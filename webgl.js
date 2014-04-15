@@ -43,13 +43,18 @@ function start() {
 var ang=0.7;
 var lightTurn=true;
 
+var num_test_goals=10;
+var num_test_fighters=40;
+var num_test_ships=15;
+var mapSize=250;
+
 function loadResources() {
 	var canvas = document.getElementById("canvas");
 	var progress = document.getElementById("progress");
 	
 	var resourceCenter = new ResourceCenter(canvas,new LODContext(4,[0,30,60,250,400]));
 	
-	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,resourceCenter.cameras[0]);
+	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,undefined);
 	//var pipScene = new Scene(canvas.width*2/3,canvas.height/4,canvas.width/3,canvas.height/2,false,[true,true,true,true],[0,0.5,0,0.5],true);
 	
 	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(ang),Math.sin(ang),0.0]; };
@@ -79,11 +84,6 @@ function loadResources() {
 	
 	//test_level.spacecrafts[0].physicalModel.orientation=
 	//	rotationMatrix4([1,0,0],-3.1415/2);
-	
-	var num_test_goals=10;
-	var num_test_fighters=40;
-	var num_test_ships=15;
-	var mapSize=250;
 	
 	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientation=
 		mul(
@@ -124,7 +124,7 @@ function loadResources() {
 	}
 		
 	for(var i=0;i<test_level.spacecrafts.length;i++) {	
-		resourceCenter.cameras.push(new Camera(canvas.width/canvas.height,60,test_level.spacecrafts[i].visualModel));
+		resourceCenter.cameras.push(new Camera(canvas.width/canvas.height,60,false,true,test_level.spacecrafts[i].visualModel));
 	}
 	//resourceCenter.cameras[1].followPosition=translationMatrix(0,-5,2);
 	resourceCenter.cameras[1].followPosition=translationMatrix(0,-6,1);

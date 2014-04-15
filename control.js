@@ -407,219 +407,276 @@ AIController.prototype.control = function() {
 	}
 };
 
+function controlCamera(camera) {
+    if(camera.controllableDirection) {
+        if (currentlyPressedKeys[17]&&currentlyPressedKeys[37]) {
+                //ctrl left
+                if (camera.angularVelocity[1]<camera.maxTurn) {
+                                camera.angularVelocity[1]+=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocity[1]>0) {
+                        camera.angularVelocity[1]-=
+                                Math.min(camera.angularAcceleration,camera.angularVelocity[1]);
+                }
+        }
+        if (currentlyPressedKeys[17]&&currentlyPressedKeys[39]) {
+                // ctrl Right
+                if (camera.angularVelocity[1]>-camera.maxTurn) {
+                        camera.angularVelocity[1]-=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocity[1]<0) {
+                        camera.angularVelocity[1]+=
+                                Math.min(camera.angularAcceleration,-camera.angularVelocity[1]);
+                }
+        }
+        if (currentlyPressedKeys[17]&&currentlyPressedKeys[38]) {
+                //ctrl up
+                if (camera.angularVelocity[0]<camera.maxTurn) {
+                                camera.angularVelocity[0]+=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocity[0]>0) {
+                        camera.angularVelocity[0]-=
+                                Math.min(camera.angularAcceleration,camera.angularVelocity[0]);
+                }
+        }
+        if (currentlyPressedKeys[17]&&currentlyPressedKeys[40]) {
+                // ctrl down
+                if (camera.angularVelocity[0]>-camera.maxTurn) {
+                        camera.angularVelocity[0]-=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocity[0]<0) {
+                        camera.angularVelocity[0]+=
+                                Math.min(camera.angularAcceleration,-camera.angularVelocity[0]);
+                }
+        }
+    }
+    if(camera.controllablePosition) {
+        if (currentlyPressedKeys[37]) {
+                // Left
+                if (camera.velocity[0]<camera.maxSpeed) {
+                        camera.velocity[0]+=camera.acceleration;
+                }
+        } else {
+                if (camera.velocity[0]>0) {
+                        camera.velocity[0]-=
+                                Math.min(camera.acceleration,camera.velocity[0]);
+                }
+        }
+        if (currentlyPressedKeys[39]) {
+                // Right
+                if (camera.velocity[0]>-camera.maxSpeed) {
+                        camera.velocity[0]-=camera.acceleration;
+                }
+        } else {
+                if (camera.velocity[0]<0) {
+                        camera.velocity[0]+=
+                                Math.min(camera.acceleration,-camera.velocity[0]);
+                }
+        }
+        if (currentlyPressedKeys[34]) {
+                // Page down
+                if (camera.velocity[1]<camera.maxSpeed) {
+                        camera.velocity[1]+=camera.acceleration;
+                }
+        } else {
+                if (camera.velocity[1]>0) {
+                        camera.velocity[1]-=
+                                Math.min(camera.acceleration,camera.velocity[1]);
+                }
+        }
+        if (currentlyPressedKeys[33]) {
+                // Page up
+                if (camera.velocity[1]>-camera.maxSpeed) {
+                        camera.velocity[1]-=camera.acceleration;
+                }
+        } else {
+                if (camera.velocity[1]<0) {
+                        camera.velocity[1]+=
+                                Math.min(camera.acceleration,-camera.velocity[1]);
+                }
+        }
+        if (currentlyPressedKeys[38]) {
+                // Up
+                if (camera.velocity[2]<camera.maxSpeed) {
+                        camera.velocity[2]+=camera.acceleration;
+                }
+        } else {
+                if (camera.velocity[2]>0) {
+                        camera.velocity[2]-=
+                                Math.min(camera.acceleration,camera.velocity[2]);
+                }
+        }
+        if (currentlyPressedKeys[40]) {
+                // Down
+                if (camera.velocity[2]>-camera.maxSpeed) {
+                        camera.velocity[2]-=camera.acceleration;
+                }
+        } else {
+                if (camera.velocity[2]<0) {
+                        camera.velocity[2]+=
+                                Math.min(camera.acceleration,-camera.velocity[2]);
+                }
+        }
+    }
+    var inverseOrientation=transposed3(inverse3(matrix3from4(camera.orientation)));
+    var translation = matrix3Vector3Product(
+            camera.velocity,
+            inverseOrientation
+            );
+
+    if (camera.followedObject===undefined) {
+        camera.position=
+                mul(
+                        camera.position,
+                        translationMatrix(
+                                translation[0],
+                                translation[1],
+                                translation[2]
+                                )
+                        );
+    } else {
+        camera.followPosition=
+                mul(
+                        camera.followPosition,
+                        translationMatrix(
+                                translation[0],
+                                translation[1],
+                                translation[2]
+                                )
+                        );
+    }
+    if (camera.followedObject===undefined) {
+        camera.orientation=
+                mul(
+                        mul(
+                                camera.orientation,
+                                rotationMatrix4(
+                                        [0,1,0],
+                                        camera.angularVelocity[1]
+                                        )
+                                ),
+                        rotationMatrix4(
+                                [1,0,0],
+                                camera.angularVelocity[0]
+                                )
+                        );
+    } else {
+        camera.followOrientation=
+                mul(
+                        mul(
+                                camera.followOrientation,
+                                rotationMatrix4(
+                                        [0,1,0],
+                                        camera.angularVelocity[1]
+                                        )
+                                ),
+                        rotationMatrix4(
+                                [1,0,0],
+                                camera.angularVelocity[0]
+                                )
+                        );
+    }
+            
+    if (currentlyPressedKeys[90]) { // z
+            camera.setFOV(camera.fov-1);
+    }
+    if (currentlyPressedKeys[85]) { // u
+            camera.setFOV(camera.fov+1);
+    }
+    
+    if (camera.followedObject!==undefined) {
+        // look in direction y instead of z:
+        camera.orientation=
+                mul(
+                        mul(
+                                matrix4from3(inverse3(matrix3from4(camera.followedObject.getOrientation()))),
+                                rotationMatrix4([1,0,0],3.1415/2)
+                                ),
+                        camera.followOrientation
+                        );
+        var camPosition = 
+                mul(
+                        mul(
+                                camera.followPosition,
+                                camera.followedObject.getOrientation()
+                                ),
+                        camera.followedObject.getPosition()
+                        );
+        camera.position=
+                translationMatrix(
+                        -camPosition[12],
+                        -camPosition[13],
+                        -camPosition[14]
+                        );
+    }
+}
+
 function control(resourceCenter,scene,level) {
-	if (scene.activeCamera.followedObject===undefined) {
-		if (currentlyPressedKeys[17]&&currentlyPressedKeys[37]) {
-			//ctrl left
-			if (scene.activeCamera.angularVelocity[1]<scene.activeCamera.maxTurn) {
-					scene.activeCamera.angularVelocity[1]+=scene.activeCamera.angularAcceleration;
-			}
-		} else {
-			if (scene.activeCamera.angularVelocity[1]>0) {
-				scene.activeCamera.angularVelocity[1]-=
-					Math.min(scene.activeCamera.angularAcceleration,scene.activeCamera.angularVelocity[1]);
-			}
-		}
-		if (currentlyPressedKeys[17]&&currentlyPressedKeys[39]) {
-			// ctrl Right
-			if (scene.activeCamera.angularVelocity[1]>-scene.activeCamera.maxTurn) {
-				scene.activeCamera.angularVelocity[1]-=scene.activeCamera.angularAcceleration;
-			}
-		} else {
-			if (scene.activeCamera.angularVelocity[1]<0) {
-				scene.activeCamera.angularVelocity[1]+=
-					Math.min(scene.activeCamera.angularAcceleration,-scene.activeCamera.angularVelocity[1]);
-			}
-		}
-		if (currentlyPressedKeys[17]&&currentlyPressedKeys[38]) {
-			//ctrl up
-			if (scene.activeCamera.angularVelocity[0]<scene.activeCamera.maxTurn) {
-					scene.activeCamera.angularVelocity[0]+=scene.activeCamera.angularAcceleration;
-			}
-		} else {
-			if (scene.activeCamera.angularVelocity[0]>0) {
-				scene.activeCamera.angularVelocity[0]-=
-					Math.min(scene.activeCamera.angularAcceleration,scene.activeCamera.angularVelocity[0]);
-			}
-		}
-		if (currentlyPressedKeys[17]&&currentlyPressedKeys[40]) {
-			// ctrl down
-			if (scene.activeCamera.angularVelocity[0]>-scene.activeCamera.maxTurn) {
-				scene.activeCamera.angularVelocity[0]-=scene.activeCamera.angularAcceleration;
-			}
-		} else {
-			if (scene.activeCamera.angularVelocity[0]<0) {
-				scene.activeCamera.angularVelocity[0]+=
-					Math.min(scene.activeCamera.angularAcceleration,-scene.activeCamera.angularVelocity[0]);
-			}
-		}
-		if (currentlyPressedKeys[37]) {
-			// Left
-			if (scene.activeCamera.velocity[0]<scene.activeCamera.maxSpeed) {
-				scene.activeCamera.velocity[0]+=scene.activeCamera.acceleration;
-			}
-		} else {
-			if (scene.activeCamera.velocity[0]>0) {
-				scene.activeCamera.velocity[0]-=
-					Math.min(scene.activeCamera.acceleration,scene.activeCamera.velocity[0]);
-			}
-		}
-		if (currentlyPressedKeys[39]) {
-			// Right
-			if (scene.activeCamera.velocity[0]>-scene.activeCamera.maxSpeed) {
-				scene.activeCamera.velocity[0]-=scene.activeCamera.acceleration;
-			}
-		} else {
-			if (scene.activeCamera.velocity[0]<0) {
-				scene.activeCamera.velocity[0]+=
-					Math.min(scene.activeCamera.acceleration,-scene.activeCamera.velocity[0]);
-			}
-		}
-		if (currentlyPressedKeys[34]) {
-			// Page down
-			if (scene.activeCamera.velocity[1]<scene.activeCamera.maxSpeed) {
-				scene.activeCamera.velocity[1]+=scene.activeCamera.acceleration;
-			}
-		} else {
-			if (scene.activeCamera.velocity[1]>0) {
-				scene.activeCamera.velocity[1]-=
-					Math.min(scene.activeCamera.acceleration,scene.activeCamera.velocity[1]);
-			}
-		}
-		if (currentlyPressedKeys[33]) {
-			// Page up
-			if (scene.activeCamera.velocity[1]>-scene.activeCamera.maxSpeed) {
-				scene.activeCamera.velocity[1]-=scene.activeCamera.acceleration;
-			}
-		} else {
-			if (scene.activeCamera.velocity[1]<0) {
-				scene.activeCamera.velocity[1]+=
-					Math.min(scene.activeCamera.acceleration,-scene.activeCamera.velocity[1]);
-			}
-		}
-		if (currentlyPressedKeys[38]) {
-			// Up
-			if (scene.activeCamera.velocity[2]<scene.activeCamera.maxSpeed) {
-				scene.activeCamera.velocity[2]+=scene.activeCamera.acceleration;
-			}
-		} else {
-			if (scene.activeCamera.velocity[2]>0) {
-				scene.activeCamera.velocity[2]-=
-					Math.min(scene.activeCamera.acceleration,scene.activeCamera.velocity[2]);
-			}
-		}
-		if (currentlyPressedKeys[40]) {
-			// Down
-			if (scene.activeCamera.velocity[2]>-scene.activeCamera.maxSpeed) {
-				scene.activeCamera.velocity[2]-=scene.activeCamera.acceleration;
-			}
-		} else {
-			if (scene.activeCamera.velocity[2]<0) {
-				scene.activeCamera.velocity[2]+=
-					Math.min(scene.activeCamera.acceleration,-scene.activeCamera.velocity[2]);
-			}
-		}
-		var inverseOrientation=transposed3(inverse3(matrix3from4(scene.activeCamera.orientation)));
-		var translation = matrix3Vector3Product(
-			scene.activeCamera.velocity,
-			inverseOrientation
-			);
-			
-		scene.activeCamera.position=
-			mul(
-				scene.activeCamera.position,
-				translationMatrix(
-					translation[0],
-					translation[1],
-					translation[2]
-					)
-				);
-		scene.activeCamera.orientation=
-			mul(
-				mul(
-					scene.activeCamera.orientation,
-					rotationMatrix4(
-						[0,1,0],
-						scene.activeCamera.angularVelocity[1]
-						)
-					),
-				rotationMatrix4(
-					[1,0,0],
-					scene.activeCamera.angularVelocity[0]
-					)
-				);
+	if (scene.activeCamera.followedCamera===undefined) {
+            controlCamera(scene.activeCamera);
 	} else {
-		// look in direction y instead of z:
-		scene.activeCamera.orientation=
-			mul(
-				mul(
-					matrix4from3(inverse3(matrix3from4(scene.activeCamera.followedObject.getOrientation()))),
-					rotationMatrix4([1,0,0],3.1415/2)
-					),
-				scene.activeCamera.followOrientation
-				);
-		var camPosition = 
-			mul(
-				mul(
-					scene.activeCamera.followPosition,
-					scene.activeCamera.followedObject.getOrientation()
-					),
-				scene.activeCamera.followedObject.getPosition()
-				);
-		scene.activeCamera.position=
-			translationMatrix(
-				-camPosition[12],
-				-camPosition[13],
-				-camPosition[14]
-				);
-	}
-	if (currentlyPressedKeys[90]) { // z
-		scene.activeCamera.setFOV(scene.activeCamera.fov-1);
-	}
-	if (currentlyPressedKeys[85]) { // u
-		scene.activeCamera.setFOV(scene.activeCamera.fov+1);
-	}
+            controlCamera(scene.activeCamera.followedCamera);
+        }
+        // pause game
 	if (currentlyPressedKeys[80]) { // p
 		alert("paused");
 	}
+        
+        /*if(activeCameraIndex>0) {
+				level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
+			}*/
+        /*if(activeCameraIndex>0) {
+				level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
+			}*/
+        /*if(activeCameraIndex>0) {
+				level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
+			}*/
+        /*if(activeCameraIndex>0) {
+				level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
+			}*/
+        
 	for(var i=0;i<keyPressEvents.length;i++) {
 		event = keyPressEvents[i];
-		if (getChar(event) === 'c') {
-			/*if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}*/
+                // follow next camera
+		if (getChar(event) === 'c') {	
 			activeCameraIndex=(activeCameraIndex+1)%resourceCenter.cameras.length;
-			scene.activeCamera=resourceCenter.cameras[activeCameraIndex];
-			/*if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}*/
-			keyPressEvents.splice(i,1);
-			i-=1;
+			scene.activeCamera.followCamera(resourceCenter.cameras[activeCameraIndex]);
 		}
+                // follow previous camera
 		if (getChar(event) === 'x') {
-			if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}
 			activeCameraIndex=(activeCameraIndex-1)%resourceCenter.cameras.length;
-			scene.activeCamera=resourceCenter.cameras[activeCameraIndex];
-			if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}
-			keyPressEvents.splice(i,1);
-			i-=1;
+                        scene.activeCamera.followCamera(resourceCenter.cameras[activeCameraIndex]);
 		}
+                // set control to manual
+                if (getChar(event) === 'm') {
+                    if(activeCameraIndex>0) {
+                        level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
+                    }
+                }
+                // set control to AI
+                if (getChar(event) === 'n') {
+                    if(activeCameraIndex>0) {
+                        level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
+                        for(var j=0;j<10;j++) {
+                            level.spacecrafts[activeCameraIndex-1].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
+                        }
+                    }
+                }
+                // stop all units
 		if (getChar(event) === '0') {
 			for(var i=0;i<level.spacecrafts.length;i++) {
 				level.spacecrafts[i].controller.goals=new Array();
 			}
-			keyPressEvents.splice(i,1);
-			i-=1;
 		}
+                // toggle rotation of directional lightsource
 		if (getChar(event) === 'l') {
 			lightTurn=!lightTurn;
-			keyPressEvents.splice(i,1);
-			i-=1;
 		}
+                // toggle visibility of hitboxes
 		if (getChar(event) === 'h') {
 			for(var i=0;i<level.spacecrafts.length;i++) {
 				for(var j=0;j<level.spacecrafts[i].visualModel.subnodes.length;j++) {
@@ -628,10 +685,11 @@ function control(resourceCenter,scene,level) {
 					}
 				}
 			}
-			keyPressEvents.splice(i,1);
-			i-=1;
 		}
+                keyPressEvents.splice(i,1);
+                i-=1;
 	}
+        scene.activeCamera.update();
 	scene.activeCamera.matrix =
 		mul(
 			scene.activeCamera.position,

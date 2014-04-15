@@ -230,14 +230,31 @@ function ShaderVariableTypeFromString(type) {
     return ShaderVariableTypes.none;
 }
 
+/**
+ * Creates a new ShaderUniform.
+ * @class ShaderUniform A class representing and wrapping a GLSL uniform 
+ * variable.
+ * @param {String} name The name of the uniform variable. Has to be the same
+ * as the name specified in the GLSL source.
+ * @param {String} type The type of the uniform variable. Only certain variable
+ * types are supported.
+ */
 function ShaderUniform(name,type) {
 	this.name=name;
 	this.type=ShaderVariableTypeFromString(type);
 	this.location=-1;
 }
 
-ShaderUniform.prototype.getLocation = function(gl,program) {
+/**
+ * Gets the location of the uniform variable in the specified GLSL program
+ * within the specified GL context, and sets the location member of the class
+ * to remember it.
+ * @param gl The GL context.
+ * @param program The GLSL shader program.
+ * */
+ShaderUniform.prototype.getAndSetLocation = function(gl,program) {
 	this.location=gl.getUniformLocation(program,this.name);
+        return this.location;
 };
 
 /**
@@ -315,7 +332,7 @@ Shader.prototype.setup = function(gl) {
         gl.linkProgram(this.id);
 	
 	for(var i=0;i<this.uniforms.length;i++) {
-		this.uniforms[i].getLocation(gl,this.id);
+		this.uniforms[i].getAndSetLocation(gl,this.id);
 	}
 };
 
@@ -484,6 +501,7 @@ FVQ.prototype.insideViewFrustum = function(camera) {
 FVQ.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.cubemap);
 	
+        drawnPolyogons+=2;
 	this.model.render(resourceCenter.gl,false);
 };
 
@@ -583,7 +601,7 @@ function Billboard(model,shader,texture,size,position,orientation) {
 	
 	var self = this;
 	
-	this.uniforms["u_modelMatrix"] = function() { return mul(mul(self.scale,self.orientation),self.position); };
+	this.uniformValueFunctions["u_modelMatrix"] = function() { return mul(mul(self.scale,self.orientation),self.position); };
 }
 
 Billboard.prototype = new VisualObject();
@@ -660,7 +678,7 @@ function VertexBuffer(id,data,location,vectorSize) {
 	this.vectorSize=vectorSize;
 }
 
-function Camera(aspect,fov,followedObject) {
+function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject) {
 	this.position=identityMatrix4();
 	this.orientation=identityMatrix4();
 	this.matrix=identityMatrix4();
@@ -675,6 +693,8 @@ function Camera(aspect,fov,followedObject) {
 	this.followOrientation=identityMatrix4();
 	this.aspect=aspect;
 	this.fov=fov;
+        this.controllablePosition=controllablePosition;
+        this.controllableDirection=controllableDirection;
 	this.focusDistance=Math.cos(fov*3.1415/360)*2*this.aspect;
 	this.perspective=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
 }
@@ -682,6 +702,61 @@ function Camera(aspect,fov,followedObject) {
 Camera.prototype.setFOV = function(fov) {
 	this.fov=fov;
 	this.perspective=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
+};
+
+/**
+ * Creates a new SceneCamera.
+ * @class SceneCamera A camera that is used to draw a scene. Can follow one of
+ * the camera objects in the resource center, adapting its parameters to the
+ * ones of that camera in a given time.
+ * @extends Camera
+ * @param aspect The starting aspect ration of the camera.
+ * @param fov The starting field of view value of the camera.
+ * @param adaptationTime The time the camera will take when adapting its parameters
+ * to a new followed camera in milliseconds.
+ * @param followedCamera Initial camera object to follow.
+ * */
+function SceneCamera(aspect,fov,adaptationTime,followedCamera) {
+    Camera.call(this,aspect,fov,true,true);
+    this.adaptationTime=adaptationTime;
+    this.followCamera(followedCamera);
+}
+
+SceneCamera.prototype = new Camera();
+SceneCamera.prototype.constructor = SceneCamera;
+
+SceneCamera.prototype.followCamera = function(camera) {
+    this.followedCamera=camera;
+    this.adaptationStartTime=new Date().getTime();
+    this.adaptationStartPosition=this.position;
+    this.adaptationStartOrientation=this.orientation;
+    this.adaptationStartFOV=this.fov;
+    this.adaptationTimeLeft=this.adaptationTime;
+};
+
+SceneCamera.prototype.update = function() {
+    if(this.followedCamera!==undefined) {
+        if(this.adaptationTimeLeft>0) {
+            var currentTime=new Date().getTime();
+            var adaptationRate=Math.min(1.0,(currentTime-this.adaptationStartTime)/this.adaptationTime);
+            this.adaptationTimeLeft=this.adaptationTime-(currentTime-this.adaptationStartTime);
+            var trans = translationMatrix(
+                    (this.followedCamera.position[12]-this.adaptationStartPosition[12])*adaptationRate,
+                    (this.followedCamera.position[13]-this.adaptationStartPosition[13])*adaptationRate,
+                    (this.followedCamera.position[14]-this.adaptationStartPosition[14])*adaptationRate
+                    );
+            this.position=translate(this.adaptationStartPosition,trans);
+            this.orientation=correctOrthogonalMatrix(addMatrices4(
+                mulMatrix4Scalar(this.adaptationStartOrientation,1.0-adaptationRate),
+                mulMatrix4Scalar(this.followedCamera.orientation,adaptationRate)));
+            this.setFOV(this.adaptationStartFOV+(this.followedCamera.fov-this.adaptationStartFOV)*adaptationRate);
+        } else {
+            this.position=this.followedCamera.position;
+            this.orientation=this.followedCamera.orientation;
+            this.matrix=this.followedCamera.matrix;
+            this.perspective=this.followedCamera.perspective;
+        }
+    }
 };
 
 function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,clearDepthOnRender,activeCamera) {
@@ -696,7 +771,7 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
 	this.clearColor=clearColor;
 	this.clearDepthOnRender=clearDepthOnRender;
 	
-	this.activeCamera = activeCamera;
+	this.activeCamera = new SceneCamera(width/height,60,5000,activeCamera);
 		
 	this.uniformValueFunctions = new Object();
 	
@@ -784,7 +859,7 @@ function ResourceCenter(canvas,lodContext) {
 	
 	this.vertexBuffers=new Array();
 	
-	this.cameras.push(new Camera(canvas.width/canvas.height,60));
+	this.cameras.push(new Camera(canvas.width/canvas.height,60,true,true));
 	
 	this.lodContext=lodContext;
 	

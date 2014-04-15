@@ -28,6 +28,12 @@ function nullMatrix4() {
 		0.0, 0.0, 0.0, 0.0]);
 }
 
+/**
+ * Creates a new 4x4 transformation matrix for performing a rotation along an
+ * arbitrary axis.
+ * @param {Number[]} axis An array of 3 numbers describing the axis of the
+ * rotation
+ * @param {Number} angle The angle of rotation in radian*/
 function rotationMatrix4(axis,angle) {
 	var cosAngle = Math.cos(angle);
 	var sinAngle = Math.sin(angle);
@@ -68,6 +74,15 @@ function translationDistance2(m1,m2) {
 		(m1[13]-m2[13])*(m1[13]-m2[13])+
 		(m1[14]-m2[14])*(m1[14]-m2[14])
 	);
+}
+
+function translate(m1,m2) {
+    return new Float32Array([
+            m1[0],m1[1],m1[2],m1[3],
+            m1[4],m1[5],m1[6],m1[7],
+            m1[8],m1[9],m1[10],m1[11],
+            m1[12]+m2[12],m1[13]+m2[13],m1[14]+m2[14],m1[15]
+    ]);
 }
 
 function vectorDotProduct(v1,v2) {
@@ -299,6 +314,23 @@ function vector4Matrix4Product(v,m) {
 		]);
 }
 
+function addMatrices4(m1,m2) {
+    return new Float32Array([
+        m1[0]+m2[0],m1[1]+m2[1],m1[2]+m2[2],m1[3]+m2[3],
+        m1[4]+m2[4],m1[5]+m2[5],m1[6]+m2[6],m1[7]+m2[7],
+        m1[8]+m2[8],m1[9]+m2[9],m1[10]+m2[10],m1[11]+m2[11],
+        m1[12]+m2[12],m1[13]+m2[13],m1[14]+m2[14],m1[15]+m2[15]
+    ]);
+}
+
+function mulMatrix4Scalar(m,s) {
+    return new Float32Array([
+        m[0]*s,m[1]*s,m[2]*s,m[3]*s,
+        m[4]*s,m[5]*s,m[6]*s,m[7]*s,
+        m[8]*s,m[9]*s,m[10]*s,m[11]*s,
+        m[12]*s,m[13]*s,m[14]*s,m[15]*s
+    ]);
+}
 
 function mul(m1,m2) {
 	return new Float32Array([
@@ -383,4 +415,16 @@ function matrix4ToHTMLString(m) {
 		m[4]+" "+m[5]+" "+m[6]+" "+m[7]+"<br/>"+
 		m[8]+" "+m[9]+" "+m[10]+" "+m[11]+"<br/>"+
 		m[12]+" "+m[13]+" "+m[14]+" "+m[15];
+}
+
+function correctOrthogonalMatrix(m) {
+    var vx=normalizeVector([m[0],m[1],m[2]]);
+    var vy=normalizeVector([m[4],m[5],m[6]]);
+    var vz=crossProduct(vx,vy);
+    vy=crossProduct(vz,vx);
+    return new Float32Array([
+        vx[0],vx[1],vx[2],0.0,
+        vy[0],vy[1],vy[2],0.0,
+        vz[0],vz[1],vz[2],0.0,
+        0.0,  0.0,  0.0,  1.0]);
 }

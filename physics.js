@@ -76,7 +76,8 @@ PhysicalObject.prototype.checkHit = function(position,direction,range) {
 };
 
 PhysicalObject.prototype.correctMatrices = function() {
-	var vx=normalizeVector([this.orientation[0],this.orientation[1],this.orientation[2]]);
+        this.orientation = correctOrthogonalMatrix(this.orientation);
+	/*var vx=normalizeVector([this.orientation[0],this.orientation[1],this.orientation[2]]);
 	var vy=normalizeVector([this.orientation[4],this.orientation[5],this.orientation[6]]);
 	var vz=crossProduct(vx,vy);
 	vy=crossProduct(vz,vx);
@@ -84,9 +85,10 @@ PhysicalObject.prototype.correctMatrices = function() {
 		vx[0],vx[1],vx[2],0.0,
 		vy[0],vy[1],vy[2],0.0,
 		vz[0],vz[1],vz[2],0.0,
-		0.0,  0.0,  0.0,  1.0]);
-		
-	vx=normalizeVector([this.angularVelocity[0],this.angularVelocity[1],this.angularVelocity[2]]);
+		0.0,  0.0,  0.0,  1.0]);*/
+	
+        this.angularVelocity = correctOrthogonalMatrix(this.angularVelocity);
+	/*vx=normalizeVector([this.angularVelocity[0],this.angularVelocity[1],this.angularVelocity[2]]);
 	vy=normalizeVector([this.angularVelocity[4],this.angularVelocity[5],this.angularVelocity[6]]);
 	vz=crossProduct(vx,vy);
 	vy=crossProduct(vz,vx);
@@ -94,7 +96,7 @@ PhysicalObject.prototype.correctMatrices = function() {
 		vx[0],vx[1],vx[2],0.0,
 		vy[0],vy[1],vy[2],0.0,
 		vz[0],vz[1],vz[2],0.0,
-		0.0,  0.0,  0.0,  1.0]);
+		0.0,  0.0,  0.0,  1.0]);*/
 		
 	this.timeSinceLastMatrixCorrection=0;
 };	
