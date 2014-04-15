@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Classes>
+	<SkyboxClass name="deepspace">
+		<shader name="skybox" samplerName="u_skybox" />
+		<cubemap name="deepspace" />
+	</SkyboxClass>
+	
+	<ProjectileClass name="plasma">
+		<graphics>
+			<billboard size="0.4">
+				<intersection position="0" />
+			</billboard>
+			<shader name="billboard" />
+			<texture filename="textures/plasma_full.png" />
+		</graphics>
+		<physics mass="1000" />
+		<logic duration="5000" />
+		<muzzleFlash>
+			<shader name="particle" />
+			<texture filename="textures/flare.png" />
+			<color r="0.0" g="1.0" b="0.0" />
+		</muzzleFlash> 
+	</ProjectileClass>
+	
+	<ProjectileClass name="proton">
+		<graphics>
+			<billboard size="1.2">
+				<intersection position="0.35" />
+			</billboard>
+			<shader name="billboard" />
+			<texture filename="textures/proton_full.png" />
+		</graphics>
+		<physics mass="5000" />
+		<logic duration="5000" />
+		<muzzleFlash>
+			<shader name="particle" />
+			<texture filename="textures/flare.png" />
+			<color r="1.0" g="1.0" b="0.0" />
+		</muzzleFlash> 
+	</ProjectileClass>
+	
+	<ProjectileClass name="ion">
+		<graphics>
+			<billboard size="3.0">
+				<intersection position="0" />
+			</billboard>
+			<shader name="billboard" />
+			<texture filename="textures/ion_full.png" />
+		</graphics>
+		<physics mass="15000" />
+		<logic duration="5000" />
+		<muzzleFlash>
+			<shader name="particle" />
+			<texture filename="textures/flare.png" />
+			<color r="0.0" g="0.6" b="1.0" />
+		</muzzleFlash> 
+	</ProjectileClass>
+	
+	<WeaponClass name="plasma">
+		<model filename="models/weapons/plazmaveto4k.egm_converted" lod="1" />
+		<barrels>
+			<barrel projectile="plasma" force="1200" x="0" y="10" z="0" />
+		</barrels>
+	</WeaponClass>
+	
+	<WeaponClass name="turret">
+		<model filename="models/weapons/loveg1_r3.egm_converted" lod="3" />
+		<model filename="models/weapons/loveg1_r2.egm_converted" lod="2" />
+		<model filename="models/weapons/loveg1_r1.egm_converted" lod="1" />
+		<model filename="models/weapons/loveg1_r0.egm_converted" lod="0" />
+		<barrels>
+			<barrel projectile="plasma" force="1500" x="2" y="25" z="10" />
+			<barrel projectile="plasma" force="1500" x="-2" y="25" z="10" />
+			<barrel projectile="plasma" force="1500" x="2" y="25" z="14" />
+			<barrel projectile="plasma" force="1500" x="-2" y="25" z="14" />
+		</barrels>
+	</WeaponClass>
+	
+	<WeaponClass name="cannon">
+		<model filename="models/weapons/kagyu1_r3.egm_converted" lod="3" />
+		<model filename="models/weapons/kagyu1_r2.egm_converted" lod="2" />
+		<model filename="models/weapons/kagyu1_r1.egm_converted" lod="1" />
+		<model filename="models/weapons/kagyu1_r0.egm_converted" lod="0" />
+		<barrels>
+			<barrel projectile="proton" force="8000" x="0" y="100" z="0" />
+		</barrels>
+	</WeaponClass>
+	
+	<WeaponClass name="largeCannon">
+		<model filename="models/weapons/agyu1_r0.egm_converted" lod="1" />
+		<barrels>
+			<barrel projectile="ion" force="50000" x="0" y="280" z="0" />
+		</barrels>
+	</WeaponClass>
+	
+	<PropulsionClass name="fighter">
+		<shader name="permanentParticle" />
+		<texture filename="textures/flare.png" />
+		<color r="0.0" g="0.8" b="1.0" />
+		<power thrust="10" angularThrust="10" />
+	</PropulsionClass>
+	
+	<PropulsionClass name="corvette">
+		<shader name="permanentParticle" />
+		<texture filename="textures/flare.png" />
+		<color r="0.0" g="0.8" b="1.0" />
+		<power thrust="80" angularThrust="20" />
+	</PropulsionClass>
+	
+	<PropulsionClass name="frigate">
+		<shader name="permanentParticle" />
+		<texture filename="textures/flare.png" />
+		<color r="0.0" g="0.8" b="1.0" />
+		<power thrust="110" angularThrust="25" />
+	</PropulsionClass>
+	
+	<PropulsionClass name="cruizer">
+		<shader name="permanentParticle" />
+		<texture filename="textures/flare.png" />
+		<color r="0.0" g="0.8" b="1.0" />
+		<power thrust="900" angularThrust="25" />
+	</PropulsionClass>
+	
+	<SpacecraftClass name="fecske">
+		<model filename="models/fecske_r4.egm_converted" lod="4" size="0.03"/>
+		<model filename="models/fecske_r3.egm_converted" lod="3"/>
+		<model filename="models/fecske_r2.egm_converted" lod="2"/>
+		<model filename="models/fecske_r1.egm_converted" lod="1"/>
+		<model filename="models/fecske_r0.egm_converted" lod="0"/>
+		<texture filename="textures/fem.bmp" />
+		<shader name="simple" />
+		<physics mass="1000">
+			<body x="0" y="0" z="5" w="80" h="20" d="10" />
+			<body x="0" y="15" z="5" w="50" h="10" d="10" />
+			<body x="0" y="10" z="0" w="20" h="40" d="10" />
+		</physics>
+		<weaponSlots>
+			<slot x="14" y="15" z="1" />
+			<slot x="-14" y="15" z="1" />
+			<slot x="22" y="11" z="1" />
+			<slot x="-22" y="11" z="1" />
+		</weaponSlots>
+		<thrusterSlots>
+			<!-- middle part's thrusters -->
+			<!--slot x="2.4" y="-9" z="1.6" size="0.3" use="forward,yawLeft" />
+			<slot x="-2.4" y="-9" z="1.6" size="0.3" use="forward,yawRight" /-->
+			
+			
+			<slot x="14" y="-7" z="2.5" size="0.3" use="forward,yawLeft" />	
+			<slot x="22" y="-7" z="2.5" size="0.3" use="forward,yawLeft" />	
+			<slot x="-14" y="-7" z="2.5" size="0.3" use="forward,yawRight" />
+			<slot x="-22" y="-7" z="2.5" size="0.3" use="forward,yawRight" />
+			
+			<slot x="21.75" y="-5.4" z="9.15" size="0.3" use="forward,yawLeft" />
+			<slot x="19.25" y="-5.4" z="9.15" size="0.3" use="forward,yawLeft" />
+			<slot x="16.75" y="-5.4" z="9.15" size="0.3" use="forward,yawLeft" />
+			<slot x="14.25" y="-5.4" z="9.15" size="0.3" use="forward,yawLeft" />
+			<slot x="-21.75" y="-5.4" z="9.15" size="0.3" use="forward,yawRight" />
+			<slot x="-19.25" y="-5.4" z="9.15" size="0.3" use="forward,yawRight" />
+			<slot x="-16.75" y="-5.4" z="9.15" size="0.3" use="forward,yawRight" />
+			<slot x="-14.25" y="-5.4" z="9.15" size="0.3" use="forward,yawRight" />
+			
+			<slot x="14" y="4.5" z="-2.5" size="0.15" use="raise,rollLeft,pitchUp" />
+			<slot x="14" y="0.5" z="-2.5" size="0.15" use="raise,rollLeft" />
+			<slot x="-14" y="4.5" z="-2.5" size="0.15" use="raise,rollRight,pitchUp" />
+			<slot x="-14" y="0.5" z="-2.5" size="0.15" use="raise,rollRight" />
+			
+			<slot x="18" y="18.8" z="6.5" size="0.3" use="reverse,yawRight" />
+			<slot x="23" y="15.9" z="6.2" size="0.3" use="reverse,yawRight" />
+			<slot x="-18" y="18.8" z="6.5" size="0.3" use="reverse,yawLeft" />
+			<slot x="-23" y="15.9" z="6.2" size="0.3" use="reverse,yawLeft" />
+		</thrusterSlots>
+	</SpacecraftClass>
+	
+	<SpacecraftClass name="delfin">
+		<model filename="models/delfin.egm_converted" lod="1" size="0.036"/>
+		<texture filename="textures/fem.bmp" />
+		<shader name="simple" />
+		<physics mass="2500">
+			<body x="0" y="30" z="5" w="30" h="70" d="10" />
+			<body x="0" y="30" z="-5" w="30" h="40" d="10" />
+			<body x="0" y="-5" z="15" w="60" h="30" d="10" />
+			<body x="0" y="30" z="-18" w="23" h="35" d="17" />
+			<body x="37" y="-10" z="30" w="23" h="35" d="17" />
+			<body x="-37" y="-10" z="30" w="23" h="35" d="17" />
+		</physics>
+	</SpacecraftClass>
+	
+	<SpacecraftClass name="korvett">
+		<model filename="models/korvett_r3.egm_converted" lod="3" size="0.03"/>
+		<texture filename="textures/fem.bmp" />
+		<shader name="simple" />
+		<physics mass="80000">
+			<body x="0" y="70" z="0" w="130" h="300" d="80" />
+			<body x="0" y="285" z="0" w="70" h="150" d="40" />
+			<body x="0" y="-30" z="0" w="200" h="100" d="80" />
+			<body x="-70" y="-160" z="0" w="35" h="240" d="35" />
+			<body x="70" y="-160" z="0" w="35" h="240" d="35" />
+		</physics>
+		<weaponSlots>
+			<slot x="55" y="-10" z="40" />
+			<slot x="-55" y="-10" z="40" />
+		</weaponSlots>
+	</SpacecraftClass>
+	
+	<SpacecraftClass name="fregatt">
+		<model filename="models/fregatt_r3.egm_converted" lod="3" size="0.03"/>
+		<model filename="models/fregatt_r2.egm_converted" lod="2"/>
+		<model filename="models/fregatt_r1.egm_converted" lod="1"/>
+		<model filename="models/fregatt_r0.egm_converted" lod="0"/>
+		<texture filename="textures/fem.bmp" />
+		<shader name="simple" />
+		<physics mass="120000">
+			<body x="0" y="65" z="45" w="140" h="160" d="75" />
+			<body x="0" y="205" z="40" w="70" h="120" d="40" />
+			<body x="0" y="190" z="-65" w="200" h="390" d="45" />
+			
+			<body x="116" y="90" z="20" w="50" h="310" d="50" />
+			<body x="-116" y="90" z="20" w="50" h="310" d="50" />
+			<body x="156" y="125" z="-70" w="50" h="310" d="50" />
+			<body x="-156" y="125" z="-70" w="50" h="310" d="50" />
+			
+			<body x="0" y="-120" z="0" w="140" h="210" d="120" />
+			<body x="0" y="-170" z="-100" w="50" h="65" d="100" />
+			
+			<body x="0" y="-180" z="-130" w="100" h="120" d="50" />
+			<body x="-110" y="-180" z="60" w="100" h="120" d="50">
+				<turn axis="y" degree="60" />
+			</body>
+			<body x="110" y="-180" z="60" w="100" h="120" d="50">
+				<turn axis="y" degree="-60" />
+			</body>
+		</physics>
+		<weaponSlots>
+			<slot x="155" y="290" z="-70" />
+			<slot x="-155" y="290" z="-70" />
+			<slot x="117" y="250" z="20" />
+			<slot x="-117" y="250" z="20" />
+		</weaponSlots>
+	</SpacecraftClass>
+	
+	<SpacecraftClass name="cirkalo">
+		<model filename="models/cirkalo_r1.egm_converted" lod="1" size="0.03"/>
+		<texture filename="textures/fem.bmp" />
+		<shader name="simple" />
+		<physics mass="1200000">
+			<body x="0" y="650" z="0" w="700" h="1700" d="800" />
+			<body x="0" y="650" z="0" w="1400" h="1700" d="400" />
+			<body x="0" y="700" z="0" w="525" h="2400" d="600" />
+			<body x="0" y="700" z="0" w="1050" h="2400" d="300" />
+			
+			<body x="0" y="2575" z="0" w="400" h="1350" d="530" />
+			<body x="0" y="2575" z="0" w="740" h="1000" d="230" />
+			
+			<body x="0" y="-950" z="0" w="800" h="900" d="1700" />
+			<body x="0" y="-1130" z="750" w="2200" h="400" d="50" />
+			<body x="0" y="-1130" z="-750" w="2200" h="400" d="50" />
+			
+			<body x="0" y="-1850" z="0" w="1650" h="900" d="300" />
+		</physics>
+		<weaponSlots>
+			<slot x="700" y="250" z="0">
+				<direction axis="z" angle="90" />
+			</slot>
+			<slot x="-700" y="250" z="0">
+				<direction axis="z" angle="-90" />
+			</slot>
+			<slot x="700" y="650" z="0">
+				<direction axis="z" angle="90" />
+			</slot>
+			<slot x="-700" y="650" z="0">
+				<direction axis="z" angle="-90" />
+			</slot>
+			<slot x="700" y="1050" z="0">
+				<direction axis="z" angle="90" />
+			</slot>
+			<slot x="-700" y="1050" z="0">
+				<direction axis="z" angle="-90" />
+			</slot>
+			<slot x="60" y="250" z="400" />
+			<slot x="-60" y="250" z="400" />
+			<slot x="60" y="650" z="400" />
+			<slot x="-60" y="650" z="400" />
+			<slot x="60" y="1050" z="400" />
+			<slot x="-60" y="1050" z="400" />
+			<slot x="60" y="250" z="-400">
+				<direction axis="y" angle="180" />
+			</slot>
+			<slot x="-60" y="250" z="-400">
+				<direction axis="y" angle="180" />
+			</slot>
+			<slot x="60" y="650" z="-400">
+				<direction axis="y" angle="180" />
+			</slot>
+			<slot x="-60" y="650" z="-400">
+				<direction axis="y" angle="180" />
+			</slot>
+			<slot x="60" y="1050" z="-400">
+				<direction axis="y" angle="180" />
+			</slot>
+			<slot x="-60" y="1050" z="-400">
+				<direction axis="y" angle="180" />
+			</slot>
+		</weaponSlots>
+	</SpacecraftClass>
+</Classes>

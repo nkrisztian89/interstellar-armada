@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EgomModel version="2.0">
+  <vertices count="4">
+    <vertex i="1" x="-10000" y="-10000" z="0" />
+    <vertex i="2" x="-10000" y="10000" z="0" />
+    <vertex i="3" x="10000" y="10000" z="0" />
+    <vertex i="4" x="10000" y="-10000" z="0" />
+  </vertices>
+  <lines count="4">
+    <line a="1" b="2" red="0" green="255" blue="0" nx="0" ny="0" nz="-10000" luminosity="255" />
+    <line a="2" b="3" red="0" green="255" blue="0" nx="0" ny="0" nz="-10000" luminosity="255" />
+    <line a="3" b="4" red="0" green="255" blue="0" nx="0" ny="0" nz="-10000" luminosity="255" />
+    <line a="4" b="1" red="0" green="255" blue="0" nx="0" ny="0" nz="-10000" luminosity="255" />
+  </lines>
+  <triangles count="2">
+    <triangle a="1" b="2" c="3" red="0" green="255" blue="0" nax="0" nay="0" naz="-10000" nbx="0" nby="0" nbz="-10000" ncx="0" ncy="0" ncz="-10000" luminosity="255" alpha="128" />
+    <triangle a="3" b="4" c="1" red="0" green="255" blue="0" nax="0" nay="0" naz="-10000" nbx="0" nby="0" nbz="-10000" ncx="0" ncy="0" ncz="-10000" luminosity="255" alpha="128" />
+  </triangles>
+</EgomModel>

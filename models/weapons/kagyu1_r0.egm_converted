@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EgomModel version="2.0">
+  <vertices count="81">
+    <vertex i="1" x="0" y="0" z="-160000" />
+    <vertex i="2" x="138564" y="0" z="-80000" />
+    <vertex i="3" x="138564" y="0" z="80000" />
+    <vertex i="4" x="0" y="0" z="160000" />
+    <vertex i="5" x="-138564" y="0" z="80000" />
+    <vertex i="6" x="-138564" y="0" z="-80000" />
+    <vertex i="7" x="0" y="-50000" z="-120000" />
+    <vertex i="8" x="103923" y="-50000" z="-60000" />
+    <vertex i="9" x="103923" y="-50000" z="60000" />
+    <vertex i="10" x="0" y="-50000" z="120000" />
+    <vertex i="11" x="-103923" y="-50000" z="60000" />
+    <vertex i="12" x="-103923" y="-50000" z="-60000" />
+    <vertex i="13" x="50000" y="-50000" z="-86603" />
+    <vertex i="14" x="-50000" y="-50000" z="-86603" />
+    <vertex i="15" x="50000" y="-200000" z="-86603" />
+    <vertex i="16" x="-50000" y="-200000" z="-86603" />
+    <vertex i="17" x="40000" y="-300000" z="-69282" />
+    <vertex i="18" x="-40000" y="-300000" z="-69282" />
+    <vertex i="19" x="82085" y="0" z="-225526" />
+    <vertex i="20" x="-82085" y="0" z="-225526" />
+    <vertex i="21" x="75244" y="-200000" z="-206732" />
+    <vertex i="22" x="-75244" y="-200000" z="-206732" />
+    <vertex i="23" x="54723" y="-350000" z="-150351" />
+    <vertex i="24" x="-54723" y="-350000" z="-150351" />
+    <vertex i="25" x="50000" y="-50000" z="86603" />
+    <vertex i="26" x="100000" y="-50000" z="0" />
+    <vertex i="27" x="50000" y="-200000" z="86603" />
+    <vertex i="28" x="100000" y="-200000" z="0" />
+    <vertex i="29" x="40000" y="-300000" z="69282" />
+    <vertex i="30" x="80000" y="-300000" z="0" />
+    <vertex i="31" x="154269" y="0" z="183851" />
+    <vertex i="32" x="236354" y="0" z="41676" />
+    <vertex i="33" x="141413" y="-200000" z="168530" />
+    <vertex i="34" x="216658" y="-200000" z="38203" />
+    <vertex i="35" x="102846" y="-350000" z="122567" />
+    <vertex i="36" x="157569" y="-350000" z="27784" />
+    <vertex i="37" x="-100000" y="-50000" z="0" />
+    <vertex i="38" x="-50000" y="-50000" z="86603" />
+    <vertex i="39" x="-100000" y="-200000" z="0" />
+    <vertex i="40" x="-50000" y="-200000" z="86603" />
+    <vertex i="41" x="-80000" y="-300000" z="0" />
+    <vertex i="42" x="-40000" y="-300000" z="69282" />
+    <vertex i="43" x="-236354" y="0" z="41676" />
+    <vertex i="44" x="-154269" y="0" z="183851" />
+    <vertex i="45" x="-216658" y="-200000" z="38203" />
+    <vertex i="46" x="-141413" y="-200000" z="168530" />
+    <vertex i="47" x="-157569" y="-350000" z="27784" />
+    <vertex i="48" x="-102846" y="-350000" z="122567" />
+    <vertex i="49" x="50000" y="-50000" z="-86603" />
+    <vertex i="50" x="100000" y="-50000" z="0" />
+    <vertex i="51" x="50000" y="-200000" z="-86603" />
+    <vertex i="52" x="100000" y="-200000" z="0" />
+    <vertex i="53" x="40000" y="-300000" z="-69282" />
+    <vertex i="54" x="80000" y="-300000" z="0" />
+    <vertex i="55" x="50000" y="-50000" z="86603" />
+    <vertex i="56" x="-50000" y="-50000" z="86603" />
+    <vertex i="57" x="50000" y="-200000" z="86603" />
+    <vertex i="58" x="-50000" y="-200000" z="86603" />
+    <vertex i="59" x="40000" y="-300000" z="69282" />
+    <vertex i="60" x="-40000" y="-300000" z="69282" />
+    <vertex i="61" x="-100000" y="-50000" z="0" />
+    <vertex i="62" x="-50000" y="-50000" z="-86603" />
+    <vertex i="63" x="-100000" y="-200000" z="0" />
+    <vertex i="64" x="-50000" y="-200000" z="-86603" />
+    <vertex i="65" x="-80000" y="-300000" z="0" />
+    <vertex i="66" x="-40000" y="-300000" z="-69282" />
+    <vertex i="67" x="0" y="-300000" z="-70000" />
+    <vertex i="68" x="60622" y="-300000" z="35000" />
+    <vertex i="69" x="-60622" y="-300000" z="35000" />
+    <vertex i="70" x="0" y="-500000" z="-40000" />
+    <vertex i="71" x="34641" y="-500000" z="20000" />
+    <vertex i="72" x="-34641" y="-500000" z="20000" />
+    <vertex i="73" x="0" y="-800000" z="-40000" />
+    <vertex i="74" x="34641" y="-800000" z="20000" />
+    <vertex i="75" x="-34641" y="-800000" z="20000" />
+    <vertex i="76" x="0" y="-850000" z="-60000" />
+    <vertex i="77" x="51962" y="-850000" z="30000" />
+    <vertex i="78" x="-51962" y="-850000" z="30000" />
+    <vertex i="79" x="0" y="-1000000" z="-30000" />
+    <vertex i="80" x="25981" y="-1000000" z="15000" />
+    <vertex i="81" x="-25981" y="-1000000" z="15000" />
+  </vertices>
+  <lines count="117">
+    <line a="1" b="2" red="128" green="128" blue="128" nx="4110" ny="-5695" nz="-7119" luminosity="0" />
+    <line a="8" b="2" red="128" green="128" blue="128" nx="6763" ny="-6247" nz="-3904" luminosity="0" />
+    <line a="2" b="3" red="128" green="128" blue="128" nx="8220" ny="-5695" nz="0" luminosity="0" />
+    <line a="9" b="3" red="128" green="128" blue="128" nx="6763" ny="-6247" nz="3904" luminosity="0" />
+    <line a="3" b="4" red="128" green="128" blue="128" nx="4110" ny="-5695" nz="7119" luminosity="0" />
+    <line a="10" b="4" red="128" green="128" blue="128" nx="0" ny="-6247" nz="7809" luminosity="0" />
+    <line a="4" b="5" red="128" green="128" blue="128" nx="-4110" ny="-5695" nz="7119" luminosity="0" />
+    <line a="11" b="5" red="128" green="128" blue="128" nx="-6763" ny="-6247" nz="3904" luminosity="0" />
+    <line a="5" b="6" red="128" green="128" blue="128" nx="-8220" ny="-5695" nz="0" luminosity="0" />
+    <line a="12" b="6" red="128" green="128" blue="128" nx="-6763" ny="-6247" nz="-3904" luminosity="0" />
+    <line a="6" b="1" red="128" green="128" blue="128" nx="-4110" ny="-5695" nz="-7119" luminosity="0" />
+    <line a="1" b="7" red="128" green="128" blue="128" nx="0" ny="-6247" nz="-7809" luminosity="0" />
+    <line a="7" b="8" red="128" green="128" blue="128" nx="2320" ny="-8859" nz="-4018" luminosity="0" />
+    <line a="8" b="9" red="128" green="128" blue="128" nx="4640" ny="-8859" nz="0" luminosity="0" />
+    <line a="9" b="10" red="128" green="128" blue="128" nx="2320" ny="-8859" nz="4018" luminosity="0" />
+    <line a="10" b="11" red="128" green="128" blue="128" nx="-2320" ny="-8859" nz="4018" luminosity="0" />
+    <line a="11" b="12" red="128" green="128" blue="128" nx="-4640" ny="-8859" nz="0" luminosity="0" />
+    <line a="12" b="7" red="128" green="128" blue="128" nx="-2320" ny="-8859" nz="-4018" luminosity="0" />
+    <line a="14" b="13" red="192" green="192" blue="192" nx="0" ny="9409" nz="3386" luminosity="0" />
+    <line a="20" b="19" red="192" green="192" blue="192" nx="0" ny="7528" nz="-6582" luminosity="0" />
+    <line a="24" b="23" red="192" green="192" blue="192" nx="0" ny="-9198" nz="-3924" luminosity="0" />
+    <line a="13" b="17" red="192" green="192" blue="192" nx="9807" ny="-258" nz="1940" luminosity="0" />
+    <line a="17" b="23" red="192" green="192" blue="192" nx="6541" ny="-5849" nz="4796" luminosity="0" />
+    <line a="23" b="19" red="192" green="192" blue="192" nx="7735" ny="-1903" nz="-6046" luminosity="0" />
+    <line a="19" b="13" red="192" green="192" blue="192" nx="6755" ny="6302" nz="3828" luminosity="0" />
+    <line a="18" b="14" red="192" green="192" blue="192" nx="-9759" ny="-240" nz="2167" luminosity="0" />
+    <line a="14" b="20" red="192" green="192" blue="192" nx="-6732" ny="6325" nz="3831" luminosity="0" />
+    <line a="20" b="24" red="192" green="192" blue="192" nx="-7682" ny="-1913" nz="-6109" luminosity="0" />
+    <line a="24" b="18" red="192" green="192" blue="192" nx="-6506" ny="-5879" nz="4807" luminosity="0" />
+    <line a="26" b="25" red="192" green="192" blue="192" nx="-2933" ny="9409" nz="-1693" luminosity="0" />
+    <line a="32" b="31" red="192" green="192" blue="192" nx="5700" ny="7528" nz="3291" luminosity="0" />
+    <line a="36" b="35" red="192" green="192" blue="192" nx="3399" ny="-9198" nz="1962" luminosity="0" />
+    <line a="25" b="29" red="192" green="192" blue="192" nx="-6583" ny="-258" nz="7523" luminosity="0" />
+    <line a="29" b="35" red="192" green="192" blue="192" nx="-7424" ny="-5849" nz="3267" luminosity="0" />
+    <line a="35" b="31" red="192" green="192" blue="192" nx="1369" ny="-1903" nz="9721" luminosity="0" />
+    <line a="31" b="25" red="192" green="192" blue="192" nx="-6693" ny="6302" nz="3936" luminosity="0" />
+    <line a="30" b="26" red="192" green="192" blue="192" nx="3003" ny="-240" nz="-9536" luminosity="0" />
+    <line a="26" b="32" red="192" green="192" blue="192" nx="48" ny="6325" nz="-7746" luminosity="0" />
+    <line a="32" b="36" red="192" green="192" blue="192" nx="9132" ny="-1913" nz="-3598" luminosity="0" />
+    <line a="36" b="30" red="192" green="192" blue="192" nx="-910" ny="-5879" nz="-8038" luminosity="0" />
+    <line a="26" b="25" red="192" green="192" blue="192" nx="-2933" ny="9409" nz="-1693" luminosity="0" />
+    <line a="32" b="31" red="192" green="192" blue="192" nx="5700" ny="7528" nz="3291" luminosity="0" />
+    <line a="36" b="35" red="192" green="192" blue="192" nx="3399" ny="-9198" nz="1962" luminosity="0" />
+    <line a="29" b="30" red="192" green="192" blue="192" nx="-4546" ny="-8511" nz="-2625" luminosity="0" />
+    <line a="25" b="29" red="192" green="192" blue="192" nx="-6583" ny="-258" nz="7523" luminosity="0" />
+    <line a="29" b="35" red="192" green="192" blue="192" nx="-7424" ny="-5849" nz="3267" luminosity="0" />
+    <line a="35" b="31" red="192" green="192" blue="192" nx="1369" ny="-1903" nz="9721" luminosity="0" />
+    <line a="31" b="25" red="192" green="192" blue="192" nx="-6693" ny="6302" nz="3936" luminosity="0" />
+    <line a="30" b="26" red="192" green="192" blue="192" nx="3003" ny="-240" nz="-9536" luminosity="0" />
+    <line a="26" b="32" red="192" green="192" blue="192" nx="48" ny="6325" nz="-7746" luminosity="0" />
+    <line a="32" b="36" red="192" green="192" blue="192" nx="9132" ny="-1913" nz="-3598" luminosity="0" />
+    <line a="36" b="30" red="192" green="192" blue="192" nx="-910" ny="-5879" nz="-8038" luminosity="0" />
+    <line a="38" b="37" red="192" green="192" blue="192" nx="2933" ny="9409" nz="-1693" luminosity="0" />
+    <line a="44" b="43" red="192" green="192" blue="192" nx="-5700" ny="7528" nz="3291" luminosity="0" />
+    <line a="48" b="47" red="192" green="192" blue="192" nx="-3399" ny="-9198" nz="1962" luminosity="0" />
+    <line a="37" b="41" red="192" green="192" blue="192" nx="-3223" ny="-258" nz="-9463" luminosity="0" />
+    <line a="41" b="47" red="192" green="192" blue="192" nx="882" ny="-5849" nz="-8063" luminosity="0" />
+    <line a="47" b="43" red="192" green="192" blue="192" nx="-9103" ny="-1903" nz="-3675" luminosity="0" />
+    <line a="43" b="37" red="192" green="192" blue="192" nx="-62" ny="6302" nz="-7764" luminosity="0" />
+    <line a="42" b="38" red="192" green="192" blue="192" nx="6757" ny="-240" nz="7368" luminosity="0" />
+    <line a="38" b="44" red="192" green="192" blue="192" nx="6684" ny="6325" nz="3915" luminosity="0" />
+    <line a="44" b="48" red="192" green="192" blue="192" nx="-1450" ny="-1913" nz="9708" luminosity="0" />
+    <line a="48" b="42" red="192" green="192" blue="192" nx="7416" ny="-5879" nz="3231" luminosity="0" />
+    <line a="38" b="37" red="192" green="192" blue="192" nx="2933" ny="9409" nz="-1693" luminosity="0" />
+    <line a="44" b="43" red="192" green="192" blue="192" nx="-5700" ny="7528" nz="3291" luminosity="0" />
+    <line a="48" b="47" red="192" green="192" blue="192" nx="-3399" ny="-9198" nz="1962" luminosity="0" />
+    <line a="41" b="42" red="192" green="192" blue="192" nx="4546" ny="-8511" nz="-2625" luminosity="0" />
+    <line a="37" b="41" red="192" green="192" blue="192" nx="-3223" ny="-258" nz="-9463" luminosity="0" />
+    <line a="41" b="47" red="192" green="192" blue="192" nx="882" ny="-5849" nz="-8063" luminosity="0" />
+    <line a="47" b="43" red="192" green="192" blue="192" nx="-9103" ny="-1903" nz="-3675" luminosity="0" />
+    <line a="43" b="37" red="192" green="192" blue="192" nx="-62" ny="6302" nz="-7764" luminosity="0" />
+    <line a="42" b="38" red="192" green="192" blue="192" nx="6757" ny="-240" nz="7368" luminosity="0" />
+    <line a="38" b="44" red="192" green="192" blue="192" nx="6684" ny="6325" nz="3915" luminosity="0" />
+    <line a="44" b="48" red="192" green="192" blue="192" nx="-1450" ny="-1913" nz="9708" luminosity="0" />
+    <line a="48" b="42" red="192" green="192" blue="192" nx="7416" ny="-5879" nz="3231" luminosity="0" />
+    <line a="18" b="17" red="160" green="160" blue="160" nx="0" ny="-9621" nz="2728" luminosity="0" />
+    <line a="17" b="30" red="160" green="160" blue="160" nx="0" ny="-10000" nz="0" luminosity="0" />
+    <line a="41" b="18" red="160" green="160" blue="160" nx="0" ny="-10000" nz="0" luminosity="0" />
+    <line a="30" b="29" red="160" green="160" blue="160" nx="-2363" ny="-9621" nz="-1364" luminosity="0" />
+    <line a="29" b="42" red="160" green="160" blue="160" nx="0" ny="-10000" nz="0" luminosity="0" />
+    <line a="42" b="41" red="160" green="160" blue="160" nx="2363" ny="-9621" nz="-1364" luminosity="0" />
+    <line a="41" b="30" red="160" green="160" blue="160" nx="0" ny="-10000" nz="0" luminosity="0" />
+    <line a="53" b="49" red="160" green="160" blue="160" nx="8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="49" b="50" red="160" green="160" blue="160" nx="8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="50" b="54" red="160" green="160" blue="160" nx="8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="54" b="53" red="160" green="160" blue="160" nx="8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="59" b="55" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="55" b="56" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="56" b="60" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="60" b="59" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="59" b="55" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="55" b="56" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="56" b="60" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="60" b="59" red="160" green="160" blue="160" nx="0" ny="-691" nz="9976" luminosity="0" />
+    <line a="65" b="61" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="61" b="62" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="62" b="66" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="66" b="65" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="65" b="61" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="61" b="62" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="62" b="66" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="66" b="65" red="160" green="160" blue="160" nx="-8640" ny="-691" nz="-4988" luminosity="0" />
+    <line a="67" b="68" red="128" green="128" blue="128" nx="8636" ny="-748" nz="-4986" luminosity="0" />
+    <line a="71" b="68" red="128" green="128" blue="128" nx="8564" ny="-1483" nz="4945" luminosity="0" />
+    <line a="68" b="69" red="128" green="128" blue="128" nx="0" ny="-748" nz="9972" luminosity="0" />
+    <line a="72" b="69" red="128" green="128" blue="128" nx="-8564" ny="-1483" nz="4945" luminosity="0" />
+    <line a="69" b="67" red="128" green="128" blue="128" nx="-8636" ny="-748" nz="-4986" luminosity="0" />
+    <line a="67" b="70" red="128" green="128" blue="128" nx="0" ny="-1483" nz="-9889" luminosity="0" />
+    <line a="70" b="71" red="160" green="160" blue="160" nx="8652" ny="-424" nz="-4995" luminosity="0" />
+    <line a="80" b="71" red="160" green="160" blue="160" nx="8659" ny="-200" nz="4999" luminosity="0" />
+    <line a="71" b="72" red="160" green="160" blue="160" nx="0" ny="-424" nz="9991" luminosity="0" />
+    <line a="81" b="72" red="160" green="160" blue="160" nx="-8659" ny="-200" nz="4999" luminosity="0" />
+    <line a="72" b="70" red="160" green="160" blue="160" nx="-8652" ny="-424" nz="-4996" luminosity="0" />
+    <line a="70" b="79" red="160" green="160" blue="160" nx="0" ny="-200" nz="-9998" luminosity="0" />
+    <line a="79" b="80" red="64" green="64" blue="64" nx="6093" ny="-7106" nz="-3518" luminosity="0" />
+    <line a="80" b="81" red="64" green="64" blue="64" nx="0" ny="-7106" nz="7036" luminosity="0" />
+    <line a="81" b="79" red="64" green="64" blue="64" nx="-6093" ny="-7106" nz="-3518" luminosity="0" />
+  </lines>
+  <triangles count="69">
+    <triangle a="7" b="1" c="2" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-5695" naz="-8220" nbx="0" nby="-5695" nbz="-8220" ncx="7119" ncy="-5695" ncz="-4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="2" b="8" c="7" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="7119" nay="-5695" naz="-4110" nbx="7119" nby="-5695" nbz="-4110" ncx="0" ncy="-5695" ncz="-8220" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="8" b="2" c="3" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="7119" nay="-5695" naz="-4110" nbx="7119" nby="-5695" nbz="-4110" ncx="7119" ncy="-5695" ncz="4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="3" b="9" c="8" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="7119" nay="-5695" naz="4110" nbx="7119" nby="-5695" nbz="4110" ncx="7119" ncy="-5695" ncz="-4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="9" b="3" c="4" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="7119" nay="-5695" naz="4110" nbx="7119" nby="-5695" nbz="4110" ncx="0" ncy="-5695" ncz="8220" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="4" b="10" c="9" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-5695" naz="8220" nbx="0" nby="-5695" nbz="8220" ncx="7119" ncy="-5695" ncz="4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="10" b="4" c="5" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-5695" naz="8220" nbx="0" nby="-5695" nbz="8220" ncx="-7119" ncy="-5695" ncz="4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="5" b="11" c="10" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-7119" nay="-5695" naz="4110" nbx="-7119" nby="-5695" nbz="4110" ncx="0" ncy="-5695" ncz="8220" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="11" b="5" c="6" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-7119" nay="-5695" naz="4110" nbx="-7119" nby="-5695" nbz="4110" ncx="-7119" ncy="-5695" ncz="-4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="6" b="12" c="11" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-7119" nay="-5695" naz="-4110" nbx="-7119" nby="-5695" nbz="-4110" ncx="-7119" ncy="-5695" ncz="4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="12" b="6" c="1" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-7119" nay="-5695" naz="-4110" nbx="-7119" nby="-5695" nbz="-4110" ncx="0" ncy="-5695" ncz="-8220" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="1" b="7" c="12" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-5695" naz="-8220" nbx="0" nby="-5695" nbz="-8220" ncx="-7119" ncy="-5695" ncz="-4110" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="7" b="8" c="9" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="7" b="9" c="10" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="7" b="10" c="11" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="7" b="11" c="12" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="14" b="13" c="19" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="9409" naz="3386" nbx="0" nby="9409" nbz="3386" ncx="0" ncy="9409" ncz="3386" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="19" b="20" c="14" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="9409" naz="3386" nbx="0" nby="9409" nbz="3386" ncx="0" ncy="9409" ncz="3386" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="20" b="19" c="23" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-2100" naz="-9777" nbx="0" nby="-2100" nbz="-9777" ncx="0" ncy="-2100" ncz="-9777" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="23" b="24" c="20" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-2100" naz="-9777" nbx="0" nby="-2100" nbz="-9777" ncx="0" ncy="-2100" ncz="-9777" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="24" b="23" c="17" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-8511" naz="5249" nbx="0" nby="-8511" nbz="5249" ncx="0" ncy="-8511" ncz="5249" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="17" b="18" c="24" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-8511" naz="5249" nbx="0" nby="-8511" nbz="5249" ncx="0" ncy="-8511" ncz="5249" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="13" b="17" c="23" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="9785" nay="-280" naz="2043" nbx="9807" nby="-258" nbz="1940" ncx="9785" ncy="-280" ncz="2043" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="23" b="19" c="13" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="9785" nay="-280" naz="2043" nbx="9762" nby="-302" nbz="2146" ncx="9785" ncy="-280" ncz="2043" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="18" b="14" c="20" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-9777" nay="-289" naz="2078" nbx="-9759" nby="-240" nbz="2167" ncx="-9777" ncy="-289" ncz="2078" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="20" b="24" c="18" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-9777" nay="-289" naz="2078" nbx="-9795" nby="-339" nbz="1988" ncx="-9777" ncy="-289" ncz="2078" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="26" b="25" c="31" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-2933" nay="9409" naz="-1693" nbx="-2933" nby="9409" nbz="-1693" ncx="-2933" ncy="9409" ncz="-1693" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="31" b="32" c="26" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-2933" nay="9409" naz="-1693" nbx="-2933" nby="9409" nbz="-1693" ncx="-2933" ncy="9409" ncz="-1693" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="32" b="31" c="35" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="8467" nay="-2100" naz="4889" nbx="8467" nby="-2100" nbz="4889" ncx="8467" ncy="-2100" ncz="4889" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="35" b="36" c="32" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="8467" nay="-2100" naz="4889" nbx="8467" nby="-2100" nbz="4889" ncx="8467" ncy="-2100" ncz="4889" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="36" b="35" c="29" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-4546" nay="-8511" naz="-2625" nbx="-4546" nby="-8511" nbz="-2625" ncx="-4546" ncy="-8511" ncz="-2625" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="29" b="30" c="36" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-4546" nay="-8511" naz="-2625" nbx="-4546" nby="-8511" nbz="-2625" ncx="-4546" ncy="-8511" ncz="-2625" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="25" b="29" c="35" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-6662" nay="-280" naz="7453" nbx="-6583" nby="-258" nbz="7523" ncx="-6662" ncy="-280" ncz="7453" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="35" b="31" c="25" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-6662" nay="-280" naz="7453" nbx="-6740" nby="-302" nbz="7382" ncx="-6662" ncy="-280" ncz="7453" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="30" b="26" c="32" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="3089" nay="-289" naz="-9506" nbx="3003" nby="-240" nbz="-9536" ncx="3089" ncy="-289" ncz="-9506" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="32" b="36" c="30" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="3089" nay="-289" naz="-9506" nbx="3176" nby="-339" nbz="-9476" ncx="3089" ncy="-289" ncz="-9506" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="38" b="37" c="43" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="2933" nay="9409" naz="-1693" nbx="2933" nby="9409" nbz="-1693" ncx="2933" ncy="9409" ncz="-1693" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="43" b="44" c="38" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="2933" nay="9409" naz="-1693" nbx="2933" nby="9409" nbz="-1693" ncx="2933" ncy="9409" ncz="-1693" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="44" b="43" c="47" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-8467" nay="-2100" naz="4889" nbx="-8467" nby="-2100" nbz="4889" ncx="-8467" ncy="-2100" ncz="4889" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="47" b="48" c="44" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-8467" nay="-2100" naz="4889" nbx="-8467" nby="-2100" nbz="4889" ncx="-8467" ncy="-2100" ncz="4889" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="48" b="47" c="41" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="4546" nay="-8511" naz="-2625" nbx="4546" nby="-8511" nbz="-2625" ncx="4546" ncy="-8511" ncz="-2625" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="41" b="42" c="48" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="4546" nay="-8511" naz="-2625" nbx="4546" nby="-8511" nbz="-2625" ncx="4546" ncy="-8511" ncz="-2625" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="37" b="41" c="47" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-3123" nay="-280" naz="-9496" nbx="-3223" nby="-258" nbz="-9463" ncx="-3123" ncy="-280" ncz="-9496" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="47" b="43" c="37" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-3123" nay="-280" naz="-9496" nbx="-3023" nby="-302" nbz="-9527" ncx="-3123" ncy="-280" ncz="-9496" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="42" b="38" c="44" red="192" green="192" blue="192" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="6688" nay="-289" naz="7429" nbx="6757" nby="-240" nbz="7368" ncx="6688" ncy="-289" ncz="7429" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="44" b="48" c="42" red="192" green="192" blue="192" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="6688" nay="-289" naz="7429" nbx="6619" nby="-339" nbz="7488" ncx="6688" ncy="-289" ncz="7429" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="18" b="17" c="30" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="30" b="41" c="18" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="30" b="29" c="42" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="42" b="41" c="30" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="53" b="49" c="50" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="8640" nay="-691" naz="-4988" nbx="8640" nby="-691" nbz="-4988" ncx="8640" ncy="-691" ncz="-4988" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="50" b="54" c="53" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="8640" nay="-691" naz="-4988" nbx="8640" nby="-691" nbz="-4988" ncx="8640" ncy="-691" ncz="-4988" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="59" b="55" c="56" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-691" naz="9976" nbx="0" nby="-691" nbz="9976" ncx="0" ncy="-691" ncz="9976" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="56" b="60" c="59" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-691" naz="9976" nbx="0" nby="-691" nbz="9976" ncx="0" ncy="-691" ncz="9976" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="65" b="61" c="62" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-8640" nay="-691" naz="-4988" nbx="-8640" nby="-691" nbz="-4988" ncx="-8640" ncy="-691" ncz="-4988" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="62" b="66" c="65" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-8640" nay="-691" naz="-4988" nbx="-8640" nby="-691" nbz="-4988" ncx="-8640" ncy="-691" ncz="-4988" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="70" b="67" c="68" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-748" naz="-9972" nbx="0" nby="-748" nbz="-9972" ncx="8636" ncy="-748" ncz="4986" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="68" b="71" c="70" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="8636" nay="-748" naz="4986" nbx="8636" nby="-748" nbz="4986" ncx="0" ncy="-748" ncz="-9972" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="71" b="68" c="69" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="8636" nay="-748" naz="4986" nbx="8636" nby="-748" nbz="4986" ncx="-8636" ncy="-748" ncz="4986" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="69" b="72" c="71" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-8636" nay="-748" naz="4986" nbx="-8636" nby="-748" nbz="4986" ncx="8636" ncy="-748" ncz="4986" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="72" b="69" c="67" red="128" green="128" blue="128" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-8636" nay="-748" naz="4986" nbx="-8636" nby="-748" nbz="4986" ncx="0" ncy="-748" ncz="-9972" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="67" b="70" c="72" red="128" green="128" blue="128" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-748" naz="-9972" nbx="0" nby="-748" nbz="-9972" ncx="-8636" ncy="-748" ncz="4986" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="79" b="70" c="71" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-100" naz="-9999" nbx="0" nby="-100" nbz="-10000" ncx="8660" ncy="-100" ncz="5000" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="71" b="80" c="79" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="8660" nay="-100" naz="5000" nbx="8660" nby="-100" nbz="5000" ncx="0" ncy="-100" ncz="-9999" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="80" b="71" c="72" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="8660" nay="-100" naz="5000" nbx="8660" nby="-100" nbz="5000" ncx="-8660" ncy="-100" ncz="5000" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="72" b="81" c="80" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="-8660" nay="-100" naz="5000" nbx="-8660" nby="-100" nbz="5000" ncx="8660" ncy="-100" ncz="5000" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="81" b="72" c="70" red="160" green="160" blue="160" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="-8660" nay="-100" naz="5000" nbx="-8660" nby="-100" nbz="5000" ncx="0" ncy="-100" ncz="-9999" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="70" b="79" c="81" red="160" green="160" blue="160" tax="0.5" tay="0.5" tbx="0.5" tby="0.0" tcx="0.0" tcy="0.0" nax="0" nay="-100" naz="-9999" nbx="0" nby="-100" nbz="-9999" ncx="-8660" ncy="-100" ncz="5000" luminosity="0" alpha="0" shininess="40" />
+    <triangle a="79" b="80" c="81" red="64" green="64" blue="64" tax="0.0" tay="0.0" tbx="0.0" tby="0.5" tcx="0.5" tcy="0.5" nax="0" nay="-10000" naz="0" nbx="0" nby="-10000" nbz="0" ncx="0" ncy="-10000" ncz="0" luminosity="0" alpha="0" shininess="40" />
+  </triangles>
+</EgomModel>

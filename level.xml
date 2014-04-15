@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<level>
+	<Players count="2">
+		<Player name="human" />
+		<Player name="computer" />
+	</Players>
+	
+	<Shaders source="shaders.xml" />
+	
+	<Classes source="classes.xml" />
+	
+	<Skybox class="deepspace" />
+	
+	<Spacecraft class="fecske" owner="human">
+		<position x="0.0" y="0.0" z="-10.0" />
+		<weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+		</weapons>
+		<propulsion class="fighter" />
+	</Spacecraft>
+	
+	<Spacecraft class="fecske" owner="human">
+		<position x="-0.75" y="2.0" z="-16.0" />
+		<weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+		</weapons>
+		<propulsion class="fighter" />
+	</Spacecraft>
+	
+	<Spacecraft class="fecske" owner="human">
+		<position x="-105.0" y="-15.0" z="-30.0" />
+		<weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+		</weapons>
+		<propulsion class="fighter" />
+	</Spacecraft>
+	
+	<Spacecraft class="delfin" owner="human">
+		<position x="5.0" y="0.0" z="-6.0" />
+		<propulsion class="fighter" />
+	</Spacecraft>
+	
+	<Spacecraft class="delfin" owner="human">
+		<position x="5.0" y="5.0" z="-16.0" />
+		<propulsion class="fighter" />
+	</Spacecraft>
+	
+	<Spacecraft class="delfin" owner="human">
+		<position x="5.0" y="5.0" z="-116.0" />
+		<propulsion class="fighter" />
+	</Spacecraft>
+	
+	<Spacecraft class="korvett" owner="human">
+		<position x="0.0" y="-8.0" z="-25.0" />
+		<weapons>
+			<weapon class="turret" />
+			<weapon class="turret" />
+		</weapons>
+		<propulsion class="corvette" />
+	</Spacecraft>
+	
+	<Spacecraft class="fregatt" owner="human">
+		<position x="20.0" y="-8.0" z="-35.0" />
+		<weapons>
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+		</weapons>
+		<propulsion class="frigate" />
+	</Spacecraft>
+	
+	<Spacecraft class="cirkalo" owner="human">
+		<position x="-30.0" y="10.0" z="-100.0" />
+		<weapons>
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+		</weapons>
+		<propulsion class="cruizer" />
+	</Spacecraft>
+</level>
