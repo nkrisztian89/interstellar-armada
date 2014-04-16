@@ -522,13 +522,13 @@ function controlCamera(camera) {
                 }
         }
     }
-    var inverseOrientation=transposed3(inverse3(matrix3from4(camera.orientation)));
-    var translation = matrix3Vector3Product(
+
+    if (camera.followedObject===undefined) {
+        var inverseOrientation=transposed3(inverse3(matrix3from4(camera.orientation)));
+        var translation = matrix3Vector3Product(
             camera.velocity,
             inverseOrientation
             );
-
-    if (camera.followedObject===undefined) {
         camera.position=
                 mul(
                         camera.position,
@@ -538,7 +538,7 @@ function controlCamera(camera) {
                                 translation[2]
                                 )
                         );
-    } else {
+    }/* else {
         camera.followPosition=
                 mul(
                         camera.followPosition,
@@ -548,7 +548,7 @@ function controlCamera(camera) {
                                 translation[2]
                                 )
                         );
-    }
+    }*/
     if (camera.followedObject===undefined) {
         camera.orientation=
                 mul(
@@ -564,7 +564,7 @@ function controlCamera(camera) {
                                 camera.angularVelocity[0]
                                 )
                         );
-    } else {
+    }/* else {
         camera.followOrientation=
                 mul(
                         mul(
@@ -579,7 +579,7 @@ function controlCamera(camera) {
                                 camera.angularVelocity[0]
                                 )
                         );
-    }
+    }*/
             
     if (currentlyPressedKeys[90]) { // z
             camera.setFOV(camera.fov-1);
@@ -590,7 +590,7 @@ function controlCamera(camera) {
     
     if (camera.followedObject!==undefined) {
         // look in direction y instead of z:
-        camera.orientation=
+        var newOrientation =
                 mul(
                         mul(
                                 matrix4from3(inverse3(matrix3from4(camera.followedObject.getOrientation()))),
@@ -598,6 +598,9 @@ function controlCamera(camera) {
                                 ),
                         camera.followOrientation
                         );
+        //var inverseNewOrientation=transposed3(inverse3(matrix3from4(newOrientation)));
+        //camera.angularVelocity = inverse4(mul(inverseNewOrientation,camera.orientation));
+        camera.orientation=newOrientation;
         var camPosition = 
                 mul(
                         mul(
@@ -606,12 +609,18 @@ function controlCamera(camera) {
                                 ),
                         camera.followedObject.getPosition()
                         );
-        camera.position=
+        var newPosition=
                 translationMatrix(
                         -camPosition[12],
                         -camPosition[13],
                         -camPosition[14]
                         );
+        var velocityMatrix = mul(translationMatrix(
+                newPosition[12]-camera.position[12],
+                newPosition[13]-camera.position[13],
+                newPosition[14]-camera.position[14]),camera.orientation);
+        camera.velocity = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
+        camera.position=newPosition;
     }
 }
 
@@ -620,6 +629,8 @@ function control(resourceCenter,scene,level) {
             controlCamera(scene.activeCamera);
 	} else {
             controlCamera(scene.activeCamera.followedCamera);
+            scene.activeCamera.velocity=scene.activeCamera.followedCamera.velocity;
+            scene.activeCamera.angularVelocity=scene.activeCamera.followedCamera.angularVelocity;
         }
         // pause game
 	if (currentlyPressedKeys[80]) { // p

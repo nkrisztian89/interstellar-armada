@@ -110,4 +110,22 @@
 			<uniform name="u_color" type="vec3" />
 		</uniforms>
 	</Shader>
+        
+        <Shader name="dust">
+		<vertex filename="shaders/dust.vert" />
+		<fragment filename="shaders/color.frag" />
+		<state>
+			<depthMask value="false" />
+		</state>
+		<attributes>
+			<attribute name="a_position" size="3" role="position" />
+		</attributes>
+		<uniforms>
+			<uniform name="u_modelMatrix" type="mat4" />
+			<uniform name="u_cameraMatrix" type="mat4" />
+			<uniform name="u_projMatrix" type="mat4" />
+			<uniform name="u_color" type="vec3" />
+                        <uniform name="u_shift" type="vec3" />
+		</uniforms>
+	</Shader>
 </Shaders>

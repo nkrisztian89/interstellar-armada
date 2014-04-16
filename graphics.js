@@ -671,6 +671,36 @@ PermanentParticle.prototype.render = function(resourceCenter,screenSize,lodConte
 	}
 };
 
+function DustParticle(shader,color,position) {
+	VisualObject.call(this,shader);
+	this.color=color;
+	this.position=position;
+        this.shift=[0.0,0.0,0.0];
+        
+        this.model = new EgomModel();
+        this.model.vertices.push([0.0,0.0,0.0]);
+        this.model.vertices.push([1.0,1.0,1.0]);
+        this.model.lines.push(new Line(0,1,color[0],color[1],color[2],1,0,0,1));
+	
+	var self = this;
+	
+	this.uniformValueFunctions["u_modelMatrix"] =   function() { return mul(self.position,self.getParentModelMatrix()); };
+        this.uniformValueFunctions["u_color"] =   function() { return self.color; };
+        this.uniformValueFunctions["u_shift"] =   function() { return self.shift; };
+}
+
+DustParticle.prototype = new VisualObject();
+DustParticle.prototype.constructor = DustParticle;
+
+DustParticle.prototype.insideViewFrustum = function(camera) {
+	return true;
+};
+
+DustParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
+        //alert("drawing dust!" + this.model.vertices.length + " - " + this.model.vertices[1][0] + "," + this.model.vertices[1][1] + "," + this.model.vertices[1][2]);
+	this.model.render(resourceCenter.gl,true);
+};
+
 function VertexBuffer(id,data,location,vectorSize) {
 	this.id=id;
 	this.data=data;
@@ -745,7 +775,13 @@ SceneCamera.prototype.update = function() {
                     (this.followedCamera.position[13]-this.adaptationStartPosition[13])*adaptationRate,
                     (this.followedCamera.position[14]-this.adaptationStartPosition[14])*adaptationRate
                     );
-            this.position=translate(this.adaptationStartPosition,trans);
+            var newPosition=translate(this.adaptationStartPosition,trans);
+            var velocityMatrix = mul(translationMatrix(
+                newPosition[12]-this.position[12],
+                newPosition[13]-this.position[13],
+                newPosition[14]-this.position[14]),this.orientation);
+            this.velocity = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
+            this.position=newPosition;
             this.orientation=correctOrthogonalMatrix(addMatrices4(
                 mulMatrix4Scalar(this.adaptationStartOrientation,1.0-adaptationRate),
                 mulMatrix4Scalar(this.followedCamera.orientation,adaptationRate)));

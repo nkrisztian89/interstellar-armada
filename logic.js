@@ -454,6 +454,39 @@ Spacecraft.prototype.simulate = function(dt) {
 	this.visualModel.orientation=this.physicalModel.orientation;
 };
 
+function Dust(resourceCenter,scene,position) {
+	this.visualModel = new DustParticle(
+		resourceCenter.getShader("dust"),
+                [0.5,0.5,0.5],
+		position
+		);
+		
+	scene.objects.push(this.visualModel);
+	
+	this.toBeDeleted = false;
+}
+
+Dust.prototype.simulate = function(camera) {
+    this.visualModel.shift=[-camera.velocity[0],-camera.velocity[1],-camera.velocity[2]];
+    if(this.visualModel.position[12]>-camera.position[12]+25.0) {
+        this.visualModel.position[12]-=50.0;
+    } else if(this.visualModel.position[12]<-camera.position[12]-25.0) {
+        this.visualModel.position[12]+=50.0;
+    }
+    if(this.visualModel.position[13]>-camera.position[13]+25.0) {
+        this.visualModel.position[13]-=50.0;
+    } else if(this.visualModel.position[13]<-camera.position[13]-25.0) {
+        this.visualModel.position[13]+=50.0;
+    }
+    if(this.visualModel.position[14]>-camera.position[14]+25.0) {
+        this.visualModel.position[14]-=50.0;
+    } else if(this.visualModel.position[14]<-camera.position[14]-25.0) {
+        this.visualModel.position[14]+=50.0;
+    }
+    this.visualModel.matrix=this.visualModel.position;
+    //document.getElementById("output").innerHTML+="<br/> "+this.visualModel.position[12]+" - "+camera.position[12];
+};
+
 function Level(resourceCenter,scene) {
 	this.players=new Array();
 	this.skyboxClasses=new Array();
@@ -464,6 +497,7 @@ function Level(resourceCenter,scene) {
 	this.skyboxes=new Array();
 	this.spacecrafts=new Array();
 	this.projectiles=new Array();
+        this.dust=new Array();
 	
 	this.resourceCenter=resourceCenter;
 	this.scene=scene;
@@ -846,7 +880,11 @@ Level.prototype.loadFromFile = function(filename) {
 				this.getWeaponClass(weaponTags[j].getAttribute("class")));
 		}
 		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(this.resourceCenter,this.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
-	}	
+	}
+        
+        for(var i=0;i<300;i++) {
+            this.dust.push(new Dust(this.resourceCenter,this.scene,translationMatrix(Math.random()*50-25.0,Math.random()*50-25.0,Math.random()*50-25.0)));
+        }
 };
 
 Level.prototype.tick = function(dt) {
@@ -866,6 +904,9 @@ Level.prototype.tick = function(dt) {
 		} else {
 			this.projectiles[i].simulate(dt,this.spacecrafts);
 		}
+	}
+        for (var i=0;i<this.dust.length;i++) {
+		this.dust[i].simulate(this.scene.activeCamera);
 	}
 };
 

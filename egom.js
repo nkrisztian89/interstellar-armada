@@ -68,7 +68,7 @@ function EgomModel(filename) {
 	}
 	
 	this.bufferStart = 0;
-	this.bufferStartLine = 0;
+	this.bufferStartLines = 0;
 }
 
 EgomModel.prototype.clear = function() {
@@ -80,7 +80,7 @@ EgomModel.prototype.clear = function() {
 	this.filename=null;
 	
 	this.bufferStart = 0;
-	this.bufferStartLine = 0;
+	this.bufferStartLines = 0;
 };
 
 EgomModel.prototype.loadFromFile = function(filename) {
