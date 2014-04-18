@@ -637,19 +637,6 @@ function control(resourceCenter,scene,level) {
 		alert("paused");
 	}
         
-        /*if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}*/
-        /*if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}*/
-        /*if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}*/
-        /*if(activeCameraIndex>0) {
-				level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-			}*/
-        
 	for(var i=0;i<keyPressEvents.length;i++) {
 		event = keyPressEvents[i];
                 // follow next camera

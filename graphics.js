@@ -6,18 +6,33 @@
  * @version 0.1
  */
 
-var modelsDrawn = [0,0,0,0];
-
+/**
+ * Creates a new Texture object.
+ * @class Represents a webGL texture resource
+ * @param {String} filename The name of file from which the texture resource 
+ * is to be loaded. The constructor itself does not initiate the loading.
+ */
 function Texture(filename) {
-	//alert("creating texture: "+filename);
 	this.filename=filename;
-	//alert("filename set to: "+this.filename);
 	this.id=-1;
 	this.image = new Image();
 }
 
+/**
+ * Initiates the loading of the texture from file and sets a callback for the
+ * finish of the loading to initiate loading the next texture from the resource
+ * center if such exists, otherwise to execute the callback passed in parameter.
+ * This is required to make sure all the textures are loaded by the time the
+ * final callback is executed, that is proceeding with any further steps already
+ * making use of the textures.
+ * @param {ResourceCenter} resourceCenter The resource center object where the
+ * subsequents texture resources to be loaded are stored.
+ * @param {number} index The index of the current texture resource in the array
+ * of textures.
+ * @param {function} callback The function to be executed after all textures
+ * have been loaded.
+ */
 Texture.prototype.chainLoad = function(resourceCenter,index,callback) {
-	//alert("loading texture: "+this.filename);
 	var self = resourceCenter.textures[index];
 	if(resourceCenter.textures.length-1===index) {
 		self.image.onload = callback;
@@ -27,8 +42,12 @@ Texture.prototype.chainLoad = function(resourceCenter,index,callback) {
 	self.image.src=self.filename;
 };
 
+/**
+ * Sets up the webGL resource for the texture within the provided GL context.
+ * Call only after the chainload has finished!
+ * @param {object} gl The webGL context.
+ */
 Texture.prototype.setup = function(gl) {
-	// Create a texture.
 	this.id = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, this.id);
 	
@@ -42,6 +61,10 @@ Texture.prototype.setup = function(gl) {
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
 };
 
+/**
+ * Sets up and returns a simple EgomModel that is suitable to be used for
+ * rendering Full Viewport Quads. (FVQ)
+ */
 function fvqModel() {
 	var result = new EgomModel();
 	result.vertices.push([-1,-1,1]);
@@ -55,6 +78,9 @@ function fvqModel() {
 	return result;
 }
 
+/**
+ * Sets up and returns a simple EgomModel that contains a two sided XY square.
+ */
 function squareModel() {
 	var result = new EgomModel();
 	result.vertices.push([-1,-1,0]);
@@ -70,6 +96,15 @@ function squareModel() {
 	return result;
 }
 
+/**
+ * Sets up and returns a simple EgomModel that is suitable for rendering
+ * energy projectiles by containing one square to serve as the side view and
+ * a set of intersecting squares that are perpendicular to the first one, to
+ * serve as the front view(s) of the projectile.
+ * @param {number[]} intersections A set of numbers between -1 and 1
+ * representing the points where the squares serving as the front view should 
+ * be created along the side view square.
+ */
 function projectileModel(intersections) {
 	var result = new EgomModel();
 	result.vertices.push([-1,-1,0]);
@@ -79,8 +114,6 @@ function projectileModel(intersections) {
 	
 	result.triangles.push(new Triangle(0,1,2, 1.0,1.0,1.0,1.0, 0,0, 0.0,0.5, 1.0,0.5, 1.0,0.0, 0,0,1,  0,0,1,  0,0,1)); 
 	result.triangles.push(new Triangle(2,3,0, 1.0,1.0,1.0,1.0, 0,0, 1.0,0.0, 0.0,0.0, 0.0,0.5, 0,0,1,  0,0,1,  0,0,1)); 
-	//result.triangles.push(new Triangle(3,2,1, 1.0,1.0,1.0,1.0, 0,0, 0.0,0.5, 1.0,0.5, 1.0,0.0, 0,0,-1, 0,0,-1, 0,0,-1)); 
-	//result.triangles.push(new Triangle(1,0,3, 1.0,1.0,1.0,1.0, 0,0, 1.0,0.0, 0.0,0.0, 0.0,0.5, 0,0,-1, 0,0,-1, 0,0,-1)); 
 	
 	for(var i=0;i<intersections.length;i++) {
 		result.vertices.push([1,intersections[i],-1]);
@@ -97,6 +130,15 @@ function projectileModel(intersections) {
 	return result;
 }
 
+/**
+ * Sets up and returns a simple EgomModel that contains a cuboid (XYZ-box) model 
+ * with the given properties.
+ * @param {number} width Size of the box along the X axis.
+ * @param {number} height Size of the box along the Y axis.
+ * @param {number} depth Size of the box along the Z axis.
+ * @param {number[]} color A vector containing the RGBA components of the 
+ * desired box color.
+ */
 function cuboidModel(width,height,depth,color) {
 	var result = new EgomModel();
 	// front
@@ -142,6 +184,14 @@ function cuboidModel(width,height,depth,color) {
 	return result;
 }
 
+/**
+ * Creates a new Cubemap object.
+ * @class Represents a webGL cubemapped texture resource
+ * @param {String} name The name of cubemap resource
+ * @param {String[]} imageURLs An array containing the URLs of the 6 faces of
+ * the cubemapped texture. The order of the pictures has to be X,Y,Z and within
+ * that, always positive first.
+ */
 function Cubemap(name,imageURLs) {
 	this.name=name;
 	this.imageURLs=imageURLs;
@@ -152,6 +202,23 @@ function Cubemap(name,imageURLs) {
 	}
 }
 
+/**
+ * Initiates the loading of one of the face textures of a cubemapped texture 
+ * object from file and sets a callback for the finish of the loading to 
+ * initiate loading the next face, the next cubemapped texture object from the
+ * resource center if such exists, otherwise to execute the callback passed in 
+ * parameter.
+ * This is required to make sure all the pictures are loaded by the time the
+ * final callback is executed, that is proceeding with any further steps already
+ * making use of the textures.
+ * @param {ResourceCenter} resourceCenter The resource center object where the
+ * subsequents cubemapped texture resources to be loaded are stored.
+ * @param {number} index The index of the current cubemap resource in the array
+ * of cubemaps.
+ * @param {number} face The index of the current face to load (0-5)
+ * @param {function} callback The function to be executed after all textures
+ * have been loaded.
+ */
 Cubemap.prototype.chainLoad = function(resourceCenter,index,face,callback) {
 	var self = this;
 	if(face<5) {
@@ -166,6 +233,12 @@ Cubemap.prototype.chainLoad = function(resourceCenter,index,face,callback) {
 	this.images[face].src=this.imageURLs[face];
 };
 
+/**
+ * Sets up the webGL resource for the cubemapped texture within the provided GL
+ * context.
+ * Call only after the chainload has finished!
+ * @param {object} gl The webGL context.
+ */
 Cubemap.prototype.setup = function(gl) {
 	// Create a texture.
 	this.id = gl.createTexture();
@@ -193,6 +266,17 @@ Cubemap.prototype.setup = function(gl) {
 	}
 };
 
+/**
+ * Creates a new ShaderAttribute object.
+ * @class A wrapper class for storing the attributes used in a given program, 
+ * so they can be automatically set based on their roles. 
+ * @param {string} name Name of the shader attribute.
+ * @param {number} size Size of the shader attribute: number of dimensions.
+ * @param {string} role Role of the shader attribute, based on which the
+ * appropriate buffer will be assigned to it to supply the values. Currently
+ * supported roles are: position, texCoord, normal, color, luminosity, 
+ * shininess.
+ */
 function ShaderAttribute(name,size,role) {
 	this.name=name;
 	this.size=size;
@@ -232,7 +316,7 @@ function ShaderVariableTypeFromString(type) {
 
 /**
  * Creates a new ShaderUniform.
- * @class ShaderUniform A class representing and wrapping a GLSL uniform 
+ * @class A class representing and wrapping a GLSL uniform 
  * variable.
  * @param {String} name The name of the uniform variable. Has to be the same
  * as the name specified in the GLSL source.
@@ -249,21 +333,25 @@ function ShaderUniform(name,type) {
  * Gets the location of the uniform variable in the specified GLSL program
  * within the specified GL context, and sets the location member of the class
  * to remember it.
- * @param gl The GL context.
- * @param program The GLSL shader program.
+ * @param {object} gl The GL context.
+ * @param {number} programID The GLSL shader program ID.
+ * @returns {number} The location ID of the uniform in the program.
  * */
-ShaderUniform.prototype.getAndSetLocation = function(gl,program) {
-	this.location=gl.getUniformLocation(program,this.name);
+ShaderUniform.prototype.getAndSetLocation = function(gl,programID) {
+	this.location=gl.getUniformLocation(programID,this.name);
         return this.location;
 };
 
 /**
  * Get the GL function that sets the uniform of the specified type at the
  * specified location to the specified value.
- * @param gl The GL context
- * @param location The location of the uniform
- * @param type The type of the uniform
- * @param value The value to set the uniform to
+ * @param {object} gl The GL context
+ * @param {number} location The location of the uniform
+ * @param {ShaderVariableTypes member} type The type of the uniform
+ * @param {object} value The value to set the uniform to (can be of different
+ * types)
+ * @returns {function} A function that executes the webGL query of setting the
+ * uniform to the specified value.
  */
 ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value) {
     switch(type) {
@@ -287,13 +375,30 @@ ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value) {
 /**
  * Sets the value of the shader in the specified GL context to the return value
  * of the passed value functio.
- * @param gl The GL context
+ * @param {object} gl The GL context
  * @param {function} valueFunction The function to calculate the uniform value
  */
 ShaderUniform.prototype.setValue = function(gl,valueFunction) {
 	ShaderUniform.prototype.getSetterFunction(gl,this.location,this.type,valueFunction())();
 };
 
+/**
+ * Creates a new Shader object. Does not perform anything besides setting the
+ * members.
+ * @class A wrapper class representing a webGL shader program.
+ * @param {string} name The name of the shader program ot can be referred to 
+ * with later.
+ * @param {string} vertexShaderFileName The name of the file containing the 
+ * vertex shader code.
+ * @param {string} fragmentShaderFileName The name of the file containing the
+ * fragment shader code.
+ * @param {boolean} depthMask Whether the depthmask should be turned on while
+ * rendering using this shader.
+ * @param {ShaderAttribute[]} attributes The list of attributes this shader
+ * has as an input.
+ * @param {ShaderUniform[]} uniforms The list of uniform variables this shader
+ * contains.
+ * */
 function Shader(name,vertexShaderFileName,fragmentShaderFileName,depthMask,attributes,uniforms) {
 	this.name=name;
 	this.vertexShaderFileName=vertexShaderFileName;
@@ -306,6 +411,13 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,depthMask,attri
 	this.id=-1;
 }
 
+/**
+ * Performs the full preparation of the webGL shader within the supplied GL
+ * context: dowloads the vertex and fragment shader files, compiles and links
+ * the code using webGL and saves the location IDs of the uniforms of the 
+ * shader.
+ * @param {object} gl The webGL context to use for webGL operations.
+ */
 Shader.prototype.setup = function(gl) {
 	var shaderSource = null;
 	

@@ -11,7 +11,7 @@
  * @param {function} callback The function to call after loading the scripts
  */
 function loadScripts(urls,callback) {
-    // Adding the script tag to the head as suggested before
+    // We add a new script tag inside the head of the document
     var head = document.getElementsByTagName('head')[0];
     var script = document.createElement('script');
     script.type = 'text/javascript';
@@ -21,10 +21,10 @@ function loadScripts(urls,callback) {
     // There are several events for cross browser compatibility.
     if(urls.length>0) {
 		script.onload = function() {loadScripts(urls,callback);};
-		//script.onreadystatechange = loadScripts(urls,callback);
+		script.onreadystatechange = function() {loadScripts(urls,callback);};
 	} else {
 		script.onload = callback;
-		//script.onreadystatechange = callback;
+		script.onreadystatechange = callback;
 	}
 
     // Fire the loading
@@ -40,57 +40,72 @@ function start() {
 	loadScripts(["matrices.js","egom.js","graphics.js","physics.js","logic.js","grid.js","control.js"],loadResources);
 }
 
+// temporary test variable indicating the angle of directional lighting
 var ang=0.7;
+// temporary test variable indicating whether the direction of directional
+// lighting should keep turning around
 var lightTurn=true;
 
+// test variable: number of random goals the AI controllers get at start
 var num_test_goals=10;
+// test variable: number of random fighters generated
 var num_test_fighters=40;
+// test variable: number of random ships generated
 var num_test_ships=15;
+// test variable: indicating the range within the random positions of fighters
+// and ships and the destinations of their goals are generated
 var mapSize=250;
 
+/**
+ * Main function loading the external resources required by the program. Builds
+ * the test scene populated with random ships and fighters controlled by AI.
+ * */
 function loadResources() {
 	var canvas = document.getElementById("canvas");
 	var progress = document.getElementById("progress");
-	
+
 	var resourceCenter = new ResourceCenter(canvas,new LODContext(4,[0,30,60,250,400]));
 	
-	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,undefined);
+	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true);
 	//var pipScene = new Scene(canvas.width*2/3,canvas.height/4,canvas.width/3,canvas.height/2,false,[true,true,true,true],[0,0.5,0,0.5],true);
 	
+        // setting uniform valuables that are universal to all scene graph 
+        // objects, so any shader used in the scene will be able to get their
+        // values
 	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(ang),Math.sin(ang),0.0]; };
 	mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.position,mainScene.activeCamera.orientation); };
 	mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspective; };
 	mainScene.uniformValueFunctions['u_eyePos'] = function() 
 		{
-			//var eyeOffset = vector3Matrix3Product([0,0,-mainScene.activeCamera.focusDistance],transposed3(inverse3(matrix3from4(mainScene.activeCamera.orientation))));
 			var eyePos = [
-				-mainScene.activeCamera.position[12],//+eyeOffset[0],
-				-mainScene.activeCamera.position[13],//+eyeOffset[1],
-				-mainScene.activeCamera.position[14]//+eyeOffset[2]
+				-mainScene.activeCamera.position[12],
+				-mainScene.activeCamera.position[13],
+				-mainScene.activeCamera.position[14]
 				];
-			//document.getElementById("output").innerHTML+=" |EP: "+vector3ToString(eyePos)+" | ";
 			return [eyePos[0],eyePos[1],eyePos[2]]; 
 		};
 	
 	resourceCenter.scenes.push(mainScene);
 	//resourceCenter.scenes.push(pipScene);
+        //pipScene.objects.push(new VisualObject(fregattModel,metalTexture,greenShader,0.0045,translationMatrix(0.0,0.0,-2.0),true));
 	
 	var test_level = new Level(resourceCenter,mainScene);
 	
+        // this loads the level and all needed other resources (models, shaders)
+        // from the XML files
 	test_level.loadFromFile("level.xml");
 	
 	progress.value=50;
 	document.getElementById("status").innerHTML="loading additional configuration...";
 	
-	//test_level.spacecrafts[0].physicalModel.orientation=
-	//	rotationMatrix4([1,0,0],-3.1415/2);
-	
+        // we turn the cruizer around so it looks nicer at start :)
 	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientation=
 		mul(
 			rotationMatrix4([0,1,0],3.1415/4),
 			rotationMatrix4([0,0,1],3.1415/2)
 			);
 	
+        // adding random fighters to the scene to test performance
 	for(var i=0;i<num_test_fighters;i++) {
 		test_level.spacecrafts.push(
 			new Spacecraft(
@@ -107,6 +122,7 @@ function loadResources() {
 		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,test_level.getPropulsionClass("fighter"));
 	}
 	
+        // adding random ships to the scene to test performance
 	for(var i=0;i<num_test_ships;i++) {
 		test_level.spacecrafts.push(
 			new Spacecraft(
@@ -123,27 +139,33 @@ function loadResources() {
 		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,test_level.getPropulsionClass("frigate"));
 	}
 		
+        // adding cameras to each fighter and ship so they can  be followed
+        /// TODO: manage camera loading from XML
 	for(var i=0;i<test_level.spacecrafts.length;i++) {	
 		resourceCenter.cameras.push(new Camera(canvas.width/canvas.height,60,false,true,test_level.spacecrafts[i].visualModel));
-	}
-	//resourceCenter.cameras[1].followPosition=translationMatrix(0,-5,2);
+        }
+        // interceptor 1
 	resourceCenter.cameras[1].followPosition=translationMatrix(0,-6,1);
+        // interceptor 2
 	resourceCenter.cameras[2].followPosition=translationMatrix(0,-4,6);
 	resourceCenter.cameras[2].followOrientation=rotationMatrix4([1,0,0],-45);
-	//resourceCenter.cameras[4].followPosition=translationMatrix(0,-5,2);
+        // bomber 1
 	resourceCenter.cameras[4].followPosition=translationMatrix(0,-10,2);
+        // corvette
 	resourceCenter.cameras[7].followPosition=translationMatrix(0,-6,3);
-	//resourceCenter.cameras[8].followPosition=translationMatrix(0,0,4);
+        // frigate
 	resourceCenter.cameras[8].followPosition=translationMatrix(0,-3,4);
-	//resourceCenter.cameras[8].followPosition=translationMatrix(0,5,-0.1);
+        // cruizer
 	resourceCenter.cameras[9].followPosition=translationMatrix(0,-25,20);
 	
+        // adding random goals to the AI for testing
 	for(var i=0;i<test_level.spacecrafts.length;i++) {
 		for(var j=0;j<num_test_goals;j++) {
 			test_level.spacecrafts[i].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
 		}
 	}
 	
+        // setting up the position and direction of the main camera
 	mainScene.activeCamera.position=
 		mul(
 			mainScene.activeCamera.position,
@@ -156,13 +178,6 @@ function loadResources() {
 			rotationMatrix4([1,0,0],3.1415/4)
 		);
 	
-	//test_level.spacecrafts[0].controller=new FighterController(test_level.spacecrafts[0],new GraphicsContext(resourceCenter,mainScene),new LogicContext(test_level));
-	//for(var i=1;i<test_level.spacecrafts.length;i++) {
-	//	test_level.spacecrafts[i].controller=new FighterController(test_level.spacecrafts[i],new GraphicsContext(resourceCenter,mainScene),new LogicContext(test_level));
-	//}
-	
-	//pipScene.objects.push(new VisualObject(fregattModel,metalTexture,greenShader,0.0045,translationMatrix(0.0,0.0,-2.0),true));
-	
 	var freq = 30;
 	
 	progress.value=75;
@@ -170,8 +185,8 @@ function loadResources() {
 	resourceCenter.init(canvas,freq);
 	
 	document.onkeydown = handleKeyDown;
-    document.onkeyup = handleKeyUp;
-    document.onkeypress = handleKeyPress;
+        document.onkeyup = handleKeyUp;
+        document.onkeypress = handleKeyPress;
 	
 	setInterval(function()
 		{
