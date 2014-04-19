@@ -640,34 +640,33 @@ VisualObject.prototype.assignUniforms = function(gl) {
  */
 VisualObject.prototype.isInsideViewFrustum = function(camera) {
 	var baseMatrix =
-		mul(mul(
-			this.getCascadeScalingMatrix(),
 			translationMatrixv(getPositionVector4(
 				mul(
 					translationMatrixv(this.getCascadePositionVector()),
 					camera.matrix
 					)
-				))
-			),
-			camera.perspectiveMatrix);
+				));
+        var fullMatrix =
+               mul(this.getCascadeScalingMatrix(),mul(baseMatrix,camera.perspectiveMatrix));
 		
-	var position = vector4Matrix4Product([0.0,0.0,0.0,1.0],baseMatrix);
+	var position = vector4Matrix4Product([0.0,0.0,0.0,1.0],fullMatrix);
 	position = [position[0]/position[3],position[1]/position[3],position[2]/position[3]];
-	var zOffsetPosition = vector4Matrix4Product([0.0,0.0,-this.getSize(),1.0],baseMatrix);
+	var zOffsetPosition = vector4Matrix4Product([0.0,0.0,-this.getSize(),1.0],fullMatrix);
 	var zOffset = (zOffsetPosition[2]/zOffsetPosition[3]);
 		
 	// frustum culling: back and front
 	if (((zOffset>-1.0) && (zOffset<1.0)) || ((position[2]>-1.0) && (position[2]<1.0))) {
-		var xyOffsetPosition = vector4Matrix4Product([this.getSize(),this.getSize(),0.0,1.0],baseMatrix);
-		xyOffsetPosition = [xyOffsetPosition[0]/xyOffsetPosition[3],xyOffsetPosition[1]/xyOffsetPosition[3],xyOffsetPosition[2]/xyOffsetPosition[3]];
-		var xOffset = xyOffsetPosition[0]-position[0];
-		var yOffset = xyOffsetPosition[1]-position[1];
-		
-		// frustum culling: sides
-		if ((position[0]+xOffset>-1)&&(position[0]-xOffset<1)&&
-			(position[1]+yOffset>-1)&&(position[1]-yOffset<1)) {
-			this.visibleWidth=xOffset;
-			this.visibleHeight=yOffset;
+                
+                // frustum culling: sides
+                var xOffsetPosition = vector4Matrix4Product([0.0,0.0,0.0,1.0],mul(mul(baseMatrix,translationMatrix(this.getSize()*this.getCascadeScalingMatrix()[0],0.0,0.0)),camera.perspectiveMatrix));
+		var offset = Math.abs(xOffsetPosition[0]/xOffsetPosition[3]-position[0]);
+                //alert(offset);
+		if (
+                    !(((position[0]+offset<-1)&&(position[0]-offset<-1))||((position[0]+offset>1)&&(position[0]-offset>1)))&&
+		    !(((position[1]+offset<-1)&&(position[1]-offset<-1))||((position[1]+offset>1)&&(position[1]-offset>1)))
+                    ) {
+			this.visibleWidth=offset;
+			this.visibleHeight=offset;
 			return true;
 		} else {
                         this.visibleWidth=0;
