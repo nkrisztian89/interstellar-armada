@@ -191,7 +191,29 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/Billboard.html">Billboard</a></li>
+	
+	<li><a href="../symbols/Camera.html">Camera</a></li>
+	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
+	
+	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	
+	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
+	
+	<li><a href="../symbols/FVQ.html">FVQ</a></li>
+	
+	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/LODContext.html">LODContext</a></li>
+	
+	<li><a href="../symbols/Mesh.html">Mesh</a></li>
+	
+	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
+	
+	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
+	
+	<li><a href="../symbols/Scene.html">Scene</a></li>
 	
 	<li><a href="../symbols/SceneCamera.html">SceneCamera</a></li>
 	
@@ -201,7 +223,11 @@ ul.inheritsList
 	
 	<li><a href="../symbols/ShaderUniform.html">ShaderUniform</a></li>
 	
+	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
+	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
+	
+	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
 	
@@ -260,6 +286,132 @@ as a node, contains references to its parent and subnodes as well.
 
 <!-- ============================== methods summary ======================== -->
 			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class VisualObject.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a></b>(gl)
+								</div>
+								<div class="description">Assigns all uniforms in the shader program associated with this object that
+this object has a value function for, using the appropriate webGL calls.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a></b>(parent, resourceCenter, scene, screenSize, depthMaskPhase)
+								</div>
+								<div class="description">Renders the object and all its subnodes.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a></b>()
+								</div>
+								<div class="description">Returns the vector that represents the position of the visual
+object in the scene, taking into account the transformations of its parent
+classes.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a></b>()
+								</div>
+								<div class="description">Returns the scaling matrix that represents the size of the
+visual object in the scene, taking into account the scaling of its parent
+classes.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a></b>()
+								</div>
+								<div class="description">Returns the model transformation matrix of the visual object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a></b>()
+								</div>
+								<div class="description">Returns the rotation matrix describing the orientation of the 
+visual object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a></b>()
+								</div>
+								<div class="description">Return the model transformation matrix of the parent of the visual object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a></b>()
+								</div>
+								<div class="description">Returns the translation matrix describing the position of the 
+visual object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a></b>()
+								</div>
+								<div class="description">Returns the scaling matrix describing the size of the 
+visual object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#getSize">getSize</a></b>()
+								</div>
+								<div class="description">Returns the numerical size of the visual object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#isInsideViewFrustum">isInsideViewFrustum</a></b>(camera)
+								</div>
+								<div class="description">Checks if the object is inside the viewing frustum of the passed camera,
+taking into account the parents of the object as well.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+			
 <!-- ============================== events summary ======================== -->
 			
 
@@ -287,7 +439,7 @@ as a node, contains references to its parent and subnodes as well.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								 <b>shader</b>
+								<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span>  <b>shader</b>
 								
 							</dt>
 								<dd>The shader that should be active while rendering this object</dd>
@@ -309,6 +461,394 @@ as a node, contains references to its parent and subnodes as well.
 
 <!-- ============================== method details ========================= -->		
 			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="assignUniforms"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>assignUniforms</b>(gl)
+					
+					</div>
+					<div class="description">
+						Assigns all uniforms in the shader program associated with this object that
+this object has a value function for, using the appropriate webGL calls.
+The matching is done based on the names of the uniforms.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{object}</span> <b>gl</b>
+									
+								</dt>
+								<dd>The webGL context to use</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="cascadeRender"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>cascadeRender</b>(parent, resourceCenter, scene, screenSize, depthMaskPhase)
+					
+					</div>
+					<div class="description">
+						Renders the object and all its subnodes.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/VisualObject.html">VisualObject</a>}</span> <b>parent</b>
+									
+								</dt>
+								<dd>The rendering parent to which the position,
+orientation and scaling of the object is relative.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
+									
+								</dt>
+								<dd>The resource center that holds the
+necessary rendering resources .</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/Scene.html">Scene</a>}</span> <b>scene</b>
+									
+								</dt>
+								<dd>The scene within which the object is located.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{number}</span> <b>screenSize</b>
+									
+								</dt>
+								<dd>The size of the rendering viewport in pixels,
+to determine the actual drawn size of the object (for dynamic LOD)</dd>
+							
+								<dt>
+									<span class="light fixedFont">{boolean}</span> <b>depthMaskPhase</b>
+									
+								</dt>
+								<dd>Whether we are drawing in the depthmask
+enabled or disabled phase (renders only phase matches with the type of the
+shared the object has)</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getCascadePositionVector"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>getCascadePositionVector</b>()
+					
+					</div>
+					<div class="description">
+						Returns the vector that represents the position of the visual
+object in the scene, taking into account the transformations of its parent
+classes.
+* @returns {number[]} A 3 element float vector indicating the position.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getCascadeScalingMatrix"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>getCascadeScalingMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the scaling matrix that represents the size of the
+visual object in the scene, taking into account the scaling of its parent
+classes.
+* @returns {Float32Array} A 4x4 scaling matrix indicating the size.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getModelMatrix"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>getModelMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the model transformation matrix of the visual object. 
+Actual calculations have to be implemented in children classes to include
+translation, rotation, scaling as well as cascading operations based on
+relative positioning.
+* @returns {Float32Array} A 4x4 identity matrix.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getOrientationMatrix"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>getOrientationMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the rotation matrix describing the orientation of the 
+visual object. Actual calculations have to be implemented in children 
+classes, this one always returns an identity matrix.
+* @returns {Float32Array} A 4x4 identity matrix.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getParentModelMatrix"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>getParentModelMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Return the model transformation matrix of the parent of the visual object.
+* @returns {Float32Array} A 4x4 transformation matrix of the parent.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getPositionMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>getPositionMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the translation matrix describing the position of the 
+visual object. Actual calculations have to be implemented in children 
+classes, this one always returns an identity matrix.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> A 4x4 identity matrix.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getScalingMatrix"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>getScalingMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the scaling matrix describing the size of the 
+visual object. Actual calculations have to be implemented in children 
+classes, this one always returns an identity matrix.
+* @returns {Float32Array} A 4x4 identity matrix.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getSize"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{number}</span>
+					<b>getSize</b>()
+					
+					</div>
+					<div class="description">
+						Returns the numerical size of the visual object.
+Actual calculations have to be implemented in children 
+classes, this one always returns 1.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{number}</span> Always 1.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="isInsideViewFrustum"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{boolean}</span>
+					<b>isInsideViewFrustum</b>(camera)
+					
+					</div>
+					<div class="description">
+						Checks if the object is inside the viewing frustum of the passed camera,
+taking into account the parents of the object as well. Also sets the view
+width and height members of the object.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> <b>camera</b>
+									
+								</dt>
+								<dd>The camera the frustum of which is to be checked</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{boolean}</span> Whether the object is inside the frustum.</dd>
+							
+							</dl>
+						
+						
+						
+
+					
+				
+			
 			
 <!-- ============================== event details ========================= -->		
 			
@@ -320,7 +860,7 @@ as a node, contains references to its parent and subnodes as well.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Fri Apr 18 2014 21:28:33 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 19 2014 03:35:45 GMT+0300 (EEST)
 		</div>
 	</body>
 </html>

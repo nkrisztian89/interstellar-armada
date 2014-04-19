@@ -71,23 +71,23 @@ FighterController.prototype.control = function() {
 	
 	var physicalModel = this.controlledEntity.physicalModel;
 		
-	var speed2=translationDistance2(physicalModel.velocity,nullMatrix4());
+	var speed2=translationDistance2(physicalModel.velocityMatrix,nullMatrix4());
 	var speed=Math.sqrt(speed2);
 	
-	var directionVector = [physicalModel.orientation[4],physicalModel.orientation[5],physicalModel.orientation[6]];
-	var velocityVector = speed>0.0?normalizeVector([physicalModel.velocity[12],physicalModel.velocity[13],physicalModel.velocity[14]]):[0,0,0];
+	var directionVector = [physicalModel.orientationMatrix[4],physicalModel.orientationMatrix[5],physicalModel.orientationMatrix[6]];
+	var velocityVector = speed>0.0?normalizeVector([physicalModel.velocityMatrix[12],physicalModel.velocityMatrix[13],physicalModel.velocityMatrix[14]]):[0,0,0];
 	var forwardSpeed = vectorDotProduct(velocityVector,directionVector)*speed;
-	var relativeVelocity = mul(
-		physicalModel.velocity,
+	var relativeVelocityMatrix = mul(
+		physicalModel.velocityMatrix,
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
 	
-	var yawAxis = [physicalModel.orientation[8],physicalModel.orientation[9],physicalModel.orientation[10]];
-	var pitchAxis = [physicalModel.orientation[0],physicalModel.orientation[1],physicalModel.orientation[2]];
+	var yawAxis = [physicalModel.orientationMatrix[8],physicalModel.orientationMatrix[9],physicalModel.orientationMatrix[10]];
+	var pitchAxis = [physicalModel.orientationMatrix[0],physicalModel.orientationMatrix[1],physicalModel.orientationMatrix[2]];
 	
 	var turningMatrix = mul(
 		mul(
-			physicalModel.orientation,
-			physicalModel.angularVelocity
+			physicalModel.orientationMatrix,
+			physicalModel.angularVelocityMatrix
 			),
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
 	
@@ -131,20 +131,20 @@ FighterController.prototype.control = function() {
 		}
 	}
 	if(this.flightMode===this.FM_COMPENSATED) {
-		if(relativeVelocity[12]<-0.0001) {
-			this.controlledEntity.addThrusterBurnCapped("slideRight",0.5,this.controlledEntity.getNeededBurnForAcc(-relativeVelocity[12]));
-		} else if(relativeVelocity[12]>0.0001) {
-			this.controlledEntity.addThrusterBurnCapped("slideLeft",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocity[12]));
+		if(relativeVelocityMatrix[12]<-0.0001) {
+			this.controlledEntity.addThrusterBurnCapped("slideRight",0.5,this.controlledEntity.getNeededBurnForAcc(-relativeVelocityMatrix[12]));
+		} else if(relativeVelocityMatrix[12]>0.0001) {
+			this.controlledEntity.addThrusterBurnCapped("slideLeft",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocityMatrix[12]));
 		}
-		if(relativeVelocity[14]<-0.0001) {
-			this.controlledEntity.addThrusterBurnCapped("raise",0.5,this.controlledEntity.getNeededBurnForAcc(-relativeVelocity[14]));
-		} else if(relativeVelocity[14]>0.0001) {
-			this.controlledEntity.addThrusterBurnCapped("lower",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocity[14]));
+		if(relativeVelocityMatrix[14]<-0.0001) {
+			this.controlledEntity.addThrusterBurnCapped("raise",0.5,this.controlledEntity.getNeededBurnForAcc(-relativeVelocityMatrix[14]));
+		} else if(relativeVelocityMatrix[14]>0.0001) {
+			this.controlledEntity.addThrusterBurnCapped("lower",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocityMatrix[14]));
 		}
-		if(relativeVelocity[13]<this.intendedSpeed-0.0001) {
-			this.controlledEntity.addThrusterBurnCapped("forward",0.5,this.controlledEntity.getNeededBurnForAcc(this.intendedSpeed-relativeVelocity[13]));
-		} else if(relativeVelocity[13]>this.intendedSpeed+0.0001) {
-			this.controlledEntity.addThrusterBurnCapped("reverse",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocity[13]-this.intendedSpeed));
+		if(relativeVelocityMatrix[13]<this.intendedSpeed-0.0001) {
+			this.controlledEntity.addThrusterBurnCapped("forward",0.5,this.controlledEntity.getNeededBurnForAcc(this.intendedSpeed-relativeVelocityMatrix[13]));
+		} else if(relativeVelocityMatrix[13]>this.intendedSpeed+0.0001) {
+			this.controlledEntity.addThrusterBurnCapped("reverse",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocityMatrix[13]-this.intendedSpeed));
 		}
 	}
 	if (currentlyPressedKeys[37]) { // left
@@ -239,8 +239,8 @@ FighterController.prototype.control = function() {
 	}
 };
 
-function Goal(position) {
-	this.position = position;
+function Goal(positionMatrix) {
+	this.positionMatrix = positionMatrix;
 }
 
 function AIController(controlledEntity,graphicsContext,logicContext) {
@@ -256,24 +256,24 @@ AIController.prototype.constructor = AIController;
 AIController.prototype.control = function() {
 	var physicalModel = this.controlledEntity.physicalModel;
 	
-	var speed2=translationDistance2(physicalModel.velocity,nullMatrix4());
+	var speed2=translationDistance2(physicalModel.velocityMatrix,nullMatrix4());
 	var speed=Math.sqrt(speed2);
 	var acc=this.controlledEntity.propulsion.class.thrust/physicalModel.mass;
 	var turnAcc=this.controlledEntity.propulsion.class.angularThrust/physicalModel.mass;
 	
-	var directionVector = normalizeVector([physicalModel.orientation[4],physicalModel.orientation[5],physicalModel.orientation[6]]);
-	var velocityVector = speed>0.0?normalizeVector([physicalModel.velocity[12],physicalModel.velocity[13],physicalModel.velocity[14]]):[0,0,0];
-	var futureOrientation = mul(physicalModel.orientation,physicalModel.angularVelocity);
-	var futureDirectionVector = normalizeVector([futureOrientation[4],futureOrientation[5],futureOrientation[6]]);
-	var turningDirection = normalizeVector([physicalModel.angularVelocity[4],physicalModel.angularVelocity[5],physicalModel.angularVelocity[6]]);
-	var turningAngle = angleDifferenceOfUnitVectors(turningDirection,[0,1,0]);
+	var directionVector = normalizeVector([physicalModel.orientationMatrix[4],physicalModel.orientationMatrix[5],physicalModel.orientationMatrix[6]]);
+	var velocityVector = speed>0.0?normalizeVector([physicalModel.velocityMatrix[12],physicalModel.velocityMatrix[13],physicalModel.velocityMatrix[14]]):[0,0,0];
+	var futureOrientationMatrix = mul(physicalModel.orientationMatrix,physicalModel.angularVelocityMatrix);
+	var futureDirectionVector = normalizeVector([futureOrientationMatrix[4],futureOrientationMatrix[5],futureOrientationMatrix[6]]);
+	var turningDirectionVector = normalizeVector([physicalModel.angularVelocityMatrix[4],physicalModel.angularVelocityMatrix[5],physicalModel.angularVelocityMatrix[6]]);
+	var turningAngle = angleDifferenceOfUnitVectors(turningDirectionVector,[0,1,0]);
 	var turningAngle2 = turningAngle*turningAngle;
 	var turningAxis = normalizeVector(crossProduct(futureDirectionVector,directionVector));
 	
 	var turningMatrix = mul(
 		mul(
-			physicalModel.orientation,
-			physicalModel.angularVelocity
+			physicalModel.orientationMatrix,
+			physicalModel.angularVelocityMatrix
 			),
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
 	
@@ -282,12 +282,12 @@ AIController.prototype.control = function() {
 	// only proceed of the craft has a goal to reach
 	if(this.goals.length>0) {
 		
-		var distance2=translationDistance2(this.goals[0].position,physicalModel.position);
+		var distance2=translationDistance2(this.goals[0].positionMatrix,physicalModel.positionMatrix);
 		var distance=Math.sqrt(distance2);
 		var toGoal = normalizeVector([
-			this.goals[0].position[12]-physicalModel.position[12],
-			this.goals[0].position[13]-physicalModel.position[13],
-			this.goals[0].position[14]-physicalModel.position[14]
+			this.goals[0].positionMatrix[12]-physicalModel.positionMatrix[12],
+			this.goals[0].positionMatrix[13]-physicalModel.positionMatrix[13],
+			this.goals[0].positionMatrix[14]-physicalModel.positionMatrix[14]
 			]);
 		var speedTowardsGoal = vectorDotProduct(velocityVector,toGoal)*speed;
 		var speedTowardsGoal2 = speedTowardsGoal*speedTowardsGoal;
@@ -296,7 +296,7 @@ AIController.prototype.control = function() {
 		//var requiredTurningAxis = normalizeVector(crossProduct(toGoal,directionVector));
 		//var turningAngleTowardsGoal = vectorDotProduct(turningAxis,requiredTurningAxis)*turningAngle;
 		
-		var relativeToGoal = vector3Matrix3Product(toGoal,matrix3from4(physicalModel.modelMatrixInverse));
+		var relativeVectorToGoal = vector3Matrix3Product(toGoal,matrix3from4(physicalModel.modelMatrixInverse));
 		
 		// if the craft is already at the target location, remove the goal
 		if(distance<0.5) {
@@ -322,13 +322,13 @@ AIController.prototype.control = function() {
 				}
 			}
 			
-			var relativeToGoalXY = normalizeVector2D([relativeToGoal[0],relativeToGoal[1]]);
+			var relativeToGoalXY = normalizeVector2D([relativeVectorToGoal[0],relativeVectorToGoal[1]]);
 			var yawAngleDifference = angleDifferenceOfUnitVectors2D([0,1],relativeToGoalXY);
 			var turningVectorXY = normalizeVector2D([turningMatrix[4],turningMatrix[5]]);
 			var yawAngularVelocity = angleDifferenceOfUnitVectors2D([0,1],turningVectorXY);	
 			
 			if ((yawAngleDifference>0.01)||(Math.abs(turningMatrix[4])>0.0001)) {
-				if(relativeToGoal[0]>0.0001) {
+				if(relativeVectorToGoal[0]>0.0001) {
 					if(
 						(turningMatrix[4]<this.TURNING_LIMIT)&&
 						(yawAngularVelocity*yawAngularVelocity<(2*yawAngleDifference*turnAcc))
@@ -337,7 +337,7 @@ AIController.prototype.control = function() {
 					} else if(turningMatrix[4]>0.0001) {
 						this.controlledEntity.addThrusterBurnCapped("yawLeft",0.5,this.controlledEntity.getNeededBurnForAngularAcc(yawAngularVelocity));
 					}
-				} else if(relativeToGoal[0]<-0.0001) {
+				} else if(relativeVectorToGoal[0]<-0.0001) {
 					if(
 						(turningMatrix[4]>-this.TURNING_LIMIT)&&
 						(yawAngularVelocity*yawAngularVelocity<(2*yawAngleDifference*turnAcc))
@@ -349,13 +349,13 @@ AIController.prototype.control = function() {
 				}
 			}
 			
-			var relativeToGoalYZ = normalizeVector2D([relativeToGoal[1],relativeToGoal[2]]);
+			var relativeToGoalYZ = normalizeVector2D([relativeVectorToGoal[1],relativeVectorToGoal[2]]);
 			var pitchAngleDifference = angleDifferenceOfUnitVectors2D([1,0],relativeToGoalYZ);
 			var turningVectorYZ = normalizeVector2D([turningMatrix[5],turningMatrix[6]]);
 			var pitchAngularVelocity = angleDifferenceOfUnitVectors2D([1,0],turningVectorYZ);	
 			
 			if ((pitchAngleDifference>0.01)||(Math.abs(turningMatrix[6])>0.0001)) {
-				if(relativeToGoal[2]>0.0001) {
+				if(relativeVectorToGoal[2]>0.0001) {
 					if(
 						(turningMatrix[6]<this.TURNING_LIMIT)&&
 						(pitchAngularVelocity*pitchAngularVelocity<(2*pitchAngleDifference*turnAcc))
@@ -364,7 +364,7 @@ AIController.prototype.control = function() {
 					} else if(turningMatrix[6]>0.0001) {
 						this.controlledEntity.addThrusterBurnCapped("pitchDown",0.5,this.controlledEntity.getNeededBurnForAngularAcc(pitchAngularVelocity));
 					}
-				} else if(relativeToGoal[2]<-0.0001) {
+				} else if(relativeVectorToGoal[2]<-0.0001) {
 					if(
 						(turningMatrix[6]>-this.TURNING_LIMIT)&&
 						(yawAngularVelocity*yawAngularVelocity<(2*yawAngleDifference*turnAcc))
@@ -411,132 +411,128 @@ function controlCamera(camera) {
     if(camera.controllableDirection) {
         if (currentlyPressedKeys[17]&&currentlyPressedKeys[37]) {
                 //ctrl left
-                if (camera.angularVelocity[1]<camera.maxTurn) {
-                                camera.angularVelocity[1]+=camera.angularAcceleration;
+                if (camera.angularVelocityVector[1]<camera.maxTurn) {
+                                camera.angularVelocityVector[1]+=camera.angularAcceleration;
                 }
         } else {
-                if (camera.angularVelocity[1]>0) {
-                        camera.angularVelocity[1]-=
-                                Math.min(camera.angularAcceleration,camera.angularVelocity[1]);
+                if (camera.angularVelocityVector[1]>0) {
+                        camera.angularVelocityVector[1]-=
+                                Math.min(camera.angularAcceleration,camera.angularVelocityVector[1]);
                 }
         }
         if (currentlyPressedKeys[17]&&currentlyPressedKeys[39]) {
                 // ctrl Right
-                if (camera.angularVelocity[1]>-camera.maxTurn) {
-                        camera.angularVelocity[1]-=camera.angularAcceleration;
+                if (camera.angularVelocityVector[1]>-camera.maxTurn) {
+                        camera.angularVelocityVector[1]-=camera.angularAcceleration;
                 }
         } else {
-                if (camera.angularVelocity[1]<0) {
-                        camera.angularVelocity[1]+=
-                                Math.min(camera.angularAcceleration,-camera.angularVelocity[1]);
+                if (camera.angularVelocityVector[1]<0) {
+                        camera.angularVelocityVector[1]+=
+                                Math.min(camera.angularAcceleration,-camera.angularVelocityVector[1]);
                 }
         }
         if (currentlyPressedKeys[17]&&currentlyPressedKeys[38]) {
                 //ctrl up
-                if (camera.angularVelocity[0]<camera.maxTurn) {
-                                camera.angularVelocity[0]+=camera.angularAcceleration;
+                if (camera.angularVelocityVector[0]<camera.maxTurn) {
+                                camera.angularVelocityVector[0]+=camera.angularAcceleration;
                 }
         } else {
-                if (camera.angularVelocity[0]>0) {
-                        camera.angularVelocity[0]-=
-                                Math.min(camera.angularAcceleration,camera.angularVelocity[0]);
+                if (camera.angularVelocityVector[0]>0) {
+                        camera.angularVelocityVector[0]-=
+                                Math.min(camera.angularAcceleration,camera.angularVelocityVector[0]);
                 }
         }
         if (currentlyPressedKeys[17]&&currentlyPressedKeys[40]) {
                 // ctrl down
-                if (camera.angularVelocity[0]>-camera.maxTurn) {
-                        camera.angularVelocity[0]-=camera.angularAcceleration;
+                if (camera.angularVelocityVector[0]>-camera.maxTurn) {
+                        camera.angularVelocityVector[0]-=camera.angularAcceleration;
                 }
         } else {
-                if (camera.angularVelocity[0]<0) {
-                        camera.angularVelocity[0]+=
-                                Math.min(camera.angularAcceleration,-camera.angularVelocity[0]);
+                if (camera.angularVelocityVector[0]<0) {
+                        camera.angularVelocityVector[0]+=
+                                Math.min(camera.angularAcceleration,-camera.angularVelocityVector[0]);
                 }
         }
     }
     if(camera.controllablePosition) {
         if (currentlyPressedKeys[37]) {
                 // Left
-                if (camera.velocity[0]<camera.maxSpeed) {
-                        camera.velocity[0]+=camera.acceleration;
+                if (camera.velocityVector[0]<camera.maxSpeed) {
+                        camera.velocityVector[0]+=camera.acceleration;
                 }
         } else {
-                if (camera.velocity[0]>0) {
-                        camera.velocity[0]-=
-                                Math.min(camera.acceleration,camera.velocity[0]);
+                if (camera.velocityVector[0]>0) {
+                        camera.velocityVector[0]-=
+                                Math.min(camera.acceleration,camera.velocityVector[0]);
                 }
         }
         if (currentlyPressedKeys[39]) {
                 // Right
-                if (camera.velocity[0]>-camera.maxSpeed) {
-                        camera.velocity[0]-=camera.acceleration;
+                if (camera.velocityVector[0]>-camera.maxSpeed) {
+                        camera.velocityVector[0]-=camera.acceleration;
                 }
         } else {
-                if (camera.velocity[0]<0) {
-                        camera.velocity[0]+=
-                                Math.min(camera.acceleration,-camera.velocity[0]);
+                if (camera.velocityVector[0]<0) {
+                        camera.velocityVector[0]+=
+                                Math.min(camera.acceleration,-camera.velocityVector[0]);
                 }
         }
         if (currentlyPressedKeys[34]) {
                 // Page down
-                if (camera.velocity[1]<camera.maxSpeed) {
-                        camera.velocity[1]+=camera.acceleration;
+                if (camera.velocityVector[1]<camera.maxSpeed) {
+                        camera.velocityVector[1]+=camera.acceleration;
                 }
         } else {
-                if (camera.velocity[1]>0) {
-                        camera.velocity[1]-=
-                                Math.min(camera.acceleration,camera.velocity[1]);
+                if (camera.velocityVector[1]>0) {
+                        camera.velocityVector[1]-=
+                                Math.min(camera.acceleration,camera.velocityVector[1]);
                 }
         }
         if (currentlyPressedKeys[33]) {
                 // Page up
-                if (camera.velocity[1]>-camera.maxSpeed) {
-                        camera.velocity[1]-=camera.acceleration;
+                if (camera.velocityVector[1]>-camera.maxSpeed) {
+                        camera.velocityVector[1]-=camera.acceleration;
                 }
         } else {
-                if (camera.velocity[1]<0) {
-                        camera.velocity[1]+=
-                                Math.min(camera.acceleration,-camera.velocity[1]);
+                if (camera.velocityVector[1]<0) {
+                        camera.velocityVector[1]+=
+                                Math.min(camera.acceleration,-camera.velocityVector[1]);
                 }
         }
         if (currentlyPressedKeys[38]) {
                 // Up
-                if (camera.velocity[2]<camera.maxSpeed) {
-                        camera.velocity[2]+=camera.acceleration;
+                if (camera.velocityVector[2]<camera.maxSpeed) {
+                        camera.velocityVector[2]+=camera.acceleration;
                 }
         } else {
-                if (camera.velocity[2]>0) {
-                        camera.velocity[2]-=
-                                Math.min(camera.acceleration,camera.velocity[2]);
+                if (camera.velocityVector[2]>0) {
+                        camera.velocityVector[2]-=
+                                Math.min(camera.acceleration,camera.velocityVector[2]);
                 }
         }
         if (currentlyPressedKeys[40]) {
                 // Down
-                if (camera.velocity[2]>-camera.maxSpeed) {
-                        camera.velocity[2]-=camera.acceleration;
+                if (camera.velocityVector[2]>-camera.maxSpeed) {
+                        camera.velocityVector[2]-=camera.acceleration;
                 }
         } else {
-                if (camera.velocity[2]<0) {
-                        camera.velocity[2]+=
-                                Math.min(camera.acceleration,-camera.velocity[2]);
+                if (camera.velocityVector[2]<0) {
+                        camera.velocityVector[2]+=
+                                Math.min(camera.acceleration,-camera.velocityVector[2]);
                 }
         }
     }
 
     if (camera.followedObject===undefined) {
-        var inverseOrientation=transposed3(inverse3(matrix3from4(camera.orientation)));
-        var translation = matrix3Vector3Product(
-            camera.velocity,
-            inverseOrientation
+        var inverseOrientationMatrix=transposed3(inverse3(matrix3from4(camera.orientationMatrix)));
+        var translationVector = matrix3Vector3Product(
+            camera.velocityVector,
+            inverseOrientationMatrix
             );
-        camera.position=
+        camera.positionMatrix=
                 mul(
-                        camera.position,
-                        translationMatrix(
-                                translation[0],
-                                translation[1],
-                                translation[2]
-                                )
+                        camera.positionMatrix,
+                        translationMatrixv(translationVector)
                         );
     }/* else {
         camera.followPosition=
@@ -550,18 +546,18 @@ function controlCamera(camera) {
                         );
     }*/
     if (camera.followedObject===undefined) {
-        camera.orientation=
+        camera.orientationMatrix=
                 mul(
                         mul(
-                                camera.orientation,
+                                camera.orientationMatrix,
                                 rotationMatrix4(
                                         [0,1,0],
-                                        camera.angularVelocity[1]
+                                        camera.angularVelocityVector[1]
                                         )
                                 ),
                         rotationMatrix4(
                                 [1,0,0],
-                                camera.angularVelocity[0]
+                                camera.angularVelocityVector[0]
                                 )
                         );
     }/* else {
@@ -590,37 +586,37 @@ function controlCamera(camera) {
     
     if (camera.followedObject!==undefined) {
         // look in direction y instead of z:
-        var newOrientation =
+        var newOrientationMatrix =
                 mul(
                         mul(
-                                matrix4from3(inverse3(matrix3from4(camera.followedObject.getOrientation()))),
+                                matrix4from3(inverse3(matrix3from4(camera.followedObject.getOrientationMatrix()))),
                                 rotationMatrix4([1,0,0],3.1415/2)
                                 ),
-                        camera.followOrientation
+                        camera.followOrientationMatrix
                         );
         //var inverseNewOrientation=transposed3(inverse3(matrix3from4(newOrientation)));
         //camera.angularVelocity = inverse4(mul(inverseNewOrientation,camera.orientation));
-        camera.orientation=newOrientation;
-        var camPosition = 
+        camera.orientationMatrix=newOrientationMatrix;
+        var camPositionMatrix = 
                 mul(
                         mul(
-                                camera.followPosition,
-                                camera.followedObject.getOrientation()
+                                camera.followPositionMatrix,
+                                camera.followedObject.getOrientationMatrix()
                                 ),
-                        camera.followedObject.getPosition()
+                        camera.followedObject.getPositionMatrix()
                         );
-        var newPosition=
+        var newPositionMatrix=
                 translationMatrix(
-                        -camPosition[12],
-                        -camPosition[13],
-                        -camPosition[14]
+                        -camPositionMatrix[12],
+                        -camPositionMatrix[13],
+                        -camPositionMatrix[14]
                         );
         var velocityMatrix = mul(translationMatrix(
-                newPosition[12]-camera.position[12],
-                newPosition[13]-camera.position[13],
-                newPosition[14]-camera.position[14]),camera.orientation);
-        camera.velocity = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
-        camera.position=newPosition;
+                newPositionMatrix[12]-camera.positionMatrix[12],
+                newPositionMatrix[13]-camera.positionMatrix[13],
+                newPositionMatrix[14]-camera.positionMatrix[14]),camera.orientationMatrix);
+        camera.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
+        camera.positionMatrix=newPositionMatrix;
     }
 }
 
@@ -629,8 +625,8 @@ function control(resourceCenter,scene,level) {
             controlCamera(scene.activeCamera);
 	} else {
             controlCamera(scene.activeCamera.followedCamera);
-            scene.activeCamera.velocity=scene.activeCamera.followedCamera.velocity;
-            scene.activeCamera.angularVelocity=scene.activeCamera.followedCamera.angularVelocity;
+            scene.activeCamera.velocityVector=scene.activeCamera.followedCamera.velocityVector;
+            scene.activeCamera.angularVelocityVector=scene.activeCamera.followedCamera.angularVelocityVector;
         }
         // pause game
 	if (currentlyPressedKeys[80]) { // p
@@ -641,13 +637,13 @@ function control(resourceCenter,scene,level) {
 		event = keyPressEvents[i];
                 // follow next camera
 		if (getChar(event) === 'c') {	
-			activeCameraIndex=(activeCameraIndex+1)%resourceCenter.cameras.length;
-			scene.activeCamera.followCamera(resourceCenter.cameras[activeCameraIndex]);
+			activeCameraIndex=(activeCameraIndex+1)%scene.cameras.length;
+			scene.activeCamera.followCamera(scene.cameras[activeCameraIndex]);
 		}
                 // follow previous camera
 		if (getChar(event) === 'x') {
-			activeCameraIndex=(activeCameraIndex-1)%resourceCenter.cameras.length;
-                        scene.activeCamera.followCamera(resourceCenter.cameras[activeCameraIndex]);
+			activeCameraIndex=(activeCameraIndex-1)%scene.cameras.length;
+                        scene.activeCamera.followCamera(scene.cameras[activeCameraIndex]);
 		}
                 // set control to manual
                 if (getChar(event) === 'm') {
@@ -690,7 +686,7 @@ function control(resourceCenter,scene,level) {
         scene.activeCamera.update();
 	scene.activeCamera.matrix =
 		mul(
-			scene.activeCamera.position,
-			scene.activeCamera.orientation
+			scene.activeCamera.positionMatrix,
+			scene.activeCamera.orientationMatrix
 		);
 }

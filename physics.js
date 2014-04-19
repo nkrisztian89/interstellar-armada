@@ -10,10 +10,10 @@ function Torque(strength,axis,duration) {
 	this.duration=duration;
 }
 
-function Body(position,orientation,width,height,depth) {
-	this.position=position;
-	this.orientation=orientation;
-	this.modelMatrixInverse=inverse4(mul(this.orientation,this.position));
+function Body(positionMatrix,orientationMatrix,width,height,depth) {
+	this.positionMatrix=positionMatrix;
+	this.orientationMatrix=orientationMatrix;
+	this.modelMatrixInverse=inverse4(mul(this.orientationMatrix,this.positionMatrix));
 	this.width=width;
 	this.height=height;
 	this.depth=depth;
@@ -22,17 +22,17 @@ function Body(position,orientation,width,height,depth) {
 	this.halfDepth=depth/2;
 }
 
-function PhysicalObject(mass,size,position,orientation,initialVelocity,bodies) {
+function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVelocityMatrix,bodies) {
 	this.mass=mass;
 	this.size=size;
 	this.sizeSquared=size*size;
-	this.position=position;
-	this.orientation=orientation;
-	this.modelMatrixInverse=inverse4(mul(this.orientation,this.position));
+	this.positionMatrix=positionMatrix;
+	this.orientationMatrix=orientationMatrix;
+	this.modelMatrixInverse=inverse4(mul(this.orientationMatrix,this.positionMatrix));
 	this.timeSinceLastMatrixCorrection=0;
 	
-	this.velocity=initialVelocity;
-	this.angularVelocity=identityMatrix4();
+	this.velocityMatrix=initialVelocityMatrix;
+	this.angularVelocityMatrix=identityMatrix4();
 	
 	this.forces=new Array();
 	this.torques=new Array();
@@ -44,7 +44,7 @@ function PhysicalObject(mass,size,position,orientation,initialVelocity,bodies) {
 PhysicalObject.prototype.calculateBodySize = function() {
 	this.bodySize=0;
 	for(var i=0;i<this.bodies.length;i++) {
-		var bodyPos = getPositionVector(this.bodies[i].position);
+		var bodyPos = getPositionVector(this.bodies[i].positionMatrix);
 		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
 		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
 		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,-this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
@@ -57,12 +57,12 @@ PhysicalObject.prototype.calculateBodySize = function() {
 	this.bodySize*=1/this.size;
 };
 
-PhysicalObject.prototype.checkHit = function(position,direction,range) {
-	if ((Math.abs(position[0]-this.position[12])<this.bodySize)&&
-		(Math.abs(position[1]-this.position[13])<this.bodySize)&&
-		(Math.abs(position[2]-this.position[14])<this.bodySize)) {
+PhysicalObject.prototype.checkHit = function(positionVector,direction,range) {
+	if ((Math.abs(positionVector[0]-this.positionMatrix[12])<this.bodySize)&&
+		(Math.abs(positionVector[1]-this.positionMatrix[13])<this.bodySize)&&
+		(Math.abs(positionVector[2]-this.positionMatrix[14])<this.bodySize)) {
 			
-		var relativePos = vector4Matrix4Product(position,this.modelMatrixInverse);
+		var relativePos = vector4Matrix4Product(positionVector,this.modelMatrixInverse);
 		var result=false;
 		for(var i=0;(result===false)&&(i<this.bodies.length);i++) {
 			var posRelativeToBody = vector4Matrix4Product(relativePos,this.bodies[i].modelMatrixInverse);
@@ -76,38 +76,18 @@ PhysicalObject.prototype.checkHit = function(position,direction,range) {
 };
 
 PhysicalObject.prototype.correctMatrices = function() {
-        this.orientation = correctOrthogonalMatrix(this.orientation);
-	/*var vx=normalizeVector([this.orientation[0],this.orientation[1],this.orientation[2]]);
-	var vy=normalizeVector([this.orientation[4],this.orientation[5],this.orientation[6]]);
-	var vz=crossProduct(vx,vy);
-	vy=crossProduct(vz,vx);
-	this.orientation=new Float32Array([
-		vx[0],vx[1],vx[2],0.0,
-		vy[0],vy[1],vy[2],0.0,
-		vz[0],vz[1],vz[2],0.0,
-		0.0,  0.0,  0.0,  1.0]);*/
-	
-        this.angularVelocity = correctOrthogonalMatrix(this.angularVelocity);
-	/*vx=normalizeVector([this.angularVelocity[0],this.angularVelocity[1],this.angularVelocity[2]]);
-	vy=normalizeVector([this.angularVelocity[4],this.angularVelocity[5],this.angularVelocity[6]]);
-	vz=crossProduct(vx,vy);
-	vy=crossProduct(vz,vx);
-	this.angularVelocity=new Float32Array([
-		vx[0],vx[1],vx[2],0.0,
-		vy[0],vy[1],vy[2],0.0,
-		vz[0],vz[1],vz[2],0.0,
-		0.0,  0.0,  0.0,  1.0]);*/
-		
+        this.orientationMatrix = correctOrthogonalMatrix(this.orientationMatrix);
+        this.angularVelocityMatrix = correctOrthogonalMatrix(this.angularVelocityMatrix);	
 	this.timeSinceLastMatrixCorrection=0;
 };	
 
 PhysicalObject.prototype.simulate = function(dt) {
 	// calculate acceleration from forces
-	var acceleration=identityMatrix4();
+	var accelerationMatrix=identityMatrix4();
 	for(var i=0;i<this.forces.length;i++) {
 		var factor = this.forces[i].strength*Math.min(dt,this.forces[i].duration)/this.mass;
-		acceleration = mul(
-			acceleration,
+		accelerationMatrix = mul(
+			accelerationMatrix,
 			translationMatrix(
 				factor*this.forces[i].direction[0],
 				factor*this.forces[i].direction[1],
@@ -121,11 +101,11 @@ PhysicalObject.prototype.simulate = function(dt) {
 	}
 	
 	// calculate angular acceleration from torques
-	var angularAcc=identityMatrix4();
+	var angularAccMatrix=identityMatrix4();
 	for(var i=0;i<this.torques.length;i++) {
 		var factor = this.torques[i].strength*Math.min(dt,this.torques[i].duration)/this.mass;
-		angularAcc = mul(
-			angularAcc,
+		angularAccMatrix = mul(
+			angularAccMatrix,
 			rotationMatrix4(this.torques[i].axis,factor));
 		this.torques[i].duration=Math.max(this.torques[i].duration-dt,0.0);
 	}
@@ -133,12 +113,12 @@ PhysicalObject.prototype.simulate = function(dt) {
 	while((this.torques.length>0)&&(this.torques[0].duration<=0)) {
 		this.torques.shift();
 	}
-	this.velocity=mul(this.velocity,acceleration);
-	this.angularVelocity=mul(this.angularVelocity,angularAcc);
+	this.velocityMatrix=mul(this.velocityMatrix,accelerationMatrix);
+	this.angularVelocityMatrix=mul(this.angularVelocityMatrix,angularAccMatrix);
 	
-	this.position=mul(this.position,this.velocity);
-	this.orientation=mul(this.orientation,this.angularVelocity);
-	this.modelMatrixInverse=inverse4(mul(this.orientation,this.position));
+	this.positionMatrix=mul(this.positionMatrix,this.velocityMatrix);
+	this.orientationMatrix=mul(this.orientationMatrix,this.angularVelocityMatrix);
+	this.modelMatrixInverse=inverse4(mul(this.orientationMatrix,this.positionMatrix));
 	
 	this.timeSinceLastMatrixCorrection+=dt;
 	if(this.timeSinceLastMatrixCorrection>=10000) {

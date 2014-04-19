@@ -45,7 +45,7 @@ Texture.prototype.chainLoad = function(resourceCenter,index,callback) {
 /**
  * Sets up the webGL resource for the texture within the provided GL context.
  * Call only after the chainload has finished!
- * @param {object} gl The webGL context.
+ * @param {WebGLRenderingContext} gl The webGL context.
  */
 Texture.prototype.setup = function(gl) {
 	this.id = gl.createTexture();
@@ -64,6 +64,7 @@ Texture.prototype.setup = function(gl) {
 /**
  * Sets up and returns a simple EgomModel that is suitable to be used for
  * rendering Full Viewport Quads. (FVQ)
+ * @returns {EgomModel} An FVQ model.
  */
 function fvqModel() {
 	var result = new EgomModel();
@@ -80,6 +81,7 @@ function fvqModel() {
 
 /**
  * Sets up and returns a simple EgomModel that contains a two sided XY square.
+ * @returns {EgomModel} An XY square model.
  */
 function squareModel() {
 	var result = new EgomModel();
@@ -104,6 +106,7 @@ function squareModel() {
  * @param {number[]} intersections A set of numbers between -1 and 1
  * representing the points where the squares serving as the front view should 
  * be created along the side view square.
+ * @returns {EgomModel} A projectile model of intersecting squares.
  */
 function projectileModel(intersections) {
 	var result = new EgomModel();
@@ -138,6 +141,7 @@ function projectileModel(intersections) {
  * @param {number} depth Size of the box along the Z axis.
  * @param {number[]} color A vector containing the RGBA components of the 
  * desired box color.
+ * @returns {EgomModel} A cuboid model.
  */
 function cuboidModel(width,height,depth,color) {
 	var result = new EgomModel();
@@ -182,6 +186,20 @@ function cuboidModel(width,height,depth,color) {
 	}
 		
 	return result;
+}
+
+/**
+ * Sets up and returns a simple EgomModel that contains a two vertices connected
+ * with a line for drawing dust particles.
+ * @param {number[]} color The RGB components of the color to use for the line.
+ * @returns {EgomModel} A dust particle model.
+ */
+function dustModel(color) {
+    var result = new EgomModel();
+    result.vertices.push([0.0,0.0,0.0]);
+    result.vertices.push([1.0,1.0,1.0]);
+    result.lines.push(new Line(0,1,color[0],color[1],color[2],1,0,0,1));
+    return result;
 }
 
 /**
@@ -237,7 +255,7 @@ Cubemap.prototype.chainLoad = function(resourceCenter,index,face,callback) {
  * Sets up the webGL resource for the cubemapped texture within the provided GL
  * context.
  * Call only after the chainload has finished!
- * @param {object} gl The webGL context.
+ * @param {WebGLRenderingContext} gl The webGL context.
  */
 Cubemap.prototype.setup = function(gl) {
 	// Create a texture.
@@ -333,7 +351,7 @@ function ShaderUniform(name,type) {
  * Gets the location of the uniform variable in the specified GLSL program
  * within the specified GL context, and sets the location member of the class
  * to remember it.
- * @param {object} gl The GL context.
+ * @param {WebGLRenderingContext} gl The GL context.
  * @param {number} programID The GLSL shader program ID.
  * @returns {number} The location ID of the uniform in the program.
  * */
@@ -345,7 +363,7 @@ ShaderUniform.prototype.getAndSetLocation = function(gl,programID) {
 /**
  * Get the GL function that sets the uniform of the specified type at the
  * specified location to the specified value.
- * @param {object} gl The GL context
+ * @param {WebGLRenderingContext} gl The GL context
  * @param {number} location The location of the uniform
  * @param {ShaderVariableTypes member} type The type of the uniform
  * @param {object} value The value to set the uniform to (can be of different
@@ -374,13 +392,28 @@ ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value) {
 
 /**
  * Sets the value of the shader in the specified GL context to the return value
- * of the passed value functio.
- * @param {object} gl The GL context
+ * of the passed value function.
+ * @param {WebGLRenderingContext} gl The GL context
  * @param {function} valueFunction The function to calculate the uniform value
  */
 ShaderUniform.prototype.setValue = function(gl,valueFunction) {
 	ShaderUniform.prototype.getSetterFunction(gl,this.location,this.type,valueFunction())();
 };
+
+/**
+ * Creates a new vertex buffer object.
+ * @class A wrapper object that represents a webGL vertex buffer object.
+ * @param {number} id The ID of the vertex buffer in its webGL context.
+ * @param {} data The data that has to be loaded to the vertex buffer.
+ * @param {number} location The location ID of the VBO in its webGL context.
+ * @param {number} vectorSize The number of components in one element of te VBO.
+ */
+function VertexBuffer(id,data,location,vectorSize) {
+	this.id=id;
+	this.data=data;
+	this.location=location;
+	this.vectorSize=vectorSize;
+}
 
 /**
  * Creates a new Shader object. Does not perform anything besides setting the
@@ -416,7 +449,7 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,depthMask,attri
  * context: dowloads the vertex and fragment shader files, compiles and links
  * the code using webGL and saves the location IDs of the uniforms of the 
  * shader.
- * @param {object} gl The webGL context to use for webGL operations.
+ * @param {WebGLRenderingContext} gl The webGL context to use for webGL operations.
  */
 Shader.prototype.setup = function(gl) {
 	var shaderSource = null;
@@ -449,15 +482,25 @@ Shader.prototype.setup = function(gl) {
 };
 
 /**
+ * Binds all the vertex attribute buffers of the shader program.
+ * @param {WebGLRenderingContext} gl The webGL context to use.
+ */
+Shader.prototype.bindBuffers = function(gl) {
+	for(var i=0;i<this.attributes.length;i++) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffers[i].id);
+		gl.vertexAttribPointer(this.vertexBuffers[i].location, this.vertexBuffers[i].vectorSize, gl.FLOAT, false, 0, 0);
+	}
+};
+
+/**
  * Creates a new VisualObject.
  * @class The parent class of all objects to be rendered in the scene graph such
  * as full viewport quads, shaded meshes, billboards or particle systems. Serves
  * as a node, contains references to its parent and subnodes as well.
- * @param shader The shader that should be active while rendering this object
+ * @param {Shader} shader The shader that should be active while rendering this object
  */
 function VisualObject(shader) {
 	this.shader = shader;
-	this.camera = null;
 	this.uniformValueFunctions = new Array();
 	
 	this.toBeDeleted=false;
@@ -471,53 +514,100 @@ function VisualObject(shader) {
 	this.visibleHeight=0;
 }
 
-VisualObject.prototype.getPosition = function() {
+/**
+ * Returns the translation matrix describing the position of the 
+ * visual object. Actual calculations have to be implemented in children 
+ * classes, this one always returns an identity matrix.
+ * @returns {Float32Array} A 4x4 identity matrix.
+ */
+VisualObject.prototype.getPositionMatrix = function() {
 	return identityMatrix4();
 };
 
-VisualObject.prototype.getOrientation = function() {
+/**
+ * Returns the rotation matrix describing the orientation of the 
+ * visual object. Actual calculations have to be implemented in children 
+ * classes, this one always returns an identity matrix.
+ * * @returns {Float32Array} A 4x4 identity matrix.
+ */
+VisualObject.prototype.getOrientationMatrix = function() {
 	return identityMatrix4();
 };
 
-VisualObject.prototype.getScale = function() {
+/**
+ * Returns the scaling matrix describing the size of the 
+ * visual object. Actual calculations have to be implemented in children 
+ * classes, this one always returns an identity matrix.
+ * * @returns {Float32Array} A 4x4 identity matrix.
+ */
+VisualObject.prototype.getScalingMatrix = function() {
 	return identityMatrix4();
 };
 
+/**
+ * Returns the numerical size of the visual object.
+ * Actual calculations have to be implemented in children 
+ * classes, this one always returns 1.
+ * @returns {number} Always 1.
+ */
 VisualObject.prototype.getSize = function() {
 	return 1;
 };
 
+/**
+ * Returns the model transformation matrix of the visual object. 
+ * Actual calculations have to be implemented in children classes to include
+ * translation, rotation, scaling as well as cascading operations based on
+ * relative positioning.
+ * * @returns {Float32Array} A 4x4 identity matrix.
+ */
 VisualObject.prototype.getModelMatrix = function() {
 	return identityMatrix4();
 };
 
+/**
+ * Returns the vector that represents the position of the visual
+ * object in the scene, taking into account the transformations of its parent
+ * classes.
+ * * @returns {number[]} A 3 element float vector indicating the position.
+ */
 VisualObject.prototype.getCascadePositionVector = function() {
 	if(this.renderParent!==null) {
 		return vectorAdd3(
 			this.renderParent.getCascadePositionVector(),
 			vector3Matrix4Product(
 				getPositionVector(
-					this.getPosition()
+					this.getPositionMatrix()
 					),
 				mul(
-					this.renderParent.getScale(),
-					this.renderParent.getOrientation()
+					this.renderParent.getScalingMatrix(),
+					this.renderParent.getOrientationMatrix()
 					)
 				)
 			);
 	} else {
-		return getPositionVector(this.getPosition());
+		return getPositionVector(this.getPositionMatrix());
 	}
 };
 
-VisualObject.prototype.getCascadeScale = function() {
+/**
+ * Returns the scaling matrix that represents the size of the
+ * visual object in the scene, taking into account the scaling of its parent
+ * classes.
+ * * @returns {Float32Array} A 4x4 scaling matrix indicating the size.
+ */
+VisualObject.prototype.getCascadeScalingMatrix = function() {
 	if(this.renderParent!==null) {
-		return mul(this.renderParent.getCascadeScale(),this.getScale());
+		return mul(this.renderParent.getCascadeScalingMatrix(),this.getScalingMatrix());
 	} else {
-		return this.getScale();
+		return this.getScalingMatrix();
 	}
 };
 
+/**
+ * Return the model transformation matrix of the parent of the visual object.
+ * * @returns {Float32Array} A 4x4 transformation matrix of the parent.
+ */
 VisualObject.prototype.getParentModelMatrix = function() {
 	if(this.renderParent!==null) {
 		return this.renderParent.getModelMatrix();
@@ -526,6 +616,12 @@ VisualObject.prototype.getParentModelMatrix = function() {
 	}
 };
 
+/**
+ * Assigns all uniforms in the shader program associated with this object that
+ * this object has a value function for, using the appropriate webGL calls.
+ * The matching is done based on the names of the uniforms.
+ * @param {WebGLRenderingContext} gl The webGL context to use
+ */
 VisualObject.prototype.assignUniforms = function(gl) {
 	for(var i=0;i<this.shader.uniforms.length;i++) {
 		if(this.uniformValueFunctions[this.shader.uniforms[i].name]!==undefined) {
@@ -535,10 +631,17 @@ VisualObject.prototype.assignUniforms = function(gl) {
 };
 
 // if inside frustum, also sets visible width and height properties
-VisualObject.prototype.insideViewFrustum = function(camera) {
+/**
+ * Checks if the object is inside the viewing frustum of the passed camera,
+ * taking into account the parents of the object as well. Also sets the view
+ * width and height members of the object.
+ * @param {Camera} camera The camera the frustum of which is to be checked
+ * @returns {boolean} Whether the object is inside the frustum.
+ */
+VisualObject.prototype.isInsideViewFrustum = function(camera) {
 	var baseMatrix =
 		mul(mul(
-			this.getCascadeScale(),
+			this.getCascadeScalingMatrix(),
 			translationMatrixv(getPositionVector4(
 				mul(
 					translationMatrixv(this.getCascadePositionVector()),
@@ -546,7 +649,7 @@ VisualObject.prototype.insideViewFrustum = function(camera) {
 					)
 				))
 			),
-			camera.perspective);
+			camera.perspectiveMatrix);
 		
 	var position = vector4Matrix4Product([0.0,0.0,0.0,1.0],baseMatrix);
 	position = [position[0]/position[3],position[1]/position[3],position[2]/position[3]];
@@ -567,49 +670,90 @@ VisualObject.prototype.insideViewFrustum = function(camera) {
 			this.visibleHeight=yOffset;
 			return true;
 		} else {
+                        this.visibleWidth=0;
+			this.visibleHeight=0;
 			return false;
 		}
 	} else {
+                this.visibleWidth=0;
+		this.visibleHeight=0;
 		return false;
 	}
 };
 
-// renders the object and all its subnodes
-VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,screenSize,lodContext,depthMask) {
+/**
+ * Renders the object and all its subnodes.
+ * @param {VisualObject} parent The rendering parent to which the position,
+ * orientation and scaling of the object is relative.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * necessary rendering resources .
+ * @param {Scene} scene The scene within which the object is located.
+ * @param {number} screenSize The size of the rendering viewport in pixels,
+ * to determine the actual drawn size of the object (for dynamic LOD)
+ * @param {boolean} depthMaskPhase Whether we are drawing in the depthmask
+ * enabled or disabled phase (renders only phase matches with the type of the
+ * shared the object has)
+ * */ 
+VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,screenSize,depthMaskPhase) {
 	if(this.visible) {
 		this.renderParent=parent;
-		if((this.shader.depthMask===depthMask)&&(this.insideViewFrustum(scene.activeCamera))) {
+		if((this.shader.depthMask===depthMaskPhase)&&(this.isInsideViewFrustum(scene.activeCamera))) {
 			resourceCenter.setCurrentShader(this.shader,scene);
 			this.assignUniforms(resourceCenter.gl);
-			this.render(resourceCenter,screenSize,lodContext);
+			this.render(resourceCenter,screenSize,scene.lodContext);
 		} else if(scene.uniformsAssigned===false) {
 			resourceCenter.setCurrentShader(this.shader,scene);
 		}
 	}
 	for(var i=0;i<this.subnodes.length;i++) {
-		this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenSize,lodContext,depthMask);
+		this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenSize,depthMaskPhase);
 	}
 };
 
-function FVQ(model,shader,samplerName,cubemap) {
+/**
+ * Creates a new Full Viewport Quad visual object.
+ * @class Represent a Full Viewport Quad to be used for drawing the background
+ * using a cube mapped texture.
+ * @extends VisualObject
+ * @param {EgomModel} model The model to be used (see fvqModel()).
+ * @param {Shader} shader The shader that should be active while rendering this object.
+ * @param {string} samplerName The name of the uniform variable that holds the
+ * texture sampler for the drawing.
+ * @param {Cubemap} cubemap The cubemap object to be used for mapping the background
+ * @param {Camera} camera The camera to be used for querying the cube map.
+ * */
+function FVQ(model,shader,samplerName,cubemap,camera) {
 	VisualObject.call(this,shader);
 	this.model=model;
 	this.samplerName=samplerName;
 	this.cubemap=cubemap;
+        this.camera=camera;
 	
 	var self = this;
 	
 	this.uniformValueFunctions[this.samplerName] =                   function() { return self.cubemap.id; };
-	this.uniformValueFunctions["u_viewDirectionProjectionInverse"] = function() { return inverse4(mul(self.camera.orientation,self.camera.perspective)); };
+	this.uniformValueFunctions["u_viewDirectionProjectionInverse"] = function() { return inverse4(mul(self.camera.orientationMatrix,self.camera.perspectiveMatrix)); };
 }
 
 FVQ.prototype = new VisualObject();
 FVQ.prototype.constructor = FVQ;
 
-FVQ.prototype.insideViewFrustum = function(camera) {
+/**
+ * Always returns true as the FVQ always has to be rendered.
+ * @param {Camera} camera Irrelevant in this case, FVQ is visible in all directions.
+ * @returns {boolean} Always true.
+ */
+FVQ.prototype.isInsideViewFrustum = function(camera) {
 	return true;
 };
 
+/**
+ * Renders the FVQ, binding the cube mapped texture.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * cube mapped textures, the FVQ model and the shader.
+ * @param {number} screenSize Irrelevant in this case.
+ * @param {LODContext} lodContext Irrelevant in this case.
+ */
 FVQ.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.cubemap);
 	
@@ -617,18 +761,38 @@ FVQ.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	this.model.render(resourceCenter.gl,false);
 };
 
+/**
+ * Creates a LOD associated 3D model object.
+ * @class A 3D model paired up with Level Of Detail indicator.
+ * @param {EgomModel} model The 3D model data.
+ * @param {number} lod The LOD level to be associated with the model.
+ */
 function ModelWithLOD(model,lod) {
 	this.model=model;
 	this.lod=lod;
 }
 
-function Mesh(modelsWithLOD,shader,texture,position,orientation,scale,lineMode) {
+/**
+ * Creates a mesh type visual object.
+ * @class Visual object that renders a 3D model from a set of different LOD
+ * options.
+ * @extends VisualObject
+ * @param {ModelWithLOD[]} modelsWithLOD The series of 3D models with their 
+ * associated LOD information.
+ * @param {Shader} shader The shader that should be active while rendering this object.
+ * @param {Texture} texture The texture that should be bound while rendering this object
+ * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+ * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
+ * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing the initial size of the object.
+ * @param {boolean} lineMode Whether the mesh should be drawn as wireframe instead of solid.
+ */
+function Mesh(modelsWithLOD,shader,texture,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
 	VisualObject.call(this,shader);
 	this.modelsWithLOD=modelsWithLOD;
 	this.texture=texture;
-	this.position=position;
-	this.orientation=orientation;
-	this.scale=scale;
+	this.positionMatrix=positionMatrix;
+	this.orientationMatrix=orientationMatrix;
+	this.scalingMatrix=scalingMatrix;
 	this.lineMode=lineMode;
 	
 	this.modelSize=0;
@@ -650,29 +814,56 @@ function Mesh(modelsWithLOD,shader,texture,position,orientation,scale,lineMode) 
 }
 
 Mesh.prototype = new VisualObject();
-
 Mesh.prototype.constructor = Mesh;
 
-Mesh.prototype.getPosition = function() {
-	return this.position;
+/**
+ * Returns the translation matrix describing the position of the mesh.
+ * @returns {Float32Array} The 4x4 translation matrix indicating the position.
+ */
+Mesh.prototype.getPositionMatrix = function() {
+	return this.positionMatrix;
 };
 
-Mesh.prototype.getOrientation = function() {
-	return this.orientation;
+/**
+ * Returns the rotation matrix describing the orientation of the mesh.
+ * @returns {Float32Array} The 4x4 rotation matrix indicating the orientation.
+ */
+Mesh.prototype.getOrientationMatrix = function() {
+	return this.orientationMatrix;
 };
 
-Mesh.prototype.getScale = function() {
-	return this.scale;
+/**
+ * Returns the scaling matrix describing the size of the mesh.
+ * @returns {Float32Array} The 4x4 scaling matrix indicating the size.
+ */
+Mesh.prototype.getScalingMatrix = function() {
+	return this.scalingMatrix;
 };
 
+/**
+ * Returns the size of the largest model of the mesh.
+ * @returns {number} The size of the largest model of the mesh.
+ */
 Mesh.prototype.getSize = function() {
 	return this.modelSize;
 };
 
+/**
+ * Returns the model transformation matrix of the mesh, also taking into account
+ * the parents' transformation.
+ * @returns {Float32Array} The 4x4 model transformation matrix of the object.
+ */
 Mesh.prototype.getModelMatrix = function() {
-	return mul(mul(this.scale,this.orientation),mul(this.position,this.getParentModelMatrix()));
+	return mul(mul(this.scalingMatrix,this.orientationMatrix),mul(this.positionMatrix,this.getParentModelMatrix()));
 };
 
+/**
+ * Renders the appropriate model of the mesh.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * texture, the models and the shader.
+ * @param {number} screenSize The size of the screen in pixels for LOD decision.
+ * @param {LODContext} lodContext The object storing the LOD thresholds and settings.
+ */
 Mesh.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	// choose the model of appropriate LOD
@@ -693,7 +884,6 @@ Mesh.prototype.render = function(resourceCenter,screenSize,lodContext) {
 			closestLOD=this.modelsWithLOD[i].lod;
 		}
 	}
-	modelsDrawn[closestLOD]=modelsDrawn[closestLOD]+1;
 	
 	if (this.lineMode===true) {
 		resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, model.bufferStartLines, 2*model.lines.length);
@@ -703,26 +893,50 @@ Mesh.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	}
 };
 
-function Billboard(model,shader,texture,size,position,orientation) {
+/**
+ * Creates a billboard type visual object, used for projectiles.
+ * @class Visual object that renders a 2D billboard transformed in 3D space.
+ * @extends VisualObject
+ * @param {EgomModel} model The model to store the simple billboard data.
+ * @param {Shader} shader The shader that should be active while rendering this object.
+ * @param {Texture} texture The texture that should be bound while rendering this object
+ * @param {number} size The size of the billboard
+ * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+ * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
+ */
+function Billboard(model,shader,texture,size,positionMatrix,orientationMatrix) {
 	VisualObject.call(this,shader);
 	this.model=model;
 	this.texture=texture;
-	this.position=position;
-	this.orientation=orientation;
-	this.scale=scalingMatrix(size,size,size);
+	this.positionMatrix=positionMatrix;
+	this.orientationMatrix=orientationMatrix;
+	this.scalingMatrix=scalingMatrix(size,size,size);
 	
 	var self = this;
 	
-	this.uniformValueFunctions["u_modelMatrix"] = function() { return mul(mul(self.scale,self.orientation),self.position); };
+	this.uniformValueFunctions["u_modelMatrix"] = function() { return mul(mul(self.scalingMatrix,self.orientationMatrix),self.positionMatrix); };
 }
 
 Billboard.prototype = new VisualObject();
 Billboard.prototype.constructor = Billboard;
 
-Billboard.prototype.insideViewFrustum = function(camera) {
+/**
+ * Always returns true as is it faster to skip the check because anyway we are
+ * only rendering 2 triangles here.
+ * @param {Camera} camera Irrelevant in this case.
+ * @returns {boolean} Always true.
+ */
+Billboard.prototype.isInsideViewFrustum = function(camera) {
 	return true;
 };
 
+/**
+ * Renders the billboard, binding the texture.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * textures, the model and the shader.
+ * @param {number} screenSize Irrelevant in this case.
+ * @param {LODContext} lodContext Irrelevant in this case.
+ */
 Billboard.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	
@@ -730,32 +944,60 @@ Billboard.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	this.model.render(resourceCenter.gl,false);
 };
 
-function Particle(model,shader,texture,color,size,position,duration) {
+/**
+ * Creates a dynamic particle type visual object that has a certain lifespan
+ * and GLSL takes into account its age when rendering. 
+ * @class Visual object that renders a 2D billboard positioned in 3D space and
+ * dynamically changing size during it's lifespan. Used for flashes and
+ * particle systems.
+ * @extends VisualObject
+ * @param {EgomModel} model The model to store the simple billboard data.
+ * @param {Shader} shader The shader that should be active while rendering this object.
+ * @param {Texture} texture The texture that should be bound while rendering this object.
+ * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
+ * @param {number} size The size of the billboard
+ * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+ * @param {number} duration The lifespan of the particle in milliseconds.
+ */
+function DynamicParticle(model,shader,texture,color,size,positionMatrix,duration) {
 	VisualObject.call(this,shader);
 	this.model=model;
 	this.texture=texture;
 	this.color=color;
-	this.position=position;
-	this.scale=scalingMatrix(size,size,size);
+	this.positionMatrix=positionMatrix;
+	this.scalingMatrix=scalingMatrix(size,size,size);
 	
 	this.creationTime=new Date().getTime();
 	this.duration=duration;
 	var self = this;
 	
-	this.uniformValueFunctions["u_modelMatrix"] =   function() { return mul(mul(self.scale,self.position),self.getParentModelMatrix()); };
-	this.uniformValueFunctions["u_billboardSize"] = function() { return self.scale[0]; };
+	this.uniformValueFunctions["u_modelMatrix"] =   function() { return mul(mul(self.scalingMatrix,self.positionMatrix),self.getParentModelMatrix()); };
+	this.uniformValueFunctions["u_billboardSize"] = function() { return self.scalingMatrix[0]; };
 	this.uniformValueFunctions["u_relAge"] = function() { return (new Date().getTime()-self.creationTime)/self.duration; };
 	this.uniformValueFunctions["u_color"] =   function() { return self.color; };
 }
 
-Particle.prototype = new VisualObject();
-Particle.prototype.constructor = Particle;
+DynamicParticle.prototype = new VisualObject();
+DynamicParticle.prototype.constructor = DynamicParticle;
 
-Particle.prototype.insideViewFrustum = function(camera) {
+/**
+ * Always returns true as is it faster to skip the check because anyway we are
+ * only rendering 2 triangles here.
+ * @param {Camera} camera Irrelevant in this case.
+ * @returns {boolean} Always true.
+ */
+DynamicParticle.prototype.isInsideViewFrustum = function(camera) {
 	return true;
 };
 
-Particle.prototype.render = function(resourceCenter,screenSize,lodContext) {
+/**
+ * Renders the particle, binding the needed texture.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * textures, the model and the shader.
+ * @param {number} screenSize Irrelevant in this case.
+ * @param {LODContext} lodContext Irrelevant in this case.
+ */
+DynamicParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	if(new Date().getTime()>=this.creationTime+this.duration) {
 		this.toBeDeleted=true;
@@ -765,17 +1007,35 @@ Particle.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	}
 };
 
-function PermanentParticle(model,shader,texture,color,size,position) {
-	Particle.call(this,model,shader,texture,color,size,position,1000);
+/**
+ * Creates a static particle type visual object.
+ * @class Visual object that renders a 2D billboard positioned in 3D space.
+ * @extends DynamicParticle
+ * @param {EgomModel} model The model to store the simple billboard data.
+ * @param {Shader} shader The shader that should be active while rendering this object.
+ * @param {Texture} texture The texture that should be bound while rendering this object.
+ * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
+ * @param {number} size The size of the billboard
+ * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+ */
+function StaticParticle(model,shader,texture,color,size,positionMatrix) {
+	DynamicParticle.call(this,model,shader,texture,color,size,positionMatrix,1000);
 	this.relSize=0;
 	var self = this;
 	this.uniformValueFunctions["u_relAge"] = function() { return 1.0-self.relSize; };
 }
 
-PermanentParticle.prototype = new Particle();
-PermanentParticle.prototype.constructor = PermanentParticle;
+StaticParticle.prototype = new DynamicParticle();
+StaticParticle.prototype.constructor = StaticParticle;
 
-PermanentParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
+/**
+ * Renders the particle, binding the needed texture.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * textures, the model and the shader.
+ * @param {number} screenSize Irrelevant in this case.
+ * @param {LODContext} lodContext Irrelevant in this case.
+ */
+StaticParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	if(this.relSize>0) {
 		drawnPolyogons+=2;
@@ -783,20 +1043,28 @@ PermanentParticle.prototype.render = function(resourceCenter,screenSize,lodConte
 	}
 };
 
-function DustParticle(shader,color,position) {
+/**
+ * Creates a dust particle type visual object.
+ * @class Visual object that renders a point like object as a line as it is
+ * moving. Used to represent dust particles that give a visual clue about the
+ * motion of the camera.
+ * @extends VisualObject
+ * @param {EgomModel} model A model of 2 vertices has to be passed (see dustModel()).
+ * @param {Shader} shader The shader that should be active while rendering this object.
+ * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
+ * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+ */
+function DustParticle(model,shader,color,positionMatrix) {
 	VisualObject.call(this,shader);
 	this.color=color;
-	this.position=position;
+	this.positionMatrix=positionMatrix;
         this.shift=[0.0,0.0,0.0];
         
-        this.model = new EgomModel();
-        this.model.vertices.push([0.0,0.0,0.0]);
-        this.model.vertices.push([1.0,1.0,1.0]);
-        this.model.lines.push(new Line(0,1,color[0],color[1],color[2],1,0,0,1));
+        this.model = model;
 	
 	var self = this;
 	
-	this.uniformValueFunctions["u_modelMatrix"] =   function() { return mul(self.position,self.getParentModelMatrix()); };
+	this.uniformValueFunctions["u_modelMatrix"] =   function() { return mul(self.positionMatrix,self.getParentModelMatrix()); };
         this.uniformValueFunctions["u_color"] =   function() { return self.color; };
         this.uniformValueFunctions["u_shift"] =   function() { return self.shift; };
 }
@@ -804,59 +1072,111 @@ function DustParticle(shader,color,position) {
 DustParticle.prototype = new VisualObject();
 DustParticle.prototype.constructor = DustParticle;
 
-DustParticle.prototype.insideViewFrustum = function(camera) {
+/**
+ * Always returns true as is it faster to skip the check because anyway we are
+ * only rendering one line here.
+ * @param {Camera} camera Irrelevant in this case.
+ * @returns {boolean} Always true.
+ */
+DustParticle.prototype.isInsideViewFrustum = function(camera) {
 	return true;
 };
 
+/**
+ * Renders the particle.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * the model and the shader.
+ * @param {number} screenSize Irrelevant in this case.
+ * @param {LODContext} lodContext Irrelevant in this case.
+ */
 DustParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
-        //alert("drawing dust!" + this.model.vertices.length + " - " + this.model.vertices[1][0] + "," + this.model.vertices[1][1] + "," + this.model.vertices[1][2]);
 	this.model.render(resourceCenter.gl,true);
 };
 
-function VertexBuffer(id,data,location,vectorSize) {
-	this.id=id;
-	this.data=data;
-	this.location=location;
-	this.vectorSize=vectorSize;
-}
-
-function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject) {
-	this.position=identityMatrix4();
-	this.orientation=identityMatrix4();
+/**
+ * Creates a new camera object.
+ * @class A virtual camera that can be positioned free or relative to another
+ * object. The scene can contain many cameras and the real camera can be set to
+ * follow one of these.
+ * @param {number} aspect The X/Y aspect ration of the screen of the camera.
+ * @param {number} fov The Field Of View of the camera in degrees.
+ * @param {boolean} controllablePosition Whether the position of the camera is changeable by the player.
+ * @param {boolean} controllableDirection Whether the direction of the camera is changeable by the player.
+ * @param {VisualObject} followedObject The object to which the camera position and direction has to be interpredet.
+ * If undefined, the camera position is interpreted as absolute (relative to scene center)
+ * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
+ * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
+ */
+function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject,followPositionMatrix,followOrientationMatrix) {
+	this.positionMatrix=identityMatrix4();
+	this.orientationMatrix=identityMatrix4();
 	this.matrix=identityMatrix4();
-	this.velocity=[0,0,0];
+	this.velocityVector=[0,0,0];
 	this.maxSpeed=1;
 	this.acceleration=0.1;
-	this.angularVelocity=[0,0,0];
+	this.angularVelocityVector=[0,0,0];
 	this.maxTurn=0.1;
 	this.angularAcceleration=0.01;
-	this.followedObject=followedObject;
-	this.followPosition=identityMatrix4();
-	this.followOrientation=identityMatrix4();
+	if(followedObject!==undefined) {
+            this.followObject(followedObject,followPositionMatrix,followOrientationMatrix);
+        }
 	this.aspect=aspect;
 	this.fov=fov;
         this.controllablePosition=controllablePosition;
         this.controllableDirection=controllableDirection;
 	this.focusDistance=Math.cos(fov*3.1415/360)*2*this.aspect;
-	this.perspective=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
+	this.perspectiveMatrix=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
 }
 
+/**
+ * Sets the camera up to follow the given visual object.
+ * @param {VisualObject} followedObject The object to which the camera position and direction has to be interpredet.
+ * If undefined, the camera position is interpreted as absolute (relative to scene center)
+ * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
+ * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
+ */
+Camera.prototype.followObject = function(followedObject,followPositionMatrix,followOrientationMatrix) {
+    this.followedObject=followedObject;
+    if(followPositionMatrix===undefined) {
+        followPositionMatrix=identityMatrix4();
+    }
+    if(followOrientationMatrix===undefined) {
+        followOrientationMatrix=identityMatrix4();
+    }
+    this.followPositionMatrix=followPositionMatrix;
+    this.followOrientationMatrix=followOrientationMatrix;
+    this.originalFollowPositionMatrix=followPositionMatrix;
+    this.originalFollowOrientationMatrix=followOrientationMatrix;
+};
+
+/**
+ * Resets the camera's relative position and orientation to their original values.
+ */
+Camera.prototype.reset = function() {
+    this.followPositionMatrix=this.originalFollowPositionMatrix;
+    this.followOrientationMatrix=this.originalFollowOrientationMatrix;
+};
+
+/**
+ * Sets the camera's Field Of View by also recalculating the perspective matrix.
+ * @param {number} fov The new desired FOV.
+ */
 Camera.prototype.setFOV = function(fov) {
 	this.fov=fov;
-	this.perspective=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
+	this.perspectiveMatrix=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
 };
 
 /**
  * Creates a new SceneCamera.
- * @class SceneCamera A camera that is used to draw a scene. Can follow one of
+ * @class A camera that is used to draw a scene. Can follow one of
  * the camera objects in the resource center, adapting its parameters to the
  * ones of that camera in a given time.
  * @extends Camera
- * @param aspect The starting aspect ration of the camera.
- * @param fov The starting field of view value of the camera.
- * @param adaptationTime The time the camera will take when adapting its parameters
+ * @param {number} aspect The starting X/Y aspect ratio of the camera.
+ * @param {number} fov The starting field of view value of the camera in degrees.
+ * @param {number} adaptationTime The initial duration the camera will take when adapting its parameters
  * to a new followed camera in milliseconds.
- * @param followedCamera Initial camera object to follow.
+ * @param {Camera} followedCamera Initial camera object to follow.
  * */
 function SceneCamera(aspect,fov,adaptationTime,followedCamera) {
     Camera.call(this,aspect,fov,true,true);
@@ -867,15 +1187,28 @@ function SceneCamera(aspect,fov,adaptationTime,followedCamera) {
 SceneCamera.prototype = new Camera();
 SceneCamera.prototype.constructor = SceneCamera;
 
-SceneCamera.prototype.followCamera = function(camera) {
+/**
+ * Set the camera up to adapt to a virtual camera.
+ * @param {Camera} camera The new camera to follow.
+ * @param {number} adaptationTime The duration the camera will take when adapting its parameters
+ * to the new followed camera in milliseconds. (optional)
+ */
+SceneCamera.prototype.followCamera = function(camera,adaptationTime) {
+    if(adaptationTime!==undefined) {
+        this.adaptationTime=adaptationTime;
+    }
     this.followedCamera=camera;
     this.adaptationStartTime=new Date().getTime();
-    this.adaptationStartPosition=this.position;
-    this.adaptationStartOrientation=this.orientation;
+    this.adaptationStartPositionMatrix=this.positionMatrix;
+    this.adaptationStartOrientationMatrix=this.orientationMatrix;
     this.adaptationStartFOV=this.fov;
     this.adaptationTimeLeft=this.adaptationTime;
 };
 
+/**
+ * Updates the transformation matrices of the scene camera to transition to a
+ * new followed camera if it did not adapt to it fully yet.
+ */
 SceneCamera.prototype.update = function() {
     if(this.followedCamera!==undefined) {
         if(this.adaptationTimeLeft>0) {
@@ -883,32 +1216,45 @@ SceneCamera.prototype.update = function() {
             var adaptationRate=Math.min(1.0,(currentTime-this.adaptationStartTime)/this.adaptationTime);
             this.adaptationTimeLeft=this.adaptationTime-(currentTime-this.adaptationStartTime);
             var trans = translationMatrix(
-                    (this.followedCamera.position[12]-this.adaptationStartPosition[12])*adaptationRate,
-                    (this.followedCamera.position[13]-this.adaptationStartPosition[13])*adaptationRate,
-                    (this.followedCamera.position[14]-this.adaptationStartPosition[14])*adaptationRate
+                    (this.followedCamera.positionMatrix[12]-this.adaptationStartPositionMatrix[12])*adaptationRate,
+                    (this.followedCamera.positionMatrix[13]-this.adaptationStartPositionMatrix[13])*adaptationRate,
+                    (this.followedCamera.positionMatrix[14]-this.adaptationStartPositionMatrix[14])*adaptationRate
                     );
-            var newPosition=translate(this.adaptationStartPosition,trans);
+            var newPositionMatrix=translate(this.adaptationStartPositionMatrix,trans);
             var velocityMatrix = mul(translationMatrix(
-                newPosition[12]-this.position[12],
-                newPosition[13]-this.position[13],
-                newPosition[14]-this.position[14]),this.orientation);
-            this.velocity = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
-            this.position=newPosition;
-            this.orientation=correctOrthogonalMatrix(addMatrices4(
-                mulMatrix4Scalar(this.adaptationStartOrientation,1.0-adaptationRate),
-                mulMatrix4Scalar(this.followedCamera.orientation,adaptationRate)));
+                newPositionMatrix[12]-this.positionMatrix[12],
+                newPositionMatrix[13]-this.positionMatrix[13],
+                newPositionMatrix[14]-this.positionMatrix[14]),this.orientationMatrix);
+            this.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
+            this.positionMatrix=newPositionMatrix;
+            this.orientationMatrix=correctOrthogonalMatrix(addMatrices4(
+                mulMatrix4Scalar(this.adaptationStartOrientationMatrix,1.0-adaptationRate),
+                mulMatrix4Scalar(this.followedCamera.orientationMatrix,adaptationRate)));
             this.setFOV(this.adaptationStartFOV+(this.followedCamera.fov-this.adaptationStartFOV)*adaptationRate);
         } else {
-            this.position=this.followedCamera.position;
-            this.orientation=this.followedCamera.orientation;
+            this.positionMatrix=this.followedCamera.positionMatrix;
+            this.orientationMatrix=this.followedCamera.orientationMatrix;
             this.matrix=this.followedCamera.matrix;
-            this.perspective=this.followedCamera.perspective;
+            this.perspectiveMatrix=this.followedCamera.perspectiveMatrix;
         }
     }
 };
 
-function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,clearDepthOnRender,activeCamera) {
-	this.objects=new Array();
+/**
+ * Creates a new scene graph object.
+ * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
+ * @param {number} left The X coordinate of the top left corner of the viewport on the screen.
+ * @param {number} top The Y coordinate of the top left corner of the viewport on the screen.
+ * @param {number} width The width of the viewport in pixels.
+ * @param {number} height The height of the viewport in pixels.
+ * @param {boolean} clearColorOnRender Whether to clear the color buffer every time at the beginning of rendering the scene.
+ * @param {boolean[]} colorMask Which components shall be cleared if the color buffer is to be cleared.
+ * @param {number[]} clearColor What color to use when clearing the buffer (RGBA components).
+ * @param {boolean} clearDepthOnRender Whether to clear the depth buffer every time at the beginning of rendering the scene.
+ * @param {LODContext} lodContext The LOD threshold and configuration to be used
+ * for rendering object with the appropriate level of detail.
+ */
+function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,clearDepthOnRender,lodContext) {
 	this.left=left;
 	this.top=top;
 	this.width=width;
@@ -919,39 +1265,50 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
 	this.clearColor=clearColor;
 	this.clearDepthOnRender=clearDepthOnRender;
 	
-	this.activeCamera = new SceneCamera(width/height,60,5000,activeCamera);
+        this.objects = new Array();
+        this.cameras = new Array();
+        
+	this.activeCamera = new SceneCamera(width/height,60,5000);
 		
+        this.lodContext = lodContext;
+        
 	this.uniformValueFunctions = new Object();
-	
-	this.firstRender=true;
 	this.uniformsAssigned=false;
+        
+        this.firstRender=true;
 }
 
-Scene.prototype.assignUniforms = function(gl,program) {
-	for(var i=0;i<program.uniforms.length;i++) {
-		if(this.uniformValueFunctions[program.uniforms[i].name]!==undefined) {
-			program.uniforms[i].setValue(gl,this.uniformValueFunctions[program.uniforms[i].name]);
+/**
+ * Assigns all uniforms in the given shader program that
+ * the scene has a value function for, using the appropriate webGL calls.
+ * The matching is done based on the names of the uniforms.
+ * @param {WebGLRenderingContext} gl The webGL context to use
+ * @param {Shader} shader The shader program in which to assign the uniforms.
+ */
+Scene.prototype.assignUniforms = function(gl,shader) {
+	for(var i=0;i<shader.uniforms.length;i++) {
+		if(this.uniformValueFunctions[shader.uniforms[i].name]!==undefined) {
+			shader.uniforms[i].setValue(gl,this.uniformValueFunctions[shader.uniforms[i].name]);
 		}
 	}
 	this.uniformsAssigned=true;
 };
 
-Scene.prototype.bindBuffers = function(gl,shader) {
-	for(var i=0;i<shader.attributes.length;i++) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, shader.vertexBuffers[i].id);
-		gl.vertexAttribPointer(shader.vertexBuffers[i].location, shader.vertexBuffers[i].vectorSize, gl.FLOAT, false, 0, 0);
-	}
-};
+// Global variable to store the number of polygon drawn so far in the current render.
+var drawnPolygons = 0;
 
-var drawnPolyogons = 0;
-
-Scene.prototype.render = function(resourceCenter,multipleScenes,lodContext) {
+/**
+ * Renders the whole scene applying the general configuration and then rendering
+ * all visual objects in the graph.
+ * @param {ResourceCenter} resourceCenter The resource center that holds the
+ * shaders, textures, models of the scene.
+ */
+Scene.prototype.render = function(resourceCenter) {
 	document.getElementById("output").innerHTML="";
 	drawnPolyogons=0;
 	
 	var gl = resourceCenter.gl;
 	
-	//alert("setting viewport: "+this.left+","+this.top+","+this.width+","+this.height);
 	gl.viewport(this.left, this.top, this.width, this.height);
 	gl.scissor(this.left, this.top, this.width, this.height);
 	
@@ -969,48 +1326,52 @@ Scene.prototype.render = function(resourceCenter,multipleScenes,lodContext) {
 	
 	this.uniformsAssigned=false;
 	
-	modelsDrawn = [0,0,0,0];
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	for(var i=0;i<this.objects.length;i++) {
-		while ((i<this.objects.length)&&((this.objects[i]===null)||(this.objects[i].toBeDeleted))) {
+		while ((i<this.objects.length)&&((this.objects[i]===undefined)||(this.objects[i].toBeDeleted))) {
 			delete this.objects[i];
 			this.objects.splice(i,1);
 		}
 		if (i<this.objects.length) {
-			this.objects[i].camera=this.activeCamera;
-			this.objects[i].cascadeRender(null,resourceCenter,this,this.height,lodContext,true);
+			this.objects[i].cascadeRender(null,resourceCenter,this,this.height,true);
 		}
 	}
 	gl.depthMask(false);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 	for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].cascadeRender(null,resourceCenter,this,this.height,lodContext,false);
+		this.objects[i].cascadeRender(null,resourceCenter,this,this.height,false);
 	}
 	document.getElementById("output").innerHTML+=drawnPolyogons;
-	//for(var i=0;i<4;i++) document.getElementById("output").innerHTML+=i+": "+modelsDrawn[i]+" ";
 };
 
+/**
+ * Creates a new LOD context object.
+ * @class Holds a certain LOD configuration to be used for making LOD decisions while rendering.
+ * @param {number} maxEnabledLOD The highest LOD that can be chosen while rendering.
+ * @param {number[]} thresholds The threshold size in pixels for each LOD.
+ * For each object the highest LOD, for which its size exceed the threshold, will be used.
+ */
 function LODContext(maxEnabledLOD,thresholds) {
 	this.maxEnabledLOD=maxEnabledLOD;
 	this.thresholds=thresholds;
 }
 
-function ResourceCenter(canvas,lodContext) {
+/**
+ * Creates a new Resource Center object.
+ * @class This class holds and manages all the various resources and their 
+ * configuration that are needed for rendering: textures, shaders, models, cameras, scenes.
+ */
+function ResourceCenter() {
 	this.gl=null;
 	
 	this.textures=new Array();
 	this.cubemaps=new Array();
 	this.shaders=new Array();
 	this.models=new Array();
-	this.cameras=new Array();
 	this.scenes=new Array();
 	
 	this.vertexBuffers=new Array();
-	
-	this.cameras.push(new Camera(canvas.width/canvas.height,60,true,true));
-	
-	this.lodContext=lodContext;
-	
+		
 	this.maxRenderTimes = 30;
 	this.renderTimes = new Array();
 	
@@ -1018,6 +1379,12 @@ function ResourceCenter(canvas,lodContext) {
 	this.boundTexture=null;
 }
 
+/**
+ * Looks for a texture with the given filename in the resource center, if not
+ * present yet, adds it, then returns it.
+ * @param {string} filename The name of the file of the texture we are looking for.
+ * @returns {Texture} The found or added texture object in the resource center.
+ */
 ResourceCenter.prototype.getTexture = function(filename) {
 	var i = 0;
 	while((i<this.textures.length)&&(this.textures[i].filename!==filename)) {
@@ -1032,6 +1399,12 @@ ResourceCenter.prototype.getTexture = function(filename) {
 	}
 };
 
+/**
+ * Looks for a shader with the given name in the resource center and returns it.
+ * If it is not present then returns null.
+ * @param {string} name The name of the shader program resource we are looking for.
+ * @returns {Shader} The found shader object in the resource center or null.
+ */
 ResourceCenter.prototype.getShader = function(name) {
 	var i = 0;
 	while((i<this.shaders.length)&&
@@ -1045,6 +1418,12 @@ ResourceCenter.prototype.getShader = function(name) {
 	}
 };
 
+/**
+ * Looks for a cubemap with the given name in the resource center and returns it.
+ * If it is not present then returns null.
+ * @param {string} name The name of the cubemap resource we are looking for.
+ * @returns {Cubemap} The found cubemap object in the resource center or null.
+ */
 ResourceCenter.prototype.getCubemap = function(name) {
 	var i = 0;
 	while((i<this.cubemaps.length)&&
@@ -1058,6 +1437,12 @@ ResourceCenter.prototype.getCubemap = function(name) {
 	}
 };
 
+/**
+ * Looks for a model with the given filename in the resource center, if not
+ * present yet, adds it, then returns it.
+ * @param {string} filename The name of the file of the model resource we are looking for.
+ * @returns {EgomModel} The found or added model object in the resource center.
+ */
 ResourceCenter.prototype.getModel = function(filename) {
 	var i = 0;
 	while((i<this.models.length)&&(this.models[i].filename!==filename)) {
@@ -1072,6 +1457,14 @@ ResourceCenter.prototype.getModel = function(filename) {
 	}
 };
 
+/**
+ * Checks if the model passed as parameter is already in the resource center,
+ * and if not, then adds it. Also uses name checking, and doesn't add the model
+ * if another one if already present with the same name.
+ * @param {EgomModel} model The model resource we are looking for in the resource center.
+ * @param {string} name The name of the model resource we are looking for.
+ * @returns {EgomModel} The found or added model object in the resource center.
+ */
 ResourceCenter.prototype.addModel = function(model,name) {
 	var i = 0;
 	while((i<this.models.length)&&(this.models[i]!==model)&&(this.models[i].filename!==name)) {
@@ -1086,6 +1479,11 @@ ResourceCenter.prototype.addModel = function(model,name) {
 	}
 };
 
+/**
+ * Performs the sequential loading of the external picture files for textures and
+ * cubemaps and then executes the callback function. 
+ * @param {function} callback The function to execute after all pictures have been loaded.
+ */
 ResourceCenter.prototype.loadTextures = function(callback) {
 	var self = this;
 	if(this.textures.length>0) {	
@@ -1097,6 +1495,11 @@ ResourceCenter.prototype.loadTextures = function(callback) {
 	}
 };
 
+/**
+ * Loads the shader configuration from an external XML file into the resource
+ * center.
+ * @param {string} filename The XML file where the shader configuration is stored.
+ */
 ResourceCenter.prototype.loadShaders = function(filename) {
 	var request = new XMLHttpRequest();
 	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
@@ -1160,8 +1563,12 @@ ResourceCenter.prototype.loadShaders = function(filename) {
 	}	
 };
 
+/**
+ * Loads the vertex buffer data to the graphic memory for the given shader program using webGL.
+ * @param {Shader} shader The shader program for which the buffers will be loaded.
+ * @param {boolean} loadLines Whether to fill the buffer for drawing lines as well next to triangles.
+ */
 ResourceCenter.prototype.setupBuffers = function(shader,loadLines) {
-	//alert("setting up vertex buffers for shader: "+shader.name);
 	this.gl.useProgram(shader.id);
 	var sumVertices=0;
 	for(var i=0;i<this.models.length;i++) {
@@ -1211,15 +1618,25 @@ ResourceCenter.prototype.setupBuffers = function(shader,loadLines) {
 	}
 };
 
+/**
+ * Sets up the provided shader for usage within the provided scene, also assigning
+ * the scene uniforms.
+ * @param {Shader} shader The shader to set as current.
+ * @param {Scene} scene The scene we are drawing.
+ */
 ResourceCenter.prototype.setCurrentShader = function(shader,scene) {
 	if(this.currentShader!==shader) {
 		this.gl.useProgram(shader.id);
-		scene.bindBuffers(this.gl,shader);	
+		shader.bindBuffers(this.gl);	
 		scene.assignUniforms(this.gl,shader);
 		this.currentShader=shader;
 	}
 };
 
+/**
+ * Binds the given texture or cubemap resource with webGL
+ * @param {Texture|Cubemap} texture The resource to bind for rendering.
+ */
 ResourceCenter.prototype.bindTexture = function(texture) {
 	if(this.boundTexture!==texture) {
 		if (texture instanceof Texture) {
@@ -1232,6 +1649,10 @@ ResourceCenter.prototype.bindTexture = function(texture) {
 	}
 };
 
+/**
+ * Sets up a webGL context and performs the basic configuration with it.
+ * @param {object} canvas The HMTL5 canvas to get and configure the context for.
+ */
 ResourceCenter.prototype.setupWebGL = function(canvas) {
 	try {
 		// Try to grab the standard context. If it fails, fallback to experimental.
@@ -1267,8 +1688,13 @@ ResourceCenter.prototype.setupWebGL = function(canvas) {
 	}
 };
 
+/**
+ * Loads and sets up all resources for rendering the scenes to the given HTML5
+ * canvas, then start the rendering loop with the given frequency.
+ * @param {object} canvas The HTML5 canvas to render to.
+ * @param {number} freq The frequency for the rendering loop, in Hertz.
+ */
 ResourceCenter.prototype.init = function(canvas,freq) {
-	//alert("Initializing...");
 	var self=this;
 	document.getElementById("status").innerHTML="loading textures...";
 	this.loadTextures(function() {
@@ -1296,30 +1722,49 @@ ResourceCenter.prototype.init = function(canvas,freq) {
 	});
 };
 
+/**
+ * Performs the webGL setup for all contained texture resources.
+ */
 ResourceCenter.prototype.setupTextures = function() {
 	for(var i=0;i<this.textures.length;i++) {
 		this.textures[i].setup(this.gl);
 	}
 };
 
+/**
+ * Performs the webGL setup for all contained cubemap resources.
+ */
 ResourceCenter.prototype.setupCubemaps = function() {
 	for(var i=0;i<this.cubemaps.length;i++) {
 		this.cubemaps[i].setup(this.gl);
 	}
 };
 
+/**
+ * Performs the webGL setup for all contained shader resources.
+ */
 ResourceCenter.prototype.setupShaders = function() {
 	for(var i=0;i<this.shaders.length;i++) {
 		this.shaders[i].setup(this.gl);
 	}
 };
 
+/**
+ * Renders all the contained scenes.
+ */
 ResourceCenter.prototype.renderScenes = function() {
 	for(var i=0;i<this.scenes.length;i++) {
-		this.scenes[i].render(this,(this.scenes.length>1),this.lodContext);
+		this.scenes[i].render(this);
 	}
 };
 
+/**
+ * Creates a new graphics context object.
+ * @class A graphics context for other modules, containing the current resource
+ * center and scene.
+ * @param {ResourceCenter} resourceCenter The resource center to be stored in the context.
+ * @param {Scene} scene The scene to be stored in the context.
+ */
 function GraphicsContext(resourceCenter,scene) {
 	this.resourceCenter=resourceCenter;
 	this.scene=scene;

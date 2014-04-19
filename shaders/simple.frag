@@ -17,12 +17,12 @@ varying vec4 v_worldPos;
 
 	
 void main() {
-	//vec3 viewDir = normalize(u_eyePos - v_worldPos.xyz);
-	//vec3 reflDir = reflect (viewDir, v_normal);
+	vec3 viewDir = normalize(u_eyePos - v_worldPos.xyz);
+	vec3 reflDir = reflect (viewDir, v_normal);
 	
 	vec4 texCol = texture2D(u_image, v_texCoord);
 	
-	//float specularFactor = v_shininess>0.0?pow(max(dot(-reflDir,u_lightDir),0.0), v_shininess):0.0;
+	float specularFactor = v_shininess>0.0?pow(max(dot(-reflDir,u_lightDir),0.0), v_shininess):0.0;
 	
 	gl_FragColor = 
 		vec4(
@@ -37,7 +37,7 @@ void main() {
 				vec3(0.02,0.2,0.2)*min(1.0,max(dot(-u_lightDir,v_normal),0.0)) 
 			*v_color.rgb))
 			*texCol.rgb
-			//+ specularFactor * vec3(1.0,1.0,1.0)
+			+ specularFactor * vec3(1.0,1.0,1.0)
 			,
 		v_color.a*texCol.a
 		);

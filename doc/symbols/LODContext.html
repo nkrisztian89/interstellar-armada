@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ShaderAttribute</title>
+		<title>JsDoc Reference - LODContext</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -240,7 +240,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ShaderAttribute
+				Class LODContext
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -248,8 +248,7 @@ ul.inheritsList
 				
 				
 			
-				A wrapper class for storing the attributes used in a given program, 
-so they can be automatically set based on their roles.
+				Holds a certain LOD configuration to be used for making LOD decisions while rendering.
 				
 				
 					<br /><i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
@@ -258,7 +257,7 @@ so they can be automatically set based on their roles.
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ShaderAttribute.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class LODContext.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -271,9 +270,9 @@ so they can be automatically set based on their roles.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ShaderAttribute.html#constructor">ShaderAttribute</a></b>(name, size, role)
+								<b><a href="../symbols/LODContext.html#constructor">LODContext</a></b>(maxEnabledLOD, thresholds)
 							</div>
-							<div class="description">Creates a new ShaderAttribute object.</div>
+							<div class="description">Creates a new LOD context object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -296,11 +295,11 @@ so they can be automatically set based on their roles.
 				</div>
 				
 				<div class="fixedFont">
-						<b>ShaderAttribute</b>(name, size, role)
+						<b>LODContext</b>(maxEnabledLOD, thresholds)
 				</div>
 				
 				<div class="description">
-					Creates a new ShaderAttribute object.
+					Creates a new LOD context object.
 					
 				</div>
 				
@@ -312,25 +311,17 @@ so they can be automatically set based on their roles.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{string}</span>  <b>name</b>
+								<span class="light fixedFont">{number}</span>  <b>maxEnabledLOD</b>
 								
 							</dt>
-								<dd>Name of the shader attribute.</dd>
+								<dd>The highest LOD that can be chosen while rendering.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>size</b>
+								<span class="light fixedFont">{number[]}</span>  <b>thresholds</b>
 								
 							</dt>
-								<dd>Size of the shader attribute: number of dimensions.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{string}</span>  <b>role</b>
-								
-							</dt>
-								<dd>Role of the shader attribute, based on which the
-appropriate buffer will be assigned to it to supply the values. Currently
-supported roles are: position, texCoord, normal, color, luminosity, 
-shininess.</dd>
+								<dd>The threshold size in pixels for each LOD.
+For each object the highest LOD, for which its size exceed the threshold, will be used.</dd>
 						
 						</dl>
 					

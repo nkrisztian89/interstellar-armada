@@ -191,7 +191,29 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/Billboard.html">Billboard</a></li>
+	
+	<li><a href="../symbols/Camera.html">Camera</a></li>
+	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
+	
+	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	
+	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
+	
+	<li><a href="../symbols/FVQ.html">FVQ</a></li>
+	
+	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/LODContext.html">LODContext</a></li>
+	
+	<li><a href="../symbols/Mesh.html">Mesh</a></li>
+	
+	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
+	
+	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
+	
+	<li><a href="../symbols/Scene.html">Scene</a></li>
 	
 	<li><a href="../symbols/SceneCamera.html">SceneCamera</a></li>
 	
@@ -201,7 +223,11 @@ ul.inheritsList
 	
 	<li><a href="../symbols/ShaderUniform.html">ShaderUniform</a></li>
 	
+	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
+	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
+	
+	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
 	
@@ -221,10 +247,10 @@ ul.inheritsList
 			<p class="description">
 				
 				<br />Extends
-					Camera.<br />
+					<a href="../symbols/Camera.html">Camera</a>.<br />
 				
 			
-				SceneCamera A camera that is used to draw a scene. Can follow one of
+				A camera that is used to draw a scene. Can follow one of
 the camera objects in the resource center, adapting its parameters to the
 ones of that camera in a given time.
 				
@@ -262,6 +288,47 @@ ones of that camera in a given time.
 
 <!-- ============================== methods summary ======================== -->
 			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class SceneCamera.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/SceneCamera.html#followCamera">followCamera</a></b>(camera, adaptationTime)
+								</div>
+								<div class="description">Set the camera up to adapt to a virtual camera.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/SceneCamera.html#update">update</a></b>()
+								</div>
+								<div class="description">Updates the transformation matrices of the scene camera to transition to a
+new followed camera if it did not adapt to it fully yet.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+				<dl class="inheritsList">
+				<dt>Methods borrowed from class <a href="../symbols/Camera.html">Camera</a>: </dt><dd><a href="../symbols/Camera.html#followObject">followObject</a>, <a href="../symbols/Camera.html#reset">reset</a>, <a href="../symbols/Camera.html#setFOV">setFOV</a></dd>
+				</dl>
+				
+			
 <!-- ============================== events summary ======================== -->
 			
 
@@ -289,26 +356,26 @@ ones of that camera in a given time.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								 <b>aspect</b>
+								<span class="light fixedFont">{number}</span>  <b>aspect</b>
 								
 							</dt>
-								<dd>The starting aspect ration of the camera.</dd>
+								<dd>The starting X/Y aspect ratio of the camera.</dd>
 						
 							<dt>
-								 <b>fov</b>
+								<span class="light fixedFont">{number}</span>  <b>fov</b>
 								
 							</dt>
-								<dd>The starting field of view value of the camera.</dd>
+								<dd>The starting field of view value of the camera in degrees.</dd>
 						
 							<dt>
-								 <b>adaptationTime</b>
+								<span class="light fixedFont">{number}</span>  <b>adaptationTime</b>
 								
 							</dt>
-								<dd>The time the camera will take when adapting its parameters
+								<dd>The initial duration the camera will take when adapting its parameters
 to a new followed camera in milliseconds.</dd>
 						
 							<dt>
-								 <b>followedCamera</b>
+								<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span>  <b>followedCamera</b>
 								
 							</dt>
 								<dd>Initial camera object to follow.</dd>
@@ -330,6 +397,80 @@ to a new followed camera in milliseconds.</dd>
 
 <!-- ============================== method details ========================= -->		
 			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="followCamera"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>followCamera</b>(camera, adaptationTime)
+					
+					</div>
+					<div class="description">
+						Set the camera up to adapt to a virtual camera.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> <b>camera</b>
+									
+								</dt>
+								<dd>The new camera to follow.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{number}</span> <b>adaptationTime</b>
+									
+								</dt>
+								<dd>The duration the camera will take when adapting its parameters
+to the new followed camera in milliseconds. (optional)</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="update"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>update</b>()
+					
+					</div>
+					<div class="description">
+						Updates the transformation matrices of the scene camera to transition to a
+new followed camera if it did not adapt to it fully yet.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					
+				
+			
 			
 <!-- ============================== event details ========================= -->		
 			
@@ -341,7 +482,7 @@ to a new followed camera in milliseconds.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Fri Apr 18 2014 21:28:32 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 19 2014 03:35:45 GMT+0300 (EEST)
 		</div>
 	</body>
 </html>

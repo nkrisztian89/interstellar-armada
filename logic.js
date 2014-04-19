@@ -6,6 +6,7 @@
 
 /**
  * Defines a skybox class.
+ * @class Represents a skybox class with associated shader and sampler name and cubemap resource.
  * @param {String} name The name of the skybox class.
  * @param {String} shaderName The name of the shader object to be used for
  * drawing this skybox.
@@ -41,7 +42,7 @@ function ProjectileClass(name,size,intersections,shaderName,textureFileName,mass
 function Barrel(projectileClass,force,x,y,z) {
 	this.projectileClass=projectileClass;
 	this.force=force;
-	this.position=[x,y,z];
+	this.positionVector=[x,y,z];
 }
 
 function WeaponClass(name,modelReferences,barrels) {
@@ -60,12 +61,12 @@ function PropulsionClass(name,shaderName,textureFileName,color,thrust,angularThr
 }
 
 function WeaponSlot(x,y,z) {
-	this.position=translationMatrix(x,y,z);
-	this.orientation=identityMatrix4();
+	this.positionMatrix=translationMatrix(x,y,z);
+	this.orientationMatrix=identityMatrix4();
 }
 
 function ThrusterSlot(x,y,z,size,use) {
-	this.position=[x,y,z,1.0];
+	this.positionVector=[x,y,z,1.0];
 	this.size=size;
 	this.uses=use.split(',');
 }
@@ -91,30 +92,31 @@ function Skybox(resourceCenter,scene,skyboxClass) {
 		resourceCenter.addModel(fvqModel(),"fvqModel"),
 		resourceCenter.getShader(skyboxClass.shaderName),
 		skyboxClass.samplerName,
-		resourceCenter.getCubemap(skyboxClass.cubemap)
+		resourceCenter.getCubemap(skyboxClass.cubemap),
+                scene.activeCamera
 		));
 }
 
-function Projectile(resourceCenter,scene,projectileClass,position,orientation,muzzleFlashPosition,spacecraft,weapon) {
+function Projectile(resourceCenter,scene,projectileClass,positionMatrix,orientationMatrix,muzzleFlashPositionMatrix,spacecraft,weapon) {
 	this.class=projectileClass;
 	this.visualModel = new Billboard(
 		resourceCenter.addModel(projectileModel(this.class.intersections),"projectileModel-"+this.class.name),
 		resourceCenter.getShader(projectileClass.shaderName),
 		resourceCenter.getTexture(projectileClass.textureFileName),
 		projectileClass.size,
-		position,
-		orientation
+		positionMatrix,
+		orientationMatrix
 		);
-	var muzzleFlash = new Particle(
+	var muzzleFlash = new DynamicParticle(
 		resourceCenter.addModel(squareModel(),"squareModel"),
 		resourceCenter.getShader(projectileClass.muzzleFlashShaderName),
 		resourceCenter.getTexture(projectileClass.muzzleFlashTextureFilename),
 		projectileClass.muzzleFlashColor,
 		projectileClass.size,
-		muzzleFlashPosition,
+		muzzleFlashPositionMatrix,
 		500
 		);
-	this.physicalModel=new PhysicalObject(projectileClass.mass,projectileClass.size,position,orientation,spacecraft.physicalModel.velocity,[]);
+	this.physicalModel=new PhysicalObject(projectileClass.mass,projectileClass.size,positionMatrix,orientationMatrix,spacecraft.physicalModel.velocityMatrix,[]);
 	
 	this.timeLeft=projectileClass.duration;
 	
@@ -136,12 +138,11 @@ Projectile.prototype.simulate = function(dt,hitObjects) {
 		delete this;
 	} else {
 		this.physicalModel.simulate(dt);
-		this.visualModel.position=this.physicalModel.position;
-		this.visualModel.orientation=this.physicalModel.orientation;
-		var position=getPositionVector4(this.physicalModel.position);
+		this.visualModel.positionMatrix=this.physicalModel.positionMatrix;
+		this.visualModel.orientationMatrix=this.physicalModel.orientationMatrix;
+		var positionVector=getPositionVector4(this.physicalModel.positionMatrix);
 		for(var i=0;i<hitObjects.length;i++) {
-			if ((hitObjects[i]!==this.origin)&&(hitObjects[i].physicalModel.checkHit(position,[],0))) {
-				//alert("hit a spacecraft of class "+hitObjects[i].class.name);
+			if ((hitObjects[i]!==this.origin)&&(hitObjects[i].physicalModel.checkHit(positionVector,[],0))) {
 				this.timeLeft=0;
 			}
 		}
@@ -155,24 +156,24 @@ function Weapon(weaponClass,spacecraft,slot,visualModel) {
 	this.visualModel=visualModel;
 }
 
-Weapon.prototype.fire = function(resourceCenter,scene,projectiles,position,orientation,scale) {
-	var weaponSlotPos = vector4Matrix4Product(getPositionVector4(this.slot.position),mul(scale,orientation));
-	var projectilePos = mul(position,translationMatrixv(weaponSlotPos));
-	var projectileOri = mul(this.slot.orientation,orientation);
+Weapon.prototype.fire = function(resourceCenter,scene,projectiles,positionMatrix,orientationMatrix,scalingMatrix) {
+	var weaponSlotPosVector = vector4Matrix4Product(getPositionVector4(this.slot.positionMatrix),mul(scalingMatrix,orientationMatrix));
+	var projectilePosMatrix = mul(positionMatrix,translationMatrixv(weaponSlotPosVector));
+	var projectileOriMatrix = mul(this.slot.orientationMatrix,orientationMatrix);
 	for(var i=0;i<this.class.barrels.length;i++) {
-		var barrelPos = vector3Matrix3Product(this.class.barrels[i].position,matrix3from4(mul(this.slot.orientation,mul(scale,orientation))));
-		var muzzleFlashPos = translationMatrixv(this.class.barrels[i].position);
+		var barrelPosVector = vector3Matrix3Product(this.class.barrels[i].positionVector,matrix3from4(mul(this.slot.orientationMatrix,mul(scalingMatrix,orientationMatrix))));
+		var muzzleFlashPosMatrix = translationMatrixv(this.class.barrels[i].positionVector);
 		var p = new Projectile(
 			resourceCenter,
 			scene,
 			this.class.barrels[i].projectileClass,
-			mul(projectilePos,translationMatrixv(barrelPos)),
-			projectileOri,
-			muzzleFlashPos,
+			mul(projectilePosMatrix,translationMatrixv(barrelPosVector)),
+			projectileOriMatrix,
+			muzzleFlashPosMatrix,
 			this.spacecraft,
 			this);
 		projectiles.push(p);
-		p.physicalModel.forces.push(new Force(this.class.barrels[i].force,[projectileOri[4],projectileOri[5],projectileOri[6]],1));
+		p.physicalModel.forces.push(new Force(this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],1));
 	}
 };
 
@@ -202,9 +203,9 @@ function Propulsion(propulsionClass,drivenPhysicalObject) {
 }
 
 Propulsion.prototype.simulate = function(dt) {
-	var directionVector = [this.drivenPhysicalObject.orientation[4],this.drivenPhysicalObject.orientation[5],this.drivenPhysicalObject.orientation[6]];
-	var yawAxis = [this.drivenPhysicalObject.orientation[8],this.drivenPhysicalObject.orientation[9],this.drivenPhysicalObject.orientation[10]];
-	var pitchAxis = [this.drivenPhysicalObject.orientation[0],this.drivenPhysicalObject.orientation[1],this.drivenPhysicalObject.orientation[2]];
+	var directionVector = [this.drivenPhysicalObject.orientationMatrix[4],this.drivenPhysicalObject.orientationMatrix[5],this.drivenPhysicalObject.orientationMatrix[6]];
+	var yawAxis = [this.drivenPhysicalObject.orientationMatrix[8],this.drivenPhysicalObject.orientationMatrix[9],this.drivenPhysicalObject.orientationMatrix[10]];
+	var pitchAxis = [this.drivenPhysicalObject.orientationMatrix[0],this.drivenPhysicalObject.orientationMatrix[1],this.drivenPhysicalObject.orientationMatrix[2]];
 	
 	if(this.thrusterBurn["forward"]>0.001) {
 		this.drivenPhysicalObject.forces.push(new Force(2*this.class.thrust*this.thrusterBurn["forward"],directionVector,1));
@@ -244,7 +245,7 @@ Propulsion.prototype.simulate = function(dt) {
 	}
 };
 
-function Spacecraft(graphicsContext,logicContext,SpacecraftClass,owner,position,controller) {
+function Spacecraft(graphicsContext,logicContext,SpacecraftClass,owner,positionMatrix,controller) {
 	this.graphicsContext=graphicsContext;
 	this.logicContext=logicContext;
 	this.class=SpacecraftClass;
@@ -258,11 +259,11 @@ function Spacecraft(graphicsContext,logicContext,SpacecraftClass,owner,position,
 		modelsWithLOD,
 		graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
 		graphicsContext.resourceCenter.getTexture(SpacecraftClass.textureFileName),
-		position,
+		positionMatrix,
 		identityMatrix4(),
 		scalingMatrix(SpacecraftClass.modelSize,SpacecraftClass.modelSize,SpacecraftClass.modelSize),
 		false);
-	this.physicalModel=new PhysicalObject(SpacecraftClass.mass,SpacecraftClass.modelSize,position,identityMatrix4(),identityMatrix4(),SpacecraftClass.bodies);
+	this.physicalModel=new PhysicalObject(SpacecraftClass.mass,SpacecraftClass.modelSize,positionMatrix,identityMatrix4(),identityMatrix4(),SpacecraftClass.bodies);
 	
 		
 	this.owner=owner;
@@ -313,8 +314,8 @@ function Spacecraft(graphicsContext,logicContext,SpacecraftClass,owner,position,
 			[phyModelWithLOD],
 			graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
 			graphicsContext.resourceCenter.getTexture("textures/white.png"),
-			translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(SpacecraftClass.bodies[i].position))),
-			SpacecraftClass.bodies[i].orientation,
+			translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(SpacecraftClass.bodies[i].positionMatrix))),
+			SpacecraftClass.bodies[i].orientationMatrix,
 			identityMatrix4(),
 			false);
 		hitZoneMesh.visible=false;
@@ -337,8 +338,8 @@ Spacecraft.prototype.addWeapon = function(resourceCenter,weaponClass) {
 				modelsWithLOD,
 				resourceCenter.getShader(this.class.shaderName),
 				resourceCenter.getTexture(this.class.textureFileName),
-				slot.position,
-				slot.orientation,
+				slot.positionMatrix,
+				slot.orientationMatrix,
 				identityMatrix4(),
 				false
 				);
@@ -352,13 +353,13 @@ Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
 	for(var i=0;i<this.class.thrusterSlots.length;i++) {
 		var slot = this.class.thrusterSlots[i];
 		
-		var thrusterParticle = new PermanentParticle(
+		var thrusterParticle = new StaticParticle(
 				resourceCenter.addModel(squareModel(),"squareModel"),
 				resourceCenter.getShader(propulsionClass.shaderName),
 				resourceCenter.getTexture(propulsionClass.textureFileName),
 				propulsionClass.color,
 				slot.size,
-				translationMatrixv(slot.position)
+				translationMatrixv(slot.positionVector)
 				);
 		this.visualModel.subnodes.push(thrusterParticle);
 		var thruster = new Thruster(slot,thrusterParticle);
@@ -370,7 +371,7 @@ Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
 
 Spacecraft.prototype.fire = function(resourceCenter,scene,projectiles) {
 	for(var i=0;i<this.weapons.length;i++) {
-		this.weapons[i].fire(resourceCenter,scene,projectiles,this.visualModel.getPosition(),this.visualModel.getOrientation(),this.visualModel.getScale(),this);
+		this.weapons[i].fire(resourceCenter,scene,projectiles,this.visualModel.getPositionMatrix(),this.visualModel.getOrientationMatrix(),this.visualModel.getScalingMatrix(),this);
 	}
 };
 
@@ -410,14 +411,14 @@ Spacecraft.prototype.addThrusterBurnCapped = function(use,value,max) {
 	}
 };
 
-Spacecraft.prototype.addDirectionalThrusterBurn = function(direction,value) {
+Spacecraft.prototype.addDirectionalThrusterBurn = function(directionVector,value) {
 	if(value<0) {
 		value=-value;
-		direction[0]=-direction[0];
-		direction[1]=-direction[1];
-		direction[2]=-direction[2];
+		directionVector[0]=-directionVector[0];
+		directionVector[1]=-directionVector[1];
+		directionVector[2]=-directionVector[2];
 	}
-	var relativeDirection = vector3Matrix3Product(direction,matrix3from4(this.physicalModel.modelMatrixInverse));
+	var relativeDirection = vector3Matrix3Product(directionVector,matrix3from4(this.physicalModel.modelMatrixInverse));
 	if(relativeDirection[0]>0.0001) {
 		this.addThrusterBurn("slideRight",relativeDirection[0]*value);
 	}
@@ -450,41 +451,40 @@ Spacecraft.prototype.simulate = function(dt) {
 	this.controller.control();
 	this.propulsion.simulate(dt);
 	this.physicalModel.simulate(dt);
-	this.visualModel.position=this.physicalModel.position;
-	this.visualModel.orientation=this.physicalModel.orientation;
+	this.visualModel.positionMatrix=this.physicalModel.positionMatrix;
+	this.visualModel.orientationMatrix=this.physicalModel.orientationMatrix;
 };
 
-function Dust(resourceCenter,scene,position) {
+function Dust(resourceCenter,scene,positionMatrix) {
 	this.visualModel = new DustParticle(
+                resourceCenter.addModel(dustModel([0.5,0.5,0.5]),"dust"),
 		resourceCenter.getShader("dust"),
                 [0.5,0.5,0.5],
-		position
+		positionMatrix
 		);
-		
 	scene.objects.push(this.visualModel);
 	
 	this.toBeDeleted = false;
 }
 
 Dust.prototype.simulate = function(camera) {
-    this.visualModel.shift=[-camera.velocity[0],-camera.velocity[1],-camera.velocity[2]];
-    if(this.visualModel.position[12]>-camera.position[12]+25.0) {
-        this.visualModel.position[12]-=50.0;
-    } else if(this.visualModel.position[12]<-camera.position[12]-25.0) {
-        this.visualModel.position[12]+=50.0;
+    this.visualModel.shift=[-camera.velocityVector[0],-camera.velocityVector[1],-camera.velocityVector[2]];
+    if(this.visualModel.positionMatrix[12]>-camera.positionMatrix[12]+25.0) {
+        this.visualModel.positionMatrix[12]-=50.0;
+    } else if(this.visualModel.positionMatrix[12]<-camera.positionMatrix[12]-25.0) {
+        this.visualModel.positionMatrix[12]+=50.0;
     }
-    if(this.visualModel.position[13]>-camera.position[13]+25.0) {
-        this.visualModel.position[13]-=50.0;
-    } else if(this.visualModel.position[13]<-camera.position[13]-25.0) {
-        this.visualModel.position[13]+=50.0;
+    if(this.visualModel.positionMatrix[13]>-camera.positionMatrix[13]+25.0) {
+        this.visualModel.positionMatrix[13]-=50.0;
+    } else if(this.visualModel.positionMatrix[13]<-camera.positionMatrix[13]-25.0) {
+        this.visualModel.positionMatrix[13]+=50.0;
     }
-    if(this.visualModel.position[14]>-camera.position[14]+25.0) {
-        this.visualModel.position[14]-=50.0;
-    } else if(this.visualModel.position[14]<-camera.position[14]-25.0) {
-        this.visualModel.position[14]+=50.0;
+    if(this.visualModel.positionMatrix[14]>-camera.positionMatrix[14]+25.0) {
+        this.visualModel.positionMatrix[14]-=50.0;
+    } else if(this.visualModel.positionMatrix[14]<-camera.positionMatrix[14]-25.0) {
+        this.visualModel.positionMatrix[14]+=50.0;
     }
-    this.visualModel.matrix=this.visualModel.position;
-    //document.getElementById("output").innerHTML+="<br/> "+this.visualModel.position[12]+" - "+camera.position[12];
+    this.visualModel.matrix=this.visualModel.positionMatrix;
 };
 
 function Level(resourceCenter,scene) {
@@ -676,7 +676,7 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 				}
 				result[i].bodies[j].orientation=
 					mul(
-						result[i].bodies[j].orientation,
+						result[i].bodies[j].orientationMatrix,
 						rotationMatrix4(axis,parseFloat(turnTags[k].getAttribute("degree"))/180*3.1415)
 					);
 			}
@@ -705,7 +705,7 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 						}
 						result[i].weaponSlots[j].orientation=
 							mul(
-								result[i].weaponSlots[j].orientation,
+								result[i].weaponSlots[j].orientationMatrix,
 								rotationMatrix4(
 									axis,
 									parseFloat(directionTags[k].getAttribute("angle"))/180*3.1415

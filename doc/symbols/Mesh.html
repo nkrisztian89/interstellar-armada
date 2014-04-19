@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ShaderUniform</title>
+		<title>JsDoc Reference - Mesh</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -240,16 +240,18 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ShaderUniform
+				Class Mesh
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
+				<br />Extends
+					<a href="../symbols/VisualObject.html">VisualObject</a>.<br />
 				
 			
-				A class representing and wrapping a GLSL uniform 
-variable.
+				Visual object that renders a 3D model from a set of different LOD
+options.
 				
 				
 					<br /><i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
@@ -258,7 +260,7 @@ variable.
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ShaderUniform.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Mesh.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -271,9 +273,9 @@ variable.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ShaderUniform.html#constructor">ShaderUniform</a></b>(name, type)
+								<b><a href="../symbols/Mesh.html#constructor">Mesh</a></b>(modelsWithLOD, shader, texture, positionMatrix, orientationMatrix, scalingMatrix, lineMode)
 							</div>
-							<div class="description">Creates a new ShaderUniform.</div>
+							<div class="description">Creates a mesh type visual object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -287,7 +289,7 @@ variable.
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class ShaderUniform.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Mesh.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -300,31 +302,55 @@ variable.
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/ShaderUniform.html#getAndSetLocation">getAndSetLocation</a></b>(gl, programID)
+								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getModelMatrix">getModelMatrix</a></b>()
 								</div>
-								<div class="description">Gets the location of the uniform variable in the specified GLSL program
-within the specified GL context, and sets the location member of the class
-to remember it.</div>
+								<div class="description">Returns the model transformation matrix of the mesh, also taking into account
+the parents' transformation.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/ShaderUniform.html#getSetterFunction">getSetterFunction</a></b>(gl, location, type, value)
+								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getOrientationMatrix">getOrientationMatrix</a></b>()
 								</div>
-								<div class="description">Get the GL function that sets the uniform of the specified type at the
-specified location to the specified value.</div>
+								<div class="description">Returns the rotation matrix describing the orientation of the mesh.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/ShaderUniform.html#setValue">setValue</a></b>(gl, valueFunction)
+								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getPositionMatrix">getPositionMatrix</a></b>()
 								</div>
-								<div class="description">Sets the value of the shader in the specified GL context to the return value
-of the passed value function.</div>
+								<div class="description">Returns the translation matrix describing the position of the mesh.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getScalingMatrix">getScalingMatrix</a></b>()
+								</div>
+								<div class="description">Returns the scaling matrix describing the size of the mesh.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getSize">getSize</a></b>()
+								</div>
+								<div class="description">Returns the size of the largest model of the mesh.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Mesh.html#render">render</a></b>(resourceCenter, screenSize, lodContext)
+								</div>
+								<div class="description">Renders the appropriate model of the mesh.</div>
 							</td>
 						</tr>
 					
@@ -332,6 +358,10 @@ of the passed value function.</div>
 				</table>
 				
 				
+				
+				<dl class="inheritsList">
+				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#isInsideViewFrustum">isInsideViewFrustum</a></dd>
+				</dl>
 				
 			
 <!-- ============================== events summary ======================== -->
@@ -345,11 +375,11 @@ of the passed value function.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>ShaderUniform</b>(name, type)
+						<b>Mesh</b>(modelsWithLOD, shader, texture, positionMatrix, orientationMatrix, scalingMatrix, lineMode)
 				</div>
 				
 				<div class="description">
-					Creates a new ShaderUniform.
+					Creates a mesh type visual object.
 					
 				</div>
 				
@@ -361,18 +391,47 @@ of the passed value function.</div>
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{String}</span>  <b>name</b>
+								<span class="light fixedFont">{<a href="../symbols/ModelWithLOD.html">ModelWithLOD</a>[]}</span>  <b>modelsWithLOD</b>
 								
 							</dt>
-								<dd>The name of the uniform variable. Has to be the same
-as the name specified in the GLSL source.</dd>
+								<dd>The series of 3D models with their 
+associated LOD information.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{String}</span>  <b>type</b>
+								<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span>  <b>shader</b>
 								
 							</dt>
-								<dd>The type of the uniform variable. Only certain variable
-types are supported.</dd>
+								<dd>The shader that should be active while rendering this object.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{<a href="../symbols/Texture.html">Texture</a>}</span>  <b>texture</b>
+								
+							</dt>
+								<dd>The texture that should be bound while rendering this object</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Float32Array}</span>  <b>positionMatrix</b>
+								
+							</dt>
+								<dd>The 4x4 translation matrix representing the initial position of the object.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Float32Array}</span>  <b>orientationMatrix</b>
+								
+							</dt>
+								<dd>The 4x4 rotation matrix representing the initial orientation of the object.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Float32Array}</span>  <b>scalingMatrix</b>
+								
+							</dt>
+								<dd>The 4x4 scaling matrix representing the initial size of the object.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{boolean}</span>  <b>lineMode</b>
+								
+							</dt>
+								<dd>Whether the mesh should be drawn as wireframe instead of solid.</dd>
 						
 						</dl>
 					
@@ -395,40 +454,150 @@ types are supported.</dd>
 					Method Detail
 				</div>
 				
-					<a name="getAndSetLocation"> </a>
+					<a name="getModelMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>getModelMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the model transformation matrix of the mesh, also taking into account
+the parents' transformation.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 model transformation matrix of the object.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getOrientationMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>getOrientationMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the rotation matrix describing the orientation of the mesh.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 rotation matrix indicating the orientation.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getPositionMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>getPositionMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the translation matrix describing the position of the mesh.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 translation matrix indicating the position.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getScalingMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>getScalingMatrix</b>()
+					
+					</div>
+					<div class="description">
+						Returns the scaling matrix describing the size of the mesh.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 scaling matrix indicating the size.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getSize"> </a>
 					<div class="fixedFont">
 					
 					<span class="light">{number}</span>
-					<b>getAndSetLocation</b>(gl, programID)
+					<b>getSize</b>()
 					
 					</div>
 					<div class="description">
-						Gets the location of the uniform variable in the specified GLSL program
-within the specified GL context, and sets the location member of the class
-to remember it.
+						Returns the size of the largest model of the mesh.
 						
 						
 					</div>
 					
 					
 					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{object}</span> <b>gl</b>
-									
-								</dt>
-								<dd>The GL context.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>programID</b>
-									
-								</dt>
-								<dd>The GLSL shader program ID.</dd>
-							
-							</dl>
 						
 						
 						
@@ -437,7 +606,7 @@ to remember it.
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{number}</span> The location ID of the uniform in the program.</dd>
+								<dd><span class="light fixedFont">{number}</span> The size of the largest model of the mesh.</dd>
 							
 							</dl>
 						
@@ -446,16 +615,15 @@ to remember it.
 
 					<hr />
 				
-					<a name="getSetterFunction"> </a>
+					<a name="render"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{function}</span>
-					<b>getSetterFunction</b>(gl, location, type, value)
+					
+					<b>render</b>(resourceCenter, screenSize, lodContext)
 					
 					</div>
 					<div class="description">
-						Get the GL function that sets the uniform of the specified type at the
-specified location to the specified value.
+						Renders the appropriate model of the mesh.
 						
 						
 					</div>
@@ -467,80 +635,23 @@ specified location to the specified value.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{object}</span> <b>gl</b>
+									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
 									
 								</dt>
-								<dd>The GL context</dd>
+								<dd>The resource center that holds the
+texture, the models and the shader.</dd>
 							
 								<dt>
-									<span class="light fixedFont">{number}</span> <b>location</b>
+									<span class="light fixedFont">{number}</span> <b>screenSize</b>
 									
 								</dt>
-								<dd>The location of the uniform</dd>
+								<dd>The size of the screen in pixels for LOD decision.</dd>
 							
 								<dt>
-									<span class="light fixedFont">{<a href="../symbols/_global_.html#ShaderVariableTypes">ShaderVariableTypes</a> member}</span> <b>type</b>
+									<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span> <b>lodContext</b>
 									
 								</dt>
-								<dd>The type of the uniform</dd>
-							
-								<dt>
-									<span class="light fixedFont">{object}</span> <b>value</b>
-									
-								</dt>
-								<dd>The value to set the uniform to (can be of different
-types)</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{function}</span> A function that executes the webGL query of setting the
-uniform to the specified value.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="setValue"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>setValue</b>(gl, valueFunction)
-					
-					</div>
-					<div class="description">
-						Sets the value of the shader in the specified GL context to the return value
-of the passed value function.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{object}</span> <b>gl</b>
-									
-								</dt>
-								<dd>The GL context</dd>
-							
-								<dt>
-									<span class="light fixedFont">{function}</span> <b>valueFunction</b>
-									
-								</dt>
-								<dd>The function to calculate the uniform value</dd>
+								<dd>The object storing the LOD thresholds and settings.</dd>
 							
 							</dl>
 						

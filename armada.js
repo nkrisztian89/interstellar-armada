@@ -64,23 +64,23 @@ function loadResources() {
 	var canvas = document.getElementById("canvas");
 	var progress = document.getElementById("progress");
 
-	var resourceCenter = new ResourceCenter(canvas,new LODContext(4,[0,30,60,250,400]));
+	var resourceCenter = new ResourceCenter();
 	
-	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true);
+	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,new LODContext(4,[0,30,60,250,400]));
 	//var pipScene = new Scene(canvas.width*2/3,canvas.height/4,canvas.width/3,canvas.height/2,false,[true,true,true,true],[0,0.5,0,0.5],true);
 	
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
 	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(ang),Math.sin(ang),0.0]; };
-	mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.position,mainScene.activeCamera.orientation); };
-	mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspective; };
+	mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
+	mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
 	mainScene.uniformValueFunctions['u_eyePos'] = function() 
 		{
 			var eyePos = [
-				-mainScene.activeCamera.position[12],
-				-mainScene.activeCamera.position[13],
-				-mainScene.activeCamera.position[14]
+				-mainScene.activeCamera.positionMatrix[12],
+				-mainScene.activeCamera.positionMatrix[13],
+				-mainScene.activeCamera.positionMatrix[14]
 				];
 			return [eyePos[0],eyePos[1],eyePos[2]]; 
 		};
@@ -99,7 +99,7 @@ function loadResources() {
 	document.getElementById("status").innerHTML="loading additional configuration...";
 	
         // we turn the cruizer around so it looks nicer at start :)
-	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientation=
+	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientationMatrix=
 		mul(
 			rotationMatrix4([0,1,0],3.1415/4),
 			rotationMatrix4([0,0,1],3.1415/2)
@@ -138,25 +138,27 @@ function loadResources() {
 		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,test_level.getWeaponClass("cannon"));
 		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,test_level.getPropulsionClass("frigate"));
 	}
+        
+        mainScene.cameras.push(new Camera(canvas.width/canvas.height,90,true,true));
 		
         // adding cameras to each fighter and ship so they can  be followed
         /// TODO: manage camera loading from XML
 	for(var i=0;i<test_level.spacecrafts.length;i++) {	
-		resourceCenter.cameras.push(new Camera(canvas.width/canvas.height,60,false,true,test_level.spacecrafts[i].visualModel));
+		mainScene.cameras.push(new Camera(canvas.width/canvas.height,60,false,true,test_level.spacecrafts[i].visualModel));
         }
         // interceptor 1
-	resourceCenter.cameras[1].followPosition=translationMatrix(0,-6,1);
+	mainScene.cameras[1].followPositionMatrix=translationMatrix(0,-6,1);
         // interceptor 2
-	resourceCenter.cameras[2].followPosition=translationMatrix(0,-4,6);
-	resourceCenter.cameras[2].followOrientation=rotationMatrix4([1,0,0],-45);
+	mainScene.cameras[2].followPositionMatrix=translationMatrix(0,-4,6);
+	mainScene.cameras[2].followOrientationMatrix=rotationMatrix4([1,0,0],-45);
         // bomber 1
-	resourceCenter.cameras[4].followPosition=translationMatrix(0,-10,2);
+	mainScene.cameras[4].followPositionMatrix=translationMatrix(0,-10,2);
         // corvette
-	resourceCenter.cameras[7].followPosition=translationMatrix(0,-6,3);
+	mainScene.cameras[7].followPositionMatrix=translationMatrix(0,-6,3);
         // frigate
-	resourceCenter.cameras[8].followPosition=translationMatrix(0,-3,4);
+	mainScene.cameras[8].followPositionMatrix=translationMatrix(0,-3,4);
         // cruizer
-	resourceCenter.cameras[9].followPosition=translationMatrix(0,-25,20);
+	mainScene.cameras[9].followPositionMatrix=translationMatrix(0,-25,20);
 	
         // adding random goals to the AI for testing
 	for(var i=0;i<test_level.spacecrafts.length;i++) {
@@ -166,15 +168,15 @@ function loadResources() {
 	}
 	
         // setting up the position and direction of the main camera
-	mainScene.activeCamera.position=
+	mainScene.activeCamera.positionMatrix=
 		mul(
-			mainScene.activeCamera.position,
+			mainScene.activeCamera.positionMatrix,
 			translationMatrix(0,10,-10)
 		);
 		
-	mainScene.activeCamera.orientation=
+	mainScene.activeCamera.orientationMatrix=
 		mul(
-			mainScene.activeCamera.orientation,
+			mainScene.activeCamera.orientationMatrix,
 			rotationMatrix4([1,0,0],3.1415/4)
 		);
 	

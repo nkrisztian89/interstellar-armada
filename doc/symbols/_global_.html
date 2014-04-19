@@ -191,7 +191,29 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/Billboard.html">Billboard</a></li>
+	
+	<li><a href="../symbols/Camera.html">Camera</a></li>
+	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
+	
+	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	
+	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
+	
+	<li><a href="../symbols/FVQ.html">FVQ</a></li>
+	
+	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/LODContext.html">LODContext</a></li>
+	
+	<li><a href="../symbols/Mesh.html">Mesh</a></li>
+	
+	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
+	
+	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
+	
+	<li><a href="../symbols/Scene.html">Scene</a></li>
 	
 	<li><a href="../symbols/SceneCamera.html">SceneCamera</a></li>
 	
@@ -201,7 +223,11 @@ ul.inheritsList
 	
 	<li><a href="../symbols/ShaderUniform.html">ShaderUniform</a></li>
 	
+	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
+	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
+	
+	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
 	
@@ -282,6 +308,16 @@ ul.inheritsList
 								</div>
 								<div class="description">Sets up and returns a simple EgomModel that contains a cuboid (XYZ-box) model 
 with the given properties.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#dustModel">dustModel</a></b>()
+								</div>
+								<div class="description">Sets up and returns a simple EgomModel that contains a two vertices connected
+with a line for drawing dust particles.</div>
 							</td>
 						</tr>
 					
@@ -453,7 +489,7 @@ containing the name of the variable type.</div>
 					<a name="cuboidModel"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{EgomModel}</span>
 					<b>cuboidModel</b>(width, height, depth, color)
 					
 					</div>
@@ -504,6 +540,49 @@ desired box color.</dd>
 						
 						
 						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{EgomModel}</span> A cuboid model.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="dustModel"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{EgomModel}</span>
+					<b>dustModel</b>()
+					
+					</div>
+					<div class="description">
+						Sets up and returns a simple EgomModel that contains a two vertices connected
+with a line for drawing dust particles.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{EgomModel}</span> A dust particle model.</dd>
+							
+							</dl>
+						
 						
 						
 
@@ -512,7 +591,7 @@ desired box color.</dd>
 					<a name="fvqModel"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{EgomModel}</span>
 					<b>fvqModel</b>()
 					
 					</div>
@@ -532,6 +611,13 @@ rendering Full Viewport Quads. (FVQ)
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{EgomModel}</span> An FVQ model.</dd>
+							
+							</dl>
 						
 						
 						
@@ -776,7 +862,7 @@ Loads the scripts in the specified order, then executes a callback function.
 					<a name="projectileModel"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{EgomModel}</span>
 					<b>projectileModel</b>(intersections)
 					
 					</div>
@@ -811,6 +897,13 @@ be created along the side view square.</dd>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{EgomModel}</span> A projectile model of intersecting squares.</dd>
+							
+							</dl>
 						
 						
 						
@@ -966,7 +1059,7 @@ to be set.</dd>
 					<a name="squareModel"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{EgomModel}</span>
 					<b>squareModel</b>()
 					
 					</div>
@@ -985,6 +1078,13 @@ to be set.</dd>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{EgomModel}</span> An XY square model.</dd>
+							
+							</dl>
 						
 						
 						
@@ -1032,7 +1132,7 @@ script files and the external resources.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Fri Apr 18 2014 21:28:32 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 19 2014 03:35:45 GMT+0300 (EEST)
 		</div>
 	</body>
 </html>
