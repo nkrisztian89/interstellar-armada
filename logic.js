@@ -703,7 +703,7 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 						if (directionTags[k].getAttribute("axis")==="z") {
 							axis=[0,0,1];
 						}
-						result[i].weaponSlots[j].orientation=
+						result[i].weaponSlots[j].orientationMatrix=
 							mul(
 								result[i].weaponSlots[j].orientationMatrix,
 								rotationMatrix4(

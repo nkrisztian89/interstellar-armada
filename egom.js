@@ -7,6 +7,7 @@
 
 /**
  * Creates a new line object for an EgomModel.
+ * @class Represents a line connecting two vertices in a model.
  * @param a The index of the starting vertex of the line.
  * @param b The index of the end vertex of the line.
  * @param red The red component of the line's color.
@@ -56,6 +57,13 @@ function Triangle(a,b,c,red,green,blue,alpha,luminosity,shininess,tax,tay,tbx,tb
 	this.ncz=ncz;
 }
 
+/**
+ * Creates a new 3D model object, and if a file name was given, loads the data
+ * from the file. Only Egom XML format is supported.
+ * @class Represents a 3D polygonal model. The Egom data stucture is optimized
+ * for generating and editing models from the program code.
+ * @param {string} filename The name of the file to load the model from. (optional)
+ */
 function EgomModel(filename) {
 	this.vertices = new Array();
 	this.lines = new Array();
@@ -162,11 +170,6 @@ EgomModel.prototype.loadFromFile = function(filename) {
 			-triangleTags[i].getAttribute("ncz")
 			);
 	}
-	
-	//alert("model with "+nVertices+" vertices loaded!");
-	
-	//xmlDoc.getElementsByTagName("to")[0].childNodes[0].nodeValue;
-	//getAttribute('category')
 };
 
 EgomModel.prototype.getBuffers = function(lineMode) {
@@ -293,7 +296,7 @@ EgomModel.prototype.getBuffers = function(lineMode) {
 EgomModel.prototype.setupBuffers = function(gl,program) {
 	var bufferData=this.getBuffers();
 	var vertexData=bufferData[0];
-	var texCoorddata=bufferData[1];
+	var texCoordData=bufferData[1];
 	var normalData=bufferData[2];
 	var colorData=bufferData[3];
 	var luminosityData=bufferData[4];
@@ -420,4 +423,115 @@ EgomModel.prototype.addCuboid = function(x,y,z,width,height,depth,color,luminosi
 		}
 	}
 	
+};
+
+function uvCoordsOnTexture(left,bottom,right,top,relativeX,relativeY) {
+    var result=[0,0];
+    result[0]=left+(right-left)*relativeX;
+    result[1]=bottom+(top-bottom)*relativeY;
+    return result;
+}
+
+/**
+ * Adds vertices and triangles that form a sphere (UV sphere).
+ * @param {number} x The X coordinate of the center.
+ * @param {number} y The Y coordinate of the center.
+ * @param {number} z The Z coordinate of the center.
+ * @param {number} radius The radius of the sphere.
+ * @param {number} angles The number of angles one circle should have within the sphere.
+ * @param {number[]} color The RGBA components of the desired color of the triangles.
+ * @param {number} luminosity The luminosity of the triangles.
+ * @param {number} shininess The shininess exponent of the triangles.
+ * @param {number[][]} textureCoordinates The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise
+ * @param {boolean} cullFace Whether to omit the triangles from the inside of the sphere.
+ */
+EgomModel.prototype.addSphere = function(x,y,z,radius,angles,color,luminosity,shininess,textureCoordinates, cullFace) {    
+    // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
+    for (var i=0;i<angles;i++) {
+        for (var j=0;j<angles;j++) {
+            this.vertices.push([x+radius*Math.sin(j*2*3.1415/angles)*Math.cos(i*2*3.1415/angles),y+radius*Math.cos(j*2*3.1415/angles),z+radius*Math.sin(i*2*3.1415/angles)*Math.sin(j*2*3.1415/angles)]);
+        }
+    }
+    
+    var i0 = this.vertices.length-angles*angles;
+    
+    if((angles%2)===1) {
+        this.vertices[i0+(angles+1)/2][0]=x;
+        this.vertices[i0+(angles+1)/2][2]=z;
+    }
+    
+    for(var i=0;i<angles;i++) {
+        // adding triangles connected to the top
+        // the vertex indices:
+        var v = [i0+(i*angles),i0+(((i+1)%angles)*angles)+1,i0+(i*angles)+1];
+        // the UV texture coordinates:
+        var uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],1/(2*angles)+(i/angles),1);
+        var uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2/angles);
+        var uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2/angles);
+        // the normal vectors:
+        var n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
+        var n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
+        var n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
+        this.triangles.push(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
+            uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
+            n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
+        if(cullFace!==true) {
+            this.triangles.push(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
+                uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
+                -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+        }
+        // triangles connected to the bottom
+        if ((angles%2)===0) {
+            v = [i0+(i*angles)+angles/2,i0+(i*angles)+angles/2-1,i0+(((i+1)%angles)*angles)+angles/2-1];
+        } else {
+            v= [i0+(angles+1)/2,i0+(i*angles)+(angles-1)/2,i0+(((i+1)%angles)*angles)+(angles-1)/2];
+        }
+        uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],1/(2*angles)+(i/angles),0);
+        uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,((angles%2)===0)?2/angles:1/angles);
+        uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,((angles%2)===0)?2/angles:1/angles);
+        n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
+        n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
+        n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
+        this.triangles.push(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
+            uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
+            n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
+        if(cullFace!==true) {
+            this.triangles.push(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
+                uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
+                -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+        }
+        // quads between the two subsequent circles
+        for (var j=1;j<angles/2-1;j++) {
+            v=[i0+(i*angles)+j,i0+(((i+1)%angles)*angles)+j+1,i0+(i*angles)+j+1];
+            uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2*j/angles);
+            uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2*(j+1)/angles);
+            uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2*(j+1)/angles);
+            n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
+            n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
+            n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
+            this.triangles.push(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
+                uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
+                n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
+            if(cullFace!==true) {
+                this.triangles.push(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
+                    uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
+                    -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+            }
+            v=[i0+(((i+1)%angles)*angles)+j+1,i0+(i*angles)+j,i0+(((i+1)%angles)*angles)+j];
+            uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2*(j+1)/angles);
+            uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2*j/angles);
+            uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2*j/angles);
+            n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
+            n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
+            n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
+            this.triangles.push(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
+                uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
+                n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
+            if(cullFace!==true) {
+                this.triangles.push(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
+                    uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
+                    -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+            }    
+        }
+    }
 };

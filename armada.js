@@ -139,6 +139,17 @@ function loadResources() {
 		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,test_level.getPropulsionClass("frigate"));
 	}
         
+        // adding a sphere model for testing the shading
+        /*var sphereModel = new EgomModel();
+        sphereModel.addSphere(0,0,0,5,32,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,0.5],[0.5,0.5]],false);
+        sphereModel.filename="sphere";
+        mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/fem.bmp"),identityMatrix4(),identityMatrix4(),identityMatrix4(),false));
+        mainScene.objects[mainScene.objects.length-1].orientationMatrix=
+                mul(
+                    rotationMatrix4([1,0,0],3.1415/4),
+                    rotationMatrix4([0,1,0],3.1415/4)
+                );*/
+        
         mainScene.cameras.push(new Camera(canvas.width/canvas.height,90,true,true));
 		
         // adding cameras to each fighter and ship so they can  be followed
@@ -166,7 +177,7 @@ function loadResources() {
 			test_level.spacecrafts[i].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
 		}
 	}
-	
+	/*
         // setting up the position and direction of the main camera
 	mainScene.activeCamera.positionMatrix=
 		mul(
@@ -178,7 +189,7 @@ function loadResources() {
 		mul(
 			mainScene.activeCamera.orientationMatrix,
 			rotationMatrix4([1,0,0],3.1415/4)
-		);
+		);*/
 	
 	var freq = 30;
 	
