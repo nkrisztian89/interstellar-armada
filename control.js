@@ -65,24 +65,15 @@ FighterController.prototype = new Controller();
 FighterController.prototype.constructor = FighterController;
 
 FighterController.prototype.control = function() {
-	if (currentlyPressedKeys[70]) {
+	if (currentlyPressedKeys[70]) { // f
 		this.controlledEntity.fire(this.graphicsContext.resourceCenter,this.graphicsContext.scene,this.logicContext.level.projectiles);
 	}
 	
 	var physicalModel = this.controlledEntity.physicalModel;
-		
-	var speed2=translationDistance2(physicalModel.velocityMatrix,nullMatrix4());
-	var speed=Math.sqrt(speed2);
 	
-	var directionVector = [physicalModel.orientationMatrix[4],physicalModel.orientationMatrix[5],physicalModel.orientationMatrix[6]];
-	var velocityVector = speed>0.0?normalizeVector([physicalModel.velocityMatrix[12],physicalModel.velocityMatrix[13],physicalModel.velocityMatrix[14]]):[0,0,0];
-	var forwardSpeed = vectorDotProduct(velocityVector,directionVector)*speed;
 	var relativeVelocityMatrix = mul(
 		physicalModel.velocityMatrix,
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
-	
-	var yawAxis = [physicalModel.orientationMatrix[8],physicalModel.orientationMatrix[9],physicalModel.orientationMatrix[10]];
-	var pitchAxis = [physicalModel.orientationMatrix[0],physicalModel.orientationMatrix[1],physicalModel.orientationMatrix[2]];
 	
 	var turningMatrix = mul(
 		mul(
@@ -95,8 +86,6 @@ FighterController.prototype.control = function() {
 		event = keyPressEvents[i];
 		if (getChar(event) === 'o') {
 			this.flightMode=(this.flightMode+1)%this.NUM_FLIGHTMODES;
-			keyPressEvents.splice(i,1);
-			i-=1;
 		}
 	}
 	this.controlledEntity.resetThrusterBurn();
@@ -263,12 +252,6 @@ AIController.prototype.control = function() {
 	
 	var directionVector = normalizeVector([physicalModel.orientationMatrix[4],physicalModel.orientationMatrix[5],physicalModel.orientationMatrix[6]]);
 	var velocityVector = speed>0.0?normalizeVector([physicalModel.velocityMatrix[12],physicalModel.velocityMatrix[13],physicalModel.velocityMatrix[14]]):[0,0,0];
-	var futureOrientationMatrix = mul(physicalModel.orientationMatrix,physicalModel.angularVelocityMatrix);
-	var futureDirectionVector = normalizeVector([futureOrientationMatrix[4],futureOrientationMatrix[5],futureOrientationMatrix[6]]);
-	var turningDirectionVector = normalizeVector([physicalModel.angularVelocityMatrix[4],physicalModel.angularVelocityMatrix[5],physicalModel.angularVelocityMatrix[6]]);
-	var turningAngle = angleDifferenceOfUnitVectors(turningDirectionVector,[0,1,0]);
-	var turningAngle2 = turningAngle*turningAngle;
-	var turningAxis = normalizeVector(crossProduct(futureDirectionVector,directionVector));
 	
 	var turningMatrix = mul(
 		mul(
@@ -293,8 +276,6 @@ AIController.prototype.control = function() {
 		var speedTowardsGoal2 = speedTowardsGoal*speedTowardsGoal;
 		
 		var angleToDesiredDirection = angleDifferenceOfUnitVectors(directionVector,toGoal);	
-		//var requiredTurningAxis = normalizeVector(crossProduct(toGoal,directionVector));
-		//var turningAngleTowardsGoal = vectorDotProduct(turningAxis,requiredTurningAxis)*turningAngle;
 		
 		var relativeVectorToGoal = vector3Matrix3Product(toGoal,matrix3from4(physicalModel.modelMatrixInverse));
 		
@@ -662,8 +643,10 @@ function control(resourceCenter,scene,level) {
                 }
                 // stop all units
 		if (getChar(event) === '0') {
-			for(var i=0;i<level.spacecrafts.length;i++) {
-				level.spacecrafts[i].controller.goals=new Array();
+			for(var j=0;j<level.spacecrafts.length;j++) {
+                                if(level.spacecrafts[j].controller instanceof AIController) {
+                                    level.spacecrafts[j].controller.goals=new Array();
+                                }
 			}
 		}
                 // toggle rotation of directional lightsource
@@ -672,10 +655,10 @@ function control(resourceCenter,scene,level) {
 		}
                 // toggle visibility of hitboxes
 		if (getChar(event) === 'h') {
-			for(var i=0;i<level.spacecrafts.length;i++) {
-				for(var j=0;j<level.spacecrafts[i].visualModel.subnodes.length;j++) {
-					if(level.spacecrafts[i].visualModel.subnodes[j].texture.filename==="textures/white.png") {
-						level.spacecrafts[i].visualModel.subnodes[j].visible=!level.spacecrafts[i].visualModel.subnodes[j].visible;
+			for(var j=0;j<level.spacecrafts.length;j++) {
+				for(var k=0;k<level.spacecrafts[j].visualModel.subnodes.length;k++) {
+					if(level.spacecrafts[j].visualModel.subnodes[k].texture.filename==="textures/white.png") {
+						level.spacecrafts[j].visualModel.subnodes[k].visible=!level.spacecrafts[j].visualModel.subnodes[k].visible;
 					}
 				}
 			}

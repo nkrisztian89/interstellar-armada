@@ -674,7 +674,7 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 				if (turnTags[k].getAttribute("axis")==="z") {
 					axis=[0,0,1];
 				}
-				result[i].bodies[j].orientation=
+				result[i].bodies[j].orientationMatrix=
 					mul(
 						result[i].bodies[j].orientationMatrix,
 						rotationMatrix4(axis,parseFloat(turnTags[k].getAttribute("degree"))/180*3.1415)
