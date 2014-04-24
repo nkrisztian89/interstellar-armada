@@ -229,6 +229,25 @@ function inverse4(m) {
 	return result;
 }
 
+/**
+ * Calculates and returns the inverse of the top left 3x3 block of a 4x4 matrix,
+ * but complemented to 4x4 matrix (using identity matrix values for the rest part).
+ * Can be used to calculate the inverse of a rotation (or scaling) described in
+ * the 3x3 part of a 4x4 matrix without letting the optional translation
+ * interfere with it.
+ * @param {Float32Array} m The input 4x4 matrix.
+ * @returns {Float32Array} The calculated inverse, complemented 4x4 matrix.
+ */
+function inverseRotationMatrix(m) {
+    return matrix4from3(inverse3(matrix3from4(m)));
+}
+
+/**
+ * Multiplies two 3x3 matrices.
+ * @param {Float32Array} m1 The 3x3 matrix on the left of the multiplicaton.
+ * @param {Float32Array} m2 The 3x3 matrix on the right of the multiplicaton.
+ * @returns {Float32Array} The result 3x3 matrix.
+ */
 function mul3(m1,m2) {
 	return new Float32Array([
 		m1[0]*m2[0]+m1[1]*m2[3]+m1[2]*m2[6],

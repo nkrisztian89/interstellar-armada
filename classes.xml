@@ -170,6 +170,20 @@
 			<slot x="-18" y="18.8" z="6.5" size="0.3" use="reverse,yawLeft" />
 			<slot x="-23" y="15.9" z="6.2" size="0.3" use="reverse,yawLeft" />
 		</thrusterSlots>
+                
+                <views>
+                    <view name="near" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-6" z="1"/>
+                    <view name="far" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-12" z="2"/>
+                    <view name="top" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="5" z="25">
+                        <turn axis="x" degree="-90" />
+                    </view>
+                    <view name="cockpit" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="-2.8" z="0"/>
+                    <view name="front" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="6" z="2">
+                        <turn axis="z" degree="180" />
+                        <turn axis="x" degree="-10" />
+                    </view>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-10" z="0"/>
+                </views>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="delfin">
@@ -184,6 +198,20 @@
 			<body x="37" y="-10" z="30" w="23" h="35" d="17" />
 			<body x="-37" y="-10" z="30" w="23" h="35" d="17" />
 		</physics>
+                
+                <views>
+                    <view name="near" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-10" z="2"/>
+                    <view name="far" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-20" z="4"/>
+                    <view name="top" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="6" z="30">
+                        <turn axis="x" degree="-90" />
+                    </view>
+                    <view name="cockpit" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="-2.8" z="0"/>
+                    <view name="front" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="10" z="2">
+                        <turn axis="z" degree="180" />
+                        <turn axis="x" degree="-10" />
+                    </view>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-12" z="0"/>
+                </views>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="korvett">
@@ -201,6 +229,20 @@
 			<slot x="55" y="-10" z="40" />
 			<slot x="-55" y="-10" z="40" />
 		</weaponSlots>
+                
+                <views>
+                    <view name="near" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-6" z="3"/>
+                    <view name="far" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-24" z="4"/>
+                    <view name="top" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="6" z="60">
+                        <turn axis="x" degree="-90" />
+                    </view>
+                    <view name="bridge" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="1.5" z="1.5"/>
+                    <view name="front" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="15" z="2">
+                        <turn axis="z" degree="180" />
+                        <turn axis="x" degree="-10" />
+                    </view>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-22" z="0"/>
+                </views>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="fregatt">
@@ -237,6 +279,20 @@
 			<slot x="117" y="250" z="20" />
 			<slot x="-117" y="250" z="20" />
 		</weaponSlots>
+                
+                <views>
+                    <view name="near" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-3" z="4"/>
+                    <view name="far" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-25" z="4"/>
+                    <view name="top" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="9" z="75">
+                        <turn axis="x" degree="-90" />
+                    </view>
+                    <view name="bridge" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="1.5" z="2.5"/>
+                    <view name="front" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="22" z="2">
+                        <turn axis="z" degree="180" />
+                        <turn axis="x" degree="-10" />
+                    </view>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-28" z="0"/>
+                </views>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="cirkalo">
@@ -260,22 +316,22 @@
 		</physics>
 		<weaponSlots>
 			<slot x="700" y="250" z="0">
-				<direction axis="z" angle="90" />
+				<direction axis="z" degree="90" />
 			</slot>
 			<slot x="-700" y="250" z="0">
-				<direction axis="z" angle="-90" />
+				<direction axis="z" degree="-90" />
 			</slot>
 			<slot x="700" y="650" z="0">
-				<direction axis="z" angle="90" />
+				<direction axis="z" degree="90" />
 			</slot>
 			<slot x="-700" y="650" z="0">
-				<direction axis="z" angle="-90" />
+				<direction axis="z" degree="-90" />
 			</slot>
 			<slot x="700" y="1050" z="0">
-				<direction axis="z" angle="90" />
+				<direction axis="z" degree="90" />
 			</slot>
 			<slot x="-700" y="1050" z="0">
-				<direction axis="z" angle="-90" />
+				<direction axis="z" degree="-90" />
 			</slot>
 			<slot x="60" y="250" z="400" />
 			<slot x="-60" y="250" z="400" />
@@ -284,23 +340,37 @@
 			<slot x="60" y="1050" z="400" />
 			<slot x="-60" y="1050" z="400" />
 			<slot x="60" y="250" z="-400">
-				<direction axis="y" angle="180" />
+				<direction axis="y" degree="180" />
 			</slot>
 			<slot x="-60" y="250" z="-400">
-				<direction axis="y" angle="180" />
+				<direction axis="y" degree="180" />
 			</slot>
 			<slot x="60" y="650" z="-400">
-				<direction axis="y" angle="180" />
+				<direction axis="y" degree="180" />
 			</slot>
 			<slot x="-60" y="650" z="-400">
-				<direction axis="y" angle="180" />
+				<direction axis="y" degree="180" />
 			</slot>
 			<slot x="60" y="1050" z="-400">
-				<direction axis="y" angle="180" />
+				<direction axis="y" degree="180" />
 			</slot>
 			<slot x="-60" y="1050" z="-400">
-				<direction axis="y" angle="180" />
+				<direction axis="y" degree="180" />
 			</slot>
 		</weaponSlots>
+                
+                <views>
+                    <view name="near" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-25" z="20"/>
+                    <view name="far" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-200" z="35"/>
+                    <view name="top" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="25" z="350">
+                        <turn axis="x" degree="-90" />
+                    </view>
+                    <view name="bridge" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="45" z="2.5"/>
+                    <view name="front" fov="60" movable="false" turnable="false" rotationCenterIsObject="false" x="0" y="140" z="15">
+                        <turn axis="z" degree="180" />
+                        <turn axis="x" degree="-10" />
+                    </view>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-200" z="0"/>
+                </views>
 	</SpacecraftClass>
 </Classes>

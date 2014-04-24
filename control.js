@@ -504,59 +504,44 @@ function controlCamera(camera) {
         }
     }
 
-    if (camera.followedObject===undefined) {
+    if (camera.controllablePosition) {
         var inverseOrientationMatrix=transposed3(inverse3(matrix3from4(camera.orientationMatrix)));
         var translationVector = matrix3Vector3Product(
             camera.velocityVector,
             inverseOrientationMatrix
             );
-        camera.positionMatrix=
+        if(camera.followedObject===undefined) {
+            camera.positionMatrix=
+                    mul(
+                            camera.positionMatrix,
+                            translationMatrixv(translationVector)
+                            );
+        } else {
+            camera.followPositionMatrix=
+                    mul(
+                            camera.followPositionMatrix,
+                            translationMatrixv(translationVector)
+                            );
+        }
+    }
+    if (camera.controllableDirection) {
+        var rotationMatrix=
                 mul(
-                        camera.positionMatrix,
-                        translationMatrixv(translationVector)
-                        );
-    }/* else {
-        camera.followPosition=
-                mul(
-                        camera.followPosition,
-                        translationMatrix(
-                                translation[0],
-                                translation[1],
-                                translation[2]
-                                )
-                        );
-    }*/
-    if (camera.followedObject===undefined) {
-        camera.orientationMatrix=
-                mul(
-                        mul(
-                                camera.orientationMatrix,
-                                rotationMatrix4(
-                                        [0,1,0],
-                                        camera.angularVelocityVector[1]
-                                        )
+                    rotationMatrix4(
+                                [0,0,1],
+                                camera.angularVelocityVector[1]
                                 ),
-                        rotationMatrix4(
+                    rotationMatrix4(
                                 [1,0,0],
                                 camera.angularVelocityVector[0]
-                                )
-                        );
-    }/* else {
-        camera.followOrientation=
-                mul(
-                        mul(
-                                camera.followOrientation,
-                                rotationMatrix4(
-                                        [0,1,0],
-                                        camera.angularVelocity[1]
-                                        )
-                                ),
-                        rotationMatrix4(
-                                [1,0,0],
-                                camera.angularVelocity[0]
-                                )
-                        );
-    }*/
+                                )    
+                    );
+        if(camera.followedObject===undefined) {
+            camera.orientationMatrix=mul(camera.orientationMatrix,rotationMatrix);
+        } else {
+            camera.followOrientationMatrix=mul(camera.followOrientationMatrix,rotationMatrix);
+        }
+    }
             
     if (currentlyPressedKeys[90]) { // z
             camera.setFOV(camera.fov-1);
@@ -570,18 +555,22 @@ function controlCamera(camera) {
         var newOrientationMatrix =
                 mul(
                         mul(
-                                matrix4from3(inverse3(matrix3from4(camera.followedObject.getOrientationMatrix()))),
-                                rotationMatrix4([1,0,0],3.1415/2)
+                                inverseRotationMatrix(camera.followedObject.getOrientationMatrix()),
+                                camera.followOrientationMatrix
                                 ),
-                        camera.followOrientationMatrix
+                        rotationMatrix4([1,0,0],3.1415/2)        
                         );
-        //var inverseNewOrientation=transposed3(inverse3(matrix3from4(newOrientation)));
-        //camera.angularVelocity = inverse4(mul(inverseNewOrientation,camera.orientation));
         camera.orientationMatrix=newOrientationMatrix;
         var camPositionMatrix = 
                 mul(
                         mul(
-                                camera.followPositionMatrix,
+                                camera.rotationCenterIsObject?
+                                    translationMatrixv(getPositionVector(mul(
+                                        camera.followPositionMatrix,
+                                            inverseRotationMatrix(camera.followOrientationMatrix)
+                                        )))
+                                    :
+                                    camera.followPositionMatrix,
                                 camera.followedObject.getOrientationMatrix()
                                 ),
                         camera.followedObject.getPositionMatrix()

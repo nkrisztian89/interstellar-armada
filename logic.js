@@ -84,6 +84,7 @@ function SpacecraftClass(name,modelReferences,modelSize,textureFileName,shaderNa
 	
 	this.weaponSlots=new Array();
 	this.thrusterSlots=new Array();
+        this.views=new Array();
 }
 
 function Skybox(resourceCenter,scene,skyboxClass) {
@@ -487,6 +488,40 @@ Dust.prototype.simulate = function(camera) {
     this.visualModel.matrix=this.visualModel.positionMatrix;
 };
 
+/**
+ * Creates a new model view object.
+ * @class Describes the parameters of a certain view of an object, based on which
+ * a camera can be created if that object is deployed in a scene.
+ * @param {string} name A desciptive name for the view, e.g. "cockpit"
+ * @param {number} fov The Field Of View of the view in degrees.
+ * @param {boolean} controllablePosition Whether the position of the view is changeable by the player.
+ * @param {boolean} controllableDirection Whether the direction of the view is changeable by the player.
+ * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the object.
+ * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the object. 
+ * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed object.
+ */
+function ObjectView(name,fov,controllablePosition,controllableDirection,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject) {
+        this.name=name;
+	this.fov=fov;
+        this.controllablePosition=controllablePosition;
+        this.controllableDirection=controllableDirection;
+        this.followPositionMatrix=followPositionMatrix;
+        this.followOrientationMatrix=followOrientationMatrix;
+        this.rotationCenterIsObject=rotationCenterIsObject;
+    
+}
+
+/**
+ * Creates a virtual camera following the given object according to the view's
+ * parameters.
+ * @param {number} aspect The X/Y aspect ratio of the camera.
+ * @param {VisualObject} followedObject The object to which the camera position and direction has to be interpredet.
+ * @returns {Camera} The created camera.
+ */
+ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
+    return new Camera(aspect,this.fov,this.controllablePosition,this.controllableDirection,followedObject,this.followPositionMatrix,this.followOrientationMatrix,this.rotationCenterIsObject);
+};
+
 function Level(resourceCenter,scene) {
 	this.players=new Array();
 	this.skyboxClasses=new Array();
@@ -625,6 +660,37 @@ Level.prototype.loadPropulsionClasses = function(filename) {
 	return result;
 };
 
+/**
+ * Constructs and returns a rotation matrix described by a series of rotations
+ * stored in the XML tags.
+ * @param {XMLElement[]} tags The tags describing rotations.
+ * @returns {Float32Array} The costructed rotation matrix.
+ */
+function getRotationMatrixFromXMLTags(tags) {
+    var result = identityMatrix4();
+    for(var i=0;i<tags.length;i++) {
+        var axis=[0,0,0];
+        if (tags[i].getAttribute("axis")==="x") {
+                axis=[1,0,0];
+        } else
+        if (tags[i].getAttribute("axis")==="y") {
+                axis=[0,1,0];
+        } else
+        if (tags[i].getAttribute("axis")==="z") {
+                axis=[0,0,1];
+        }
+        result=
+                mul(
+                        result,
+                        rotationMatrix4(
+                                axis,
+                                parseFloat(tags[i].getAttribute("degree"))/180*3.1415
+                                )
+                        );
+    }
+    return result;
+}
+
 Level.prototype.loadSpacecraftClasses = function(filename) {
 	var request = new XMLHttpRequest();
 	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
@@ -666,20 +732,7 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 				parseFloat(bodyTags[j].getAttribute("d"))*result[i].modelSize
 				));
 			var turnTags=bodyTags[j].getElementsByTagName("turn");
-			for(var k=0;k<turnTags.length;k++) {
-				var axis=[1,0,0];
-				if (turnTags[k].getAttribute("axis")==="y") {
-					axis=[0,1,0];
-				} else
-				if (turnTags[k].getAttribute("axis")==="z") {
-					axis=[0,0,1];
-				}
-				result[i].bodies[j].orientationMatrix=
-					mul(
-						result[i].bodies[j].orientationMatrix,
-						rotationMatrix4(axis,parseFloat(turnTags[k].getAttribute("degree"))/180*3.1415)
-					);
-			}
+			result[i].bodies[j].orientationMatrix=getRotationMatrixFromXMLTags(turnTags);
 		}
 		if (classTags[i].getElementsByTagName("weaponSlots").length>0) {
 			var weaponSlotTags = classTags[i].getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
@@ -691,28 +744,7 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 					parseFloat(weaponSlotTags[j].getAttribute("z"))
 					));
 				var directionTags=weaponSlotTags[j].getElementsByTagName("direction");
-				if(directionTags.length>0) {
-					for(var k=0;k<directionTags.length;k++) {
-						var axis=[0,0,0];
-						if (directionTags[k].getAttribute("axis")==="x") {
-							axis=[1,0,0];
-						} else
-						if (directionTags[k].getAttribute("axis")==="y") {
-							axis=[0,1,0];
-						} else
-						if (directionTags[k].getAttribute("axis")==="z") {
-							axis=[0,0,1];
-						}
-						result[i].weaponSlots[j].orientationMatrix=
-							mul(
-								result[i].weaponSlots[j].orientationMatrix,
-								rotationMatrix4(
-									axis,
-									parseFloat(directionTags[k].getAttribute("angle"))/180*3.1415
-									)
-								);
-					}
-				}
+				result[i].weaponSlots[j].orientationMatrix=getRotationMatrixFromXMLTags(directionTags);
 			}
 		}
 		
@@ -728,6 +760,25 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 					thrusterSlotTags[j].getAttribute("use"))
 					);
 			}
+		}
+                
+                if (classTags[i].getElementsByTagName("views").length>0) {
+			var viewTags = classTags[i].getElementsByTagName("views")[0].getElementsByTagName("view");
+			result[i].views=new Array();
+			for(var j=0;j<viewTags.length;j++) {
+				result[i].views.push(new ObjectView(
+                                        viewTags[j].getAttribute("name"),
+                                        parseFloat(viewTags[j].getAttribute("fov")),
+                                        viewTags[j].getAttribute("movable")==="true",
+                                        viewTags[j].getAttribute("turnable")==="true",
+                                        translationMatrix(
+                                            parseFloat(viewTags[j].getAttribute("x")),
+                                            parseFloat(viewTags[j].getAttribute("y")),
+                                            parseFloat(viewTags[j].getAttribute("z"))),
+                                        getRotationMatrixFromXMLTags(viewTags[j].getElementsByTagName("turn")),
+                                        viewTags[j].getAttribute("rotationCenterIsObject")==="true"
+					));
+			}  
 		}
 	}
 	
@@ -860,10 +911,11 @@ Level.prototype.loadFromFile = function(filename) {
 	
 	var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
 	for(var i=0;i<spacecraftTags.length;i++) {
+                var spacecraftClass = this.getSpacecraftClass(spacecraftTags[i].getAttribute("class"));
 		this.spacecrafts.push(new Spacecraft(
 			new GraphicsContext(this.resourceCenter,this.scene),
 			new LogicContext(this),
-			this.getSpacecraftClass(spacecraftTags[i].getAttribute("class")),
+			spacecraftClass,
 			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
 			translationMatrix(
 				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("x")),
@@ -880,6 +932,9 @@ Level.prototype.loadFromFile = function(filename) {
 				this.getWeaponClass(weaponTags[j].getAttribute("class")));
 		}
 		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(this.resourceCenter,this.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
+                for(var j=0;j<spacecraftClass.views.length;j++) {
+                    this.scene.cameras.push(spacecraftClass.views[j].createCameraForObject(this.scene.width/this.scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
+                }
 	}
         
         for(var i=0;i<300;i++) {
@@ -888,7 +943,6 @@ Level.prototype.loadFromFile = function(filename) {
 };
 
 Level.prototype.tick = function(dt) {
-	//document.getElementById("output").innerHTML="";
 	for (var i=0;i<this.spacecrafts.length;i++) {
 		if ((this.spacecrafts[i]===undefined)||(this.spacecrafts[i].toBeDeleted)) {
 			delete this.spacecrafts[i];

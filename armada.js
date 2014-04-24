@@ -151,25 +151,6 @@ function loadResources() {
                 );*/
         
         mainScene.cameras.push(new Camera(canvas.width/canvas.height,90,true,true));
-		
-        // adding cameras to each fighter and ship so they can  be followed
-        /// TODO: manage camera loading from XML
-	for(var i=0;i<test_level.spacecrafts.length;i++) {	
-		mainScene.cameras.push(new Camera(canvas.width/canvas.height,60,false,true,test_level.spacecrafts[i].visualModel));
-        }
-        // interceptor 1
-	mainScene.cameras[1].followPositionMatrix=translationMatrix(0,-6,1);
-        // interceptor 2
-	mainScene.cameras[2].followPositionMatrix=translationMatrix(0,-4,6);
-	mainScene.cameras[2].followOrientationMatrix=rotationMatrix4([1,0,0],-45);
-        // bomber 1
-	mainScene.cameras[4].followPositionMatrix=translationMatrix(0,-10,2);
-        // corvette
-	mainScene.cameras[7].followPositionMatrix=translationMatrix(0,-6,3);
-        // frigate
-	mainScene.cameras[8].followPositionMatrix=translationMatrix(0,-3,4);
-        // cruizer
-	mainScene.cameras[9].followPositionMatrix=translationMatrix(0,-25,20);
 	
         // adding random goals to the AI for testing
 	for(var i=0;i<test_level.spacecrafts.length;i++) {
@@ -191,7 +172,7 @@ function loadResources() {
 			rotationMatrix4([1,0,0],3.1415/4)
 		);*/
 	
-	var freq = 30;
+	var freq = 60;
 	
 	progress.value=75;
 	

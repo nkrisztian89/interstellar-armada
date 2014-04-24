@@ -1105,8 +1105,9 @@ DustParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
  * If undefined, the camera position is interpreted as absolute (relative to scene center)
  * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
  * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
+ * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
  */
-function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject,followPositionMatrix,followOrientationMatrix) {
+function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject) {
 	this.positionMatrix=identityMatrix4();
 	this.orientationMatrix=identityMatrix4();
 	this.matrix=identityMatrix4();
@@ -1117,7 +1118,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
 	this.maxTurn=0.1;
 	this.angularAcceleration=0.01;
 	if(followedObject!==undefined) {
-            this.followObject(followedObject,followPositionMatrix,followOrientationMatrix);
+            this.followObject(followedObject,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject);
         }
 	this.aspect=aspect;
 	this.fov=fov;
@@ -1133,8 +1134,9 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
  * If undefined, the camera position is interpreted as absolute (relative to scene center)
  * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
  * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
+ * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
  */
-Camera.prototype.followObject = function(followedObject,followPositionMatrix,followOrientationMatrix) {
+Camera.prototype.followObject = function(followedObject,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject) {
     this.followedObject=followedObject;
     if(followPositionMatrix===undefined) {
         followPositionMatrix=identityMatrix4();
@@ -1146,6 +1148,7 @@ Camera.prototype.followObject = function(followedObject,followPositionMatrix,fol
     this.followOrientationMatrix=followOrientationMatrix;
     this.originalFollowPositionMatrix=followPositionMatrix;
     this.originalFollowOrientationMatrix=followOrientationMatrix;
+    this.rotationCenterIsObject=rotationCenterIsObject;
 };
 
 /**
@@ -1267,7 +1270,7 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         this.objects = new Array();
         this.cameras = new Array();
         
-	this.activeCamera = new SceneCamera(width/height,60,5000);
+	this.activeCamera = new SceneCamera(width/height,60,1000);
 		
         this.lodContext = lodContext;
         
