@@ -19,6 +19,10 @@ function handleKeyUp(event) {
 	currentlyPressedKeys[event.keyCode] = false;
 }
 
+function handleKeyPress(event) {
+	keyPressEvents.push(event);
+}
+
 // event.type must be keypress
 function getChar(event) {
   if (event.which === null) {
@@ -27,10 +31,6 @@ function getChar(event) {
     return String.fromCharCode(event.which);   // the rest
   } else
   return null; // special key
-}
-
-function handleKeyPress(event) {
-	keyPressEvents.push(event);
 }
 
 function Controller(controlledEntity,graphicsContext,logicContext) {

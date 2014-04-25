@@ -201,15 +201,21 @@ ul.inheritsList
 	
 	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
+	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
+	
 	<li><a href="../symbols/FVQ.html">FVQ</a></li>
 	
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/Line.html">Line</a></li>
 	
 	<li><a href="../symbols/LODContext.html">LODContext</a></li>
 	
 	<li><a href="../symbols/Mesh.html">Mesh</a></li>
 	
 	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
+	
+	<li><a href="../symbols/ObjectView.html">ObjectView</a></li>
 	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -222,6 +228,8 @@ ul.inheritsList
 	<li><a href="../symbols/ShaderAttribute.html">ShaderAttribute</a></li>
 	
 	<li><a href="../symbols/ShaderUniform.html">ShaderUniform</a></li>
+	
+	<li><a href="../symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
 	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
 	
@@ -314,7 +322,7 @@ with the given properties.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/_global_.html#dustModel">dustModel</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#dustModel">dustModel</a></b>(color)
 								</div>
 								<div class="description">Sets up and returns a simple EgomModel that contains a two vertices connected
 with a line for drawing dust particles.</div>
@@ -334,9 +342,20 @@ rendering Full Viewport Quads.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/_global_.html#Line">Line</a></b>(a, b, red, green, blue, luminosity, nx, ny, nz)
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getRotationMatrixFromXMLTags">getRotationMatrixFromXMLTags</a></b>(tags)
 								</div>
-								<div class="description">Creates a new line object for an EgomModel.</div>
+								<div class="description">Constructs and returns a rotation matrix described by a series of rotations
+stored in the XML tags.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#inverseRotationMatrix">inverseRotationMatrix</a></b>(m)
+								</div>
+								<div class="description">Calculates and returns the inverse of the top left 3x3 block of a 4x4 matrix,
+but complemented to 4x4 matrix (using identity matrix values for the rest part).</div>
 							</td>
 						</tr>
 					
@@ -361,9 +380,9 @@ rendering Full Viewport Quads.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b>mul3</b>(m1, m2)
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#mul3">mul3</a></b>(m1, m2)
 								</div>
-								<div class="description"></div>
+								<div class="description">Multiplies two 3x3 matrices.</div>
 							</td>
 						</tr>
 					
@@ -405,15 +424,6 @@ arbitrary axis.</div>
 								</div>
 								<div class="description">Determining the enumeration value of a shader variable type from the string
 containing the name of the variable type.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/_global_.html#SkyboxClass">SkyboxClass</a></b>(name, shaderName, samplerName, cubemap)
-								</div>
-								<div class="description">Defines a skybox class.</div>
 							</td>
 						</tr>
 					
@@ -489,7 +499,7 @@ containing the name of the variable type.</div>
 					<a name="cuboidModel"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{EgomModel}</span>
+					<span class="light">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>
 					<b>cuboidModel</b>(width, height, depth, color)
 					
 					</div>
@@ -498,7 +508,7 @@ containing the name of the variable type.</div>
 with the given properties.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -543,7 +553,7 @@ desired box color.</dd>
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{EgomModel}</span> A cuboid model.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span> A cuboid model.</dd>
 							
 							</dl>
 						
@@ -555,84 +565,13 @@ desired box color.</dd>
 					<a name="dustModel"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{EgomModel}</span>
-					<b>dustModel</b>()
+					<span class="light">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>
+					<b>dustModel</b>(color)
 					
 					</div>
 					<div class="description">
 						Sets up and returns a simple EgomModel that contains a two vertices connected
 with a line for drawing dust particles.
-						
-							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{EgomModel}</span> A dust particle model.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="fvqModel"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{EgomModel}</span>
-					<b>fvqModel</b>()
-					
-					</div>
-					<div class="description">
-						Sets up and returns a simple EgomModel that is suitable to be used for
-rendering Full Viewport Quads. (FVQ)
-						
-							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{EgomModel}</span> An FVQ model.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="Line"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>Line</b>(a, b, red, green, blue, luminosity, nx, ny, nz)
-					
-					</div>
-					<div class="description">
-						Creates a new line object for an EgomModel.
 						
 							<br />
 							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
@@ -647,64 +586,156 @@ rendering Full Viewport Quads. (FVQ)
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>a</b>
+									<span class="light fixedFont">{number[]}</span> <b>color</b>
 									
 								</dt>
-								<dd>The index of the starting vertex of the line.</dd>
-							
-								<dt>
-									<b>b</b>
-									
-								</dt>
-								<dd>The index of the end vertex of the line.</dd>
-							
-								<dt>
-									<b>red</b>
-									
-								</dt>
-								<dd>The red component of the line's color.</dd>
-							
-								<dt>
-									<b>green</b>
-									
-								</dt>
-								<dd>The green component of the line's color.</dd>
-							
-								<dt>
-									<b>blue</b>
-									
-								</dt>
-								<dd>The blue component of the line's color.</dd>
-							
-								<dt>
-									<b>luminosity</b>
-									
-								</dt>
-								<dd>The luminosity of the line.</dd>
-							
-								<dt>
-									<b>nx</b>
-									
-								</dt>
-								<dd>The X coordinate of the normal vector associated with the line.</dd>
-							
-								<dt>
-									<b>ny</b>
-									
-								</dt>
-								<dd>The Y coordinate of the normal vector associated with the line.</dd>
-							
-								<dt>
-									<b>nz</b>
-									
-								</dt>
-								<dd>The Z coordinate of the normal vector associated with the line.</dd>
+								<dd>The RGB components of the color to use for the line.</dd>
 							
 							</dl>
 						
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span> A dust particle model.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="fvqModel"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>
+					<b>fvqModel</b>()
+					
+					</div>
+					<div class="description">
+						Sets up and returns a simple EgomModel that is suitable to be used for
+rendering Full Viewport Quads. (FVQ)
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span> An FVQ model.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getRotationMatrixFromXMLTags"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>getRotationMatrixFromXMLTags</b>(tags)
+					
+					</div>
+					<div class="description">
+						Constructs and returns a rotation matrix described by a series of rotations
+stored in the XML tags.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/armada_logic.js.html">logic.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{XMLElement[]}</span> <b>tags</b>
+									
+								</dt>
+								<dd>The tags describing rotations.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The costructed rotation matrix.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="inverseRotationMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>inverseRotationMatrix</b>(m)
+					
+					</div>
+					<div class="description">
+						Calculates and returns the inverse of the top left 3x3 block of a 4x4 matrix,
+but complemented to 4x4 matrix (using identity matrix values for the rest part).
+Can be used to calculate the inverse of a rotation (or scaling) described in
+the 3x3 part of a 4x4 matrix without letting the optional translation
+interfere with it.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/armada_matrices.js.html">matrices.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Float32Array}</span> <b>m</b>
+									
+								</dt>
+								<dd>The input 4x4 matrix.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The calculated inverse, complemented 4x4 matrix.</dd>
+							
+							</dl>
 						
 						
 						
@@ -789,12 +820,12 @@ Loads the scripts in the specified order, then executes a callback function.
 					<a name="mul3"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{Float32Array}</span>
 					<b>mul3</b>(m1, m2)
 					
 					</div>
 					<div class="description">
-						
+						Multiplies two 3x3 matrices.
 						
 							<br />
 							<i>Defined in: </i> <a href="../symbols/src/armada_matrices.js.html">matrices.js</a>.
@@ -809,22 +840,29 @@ Loads the scripts in the specified order, then executes a callback function.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>m1</b>
+									<span class="light fixedFont">{Float32Array}</span> <b>m1</b>
 									
 								</dt>
-								<dd></dd>
+								<dd>The 3x3 matrix on the left of the multiplicaton.</dd>
 							
 								<dt>
-									<b>m2</b>
+									<span class="light fixedFont">{Float32Array}</span> <b>m2</b>
 									
 								</dt>
-								<dd></dd>
+								<dd>The 3x3 matrix on the right of the multiplicaton.</dd>
 							
 							</dl>
 						
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The result 3x3 matrix.</dd>
+							
+							</dl>
 						
 						
 						
@@ -862,7 +900,7 @@ Loads the scripts in the specified order, then executes a callback function.
 					<a name="projectileModel"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{EgomModel}</span>
+					<span class="light">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>
 					<b>projectileModel</b>(intersections)
 					
 					</div>
@@ -873,7 +911,7 @@ a set of intersecting squares that are perpendicular to the first one, to
 serve as the front view(s) of the projectile.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -901,7 +939,7 @@ be created along the side view square.</dd>
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{EgomModel}</span> A projectile model of intersecting squares.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span> A projectile model of intersecting squares.</dd>
 							
 							</dl>
 						
@@ -997,69 +1035,10 @@ containing the name of the variable type.
 
 					<hr />
 				
-					<a name="SkyboxClass"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>SkyboxClass</b>(name, shaderName, samplerName, cubemap)
-					
-					</div>
-					<div class="description">
-						Defines a skybox class.
-						
-							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_logic.js.html">logic.js</a>.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>name</b>
-									
-								</dt>
-								<dd>The name of the skybox class.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>shaderName</b>
-									
-								</dt>
-								<dd>The name of the shader object to be used for
-drawing this skybox.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{String}</span> <b>samplerName</b>
-									
-								</dt>
-								<dd>The name of the sampler variable in the shader
-to be set.</dd>
-							
-								<dt>
-									<b>cubemap</b>
-									
-								</dt>
-								<dd>The cube map resource to be used.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
 					<a name="squareModel"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{EgomModel}</span>
+					<span class="light">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>
 					<b>squareModel</b>()
 					
 					</div>
@@ -1067,7 +1046,7 @@ to be set.</dd>
 						Sets up and returns a simple EgomModel that contains a two sided XY square.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -1082,7 +1061,7 @@ to be set.</dd>
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{EgomModel}</span> An XY square model.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span> An XY square model.</dd>
 							
 							</dl>
 						
@@ -1132,7 +1111,7 @@ script files and the external resources.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 19 2014 03:35:45 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 26 2014 00:45:11 GMT+0300 (EEST)
 		</div>
 	</body>
 </html>

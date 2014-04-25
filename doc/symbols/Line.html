@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - GraphicsContext</title>
+		<title>JsDoc Reference - Line</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -248,7 +248,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class GraphicsContext
+				Class Line
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -256,17 +256,16 @@ ul.inheritsList
 				
 				
 			
-				A graphics context for other modules, containing the current resource
-center and scene.
+				Represents a line connecting two vertices in a model.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class GraphicsContext.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Line.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -279,9 +278,9 @@ center and scene.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/GraphicsContext.html#constructor">GraphicsContext</a></b>(resourceCenter, scene)
+								<b><a href="../symbols/Line.html#constructor">Line</a></b>(a, b, red, green, blue, luminosity, nx, ny, nz)
 							</div>
-							<div class="description">Creates a new graphics context object.</div>
+							<div class="description">Creates a new line object for an EgomModel.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -304,11 +303,11 @@ center and scene.
 				</div>
 				
 				<div class="fixedFont">
-						<b>GraphicsContext</b>(resourceCenter, scene)
+						<b>Line</b>(a, b, red, green, blue, luminosity, nx, ny, nz)
 				</div>
 				
 				<div class="description">
-					Creates a new graphics context object.
+					Creates a new line object for an EgomModel.
 					
 				</div>
 				
@@ -320,16 +319,58 @@ center and scene.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span>  <b>resourceCenter</b>
+								 <b>a</b>
 								
 							</dt>
-								<dd>The resource center to be stored in the context.</dd>
+								<dd>The index of the starting vertex of the line.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Scene.html">Scene</a>}</span>  <b>scene</b>
+								 <b>b</b>
 								
 							</dt>
-								<dd>The scene to be stored in the context.</dd>
+								<dd>The index of the end vertex of the line.</dd>
+						
+							<dt>
+								 <b>red</b>
+								
+							</dt>
+								<dd>The red component of the line's color.</dd>
+						
+							<dt>
+								 <b>green</b>
+								
+							</dt>
+								<dd>The green component of the line's color.</dd>
+						
+							<dt>
+								 <b>blue</b>
+								
+							</dt>
+								<dd>The blue component of the line's color.</dd>
+						
+							<dt>
+								 <b>luminosity</b>
+								
+							</dt>
+								<dd>The luminosity of the line.</dd>
+						
+							<dt>
+								 <b>nx</b>
+								
+							</dt>
+								<dd>The X coordinate of the normal vector associated with the line.</dd>
+						
+							<dt>
+								 <b>ny</b>
+								
+							</dt>
+								<dd>The Y coordinate of the normal vector associated with the line.</dd>
+						
+							<dt>
+								 <b>nz</b>
+								
+							</dt>
+								<dd>The Z coordinate of the normal vector associated with the line.</dd>
 						
 						</dl>
 					

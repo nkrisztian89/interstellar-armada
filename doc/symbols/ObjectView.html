@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - GraphicsContext</title>
+		<title>JsDoc Reference - ObjectView</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -248,7 +248,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class GraphicsContext
+				Class ObjectView
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -256,17 +256,17 @@ ul.inheritsList
 				
 				
 			
-				A graphics context for other modules, containing the current resource
-center and scene.
+				Describes the parameters of a certain view of an object, based on which
+a camera can be created if that object is deployed in a scene.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/armada_logic.js.html">logic.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class GraphicsContext.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ObjectView.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -279,9 +279,9 @@ center and scene.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/GraphicsContext.html#constructor">GraphicsContext</a></b>(resourceCenter, scene)
+								<b><a href="../symbols/ObjectView.html#constructor">ObjectView</a></b>(name, fov, controllablePosition, controllableDirection, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject)
 							</div>
-							<div class="description">Creates a new graphics context object.</div>
+							<div class="description">Creates a new model view object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -292,6 +292,34 @@ center and scene.
 			
 
 <!-- ============================== methods summary ======================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class ObjectView.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/ObjectView.html#createCameraForObject">createCameraForObject</a></b>(aspect, followedObject)
+								</div>
+								<div class="description">Creates a virtual camera following the given object according to the view's
+parameters.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -304,11 +332,11 @@ center and scene.
 				</div>
 				
 				<div class="fixedFont">
-						<b>GraphicsContext</b>(resourceCenter, scene)
+						<b>ObjectView</b>(name, fov, controllablePosition, controllableDirection, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject)
 				</div>
 				
 				<div class="description">
-					Creates a new graphics context object.
+					Creates a new model view object.
 					
 				</div>
 				
@@ -320,16 +348,46 @@ center and scene.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span>  <b>resourceCenter</b>
+								<span class="light fixedFont">{string}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The resource center to be stored in the context.</dd>
+								<dd>A desciptive name for the view, e.g. "cockpit"</dd>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Scene.html">Scene</a>}</span>  <b>scene</b>
+								<span class="light fixedFont">{number}</span>  <b>fov</b>
 								
 							</dt>
-								<dd>The scene to be stored in the context.</dd>
+								<dd>The Field Of View of the view in degrees.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{boolean}</span>  <b>controllablePosition</b>
+								
+							</dt>
+								<dd>Whether the position of the view is changeable by the player.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{boolean}</span>  <b>controllableDirection</b>
+								
+							</dt>
+								<dd>Whether the direction of the view is changeable by the player.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Float32Array}</span>  <b>followPositionMatrix</b>
+								
+							</dt>
+								<dd>The translation matrix describing the relative position to the object.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Float32Array}</span>  <b>followOrientationMatrix</b>
+								
+							</dt>
+								<dd>The rotation matrix describing the relative orientation to the object.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{boolean}</span>  <b>rotationCenterIsObject</b>
+								
+							</dt>
+								<dd>Whether the rotation of the camera has to be executed around the followed object.</dd>
 						
 						</dl>
 					
@@ -348,6 +406,61 @@ center and scene.
 
 <!-- ============================== method details ========================= -->		
 			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="createCameraForObject"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/Camera.html">Camera</a>}</span>
+					<b>createCameraForObject</b>(aspect, followedObject)
+					
+					</div>
+					<div class="description">
+						Creates a virtual camera following the given object according to the view's
+parameters.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{number}</span> <b>aspect</b>
+									
+								</dt>
+								<dd>The X/Y aspect ratio of the camera.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/VisualObject.html">VisualObject</a>}</span> <b>followedObject</b>
+									
+								</dt>
+								<dd>The object to which the camera position and direction has to be interpredet.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> The created camera.</dd>
+							
+							</dl>
+						
+						
+						
+
+					
+				
+			
 			
 <!-- ============================== event details ========================= -->		
 			
@@ -359,7 +472,7 @@ center and scene.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 26 2014 00:45:11 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 26 2014 00:45:12 GMT+0300 (EEST)
 		</div>
 	</body>
 </html>
