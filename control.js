@@ -6,49 +6,397 @@
  * @version 0.1
  */
 
-var activeCameraIndex = 0;
+function KeyboardControlContext() {
+    var currentlyPressedKeys = new Array(256);
+    var i;
+    //var keyPressEvents = new Array();
+    var keyCodeTable = {
+        "backspace": 8,
+        "tab": 9,
+        "enter": 13,
+        "shift": 16,
+        "ctrl": 17,
+        "alt": 18,
+        "pause": 19,
+        "caps lock": 20,
+        "escape": 27,
+        "page up": 33,
+        "page down": 34,
+        "end": 35,
+        "home": 36,
+        "left": 37,
+        "up": 38,
+        "right": 39,
+        "down": 40,
+        "insert": 45,
+        "delete": 46,
+        "0": 48, "1": 49, "2": 50, "3": 51, "4": 52, "5": 53, "6": 54, "7": 55, "8": 56, "9": 57,
+        "a": 65, "b": 66, "c": 67, "d": 68, "e": 69, "f": 70, "g": 71, "h": 72, "i": 73, "j": 74,
+        "k": 75, "l": 76, "m": 77, "n": 78, "o": 79, "p": 80, "q": 81, "r": 82, "s": 83, "t": 84,
+        "u": 85, "v": 86, "w": 87, "x": 88, "y": 89, "z": 90
+    };
+     var keyCommands={};
+    
+    for(i=0;i<currentlyPressedKeys.length;i++) { currentlyPressedKeys[i]=false; }
 
-var currentlyPressedKeys = {};
-var keyPressEvents = new Array();
-
-function handleKeyDown(event) {
+    this.handleKeyDown = function(event) {
 	currentlyPressedKeys[event.keyCode] = true;
-}
+    };  
 
-function handleKeyUp(event) {
+    this.handleKeyUp = function(event) {
 	currentlyPressedKeys[event.keyCode] = false;
+    };
+    
+    /**
+     * Creates a new keyboard command object.
+     * @class Represents a keypress - command association.
+     * @param {string} name Name of the command. The different controllers identify the command association by this name.
+     * @param {string} key The string representation of the pressed key (see keyCodeTable).
+     * @param {boolean} shiftState Whether the shift key should be held pressed while activating this command.
+     * @param {boolean} ctrlState Whether the control key should be held pressed while activating this command.
+     * @param {boolean} altState Whether the alt key should be held pressed while activating this command.
+     */
+    this.KeyCommand = function(name,key,shiftState,ctrlState,altState) {
+        this.name=name;
+        this.keyCode=keyCodeTable[key];
+        this.shiftState=shiftState;
+        this.ctrlState=ctrlState;
+        this.altState=altState;
+        var oneShotExecuted=false;
+        
+        /**
+         * A function that can be executed with CheckAndExecute automatically
+         * upon every new press (following a previous release) of the key(s).
+         */
+        this.executeOneShotCommand=function() {};
+        /**
+         * A function that can be executed with CheckAndExecute automatically
+         * continuously while the key(s) are pressed.
+         */
+        this.executeContinuousCommand=function() {};
+        /**
+         * Checks if the key(s) are pressed currently, which means the continuous
+         * commands should be executed.
+         * @returns {boolean} Whether the continuous command should be executed now.
+         */
+        this.checkContinuous=function () {
+            return (currentlyPressedKeys[this.keyCode] &&
+                    (currentlyPressedKeys[16]===this.shiftState) &&
+                    (currentlyPressedKeys[17]===this.ctrlState) &&
+                    (currentlyPressedKeys[18]===this.altState));
+        };
+        /**
+         * Checks if the one shot command should be executed and updates the
+         * state as if it was, but without actually executing it (allowing an
+         * external code block to be used for this purpose, making it possible
+         * to use local variables of an external block.
+         * @returns {boolean} Whether the one shot command should be executed now.
+         */
+        this.checkAndSetOneShot=function () {
+            if (currentlyPressedKeys[this.keyCode] &&
+                    (currentlyPressedKeys[16]===this.shiftState) &&
+                    (currentlyPressedKeys[17]===this.ctrlState) &&
+                    (currentlyPressedKeys[18]===this.altState)) {
+                if (!oneShotExecuted) {
+                    oneShotExecuted=true;
+                    return true;
+                }
+            } else {
+                oneShotExecuted=false;
+            }
+            return false;
+        };
+        /**
+         * Checks the current state of keys and executes both the one shot and
+         * continuous commands accordingly as well as updates the state for further
+         * checks.
+         */
+        this.checkAndExecute=function () {
+            if (currentlyPressedKeys[this.keyCode] &&
+                    (currentlyPressedKeys[16]===this.shiftState) &&
+                    (currentlyPressedKeys[17]===this.ctrlState) &&
+                    (currentlyPressedKeys[18]===this.altState)) {
+                if (!oneShotExecuted) {
+                    this.executeOneShotCommand();
+                    oneShotExecuted=true;
+                }
+                this.executeContinuousCommand();
+            } else {
+                oneShotExecuted=false;
+            }
+        };
+    };
+    
+    this.addKeyCommand = function(keyCommand) {
+        keyCommands[keyCommand.name]=keyCommand;
+    };
+    
+    this.setOneShotActionForCommand = function(commandName,action) {
+        if(keyCommands[commandName]!==undefined) {
+            keyCommands[commandName].executeOneShotCommand=action;
+        }
+        return keyCommands[commandName];
+    };
+    
+    this.setContinuousActionForCommand = function(commandName,action) {
+        if(keyCommands[commandName]!==undefined) {
+            keyCommands[commandName].executeContinuousCommand=action;
+        }
+        return keyCommands[commandName];
+    };
 }
 
-function handleKeyPress(event) {
-	keyPressEvents.push(event);
+/**
+ * Creates a new controller object.
+ * @class The parent class for all controller objects that control a certain
+ * entity from the logic module.
+ * @param {object} controlledEntity The entity which is controlled by the controller.
+ * @param {GraphicsContext} graphicsContext The graphics context where the visual model of the controlled entity resides.
+ * @param {LogicContext} logicContext The logic context of the controlled entity.
+ * @param {KeyboardControlContext} controlContext The control context supplying the input data (currently only keyboard).
+ */
+function Controller(controlledEntity,graphicsContext,logicContext,controlContext) {
+    this.controlledEntity=controlledEntity;
+    this.graphicsContext=graphicsContext;
+    this.logicContext=logicContext;
+    this.controlContext=controlContext;
 }
 
-// event.type must be keypress
-function getChar(event) {
-  if (event.which === null) {
-    return String.fromCharCode(event.keyCode); // IE
-  } else if (event.which!==0 && event.charCode!==0) {
-    return String.fromCharCode(event.which);   // the rest
-  } else
-  return null; // special key
-}
-
-function Controller(controlledEntity,graphicsContext,logicContext) {
-	this.controlledEntity=controlledEntity;
-	this.graphicsContext=graphicsContext;
-	this.logicContext=logicContext;
-}
-
-function CameraController(controlledEntity,graphicsContext,logicContext) {
-	Controller.call(this,controlledEntity,graphicsContext,logicContext);
+function CameraController(controlledEntity,graphicsContext,logicContext,controlContext) {
+	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
+        
+    this.turnLeftCommand=controlContext.setContinuousActionForCommand("cameraTurnLeft",function(){});
+    this.turnRightCommand=controlContext.setContinuousActionForCommand("cameraTurnRight",function(){});
+    this.turnUpCommand=controlContext.setContinuousActionForCommand("cameraTurnUp",function(){});
+    this.turnDownCommand=controlContext.setContinuousActionForCommand("cameraTurnDown",function(){});
+    
+    this.moveLeftCommand=controlContext.setContinuousActionForCommand("cameraMoveLeft",function(){});
+    this.moveRightCommand=controlContext.setContinuousActionForCommand("cameraMoveRight",function(){});
+    this.moveUpCommand=controlContext.setContinuousActionForCommand("cameraMoveUp",function(){});
+    this.moveDownCommand=controlContext.setContinuousActionForCommand("cameraMoveDown",function(){});
+    this.moveForwardCommand=controlContext.setContinuousActionForCommand("cameraMoveForward",function(){});
+    this.moveBackwardCommand=controlContext.setContinuousActionForCommand("cameraMoveBackward",function(){});
+    
+    this.decreaseFOVCommand=controlContext.setContinuousActionForCommand("cameraDecreaseFOV",function(){});
+    this.increaseFOVCommand=controlContext.setContinuousActionForCommand("cameraIncreaseFOV",function(){});
 }
 
 CameraController.prototype = new Controller();
 CameraController.prototype.constructor = CameraController;
 
-function FighterController(controlledEntity,graphicsContext,logicContext) {
-	Controller.call(this,controlledEntity,graphicsContext,logicContext);
-	
+CameraController.prototype.control = function() {
+    var camera=this.controlledEntity;
+    var inverseOrientationMatrix;
+    var translationVector;
+    var rotationMatrix;
+
+    if(camera.controllableDirection) {
+	if (this.turnLeftCommand.checkContinuous()) {
+                if (camera.angularVelocityVector[1]<camera.maxTurn) {
+                                camera.angularVelocityVector[1]+=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocityVector[1]>0) {
+                        camera.angularVelocityVector[1]-=
+                                Math.min(camera.angularAcceleration,camera.angularVelocityVector[1]);
+                }
+        }
+	if (this.turnRightCommand.checkContinuous()) {
+                if (camera.angularVelocityVector[1]>-camera.maxTurn) {
+                        camera.angularVelocityVector[1]-=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocityVector[1]<0) {
+                        camera.angularVelocityVector[1]+=
+                                Math.min(camera.angularAcceleration,-camera.angularVelocityVector[1]);
+                }
+        }
+	if (this.turnUpCommand.checkContinuous()) {
+                if (camera.angularVelocityVector[0]<camera.maxTurn) {
+                                camera.angularVelocityVector[0]+=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocityVector[0]>0) {
+                        camera.angularVelocityVector[0]-=
+                                Math.min(camera.angularAcceleration,camera.angularVelocityVector[0]);
+                }
+        }
+	if (this.turnDownCommand.checkContinuous()) {
+                if (camera.angularVelocityVector[0]>-camera.maxTurn) {
+                        camera.angularVelocityVector[0]-=camera.angularAcceleration;
+                }
+        } else {
+                if (camera.angularVelocityVector[0]<0) {
+                        camera.angularVelocityVector[0]+=
+                                Math.min(camera.angularAcceleration,-camera.angularVelocityVector[0]);
+                }
+        }
+    }
+    if(camera.controllablePosition) {
+	if (this.moveLeftCommand.checkContinuous()) {
+                if (camera.velocityVector[0]<camera.maxSpeed) {
+                        camera.velocityVector[0]+=camera.acceleration;
+                }
+        } else {
+                if (camera.velocityVector[0]>0) {
+                        camera.velocityVector[0]-=
+                                Math.min(camera.acceleration,camera.velocityVector[0]);
+                }
+        }
+        if (this.moveRightCommand.checkContinuous()) {
+                if (camera.velocityVector[0]>-camera.maxSpeed) {
+                        camera.velocityVector[0]-=camera.acceleration;
+                }
+        } else {
+                if (camera.velocityVector[0]<0) {
+                        camera.velocityVector[0]+=
+                                Math.min(camera.acceleration,-camera.velocityVector[0]);
+                }
+        }
+        if (this.moveDownCommand.checkContinuous()) {
+                if (camera.velocityVector[1]<camera.maxSpeed) {
+                        camera.velocityVector[1]+=camera.acceleration;
+                }
+        } else {
+                if (camera.velocityVector[1]>0) {
+                        camera.velocityVector[1]-=
+                                Math.min(camera.acceleration,camera.velocityVector[1]);
+                }
+        }
+        if (this.moveUpCommand.checkContinuous()) {
+                if (camera.velocityVector[1]>-camera.maxSpeed) {
+                        camera.velocityVector[1]-=camera.acceleration;
+                }
+        } else {
+                if (camera.velocityVector[1]<0) {
+                        camera.velocityVector[1]+=
+                                Math.min(camera.acceleration,-camera.velocityVector[1]);
+                }
+        }
+        if (this.moveForwardCommand.checkContinuous()) {
+                if (camera.velocityVector[2]<camera.maxSpeed) {
+                        camera.velocityVector[2]+=camera.acceleration;
+                }
+        } else {
+                if (camera.velocityVector[2]>0) {
+                        camera.velocityVector[2]-=
+                                Math.min(camera.acceleration,camera.velocityVector[2]);
+                }
+        }
+        if (this.moveBackwardCommand.checkContinuous()) {
+                if (camera.velocityVector[2]>-camera.maxSpeed) {
+                        camera.velocityVector[2]-=camera.acceleration;
+                }
+        } else {
+                if (camera.velocityVector[2]<0) {
+                        camera.velocityVector[2]+=
+                                Math.min(camera.acceleration,-camera.velocityVector[2]);
+                }
+        }
+    }
+
+    if (camera.controllablePosition) {
+        inverseOrientationMatrix=transposed3(inverse3(matrix3from4(camera.orientationMatrix)));
+        translationVector = matrix3Vector3Product(
+            camera.velocityVector,
+            inverseOrientationMatrix
+            );
+        if(camera.followedObject===undefined) {
+            camera.positionMatrix=
+                    mul(
+                            camera.positionMatrix,
+                            translationMatrixv(translationVector)
+                            );
+        } else {
+            camera.followPositionMatrix=
+                    mul(
+                            camera.followPositionMatrix,
+                            translationMatrixv(translationVector)
+                            );
+        }
+    }
+    if (camera.controllableDirection) {
+        if(camera.followedObject===undefined) {
+            rotationMatrix=
+                mul(
+                    rotationMatrix4(
+                                [0,1,0],
+                                camera.angularVelocityVector[1]
+                                ),
+                    rotationMatrix4(
+                                [1,0,0],
+                                camera.angularVelocityVector[0]
+                                )    
+                    );
+            camera.orientationMatrix=mul(camera.orientationMatrix,rotationMatrix);
+        } else {
+            rotationMatrix=
+                mul(
+                    rotationMatrix4(
+                                [0,0,1],
+                                camera.angularVelocityVector[1]
+                                ),
+                    rotationMatrix4(
+                                [1,0,0],
+                                camera.angularVelocityVector[0]
+                                )    
+                    );
+            camera.followOrientationMatrix=mul(camera.followOrientationMatrix,rotationMatrix);
+        }
+    }
+            
+    if (this.decreaseFOVCommand.checkContinuous()) {
+            camera.setFOV(camera.fov-1);
+    }
+    if (this.increaseFOVCommand.checkContinuous()) {
+            camera.setFOV(camera.fov+1);
+    }
+    
+    if (camera.followedObject!==undefined) {
+        // look in direction y instead of z:
+        var newOrientationMatrix =
+                mul(
+                        mul(
+                                inverseRotationMatrix(camera.followedObject.getOrientationMatrix()),
+                                camera.followOrientationMatrix
+                                ),
+                        rotationMatrix4([1,0,0],3.1415/2)        
+                        );
+        camera.orientationMatrix=newOrientationMatrix;
+        var camPositionMatrix = 
+                mul(
+                        mul(
+                                camera.rotationCenterIsObject?
+                                    translationMatrixv(getPositionVector(mul(
+                                        camera.followPositionMatrix,
+                                            inverseRotationMatrix(camera.followOrientationMatrix)
+                                        )))
+                                    :
+                                    camera.followPositionMatrix,
+                                camera.followedObject.getOrientationMatrix()
+                                ),
+                        camera.followedObject.getPositionMatrix()
+                        );
+        var newPositionMatrix=
+                translationMatrix(
+                        -camPositionMatrix[12],
+                        -camPositionMatrix[13],
+                        -camPositionMatrix[14]
+                        );
+        var velocityMatrix = mul(translationMatrix(
+                newPositionMatrix[12]-camera.positionMatrix[12],
+                newPositionMatrix[13]-camera.positionMatrix[13],
+                newPositionMatrix[14]-camera.positionMatrix[14]),camera.orientationMatrix);
+        camera.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
+        camera.positionMatrix=newPositionMatrix;
+    }
+};
+
+function FighterController(controlledEntity,graphicsContext,logicContext,controlContext) {
+	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
+        
+        var self=this;
+        	
 	this.FM_INERTIAL    = 0;
 	this.FM_COMPENSATED = 1;
 	//this.FM_RESTRICTED  = 2;
@@ -59,15 +407,56 @@ function FighterController(controlledEntity,graphicsContext,logicContext) {
 	this.intendedSpeed = 0;
 	
 	this.TURNING_LIMIT = 0.1;
+        
+        this.fireCommand=controlContext.setContinuousActionForCommand("fire",function(){
+            self.controlledEntity.fire(self.graphicsContext.resourceCenter,self.graphicsContext.scene,self.logicContext.level.projectiles);
+        });
+        this.changeFlightModeCommand=controlContext.setOneShotActionForCommand("changeFlightMode",function(){
+            self.flightMode=(self.flightMode+1)%self.NUM_FLIGHTMODES;
+        });
+        this.forwardCommand=controlContext.setContinuousActionForCommand("forward",function(){
+            switch(self.flightMode) {
+                case self.FM_INERTIAL:
+                        self.controlledEntity.addThrusterBurn("forward",0.5);
+                        break;
+                case self.FM_COMPENSATED:
+                        self.intendedSpeed+=self.controlledEntity.propulsion.class.thrust/self.controlledEntity.physicalModel.mass;
+                        break;
+            }
+        });
+        this.reverseCommand=controlContext.setContinuousActionForCommand("reverse",function(){
+            switch(self.flightMode) {
+                case self.FM_INERTIAL:
+                        self.controlledEntity.addThrusterBurn("reverse",0.5);
+                        break;
+                case self.FM_COMPENSATED:
+                        self.intendedSpeed-=self.controlledEntity.propulsion.class.thrust/self.controlledEntity.physicalModel.mass;
+                        if(self.intendedSpeed<0) {
+                                self.intendedSpeed=0;
+                        }
+                        break;
+            }
+        });
+        this.resetSpeedCommand=controlContext.setOneShotActionForCommand("resetSpeed",function(){
+            switch(self.flightMode) {
+                case self.FM_COMPENSATED:
+                        self.intendedSpeed=0;
+                        break;
+            }
+        });
+        this.yawLeftCommand=controlContext.setContinuousActionForCommand("yawLeft",function(){});
+        this.yawRightCommand=controlContext.setContinuousActionForCommand("yawRight",function(){});
+        this.pitchDownCommand=controlContext.setContinuousActionForCommand("pitchDown",function(){});
+        this.pitchUpCommand=controlContext.setContinuousActionForCommand("pitchUp",function(){});
+        this.rollRightCommand=controlContext.setContinuousActionForCommand("rollRight",function(){});
+        this.rollLeftCommand=controlContext.setContinuousActionForCommand("rollLeft",function(){});
 }
 
 FighterController.prototype = new Controller();
 FighterController.prototype.constructor = FighterController;
 
 FighterController.prototype.control = function() {
-	if (currentlyPressedKeys[70]) { // f
-		this.controlledEntity.fire(this.graphicsContext.resourceCenter,this.graphicsContext.scene,this.logicContext.level.projectiles);
-	}
+	this.fireCommand.checkAndExecute();
 	
 	var physicalModel = this.controlledEntity.physicalModel;
 	
@@ -82,43 +471,14 @@ FighterController.prototype.control = function() {
 			),
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
 	
-	for(var i=0;i<keyPressEvents.length;i++) {
-		event = keyPressEvents[i];
-		if (getChar(event) === 'o') {
-			this.flightMode=(this.flightMode+1)%this.NUM_FLIGHTMODES;
-		}
-	}
+	this.changeFlightModeCommand.checkAndExecute();
+        
 	this.controlledEntity.resetThrusterBurn();
-	if (currentlyPressedKeys[87]) { // W
-		switch(this.flightMode) {
-			case this.FM_INERTIAL:
-				this.controlledEntity.addThrusterBurn("forward",0.5);
-				break;
-			case this.FM_COMPENSATED:
-				this.intendedSpeed+=this.controlledEntity.propulsion.class.thrust/physicalModel.mass;
-				break;
-		}
-	}
-	if (currentlyPressedKeys[83]) { // S
-		switch(this.flightMode) {
-			case this.FM_INERTIAL:
-				this.controlledEntity.addThrusterBurn("reverse",0.5);
-				break;
-			case this.FM_COMPENSATED:
-				this.intendedSpeed-=this.controlledEntity.propulsion.class.thrust/physicalModel.mass;
-				if(this.intendedSpeed<0) {
-					this.intendedSpeed=0;
-				}
-				break;
-		}
-	}
-	if (currentlyPressedKeys[8]) { // backspace
-		switch(this.flightMode) {
-			case this.FM_COMPENSATED:
-				this.intendedSpeed=0;
-				break;
-		}
-	}
+        
+	this.forwardCommand.checkAndExecute();
+	this.reverseCommand.checkAndExecute();
+	this.resetSpeedCommand.checkAndExecute();
+        
 	if(this.flightMode===this.FM_COMPENSATED) {
 		if(relativeVelocityMatrix[12]<-0.0001) {
 			this.controlledEntity.addThrusterBurnCapped("slideRight",0.5,this.controlledEntity.getNeededBurnForAcc(-relativeVelocityMatrix[12]));
@@ -136,12 +496,12 @@ FighterController.prototype.control = function() {
 			this.controlledEntity.addThrusterBurnCapped("reverse",0.5,this.controlledEntity.getNeededBurnForAcc(relativeVelocityMatrix[13]-this.intendedSpeed));
 		}
 	}
-	if (currentlyPressedKeys[37]) { // left
+	if (this.yawLeftCommand.checkContinuous()) {
 		if(turningMatrix[4]>-this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("yawLeft",0.5);
 		}
 	} else
-	if (currentlyPressedKeys[39]) { // right
+	if (this.yawRightCommand.checkContinuous()) {
 		if(turningMatrix[4]<this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("yawRight",0.5);
 		}
@@ -166,12 +526,12 @@ FighterController.prototype.control = function() {
 				);
 		this.controlledEntity.addThrusterBurn("yawLeft",0.5*burn/this.controlledEntity.propulsion.class.angularThrust);
 	} 
-	if (currentlyPressedKeys[38]) { // up
+	if (this.pitchDownCommand.checkContinuous()) {
 		if(turningMatrix[6]>-this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("pitchDown",0.5);
 		}
 	} else
-	if (currentlyPressedKeys[40]) { // down
+	if (this.pitchUpCommand.checkContinuous()) {
 		if(turningMatrix[6]<this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("pitchUp",0.5);
 		}
@@ -196,12 +556,12 @@ FighterController.prototype.control = function() {
 				);
 		this.controlledEntity.addThrusterBurn("pitchDown",0.5*burn/this.controlledEntity.propulsion.class.angularThrust);
 	}
-	if (currentlyPressedKeys[34]) { // page down
+	if (this.rollRightCommand.checkContinuous()) {
 		if(turningMatrix[2]>-this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("rollRight",0.5);
 		}
 	} else
-	if (currentlyPressedKeys[33]) { // page up
+	if (this.rollLeftCommand.checkContinuous()) {
 		if(turningMatrix[2]<this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("rollLeft",0.5);
 		}
@@ -232,8 +592,8 @@ function Goal(positionMatrix) {
 	this.positionMatrix = positionMatrix;
 }
 
-function AIController(controlledEntity,graphicsContext,logicContext) {
-	Controller.call(this,controlledEntity,graphicsContext,logicContext);
+function AIController(controlledEntity,graphicsContext,logicContext,controlContext) {
+	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
 	this.goals=new Array();
 	
 	this.TURNING_LIMIT = 0.1;
@@ -388,273 +748,177 @@ AIController.prototype.control = function() {
 	}
 };
 
-function controlCamera(camera) {
-    if(camera.controllableDirection) {
-        if (currentlyPressedKeys[17]&&currentlyPressedKeys[37]) {
-                //ctrl left
-                if (camera.angularVelocityVector[1]<camera.maxTurn) {
-                                camera.angularVelocityVector[1]+=camera.angularAcceleration;
-                }
-        } else {
-                if (camera.angularVelocityVector[1]>0) {
-                        camera.angularVelocityVector[1]-=
-                                Math.min(camera.angularAcceleration,camera.angularVelocityVector[1]);
-                }
-        }
-        if (currentlyPressedKeys[17]&&currentlyPressedKeys[39]) {
-                // ctrl Right
-                if (camera.angularVelocityVector[1]>-camera.maxTurn) {
-                        camera.angularVelocityVector[1]-=camera.angularAcceleration;
-                }
-        } else {
-                if (camera.angularVelocityVector[1]<0) {
-                        camera.angularVelocityVector[1]+=
-                                Math.min(camera.angularAcceleration,-camera.angularVelocityVector[1]);
-                }
-        }
-        if (currentlyPressedKeys[17]&&currentlyPressedKeys[38]) {
-                //ctrl up
-                if (camera.angularVelocityVector[0]<camera.maxTurn) {
-                                camera.angularVelocityVector[0]+=camera.angularAcceleration;
-                }
-        } else {
-                if (camera.angularVelocityVector[0]>0) {
-                        camera.angularVelocityVector[0]-=
-                                Math.min(camera.angularAcceleration,camera.angularVelocityVector[0]);
-                }
-        }
-        if (currentlyPressedKeys[17]&&currentlyPressedKeys[40]) {
-                // ctrl down
-                if (camera.angularVelocityVector[0]>-camera.maxTurn) {
-                        camera.angularVelocityVector[0]-=camera.angularAcceleration;
-                }
-        } else {
-                if (camera.angularVelocityVector[0]<0) {
-                        camera.angularVelocityVector[0]+=
-                                Math.min(camera.angularAcceleration,-camera.angularVelocityVector[0]);
-                }
-        }
-    }
-    if(camera.controllablePosition) {
-        if (currentlyPressedKeys[37]) {
-                // Left
-                if (camera.velocityVector[0]<camera.maxSpeed) {
-                        camera.velocityVector[0]+=camera.acceleration;
-                }
-        } else {
-                if (camera.velocityVector[0]>0) {
-                        camera.velocityVector[0]-=
-                                Math.min(camera.acceleration,camera.velocityVector[0]);
-                }
-        }
-        if (currentlyPressedKeys[39]) {
-                // Right
-                if (camera.velocityVector[0]>-camera.maxSpeed) {
-                        camera.velocityVector[0]-=camera.acceleration;
-                }
-        } else {
-                if (camera.velocityVector[0]<0) {
-                        camera.velocityVector[0]+=
-                                Math.min(camera.acceleration,-camera.velocityVector[0]);
-                }
-        }
-        if (currentlyPressedKeys[34]) {
-                // Page down
-                if (camera.velocityVector[1]<camera.maxSpeed) {
-                        camera.velocityVector[1]+=camera.acceleration;
-                }
-        } else {
-                if (camera.velocityVector[1]>0) {
-                        camera.velocityVector[1]-=
-                                Math.min(camera.acceleration,camera.velocityVector[1]);
-                }
-        }
-        if (currentlyPressedKeys[33]) {
-                // Page up
-                if (camera.velocityVector[1]>-camera.maxSpeed) {
-                        camera.velocityVector[1]-=camera.acceleration;
-                }
-        } else {
-                if (camera.velocityVector[1]<0) {
-                        camera.velocityVector[1]+=
-                                Math.min(camera.acceleration,-camera.velocityVector[1]);
-                }
-        }
-        if (currentlyPressedKeys[38]) {
-                // Up
-                if (camera.velocityVector[2]<camera.maxSpeed) {
-                        camera.velocityVector[2]+=camera.acceleration;
-                }
-        } else {
-                if (camera.velocityVector[2]>0) {
-                        camera.velocityVector[2]-=
-                                Math.min(camera.acceleration,camera.velocityVector[2]);
-                }
-        }
-        if (currentlyPressedKeys[40]) {
-                // Down
-                if (camera.velocityVector[2]>-camera.maxSpeed) {
-                        camera.velocityVector[2]-=camera.acceleration;
-                }
-        } else {
-                if (camera.velocityVector[2]<0) {
-                        camera.velocityVector[2]+=
-                                Math.min(camera.acceleration,-camera.velocityVector[2]);
-                }
-        }
-    }
-
-    if (camera.controllablePosition) {
-        var inverseOrientationMatrix=transposed3(inverse3(matrix3from4(camera.orientationMatrix)));
-        var translationVector = matrix3Vector3Product(
-            camera.velocityVector,
-            inverseOrientationMatrix
-            );
-        if(camera.followedObject===undefined) {
-            camera.positionMatrix=
-                    mul(
-                            camera.positionMatrix,
-                            translationMatrixv(translationVector)
-                            );
-        } else {
-            camera.followPositionMatrix=
-                    mul(
-                            camera.followPositionMatrix,
-                            translationMatrixv(translationVector)
-                            );
-        }
-    }
-    if (camera.controllableDirection) {
-        var rotationMatrix=
-                mul(
-                    rotationMatrix4(
-                                [0,0,1],
-                                camera.angularVelocityVector[1]
-                                ),
-                    rotationMatrix4(
-                                [1,0,0],
-                                camera.angularVelocityVector[0]
-                                )    
-                    );
-        if(camera.followedObject===undefined) {
-            camera.orientationMatrix=mul(camera.orientationMatrix,rotationMatrix);
-        } else {
-            camera.followOrientationMatrix=mul(camera.followOrientationMatrix,rotationMatrix);
-        }
-    }
-            
-    if (currentlyPressedKeys[90]) { // z
-            camera.setFOV(camera.fov-1);
-    }
-    if (currentlyPressedKeys[85]) { // u
-            camera.setFOV(camera.fov+1);
-    }
+/**
+ * Initializes the global keyboard commands by looking for the appropriate associations
+ * in the given control context and setting their execution actions.
+ * @param {GraphicsContext} graphicsContext The graphics context within which to set the commands.
+ * @param {LogicContext} logicContext The logic context within which to set the commands.
+ * @param {KeyboardControlContext} controlContext The context that contains the key (combination) - action associations.
+ * @returns {KeyboardControlContext.KeyCommand[]} The global keyboard commands organized in an array.
+ */
+function initGlobalCommands(graphicsContext,logicContext,controlContext) {
     
-    if (camera.followedObject!==undefined) {
-        // look in direction y instead of z:
-        var newOrientationMatrix =
-                mul(
-                        mul(
-                                inverseRotationMatrix(camera.followedObject.getOrientationMatrix()),
-                                camera.followOrientationMatrix
-                                ),
-                        rotationMatrix4([1,0,0],3.1415/2)        
-                        );
-        camera.orientationMatrix=newOrientationMatrix;
-        var camPositionMatrix = 
-                mul(
-                        mul(
-                                camera.rotationCenterIsObject?
-                                    translationMatrixv(getPositionVector(mul(
-                                        camera.followPositionMatrix,
-                                            inverseRotationMatrix(camera.followOrientationMatrix)
-                                        )))
-                                    :
-                                    camera.followPositionMatrix,
-                                camera.followedObject.getOrientationMatrix()
-                                ),
-                        camera.followedObject.getPositionMatrix()
-                        );
-        var newPositionMatrix=
-                translationMatrix(
-                        -camPositionMatrix[12],
-                        -camPositionMatrix[13],
-                        -camPositionMatrix[14]
-                        );
-        var velocityMatrix = mul(translationMatrix(
-                newPositionMatrix[12]-camera.positionMatrix[12],
-                newPositionMatrix[13]-camera.positionMatrix[13],
-                newPositionMatrix[14]-camera.positionMatrix[14]),camera.orientationMatrix);
-        camera.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
-        camera.positionMatrix=newPositionMatrix;
-    }
+    var globalCommands=new Array();
+    var i,j;
+    
+    globalCommands.push(controlContext.setOneShotActionForCommand("pause",function(){
+        alert("Game paused.");
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("changeView",function(){
+        if ((graphicsContext.scene.activeCamera.followedCamera!==undefined) && 
+                (graphicsContext.scene.activeCamera.followedCamera.nextView!==null)) {
+            graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.activeCamera.followedCamera.nextView,500);
+        }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("followNext",function(){
+        // if we are currently following a camera, we have to look for the first subsequent
+        // camera that follows a different object than the current
+        if (graphicsContext.scene.activeCamera.followedCamera!==undefined) {
+            // first find the index of the first camera following the current object, iterating
+            // through the cameras from the beginning
+            i=0;
+            while ((i<graphicsContext.scene.cameras.length)&&
+                    (graphicsContext.scene.cameras[i].followedObject!==graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
+                i++;
+            }
+            // then find the first camera which has a different followed object
+            if(i<graphicsContext.scene.cameras.length) {
+                while(
+                        (i<graphicsContext.scene.cameras.length)&&
+                        (graphicsContext.scene.cameras[i].followedObject===graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
+                    i++;
+                }
+                // if we found such a camera, start following it
+                if(i<graphicsContext.scene.cameras.length) {
+                    graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.cameras[i],4000);
+                // if we didn't find such a camera, go back to free camera mode
+                } else {
+                    graphicsContext.scene.activeCamera.followedCamera=undefined;
+                }
+            }
+        // if we are currently not following any cameras, just start following the first one
+        } else {
+            if (graphicsContext.scene.cameras.length>0) {
+                graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.cameras[0],4000);
+            }
+        }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("followPrevious",function(){
+        // if we are currently following a camera, we have to look for the last preceding
+        // camera that follows a different object than the current
+        if (graphicsContext.scene.activeCamera.followedCamera!==undefined) {
+            // first find the index of the first camera following the current object, iterating
+            // through the cameras from the beginning
+            i=0;
+            while ((i<graphicsContext.scene.cameras.length)&&
+                    (graphicsContext.scene.cameras[i].followedObject!==graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
+                i++;
+            }
+            // then find the first camera backwards which has a different followed object
+            if(i<graphicsContext.scene.cameras.length) {
+                while(
+                        (i>=0)&&
+                        (graphicsContext.scene.cameras[i].followedObject===graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
+                    i--;
+                }
+                // and then go back more until we find the last camera still following the previous object
+                j=i-1;
+                while(
+                        (j>=0)&&
+                        (graphicsContext.scene.cameras[j].followedObject===graphicsContext.scene.cameras[i].followedObject)) {
+                    j--;
+                }
+                // if we found such a camera (i), start following the last good one (j+1)
+                if(i>=0) {
+                    graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.cameras[j+1],4000);
+                // if we didn't find such a camera, go back to free camera mode
+                } else {
+                    graphicsContext.scene.activeCamera.followedCamera=undefined;
+                }
+            }
+        // if we are currently not following any cameras, just start following the first one
+        // wich follows the same object as the last one
+        } else {
+            if (graphicsContext.scene.cameras.length>0) {
+                i=graphicsContext.scene.cameras.length-1;
+                j=i-1;
+                while(
+                        (j>=0)&&
+                        (graphicsContext.scene.cameras[j].followedObject===graphicsContext.scene.cameras[i].followedObject)) {
+                    j--;
+                }
+                graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.cameras[j+1],4000);
+            }
+        }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("setManualControl",function(){
+        if ((graphicsContext.scene.activeCamera.followedCamera!==undefined) &&
+            (graphicsContext.scene.activeCamera.followedCamera.followedObject!==undefined)) {
+            i=0;
+            while ((i<logicContext.level.spacecrafts.length)&&
+                    (logicContext.level.spacecrafts[i].visualModel!==graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
+                i++;
+            }
+            if (i<logicContext.level.spacecrafts.length) {
+                logicContext.level.spacecrafts[i].controller=new FighterController(logicContext.level.spacecrafts[i],graphicsContext,logicContext,controlContext);
+            }
+        }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("setAIControl",function(){
+        if ((graphicsContext.scene.activeCamera.followedCamera!==undefined) &&
+            (graphicsContext.scene.activeCamera.followedCamera.followedObject!==undefined)) {
+            i=0;
+            while ((i<logicContext.level.spacecrafts.length)&&
+                    (logicContext.level.spacecrafts[i].visualModel!==graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
+                i++;
+            }
+            if (i<logicContext.level.spacecrafts.length) {
+                logicContext.level.spacecrafts[i].controller=new AIController(logicContext.level.spacecrafts[i],graphicsContext,logicContext,controlContext);
+                for(j=0;j<10;j++) {
+                    logicContext.level.spacecrafts[i].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
+                }
+            }
+        }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("stopAIShips",function(){
+        for(i=0;i<logicContext.level.spacecrafts.length;i++) {
+            if(logicContext.level.spacecrafts[i].controller instanceof AIController) {
+                logicContext.level.spacecrafts[i].controller.goals=new Array();
+            }
+        }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("toggleLightRotation",function(){
+        lightTurn=!lightTurn;
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("toggleHitboxVisibility",function(){
+        for(i=0;i<logicContext.level.spacecrafts.length;i++) {
+            for(j=0;j<logicContext.level.spacecrafts[i].visualModel.subnodes.length;j++) {
+                if(logicContext.level.spacecrafts[i].visualModel.subnodes[j].texture.filename==="textures/white.png") {
+                    logicContext.level.spacecrafts[i].visualModel.subnodes[j].visible=!logicContext.level.spacecrafts[i].visualModel.subnodes[j].visible;
+                }
+            }
+        }
+    }));
+    
+    return globalCommands;
 }
 
-function control(resourceCenter,scene,level) {
-	if (scene.activeCamera.followedCamera===undefined) {
-            controlCamera(scene.activeCamera);
-	} else {
-            controlCamera(scene.activeCamera.followedCamera);
-            scene.activeCamera.velocityVector=scene.activeCamera.followedCamera.velocityVector;
-            scene.activeCamera.angularVelocityVector=scene.activeCamera.followedCamera.angularVelocityVector;
-        }
-        // pause game
-	if (currentlyPressedKeys[80]) { // p
-		alert("paused");
-	}
+function control(scene,level,globalCommands) {
+        var i;
         
-	for(var i=0;i<keyPressEvents.length;i++) {
-		event = keyPressEvents[i];
-                // follow next camera
-		if (getChar(event) === 'c') {	
-			activeCameraIndex=(activeCameraIndex+1)%scene.cameras.length;
-			scene.activeCamera.followCamera(scene.cameras[activeCameraIndex]);
-		}
-                // follow previous camera
-		if (getChar(event) === 'x') {
-			activeCameraIndex=(activeCameraIndex-1)%scene.cameras.length;
-                        scene.activeCamera.followCamera(scene.cameras[activeCameraIndex]);
-		}
-                // set control to manual
-                if (getChar(event) === 'm') {
-                    if(activeCameraIndex>0) {
-                        level.spacecrafts[activeCameraIndex-1].controller=new FighterController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-                    }
-                }
-                // set control to AI
-                if (getChar(event) === 'n') {
-                    if(activeCameraIndex>0) {
-                        level.spacecrafts[activeCameraIndex-1].controller=new AIController(level.spacecrafts[activeCameraIndex-1],new GraphicsContext(resourceCenter,scene),new LogicContext(level));
-                        for(var j=0;j<10;j++) {
-                            level.spacecrafts[activeCameraIndex-1].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
-                        }
-                    }
-                }
-                // stop all units
-		if (getChar(event) === '0') {
-			for(var j=0;j<level.spacecrafts.length;j++) {
-                                if(level.spacecrafts[j].controller instanceof AIController) {
-                                    level.spacecrafts[j].controller.goals=new Array();
-                                }
-			}
-		}
-                // toggle rotation of directional lightsource
-		if (getChar(event) === 'l') {
-			lightTurn=!lightTurn;
-		}
-                // toggle visibility of hitboxes
-		if (getChar(event) === 'h') {
-			for(var j=0;j<level.spacecrafts.length;j++) {
-				for(var k=0;k<level.spacecrafts[j].visualModel.subnodes.length;k++) {
-					if(level.spacecrafts[j].visualModel.subnodes[k].texture.filename==="textures/white.png") {
-						level.spacecrafts[j].visualModel.subnodes[k].visible=!level.spacecrafts[j].visualModel.subnodes[k].visible;
-					}
-				}
-			}
-		}
-                keyPressEvents.splice(i,1);
-                i-=1;
-	}
+	if (scene.activeCamera.followedCamera===undefined) {
+            level.cameraController.controlledEntity=scene.activeCamera;
+            level.cameraController.control();
+	} else {
+            level.cameraController.controlledEntity=scene.activeCamera.followedCamera;
+            level.cameraController.control();
+            scene.activeCamera.velocityVector=scene.activeCamera.followedCamera.velocityVector;
+        }
+        
+        for(i=0;i<globalCommands.length;i++) {
+            globalCommands[i].checkAndExecute();
+        }
+
         scene.activeCamera.update();
 	scene.activeCamera.matrix =
 		mul(

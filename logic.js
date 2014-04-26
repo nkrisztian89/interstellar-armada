@@ -246,7 +246,7 @@ Propulsion.prototype.simulate = function(dt) {
 	}
 };
 
-function Spacecraft(graphicsContext,logicContext,SpacecraftClass,owner,positionMatrix,controller) {
+function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,controller) {
 	this.graphicsContext=graphicsContext;
 	this.logicContext=logicContext;
 	this.class=SpacecraftClass;
@@ -269,9 +269,9 @@ function Spacecraft(graphicsContext,logicContext,SpacecraftClass,owner,positionM
 		
 	this.owner=owner;
 	if (controller==="ai") {
-		this.controller=new AIController(this,graphicsContext,logicContext);
+		this.controller=new AIController(this,graphicsContext,logicContext,controlContext);
 	} else if (controller==="keyboard") {
-		this.controller=new FighterController(this,graphicsContext,logicContext);
+		this.controller=new FighterController(this,graphicsContext,logicContext,controlContext);
 	} else {
 		alert("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
 		this.controller=null;
@@ -522,7 +522,7 @@ ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
     return new Camera(aspect,this.fov,this.controllablePosition,this.controllableDirection,followedObject,this.followPositionMatrix,this.followOrientationMatrix,this.rotationCenterIsObject);
 };
 
-function Level(resourceCenter,scene) {
+function Level(resourceCenter,scene,controlContext) {
 	this.players=new Array();
 	this.skyboxClasses=new Array();
 	this.weaponClasses=new Array();
@@ -536,6 +536,9 @@ function Level(resourceCenter,scene) {
 	
 	this.resourceCenter=resourceCenter;
 	this.scene=scene;
+        this.controlContext=controlContext;
+        
+        this.cameraController=new CameraController(scene.activeCamera,new GraphicsContext(resourceCenter,scene),new LogicContext(this),controlContext);
 }
 
 Level.prototype.loadSkyboxClasses = function(filename) {
@@ -910,11 +913,15 @@ Level.prototype.loadFromFile = function(filename) {
 	}
 	
 	var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
+        var graphicsContext = new GraphicsContext(this.resourceCenter,this.scene);
+        var logicContext = new LogicContext(this);
+        
 	for(var i=0;i<spacecraftTags.length;i++) {
                 var spacecraftClass = this.getSpacecraftClass(spacecraftTags[i].getAttribute("class"));
 		this.spacecrafts.push(new Spacecraft(
-			new GraphicsContext(this.resourceCenter,this.scene),
-			new LogicContext(this),
+			graphicsContext,
+			logicContext,
+                        this.controlContext,
 			spacecraftClass,
 			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
 			translationMatrix(
@@ -934,6 +941,12 @@ Level.prototype.loadFromFile = function(filename) {
 		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(this.resourceCenter,this.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
                 for(var j=0;j<spacecraftClass.views.length;j++) {
                     this.scene.cameras.push(spacecraftClass.views[j].createCameraForObject(this.scene.width/this.scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
+                    if (j>0) {
+                        this.scene.cameras[this.scene.cameras.length-2].nextView = this.scene.cameras[this.scene.cameras.length-1];
+                    }
+                }
+                if (spacecraftClass.views.length>0) {
+                    this.scene.cameras[this.scene.cameras.length-1].nextView = this.scene.cameras[this.scene.cameras.length-spacecraftClass.views.length];
                 }
 	}
         

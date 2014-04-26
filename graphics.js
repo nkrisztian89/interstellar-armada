@@ -984,6 +984,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
         this.controllableDirection=controllableDirection;
 	this.focusDistance=Math.cos(fov*3.1415/360)*2*this.aspect;
 	this.perspectiveMatrix=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
+        this.nextView=null;
 }
 
 /**

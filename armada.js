@@ -63,6 +63,46 @@ var mapSize=250;
 function loadResources() {
 	var canvas = document.getElementById("canvas");
 	var progress = document.getElementById("progress");
+        
+        var controlContext = new KeyboardControlContext();
+	
+	document.onkeydown = controlContext.handleKeyDown;
+        document.onkeyup = controlContext.handleKeyUp;
+        
+        controlContext.addKeyCommand(new controlContext.KeyCommand("fire",              "f",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("changeFlightMode",  "o",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("forward",           "w",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("reverse",           "s",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("resetSpeed",        "backspace",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("yawLeft",           "left",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("yawRight",          "right",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("pitchDown",         "up",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("pitchUp",           "down",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("rollRight",         "page down",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("rollLeft",          "page up",false,false,false));
+        
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnLeft",    "left",false,true,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnRight",   "right",false,true,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnUp",      "up",false,true,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnDown",    "down",false,true,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveLeft",    "left",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveRight",   "right",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveUp",      "page up",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveDown",    "page down",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveForward", "up",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveBackward","down",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraDecreaseFOV", "z",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraIncreaseFOV", "u",false,false,false));
+        
+        controlContext.addKeyCommand(new controlContext.KeyCommand("pause",                 "p",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("changeView",            "v",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("followNext",            "c",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("followPrevious",        "x",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("setManualControl",      "m",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("setAIControl",          "n",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("stopAIShips",           "0",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("toggleLightRotation",   "l",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("toggleHitboxVisibility","h",false,false,false));
 
 	var resourceCenter = new ResourceCenter();
 	
@@ -89,7 +129,7 @@ function loadResources() {
 	//resourceCenter.scenes.push(pipScene);
         //pipScene.objects.push(new VisualObject(fregattModel,metalTexture,greenShader,0.0045,translationMatrix(0.0,0.0,-2.0),true));
 	
-	var test_level = new Level(resourceCenter,mainScene);
+	var test_level = new Level(resourceCenter,mainScene,controlContext);
 	
         // this loads the level and all needed other resources (models, shaders)
         // from the XML files
@@ -104,13 +144,17 @@ function loadResources() {
 			rotationMatrix4([0,1,0],3.1415/4),
 			rotationMatrix4([0,0,1],3.1415/2)
 			);
+                
+        var graphicsContext = new GraphicsContext(resourceCenter,mainScene);
+        var logicContext = new LogicContext(test_level);
 	
         // adding random fighters to the scene to test performance
 	for(var i=0;i<num_test_fighters;i++) {
 		test_level.spacecrafts.push(
 			new Spacecraft(
-				new GraphicsContext(resourceCenter,mainScene),
-				new LogicContext(test_level),
+				graphicsContext,
+				logicContext,
+                                controlContext,
 				test_level.getSpacecraftClass("fecske"),
 				test_level.getPlayer("human"),
 				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
@@ -126,8 +170,9 @@ function loadResources() {
 	for(var i=0;i<num_test_ships;i++) {
 		test_level.spacecrafts.push(
 			new Spacecraft(
-				new GraphicsContext(resourceCenter,mainScene),
-				new LogicContext(test_level),
+				graphicsContext,
+				logicContext,
+                                controlContext,
 				test_level.getSpacecraftClass("fregatt"),
 				test_level.getPlayer("human"),
 				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
@@ -149,8 +194,6 @@ function loadResources() {
                     rotationMatrix4([1,0,0],3.1415/4),
                     rotationMatrix4([0,1,0],3.1415/4)
                 );*/
-        
-        mainScene.cameras.push(new Camera(canvas.width/canvas.height,90,true,true));
 	
         // adding random goals to the AI for testing
 	for(var i=0;i<test_level.spacecrafts.length;i++) {
@@ -160,32 +203,21 @@ function loadResources() {
 	}
 	/*
         // setting up the position and direction of the main camera
-	mainScene.activeCamera.positionMatrix=
-		mul(
-			mainScene.activeCamera.positionMatrix,
-			translationMatrix(0,10,-10)
-		);
-		
-	mainScene.activeCamera.orientationMatrix=
-		mul(
-			mainScene.activeCamera.orientationMatrix,
-			rotationMatrix4([1,0,0],3.1415/4)
-		);*/
+	mainScene.activeCamera.positionMatrix=translationMatrix(0,10,-10);
+	mainScene.activeCamera.orientationMatrix=rotationMatrix4([1,0,0],3.1415/4);
+        */
 	
 	var freq = 60;
 	
 	progress.value=75;
 	
 	resourceCenter.init(canvas,freq);
-	
-	document.onkeydown = handleKeyDown;
-        document.onkeyup = handleKeyUp;
-        document.onkeypress = handleKeyPress;
-	
+        
+        var globalCommands=initGlobalCommands(graphicsContext,logicContext,controlContext);
 	setInterval(function()
 		{
 			test_level.tick(1000/freq);
-			control(resourceCenter,mainScene,test_level);
+			control(mainScene,test_level,globalCommands);
 			ang+=lightTurn?0.07:0.0;
 		},1000/freq);
 }
