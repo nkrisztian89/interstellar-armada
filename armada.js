@@ -69,7 +69,7 @@ function loadResources() {
 	document.onkeydown = controlContext.handleKeyDown;
         document.onkeyup = controlContext.handleKeyUp;
         
-        controlContext.addKeyCommand(new controlContext.KeyCommand("fire",              "f",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("fire",              "space",false,false,false));
         controlContext.addKeyCommand(new controlContext.KeyCommand("changeFlightMode",  "o",false,false,false));
         controlContext.addKeyCommand(new controlContext.KeyCommand("forward",           "w",false,false,false));
         controlContext.addKeyCommand(new controlContext.KeyCommand("reverse",           "s",false,false,false));

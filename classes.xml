@@ -143,8 +143,7 @@
 		<thrusterSlots>
 			<!-- middle part's thrusters -->
 			<!--slot x="2.4" y="-9" z="1.6" size="0.3" use="forward,yawLeft" />
-			<slot x="-2.4" y="-9" z="1.6" size="0.3" use="forward,yawRight" /-->
-			
+			<slot x="-2.4" y="-9" z="1.6" size="0.3" use="forward,yawRight" /-->	
 			
 			<slot x="14" y="-7" z="2.5" size="0.3" use="forward,yawLeft" />	
 			<slot x="22" y="-7" z="2.5" size="0.3" use="forward,yawLeft" />	
@@ -160,15 +159,32 @@
 			<slot x="-16.75" y="-5.4" z="9.15" size="0.3" use="forward,yawRight" />
 			<slot x="-14.25" y="-5.4" z="9.15" size="0.3" use="forward,yawRight" />
 			
-			<slot x="14" y="4.5" z="-2.5" size="0.15" use="raise,rollLeft,pitchUp" />
-			<slot x="14" y="0.5" z="-2.5" size="0.15" use="raise,rollLeft" />
-			<slot x="-14" y="4.5" z="-2.5" size="0.15" use="raise,rollRight,pitchUp" />
-			<slot x="-14" y="0.5" z="-2.5" size="0.15" use="raise,rollRight" />
+			<slot x="14" y="4.5" z="-2.5" size="0.15" use="raise,rollLeft" />
+			<slot x="14" y="0.5" z="-2.5" size="0.15" use="raise,rollLeft,pitchDown" />
+			<slot x="-14" y="4.5" z="-2.5" size="0.15" use="raise,rollRight" />
+			<slot x="-14" y="0.5" z="-2.5" size="0.15" use="raise,rollRight,pitchDown" />
 			
 			<slot x="18" y="18.8" z="6.5" size="0.3" use="reverse,yawRight" />
 			<slot x="23" y="15.9" z="6.2" size="0.3" use="reverse,yawRight" />
 			<slot x="-18" y="18.8" z="6.5" size="0.3" use="reverse,yawLeft" />
 			<slot x="-23" y="15.9" z="6.2" size="0.3" use="reverse,yawLeft" />
+                        
+                        <slot x="2.6" y="10" z="7" size="0.15" use="lower,pitchDown" />
+                        <slot x="-2.6" y="10" z="7" size="0.15" use="lower,pitchDown" />
+                        
+                        <slot x="6.8" y="23" z="-2.5" size="0.15" use="raise,pitchUp,slideLeft" />
+                        <slot x="-6.8" y="23" z="-2.5" size="0.15" use="raise,pitchUp,slideRight" />
+                        
+                        <slot x="27.4" y="3.5" z="2.5" size="0.15" use="slideLeft" />
+                        <slot x="27.4" y="0.5" z="2.5" size="0.15" use="slideLeft" />
+                        <slot x="25.6" y="-2.5" z="9.3" size="0.15" use="slideLeft" />
+                        
+                        <slot x="-27.4" y="3.5" z="2.5" size="0.15" use="slideRight" />
+                        <slot x="-27.4" y="0.5" z="2.5" size="0.15" use="slideRight" />
+                        <slot x="-25.6" y="-2.5" z="9.3" size="0.15" use="slideRight" />
+                        
+                        <slot x="18" y="4.0" z="11.2" size="0.25" use="lower,rollRight,pitchUp" />
+                        <slot x="-18" y="4.0" z="11.2" size="0.25" use="lower,rollLeft,pitchUp" />
 		</thrusterSlots>
                 
                 <views>
@@ -182,7 +198,7 @@
                         <turn axis="z" degree="180" />
                         <turn axis="x" degree="-10" />
                     </view>
-                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-10" z="0"/>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-5" z="0"/>
                 </views>
 	</SpacecraftClass>
 	
