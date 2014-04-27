@@ -42,6 +42,10 @@
 	
 	<Spacecraft class="delfin" owner="human">
 		<position x="5.0" y="0.0" z="-6.0" />
+                <weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+		</weapons>
 		<propulsion class="fighter" />
 	</Spacecraft>
 	

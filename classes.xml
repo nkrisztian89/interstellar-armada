@@ -203,7 +203,11 @@
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="delfin">
-		<model filename="models/delfin.egm_converted" lod="1" size="0.036"/>
+		<model filename="models/delfin_r4.egm_converted" lod="4" size="0.036"/>
+                <model filename="models/delfin_r3.egm_converted" lod="3"/>
+                <model filename="models/delfin_r2.egm_converted" lod="2"/>
+                <model filename="models/delfin_r1.egm_converted" lod="1"/>
+                <model filename="models/delfin_r0.egm_converted" lod="0"/>
 		<texture filename="textures/fem.bmp" />
 		<shader name="simple" />
 		<physics mass="2500">
@@ -214,6 +218,53 @@
 			<body x="37" y="-10" z="30" w="23" h="35" d="17" />
 			<body x="-37" y="-10" z="30" w="23" h="35" d="17" />
 		</physics>
+                
+                <weaponSlots>
+			<slot x="20.4" y="19.2" z="-7.2" />
+			<slot x="-20.4" y="19.2" z="-7.2" />
+		</weaponSlots>
+                
+                <thrusterSlots>
+                        <slot x="0" y="9.6" z="-18" size="0.7" use="forward,pitchUp" />	
+                        <slot x="36" y="-25.2" z="30" size="0.7" use="forward,yawLeft" />	
+                        <slot x="-36" y="-25.2" z="30" size="0.7" use="forward,yawRight" />	
+                        
+                        <slot x="0" y="51.5" z="-12" size="0.3" use="reverse,pitchDown" />	
+                        <slot x="5.2" y="51.5" z="-21" size="0.3" use="reverse,pitchDown" />	
+                        <slot x="-5.2" y="51.5" z="-21" size="0.3" use="reverse,pitchDown" />	
+                        
+                        <slot x="36" y="16.7" z="36" size="0.3" use="reverse,yawRight,pitchUp" />
+                        <slot x="41.2" y="16.7" z="27" size="0.3" use="reverse,yawRight,pitchUp" />	
+                        <slot x="30.8" y="16.7" z="27" size="0.3" use="reverse,yawRight,pitchUp" />		
+                        
+                        <slot x="-36" y="16.7" z="36" size="0.3" use="reverse,yawLeft,pitchUp" />	
+                        <slot x="-41.2" y="16.7" z="27" size="0.3" use="reverse,yawLeft,pitchUp" />	
+                        <slot x="-30.8" y="16.7" z="27" size="0.3" use="reverse,yawLeft,pitchUp" />
+                        
+                        <slot x="11.9" y="30.6" z="-18" size="0.3" use="rollRight,slideLeft,yawLeft" />
+                        <slot x="11.9" y="23.4" z="-18" size="0.3" use="rollRight,slideLeft" />
+                        
+                        <slot x="-11.9" y="30.6" z="-18" size="0.3" use="rollLeft,slideRight,yawRight" />
+                        <slot x="-11.9" y="23.4" z="-18" size="0.3" use="rollLeft,slideRight" />
+                        
+                        <slot x="30.05" y="-4,2" z="40.3" size="0.3" use="rollRight,lower" />
+                        <slot x="30.05" y="-11.4" z="40.3" size="0.3" use="rollRight,lower" />
+                        
+                        <slot x="41.95" y="-4,2" z="19.7" size="0.3" use="rollLeft,raise,slideLeft,pitchDown" />
+                        <slot x="41.95" y="-11.4" z="19.7" size="0.3" use="rollLeft,raise,slideLeft,pitchDown" />
+                        
+                        <slot x="-41.95" y="-4,2" z="19.7" size="0.3" use="rollRight,raise,slideRight,pitchDown" />
+                        <slot x="-41.95" y="-11.4" z="19.7" size="0.3" use="rollRight,raise,slideRight,pitchDown" />
+                        
+                        <slot x="-30.05" y="-4,2" z="40.3" size="0.3" use="rollLeft,lower" />
+                        <slot x="-30.05" y="-11.4" z="40.3" size="0.3" use="rollLeft,lower" />
+                        
+                        <slot x="6.4" y="33.6" z="10.44" size="0.3" use="pitchDown,lower,slideLeft" />
+                        <slot x="-6.4" y="33.6" z="10.44" size="0.3" use="pitchDown,lower,slideRight" />
+                        
+                        <slot x="8.05" y="53.8" z="-4.7" size="0.3" use="pitchUp,raise" />
+                        <slot x="-8.05" y="53.8" z="-4.7" size="0.3" use="pitchUp,raise" />
+                </thrusterSlots>
                 
                 <views>
                     <view name="near" fov="60" movable="false" turnable="false" rotationCenterIsObject="true" x="0" y="-10" z="2"/>
@@ -226,7 +277,7 @@
                         <turn axis="z" degree="180" />
                         <turn axis="x" degree="-10" />
                     </view>
-                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-12" z="0"/>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-8" z="0"/>
                 </views>
 	</SpacecraftClass>
 	
