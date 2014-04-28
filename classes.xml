@@ -225,9 +225,9 @@
 		</weaponSlots>
                 
                 <thrusterSlots>
-                        <slot x="0" y="9.6" z="-18" size="0.7" use="forward,pitchUp" />	
-                        <slot x="36" y="-25.2" z="30" size="0.7" use="forward,yawLeft" />	
-                        <slot x="-36" y="-25.2" z="30" size="0.7" use="forward,yawRight" />	
+                        <slot x="0" y="9.4" z="-18" size="0.7" use="forward,pitchUp" />	
+                        <slot x="36" y="-25.4" z="30" size="0.7" use="forward,yawLeft" />	
+                        <slot x="-36" y="-25.4" z="30" size="0.7" use="forward,yawRight" />	
                         
                         <slot x="0" y="51.5" z="-12" size="0.3" use="reverse,pitchDown" />	
                         <slot x="5.2" y="51.5" z="-21" size="0.3" use="reverse,pitchDown" />	

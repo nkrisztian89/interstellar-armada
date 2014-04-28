@@ -371,6 +371,8 @@ function VisualObject(shader) {
 	
 	this.visibleWidth=0;
 	this.visibleHeight=0;
+        
+        this.lastInsideFrustumState=true;
 }
 
 /**
@@ -497,6 +499,12 @@ VisualObject.prototype.assignUniforms = function(gl) {
  * @returns {boolean} Whether the object is inside the frustum.
  */
 VisualObject.prototype.isInsideViewFrustum = function(camera) {
+        if (this.renderParent!==null && this.renderParent.lastInsideFrustumState===false) {
+            this.visibleWidth=0;
+            this.visibleHeight=0;
+            this.lastInsideFrustumState = false;
+            return this.lastInsideFrustumState;
+        }
 	var baseMatrix =
 			translationMatrixv(getPositionVector4(
 				mul(
@@ -525,17 +533,18 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
                     ) {
 			this.visibleWidth=offset;
 			this.visibleHeight=offset;
-			return true;
+			this.lastInsideFrustumState = true;
 		} else {
                         this.visibleWidth=0;
 			this.visibleHeight=0;
-			return false;
+			this.lastInsideFrustumState = false;
 		}
 	} else {
                 this.visibleWidth=0;
 		this.visibleHeight=0;
-		return false;
+		this.lastInsideFrustumState = false;
 	}
+        return this.lastInsideFrustumState;
 };
 
 /**
@@ -844,7 +853,7 @@ DynamicParticle.prototype.constructor = DynamicParticle;
  * @returns {boolean} Always true.
  */
 DynamicParticle.prototype.isInsideViewFrustum = function(camera) {
-	return true;
+	return (this.renderParent===null?true:this.renderParent.lastInsideFrustumState);
 };
 
 /**
