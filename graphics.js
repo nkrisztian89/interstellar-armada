@@ -357,8 +357,9 @@ Shader.prototype.bindBuffers = function(gl) {
  * as full viewport quads, shaded meshes, billboards or particle systems. Serves
  * as a node, contains references to its parent and subnodes as well.
  * @param {Shader} shader The shader that should be active while rendering this object
+ * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this value, render will not take place.
  */
-function VisualObject(shader) {
+function VisualObject(shader,smallestParentSizeWhenDrawn) {
 	this.shader = shader;
 	this.uniformValueFunctions = new Array();
 	
@@ -373,6 +374,9 @@ function VisualObject(shader) {
 	this.visibleHeight=0;
         
         this.lastInsideFrustumState=true;
+        
+        this.insideParent=undefined;
+        this.smallestParentSizeWhenDrawn=smallestParentSizeWhenDrawn;
 }
 
 /**
@@ -499,11 +503,23 @@ VisualObject.prototype.assignUniforms = function(gl) {
  * @returns {boolean} Whether the object is inside the frustum.
  */
 VisualObject.prototype.isInsideViewFrustum = function(camera) {
-        if (this.renderParent!==null && this.renderParent.lastInsideFrustumState===false) {
-            this.visibleWidth=0;
-            this.visibleHeight=0;
-            this.lastInsideFrustumState = false;
-            return this.lastInsideFrustumState;
+        if (this.renderParent!==null) {
+            if (this.insideParent===undefined) {
+                this.insideParent=(this.getPositionMatrix()[12]<this.renderParent.getSize()) &&
+                        (this.getPositionMatrix()[13]<this.renderParent.getSize()) && 
+                        (this.getPositionMatrix()[14]<this.renderParent.getSize());
+            }
+            if (this.renderParent.lastInsideFrustumState===false) {
+                this.visibleWidth=0;
+                this.visibleHeight=0;
+                this.lastInsideFrustumState = false;
+                return this.lastInsideFrustumState;
+            } else if (this.insideParent===true) {
+                this.visibleWidth=this.renderParent.visibleWidth;
+                this.visibleHeight=this.renderParent.visibleHeight;
+                this.lastInsideFrustumState = true;
+                return this.lastInsideFrustumState;
+            }
         }
 	var baseMatrix =
 			translationMatrixv(getPositionVector4(
@@ -561,19 +577,22 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
  * shared the object has)
  * */ 
 VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,screenSize,depthMaskPhase) {
-	if(this.visible) {
-		this.renderParent=parent;
-		if((this.shader.depthMask===depthMaskPhase)&&(this.isInsideViewFrustum(scene.activeCamera))) {
-			resourceCenter.setCurrentShader(this.shader,scene);
-			this.assignUniforms(resourceCenter.gl);
-			this.render(resourceCenter,screenSize,scene.lodContext);
-		} else if(scene.uniformsAssigned===false) {
-			resourceCenter.setCurrentShader(this.shader,scene);
-		}
-	}
-	for(var i=0;i<this.subnodes.length;i++) {
-		this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenSize,depthMaskPhase);
-	}
+    if(this.visible) {
+        this.renderParent=parent;
+        if ((this.renderParent===null) || (this.smallestParentSizeWhenDrawn===undefined) ||
+                (Math.max(this.renderParent.visibleWidth,this.renderParent.visibleHeight)*screenSize>=this.smallestParentSizeWhenDrawn)) {
+            if((this.shader.depthMask===depthMaskPhase)&&(this.isInsideViewFrustum(scene.activeCamera))) {
+                resourceCenter.setCurrentShader(this.shader,scene);
+                this.assignUniforms(resourceCenter.gl);
+                this.render(resourceCenter,screenSize,scene.lodContext);
+            } else if(scene.uniformsAssigned===false) {
+                resourceCenter.setCurrentShader(this.shader,scene);
+            }
+            for(var i=0;i<this.subnodes.length;i++) {
+                this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenSize,depthMaskPhase);
+            }
+        }
+    }
 };
 
 /**
@@ -824,9 +843,10 @@ Billboard.prototype.render = function(resourceCenter,screenSize,lodContext) {
  * @param {number} size The size of the billboard
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
  * @param {number} duration The lifespan of the particle in milliseconds.
+ * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this, render will not take place.
  */
-function DynamicParticle(model,shader,texture,color,size,positionMatrix,duration) {
-	VisualObject.call(this,shader);
+function DynamicParticle(model,shader,texture,color,size,positionMatrix,duration,smallestParentSizeWhenDrawn) {
+	VisualObject.call(this,shader,smallestParentSizeWhenDrawn);
 	this.model=model;
 	this.texture=texture;
 	this.color=color;
@@ -883,16 +903,34 @@ DynamicParticle.prototype.render = function(resourceCenter,screenSize,lodContext
  * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
  * @param {number} size The size of the billboard
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+ * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this, render will not take place.
  */
-function StaticParticle(model,shader,texture,color,size,positionMatrix) {
-	DynamicParticle.call(this,model,shader,texture,color,size,positionMatrix,1000);
-	this.relSize=0;
+function StaticParticle(model,shader,texture,color,size,positionMatrix,smallestParentSizeWhenDrawn) {
+	DynamicParticle.call(this,model,shader,texture,color,size,positionMatrix,1000,smallestParentSizeWhenDrawn);
+	this._relSize=0;
 	var self = this;
-	this.uniformValueFunctions["u_relAge"] = function() { return 1.0-self.relSize; };
+	this.uniformValueFunctions["u_relAge"] = function() { return 1.0-self._relSize; };
 }
 
 StaticParticle.prototype = new DynamicParticle();
 StaticParticle.prototype.constructor = StaticParticle;
+
+/**
+ * Getter function for the _relSize member.
+ * @returns {number} The value of the relative size.
+ */
+StaticParticle.prototype.getRelSize = function() {
+    return this._relSize;
+};
+
+/**
+ * Setter function for the _relSize member. Also updates the visibility.
+ * @param {number} newValue The new value of the relative size.
+ */
+StaticParticle.prototype.setRelSize = function(newValue) {
+    this._relSize=newValue;
+    this.visible=this._relSize>=0.001;
+};
 
 /**
  * Renders the particle, binding the needed texture.
@@ -903,7 +941,7 @@ StaticParticle.prototype.constructor = StaticParticle;
  */
 StaticParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
 	resourceCenter.bindTexture(this.texture);
-	if(this.relSize>0) {
+	if(this._relSize>0) {
 		drawnPolyogons+=2;
 		this.model.render(resourceCenter.gl,false);
 	}

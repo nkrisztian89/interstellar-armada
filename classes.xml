@@ -198,7 +198,7 @@
                         <turn axis="z" degree="180" />
                         <turn axis="x" degree="-10" />
                     </view>
-                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-5" z="0"/>
+                    <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-6" z="0"/>
                 </views>
 	</SpacecraftClass>
 	

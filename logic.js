@@ -360,7 +360,8 @@ Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
 				resourceCenter.getTexture(propulsionClass.textureFileName),
 				propulsionClass.color,
 				slot.size,
-				translationMatrixv(slot.positionVector)
+				translationMatrixv(slot.positionVector),
+                                20
 				);
 		this.visualModel.subnodes.push(thrusterParticle);
 		var thruster = new Thruster(slot,thrusterParticle);
@@ -379,7 +380,7 @@ Spacecraft.prototype.fire = function(resourceCenter,scene,projectiles) {
 Spacecraft.prototype.setThrusterBurn = function(use,value) {
 	this.propulsion.thrusterBurn[use]=value;
 	for(var i=0;i<this.thrusters[use].length;i++) {
-		this.thrusters[use][i].visualModel.relSize=value;
+		this.thrusters[use][i].visualModel.setRelSize(value);
 	}
 };
 
@@ -401,14 +402,14 @@ Spacecraft.prototype.resetThrusterBurn = function() {
 Spacecraft.prototype.addThrusterBurn = function(use,value) {
 	this.propulsion.thrusterBurn[use]+=value;
 	for(var i=0;i<this.thrusters[use].length;i++) {
-		this.thrusters[use][i].visualModel.relSize+=value;
+		this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+value);
 	}
 };
 
 Spacecraft.prototype.addThrusterBurnCapped = function(use,value,max) {
 	this.propulsion.thrusterBurn[use]+=value>max?max:value;
 	for(var i=0;i<this.thrusters[use].length;i++) {
-		this.thrusters[use][i].visualModel.relSize+=value>max?max:value;
+		this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+(value>max?max:value));
 	}
 };
 
