@@ -13,7 +13,7 @@ function Torque(strength,axis,duration) {
 function Body(positionMatrix,orientationMatrix,width,height,depth) {
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
-	this.modelMatrixInverse=inverse4(mul(this.orientationMatrix,this.positionMatrix));
+	this.modelMatrixInverse=mul(inverseTranslationMatrix(this.positionMatrix),inverseRotationMatrix(this.orientationMatrix));
 	this.width=width;
 	this.height=height;
 	this.depth=depth;
@@ -28,7 +28,7 @@ function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVeloci
 	this.sizeSquared=size*size;
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
-	this.modelMatrixInverse=inverse4(mul(this.orientationMatrix,this.positionMatrix));
+	this.modelMatrixInverse=mul(inverseTranslationMatrix(this.positionMatrix),inverseRotationMatrix(this.orientationMatrix));
 	this.timeSinceLastMatrixCorrection=0;
 	
 	this.velocityMatrix=initialVelocityMatrix;
@@ -43,8 +43,9 @@ function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVeloci
 
 PhysicalObject.prototype.calculateBodySize = function() {
 	this.bodySize=0;
+        var bodyPos;
 	for(var i=0;i<this.bodies.length;i++) {
-		var bodyPos = getPositionVector(this.bodies[i].positionMatrix);
+		bodyPos = getPositionVector(this.bodies[i].positionMatrix);
 		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
 		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
 		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,-this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
@@ -64,8 +65,9 @@ PhysicalObject.prototype.checkHit = function(positionVector,direction,range) {
 			
 		var relativePos = vector4Matrix4Product(positionVector,this.modelMatrixInverse);
 		var result=false;
+                var posRelativeToBody;
 		for(var i=0;(result===false)&&(i<this.bodies.length);i++) {
-			var posRelativeToBody = vector4Matrix4Product(relativePos,this.bodies[i].modelMatrixInverse);
+			posRelativeToBody = vector4Matrix4Product(relativePos,this.bodies[i].modelMatrixInverse);
 			result = 
 				(posRelativeToBody[0]>=-this.bodies[i].halfWidth)&&(posRelativeToBody[0]<=this.bodies[i].halfWidth)&&
 				(posRelativeToBody[1]>=-this.bodies[i].halfHeight)&&(posRelativeToBody[1]<=this.bodies[i].halfHeight)&&

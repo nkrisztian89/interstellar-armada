@@ -243,6 +243,16 @@ function inverseRotationMatrix(m) {
 }
 
 /**
+ * Calculates and returns the inverse of a 4x4 translation matrix, building on
+ * the fact that only the 3rd row of the matrix holds useful information.
+ * @param {Float32Array} m The input 4x4 matrix.
+ * @returns {Float32Array} The calculated inverse 4x4 matrix.
+ */
+function inverseTranslationMatrix(m) {
+    return translationMatrix(-m[12],-m[13],-m[14]);
+}
+
+/**
  * Multiplies two 3x3 matrices.
  * @param {Float32Array} m1 The 3x3 matrix on the left of the multiplicaton.
  * @param {Float32Array} m2 The 3x3 matrix on the right of the multiplicaton.
@@ -420,6 +430,27 @@ function vector4ToString(v) {
 
 function r3(x) {
 	return Math.round(x*1000)/1000;
+}
+
+function equalMatrices4(m1,m2) {
+    return (
+            m1[0]===m2[0] &&
+            m1[1]===m2[1] &&
+            m1[2]===m2[2] &&
+            m1[3]===m2[3] &&
+            m1[4]===m2[4] &&
+            m1[5]===m2[5] &&
+            m1[6]===m2[6] &&
+            m1[7]===m2[7] &&
+            m1[8]===m2[8] &&
+            m1[9]===m2[9] &&
+            m1[10]===m2[10] &&
+            m1[11]===m2[11] &&
+            m1[12]===m2[12] &&
+            m1[13]===m2[13] &&
+            m1[14]===m2[14] &&
+            m1[15]===m2[15]
+            );
 }
 
 function matrix4ToString(m) {

@@ -453,8 +453,8 @@ Spacecraft.prototype.simulate = function(dt) {
 	this.controller.control();
 	this.propulsion.simulate(dt);
 	this.physicalModel.simulate(dt);
-	this.visualModel.positionMatrix=this.physicalModel.positionMatrix;
-	this.visualModel.orientationMatrix=this.physicalModel.orientationMatrix;
+	this.visualModel.setPositionMatrix(this.physicalModel.positionMatrix);
+	this.visualModel.setOrientationMatrix(this.physicalModel.orientationMatrix);
 };
 
 function Dust(resourceCenter,scene,positionMatrix) {
@@ -730,13 +730,11 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 					parseFloat(bodyTags[j].getAttribute("y"))*result[i].modelSize,
 					parseFloat(bodyTags[j].getAttribute("z"))*result[i].modelSize
 					),
-				identityMatrix4(),
+				getRotationMatrixFromXMLTags(bodyTags[j].getElementsByTagName("turn")),
 				parseFloat(bodyTags[j].getAttribute("w"))*result[i].modelSize,
 				parseFloat(bodyTags[j].getAttribute("h"))*result[i].modelSize,
 				parseFloat(bodyTags[j].getAttribute("d"))*result[i].modelSize
 				));
-			var turnTags=bodyTags[j].getElementsByTagName("turn");
-			result[i].bodies[j].orientationMatrix=getRotationMatrixFromXMLTags(turnTags);
 		}
 		if (classTags[i].getElementsByTagName("weaponSlots").length>0) {
 			var weaponSlotTags = classTags[i].getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");

@@ -377,6 +377,8 @@ function VisualObject(shader,smallestParentSizeWhenDrawn) {
         
         this.insideParent=undefined;
         this.smallestParentSizeWhenDrawn=smallestParentSizeWhenDrawn;
+        
+        this.modelMatrixCalculated = false;
 }
 
 /**
@@ -595,6 +597,14 @@ VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,scre
     }
 };
 
+VisualObject.prototype.resetModelMatrixCalculated = function() {
+    var i;
+    this.modelMatrixCalculated=false;
+    for(var i=0;i<this.subnodes.length;i++) {
+        this.subnodes[i].resetModelMatrixCalculated();
+    }    
+};
+
 /**
  * Creates a new Full Viewport Quad visual object.
  * @class Represent a Full Viewport Quad to be used for drawing the background
@@ -706,7 +716,12 @@ Mesh.prototype.constructor = Mesh;
  * @returns {Float32Array} The 4x4 translation matrix indicating the position.
  */
 Mesh.prototype.getPositionMatrix = function() {
-	return this.positionMatrix;
+    return this.positionMatrix;
+};
+
+Mesh.prototype.setPositionMatrix = function(newValue) {
+    this.positionMatrix = newValue;
+    this.modelMatrixCalculated = false;
 };
 
 /**
@@ -714,7 +729,12 @@ Mesh.prototype.getPositionMatrix = function() {
  * @returns {Float32Array} The 4x4 rotation matrix indicating the orientation.
  */
 Mesh.prototype.getOrientationMatrix = function() {
-	return this.orientationMatrix;
+    return this.orientationMatrix;
+};
+
+Mesh.prototype.setOrientationMatrix = function(newValue) {
+    this.orientationMatrix = newValue;
+    this.modelMatrixCalculated = false;
 };
 
 /**
@@ -722,7 +742,12 @@ Mesh.prototype.getOrientationMatrix = function() {
  * @returns {Float32Array} The 4x4 scaling matrix indicating the size.
  */
 Mesh.prototype.getScalingMatrix = function() {
-	return this.scalingMatrix;
+    return this.scalingMatrix;
+};
+
+Mesh.prototype.setScalingMatrix = function(newValue) {
+    this.scalingMatrix = newValue;
+    this.modelMatrixCalculated = false;
 };
 
 /**
@@ -735,11 +760,15 @@ Mesh.prototype.getSize = function() {
 
 /**
  * Returns the model transformation matrix of the mesh, also taking into account
- * the parents' transformation.
+ * the parent's transformation.
  * @returns {Float32Array} The 4x4 model transformation matrix of the object.
  */
 Mesh.prototype.getModelMatrix = function() {
-	return mul(mul(this.scalingMatrix,this.orientationMatrix),mul(this.positionMatrix,this.getParentModelMatrix()));
+    if (this.modelMatrixCalculated===false) {
+	this.modelMatrix=mul(mul(this.scalingMatrix,this.orientationMatrix),mul(this.positionMatrix,this.getParentModelMatrix()));
+        this.modelMatrixCalculated=true;
+    }
+    return this.modelMatrix;    
 };
 
 /**
@@ -1246,6 +1275,9 @@ Scene.prototype.render = function(resourceCenter) {
 	}
 	gl.depthMask(false);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        for(var i=0;i<this.objects.length;i++) {
+		this.objects[i].resetModelMatrixCalculated();
+	}
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].cascadeRender(null,resourceCenter,this,this.height,false);
 	}
@@ -1560,17 +1592,19 @@ ResourceCenter.prototype.bindTexture = function(texture) {
 /**
  * Sets up a webGL context and performs the basic configuration with it.
  * @param {object} canvas The HMTL5 canvas to get and configure the context for.
+ * @returns {boolean} Indicates whether the creation of the WebGL context succeeded.
  */
 ResourceCenter.prototype.setupWebGL = function(canvas) {
 	try {
 		// Try to grab the standard context. If it fails, fallback to experimental.
-		this.gl = canvas.getContext("webgl",{alpha: false}) || canvas.getContext("experimental-webgl",{alpha: false});
+		this.gl = canvas.getContext("webgl",{alpha: false, antialias: true}) || canvas.getContext("experimental-webgl",{alpha: false, antialias: true});
 	}
 	catch(e) {}
 
 	// If we don't have a GL context, give up now
 	if (!this.gl) {
 		alert("Unable to initialize WebGL. Your browser might not support it.");
+                return false;
 	}
 	
 	this.gl.clearDepth(1.0);
@@ -1594,6 +1628,8 @@ ResourceCenter.prototype.setupWebGL = function(canvas) {
 	for(var i=0;i<this.shaders.length;i++) {
 		this.setupBuffers(this.shaders[i],true);
 	}
+        
+        return true;
 };
 
 /**
@@ -1607,26 +1643,27 @@ ResourceCenter.prototype.init = function(canvas,freq) {
 	document.getElementById("status").innerHTML="loading textures...";
 	this.loadTextures(function() {
 		document.getElementById("status").innerHTML="initializing WebGL...";
-		self.setupWebGL(canvas);
-		document.getElementById("status").style.display="none";
-		document.getElementById("progress").value=100;
-		alert("ready!");
-		document.getElementById("progress").style.display="none";
-		setInterval(
-			function() {
-				self.renderScenes();
-				var d = new Date();
-				self.renderTimes.push(d.getTime());
-				if(self.renderTimes.length>self.maxRenderTimes) {
-					self.renderTimes.shift();
-				}
-				if (self.renderTimes.length>1) {
-					document.getElementById("output").innerHTML+=
-						"<br/>FPS: "+
-						Math.round(1000/((self.renderTimes[self.renderTimes.length-1]-self.renderTimes[0])/(self.renderTimes.length-1))*10)/10;
-				}
-			},
-			1000/freq);
+		if (self.setupWebGL(canvas)) {
+                    document.getElementById("status").style.display="none";
+                    document.getElementById("progress").value=100;
+                    alert("ready!");
+                    document.getElementById("progress").style.display="none";
+                    setInterval(
+                            function() {
+                                    self.renderScenes();
+                                    var d = new Date();
+                                    self.renderTimes.push(d.getTime());
+                                    if(self.renderTimes.length>self.maxRenderTimes) {
+                                            self.renderTimes.shift();
+                                    }
+                                    if (self.renderTimes.length>1) {
+                                            document.getElementById("output").innerHTML+=
+                                                    "<br/>FPS: "+
+                                                    Math.round(1000/((self.renderTimes[self.renderTimes.length-1]-self.renderTimes[0])/(self.renderTimes.length-1))*10)/10;
+                                    }
+                            },
+                            1000/freq);
+                }
 	});
 };
 
