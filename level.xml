@@ -59,7 +59,7 @@
 		<propulsion class="fighter" />
 	</Spacecraft>
 	
-	<Spacecraft class="korvett" owner="human">
+	<Spacecraft class="aries" owner="human">
 		<position x="0.0" y="-8.0" z="-25.0" />
 		<weapons>
 			<weapon class="turret" />
@@ -68,7 +68,7 @@
 		<propulsion class="corvette" />
 	</Spacecraft>
 	
-	<Spacecraft class="fregatt" owner="human">
+	<Spacecraft class="taurus" owner="human">
 		<position x="20.0" y="-8.0" z="-35.0" />
 		<weapons>
 			<weapon class="cannon" />
@@ -79,7 +79,7 @@
 		<propulsion class="frigate" />
 	</Spacecraft>
 	
-	<Spacecraft class="cirkalo" owner="human">
+	<Spacecraft class="libra" owner="human">
 		<position x="-30.0" y="10.0" z="-100.0" />
 		<weapons>
 			<weapon class="largeCannon" />

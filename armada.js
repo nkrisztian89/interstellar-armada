@@ -173,7 +173,7 @@ function loadResources() {
 				graphicsContext,
 				logicContext,
                                 controlContext,
-				test_level.getSpacecraftClass("fregatt"),
+				test_level.getSpacecraftClass("taurus"),
 				test_level.getPlayer("human"),
 				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
 				"ai"
