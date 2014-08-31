@@ -214,8 +214,13 @@ function loadResources() {
 	resourceCenter.init(canvas,freq);
         
         var globalCommands=initGlobalCommands(graphicsContext,logicContext,controlContext);
+
+	var prevDate,curDate = new Date();
+
 	setInterval(function()
 		{
+			curDate=new Date();
+			prevDate=curDate;
 			test_level.tick(1000/freq);
 			control(mainScene,test_level,globalCommands);
 			ang+=lightTurn?0.07:0.0;

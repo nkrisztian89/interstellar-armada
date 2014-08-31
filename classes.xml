@@ -87,9 +87,13 @@
 	</WeaponClass>
 	
 	<WeaponClass name="largeCannon">
-		<model filename="models/weapons/agyu1_r0.egm_converted" lod="1" />
+		<model filename="models/weapons/cannon_r4.egm_converted" lod="4" />
+		<model filename="models/weapons/cannon_r3.egm_converted" lod="3" />
+		<model filename="models/weapons/cannon_r2.egm_converted" lod="2" />
+		<model filename="models/weapons/cannon_r1.egm_converted" lod="1" />
+		<model filename="models/weapons/cannon_r0.egm_converted" lod="0" />
 		<barrels>
-			<barrel projectile="ion" force="50000" x="0" y="280" z="0" />
+			<barrel projectile="ion" force="50000" x="0" y="320" z="0" />
 		</barrels>
 	</WeaponClass>
 	
@@ -459,7 +463,11 @@
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="libra">
-		<model filename="models/libra_r1.egm_converted" lod="1" size="0.03"/>
+		<model filename="models/libra_r4.egm_converted" lod="4" size="0.03"/>
+		<model filename="models/libra_r3.egm_converted" lod="3"/>
+		<model filename="models/libra_r2.egm_converted" lod="2"/>
+		<model filename="models/libra_r1.egm_converted" lod="1"/>
+		<model filename="models/libra_r0.egm_converted" lod="0"/>
 		<texture filename="textures/libra.png" />
 		<shader name="simple" />
 		<physics mass="1200000">
@@ -478,67 +486,67 @@
 			<body x="0" y="-1450" z="0" w="1650" h="900" d="300" />
 		</physics>
 		<weaponSlots>
-			<slot x="700" y="-150" z="0">
+			<slot x="720" y="-150" z="0">
 				<direction axis="z" degree="90" />
 			</slot>
-			<slot x="-700" y="-150" z="0">
+			<slot x="-720" y="-150" z="0">
 				<direction axis="z" degree="-90" />
 			</slot>
-			<slot x="700" y="250" z="0">
+			<slot x="720" y="250" z="0">
 				<direction axis="z" degree="90" />
 			</slot>
-			<slot x="-700" y="250" z="0">
+			<slot x="-720" y="250" z="0">
 				<direction axis="z" degree="-90" />
 			</slot>
-			<slot x="700" y="650" z="0">
+			<slot x="720" y="650" z="0">
 				<direction axis="z" degree="90" />
 			</slot>
-			<slot x="-700" y="650" z="0">
+			<slot x="-720" y="650" z="0">
 				<direction axis="z" degree="-90" />
 			</slot>
-			<slot x="60" y="-150" z="400" />
-			<slot x="-60" y="-150" z="400" />
-			<slot x="60" y="250" z="400" />
-			<slot x="-60" y="250" z="400" />
-			<slot x="60" y="650" z="400" />
-			<slot x="-60" y="650" z="400" />
-			<slot x="60" y="-150" z="-400">
+			<slot x="60" y="-150" z="410" />
+			<slot x="-60" y="-150" z="410" />
+			<slot x="60" y="250" z="410" />
+			<slot x="-60" y="250" z="410" />
+			<slot x="60" y="650" z="410" />
+			<slot x="-60" y="650" z="410" />
+			<slot x="60" y="-150" z="-410">
 				<direction axis="y" degree="180" />
 			</slot>
-			<slot x="-60" y="-150" z="-400">
+			<slot x="-60" y="-150" z="-410">
 				<direction axis="y" degree="180" />
 			</slot>
-			<slot x="60" y="250" z="-400">
+			<slot x="60" y="250" z="-410">
 				<direction axis="y" degree="180" />
 			</slot>
-			<slot x="-60" y="250" z="-400">
+			<slot x="-60" y="250" z="-410">
 				<direction axis="y" degree="180" />
 			</slot>
-			<slot x="60" y="650" z="-400">
+			<slot x="60" y="650" z="-410">
 				<direction axis="y" degree="180" />
 			</slot>
-			<slot x="-60" y="650" z="-400">
+			<slot x="-60" y="650" z="-410">
 				<direction axis="y" degree="180" />
 			</slot>
 		</weaponSlots>
 
 		<thrusterSlots>
-                        <slot x="309" y="-1335" z="641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1415" z="641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1495" z="641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1575" z="641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1335" z="-641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1415" z="-641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1495" z="-641" size="2.2" use="yawRight" />
-			<slot x="309" y="-1575" z="-641" size="2.2" use="yawRight" />
-			<slot x="-309" y="-1335" z="641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1415" z="641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1495" z="641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1575" z="641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1335" z="-641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1415" z="-641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1495" z="-641" size="2.2" use="yawLeft" />
-			<slot x="-309" y="-1575" z="-641" size="2.2" use="yawLeft" />
+                        <slot x="309" y="-1335" z="641" size="2.2" use="yawRight,rollLeft" />
+			<slot x="309" y="-1415" z="641" size="2.2" use="yawRight,rollLeft" />
+			<slot x="309" y="-1495" z="641" size="2.2" use="yawRight,rollLeft" />
+			<slot x="309" y="-1575" z="641" size="2.2" use="yawRight,rollLeft" />
+			<slot x="309" y="-1335" z="-641" size="2.2" use="yawRight,rollRight" />
+			<slot x="309" y="-1415" z="-641" size="2.2" use="yawRight,rollRight" />
+			<slot x="309" y="-1495" z="-641" size="2.2" use="yawRight,rollRight" />
+			<slot x="309" y="-1575" z="-641" size="2.2" use="yawRight,rollRight" />
+			<slot x="-309" y="-1335" z="641" size="2.2" use="yawLeft,rollRight" />
+			<slot x="-309" y="-1415" z="641" size="2.2" use="yawLeft,rollRight" />
+			<slot x="-309" y="-1495" z="641" size="2.2" use="yawLeft,rollRight" />
+			<slot x="-309" y="-1575" z="641" size="2.2" use="yawLeft,rollRight" />
+			<slot x="-309" y="-1335" z="-641" size="2.2" use="yawLeft,rollLeft" />
+			<slot x="-309" y="-1415" z="-641" size="2.2" use="yawLeft,rollLeft" />
+			<slot x="-309" y="-1495" z="-641" size="2.2" use="yawLeft,rollLeft" />
+			<slot x="-309" y="-1575" z="-641" size="2.2" use="yawLeft,rollLeft" />
 
 			<slot x="172.88" y="-1032" z="445" size="3.5" use="reverse" />
 			<slot x="167.88" y="-1062" z="525" size="3.5" use="reverse" />
@@ -583,6 +591,38 @@
 			<slot x="-210" y="-2775" z="0" size="4.5" use="forward" />
 			<slot x="-320" y="-2755" z="0" size="4.5" use="forward" />
 			<slot x="-430" y="-2735" z="0" size="4.5" use="forward" />
+
+			<slot x="300" y="1830" z="150" size="3.2" use="pitchDown,rollRight" />
+			<slot x="300" y="1910" z="144.7" size="3.2" use="pitchDown,rollRight" />
+			<slot x="300" y="2070" z="134.1" size="3.2" use="pitchDown,rollRight" />
+			<slot x="300" y="1990" z="139.4" size="3.2" use="pitchDown,rollRight" />
+			<slot x="-300" y="1830" z="150" size="3.2" use="pitchDown,rollLeft" />
+			<slot x="-300" y="1910" z="144.7" size="3.2" use="pitchDown,rollLeft" />
+			<slot x="-300" y="1990" z="139.4" size="3.2" use="pitchDown,rollLeft" />
+			<slot x="-300" y="2070" z="134.1" size="3.2" use="pitchDown,rollLeft" />
+
+			<slot x="300" y="1830" z="-150" size="3.2" use="pitchUp,rollLeft" />
+			<slot x="300" y="1910" z="-144.7" size="3.2" use="pitchUp,rollLeft" />
+			<slot x="300" y="1990" z="-139.4" size="3.2" use="pitchUp,rollLeft" />
+			<slot x="300" y="2070" z="-134.1" size="3.2" use="pitchUp,rollLeft" />
+			<slot x="-300" y="1830" z="-150" size="3.2" use="pitchUp,rollRight" />
+			<slot x="-300" y="1910" z="-144.7" size="3.2" use="pitchUp,rollRight" />
+			<slot x="-300" y="1990" z="-139.4" size="3.2" use="pitchUp,rollRight" />
+			<slot x="-300" y="2070" z="-134.1" size="3.2" use="pitchUp,rollRight" />
+
+			<slot x="395" y="2205" z="0" size="2.5" use="yawLeft" />
+			<slot x="377" y="2275" z="0" size="2.5" use="yawLeft" />
+			<slot x="359" y="2345" z="0" size="2.5" use="yawLeft" />
+			<slot x="341" y="2415" z="0" size="2.5" use="yawLeft" />
+			<slot x="323" y="2485" z="0" size="2.5" use="yawLeft" />
+			<slot x="305" y="2555" z="0" size="2.5" use="yawLeft" />
+
+			<slot x="-395" y="2205" z="0" size="2.5" use="yawRight" />
+			<slot x="-377" y="2275" z="0" size="2.5" use="yawRight" />
+			<slot x="-359" y="2345" z="0" size="2.5" use="yawRight" />
+			<slot x="-341" y="2415" z="0" size="2.5" use="yawRight" />
+			<slot x="-323" y="2485" z="0" size="2.5" use="yawRight" />
+			<slot x="-305" y="2555" z="0" size="2.5" use="yawRight" />
                 </thrusterSlots>
 
 		<dockingSpaces>
