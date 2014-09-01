@@ -174,7 +174,7 @@ Weapon.prototype.fire = function(resourceCenter,scene,projectiles,positionMatrix
 			this.spacecraft,
 			this);
 		projectiles.push(p);
-		p.physicalModel.forces.push(new Force(this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],1));
+		p.physicalModel.forces.push(new Force("",this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],1));
 	}
 };
 
@@ -208,41 +208,43 @@ Propulsion.prototype.simulate = function(dt) {
 	var yawAxis = [this.drivenPhysicalObject.orientationMatrix[8],this.drivenPhysicalObject.orientationMatrix[9],this.drivenPhysicalObject.orientationMatrix[10]];
 	var pitchAxis = [this.drivenPhysicalObject.orientationMatrix[0],this.drivenPhysicalObject.orientationMatrix[1],this.drivenPhysicalObject.orientationMatrix[2]];
 	
+        var timeUnit = 50;
+        
 	if(this.thrusterBurn["forward"]>0.001) {
-		this.drivenPhysicalObject.forces.push(new Force(2*this.class.thrust*this.thrusterBurn["forward"],directionVector,1));
+		this.drivenPhysicalObject.addOrRenewForce("forwardThrust",2*this.class.thrust*this.thrusterBurn["forward"],directionVector,timeUnit);
 	}
 	if(this.thrusterBurn["reverse"]>0.001) {
-		this.drivenPhysicalObject.forces.push(new Force(-2*this.class.thrust*this.thrusterBurn["reverse"],directionVector,1));
+		this.drivenPhysicalObject.addOrRenewForce("reverseThrust",-2*this.class.thrust*this.thrusterBurn["reverse"],directionVector,timeUnit);
 	}
 	if(this.thrusterBurn["slideRight"]>0.001) {
-		this.drivenPhysicalObject.forces.push(new Force(2*this.class.thrust*this.thrusterBurn["slideRight"],pitchAxis,1));
+		this.drivenPhysicalObject.addOrRenewForce("slideRightThrust",2*this.class.thrust*this.thrusterBurn["slideRight"],pitchAxis,timeUnit);
 	}
 	if(this.thrusterBurn["slideLeft"]>0.001) {
-		this.drivenPhysicalObject.forces.push(new Force(-2*this.class.thrust*this.thrusterBurn["slideLeft"],pitchAxis,1));
+		this.drivenPhysicalObject.addOrRenewForce("slideLeftThrust",-2*this.class.thrust*this.thrusterBurn["slideLeft"],pitchAxis,timeUnit);
 	}
 	if(this.thrusterBurn["raise"]>0.001) {
-		this.drivenPhysicalObject.forces.push(new Force(2*this.class.thrust*this.thrusterBurn["raise"],yawAxis,1));
+		this.drivenPhysicalObject.addOrRenewForce("raiseThrust",2*this.class.thrust*this.thrusterBurn["raise"],yawAxis,timeUnit);
 	}
 	if(this.thrusterBurn["lower"]>0.001) {
-		this.drivenPhysicalObject.forces.push(new Force(-2*this.class.thrust*this.thrusterBurn["lower"],yawAxis,1));
+		this.drivenPhysicalObject.addOrRenewForce("lowerThrust",-2*this.class.thrust*this.thrusterBurn["lower"],yawAxis,timeUnit);
 	}
 	if(this.thrusterBurn["yawRight"]>0.001) {
-		this.drivenPhysicalObject.torques.push(new Torque(2*this.class.angularThrust*this.thrusterBurn["yawRight"],yawAxis,1));
+		this.drivenPhysicalObject.addOrRenewTorque("yawRightThrust",2*this.class.angularThrust*this.thrusterBurn["yawRight"],yawAxis,timeUnit);
 	}
 	if(this.thrusterBurn["yawLeft"]>0.001) {
-		this.drivenPhysicalObject.torques.push(new Torque(-2*this.class.angularThrust*this.thrusterBurn["yawLeft"],yawAxis,1));
+		this.drivenPhysicalObject.addOrRenewTorque("yawLeftThrust",-2*this.class.angularThrust*this.thrusterBurn["yawLeft"],yawAxis,timeUnit);
 	}
 	if(this.thrusterBurn["pitchUp"]>0.001) {
-		this.drivenPhysicalObject.torques.push(new Torque(-2*this.class.angularThrust*this.thrusterBurn["pitchUp"],pitchAxis,1));
+		this.drivenPhysicalObject.addOrRenewTorque("pitchUpThrust",-2*this.class.angularThrust*this.thrusterBurn["pitchUp"],pitchAxis,timeUnit);
 	}
 	if(this.thrusterBurn["pitchDown"]>0.001) {
-		this.drivenPhysicalObject.torques.push(new Torque(2*this.class.angularThrust*this.thrusterBurn["pitchDown"],pitchAxis,1));
+		this.drivenPhysicalObject.addOrRenewTorque("pitchDownThrust",2*this.class.angularThrust*this.thrusterBurn["pitchDown"],pitchAxis,timeUnit);
 	}
 	if(this.thrusterBurn["rollRight"]>0.001) {
-		this.drivenPhysicalObject.torques.push(new Torque(-2*this.class.angularThrust*this.thrusterBurn["rollRight"],directionVector,1));
+		this.drivenPhysicalObject.addOrRenewTorque("rollRightThrust",-2*this.class.angularThrust*this.thrusterBurn["rollRight"],directionVector,timeUnit);
 	}
 	if(this.thrusterBurn["rollLeft"]>0.001) {
-		this.drivenPhysicalObject.torques.push(new Torque(2*this.class.angularThrust*this.thrusterBurn["rollLeft"],directionVector,1));
+		this.drivenPhysicalObject.addOrRenewTorque("rollLeftThrust",2*this.class.angularThrust*this.thrusterBurn["rollLeft"],directionVector,timeUnit);
 	}
 };
 

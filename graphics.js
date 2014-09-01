@@ -1046,7 +1046,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
 	this.orientationMatrix=identityMatrix4();
 	this.matrix=identityMatrix4();
 	this.velocityVector=[0,0,0];
-	this.maxSpeed=1;
+	this.maxSpeed=10;
 	this.acceleration=0.1;
 	this.angularVelocityVector=[0,0,0];
 	this.maxTurn=0.1;
@@ -1059,7 +1059,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
         this.controllablePosition=controllablePosition;
         this.controllableDirection=controllableDirection;
 	this.focusDistance=Math.cos(fov*3.1415/360)*2*this.aspect;
-	this.perspectiveMatrix=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
+	this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,Math.cos(fov*3.1415/360)*2*this.aspect/20,25000.0);
         this.nextView=null;
 }
 

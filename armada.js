@@ -44,7 +44,7 @@ function start() {
 var ang=0.7;
 // temporary test variable indicating whether the direction of directional
 // lighting should keep turning around
-var lightTurn=true;
+var lightTurn=false;
 
 // test variable: number of random goals the AI controllers get at start
 var num_test_goals=10;
@@ -54,7 +54,9 @@ var num_test_fighters=40;
 var num_test_ships=15;
 // test variable: indicating the range within the random positions of fighters
 // and ships and the destinations of their goals are generated
-var mapSize=250;
+var mapSize=3000;
+
+var prevDate,curDate;
 
 /**
  * Main function loading the external resources required by the program. Builds
@@ -112,7 +114,7 @@ function loadResources() {
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
-	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(ang),Math.sin(ang),0.0]; };
+	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(ang),0.0,Math.sin(ang)]; };
 	mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
 	mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
 	mainScene.uniformValueFunctions['u_eyePos'] = function() 
@@ -155,7 +157,7 @@ function loadResources() {
 				graphicsContext,
 				logicContext,
                                 controlContext,
-				test_level.getSpacecraftClass("fecske"),
+				test_level.getSpacecraftClass("falcon"),
 				test_level.getPlayer("human"),
 				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
 				"ai"
@@ -186,21 +188,23 @@ function loadResources() {
         
         // adding a sphere model for testing the shading
         /*var sphereModel = new EgomModel();
-        sphereModel.addSphere(0,0,0,5,32,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,0.5],[0.5,0.5]],false);
+        // 100x downsized earth
+        sphereModel.addSphere(0,0,0,63710,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
         sphereModel.filename="sphere";
-        mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/fem.bmp"),identityMatrix4(),identityMatrix4(),identityMatrix4(),false));
+        sphereModel.size=127420;
+        mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),translationMatrix(0,0,-73710),identityMatrix4(),identityMatrix4(),false));
         mainScene.objects[mainScene.objects.length-1].orientationMatrix=
-                mul(
-                    rotationMatrix4([1,0,0],3.1415/4),
-                    rotationMatrix4([0,1,0],3.1415/4)
-                );*/
+                //mul(
+                //    rotationMatrix4([1,0,0],3.1415/4),
+                    rotationMatrix4([1,0,0],-3.1415*0.75);
+                //);*/
 	
         // adding random goals to the AI for testing
-	for(var i=0;i<test_level.spacecrafts.length;i++) {
+	/*for(var i=0;i<test_level.spacecrafts.length;i++) {
 		for(var j=0;j<num_test_goals;j++) {
 			test_level.spacecrafts[i].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
 		}
-	}
+	}*/
 	/*
         // setting up the position and direction of the main camera
 	mainScene.activeCamera.positionMatrix=translationMatrix(0,10,-10);
@@ -215,13 +219,13 @@ function loadResources() {
         
         var globalCommands=initGlobalCommands(graphicsContext,logicContext,controlContext);
 
-	var prevDate,curDate = new Date();
+	prevDate = new Date();
 
 	setInterval(function()
 		{
 			curDate=new Date();
-			prevDate=curDate;
-			test_level.tick(1000/freq);
+			test_level.tick(curDate-prevDate);
+                        prevDate=curDate;
 			control(mainScene,test_level,globalCommands);
 			ang+=lightTurn?0.07:0.0;
 		},1000/freq);

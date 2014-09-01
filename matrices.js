@@ -33,7 +33,8 @@ function nullMatrix4() {
  * arbitrary axis.
  * @param {Number[]} axis An array of 3 numbers describing the axis of the
  * rotation
- * @param {Number} angle The angle of rotation in radian*/
+ * @param {Number} angle The angle of rotation in radian
+ */
 function rotationMatrix4(axis,angle) {
 	var cosAngle = Math.cos(angle);
 	var sinAngle = Math.sin(angle);

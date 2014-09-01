@@ -592,6 +592,13 @@ FighterController.prototype.control = function() {
 				);
 		this.controlledEntity.addThrusterBurn("rollRight",0.5*burn/this.controlledEntity.propulsion.class.angularThrust);
 	}
+        
+        document.getElementById('ui').innerHTML=
+                "speed: "+vector3Length(getPositionVector(physicalModel.velocityMatrix))+" m/s"+
+                "<br/>"+
+                "distance: "+getPositionVector(physicalModel.positionMatrix)[1]+" m"+
+                "<br/>"+
+                "mass: "+physicalModel.mass+" kg";
 };
 
 function Goal(positionMatrix) {
@@ -628,7 +635,7 @@ AIController.prototype.control = function() {
 	
 	this.controlledEntity.resetThrusterBurn();
 	
-	// only proceed of the craft has a goal to reach
+	// only proceed if the craft has a goal to reach
 	if(this.goals.length>0) {
 		
 		var distance2=translationDistance2(this.goals[0].positionMatrix,physicalModel.positionMatrix);
