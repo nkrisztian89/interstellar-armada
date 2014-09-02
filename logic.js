@@ -48,9 +48,10 @@ function Barrel(projectileClass,force,x,y,z) {
 	this.positionVector=[x,y,z];
 }
 
-function WeaponClass(name,modelReferences,barrels) {
+function WeaponClass(name,modelReferences,cooldown,barrels) {
 	this.name=name;
 	this.modelReferences=modelReferences;
+        this.cooldown=cooldown;
 	this.barrels=barrels;
 }
 
@@ -158,27 +159,34 @@ function Weapon(weaponClass,spacecraft,slot,visualModel) {
 	this.spacecraft=spacecraft;
 	this.slot=slot;
 	this.visualModel=visualModel;
+        this.lastFireTime=0;
 }
 
 Weapon.prototype.fire = function(resourceCenter,scene,projectiles,positionMatrix,orientationMatrix,scalingMatrix) {
-	var weaponSlotPosVector = vector4Matrix4Product(getPositionVector4(this.slot.positionMatrix),mul(scalingMatrix,orientationMatrix));
-	var projectilePosMatrix = mul(positionMatrix,translationMatrixv(weaponSlotPosVector));
-	var projectileOriMatrix = mul(this.slot.orientationMatrix,orientationMatrix);
-	for(var i=0;i<this.class.barrels.length;i++) {
-		var barrelPosVector = vector3Matrix3Product(this.class.barrels[i].positionVector,matrix3from4(mul(this.slot.orientationMatrix,mul(scalingMatrix,orientationMatrix))));
-		var muzzleFlashPosMatrix = translationMatrixv(this.class.barrels[i].positionVector);
-		var p = new Projectile(
-			resourceCenter,
-			scene,
-			this.class.barrels[i].projectileClass,
-			mul(projectilePosMatrix,translationMatrixv(barrelPosVector)),
-			projectileOriMatrix,
-			muzzleFlashPosMatrix,
-			this.spacecraft,
-			this);
-		projectiles.push(p);
-		p.physicalModel.forces.push(new Force("",this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],TIME_UNIT));
-	}
+	// check cooldown
+        var curTime = new Date();
+        if ((curTime-this.lastFireTime)>this.class.cooldown) {
+            this.lastFireTime=curTime;
+            var weaponSlotPosVector = vector4Matrix4Product(getPositionVector4(this.slot.positionMatrix),mul(scalingMatrix,orientationMatrix));
+            var projectilePosMatrix = mul(positionMatrix,translationMatrixv(weaponSlotPosVector));
+            var projectileOriMatrix = mul(this.slot.orientationMatrix,orientationMatrix);
+            for(var i=0;i<this.class.barrels.length;i++) {
+                    var barrelPosVector = vector3Matrix3Product(this.class.barrels[i].positionVector,matrix3from4(mul(this.slot.orientationMatrix,mul(scalingMatrix,orientationMatrix))));
+                    var muzzleFlashPosMatrix = translationMatrixv(this.class.barrels[i].positionVector);
+                    var p = new Projectile(
+                            resourceCenter,
+                            scene,
+                            this.class.barrels[i].projectileClass,
+                            mul(projectilePosMatrix,translationMatrixv(barrelPosVector)),
+                            projectileOriMatrix,
+                            muzzleFlashPosMatrix,
+                            this.spacecraft,
+                            this);
+                    projectiles.push(p);
+                    p.physicalModel.forces.push(new Force("",this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],TIME_UNIT));
+            }
+        }
+        
 };
 
 function Thruster(slot,visualModel) {
@@ -620,6 +628,7 @@ Level.prototype.loadWeaponClasses = function(filename) {
 				modelTags[j].getAttribute("filename"),
 				modelTags[j].getAttribute("lod")));
 		}
+                var cooldown=classTags[i].getElementsByTagName("logic")[0].getAttribute("cooldown");
 		var barrelTags=classTags[i].getElementsByTagName("barrel");
 		var barrels = new Array();
 		for(var j=0;j<barrelTags.length;j++) {
@@ -633,6 +642,7 @@ Level.prototype.loadWeaponClasses = function(filename) {
 		result.push(new WeaponClass(
 			classTags[i].getAttribute("name"),
 			modelReferences,
+                        cooldown,
 			barrels));
 	}
 	

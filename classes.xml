@@ -58,7 +58,8 @@
 	
 	<WeaponClass name="plasma">
 		<model filename="models/weapons/plazmaveto4k.egm_converted" lod="1" />
-		<barrels>
+		<logic cooldown="250" />
+                <barrels>
 			<barrel projectile="plasma" force="1200" x="0" y="10" z="0" />
 		</barrels>
 	</WeaponClass>
@@ -68,7 +69,8 @@
 		<model filename="models/weapons/loveg1_r2.egm_converted" lod="2" />
 		<model filename="models/weapons/loveg1_r1.egm_converted" lod="1" />
 		<model filename="models/weapons/loveg1_r0.egm_converted" lod="0" />
-		<barrels>
+		<logic cooldown="250" />
+                <barrels>
 			<barrel projectile="plasma" force="1500" x="2" y="25" z="10" />
 			<barrel projectile="plasma" force="1500" x="-2" y="25" z="10" />
 			<barrel projectile="plasma" force="1500" x="2" y="25" z="14" />
@@ -81,7 +83,8 @@
 		<model filename="models/weapons/kagyu1_r2.egm_converted" lod="2" />
 		<model filename="models/weapons/kagyu1_r1.egm_converted" lod="1" />
 		<model filename="models/weapons/kagyu1_r0.egm_converted" lod="0" />
-		<barrels>
+		<logic cooldown="1500" />
+                <barrels>
 			<barrel projectile="proton" force="8000" x="0" y="100" z="0" />
 		</barrels>
 	</WeaponClass>
@@ -92,7 +95,8 @@
 		<model filename="models/weapons/cannon_r2.egm_converted" lod="2" />
 		<model filename="models/weapons/cannon_r1.egm_converted" lod="1" />
 		<model filename="models/weapons/cannon_r0.egm_converted" lod="0" />
-		<barrels>
+		<logic cooldown="5000" />
+                <barrels>
 			<barrel projectile="ion" force="50000" x="0" y="320" z="0" />
 		</barrels>
 	</WeaponClass>
