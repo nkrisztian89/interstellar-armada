@@ -64,10 +64,10 @@ function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVeloci
 
 /**
  * Checks the forces for one with the given ID, if it exists, renews its
- * duration, if it does not, adds a new force with the given parameters. It
+ * properties, if it does not, adds a new force with the given parameters. It
  * will renew all forces with the given ID, if more than one exists.
  * @param {String} forceID The ID of the force to look for
- * @param {number} strength The strength of the force if it needs to be created.
+ * @param {number} strength The strength of the force.
  * @param {number[]} direction The vector describing the direction of the force.
  * @param {number} duration The force will either created with, or renewed to
  * last for this duration.
@@ -77,6 +77,8 @@ PhysicalObject.prototype.addOrRenewForce = function(forceID,strength,direction,d
     var found = false;
     for(i=0;i<this.forces.length;i++) {
         if (this.forces[i].id===forceID) {
+            this.forces[i].strength=strength;
+            this.forces[i].direction=direction;
             this.forces[i].duration=duration;
             found=true;
         }
@@ -88,10 +90,10 @@ PhysicalObject.prototype.addOrRenewForce = function(forceID,strength,direction,d
 
 /**
  * Checks the torques for one with the given ID, if it exists, renews its
- * duration, if it does not, adds a new torque with the given parameters. It
+ * properties, if it does not, adds a new torque with the given parameters. It
  * will renew all torques with the given ID, if more than one exists.
  * @param {String} torqueID The ID of the torque to look for
- * @param {number} strength The strength of the torque if it needs to be created.
+ * @param {number} strength The strength of the torque.
  * @param {number[]} axis The vector describing the axis of the torque.
  * @param {number} duration The torque will either created with, or renewed to
  * last for this duration.
@@ -101,6 +103,8 @@ PhysicalObject.prototype.addOrRenewTorque = function(torqueID,strength,axis,dura
     var found = false;
     for(i=0;i<this.torques.length;i++) {
         if (this.torques[i].id===torqueID) {
+            this.torques[i].strength=strength;
+            this.torques[i].axis=axis;
             this.torques[i].duration=duration;
             found=true;
         }

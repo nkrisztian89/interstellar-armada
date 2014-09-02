@@ -12,7 +12,7 @@
 	<Skybox class="deepspace" />
 	
 	<Spacecraft class="falcon" owner="human">
-		<position x="0.0" y="0.0" z="-10.0" />
+		<position x="0.0" y="0.0" z="-60.0" />
 		<weapons>
 			<weapon class="plasma" />
 			<weapon class="plasma" />
@@ -41,26 +41,26 @@
 	</Spacecraft>
 	
 	<Spacecraft class="viper" owner="human">
-		<position x="50" y="0.0" z="-60" />
+		<position x="50" y="-30" z="-170" />
                 <weapons>
 			<weapon class="plasma" />
 			<weapon class="plasma" />
 		</weapons>
-		<propulsion class="fighter" />
+		<propulsion class="bomber" />
 	</Spacecraft>
 	
 	<Spacecraft class="viper" owner="human">
 		<position x="50" y="50" z="-160" />
-		<propulsion class="fighter" />
+		<propulsion class="bomber" />
 	</Spacecraft>
 	
 	<Spacecraft class="viper" owner="human">
 		<position x="50" y="50" z="-1160" />
-		<propulsion class="fighter" />
+		<propulsion class="bomber" />
 	</Spacecraft>
 	
 	<Spacecraft class="aries" owner="human">
-		<position x="0.0" y="-80" z="-250" />
+		<position x="-60" y="-50" z="-280" />
 		<weapons>
 			<weapon class="turret" />
 			<weapon class="turret" />
@@ -80,7 +80,7 @@
 	</Spacecraft>
 	
 	<Spacecraft class="libra" owner="human">
-		<position x="-300" y="100" z="-1000" />
+		<position x="-100" y="100" z="-1000" />
 		<weapons>
 			<weapon class="largeCannon" />
 			<weapon class="largeCannon" />

@@ -13,7 +13,7 @@
 			<shader name="billboard" />
 			<texture filename="textures/plasma_full.png" />
 		</graphics>
-		<physics mass="1000" />
+		<physics mass="1" />
 		<logic duration="5000" />
 		<muzzleFlash>
 			<shader name="particle" />
@@ -30,7 +30,7 @@
 			<shader name="billboard" />
 			<texture filename="textures/proton_full.png" />
 		</graphics>
-		<physics mass="5000" />
+		<physics mass="5" />
 		<logic duration="5000" />
 		<muzzleFlash>
 			<shader name="particle" />
@@ -47,7 +47,7 @@
 			<shader name="billboard" />
 			<texture filename="textures/ion_full.png" />
 		</graphics>
-		<physics mass="15000" />
+		<physics mass="15" />
 		<logic duration="5000" />
 		<muzzleFlash>
 			<shader name="particle" />
@@ -103,26 +103,33 @@
 		<color r="0.0" g="0.8" b="1.0" />
 		<power thrust="300000" angularThrust="0.5" />
 	</PropulsionClass>
+        
+        <PropulsionClass name="bomber">
+		<shader name="permanentParticle" />
+		<texture filename="textures/flare.png" />
+		<color r="0.0" g="0.8" b="1.0" />
+		<power thrust="700000" angularThrust="1.0" />
+	</PropulsionClass>
 	
 	<PropulsionClass name="corvette">
 		<shader name="permanentParticle" />
 		<texture filename="textures/flare.png" />
 		<color r="0.0" g="0.8" b="1.0" />
-		<power thrust="4" angularThrust="1" />
+		<power thrust="12000000" angularThrust="8" />
 	</PropulsionClass>
 	
 	<PropulsionClass name="frigate">
 		<shader name="permanentParticle" />
 		<texture filename="textures/flare.png" />
 		<color r="0.0" g="0.8" b="1.0" />
-		<power thrust="5.5" angularThrust="1.25" />
+		<power thrust="33000000" angularThrust="20" />
 	</PropulsionClass>
 	
 	<PropulsionClass name="cruizer">
 		<shader name="permanentParticle" />
 		<texture filename="textures/flare.png" />
 		<color r="0.0" g="0.8" b="1.0" />
-		<power thrust="45" angularThrust="1.25" />
+		<power thrust="250000000" angularThrust="140" />
 	</PropulsionClass>
 	
 	<SpacecraftClass name="falcon">
@@ -214,7 +221,7 @@
                 <model filename="models/delfin_r0.egm_converted" lod="0"/>
 		<texture filename="textures/fem.png" />
 		<shader name="simple" />
-		<physics mass="2500">
+		<physics mass="35000">
 			<body x="0" y="30" z="5" w="30" h="70" d="10" />
 			<body x="0" y="30" z="-5" w="30" h="40" d="10" />
 			<body x="0" y="-5" z="15" w="60" h="30" d="10" />
@@ -293,7 +300,7 @@
                 <model filename="models/aries_r0.egm_converted" lod="0" />
 		<texture filename="textures/fem.png" />
 		<shader name="simple" />
-		<physics mass="80000">
+		<physics mass="800000">
 			<body x="0" y="70" z="0" w="130" h="300" d="80" />
 			<body x="0" y="315" z="0" w="70" h="150" d="40" />
 			<body x="0" y="-20" z="0" w="210" h="120" d="80" />
@@ -361,7 +368,7 @@
 		<model filename="models/taurus_r0.egm_converted" lod="0"/>
 		<texture filename="textures/fem.png" />
 		<shader name="simple" />
-		<physics mass="120000">
+		<physics mass="2200000">
 			<body x="0" y="65" z="55" w="140" h="160" d="75" />
 			<body x="0" y="220" z="55" w="80" h="150" d="40" />
 			<body x="0" y="210" z="-80" w="200" h="430" d="45" />
@@ -470,7 +477,7 @@
 		<model filename="models/libra_r0.egm_converted" lod="0"/>
 		<texture filename="textures/libra.png" />
 		<shader name="simple" />
-		<physics mass="1200000">
+		<physics mass="25000000">
 			<body x="0" y="250" z="0" w="700" h="1700" d="800" />
 			<body x="0" y="250" z="0" w="1400" h="1700" d="400" />
 			<body x="0" y="300" z="0" w="525" h="2400" d="600" />

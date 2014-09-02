@@ -1046,7 +1046,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
 	this.orientationMatrix=identityMatrix4();
 	this.matrix=identityMatrix4();
 	this.velocityVector=[0,0,0];
-	this.maxSpeed=10;
+	this.maxSpeed=5;
 	this.acceleration=0.1;
 	this.angularVelocityVector=[0,0,0];
 	this.maxTurn=0.1;
@@ -1058,8 +1058,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
 	this.fov=fov;
         this.controllablePosition=controllablePosition;
         this.controllableDirection=controllableDirection;
-	this.focusDistance=Math.cos(fov*3.1415/360)*2*this.aspect;
-	this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,Math.cos(fov*3.1415/360)*2*this.aspect/20,25000.0);
+	this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,Math.cos(fov*3.1415/360)*2*this.aspect/20,5000.0);
         this.nextView=null;
 }
 
@@ -1100,7 +1099,7 @@ Camera.prototype.reset = function() {
  */
 Camera.prototype.setFOV = function(fov) {
 	this.fov=fov;
-	this.perspectiveMatrix=perspectiveMatrix4(this.aspect,1.0,Math.cos(fov*3.1415/360)*2*this.aspect,500.0);
+	this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,Math.cos(fov*3.1415/360)*2*this.aspect/20,5000.0);
 };
 
 /**
@@ -1150,12 +1149,12 @@ SceneCamera.prototype.update = function() {
     if(this.followedCamera!==undefined) {
         if(this.adaptationTimeLeft>0) {
             var currentTime=new Date().getTime();
-            var adaptationRate=Math.min(1.0,(currentTime-this.adaptationStartTime)/this.adaptationTime);
+            var adaptationProgress=Math.min(1.0,(currentTime-this.adaptationStartTime)/this.adaptationTime);
             this.adaptationTimeLeft=this.adaptationTime-(currentTime-this.adaptationStartTime);
             var trans = translationMatrix(
-                    (this.followedCamera.positionMatrix[12]-this.adaptationStartPositionMatrix[12])*adaptationRate,
-                    (this.followedCamera.positionMatrix[13]-this.adaptationStartPositionMatrix[13])*adaptationRate,
-                    (this.followedCamera.positionMatrix[14]-this.adaptationStartPositionMatrix[14])*adaptationRate
+                    (this.followedCamera.positionMatrix[12]-this.adaptationStartPositionMatrix[12])*adaptationProgress,
+                    (this.followedCamera.positionMatrix[13]-this.adaptationStartPositionMatrix[13])*adaptationProgress,
+                    (this.followedCamera.positionMatrix[14]-this.adaptationStartPositionMatrix[14])*adaptationProgress
                     );
             var newPositionMatrix=translate(this.adaptationStartPositionMatrix,trans);
             var velocityMatrix = mul(translationMatrix(
@@ -1165,9 +1164,10 @@ SceneCamera.prototype.update = function() {
             this.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
             this.positionMatrix=newPositionMatrix;
             this.orientationMatrix=correctOrthogonalMatrix(addMatrices4(
-                mulMatrix4Scalar(this.adaptationStartOrientationMatrix,1.0-adaptationRate),
-                mulMatrix4Scalar(this.followedCamera.orientationMatrix,adaptationRate)));
-            this.setFOV(this.adaptationStartFOV+(this.followedCamera.fov-this.adaptationStartFOV)*adaptationRate);
+                mulMatrix4Scalar(this.adaptationStartOrientationMatrix,1.0-adaptationProgress),
+                mulMatrix4Scalar(this.followedCamera.orientationMatrix,adaptationProgress)));
+            this.matrix=mul(this.positionMatrix,this.orientationMatrix);
+            this.setFOV(this.adaptationStartFOV+(this.followedCamera.fov-this.adaptationStartFOV)*adaptationProgress);
         } else {
             this.positionMatrix=this.followedCamera.positionMatrix;
             this.orientationMatrix=this.followedCamera.orientationMatrix;

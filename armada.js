@@ -37,7 +37,7 @@ function loadScripts(urls,callback) {
  */
 function start() {
 	document.getElementById("status").innerHTML="loading program source...";
-	loadScripts(["matrices.js","egom.js","graphics.js","physics.js","logic.js","grid.js","control.js"],loadResources);
+	loadScripts(["matrices.js","egom.js","graphics.js","physics.js","logic.js","control.js"],loadResources);
 }
 
 // temporary test variable indicating the angle of directional lighting
@@ -199,10 +199,18 @@ function loadResources() {
                     rotationMatrix4([1,0,0],-3.1415*0.75);
                 //);*/
 	
+        /*var sphereModel = new EgomModel();
+        sphereModel.addSphere(0,0,0,5,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
+        sphereModel.filename="sphere";
+        sphereModel.size=10;
         // adding random goals to the AI for testing
-	/*for(var i=0;i<test_level.spacecrafts.length;i++) {
+	for(var i=0;i<test_level.spacecrafts.length;i++) {
 		for(var j=0;j<num_test_goals;j++) {
-			test_level.spacecrafts[i].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
+                        var goalPosition = translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2);
+			test_level.spacecrafts[i].controller.goals.push(new Goal(goalPosition));
+                        if (i===0) {
+                            mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),goalPosition,identityMatrix4(),identityMatrix4(),false));
+                        }
 		}
 	}*/
 	/*

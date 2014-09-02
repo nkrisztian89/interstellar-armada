@@ -4,6 +4,9 @@
  * @version 0.1
  */
 
+var TIME_UNIT = 50; // 50 ms is used for thruster control as duration of one
+                    // burst of thrusters
+
 /**
  * Defines a skybox class.
  * @class Represents a skybox class with associated shader and sampler name and cubemap resource.
@@ -174,7 +177,7 @@ Weapon.prototype.fire = function(resourceCenter,scene,projectiles,positionMatrix
 			this.spacecraft,
 			this);
 		projectiles.push(p);
-		p.physicalModel.forces.push(new Force("",this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],1));
+		p.physicalModel.forces.push(new Force("",this.class.barrels[i].force,[projectileOriMatrix[4],projectileOriMatrix[5],projectileOriMatrix[6]],TIME_UNIT));
 	}
 };
 
@@ -207,44 +210,42 @@ Propulsion.prototype.simulate = function(dt) {
 	var directionVector = [this.drivenPhysicalObject.orientationMatrix[4],this.drivenPhysicalObject.orientationMatrix[5],this.drivenPhysicalObject.orientationMatrix[6]];
 	var yawAxis = [this.drivenPhysicalObject.orientationMatrix[8],this.drivenPhysicalObject.orientationMatrix[9],this.drivenPhysicalObject.orientationMatrix[10]];
 	var pitchAxis = [this.drivenPhysicalObject.orientationMatrix[0],this.drivenPhysicalObject.orientationMatrix[1],this.drivenPhysicalObject.orientationMatrix[2]];
-	
-        var timeUnit = 50;
         
 	if(this.thrusterBurn["forward"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewForce("forwardThrust",2*this.class.thrust*this.thrusterBurn["forward"],directionVector,timeUnit);
+		this.drivenPhysicalObject.addOrRenewForce("forwardThrust",2*this.class.thrust*this.thrusterBurn["forward"],directionVector,TIME_UNIT);
 	}
 	if(this.thrusterBurn["reverse"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewForce("reverseThrust",-2*this.class.thrust*this.thrusterBurn["reverse"],directionVector,timeUnit);
+		this.drivenPhysicalObject.addOrRenewForce("reverseThrust",-2*this.class.thrust*this.thrusterBurn["reverse"],directionVector,TIME_UNIT);
 	}
 	if(this.thrusterBurn["slideRight"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewForce("slideRightThrust",2*this.class.thrust*this.thrusterBurn["slideRight"],pitchAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewForce("slideRightThrust",2*this.class.thrust*this.thrusterBurn["slideRight"],pitchAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["slideLeft"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewForce("slideLeftThrust",-2*this.class.thrust*this.thrusterBurn["slideLeft"],pitchAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewForce("slideLeftThrust",-2*this.class.thrust*this.thrusterBurn["slideLeft"],pitchAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["raise"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewForce("raiseThrust",2*this.class.thrust*this.thrusterBurn["raise"],yawAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewForce("raiseThrust",2*this.class.thrust*this.thrusterBurn["raise"],yawAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["lower"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewForce("lowerThrust",-2*this.class.thrust*this.thrusterBurn["lower"],yawAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewForce("lowerThrust",-2*this.class.thrust*this.thrusterBurn["lower"],yawAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["yawRight"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewTorque("yawRightThrust",2*this.class.angularThrust*this.thrusterBurn["yawRight"],yawAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewTorque("yawRightThrust",2*this.class.angularThrust*this.thrusterBurn["yawRight"],yawAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["yawLeft"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewTorque("yawLeftThrust",-2*this.class.angularThrust*this.thrusterBurn["yawLeft"],yawAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewTorque("yawLeftThrust",-2*this.class.angularThrust*this.thrusterBurn["yawLeft"],yawAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["pitchUp"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewTorque("pitchUpThrust",-2*this.class.angularThrust*this.thrusterBurn["pitchUp"],pitchAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewTorque("pitchUpThrust",-2*this.class.angularThrust*this.thrusterBurn["pitchUp"],pitchAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["pitchDown"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewTorque("pitchDownThrust",2*this.class.angularThrust*this.thrusterBurn["pitchDown"],pitchAxis,timeUnit);
+		this.drivenPhysicalObject.addOrRenewTorque("pitchDownThrust",2*this.class.angularThrust*this.thrusterBurn["pitchDown"],pitchAxis,TIME_UNIT);
 	}
 	if(this.thrusterBurn["rollRight"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewTorque("rollRightThrust",-2*this.class.angularThrust*this.thrusterBurn["rollRight"],directionVector,timeUnit);
+		this.drivenPhysicalObject.addOrRenewTorque("rollRightThrust",-2*this.class.angularThrust*this.thrusterBurn["rollRight"],directionVector,TIME_UNIT);
 	}
 	if(this.thrusterBurn["rollLeft"]>0.001) {
-		this.drivenPhysicalObject.addOrRenewTorque("rollLeftThrust",2*this.class.angularThrust*this.thrusterBurn["rollLeft"],directionVector,timeUnit);
+		this.drivenPhysicalObject.addOrRenewTorque("rollLeftThrust",2*this.class.angularThrust*this.thrusterBurn["rollLeft"],directionVector,TIME_UNIT);
 	}
 };
 
@@ -443,12 +444,13 @@ Spacecraft.prototype.addDirectionalThrusterBurn = function(directionVector,value
 	}
 };
 
-Spacecraft.prototype.getNeededBurnForAcc = function(acceleration) {
-	return acceleration*this.physicalModel.mass/this.propulsion.class.thrust/2;
+Spacecraft.prototype.getNeededBurnForSpeedChange = function(speedDifference) {
+	return speedDifference*this.physicalModel.mass/this.propulsion.class.thrust/2/(TIME_UNIT/1000);
 };
 
-Spacecraft.prototype.getNeededBurnForAngularAcc = function(angularAcceleration) {
-	return angularAcceleration*this.physicalModel.mass/this.propulsion.class.angularThrust/2;
+Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function(angularVelocityDifference) {
+        // note: the division by 10 in the end if on purpose: matrix represents 5 ms change, torque lasts for 50 ms
+	return angularVelocityDifference*this.physicalModel.mass/this.propulsion.class.angularThrust/2/10;
 };
 
 Spacecraft.prototype.simulate = function(dt) {

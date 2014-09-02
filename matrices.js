@@ -96,6 +96,13 @@ function angleDifferenceOfUnitVectors(v1,v2) {
 	);
 }
 
+/**
+ * Returns the angle between two 2 dimensional vectors (given as arrays of two
+ * numbers) in radian.
+ * @param {number[]} v1 The first 2D vector.
+ * @param {number[]} v2 The second 2D vector.
+ * @returns {Number} The angle in radian.
+ */
 function angleDifferenceOfUnitVectors2D(v1,v2) {
 	return (
 		Math.acos(v1[0]*v2[0]+v1[1]*v2[1])
