@@ -257,8 +257,63 @@ Propulsion.prototype.simulate = function(dt) {
 	}
 };
 
+/**
+ * Creates a new ControllableEntity object.
+ * @class This is the parent class for all entity that can be controlled in the
+ * game by a controller object. (such as a keyboard or an AI controller)
+ * @param {Controller} controller The object to be assigned as the controller
+ * of the entity.
+ */
+function ControllableEntity(controller) {
+    this.controller=controller;
+    if ((this.controller!==undefined)&&(this.controller!==null)) {
+        this.controller.setControlledEntity(this);
+    }
+};
+
+ControllableEntity.prototype.getController = function() {
+    return this.controller;
+};
+
+/**
+ * Assigns the controller property without checking if the set controller's
+ * controlled entity is also set properly to this one.
+ * @param {Controller} newController The new value of controller.
+ */
+ControllableEntity.prototype.setControllerWithoutChecks = function(newController) {
+    this.controller = newController;
+};
+
+/**
+ * Assigns the controller property and makes sure that the controller's 
+ * controlled entity is updated as well to this one.
+ * @param {Controller} newController The new value of controller.
+ */
+ControllableEntity.prototype.setController = function(newController) {
+    if ((this.controller!==newController)&&(newController!==undefined)) {
+        if ((newController!==null)&&(newController.getControlledEntity()!==this)) {
+            newController.setControlledEntityWithoutChecks(this);
+        }
+        if((this.controller!==null)&&(this.controller!==undefined)&&(this.controller.getControlledEntity()===this)) {
+            this.controller.setControlledEntityWithoutChecks(null);
+        }
+        this.controller=newController;
+    }
+};
+
 function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,controller) {
-	this.graphicsContext=graphicsContext;
+	// creating the appropriate controller object based on the supplied string
+        // and assigning it using the parent's constructor
+        ControllableEntity.call(this,null);
+        if (controller==="ai") {
+            this.controller = new AIController(this,graphicsContext,logicContext,controlContext);
+	} else if (controller==="keyboard") {
+            this.controller = new FighterController(this,graphicsContext,logicContext,controlContext);
+	} else {
+		alert("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
+	}
+    
+        this.graphicsContext=graphicsContext;
 	this.logicContext=logicContext;
 	this.class=SpacecraftClass;
 	var modelsWithLOD=new Array();
@@ -279,14 +334,6 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 	
 		
 	this.owner=owner;
-	if (controller==="ai") {
-		this.controller=new AIController(this,graphicsContext,logicContext,controlContext);
-	} else if (controller==="keyboard") {
-		this.controller=new FighterController(this,graphicsContext,logicContext,controlContext);
-	} else {
-		alert("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
-		this.controller=null;
-	}
 	
 	this.weapons=new Array();
 	
@@ -336,6 +383,9 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 	
 	this.toBeDeleted = false;
 }
+
+Spacecraft.prototype = new ControllableEntity();
+Spacecraft.prototype.constructor = Spacecraft;
 
 Spacecraft.prototype.addWeapon = function(resourceCenter,weaponClass) {
 	if(this.weapons.length<this.class.weaponSlots.length) {
@@ -462,7 +512,9 @@ Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function(angularVel
 };
 
 Spacecraft.prototype.simulate = function(dt) {
-	this.controller.control();
+	if (this.controller!==null) {
+            this.controller.control();
+        }
 	this.propulsion.simulate(dt);
 	this.physicalModel.simulate(dt);
 	this.visualModel.setPositionMatrix(this.physicalModel.positionMatrix);

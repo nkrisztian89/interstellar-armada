@@ -1042,7 +1042,7 @@ DustParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
  * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
  */
 function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject) {
-	this.positionMatrix=identityMatrix4();
+        this.positionMatrix=identityMatrix4();
 	this.orientationMatrix=identityMatrix4();
 	this.matrix=identityMatrix4();
 	this.velocityVector=[0,0,0];
@@ -1124,6 +1124,18 @@ SceneCamera.prototype = new Camera();
 SceneCamera.prototype.constructor = SceneCamera;
 
 /**
+ * A temporary function needed as controllers have to set their controlled
+ * entity at initialization, and they expect a controllable entity that has
+ * this function, however ControllableEntity is defined in logic.js. The
+ * scene camera has a controller so it needs this function (to be cleaned up
+ * later)
+ * @param {Controller} newController
+ */
+SceneCamera.prototype.setControllerWithoutChecks = function(newController) {
+    this.controller = newController;
+};
+
+/**
  * Set the camera up to adapt to a virtual camera.
  * @param {Camera} camera The new camera to follow.
  * @param {number} adaptationTime The duration the camera will take when adapting its parameters
@@ -1175,6 +1187,24 @@ SceneCamera.prototype.update = function() {
             this.perspectiveMatrix=this.followedCamera.perspectiveMatrix;
         }
     }
+};
+
+SceneCamera.prototype.getFollowedSpacecraft = function(logicContext) {
+    var i;
+    if ((this.followedCamera!==undefined) && (this.followedCamera.followedObject!==undefined)) {
+        // look up the spacecraft being followed (these references need to be cleaned up
+        // to make this part transparent)
+        i=0;
+        while ((i<logicContext.level.spacecrafts.length)&&
+                (logicContext.level.spacecrafts[i].visualModel!==this.followedCamera.followedObject)) {
+            i++;
+        }
+        // if we found it, set the proper controller
+        if (i<logicContext.level.spacecrafts.length) {
+            return logicContext.level.spacecrafts[i];
+        }
+    }
+    return null;
 };
 
 /**

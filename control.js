@@ -6,6 +6,9 @@
  * @version 0.1
  */
 
+// the global variable used for manual spacecraft control (for test purposes)
+var manualController;
+
 function KeyboardControlContext() {
     var currentlyPressedKeys = new Array(256);
     var i;
@@ -156,17 +159,47 @@ function KeyboardControlContext() {
  * Creates a new controller object.
  * @class The parent class for all controller objects that control a certain
  * entity from the logic module.
- * @param {object} controlledEntity The entity which is controlled by the controller.
+ * @param {ControllableEntity} controlledEntity The entity which is controlled by the controller.
  * @param {GraphicsContext} graphicsContext The graphics context where the visual model of the controlled entity resides.
  * @param {LogicContext} logicContext The logic context of the controlled entity.
  * @param {KeyboardControlContext} controlContext The control context supplying the input data (currently only keyboard).
  */
 function Controller(controlledEntity,graphicsContext,logicContext,controlContext) {
-    this.controlledEntity=controlledEntity;
     this.graphicsContext=graphicsContext;
     this.logicContext=logicContext;
     this.controlContext=controlContext;
+    this.setControlledEntity(controlledEntity);
 }
+
+Controller.prototype.getControlledEntity = function() {
+    return this.controlledEntity;
+};
+
+/**
+ * Assigns the controlledEntity property without checking if the set entity's
+ * controller is also set properly to this one.
+ * @param {ControllableEntity} newControlledEntity The new value of controlledEntity.
+ */
+Controller.prototype.setControlledEntityWithoutChecks = function(newControlledEntity) {
+    this.controlledEntity=newControlledEntity;
+};
+
+/**
+ * Assigns the controlledEntity property and makes sure the entity's controller
+ * is also updated.
+ * @param {ControllableEntity} newControlledEntity The new value of controlledEntity.
+ */
+Controller.prototype.setControlledEntity = function(newControlledEntity) {
+    if ((this.controlledEntity!==newControlledEntity)&&(newControlledEntity!==undefined)) {
+        if ((this.controlledEntity!==null)&&(this.controlledEntity!==undefined)) {
+            this.controlledEntity.setControllerWithoutChecks(null);
+        }
+        this.controlledEntity=newControlledEntity;
+        if (newControlledEntity!==null) {
+            newControlledEntity.setControllerWithoutChecks(this);
+        }
+    }
+};
 
 function CameraController(controlledEntity,graphicsContext,logicContext,controlContext) {
 	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
@@ -409,8 +442,7 @@ function FighterController(controlledEntity,graphicsContext,logicContext,control
 	
 	this.NUM_FLIGHTMODES = 2;
 	
-	this.flightMode = this.FM_INERTIAL;
-	this.intendedSpeed = 0;
+	this.reset();
 	
 	this.TURNING_LIMIT = this.controlledEntity.propulsion.class.angularThrust/this.controlledEntity.physicalModel.mass*200;
         this.TURN_TOLERANCE=0.00001; // the minimum rotation wich is compensated
@@ -463,6 +495,15 @@ function FighterController(controlledEntity,graphicsContext,logicContext,control
 
 FighterController.prototype = new Controller();
 FighterController.prototype.constructor = FighterController;
+
+/**
+ * Resetting the flight control settings (e.g. for the case if we assume control
+ * of a new ship)
+ */
+FighterController.prototype.reset = function() {
+    this.flightMode = this.FM_INERTIAL;
+    this.intendedSpeed = 0;
+};
 
 FighterController.prototype.control = function() {
         document.getElementById('ui').innerHTML="";
@@ -914,6 +955,10 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
                 graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.cameras[0],4000);
             }
         }
+        // cancel spacecraft control
+        if (manualController!==undefined) {
+            manualController.setControlledEntity(null);
+        }
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("followPrevious",function(){
         // if we are currently following a camera, we have to look for the last preceding
@@ -962,35 +1007,36 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
                 graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.cameras[j+1],4000);
             }
         }
+        // cancel spacecraft control
+        if (manualController!==undefined) {
+            manualController.setControlledEntity(null);
+        }
     }));
+    // assuming manual control of a spacecraft
     globalCommands.push(controlContext.setOneShotActionForCommand("setManualControl",function(){
-        if ((graphicsContext.scene.activeCamera.followedCamera!==undefined) &&
-            (graphicsContext.scene.activeCamera.followedCamera.followedObject!==undefined)) {
-            i=0;
-            while ((i<logicContext.level.spacecrafts.length)&&
-                    (logicContext.level.spacecrafts[i].visualModel!==graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
-                i++;
-            }
-            if (i<logicContext.level.spacecrafts.length) {
-                logicContext.level.spacecrafts[i].controller=new FighterController(logicContext.level.spacecrafts[i],graphicsContext,logicContext,controlContext);
-            }
+        // we only assume control if a spacecraft is being followed by a camera
+        var followedSpacecraft = graphicsContext.scene.activeCamera.getFollowedSpacecraft(logicContext);
+        if (followedSpacecraft!==null) {
+                // if the controller does not exist yet, create it
+                if (manualController===undefined) {
+                    manualController = new FighterController(followedSpacecraft,graphicsContext,logicContext,controlContext);                    
+                // if it exist, reassign it to the new spacecraft
+                } else {
+                    manualController.setControlledEntity(followedSpacecraft);
+                    manualController.reset();
+                }
         }
     }));
+    // setting the AI to control the followed spacecraft (does not do anything at the moment)
     globalCommands.push(controlContext.setOneShotActionForCommand("setAIControl",function(){
-        if ((graphicsContext.scene.activeCamera.followedCamera!==undefined) &&
-            (graphicsContext.scene.activeCamera.followedCamera.followedObject!==undefined)) {
-            i=0;
-            while ((i<logicContext.level.spacecrafts.length)&&
-                    (logicContext.level.spacecrafts[i].visualModel!==graphicsContext.scene.activeCamera.followedCamera.followedObject)) {
-                i++;
-            }
-            if (i<logicContext.level.spacecrafts.length) {
-                logicContext.level.spacecrafts[i].controller=new AIController(logicContext.level.spacecrafts[i],graphicsContext,logicContext,controlContext);
-                for(j=0;j<10;j++) {
-                    logicContext.level.spacecrafts[i].controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
-                }
-            }
+        var followedSpacecraft = graphicsContext.scene.activeCamera.getFollowedSpacecraft(logicContext);
+        if (followedSpacecraft!==null) {
+            followedSpacecraft.setController(new AIController(followedSpacecraft,graphicsContext,logicContext,controlContext));
+            //for(j=0;j<10;j++) {
+            //    followedSpacecraft.controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
+            //}    
         }
+
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("stopAIShips",function(){
         for(i=0;i<logicContext.level.spacecrafts.length;i++) {
