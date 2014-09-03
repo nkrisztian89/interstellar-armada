@@ -1,10 +1,30 @@
 /**
  * @fileOverview This file contains the classes, methods and global variables
- * that implement the control module for the Armada project. This includes both
- * user input (keyboard and mouse) and artificial intelligence.
+ * that implement the control module for the Interstellar Armada project. 
+ * This includes both user input (keyboard and mouse) and artificial 
+ * intelligence.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
  * @version 0.1
  */
+
+/**********************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.
+
+    Interstellar Armada is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Interstellar Armada is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 // the global variable used for manual spacecraft control (for test purposes)
 var manualController;
