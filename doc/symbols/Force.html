@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - Scene</title>
+		<title>JsDoc Reference - Force</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -256,7 +256,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class Scene
+				Class Force
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -264,16 +264,17 @@ ul.inheritsList
 				
 				
 			
-				An object to hold a hierarchic scene graph and webGL configuration for rendering.
+				Represents a force affecting a physical object, causing it to 
+accelerate in a linear pace.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/physics.js.html">physics.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Scene.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Force.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -286,9 +287,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/Scene.html#constructor">Scene</a></b>(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext)
+								<b><a href="../symbols/Force.html#constructor">Force</a></b>(id, strength, direction, duration)
 							</div>
-							<div class="description">Creates a new scene graph object.</div>
+							<div class="description">Defines a force class.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -299,44 +300,6 @@ ul.inheritsList
 			
 
 <!-- ============================== methods summary ======================== -->
-			
-				
-				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Scene.">
-					<caption>Method Summary</caption>
-					<thead>
-						<tr>
-							<th scope="col">Method Attributes</th>
-							<th scope="col">Method Name and Description</th>
-						</tr>
-					</thead>
-					<tbody>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Scene.html#assignUniforms">assignUniforms</a></b>(gl, shader)
-								</div>
-								<div class="description">Assigns all uniforms in the given shader program that
-the scene has a value function for, using the appropriate webGL calls.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Scene.html#render">render</a></b>(resourceCenter)
-								</div>
-								<div class="description">Renders the whole scene applying the general configuration and then rendering
-all visual objects in the graph.</div>
-							</td>
-						</tr>
-					
-					</tbody>
-				</table>
-				
-				
-				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -349,11 +312,11 @@ all visual objects in the graph.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>Scene</b>(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext)
+						<b>Force</b>(id, strength, direction, duration)
 				</div>
 				
 				<div class="description">
-					Creates a new scene graph object.
+					Defines a force class.
 					
 				</div>
 				
@@ -365,59 +328,31 @@ all visual objects in the graph.</div>
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>left</b>
+								<span class="light fixedFont">{String}</span>  <b>id</b>
 								
 							</dt>
-								<dd>The X coordinate of the top left corner of the viewport on the screen.</dd>
+								<dd>Can be used to identify continuous forces so that their
+duration can be subsequently renewed.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>top</b>
+								<span class="light fixedFont">{Number}</span>  <b>strength</b>
 								
 							</dt>
-								<dd>The Y coordinate of the top left corner of the viewport on the screen.</dd>
+								<dd>The strength of the force in newtons.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>width</b>
+								<span class="light fixedFont">{Number[]}</span>  <b>direction</b>
 								
 							</dt>
-								<dd>The width of the viewport in pixels.</dd>
+								<dd>The vector describing the direction in which
+the force creates the acceleration. (needs to be unit vector)</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>height</b>
+								<span class="light fixedFont">{number}</span>  <b>duration</b>
 								
 							</dt>
-								<dd>The height of the viewport in pixels.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>clearColorOnRender</b>
-								
-							</dt>
-								<dd>Whether to clear the color buffer every time at the beginning of rendering the scene.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean[]}</span>  <b>colorMask</b>
-								
-							</dt>
-								<dd>Which components shall be cleared if the color buffer is to be cleared.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number[]}</span>  <b>clearColor</b>
-								
-							</dt>
-								<dd>What color to use when clearing the buffer (RGBA components).</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>clearDepthOnRender</b>
-								
-							</dt>
-								<dd>Whether to clear the depth buffer every time at the beginning of rendering the scene.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span>  <b>lodContext</b>
-								
-							</dt>
-								<dd>The LOD threshold and configuration to be used
-for rendering object with the appropriate level of detail.</dd>
+								<dd>The duration until which the force is still in
+effect, given in milliseconds.</dd>
 						
 						</dl>
 					
@@ -435,93 +370,6 @@ for rendering object with the appropriate level of detail.</dd>
 			
 
 <!-- ============================== method details ========================= -->		
-			
-				<div class="sectionTitle">
-					Method Detail
-				</div>
-				
-					<a name="assignUniforms"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>assignUniforms</b>(gl, shader)
-					
-					</div>
-					<div class="description">
-						Assigns all uniforms in the given shader program that
-the scene has a value function for, using the appropriate webGL calls.
-The matching is done based on the names of the uniforms.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{WebGLRenderingContext}</span> <b>gl</b>
-									
-								</dt>
-								<dd>The webGL context to use</dd>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span> <b>shader</b>
-									
-								</dt>
-								<dd>The shader program in which to assign the uniforms.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="render"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>render</b>(resourceCenter)
-					
-					</div>
-					<div class="description">
-						Renders the whole scene applying the general configuration and then rendering
-all visual objects in the graph.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
-									
-								</dt>
-								<dd>The resource center that holds the
-shaders, textures, models of the scene.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					
-				
 			
 			
 <!-- ============================== event details ========================= -->		

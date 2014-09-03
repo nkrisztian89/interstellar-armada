@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - Scene</title>
+		<title>JsDoc Reference - KeyCommand</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -256,7 +256,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class Scene
+				Class KeyCommand
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -264,16 +264,16 @@ ul.inheritsList
 				
 				
 			
-				An object to hold a hierarchic scene graph and webGL configuration for rendering.
+				Represents a keypress - command association.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Scene.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class KeyCommand.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -286,9 +286,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/Scene.html#constructor">Scene</a></b>(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext)
+								<b><a href="../symbols/KeyCommand.html#constructor">KeyCommand</a></b>(name, key, shiftState, ctrlState, altState)
 							</div>
-							<div class="description">Creates a new scene graph object.</div>
+							<div class="description">Creates a new keyboard command object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -302,7 +302,7 @@ ul.inheritsList
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Scene.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class KeyCommand.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -315,20 +315,53 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Scene.html#assignUniforms">assignUniforms</a></b>(gl, shader)
+								<div class="fixedFont"><b><a href="../symbols/KeyCommand.html#checkAndExecute">checkAndExecute</a></b>()
 								</div>
-								<div class="description">Assigns all uniforms in the given shader program that
-the scene has a value function for, using the appropriate webGL calls.</div>
+								<div class="description">Checks the current state of keys and executes both the one shot and
+continuous commands accordingly as well as updates the state for further
+checks.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Scene.html#render">render</a></b>(resourceCenter)
+								<div class="fixedFont"><b><a href="../symbols/KeyCommand.html#checkAndSetOneShot">checkAndSetOneShot</a></b>()
 								</div>
-								<div class="description">Renders the whole scene applying the general configuration and then rendering
-all visual objects in the graph.</div>
+								<div class="description">Checks if the one shot command should be executed and updates the
+state as if it was, but without actually executing it (allowing an
+external code block to be used for this purpose, making it possible
+to use local variables of an external block.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/KeyCommand.html#checkContinuous">checkContinuous</a></b>()
+								</div>
+								<div class="description">Checks if the key(s) are pressed currently, which means the continuous
+commands should be executed.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/KeyCommand.html#executeContinuousCommand">executeContinuousCommand</a></b>()
+								</div>
+								<div class="description">A function that can be executed with CheckAndExecute automatically
+continuously while the key(s) are pressed.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/KeyCommand.html#executeOneShotCommand">executeOneShotCommand</a></b>()
+								</div>
+								<div class="description">A function that can be executed with CheckAndExecute automatically
+upon every new press (following a previous release) of the key(s).</div>
 							</td>
 						</tr>
 					
@@ -349,11 +382,11 @@ all visual objects in the graph.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>Scene</b>(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext)
+						<b>KeyCommand</b>(name, key, shiftState, ctrlState, altState)
 				</div>
 				
 				<div class="description">
-					Creates a new scene graph object.
+					Creates a new keyboard command object.
 					
 				</div>
 				
@@ -365,59 +398,34 @@ all visual objects in the graph.</div>
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>left</b>
+								<span class="light fixedFont">{string}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The X coordinate of the top left corner of the viewport on the screen.</dd>
+								<dd>Name of the command. The different controllers identify the command association by this name.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>top</b>
+								<span class="light fixedFont">{string}</span>  <b>key</b>
 								
 							</dt>
-								<dd>The Y coordinate of the top left corner of the viewport on the screen.</dd>
+								<dd>The string representation of the pressed key (see keyCodeTable).</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>width</b>
+								<span class="light fixedFont">{boolean}</span>  <b>shiftState</b>
 								
 							</dt>
-								<dd>The width of the viewport in pixels.</dd>
+								<dd>Whether the shift key should be held pressed while activating this command.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>height</b>
+								<span class="light fixedFont">{boolean}</span>  <b>ctrlState</b>
 								
 							</dt>
-								<dd>The height of the viewport in pixels.</dd>
+								<dd>Whether the control key should be held pressed while activating this command.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>clearColorOnRender</b>
+								<span class="light fixedFont">{boolean}</span>  <b>altState</b>
 								
 							</dt>
-								<dd>Whether to clear the color buffer every time at the beginning of rendering the scene.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean[]}</span>  <b>colorMask</b>
-								
-							</dt>
-								<dd>Which components shall be cleared if the color buffer is to be cleared.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number[]}</span>  <b>clearColor</b>
-								
-							</dt>
-								<dd>What color to use when clearing the buffer (RGBA components).</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>clearDepthOnRender</b>
-								
-							</dt>
-								<dd>Whether to clear the depth buffer every time at the beginning of rendering the scene.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span>  <b>lodContext</b>
-								
-							</dt>
-								<dd>The LOD threshold and configuration to be used
-for rendering object with the appropriate level of detail.</dd>
+								<dd>Whether the alt key should be held pressed while activating this command.</dd>
 						
 						</dl>
 					
@@ -440,40 +448,23 @@ for rendering object with the appropriate level of detail.</dd>
 					Method Detail
 				</div>
 				
-					<a name="assignUniforms"> </a>
+					<a name="checkAndExecute"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>assignUniforms</b>(gl, shader)
+					<b>checkAndExecute</b>()
 					
 					</div>
 					<div class="description">
-						Assigns all uniforms in the given shader program that
-the scene has a value function for, using the appropriate webGL calls.
-The matching is done based on the names of the uniforms.
+						Checks the current state of keys and executes both the one shot and
+continuous commands accordingly as well as updates the state for further
+checks.
 						
 						
 					</div>
 					
 					
 					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{WebGLRenderingContext}</span> <b>gl</b>
-									
-								</dt>
-								<dd>The webGL context to use</dd>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span> <b>shader</b>
-									
-								</dt>
-								<dd>The shader program in which to assign the uniforms.</dd>
-							
-							</dl>
 						
 						
 						
@@ -484,16 +475,18 @@ The matching is done based on the names of the uniforms.
 
 					<hr />
 				
-					<a name="render"> </a>
+					<a name="checkAndSetOneShot"> </a>
 					<div class="fixedFont">
 					
-					
-					<b>render</b>(resourceCenter)
+					<span class="light">{boolean}</span>
+					<b>checkAndSetOneShot</b>()
 					
 					</div>
 					<div class="description">
-						Renders the whole scene applying the general configuration and then rendering
-all visual objects in the graph.
+						Checks if the one shot command should be executed and updates the
+state as if it was, but without actually executing it (allowing an
+external code block to be used for this purpose, making it possible
+to use local variables of an external block.
 						
 						
 					</div>
@@ -501,17 +494,97 @@ all visual objects in the graph.
 					
 					
 						
+						
+						
+						
+						
 							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
+							<dt class="heading">Returns:</dt>
 							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
-									
-								</dt>
-								<dd>The resource center that holds the
-shaders, textures, models of the scene.</dd>
+								<dd><span class="light fixedFont">{boolean}</span> Whether the one shot command should be executed now.</dd>
 							
 							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="checkContinuous"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{boolean}</span>
+					<b>checkContinuous</b>()
+					
+					</div>
+					<div class="description">
+						Checks if the key(s) are pressed currently, which means the continuous
+commands should be executed.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{boolean}</span> Whether the continuous command should be executed now.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="executeContinuousCommand"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>executeContinuousCommand</b>()
+					
+					</div>
+					<div class="description">
+						A function that can be executed with CheckAndExecute automatically
+continuously while the key(s) are pressed.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="executeOneShotCommand"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>executeOneShotCommand</b>()
+					
+					</div>
+					<div class="description">
+						A function that can be executed with CheckAndExecute automatically
+upon every new press (following a previous release) of the key(s).
+						
+						
+					</div>
+					
+					
+					
 						
 						
 						

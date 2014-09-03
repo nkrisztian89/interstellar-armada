@@ -195,6 +195,10 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
 	
+	<li><a href="../symbols/ControllableEntity.html">ControllableEntity</a></li>
+	
+	<li><a href="../symbols/Controller.html">Controller</a></li>
+	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
 	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
@@ -203,9 +207,13 @@ ul.inheritsList
 	
 	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
 	
+	<li><a href="../symbols/Force.html">Force</a></li>
+	
 	<li><a href="../symbols/FVQ.html">FVQ</a></li>
 	
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
 	
@@ -261,7 +269,7 @@ ul.inheritsList
 				Visual object that renders a 2D billboard positioned in 3D space.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
 				
 			</p>
 
@@ -280,7 +288,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/StaticParticle.html#constructor">StaticParticle</a></b>(model, shader, texture, color, size, positionMatrix)
+								<b><a href="../symbols/StaticParticle.html#constructor">StaticParticle</a></b>(model, shader, texture, color, size, positionMatrix, smallestParentSizeWhenDrawn)
 							</div>
 							<div class="description">Creates a static particle type visual object.</div>
 						</td>
@@ -309,9 +317,27 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/StaticParticle.html#getRelSize">getRelSize</a></b>()
+								</div>
+								<div class="description">Getter function for the _relSize member.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/StaticParticle.html#render">render</a></b>(resourceCenter, screenSize, lodContext)
 								</div>
 								<div class="description">Renders the particle, binding the needed texture.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/StaticParticle.html#setRelSize">setRelSize</a></b>(newValue)
+								</div>
+								<div class="description">Setter function for the _relSize member.</div>
 							</td>
 						</tr>
 					
@@ -336,7 +362,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>StaticParticle</b>(model, shader, texture, color, size, positionMatrix)
+						<b>StaticParticle</b>(model, shader, texture, color, size, positionMatrix, smallestParentSizeWhenDrawn)
 				</div>
 				
 				<div class="description">
@@ -387,6 +413,12 @@ ul.inheritsList
 							</dt>
 								<dd>The 4x4 translation matrix representing the initial position of the object.</dd>
 						
+							<dt>
+								<span class="light fixedFont">{number}</span>  <b>smallestParentSizeWhenDrawn</b>
+								
+							</dt>
+								<dd>If the rendering parent's apparent size is smaller than this, render will not take place.</dd>
+						
 						</dl>
 					
 					
@@ -407,6 +439,38 @@ ul.inheritsList
 				<div class="sectionTitle">
 					Method Detail
 				</div>
+				
+					<a name="getRelSize"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{number}</span>
+					<b>getRelSize</b>()
+					
+					</div>
+					<div class="description">
+						Getter function for the _relSize member.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{number}</span> The value of the relative size.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
 				
 					<a name="render"> </a>
 					<div class="fixedFont">
@@ -455,6 +519,42 @@ textures, the model and the shader.</dd>
 						
 						
 
+					<hr />
+				
+					<a name="setRelSize"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>setRelSize</b>(newValue)
+					
+					</div>
+					<div class="description">
+						Setter function for the _relSize member. Also updates the visibility.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{number}</span> <b>newValue</b>
+									
+								</dt>
+								<dd>The new value of the relative size.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
 					
 				
 			
@@ -469,7 +569,7 @@ textures, the model and the shader.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 26 2014 00:45:12 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

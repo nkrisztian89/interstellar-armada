@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - Scene</title>
+		<title>JsDoc Reference - ControllableEntity</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -256,7 +256,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class Scene
+				Class ControllableEntity
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -264,16 +264,17 @@ ul.inheritsList
 				
 				
 			
-				An object to hold a hierarchic scene graph and webGL configuration for rendering.
+				This is the parent class for all entity that can be controlled in the
+game by a controller object. (such as a keyboard or an AI controller)
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Scene.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ControllableEntity.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -286,9 +287,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/Scene.html#constructor">Scene</a></b>(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext)
+								<b><a href="../symbols/ControllableEntity.html#constructor">ControllableEntity</a></b>(controller)
 							</div>
-							<div class="description">Creates a new scene graph object.</div>
+							<div class="description">Creates a new ControllableEntity object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -302,7 +303,7 @@ ul.inheritsList
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Scene.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class ControllableEntity.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -315,20 +316,20 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Scene.html#assignUniforms">assignUniforms</a></b>(gl, shader)
+								<div class="fixedFont"><b><a href="../symbols/ControllableEntity.html#setController">setController</a></b>(newController)
 								</div>
-								<div class="description">Assigns all uniforms in the given shader program that
-the scene has a value function for, using the appropriate webGL calls.</div>
+								<div class="description">Assigns the controller property and makes sure that the controller's 
+controlled entity is updated as well to this one.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Scene.html#render">render</a></b>(resourceCenter)
+								<div class="fixedFont"><b><a href="../symbols/ControllableEntity.html#setControllerWithoutChecks">setControllerWithoutChecks</a></b>(newController)
 								</div>
-								<div class="description">Renders the whole scene applying the general configuration and then rendering
-all visual objects in the graph.</div>
+								<div class="description">Assigns the controller property without checking if the set controller's
+controlled entity is also set properly to this one.</div>
 							</td>
 						</tr>
 					
@@ -349,11 +350,11 @@ all visual objects in the graph.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>Scene</b>(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext)
+						<b>ControllableEntity</b>(controller)
 				</div>
 				
 				<div class="description">
-					Creates a new scene graph object.
+					Creates a new ControllableEntity object.
 					
 				</div>
 				
@@ -365,59 +366,11 @@ all visual objects in the graph.</div>
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>left</b>
+								<span class="light fixedFont">{<a href="../symbols/Controller.html">Controller</a>}</span>  <b>controller</b>
 								
 							</dt>
-								<dd>The X coordinate of the top left corner of the viewport on the screen.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>top</b>
-								
-							</dt>
-								<dd>The Y coordinate of the top left corner of the viewport on the screen.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>width</b>
-								
-							</dt>
-								<dd>The width of the viewport in pixels.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>height</b>
-								
-							</dt>
-								<dd>The height of the viewport in pixels.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>clearColorOnRender</b>
-								
-							</dt>
-								<dd>Whether to clear the color buffer every time at the beginning of rendering the scene.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean[]}</span>  <b>colorMask</b>
-								
-							</dt>
-								<dd>Which components shall be cleared if the color buffer is to be cleared.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number[]}</span>  <b>clearColor</b>
-								
-							</dt>
-								<dd>What color to use when clearing the buffer (RGBA components).</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>clearDepthOnRender</b>
-								
-							</dt>
-								<dd>Whether to clear the depth buffer every time at the beginning of rendering the scene.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span>  <b>lodContext</b>
-								
-							</dt>
-								<dd>The LOD threshold and configuration to be used
-for rendering object with the appropriate level of detail.</dd>
+								<dd>The object to be assigned as the controller
+of the entity.</dd>
 						
 						</dl>
 					
@@ -440,17 +393,16 @@ for rendering object with the appropriate level of detail.</dd>
 					Method Detail
 				</div>
 				
-					<a name="assignUniforms"> </a>
+					<a name="setController"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>assignUniforms</b>(gl, shader)
+					<b>setController</b>(newController)
 					
 					</div>
 					<div class="description">
-						Assigns all uniforms in the given shader program that
-the scene has a value function for, using the appropriate webGL calls.
-The matching is done based on the names of the uniforms.
+						Assigns the controller property and makes sure that the controller's 
+controlled entity is updated as well to this one.
 						
 						
 					</div>
@@ -462,16 +414,10 @@ The matching is done based on the names of the uniforms.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{WebGLRenderingContext}</span> <b>gl</b>
+									<span class="light fixedFont">{<a href="../symbols/Controller.html">Controller</a>}</span> <b>newController</b>
 									
 								</dt>
-								<dd>The webGL context to use</dd>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span> <b>shader</b>
-									
-								</dt>
-								<dd>The shader program in which to assign the uniforms.</dd>
+								<dd>The new value of controller.</dd>
 							
 							</dl>
 						
@@ -484,16 +430,16 @@ The matching is done based on the names of the uniforms.
 
 					<hr />
 				
-					<a name="render"> </a>
+					<a name="setControllerWithoutChecks"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>render</b>(resourceCenter)
+					<b>setControllerWithoutChecks</b>(newController)
 					
 					</div>
 					<div class="description">
-						Renders the whole scene applying the general configuration and then rendering
-all visual objects in the graph.
+						Assigns the controller property without checking if the set controller's
+controlled entity is also set properly to this one.
 						
 						
 					</div>
@@ -505,11 +451,10 @@ all visual objects in the graph.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
+									<span class="light fixedFont">{<a href="../symbols/Controller.html">Controller</a>}</span> <b>newController</b>
 									
 								</dt>
-								<dd>The resource center that holds the
-shaders, textures, models of the scene.</dd>
+								<dd>The new value of controller.</dd>
 							
 							</dl>
 						

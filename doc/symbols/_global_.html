@@ -195,6 +195,10 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
 	
+	<li><a href="../symbols/ControllableEntity.html">ControllableEntity</a></li>
+	
+	<li><a href="../symbols/Controller.html">Controller</a></li>
+	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
 	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
@@ -203,9 +207,13 @@ ul.inheritsList
 	
 	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
 	
+	<li><a href="../symbols/Force.html">Force</a></li>
+	
 	<li><a href="../symbols/FVQ.html">FVQ</a></li>
 	
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
 	
@@ -282,9 +290,35 @@ ul.inheritsList
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
+								<b><a href="../symbols/_global_.html#manualController">manualController</a></b>
+								</div>
+								<div class="description">*******************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
 								<b><a href="../symbols/_global_.html#ShaderVariableTypes">ShaderVariableTypes</a></b>
 								</div>
 								<div class="description">Enumeration defining the available variables types of shaders.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/_global_.html#TIME_UNIT">TIME_UNIT</a></b>
+								</div>
+								<div class="description">*******************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.</div>
 							</td>
 						</tr>
 					
@@ -308,6 +342,16 @@ ul.inheritsList
 						</tr>
 					</thead>
 					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#angleDifferenceOfUnitVectors2D">angleDifferenceOfUnitVectors2D</a></b>(v1, v2)
+								</div>
+								<div class="description">Returns the angle between two 2 dimensional vectors (given as arrays of two
+numbers) in radian.</div>
+							</td>
+						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
@@ -352,10 +396,42 @@ stored in the XML tags.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#identityMatrix3">identityMatrix3</a></b>()
+								</div>
+								<div class="description">*******************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#initGlobalCommands">initGlobalCommands</a></b>(graphicsContext, logicContext, controlContext)
+								</div>
+								<div class="description">Initializes the global keyboard commands by looking for the appropriate associations
+in the given control context and setting their execution actions.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/_global_.html#inverseRotationMatrix">inverseRotationMatrix</a></b>(m)
 								</div>
 								<div class="description">Calculates and returns the inverse of the top left 3x3 block of a 4x4 matrix,
 but complemented to 4x4 matrix (using identity matrix values for the rest part).</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#inverseTranslationMatrix">inverseTranslationMatrix</a></b>(m)
+								</div>
+								<div class="description">Calculates and returns the inverse of a 4x4 translation matrix, building on
+the fact that only the 3rd row of the matrix holds useful information.</div>
 							</td>
 						</tr>
 					
@@ -463,6 +539,48 @@ containing the name of the variable type.</div>
 					Field Detail
 				</div>
 				
+					<a name="manualController"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>manualController</b>
+					
+					</div>
+					<div class="description">
+						*******************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.
+
+    Interstellar Armada is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Interstellar Armada is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+*********************************************************************
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name="ShaderVariableTypes"> </a>
 					<div class="fixedFont">
 					
@@ -474,7 +592,49 @@ containing the name of the variable type.</div>
 						Enumeration defining the available variables types of shaders.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="TIME_UNIT"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>TIME_UNIT</b>
+					
+					</div>
+					<div class="description">
+						*******************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.
+
+    Interstellar Armada is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Interstellar Armada is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+*********************************************************************
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
 						
 						
 					</div>
@@ -496,6 +656,59 @@ containing the name of the variable type.</div>
 					Method Detail
 				</div>
 				
+					<a name="angleDifferenceOfUnitVectors2D"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Number}</span>
+					<b>angleDifferenceOfUnitVectors2D</b>(v1, v2)
+					
+					</div>
+					<div class="description">
+						Returns the angle between two 2 dimensional vectors (given as arrays of two
+numbers) in radian.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{number[]}</span> <b>v1</b>
+									
+								</dt>
+								<dd>The first 2D vector.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{number[]}</span> <b>v2</b>
+									
+								</dt>
+								<dd>The second 2D vector.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Number}</span> The angle in radian.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="cuboidModel"> </a>
 					<div class="fixedFont">
 					
@@ -508,7 +721,7 @@ containing the name of the variable type.</div>
 with the given properties.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -574,7 +787,7 @@ desired box color.</dd>
 with a line for drawing dust particles.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -621,7 +834,7 @@ with a line for drawing dust particles.
 rendering Full Viewport Quads. (FVQ)
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -657,7 +870,7 @@ rendering Full Viewport Quads. (FVQ)
 stored in the XML tags.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_logic.js.html">logic.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
 						
 						
 					</div>
@@ -692,6 +905,110 @@ stored in the XML tags.
 
 					<hr />
 				
+					<a name="identityMatrix3"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>identityMatrix3</b>()
+					
+					</div>
+					<div class="description">
+						*******************************************************************
+    Copyright 2014 Krisztián Nagy
+    
+    This file is part of Interstellar Armada.
+
+    Interstellar Armada is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Interstellar Armada is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+*********************************************************************
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="initGlobalCommands"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{KeyboardControlContext.KeyCommand[]}</span>
+					<b>initGlobalCommands</b>(graphicsContext, logicContext, controlContext)
+					
+					</div>
+					<div class="description">
+						Initializes the global keyboard commands by looking for the appropriate associations
+in the given control context and setting their execution actions.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/GraphicsContext.html">GraphicsContext</a>}</span> <b>graphicsContext</b>
+									
+								</dt>
+								<dd>The graphics context within which to set the commands.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{LogicContext}</span> <b>logicContext</b>
+									
+								</dt>
+								<dd>The logic context within which to set the commands.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{KeyboardControlContext}</span> <b>controlContext</b>
+									
+								</dt>
+								<dd>The context that contains the key (combination) - action associations.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{KeyboardControlContext.KeyCommand[]}</span> The global keyboard commands organized in an array.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="inverseRotationMatrix"> </a>
 					<div class="fixedFont">
 					
@@ -707,7 +1024,7 @@ the 3x3 part of a 4x4 matrix without letting the optional translation
 interfere with it.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -742,6 +1059,53 @@ interfere with it.
 
 					<hr />
 				
+					<a name="inverseTranslationMatrix"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Float32Array}</span>
+					<b>inverseTranslationMatrix</b>(m)
+					
+					</div>
+					<div class="description">
+						Calculates and returns the inverse of a 4x4 translation matrix, building on
+the fact that only the 3rd row of the matrix holds useful information.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Float32Array}</span> <b>m</b>
+									
+								</dt>
+								<dd>The input 4x4 matrix.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> The calculated inverse 4x4 matrix.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="loadResources"> </a>
 					<div class="fixedFont">
 					
@@ -754,7 +1118,7 @@ interfere with it.
 the test scene populated with random ships and fighters controlled by AI.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_armada.js.html">armada.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/armada.js.html">armada.js</a>.
 						
 						
 					</div>
@@ -783,7 +1147,7 @@ the test scene populated with random ships and fighters controlled by AI.
 Loads the scripts in the specified order, then executes a callback function.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_armada.js.html">armada.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/armada.js.html">armada.js</a>.
 						
 						
 					</div>
@@ -828,7 +1192,7 @@ Loads the scripts in the specified order, then executes a callback function.
 						Multiplies two 3x3 matrices.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -880,7 +1244,7 @@ Loads the scripts in the specified order, then executes a callback function.
 						
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
 						
 						
 					</div>
@@ -911,7 +1275,7 @@ a set of intersecting squares that are perpendicular to the first one, to
 serve as the front view(s) of the projectile.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -960,7 +1324,7 @@ be created along the side view square.</dd>
 arbitrary axis.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -1007,7 +1371,7 @@ rotation</dd>
 containing the name of the variable type.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
 						
 						
 					</div>
@@ -1046,7 +1410,7 @@ containing the name of the variable type.
 						Sets up and returns a simple EgomModel that contains a two sided XY square.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -1082,7 +1446,7 @@ containing the name of the variable type.
 script files and the external resources.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada_armada.js.html">armada.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/armada.js.html">armada.js</a>.
 						
 						
 					</div>
@@ -1111,7 +1475,7 @@ script files and the external resources.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Apr 26 2014 00:45:11 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

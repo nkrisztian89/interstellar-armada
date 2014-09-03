@@ -190,6 +190,10 @@ ul.inheritsList
 	
 	<li><a href="symbols/Camera.html">Camera</a></li>
 	
+	<li><a href="symbols/ControllableEntity.html">ControllableEntity</a></li>
+	
+	<li><a href="symbols/Controller.html">Controller</a></li>
+	
 	<li><a href="symbols/Cubemap.html">Cubemap</a></li>
 	
 	<li><a href="symbols/DustParticle.html">DustParticle</a></li>
@@ -198,9 +202,13 @@ ul.inheritsList
 	
 	<li><a href="symbols/EgomModel.html">EgomModel</a></li>
 	
+	<li><a href="symbols/Force.html">Force</a></li>
+	
 	<li><a href="symbols/FVQ.html">FVQ</a></li>
 	
 	<li><a href="symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="symbols/KeyCommand.html">KeyCommand</a></li>
 	
 	<li><a href="symbols/Line.html">Line</a></li>
 	
@@ -243,10 +251,10 @@ ul.inheritsList
 			
 			
 			<div>
-				<h2><a href="symbols/src/armada_egom.js.html">egom.js</a></h2>
+				<h2><a href="symbols/src/logic.js.html">logic.js</a></h2>
 				
-This file provides limited functionality to interact with
-EgomModel 3D models, including loading the data from EgomModel XML files.
+This file implements the game logic of the Interstellar 
+Armada program.
 				<dl>
 					
 						<dt class="heading">Author:</dt>
@@ -263,9 +271,10 @@ EgomModel 3D models, including loading the data from EgomModel XML files.
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/armada_logic.js.html">logic.js</a></h2>
+				<h2><a href="symbols/src/physics.js.html">physics.js</a></h2>
 				
-This file implements the game logic of the Armada project.
+This file implements the simple newtonian physics engine of the
+Interstellar Armada program.
 				<dl>
 					
 						<dt class="heading">Author:</dt>
@@ -282,47 +291,7 @@ This file implements the game logic of the Armada project.
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/armada_control.js.html">control.js</a></h2>
-				
-This file contains the classes, methods and global variables
-that implement the control module for the Armada project. This includes both
-user input (keyboard and mouse) and artificial intelligence.
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/armada_armada.js.html">armada.js</a></h2>
-				
-This file is the main source file for the Armada project.
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/armada_graphics.js.html">graphics.js</a></h2>
+				<h2><a href="symbols/src/graphics.js.html">graphics.js</a></h2>
 				
 This file contains the classes, methods and global variables
 for the creation, manipulation and rendering of graphical objects using webGL,
@@ -343,10 +312,18 @@ as well as managing the required resources (such as textures).
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/armada_grid.js.html">armada/grid.js</a></h2>
+				<h2><a href="symbols/src/armada.js.html">armada.js</a></h2>
 				
+This file contains the entry point for the Interstellar
+Armada (working name) program.
 				<dl>
 					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
 					
 					
 					
@@ -355,10 +332,19 @@ as well as managing the required resources (such as textures).
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/armada_matrices.js.html">armada/matrices.js</a></h2>
+				<h2><a href="symbols/src/egom.js.html">egom.js</a></h2>
 				
+This file provides limited functionality to interact with
+EgomModel 3D models, including loading the data from EgomModel XML files.
+EgomModel is a simple 3D modeling library written in object pascal.
 				<dl>
 					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
 					
 					
 					
@@ -367,7 +353,29 @@ as well as managing the required resources (such as textures).
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/armada_physics.js.html">armada/physics.js</a></h2>
+				<h2><a href="symbols/src/control.js.html">control.js</a></h2>
+				
+This file contains the classes, methods and global variables
+that implement the control module for the Interstellar Armada project. 
+This includes both user input (keyboard and mouse) and artificial 
+intelligence.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/matrices.js.html">./matrices.js</a></h2>
 				
 				<dl>
 					
@@ -382,7 +390,7 @@ as well as managing the required resources (such as textures).
 		</div>
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Sat Apr 26 2014 00:45:12 GMT+0300 (EEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>
