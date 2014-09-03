@@ -1,0 +1,156 @@
+/* generic settings */
+body {
+    color: #DDDDDD;
+    background-color: black;
+    font-family: Ubuntu light, Verdana, Geneva, sans-serif;
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-shadow: #888888 0.1em 0.1em 0.5em;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 0;
+}
+
+h2 {
+    text-shadow: #888888 0.1em 0.1em 0.5em;
+    text-align: center;
+    font-variant: small-caps;
+}
+
+h3 {
+    text-shadow: #000000 0.0em 0.0em 0.4em;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 10px;
+    padding: 10px;
+}
+
+table, ul {
+    background-color: #111111;
+    border: 2px solid #333333;
+    box-shadow: 0em 0em 0.5em #00FF00;
+    margin: 1em auto;
+}
+
+ul.mainmenu {
+    width: 350px;
+}
+
+ul {
+    display: table;
+    padding: 1.0em;
+}
+
+th, td {
+    padding: 0.5em;
+}
+
+th {
+    text-align: left;
+    color: white;
+}
+
+li {
+    display: block;
+    list-style-type: none;
+    margin: 0.0em;
+    padding: 0.0em;
+    text-align: center;
+}
+
+td, li {
+    border: none;
+    background-color: #222222;
+    box-shadow: 0em 0em 0.5em #000000;
+    font-size: 0.9em;
+}
+
+li.menubutton:hover {
+    background-color: #333333;
+}
+
+a {
+    display: block;
+    margin: 0.2em;
+    padding: 0.5em;
+    color: #000000;
+    text-decoration: none;
+    text-shadow:
+        #00FF00 0 0 0.2em,
+        #00FF00 0 0 0.2em;
+    font-weight: bold;
+    font-variant: small-caps;
+}
+
+a:hover {
+    color: #FFFFFF;
+}
+
+img {
+    margin: 0.5em;
+}
+
+div {
+    padding: 0.2em;
+    margin: 1em;
+    box-shadow: 0em 0em 0.5em #888888;
+}
+
+div.content {
+    display: table;
+    padding: 1em;
+    border: 2px solid #AAAAAA;
+    margin: 16px auto;
+    background-color: rgba(255,255,255,.75);
+}
+
+div.error {
+    display: table;
+    border: 4px dashed black;
+    margin: 16px auto;
+    background-color: red;
+}
+
+div.info {
+    display: table;
+    border: 4px solid #FF9933;
+    margin: 16px auto;
+    background-color: #FFCC99;
+}
+
+div.headfoot {
+    background-color: rgba(255,255,255,.5);
+    border: 2px dotted #FF9933;
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 0.9em;
+    padding: 8px;
+    margin: 16px;
+    box-shadow: none;
+}
+
+p {
+    font-size: 14px;
+}
+
+p.narrow {
+    padding: 2px;
+    margin: 2px;
+}
+
+p.nulled {
+    padding: 0;
+    margin: 0;
+    text-align: right;
+}
+
+p.export {
+    text-align: right;
+}
+
+.originalprice {
+    text-decoration: line-through;
+}
