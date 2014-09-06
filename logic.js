@@ -321,6 +321,19 @@ ControllableEntity.prototype.setController = function(newController) {
     }
 };
 
+/**
+ * Creates and initializes a Spacecraft object. Loads all necessary models into
+ * the resource center of graphicsContext, taking into account the maximum
+ * enabled LOD defined in the scene of graphicsContext.
+ * @param {GraphicsContext} graphicsContext
+ * @param {LogicContext} logicContext
+ * @param {ControlContext} controlContext
+ * @param {SpacecraftClass} SpacecraftClass
+ * @param {String} owner
+ * @param {Number[]} positionMatrix
+ * @param {String} controller
+ * @returns {Spacecraft}
+ */
 function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,controller) {
 	// creating the appropriate controller object based on the supplied string
         // and assigning it using the parent's constructor
@@ -336,11 +349,14 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
         this.graphicsContext=graphicsContext;
 	this.logicContext=logicContext;
 	this.class=SpacecraftClass;
+        // loading or setting models
 	var modelsWithLOD=new Array();
 	for(var i=0;i<SpacecraftClass.modelReferences.length;i++) {
-		modelsWithLOD.push(new ModelWithLOD(
-			graphicsContext.resourceCenter.getModel(SpacecraftClass.modelReferences[i].filename),
-			SpacecraftClass.modelReferences[i].lod));
+                if(graphicsContext.scene.getLODContext().maxEnabledLOD>=SpacecraftClass.modelReferences[i].lod) {
+                    modelsWithLOD.push(new ModelWithLOD(
+                        graphicsContext.resourceCenter.getModel(SpacecraftClass.modelReferences[i].filename),
+                        SpacecraftClass.modelReferences[i].lod));
+                }
 	}
 	this.visualModel = new Mesh(
 		modelsWithLOD,

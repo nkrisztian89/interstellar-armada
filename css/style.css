@@ -8,27 +8,7 @@ body {
     padding: 0;
 }
 
-h1 {
-    text-shadow: #888888 0.1em 0.1em 0.5em;
-    text-align: center;
-    font-variant: small-caps;
-    margin: 0;
-}
-
-h2 {
-    text-shadow: #888888 0.1em 0.1em 0.5em;
-    text-align: center;
-    font-variant: small-caps;
-}
-
-h3 {
-    text-shadow: #000000 0.0em 0.0em 0.4em;
-    text-align: center;
-    font-variant: small-caps;
-    margin: 10px;
-    padding: 10px;
-}
-
+/* tables and lists with similar appearance (gray box with green glow) */
 table, ul {
     background-color: #111111;
     border: 2px solid #333333;
@@ -36,6 +16,7 @@ table, ul {
     margin: 1em auto;
 }
 
+/* main menu has fixed width for now (readable on all types of screens) */
 ul.mainmenu {
     width: 350px;
 }
@@ -57,9 +38,9 @@ th {
 li {
     display: block;
     list-style-type: none;
+    text-align: center;
     margin: 0.0em;
     padding: 0.0em;
-    text-align: center;
 }
 
 td, li {
@@ -94,63 +75,27 @@ img {
     margin: 0.5em;
 }
 
-div {
-    padding: 0.2em;
-    margin: 1em;
-    box-shadow: 0em 0em 0.5em #888888;
-}
-
-div.content {
-    display: table;
-    padding: 1em;
-    border: 2px solid #AAAAAA;
-    margin: 16px auto;
-    background-color: rgba(255,255,255,.75);
-}
-
-div.error {
-    display: table;
-    border: 4px dashed black;
-    margin: 16px auto;
-    background-color: red;
-}
-
-div.info {
-    display: table;
-    border: 4px solid #FF9933;
-    margin: 16px auto;
-    background-color: #FFCC99;
-}
-
-div.headfoot {
-    background-color: rgba(255,255,255,.5);
-    border: 2px dotted #FF9933;
-    font-family: Verdana, Geneva, sans-serif;
-    font-size: 0.9em;
-    padding: 8px;
-    margin: 16px;
-    box-shadow: none;
-}
-
 p {
     font-size: 14px;
 }
 
-p.narrow {
-    padding: 2px;
-    margin: 2px;
-}
-
-p.nulled {
-    padding: 0;
+h1 {
+    text-shadow: #888888 0.1em 0.1em 0.5em;
+    text-align: center;
+    font-variant: small-caps;
     margin: 0;
-    text-align: right;
 }
 
-p.export {
-    text-align: right;
+h2 {
+    text-shadow: #888888 0.1em 0.1em 0.5em;
+    text-align: center;
+    font-variant: small-caps;
 }
 
-.originalprice {
-    text-decoration: line-through;
+h3 {
+    text-shadow: #000000 0.0em 0.0em 0.4em;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 10px;
+    padding: 10px;
 }

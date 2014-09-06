@@ -12,18 +12,19 @@
 <script src="armada.js?123">
 </script>
 
-<!--link href="css/style.css" rel="stylesheet" type="text/css"/-->
+<link href="css/style.css" rel="stylesheet" type="text/css"/>
+<link href="css/game.css" rel="stylesheet" type="text/css"/>
 </head>
 
-<body onload="start()">
+<body onload="start()" onresize="resizeCanvas()">
 	
-<canvas id="canvas" width="1200" height="600" style="border:1px dotted #AAAAAA;"></canvas> 
-<progress id="progress" value="0" max="100"></progress>
-<p id="status">
+<canvas id="canvas" class ="gameScreen"></canvas> 
+<progress id="progress" class="status" value="0" max="100"></progress>
+<p id="status" class="status">
 </p>
-<p id="output" style="font-family: Helvetica-Narrow; font-size: 9pt; border:1px dotted #AAAAAA; background-color: #fefd70">
+<p id="output">
 </p>
-<p id="ui" style="font-family: Helvetica-Narrow; font-size: 9pt; color: #EEEEEE; border:1px dotted #AAAAAA; background-color: #444444">
+<p id="ui">
 </p>
 
 </body>

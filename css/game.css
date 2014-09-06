@@ -1,0 +1,48 @@
+/* in order to size the game canvas according to screen size relatively, all
+   its parents' size must be explicit, so give html and body 100% */
+body,html {
+    width: 100%;
+    height: 100%;
+    border: 0px;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* the canvas element where the game (WebGL) scene is rendered */
+canvas.gameScreen {
+    width: 90%;
+    height: 70%;
+    border: 1px dotted #AAAAAA;
+    display: block;
+    margin-left: auto; 
+    margin-right: auto; 
+    margin-top: 5px; 
+    margin-bottom: 5px; 
+}
+
+.status {
+    text-align: center;
+    width: 300px;
+    display: block;
+    margin-left: auto; 
+    margin-right: auto; 
+}
+
+p#output {
+    font-family: Helvetica-Narrow;
+    font-size: 9pt;
+    border:1px dotted #AAAAAA;
+    width: 90%;
+    margin-left: auto; 
+    margin-right: auto; 
+}
+
+p#ui {
+    font-family: Helvetica-Narrow;
+    font-size: 9pt; color: #EEEEEE;
+    border:1px dotted #AAAAAA;
+    background-color: #444444;
+    width: 300px;
+    margin-left: auto; 
+    margin-right: auto; 
+}

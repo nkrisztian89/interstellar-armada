@@ -77,13 +77,34 @@ var num_test_ships=15;
 var mapSize=3000;
 
 var prevDate,curDate;
+var mainScene;
+
+function resizeCanvas() {
+   // only change the size of the canvas if the size it's being displayed
+   // has changed.
+   var canvas = document.getElementById("canvas");
+   var width = canvas.clientWidth;
+   var height = canvas.clientHeight;
+   if (canvas.width !== width ||
+       canvas.height !== height) {
+     // Change the size of the canvas to match the size it's being displayed
+     canvas.width = width;
+     canvas.height = height;
+   }
+   if (mainScene!==undefined) {
+       mainScene.resizeViewport(width,height);
+   } 
+}
 
 /**
  * Main function loading the external resources required by the program. Builds
  * the test scene populated with random ships and fighters controlled by AI.
  * */
 function loadResources() {
-	var canvas = document.getElementById("canvas");
+	document.getElementById("output").style.display="none";
+        document.getElementById("ui").style.display="none";
+        
+        var canvas = document.getElementById("canvas");
 	var progress = document.getElementById("progress");
         
         var controlContext = new KeyboardControlContext();
@@ -127,8 +148,22 @@ function loadResources() {
         controlContext.addKeyCommand(new controlContext.KeyCommand("toggleHitboxVisibility","h",false,false,false));
 
 	var resourceCenter = new ResourceCenter();
-	
-	var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,new LODContext(4,[0,30,60,250,400]));
+	  
+        resizeCanvas(); 
+        // based on screen (canvas) size, set a maximum enabled LOD, so that
+        // higher LOD models won't even get loaded during level initialization
+        //(sparing memory, download time and performance)
+        var maxLOD;
+        if(canvas.width>=800) {
+            maxLOD=4;
+        } else if (canvas.width>=500) {
+            maxLOD=3;
+        } else if (canvas.width>=120) {
+            maxLOD=2;
+        } else {
+            maxLOD=1;
+        }
+	mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,new LODContext(maxLOD,[0,30,60,250,400]));
 	//var pipScene = new Scene(canvas.width*2/3,canvas.height/4,canvas.width/3,canvas.height/2,false,[true,true,true,true],[0,0.5,0,0.5],true);
 	
         // setting uniform valuables that are universal to all scene graph 

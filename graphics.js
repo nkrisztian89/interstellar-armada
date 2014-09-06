@@ -550,7 +550,7 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
 					)
 				));
         var fullMatrix =
-               mul(this.getCascadeScalingMatrix(),mul(baseMatrix,camera.perspectiveMatrix));
+               mul(mul(this.getCascadeScalingMatrix(),baseMatrix),camera.perspectiveMatrix);
 		
 	var position = vector4Matrix4Product([0.0,0.0,0.0,1.0],fullMatrix);
 	position = [position[0]/position[3],position[1]/position[3],position[2]/position[3]];
@@ -562,14 +562,16 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
                 
                 // frustum culling: sides
                 var xOffsetPosition = vector4Matrix4Product([0.0,0.0,0.0,1.0],mul(mul(baseMatrix,translationMatrix(this.getSize()*this.getCascadeScalingMatrix()[0],0.0,0.0)),camera.perspectiveMatrix));
-		var offset = Math.abs(xOffsetPosition[0]/xOffsetPosition[3]-position[0]);
+                var yOffsetPosition = vector4Matrix4Product([0.0,0.0,0.0,1.0],mul(mul(baseMatrix,translationMatrix(0.0,this.getSize()*this.getCascadeScalingMatrix()[0],0.0)),camera.perspectiveMatrix));
+		var xOffset = Math.abs(xOffsetPosition[0]/xOffsetPosition[3]-position[0]);
+                var yOffset = Math.abs(yOffsetPosition[1]/yOffsetPosition[3]-position[1]);
                 //alert(offset);
 		if (
-                    !(((position[0]+offset<-1)&&(position[0]-offset<-1))||((position[0]+offset>1)&&(position[0]-offset>1)))&&
-		    !(((position[1]+offset<-1)&&(position[1]-offset<-1))||((position[1]+offset>1)&&(position[1]-offset>1)))
+                    !(((position[0]+xOffset<-1)&&(position[0]-xOffset<-1))||((position[0]+xOffset>1)&&(position[0]-xOffset>1)))&&
+		    !(((position[1]+yOffset<-1)&&(position[1]-yOffset<-1))||((position[1]+yOffset>1)&&(position[1]-yOffset>1)))
                     ) {
-			this.visibleWidth=offset;
-			this.visibleHeight=offset;
+			this.visibleWidth=xOffset;
+			this.visibleHeight=yOffset;
 			this.lastInsideFrustumState = true;
 		} else {
                         this.visibleWidth=0;
@@ -591,26 +593,28 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * necessary rendering resources .
  * @param {Scene} scene The scene within which the object is located.
- * @param {number} screenSize The size of the rendering viewport in pixels,
+ * @param {number} screenWidth The size of the rendering viewport in pixels,
+ * to determine the actual drawn size of the object (for dynamic LOD)
+ * * @param {number} screenHeight The size of the rendering viewport in pixels,
  * to determine the actual drawn size of the object (for dynamic LOD)
  * @param {boolean} depthMaskPhase Whether we are drawing in the depthmask
  * enabled or disabled phase (renders only phase matches with the type of the
  * shared the object has)
  * */ 
-VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,screenSize,depthMaskPhase) {
+VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase) {
     if(this.visible) {
         this.renderParent=parent;
         if ((this.renderParent===null) || (this.smallestParentSizeWhenDrawn===undefined) ||
-                (Math.max(this.renderParent.visibleWidth,this.renderParent.visibleHeight)*screenSize>=this.smallestParentSizeWhenDrawn)) {
+                (Math.max(this.renderParent.visibleWidth*screenWidth,this.renderParent.visibleHeight*screenHeight)>=this.smallestParentSizeWhenDrawn)) {
             if((this.shader.depthMask===depthMaskPhase)&&(this.isInsideViewFrustum(scene.activeCamera))) {
                 resourceCenter.setCurrentShader(this.shader,scene);
                 this.assignUniforms(resourceCenter.gl);
-                this.render(resourceCenter,screenSize,scene.lodContext);
+                this.render(resourceCenter,screenWidth,screenHeight,scene.lodContext);
             } else if(scene.uniformsAssigned===false) {
                 resourceCenter.setCurrentShader(this.shader,scene);
             }
             for(var i=0;i<this.subnodes.length;i++) {
-                this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenSize,depthMaskPhase);
+                this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase);
             }
         }
     }
@@ -665,10 +669,11 @@ FVQ.prototype.isInsideViewFrustum = function(camera) {
  * Renders the FVQ, binding the cube mapped texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * cube mapped textures, the FVQ model and the shader.
- * @param {number} screenSize Irrelevant in this case.
+ * @param {number} screenWidth Irrelevant in this case.
+ * @param {number} screenHeight Irrelevant in this case.
  * @param {LODContext} lodContext Irrelevant in this case.
  */
-FVQ.prototype.render = function(resourceCenter,screenSize,lodContext) {
+FVQ.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
 	resourceCenter.bindTexture(this.cubemap);
 	
         drawnPolyogons+=2;
@@ -794,13 +799,14 @@ Mesh.prototype.getModelMatrix = function() {
  * Renders the appropriate model of the mesh.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * texture, the models and the shader.
- * @param {number} screenSize The size of the screen in pixels for LOD decision.
+ * @param {number} screenWidth The size of the screen in pixels for LOD decision.
+ * @param {number} screenHeight The size of the screen in pixels for LOD decision.
  * @param {LODContext} lodContext The object storing the LOD thresholds and settings.
  */
-Mesh.prototype.render = function(resourceCenter,screenSize,lodContext) {
+Mesh.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	// choose the model of appropriate LOD
-	var visibleSize = this.visibleWidth*screenSize;
+	var visibleSize = Math.max(this.visibleWidth*screenWidth,this.visibleHeight*screenHeight);
 	var model;
 	var closestLOD = -1;
 	for(var i=0;i<this.modelsWithLOD.length;i++) {
@@ -867,10 +873,11 @@ Billboard.prototype.isInsideViewFrustum = function(camera) {
  * Renders the billboard, binding the texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * textures, the model and the shader.
- * @param {number} screenSize Irrelevant in this case.
+ * @param {number} screenWidth Irrelevant in this case.
+ * @param {number} screenHeight Irrelevant in this case.
  * @param {LODContext} lodContext Irrelevant in this case.
  */
-Billboard.prototype.render = function(resourceCenter,screenSize,lodContext) {
+Billboard.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	
 	drawnPolyogons+=2;
@@ -928,10 +935,11 @@ DynamicParticle.prototype.isInsideViewFrustum = function(camera) {
  * Renders the particle, binding the needed texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * textures, the model and the shader.
- * @param {number} screenSize Irrelevant in this case.
+ * @param {number} screenWidth Irrelevant in this case.
+ * @param {number} screenHeight Irrelevant in this case.
  * @param {LODContext} lodContext Irrelevant in this case.
  */
-DynamicParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
+DynamicParticle.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	if(new Date().getTime()>=this.creationTime+this.duration) {
 		this.toBeDeleted=true;
@@ -984,10 +992,11 @@ StaticParticle.prototype.setRelSize = function(newValue) {
  * Renders the particle, binding the needed texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * textures, the model and the shader.
- * @param {number} screenSize Irrelevant in this case.
+ * @param {number} screenWidth Irrelevant in this case.
+ * @param {number} screenHeight Irrelevant in this case.
  * @param {LODContext} lodContext Irrelevant in this case.
  */
-StaticParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
+StaticParticle.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
 	resourceCenter.bindTexture(this.texture);
 	if(this._relSize>0) {
 		drawnPolyogons+=2;
@@ -1038,10 +1047,11 @@ DustParticle.prototype.isInsideViewFrustum = function(camera) {
  * Renders the particle.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * the model and the shader.
- * @param {number} screenSize Irrelevant in this case.
+ * @param {number} screenWidth Irrelevant in this case.
+ * @param {number} screenHeight Irrelevant in this case.
  * @param {LODContext} lodContext Irrelevant in this case.
  */
-DustParticle.prototype.render = function(resourceCenter,screenSize,lodContext) {
+DustParticle.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
 	this.model.render(resourceCenter.gl,true);
 };
 
@@ -1077,7 +1087,7 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
 	this.fov=fov;
         this.controllablePosition=controllablePosition;
         this.controllableDirection=controllableDirection;
-	this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,Math.cos(fov*3.1415/360)*2*this.aspect/20,5000.0);
+	this.updatePerspectiveMatrix();
         this.nextView=null;
 }
 
@@ -1112,13 +1122,26 @@ Camera.prototype.reset = function() {
     this.followOrientationMatrix=this.originalFollowOrientationMatrix;
 };
 
+Camera.prototype.updatePerspectiveMatrix = function() {
+    this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,this.aspect*Math.cos(this.fov*3.1415/360)*2/20,5000.0);
+};
+
 /**
  * Sets the camera's Field Of View by also recalculating the perspective matrix.
- * @param {number} fov The new desired FOV.
+ * @param {number} fov The new desired FOV in degrees.
  */
 Camera.prototype.setFOV = function(fov) {
-	this.fov=fov;
-	this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,Math.cos(fov*3.1415/360)*2*this.aspect/20,5000.0);
+    this.fov=fov;
+    this.updatePerspectiveMatrix();
+};
+
+/**
+ * Sets the camera's aspect ratio by also recalculating the perspective matrix.
+ * @param {number} aspect The new desired aspect ratio.
+ */
+Camera.prototype.setAspect = function(aspect) {
+    this.aspect=aspect;
+    this.updatePerspectiveMatrix();
 };
 
 /**
@@ -1264,6 +1287,20 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         this.firstRender=true;
 }
 
+Scene.prototype.getLODContext = function() {
+    return this.lodContext;
+};
+
+Scene.prototype.resizeViewport = function(newWidth,newHeight) {
+    var i;
+    this.width=newWidth;
+    this.height=newHeight;
+    for(var i=0;i<this.cameras.length;i++) {
+        this.cameras[i].setAspect(this.width/this.height);
+    }
+    this.activeCamera.setAspect(this.width/this.height);
+};
+
 /**
  * Assigns all uniforms in the given shader program that
  * the scene has a value function for, using the appropriate webGL calls.
@@ -1319,7 +1356,7 @@ Scene.prototype.render = function(resourceCenter) {
 			this.objects.splice(i,1);
 		}
 		if (i<this.objects.length) {
-			this.objects[i].cascadeRender(null,resourceCenter,this,this.height,true);
+			this.objects[i].cascadeRender(null,resourceCenter,this,this.width,this.height,true);
 		}
 	}
 	gl.depthMask(false);
@@ -1328,7 +1365,7 @@ Scene.prototype.render = function(resourceCenter) {
 		this.objects[i].resetModelMatrixCalculated();
 	}
 	for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].cascadeRender(null,resourceCenter,this,this.height,false);
+		this.objects[i].cascadeRender(null,resourceCenter,this,this.width,this.height,false);
 	}
 	document.getElementById("output").innerHTML+=drawnPolyogons;
 };
@@ -1433,6 +1470,7 @@ ResourceCenter.prototype.getCubemap = function(name) {
  * @returns {EgomModel} The found or added model object in the resource center.
  */
 ResourceCenter.prototype.getModel = function(filename) {
+    document.getElementById("status").innerHTML="loading model: "+filename+"...";
 	var i = 0;
 	while((i<this.models.length)&&(this.models[i].filename!==filename)) {
 		i++;
@@ -1444,6 +1482,7 @@ ResourceCenter.prototype.getModel = function(filename) {
 		this.models.push(model);
 		return model;
 	}
+    document.getElementById("status").innerHTML="loading model: "+filename+"... done.";
 };
 
 /**
@@ -1697,6 +1736,8 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                     document.getElementById("progress").value=100;
                     alert("ready!");
                     document.getElementById("progress").style.display="none";
+                    document.getElementById("output").style.display="block";
+                    document.getElementById("ui").style.display="block";
                     setInterval(
                             function() {
                                     self.renderScenes();
