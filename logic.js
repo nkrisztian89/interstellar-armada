@@ -148,7 +148,7 @@ function Projectile(resourceCenter,scene,projectileClass,positionMatrix,orientat
 	this.origin=spacecraft;
 	
 	scene.objects.push(this.visualModel);
-	weapon.visualModel.subnodes.push(muzzleFlash);
+	weapon.visualModel.addSubnode(muzzleFlash);
 	
 	this.toBeDeleted = false;
 }
@@ -414,7 +414,7 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 			identityMatrix4(),
 			false);
 		hitZoneMesh.visible=false;
-		this.visualModel.subnodes.push(hitZoneMesh);
+		this.visualModel.addSubnode(hitZoneMesh);
 	}
 	
 	this.toBeDeleted = false;
@@ -441,7 +441,7 @@ Spacecraft.prototype.addWeapon = function(resourceCenter,weaponClass) {
 				identityMatrix4(),
 				false
 				);
-		this.visualModel.subnodes.push(weaponMesh);
+		this.visualModel.addSubnode(weaponMesh);
 		this.weapons.push(new Weapon(weaponClass,this,slot,weaponMesh));
 	}
 };
@@ -460,7 +460,7 @@ Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
 				translationMatrixv(slot.positionVector),
                                 20
 				);
-		this.visualModel.subnodes.push(thrusterParticle);
+		this.visualModel.addSubnode(thrusterParticle);
 		var thruster = new Thruster(slot,thrusterParticle);
 		for(var j=0;j<slot.uses.length;j++) {
 			this.thrusters[slot.uses[j]].push(thruster);

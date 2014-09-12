@@ -401,6 +401,16 @@ function VisualObject(shader,smallestParentSizeWhenDrawn) {
 }
 
 /**
+ * Adds a subnode to the rendering tree.
+ * @param {VisualObject} subnode The subnode to be added to the rendering tree. 
+ * It will be rendered relative to this object (transformation matrices stack)
+ */
+VisualObject.prototype.addSubnode = function(subnode) {
+    this.subnodes.push(subnode);
+    subnode.renderParent = this;
+};
+
+/**
  * Returns the translation matrix describing the position of the 
  * visual object. Actual calculations have to be implemented in children 
  * classes, this one always returns an identity matrix.
@@ -588,8 +598,6 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
 
 /**
  * Renders the object and all its subnodes.
- * @param {VisualObject} parent The rendering parent to which the position,
- * orientation and scaling of the object is relative.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * necessary rendering resources .
  * @param {Scene} scene The scene within which the object is located.
@@ -599,11 +607,11 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
  * to determine the actual drawn size of the object (for dynamic LOD)
  * @param {boolean} depthMaskPhase Whether we are drawing in the depthmask
  * enabled or disabled phase (renders only phase matches with the type of the
- * shared the object has)
+ * shader the object has)
  * */ 
-VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase) {
+VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase) {
+    // the visible property determines visibility of all subnodes as well
     if(this.visible) {
-        this.renderParent=parent;
         if ((this.renderParent===null) || (this.smallestParentSizeWhenDrawn===undefined) ||
                 (Math.max(this.renderParent.visibleWidth*screenWidth,this.renderParent.visibleHeight*screenHeight)>=this.smallestParentSizeWhenDrawn)) {
             if((this.shader.depthMask===depthMaskPhase)&&(this.isInsideViewFrustum(scene.activeCamera))) {
@@ -614,7 +622,7 @@ VisualObject.prototype.cascadeRender = function(parent,resourceCenter,scene,scre
                 resourceCenter.setCurrentShader(this.shader,scene);
             }
             for(var i=0;i<this.subnodes.length;i++) {
-                this.subnodes[i].cascadeRender(this,resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase);
+                this.subnodes[i].cascadeRender(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase);
             }
         }
     }
@@ -641,7 +649,7 @@ VisualObject.prototype.resetModelMatrixCalculated = function() {
  * @param {Camera} camera The camera to be used for querying the cube map.
  * */
 function FVQ(model,shader,samplerName,cubemap,camera) {
-	VisualObject.call(this,shader);
+	VisualObject.call(this,shader,0);
 	this.model=model;
 	this.samplerName=samplerName;
 	this.cubemap=cubemap;
@@ -706,7 +714,7 @@ function ModelWithLOD(model,lod) {
  * @param {boolean} lineMode Whether the mesh should be drawn as wireframe instead of solid.
  */
 function Mesh(modelsWithLOD,shader,texture,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
-	VisualObject.call(this,shader);
+	VisualObject.call(this,shader,10);
 	this.modelsWithLOD=modelsWithLOD;
 	this.texture=texture;
 	this.positionMatrix=positionMatrix;
@@ -844,7 +852,7 @@ Mesh.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodCont
  * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
  */
 function Billboard(model,shader,texture,size,positionMatrix,orientationMatrix) {
-	VisualObject.call(this,shader);
+	VisualObject.call(this,shader,0);
 	this.model=model;
 	this.texture=texture;
 	this.positionMatrix=positionMatrix;
@@ -1016,7 +1024,7 @@ StaticParticle.prototype.render = function(resourceCenter,screenWidth,screenHeig
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
  */
 function DustParticle(model,shader,color,positionMatrix) {
-	VisualObject.call(this,shader);
+	VisualObject.call(this,shader,0);
 	this.color=color;
 	this.positionMatrix=positionMatrix;
         this.shift=[0.0,0.0,0.0];
@@ -1348,7 +1356,10 @@ Scene.prototype.render = function(resourceCenter) {
 	gl.clear(clear);
 	
 	this.uniformsAssigned=false;
-	
+	for(var i=0;i<this.objects.length;i++) {
+		this.objects[i].resetModelMatrixCalculated();
+	}
+        
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	for(var i=0;i<this.objects.length;i++) {
 		while ((i<this.objects.length)&&((this.objects[i]===undefined)||(this.objects[i].toBeDeleted))) {
@@ -1356,16 +1367,13 @@ Scene.prototype.render = function(resourceCenter) {
 			this.objects.splice(i,1);
 		}
 		if (i<this.objects.length) {
-			this.objects[i].cascadeRender(null,resourceCenter,this,this.width,this.height,true);
+			this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,true);
 		}
 	}
 	gl.depthMask(false);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].resetModelMatrixCalculated();
-	}
 	for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].cascadeRender(null,resourceCenter,this,this.width,this.height,false);
+		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
 	}
 	document.getElementById("output").innerHTML+=drawnPolyogons;
 };
