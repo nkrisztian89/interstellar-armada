@@ -89,13 +89,17 @@ function EgomModel(filename) {
 	this.lines = new Array();
 	this.triangles = new Array();
 	this.size = 0;
-	
-	this.filename=filename;
+        
+        this.nOpaqueTriangles = 0;
+        this.nTransparentTriangles = 0;
+        
+        this.filename=filename;
 	if(filename!==undefined) {
 		this.loadFromFile(filename);
 	}
 	
 	this.bufferStart = 0;
+        this.bufferStartTransparent = 0;
 	this.bufferStartLines = 0;
 }
 
@@ -107,7 +111,11 @@ EgomModel.prototype.clear = function() {
 	
 	this.filename=null;
 	
+	this.nOpaqueTriangles = 0;
+        this.nTransparentTriangles = 0;
+	
 	this.bufferStart = 0;
+        this.bufferStartTransparent = 0;
 	this.bufferStartLines = 0;
 };
 
@@ -189,7 +197,11 @@ EgomModel.prototype.loadFromFile = function(filename) {
 			-triangleTags[i].getAttribute("ncy"),
 			-triangleTags[i].getAttribute("ncz")
 			);
+                if ((this.triangles[i].alpha<1.0)&&(this.nTransparentTriangles===0)) {
+                    this.nTransparentTriangles=nTriangles-i;
+                }
 	}
+        this.nOpaqueTriangles=nTriangles-this.nTransparentTriangles;
 };
 
 EgomModel.prototype.getBuffers = function(lineMode) {

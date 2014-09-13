@@ -377,8 +377,10 @@ Shader.prototype.bindBuffers = function(gl) {
  * as a node, contains references to its parent and subnodes as well.
  * @param {Shader} shader The shader that should be active while rendering this object
  * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this value, render will not take place.
+ * @param {boolean} renderedWithDepthMask Tells whether this object should be rendered when the depth mask is on (= it contains non-transparent triangles)
+ * @param {boolean} renderedWithoutDepthMask Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)
  */
-function VisualObject(shader,smallestParentSizeWhenDrawn) {
+function VisualObject(shader,smallestParentSizeWhenDrawn,renderedWithDepthMask,renderedWithoutDepthMask) {
 	this.shader = shader;
 	this.uniformValueFunctions = new Array();
 	
@@ -396,6 +398,9 @@ function VisualObject(shader,smallestParentSizeWhenDrawn) {
         
         this.insideParent=undefined;
         this.smallestParentSizeWhenDrawn=smallestParentSizeWhenDrawn;
+        
+        this.renderedWithDepthMask = renderedWithDepthMask;
+        this.renderedWithoutDepthMask = renderedWithoutDepthMask;
         
         this.modelMatrixCalculated = false;
 }
@@ -597,6 +602,21 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
 };
 
 /**
+ * A method to check if the visual object needs to be rendered according to this
+ * LOD parameters and depth mask phase (a model at a certain LOD might or might 
+ * not contain transparent triangles) Needs to be implemented in the descendant
+ * classes.
+ * @param {Number} screenWidth
+ * @param {Number} screenHeight
+ * @param {LODContext} lodContext
+ * @param {Boolean} depthMask
+ * @returns {Boolean}
+ */
+VisualObject.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,depthMask) {
+    return true;
+};
+
+/**
  * Renders the object and all its subnodes.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * necessary rendering resources .
@@ -612,15 +632,33 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
 VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase) {
     // the visible property determines visibility of all subnodes as well
     if(this.visible) {
+        // subnodes (children) are only rendered if the parent's visible size
+        // reaches a set limit
         if ((this.renderParent===null) || (this.smallestParentSizeWhenDrawn===undefined) ||
                 (Math.max(this.renderParent.visibleWidth*screenWidth,this.renderParent.visibleHeight*screenHeight)>=this.smallestParentSizeWhenDrawn)) {
-            if((this.shader.depthMask===depthMaskPhase)&&(this.isInsideViewFrustum(scene.activeCamera))) {
-                resourceCenter.setCurrentShader(this.shader,scene);
-                this.assignUniforms(resourceCenter.gl);
-                this.render(resourceCenter,screenWidth,screenHeight,scene.lodContext);
+            // checking if the object is rendered in this phase (depth mask on/
+            // off) and it is inside the view frustum
+            if(((this.renderedWithDepthMask===true)&&(depthMaskPhase===true))||
+                    ((this.renderedWithoutDepthMask===true)&&(depthMaskPhase===false))) {
+                // the frustum check only needs to be calculated if this is the
+                // first pass (depth mask on), or the object wasn't rendered
+                // in the first pass
+                if ((((this.renderedWithDepthMask===false)||(depthMaskPhase===true))&&(this.isInsideViewFrustum(scene.activeCamera)))||(this.lastInsideFrustumState===true)) {
+                    if(this.needsToBeRendered(screenWidth,screenHeight,scene.lodContext,depthMaskPhase)) {
+                        resourceCenter.setCurrentShader(this.shader,scene);
+                        this.assignUniforms(resourceCenter.gl);
+                        this.render(resourceCenter,screenWidth,screenHeight,scene.lodContext,depthMaskPhase);
+                    } else if(scene.uniformsAssigned===false) {
+                        resourceCenter.setCurrentShader(this.shader,scene);
+                    }
+                }
+            // set the scene uniforms for the shader in case they are yet unset,
+            // even if this particular object is not getting rendered this time
+            // this is needed!
             } else if(scene.uniformsAssigned===false) {
                 resourceCenter.setCurrentShader(this.shader,scene);
             }
+            // recursive rendering of all subnodes
             for(var i=0;i<this.subnodes.length;i++) {
                 this.subnodes[i].cascadeRender(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase);
             }
@@ -649,7 +687,7 @@ VisualObject.prototype.resetModelMatrixCalculated = function() {
  * @param {Camera} camera The camera to be used for querying the cube map.
  * */
 function FVQ(model,shader,samplerName,cubemap,camera) {
-	VisualObject.call(this,shader,0);
+	VisualObject.call(this,shader,0,true,false);
 	this.model=model;
 	this.samplerName=samplerName;
 	this.cubemap=cubemap;
@@ -714,13 +752,15 @@ function ModelWithLOD(model,lod) {
  * @param {boolean} lineMode Whether the mesh should be drawn as wireframe instead of solid.
  */
 function Mesh(modelsWithLOD,shader,texture,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
-	VisualObject.call(this,shader,10);
+	VisualObject.call(this,shader,10,true,true);
 	this.modelsWithLOD=modelsWithLOD;
 	this.texture=texture;
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
 	this.scalingMatrix=scalingMatrix;
 	this.lineMode=lineMode;
+        
+        this.model=null;
 	
 	this.modelSize=0;
 	for(var i=0;i<this.modelsWithLOD.length;i++) {
@@ -804,40 +844,74 @@ Mesh.prototype.getModelMatrix = function() {
 };
 
 /**
+ * A method to check if the mesh needs to be rendered according to these
+ * LOD parameters and depth mask phase (a model at a certain LOD might or might 
+ * not contain transparent triangles) Also sets the model property to the model
+ * with the calculated LOD.
+ * @param {Number} screenWidth
+ * @param {Number} screenHeight
+ * @param {LODContext} lodContext
+ * @param {Boolean} depthMask
+ * @returns {Boolean}
+ */
+Mesh.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,depthMask) {
+    // choose the model of appropriate LOD
+    var visibleSize = Math.max(this.visibleWidth*screenWidth,this.visibleHeight*screenHeight);
+    var closestLOD = -1;
+    for(var i=0;i<this.modelsWithLOD.length;i++) {
+            if(
+                    (closestLOD===-1) ||
+                    (this.modelsWithLOD[i].lod<=lodContext.maxEnabledLOD) &&
+                    (
+                            (closestLOD>lodContext.maxEnabledLOD) ||
+                            ((lodContext.thresholds[closestLOD]>visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod]<=visibleSize)) ||
+                            ((lodContext.thresholds[closestLOD]<=visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod]<=visibleSize) && (this.modelsWithLOD[i].lod>closestLOD)) ||
+                            ((lodContext.thresholds[closestLOD]>visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod]>visibleSize) && (this.modelsWithLOD[i].lod<closestLOD))
+                    )) {
+                    closestLOD=this.modelsWithLOD[i].lod;
+                    this.model=this.modelsWithLOD[i].model;
+            }
+    }
+    
+    if (this.lineMode===true) {
+            return true;
+    } else {
+            if(depthMask===true) {
+                if(this.model.nOpaqueTriangles>0) {
+                    return true;
+                }
+            } else if ((depthMask===false)&&(this.model.nTransparentTriangles>0)) {
+                return true;
+            }
+    }
+    return false;
+};
+
+/**
  * Renders the appropriate model of the mesh.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * texture, the models and the shader.
  * @param {number} screenWidth The size of the screen in pixels for LOD decision.
  * @param {number} screenHeight The size of the screen in pixels for LOD decision.
  * @param {LODContext} lodContext The object storing the LOD thresholds and settings.
+ * @param {boolean} depthMask Tells whether the depth mask is turned on during this render pass.
  */
-Mesh.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
-	resourceCenter.bindTexture(this.texture);
-	// choose the model of appropriate LOD
-	var visibleSize = Math.max(this.visibleWidth*screenWidth,this.visibleHeight*screenHeight);
-	var model;
-	var closestLOD = -1;
-	for(var i=0;i<this.modelsWithLOD.length;i++) {
-		if(
-			(closestLOD===-1) ||
-			(this.modelsWithLOD[i].lod<=lodContext.maxEnabledLOD) &&
-			(
-				(closestLOD>lodContext.maxEnabledLOD) ||
-				((lodContext.thresholds[closestLOD]>visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod]<=visibleSize)) ||
-				((lodContext.thresholds[closestLOD]<=visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod]<=visibleSize) && (this.modelsWithLOD[i].lod>closestLOD)) ||
-				((lodContext.thresholds[closestLOD]>visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod]>visibleSize) && (this.modelsWithLOD[i].lod<closestLOD))
-			)) {
-			model=this.modelsWithLOD[i].model;
-			closestLOD=this.modelsWithLOD[i].lod;
-		}
-	}
-	
-	if (this.lineMode===true) {
-		resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, model.bufferStartLines, 2*model.lines.length);
-	} else {
-		resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, model.bufferStart, 3*model.triangles.length);
-		drawnPolyogons+=model.triangles.length;
-	}
+Mesh.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext,depthMask) {
+    if (this.lineMode===true) {
+            resourceCenter.bindTexture(this.texture);
+            resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, this.model.bufferStartLines, 2*this.model.lines.length);
+    } else {
+            if(depthMask===true) {
+                drawnPolyogons+=this.model.triangles.length;
+                if(this.model.nOpaqueTriangles>0) {
+                    resourceCenter.bindTexture(this.texture);
+                    resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStart, 3*this.model.nOpaqueTriangles);
+                }
+            } else if ((depthMask===false)&&(this.model.nTransparentTriangles>0)) {
+                resourceCenter.bindTexture(this.texture);
+                resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStartTransparent, 3*this.model.nTransparentTriangles);
+            }
+    }
 };
 
 /**
@@ -852,7 +926,7 @@ Mesh.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodCont
  * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
  */
 function Billboard(model,shader,texture,size,positionMatrix,orientationMatrix) {
-	VisualObject.call(this,shader,0);
+	VisualObject.call(this,shader,0,false,true);
 	this.model=model;
 	this.texture=texture;
 	this.positionMatrix=positionMatrix;
@@ -909,7 +983,7 @@ Billboard.prototype.render = function(resourceCenter,screenWidth,screenHeight,lo
  * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this, render will not take place.
  */
 function DynamicParticle(model,shader,texture,color,size,positionMatrix,duration,smallestParentSizeWhenDrawn) {
-	VisualObject.call(this,shader,smallestParentSizeWhenDrawn);
+	VisualObject.call(this,shader,smallestParentSizeWhenDrawn,false,true);
 	this.model=model;
 	this.texture=texture;
 	this.color=color;
@@ -1024,7 +1098,7 @@ StaticParticle.prototype.render = function(resourceCenter,screenWidth,screenHeig
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
  */
 function DustParticle(model,shader,color,positionMatrix) {
-	VisualObject.call(this,shader,0);
+	VisualObject.call(this,shader,0,false,true);
 	this.color=color;
 	this.positionMatrix=positionMatrix;
         this.shift=[0.0,0.0,0.0];
@@ -1350,17 +1424,23 @@ Scene.prototype.render = function(resourceCenter) {
 
 	this.firstRender=false;
 	
-	gl.depthMask(true);
+        // clearing color and depth buffers as set for this scene
 	var clear = this.clearColorOnRender?gl.COLOR_BUFFER_BIT:0;
 	clear=this.clearDepthOnRender?clear|gl.DEPTH_BUFFER_BIT:clear;
 	gl.clear(clear);
 	
-	this.uniformsAssigned=false;
+        // ensuring that transformation matrices are only calculated once for 
+        // each object in each render
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].resetModelMatrixCalculated();
 	}
         
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        this.uniformsAssigned=false;
+        
+        // first rendering pass: rendering the non-transparent triangles with 
+        // Z buffer writing turned on
+	gl.depthMask(true);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	for(var i=0;i<this.objects.length;i++) {
 		while ((i<this.objects.length)&&((this.objects[i]===undefined)||(this.objects[i].toBeDeleted))) {
 			delete this.objects[i];
@@ -1370,8 +1450,11 @@ Scene.prototype.render = function(resourceCenter) {
 			this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,true);
 		}
 	}
+        // second rendering pass: rendering the transparent triangles with 
+        // Z buffer writing turned off
 	gl.depthMask(false);
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+	//gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
 	}
@@ -1627,9 +1710,12 @@ ResourceCenter.prototype.setupBuffers = function(shader,loadLines) {
 		var trianglesToLoad=true;
 		while(linesToLoad||trianglesToLoad) {
 			objectBufferData=this.models[i].getBuffers(linesToLoad);
-			linesToLoad?
-				(this.models[i].bufferStartLines=bufferSize):
-				(this.models[i].bufferStart=bufferSize);
+			 if (linesToLoad) {
+				this.models[i].bufferStartLines=bufferSize;
+                            } else {
+				this.models[i].bufferStart=bufferSize;
+                                this.models[i].bufferStartTransparent=bufferSize+this.models[i].nOpaqueTriangles*3;
+                            }
 			for(var j=0;j<shader.attributes.length;j++) {
 				shader.vertexBuffers[j].data.set(objectBufferData[shader.attributes[j].role],bufferSize*shader.attributes[j].size);
 			}
