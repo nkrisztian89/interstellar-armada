@@ -303,18 +303,18 @@ function VertexBuffer(id,data,location,vectorSize) {
  * vertex shader code.
  * @param {string} fragmentShaderFileName The name of the file containing the
  * fragment shader code.
- * @param {boolean} depthMask Whether the depthmask should be turned on while
- * rendering using this shader.
+ * @param {string} blendType What kind of blending function should be used
+ * while rendering with this shader.
  * @param {ShaderAttribute[]} attributes The list of attributes this shader
  * has as an input.
  * @param {ShaderUniform[]} uniforms The list of uniform variables this shader
  * contains.
  * */
-function Shader(name,vertexShaderFileName,fragmentShaderFileName,depthMask,attributes,uniforms) {
+function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attributes,uniforms) {
 	this.name=name;
 	this.vertexShaderFileName=vertexShaderFileName;
 	this.fragmentShaderFileName=fragmentShaderFileName;
-	this.depthMask=depthMask;
+	this.blendType=blendType;
 	this.attributes=attributes;
 	this.uniforms=uniforms;
 	this.vertexBuffers=new Array();
@@ -413,6 +413,20 @@ function VisualObject(shader,smallestParentSizeWhenDrawn,renderedWithDepthMask,r
 VisualObject.prototype.addSubnode = function(subnode) {
     this.subnodes.push(subnode);
     subnode.renderParent = this;
+};
+
+/**
+ * Removes all subnodes from the subtree of this object that are deleted or
+ * are marked for deletion.
+ */
+VisualObject.prototype.cascadeCleanUp = function() {
+    for(var i=0;i<this.subnodes.length;i++) {
+        this.subnodes[i].cascadeCleanUp();
+        while ((i<this.subnodes.length)&&((this.subnodes[i]===undefined)||(this.subnodes[i].toBeDeleted))) {
+            delete this.subnodes[i];
+            this.subnodes.splice(i,1);
+	}
+    }
 };
 
 /**
@@ -643,20 +657,16 @@ VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth
                 // the frustum check only needs to be calculated if this is the
                 // first pass (depth mask on), or the object wasn't rendered
                 // in the first pass
-                if ((((this.renderedWithDepthMask===false)||(depthMaskPhase===true))&&(this.isInsideViewFrustum(scene.activeCamera)))||(this.lastInsideFrustumState===true)) {
+                if ((
+                        ((this.renderedWithDepthMask===false)||(depthMaskPhase===true))
+                        &&(this.isInsideViewFrustum(scene.activeCamera))
+                    )||(this.lastInsideFrustumState===true)) {
                     if(this.needsToBeRendered(screenWidth,screenHeight,scene.lodContext,depthMaskPhase)) {
                         resourceCenter.setCurrentShader(this.shader,scene);
                         this.assignUniforms(resourceCenter.gl);
-                        this.render(resourceCenter,screenWidth,screenHeight,scene.lodContext,depthMaskPhase);
-                    } else if(scene.uniformsAssigned===false) {
-                        resourceCenter.setCurrentShader(this.shader,scene);
+                        this.render(resourceCenter,depthMaskPhase);
                     }
                 }
-            // set the scene uniforms for the shader in case they are yet unset,
-            // even if this particular object is not getting rendered this time
-            // this is needed!
-            } else if(scene.uniformsAssigned===false) {
-                resourceCenter.setCurrentShader(this.shader,scene);
             }
             // recursive rendering of all subnodes
             for(var i=0;i<this.subnodes.length;i++) {
@@ -666,11 +676,15 @@ VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth
     }
 };
 
-VisualObject.prototype.resetModelMatrixCalculated = function() {
+/**
+ * Sets the modelMatrixCalculated property of this object and its whole subtree
+ * to false.
+ */
+VisualObject.prototype.cascadeResetModelMatrixCalculated = function() {
     var i;
     this.modelMatrixCalculated=false;
     for(var i=0;i<this.subnodes.length;i++) {
-        this.subnodes[i].resetModelMatrixCalculated();
+        this.subnodes[i].cascadeResetModelMatrixCalculated();
     }    
 };
 
@@ -715,11 +729,8 @@ FVQ.prototype.isInsideViewFrustum = function(camera) {
  * Renders the FVQ, binding the cube mapped texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * cube mapped textures, the FVQ model and the shader.
- * @param {number} screenWidth Irrelevant in this case.
- * @param {number} screenHeight Irrelevant in this case.
- * @param {LODContext} lodContext Irrelevant in this case.
  */
-FVQ.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
+FVQ.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.cubemap);
 	
         drawnPolyogons+=2;
@@ -891,12 +902,9 @@ Mesh.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,
  * Renders the appropriate model of the mesh.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * texture, the models and the shader.
- * @param {number} screenWidth The size of the screen in pixels for LOD decision.
- * @param {number} screenHeight The size of the screen in pixels for LOD decision.
- * @param {LODContext} lodContext The object storing the LOD thresholds and settings.
  * @param {boolean} depthMask Tells whether the depth mask is turned on during this render pass.
  */
-Mesh.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext,depthMask) {
+Mesh.prototype.render = function(resourceCenter,depthMask) {
     if (this.lineMode===true) {
             resourceCenter.bindTexture(this.texture);
             resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, this.model.bufferStartLines, 2*this.model.lines.length);
@@ -955,11 +963,8 @@ Billboard.prototype.isInsideViewFrustum = function(camera) {
  * Renders the billboard, binding the texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * textures, the model and the shader.
- * @param {number} screenWidth Irrelevant in this case.
- * @param {number} screenHeight Irrelevant in this case.
- * @param {LODContext} lodContext Irrelevant in this case.
  */
-Billboard.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
+Billboard.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.texture);
 	
 	drawnPolyogons+=2;
@@ -1017,11 +1022,8 @@ DynamicParticle.prototype.isInsideViewFrustum = function(camera) {
  * Renders the particle, binding the needed texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * textures, the model and the shader.
- * @param {number} screenWidth Irrelevant in this case.
- * @param {number} screenHeight Irrelevant in this case.
- * @param {LODContext} lodContext Irrelevant in this case.
  */
-DynamicParticle.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
+DynamicParticle.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.texture);
 	if(new Date().getTime()>=this.creationTime+this.duration) {
 		this.toBeDeleted=true;
@@ -1074,11 +1076,8 @@ StaticParticle.prototype.setRelSize = function(newValue) {
  * Renders the particle, binding the needed texture.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * textures, the model and the shader.
- * @param {number} screenWidth Irrelevant in this case.
- * @param {number} screenHeight Irrelevant in this case.
- * @param {LODContext} lodContext Irrelevant in this case.
  */
-StaticParticle.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
+StaticParticle.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.texture);
 	if(this._relSize>0) {
 		drawnPolyogons+=2;
@@ -1129,11 +1128,8 @@ DustParticle.prototype.isInsideViewFrustum = function(camera) {
  * Renders the particle.
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * the model and the shader.
- * @param {number} screenWidth Irrelevant in this case.
- * @param {number} screenHeight Irrelevant in this case.
- * @param {LODContext} lodContext Irrelevant in this case.
  */
-DustParticle.prototype.render = function(resourceCenter,screenWidth,screenHeight,lodContext) {
+DustParticle.prototype.render = function(resourceCenter) {
 	this.model.render(resourceCenter.gl,true);
 };
 
@@ -1364,7 +1360,6 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         this.lodContext = lodContext;
         
 	this.uniformValueFunctions = new Object();
-	this.uniformsAssigned=false;
         
         this.firstRender=true;
 }
@@ -1373,6 +1368,12 @@ Scene.prototype.getLODContext = function() {
     return this.lodContext;
 };
 
+/**
+ * Recalculates the perspective matrices of cameras in case the viewport size
+ * (and as a result, aspect) has changed.
+ * @param {Number} newWidth
+ * @param {Number} newHeight
+ */
 Scene.prototype.resizeViewport = function(newWidth,newHeight) {
     var i;
     this.width=newWidth;
@@ -1396,7 +1397,20 @@ Scene.prototype.assignUniforms = function(gl,shader) {
 			shader.uniforms[i].setValue(gl,this.uniformValueFunctions[shader.uniforms[i].name]);
 		}
 	}
-	this.uniformsAssigned=true;
+};
+
+/**
+ * Cleans up the whole scene graph, removing all object that are deleted or are
+ * marked for deletion.
+ */
+Scene.prototype.cleanUp = function() {
+    for(var i=0;i<this.objects.length;i++) {
+        this.objects[i].cascadeCleanUp();
+        while ((i<this.objects.length)&&((this.objects[i]===undefined)||(this.objects[i].toBeDeleted))) {
+            delete this.objects[i];
+            this.objects.splice(i,1);
+	}
+    }
 };
 
 // Global variable to store the number of polygon drawn so far in the current render.
@@ -1424,6 +1438,9 @@ Scene.prototype.render = function(resourceCenter) {
 
 	this.firstRender=false;
 	
+        // glClear is affected by the depth mask, so we need to turn it on here!
+        // (it's disabled for the second (transparent) render pass)
+        gl.depthMask(true);
         // clearing color and depth buffers as set for this scene
 	var clear = this.clearColorOnRender?gl.COLOR_BUFFER_BIT:0;
 	clear=this.clearDepthOnRender?clear|gl.DEPTH_BUFFER_BIT:clear;
@@ -1432,29 +1449,19 @@ Scene.prototype.render = function(resourceCenter) {
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
 	for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].resetModelMatrixCalculated();
+		this.objects[i].cascadeResetModelMatrixCalculated();
 	}
-        
-        this.uniformsAssigned=false;
-        
+                
         // first rendering pass: rendering the non-transparent triangles with 
         // Z buffer writing turned on
-	gl.depthMask(true);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.disable(gl.BLEND);
 	for(var i=0;i<this.objects.length;i++) {
-		while ((i<this.objects.length)&&((this.objects[i]===undefined)||(this.objects[i].toBeDeleted))) {
-			delete this.objects[i];
-			this.objects.splice(i,1);
-		}
-		if (i<this.objects.length) {
-			this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,true);
-		}
+		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,true);
 	}
         // second rendering pass: rendering the transparent triangles with 
         // Z buffer writing turned off
 	gl.depthMask(false);
-	//gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND);
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
 	}
@@ -1660,7 +1667,7 @@ ResourceCenter.prototype.loadShaders = function(filename) {
 			shaderTags[i].getAttribute("name"),
 			shaderTags[i].getElementsByTagName("vertex")[0].getAttribute("filename"),
 			shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
-			(shaderTags[i].getElementsByTagName("depthMask")[0].getAttribute("value")==="true"),
+			shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
 			new Array(),
 			new Array())
 			);
@@ -1749,6 +1756,11 @@ ResourceCenter.prototype.setupBuffers = function(shader,loadLines) {
 ResourceCenter.prototype.setCurrentShader = function(shader,scene) {
 	if(this.currentShader!==shader) {
 		this.gl.useProgram(shader.id);
+                if (shader.blendType==="mix") {
+                    this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+                } else if (shader.blendType==="add") {
+                    this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
+                }
 		shader.bindBuffers(this.gl);	
 		scene.assignUniforms(this.gl,shader);
 		this.currentShader=shader;
@@ -1834,6 +1846,7 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                     document.getElementById("ui").style.display="block";
                     setInterval(
                             function() {
+                                    self.cleanUpScenes();
                                     self.renderScenes();
                                     var d = new Date();
                                     self.renderTimes.push(d.getTime());
@@ -1879,12 +1892,25 @@ ResourceCenter.prototype.setupShaders = function() {
 };
 
 /**
+ * Cleans up all the contained scenes.
+ */
+ResourceCenter.prototype.cleanUpScenes = function() {
+	for(var i=0;i<this.scenes.length;i++) {
+		this.scenes[i].cleanUp();
+	}
+};
+
+/**
  * Renders all the contained scenes.
  */
 ResourceCenter.prototype.renderScenes = function() {
-	for(var i=0;i<this.scenes.length;i++) {
-		this.scenes[i].render(this);
-	}
+    // we need to set the current shader to null in the beginning of each render
+    // since otherwise if only one shader is used, its uniforms would never
+    // be updated, as they are updated whenever a new shader is set
+    this.currentShader=null;
+    for(var i=0;i<this.scenes.length;i++) {
+        this.scenes[i].render(this);
+    }
 };
 
 /**

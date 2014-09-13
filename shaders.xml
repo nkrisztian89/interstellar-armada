@@ -13,7 +13,7 @@
 		<vertex filename="shaders/simple.vert" />
 		<fragment filename="shaders/simple.frag" />
 		<state>
-			<depthMask value="true" />
+			<blendType value="mix" />
 		</state>
 		<attributes>
 			<attribute name="a_position" size="3" role="position" />
@@ -38,7 +38,7 @@
 		<vertex filename="shaders/skybox.vert" />
 		<fragment filename="shaders/skybox.frag" />
 		<state>
-			<depthMask value="true" />
+			<blendType value="none" />
 		</state>
 		<attributes>
 			<attribute name="a_position" size="3" role="position" />
@@ -54,7 +54,7 @@
 		<vertex filename="shaders/billboard.vert" />
 		<fragment filename="shaders/billboard.frag" />
 		<state>
-			<depthMask value="false" />
+			<blendType value="add" />
 		</state>
 		<attributes>
 			<attribute name="a_position" size="3" role="position" />
@@ -73,7 +73,7 @@
 		<vertex filename="shaders/particle.vert" />
 		<fragment filename="shaders/particle.frag" />
 		<state>
-			<depthMask value="false" />
+			<blendType value="add" />
 		</state>
 		<attributes>
 			<attribute name="a_position" size="3" role="position" />
@@ -94,7 +94,7 @@
 		<vertex filename="shaders/linearSizeParticle.vert" />
 		<fragment filename="shaders/particle.frag" />
 		<state>
-			<depthMask value="false" />
+			<blendType value="add" />
 		</state>
 		<attributes>
 			<attribute name="a_position" size="3" role="position" />
@@ -115,7 +115,7 @@
 		<vertex filename="shaders/dust.vert" />
 		<fragment filename="shaders/color.frag" />
 		<state>
-			<depthMask value="false" />
+			<blendType value="none" />
 		</state>
 		<attributes>
 			<attribute name="a_position" size="3" role="position" />
