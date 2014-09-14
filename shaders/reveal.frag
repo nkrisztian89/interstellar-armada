@@ -1,7 +1,7 @@
 precision mediump float;
 	
 // our texture
-uniform sampler2D u_image;
+uniform sampler2D u_colorTexture;
 uniform vec3 u_lightDir;
 uniform vec3 u_eyePos;
 
@@ -25,7 +25,7 @@ void main() {
 	vec3 viewDir = normalize(u_eyePos - v_worldPos.xyz);
 	vec3 reflDir = reflect (viewDir, v_normal);
 	
-	vec4 texCol = texture2D(u_image, v_texCoord);
+	vec4 texCol = texture2D(u_colorTexture, v_texCoord);
 	
 	float specularFactor = v_shininess>0.0?pow(max(dot(-reflDir,u_lightDir),0.0), v_shininess):0.0;
 	

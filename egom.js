@@ -50,7 +50,7 @@ function Line(a,b,red,green,blue,luminosity,nx,ny,nz) {
 	this.nz=nz;
 }
 
-function Triangle(a,b,c,red,green,blue,alpha,luminosity,shininess,tax,tay,tbx,tby,tcx,tcy,nax,nay,naz,nbx,nby,nbz,ncx,ncy,ncz) {
+function Triangle(a,b,c,red,green,blue,alpha,luminosity,shininess,tax,tay,tbx,tby,tcx,tcy,nax,nay,naz,nbx,nby,nbz,ncx,ncy,ncz,group) {
 	this.a=a;
 	this.b=b;
 	this.c=c;
@@ -75,6 +75,7 @@ function Triangle(a,b,c,red,green,blue,alpha,luminosity,shininess,tax,tay,tbx,tb
 	this.ncx=ncx;
 	this.ncy=ncy;
 	this.ncz=ncz;
+        this.group=group;
 }
 
 /**
@@ -195,7 +196,8 @@ EgomModel.prototype.loadFromFile = function(filename) {
 			-triangleTags[i].getAttribute("nbz"),
 			triangleTags[i].getAttribute("ncx"),
 			-triangleTags[i].getAttribute("ncy"),
-			-triangleTags[i].getAttribute("ncz")
+			-triangleTags[i].getAttribute("ncz"),
+                        (triangleTags[i].hasAttribute("group")?triangleTags[i].getAttribute("group"):0)
 			);
                 if ((this.triangles[i].alpha<1.0)&&(this.nTransparentTriangles===0)) {
                     this.nTransparentTriangles=nTriangles-i;
@@ -251,6 +253,11 @@ EgomModel.prototype.getBuffers = function(lineMode) {
 		for(var i=0;i<this.lines.length;i++) {
 			shininessData[i*2]=0;
 			shininessData[i*2+1]=0;
+		}
+                var groupIndexData = new Float32Array(this.lines.length*2);
+		for(var i=0;i<this.lines.length;i++) {
+			groupIndexData[i*2]=0;
+			groupIndexData[i*2+1]=0;
 		}
 	} else {
 		var vertexData = new Float32Array(this.triangles.length*9);
@@ -313,6 +320,12 @@ EgomModel.prototype.getBuffers = function(lineMode) {
 			shininessData[i*3+1]=this.triangles[i].shininess;
 			shininessData[i*3+2]=this.triangles[i].shininess;
 		}
+                var groupIndexData = new Float32Array(this.triangles.length*3);
+		for(var i=0;i<this.triangles.length;i++) {
+			groupIndexData[i*3]=this.triangles[i].group;
+			groupIndexData[i*3+1]=this.triangles[i].group;
+			groupIndexData[i*3+2]=this.triangles[i].group;
+		}
 	}
 	
 	return {
@@ -321,7 +334,8 @@ EgomModel.prototype.getBuffers = function(lineMode) {
 		"normal": normalData,
 		"color": colorData,
 		"luminosity": luminosityData,
-		"shininess": shininessData
+		"shininess": shininessData,
+                "groupIndex": groupIndexData
 		};
 };
 
@@ -333,6 +347,7 @@ EgomModel.prototype.setupBuffers = function(gl,program) {
 	var colorData=bufferData[3];
 	var luminosityData=bufferData[4];
 	var shininessData=bufferData[5];
+        var groupIndexData=bufferData[6];
 	
 	// look up where the vertex data needs to go.
 	var positionLocation = gl.getAttribLocation(program, "a_position");
@@ -399,6 +414,16 @@ EgomModel.prototype.setupBuffers = function(gl,program) {
 		gl.STATIC_DRAW);
 	gl.enableVertexAttribArray(shininessLocation);
 	gl.vertexAttribPointer(shininessLocation, 1, gl.FLOAT, false, 0, 0);
+        
+        var groupIndexLocation = gl.getAttribLocation(program, "a_groupIndex");
+	var groupIndexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, groupIndexBuffer);
+	gl.bufferData(
+		gl.ARRAY_BUFFER, 
+		groupIndexData,
+		gl.STATIC_DRAW);
+	gl.enableVertexAttribArray(groupIndexLocation);
+	gl.vertexAttribPointer(groupIndexLocation, 1, gl.UINT, false, 0, 0);
 };
 
 EgomModel.prototype.render = function(gl,lineMode) {

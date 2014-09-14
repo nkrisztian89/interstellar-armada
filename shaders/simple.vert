@@ -1,3 +1,5 @@
+// shader used in general for meshes
+
 uniform mat4 u_modelMatrix;
 uniform mat4 u_cameraMatrix;
 uniform mat4 u_projMatrix;
@@ -21,8 +23,7 @@ varying vec4 v_worldPos;
 
 void main() {
 	gl_Position = u_projMatrix * u_cameraMatrix * u_modelMatrix * vec4(a_position,1.0);
-	// pass the texCoord to the fragment shader
-	// The GPU will interpolate this value between points
+
 	v_texCoord = a_texCoord;
 	v_normal = normalize(u_normalMatrix * a_normal);
 	v_color = a_color;

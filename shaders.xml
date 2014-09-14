@@ -28,9 +28,37 @@
 			<uniform name="u_cameraMatrix" type="mat4" />
 			<uniform name="u_projMatrix" type="mat4" />
 			<uniform name="u_normalMatrix" type="mat3" />
-			<uniform name="u_image" type="sampler2D" />
+			<uniform name="u_colorTexture" type="sampler2D" />
 			<uniform name="u_lightDir" type="vec3" />
 			<uniform name="u_eyePos" type="vec3" />
+		</uniforms>
+	</Shader>
+        
+        <Shader name="ship">
+		<vertex filename="shaders/ship.vert" />
+		<fragment filename="shaders/ship.frag" />
+		<state>
+			<blendType value="mix" />
+		</state>
+		<attributes>
+			<attribute name="a_position" size="3" role="position" />
+			<attribute name="a_texCoord" size="2" role="texCoord" />
+			<attribute name="a_normal" size="3" role="normal" />
+			<attribute name="a_color" size="4" role="color" />
+			<attribute name="a_luminosity" size="1" role="luminosity" />
+			<attribute name="a_shininess" size="1" role="shininess" />
+                        <attribute name="a_groupIndex" size="1" role="groupIndex" />
+		</attributes>
+		<uniforms>
+			<uniform name="u_modelMatrix" type="mat4" />
+			<uniform name="u_cameraMatrix" type="mat4" />
+			<uniform name="u_projMatrix" type="mat4" />
+			<uniform name="u_normalMatrix" type="mat3" />
+			<uniform name="u_colorTexture" type="sampler2D" />
+                        <uniform name="u_luminosityTexture" type="sampler2D" />
+			<uniform name="u_lightDir" type="vec3" />
+			<uniform name="u_eyePos" type="vec3" />
+                        <uniform name="u_luminosityFactors" type="float" arraySize="20" />
 		</uniforms>
 	</Shader>
 	
@@ -64,7 +92,7 @@
 			<uniform name="u_modelMatrix" type="mat4" />
 			<uniform name="u_cameraMatrix" type="mat4" />
 			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_image" type="sampler2D" />
+			<uniform name="u_colorTexture" type="sampler2D" />
 			<uniform name="u_eyePos" type="vec3" />
 		</uniforms>
 	</Shader>
@@ -85,7 +113,7 @@
 			<uniform name="u_projMatrix" type="mat4" />
 			<uniform name="u_billboardSize" type = "float" />
 			<uniform name="u_relAge" type="float" />
-			<uniform name="u_image" type="sampler2D" />
+			<uniform name="u_colorTexture" type="sampler2D" />
 			<uniform name="u_color" type="vec3" />
 		</uniforms>
 	</Shader>
@@ -106,7 +134,7 @@
 			<uniform name="u_projMatrix" type="mat4" />
 			<uniform name="u_billboardSize" type = "float" />
 			<uniform name="u_relAge" type="float" />
-			<uniform name="u_image" type="sampler2D" />
+			<uniform name="u_colorTexture" type="sampler2D" />
 			<uniform name="u_color" type="vec3" />
 		</uniforms>
 	</Shader>

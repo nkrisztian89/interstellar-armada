@@ -89,18 +89,19 @@ function WeaponSlot(x,y,z) {
 	this.orientationMatrix=identityMatrix4();
 }
 
-function ThrusterSlot(x,y,z,size,use) {
+function ThrusterSlot(x,y,z,size,use,group) {
 	this.positionVector=[x,y,z,1.0];
 	this.size=size;
 	this.uses=use.split(',');
+        this.group=group;
 }
 
-function SpacecraftClass(name,modelReferences,modelSize,textureFileName,shaderName,mass) {
+function SpacecraftClass(name,modelReferences,modelSize,textureFileNames,shaderName,mass) {
 	this.name=name;
 	
 	this.modelReferences=modelReferences;
 	this.modelSize=modelSize;
-	this.textureFileName=textureFileName;
+	this.textureFileNames=textureFileNames;
 	this.shaderName=shaderName;
 	
 	this.mass=mass;
@@ -358,10 +359,14 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
                         SpacecraftClass.modelReferences[i].lod));
                 }
 	}
-	this.visualModel = new Mesh(
+        var textures=new Object();
+        for(var textureType in SpacecraftClass.textureFileNames) {
+            textures[textureType]=graphicsContext.resourceCenter.getTexture(SpacecraftClass.textureFileNames[textureType]);
+        }
+	this.visualModel = new ShipMesh(
 		modelsWithLOD,
 		graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
-		graphicsContext.resourceCenter.getTexture(SpacecraftClass.textureFileName),
+		textures,
 		positionMatrix,
 		identityMatrix4(),
 		scalingMatrix(SpacecraftClass.modelSize,SpacecraftClass.modelSize,SpacecraftClass.modelSize),
@@ -408,7 +413,8 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 		var hitZoneMesh = new Mesh(
 			[phyModelWithLOD],
 			graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
-			graphicsContext.resourceCenter.getTexture("textures/white.png"),
+			{color: graphicsContext.resourceCenter.getTexture("textures/white.png"),
+                        luminosity: graphicsContext.resourceCenter.getTexture("textures/white.png")},
 			translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(SpacecraftClass.bodies[i].positionMatrix))),
 			SpacecraftClass.bodies[i].orientationMatrix,
 			identityMatrix4(),
@@ -435,7 +441,7 @@ Spacecraft.prototype.addWeapon = function(resourceCenter,weaponClass) {
 		var weaponMesh = new Mesh(
 				modelsWithLOD,
 				resourceCenter.getShader(this.class.shaderName),
-				resourceCenter.getTexture(this.class.textureFileName),
+				{color: resourceCenter.getTexture(this.class.textureFileNames['color'])},
 				slot.positionMatrix,
 				slot.orientationMatrix,
 				identityMatrix4(),
@@ -475,10 +481,13 @@ Spacecraft.prototype.fire = function(resourceCenter,scene,projectiles) {
 };
 
 Spacecraft.prototype.setThrusterBurn = function(use,value) {
-	this.propulsion.thrusterBurn[use]=value;
-	for(var i=0;i<this.thrusters[use].length;i++) {
-		this.thrusters[use][i].visualModel.setRelSize(value);
-	}
+    this.propulsion.thrusterBurn[use]=value;
+    for(var i=0;i<this.thrusters[use].length;i++) {
+        // set the size of the particle that shows the burn
+        this.thrusters[use][i].visualModel.setRelSize(value);
+        // set the strength of which the luminosity texture is lighted
+        this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+    }
 };
 
 Spacecraft.prototype.resetThrusterBurn = function() {
@@ -497,17 +506,23 @@ Spacecraft.prototype.resetThrusterBurn = function() {
 };
 
 Spacecraft.prototype.addThrusterBurn = function(use,value) {
-	this.propulsion.thrusterBurn[use]+=value;
-	for(var i=0;i<this.thrusters[use].length;i++) {
-		this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+value);
-	}
+    this.propulsion.thrusterBurn[use]+=value;
+    for(var i=0;i<this.thrusters[use].length;i++) {
+        // set the size of the particle that shows the burn
+        this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+value);
+        // set the strength of which the luminosity texture is lighted
+        this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+    }
 };
 
 Spacecraft.prototype.addThrusterBurnCapped = function(use,value,max) {
-	this.propulsion.thrusterBurn[use]+=value>max?max:value;
-	for(var i=0;i<this.thrusters[use].length;i++) {
-		this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+(value>max?max:value));
-	}
+    this.propulsion.thrusterBurn[use]+=value>max?max:value;
+    for(var i=0;i<this.thrusters[use].length;i++) {
+        // set the size of the particle that shows the burn
+        this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+(value>max?max:value));
+        // set the strength of which the luminosity texture is lighted
+        this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+    }
 };
 
 Spacecraft.prototype.addDirectionalThrusterBurn = function(directionVector,value) {
@@ -814,11 +829,18 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 				modelTags[j].getAttribute("filename"),
 				modelTags[j].getAttribute("lod")));
 		}
+                // reading the textures into an object, where the texture type are the
+                // name of the properties
+                var textureTags=classTags[i].getElementsByTagName("texture");
+                var textures = new Object();
+                for(var j=0;j<textureTags.length;j++) {
+                    textures[textureTags[j].getAttribute("type")]=textureTags[j].getAttribute("filename");
+                }
 		result.push(new SpacecraftClass(
 			classTags[i].getAttribute("name"),
 			modelReferences,
 			parseFloat(modelTags[0].getAttribute("size")),
-			classTags[i].getElementsByTagName("texture")[0].getAttribute("filename"),
+			textures,
 			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
 			classTags[i].getElementsByTagName("physics")[0].getAttribute("mass")
 			)
@@ -861,8 +883,9 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 					parseFloat(thrusterSlotTags[j].getAttribute("y")),
 					parseFloat(thrusterSlotTags[j].getAttribute("z")),
 					parseFloat(thrusterSlotTags[j].getAttribute("size")),
-					thrusterSlotTags[j].getAttribute("use"))
-					);
+					thrusterSlotTags[j].getAttribute("use"),
+                                        (thrusterSlotTags[j].hasAttribute("group")?thrusterSlotTags[j].getAttribute("group"):0)
+					));
 			}
 		}
                 

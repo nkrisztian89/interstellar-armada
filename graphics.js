@@ -56,7 +56,10 @@ Texture.prototype.chainLoad = function(resourceCenter,index,callback) {
 	if(resourceCenter.textures.length-1===index) {
 		self.image.onload = callback;
 	} else {
-		self.image.onload = function() {self.chainLoad(resourceCenter,index+1,callback);};
+		self.image.onload = function() {
+                    document.getElementById("status").innerHTML="loaded texture: "+self.filename+".";
+                    self.chainLoad(resourceCenter,index+1,callback);
+                };
 	}
 	self.image.src=self.filename;
 };
@@ -171,7 +174,7 @@ Cubemap.prototype.setup = function(gl) {
  * @param {string} role Role of the shader attribute, based on which the
  * appropriate buffer will be assigned to it to supply the values. Currently
  * supported roles are: position, texCoord, normal, color, luminosity, 
- * shininess.
+ * shininess, groupIndex.
  */
 function ShaderAttribute(name,size,role) {
 	this.name=name;
@@ -191,7 +194,8 @@ var ShaderVariableTypes = Object.freeze(
             vec3: 4,
             vec4: 5,
             sampler2D: 6,
-            samplerCube: 7
+            samplerCube: 7,
+            uint: 8
         });
  
 /**
@@ -207,6 +211,7 @@ function ShaderVariableTypeFromString(type) {
     if (type==="vec4") return ShaderVariableTypes.vec4;
     if (type==="sampler2D") return ShaderVariableTypes.sampler2D;
     if (type==="samplerCube") return ShaderVariableTypes.samplerCube;
+    if (type==="uint") return ShaderVariableTypes.uint;
     return ShaderVariableTypes.none;
 }
 
@@ -218,10 +223,17 @@ function ShaderVariableTypeFromString(type) {
  * as the name specified in the GLSL source.
  * @param {String} type The type of the uniform variable. Only certain variable
  * types are supported.
+ * @param {Number} arraySize If 0 or undefined, the uniform is not an array. If 
+ * one or more, then gives the size of the uniform array.
  */
-function ShaderUniform(name,type) {
+function ShaderUniform(name,type,arraySize) {
 	this.name=name;
 	this.type=ShaderVariableTypeFromString(type);
+        if(arraySize!==undefined) {
+            this.arraySize=arraySize;
+        } else {
+            this.arraySize=0;
+        }
 	this.location=-1;
 }
 
@@ -240,31 +252,42 @@ ShaderUniform.prototype.getAndSetLocation = function(gl,programID) {
 
 /**
  * Get the GL function that sets the uniform of the specified type at the
- * specified location to the specified value.
+ * specified location to the specified value. Used directly from the prototype,
+ * do not use private properties here!
  * @param {WebGLRenderingContext} gl The GL context
  * @param {number} location The location of the uniform
  * @param {ShaderVariableTypes member} type The type of the uniform
  * @param {object} value The value to set the uniform to (can be of different
  * types)
+ * @param {Number} arraySize The size of the uniform array. If 0, it is not an array.
  * @returns {function} A function that executes the webGL query of setting the
  * uniform to the specified value.
  */
-ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value) {
-    switch(type) {
-        case ShaderVariableTypes.float: return function() { gl.uniform1f(location,value); };
-            break;
-        case ShaderVariableTypes.mat4: return function() { gl.uniformMatrix4fv(location,false,value); };
-            break;
-        case ShaderVariableTypes.mat3: return function() { gl.uniformMatrix3fv(location,false,value); };
-            break;
-        case ShaderVariableTypes.vec3: return function() { gl.uniform3fv(location,value); };
-            break;
-        case ShaderVariableTypes.vec4: return function() { gl.uniform4fv(location,value); };
-            break;
-        case ShaderVariableTypes.sampler2D: return function() { gl.uniform1i(location,value); };
-            break;
-        case ShaderVariableTypes.samplerCube: return function() { gl.uniform1i(location,value); };
-            break;
+ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value,arraySize) {
+    if(arraySize>0) {
+        switch(type) {
+            case ShaderVariableTypes.float: return function() { gl.uniform1fv(location,value); };
+                break;
+        }
+    } else {
+        switch(type) {
+            case ShaderVariableTypes.float: return function() { gl.uniform1f(location,value); };
+                break;
+            case ShaderVariableTypes.mat4: return function() { gl.uniformMatrix4fv(location,false,value); };
+                break;
+            case ShaderVariableTypes.mat3: return function() { gl.uniformMatrix3fv(location,false,value); };
+                break;
+            case ShaderVariableTypes.vec3: return function() { gl.uniform3fv(location,value); };
+                break;
+            case ShaderVariableTypes.vec4: return function() { gl.uniform4fv(location,value); };
+                break;
+            case ShaderVariableTypes.sampler2D: return function() { gl.uniform1i(location,value); };
+                break;
+            case ShaderVariableTypes.samplerCube: return function() { gl.uniform1i(location,value); };
+                break;
+            case ShaderVariableTypes.uint: return function() { gl.uniform1i(location,value); };
+                break;
+        }
     }
 };
 
@@ -275,7 +298,7 @@ ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value) {
  * @param {function} valueFunction The function to calculate the uniform value
  */
 ShaderUniform.prototype.setValue = function(gl,valueFunction) {
-	ShaderUniform.prototype.getSetterFunction(gl,this.location,this.type,valueFunction())();
+    ShaderUniform.prototype.getSetterFunction(gl,this.location,this.type,valueFunction(),this.arraySize)();
 };
 
 /**
@@ -366,7 +389,7 @@ Shader.prototype.setup = function(gl) {
 Shader.prototype.bindBuffers = function(gl) {
 	for(var i=0;i<this.attributes.length;i++) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffers[i].id);
-		gl.vertexAttribPointer(this.vertexBuffers[i].location, this.vertexBuffers[i].vectorSize, gl.FLOAT, false, 0, 0);
+                gl.vertexAttribPointer(this.vertexBuffers[i].location, this.vertexBuffers[i].vectorSize, gl.FLOAT, false, 0, 0);
 	}
 };
 
@@ -731,7 +754,7 @@ FVQ.prototype.isInsideViewFrustum = function(camera) {
  * cube mapped textures, the FVQ model and the shader.
  */
 FVQ.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.cubemap);
+	resourceCenter.bindTexture(this.cubemap,0);
 	
         drawnPolyogons+=2;
 	this.model.render(resourceCenter.gl,false);
@@ -756,16 +779,16 @@ function ModelWithLOD(model,lod) {
  * @param {ModelWithLOD[]} modelsWithLOD The series of 3D models with their 
  * associated LOD information.
  * @param {Shader} shader The shader that should be active while rendering this object.
- * @param {Texture} texture The texture that should be bound while rendering this object
+ * @param {Object} textures The textures that should be bound while rendering this object in an associative array, with the roles as keys.
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
  * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
  * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing the initial size of the object.
  * @param {boolean} lineMode Whether the mesh should be drawn as wireframe instead of solid.
  */
-function Mesh(modelsWithLOD,shader,texture,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
-	VisualObject.call(this,shader,10,true,true);
+function Mesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
+        VisualObject.call(this,shader,10,true,true);
 	this.modelsWithLOD=modelsWithLOD;
-	this.texture=texture;
+	this.textures=textures;
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
 	this.scalingMatrix=scalingMatrix;
@@ -788,7 +811,14 @@ function Mesh(modelsWithLOD,shader,texture,positionMatrix,orientationMatrix,scal
 	
 	this.uniformValueFunctions["u_modelMatrix"] = function() { self.modelMatrix=self.getModelMatrix(); return self.modelMatrix; };
 	this.uniformValueFunctions["u_normalMatrix"] = function() { return transposed3(inverse3(matrix3from4(self.modelMatrix))); };
-	this.uniformValueFunctions["u_image"] = function() { return self.texture.id; };
+	for(var textureType in textures) {
+            if(textureType==="color") {
+                this.uniformValueFunctions["u_colorTexture"] = function() { return 0; };
+            } else
+            if(textureType==="luminosity") {
+                this.uniformValueFunctions["u_luminosityTexture"] = function() { return 1; };
+            }
+        }
 }
 
 Mesh.prototype = new VisualObject();
@@ -905,22 +935,39 @@ Mesh.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,
  * @param {boolean} depthMask Tells whether the depth mask is turned on during this render pass.
  */
 Mesh.prototype.render = function(resourceCenter,depthMask) {
+    var i=0;
+    for(var textureType in this.textures) {        
+        resourceCenter.bindTexture(this.textures[textureType],i);
+        i++;
+    }
     if (this.lineMode===true) {
-            resourceCenter.bindTexture(this.texture);
             resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, this.model.bufferStartLines, 2*this.model.lines.length);
     } else {
             if(depthMask===true) {
                 drawnPolyogons+=this.model.triangles.length;
-                if(this.model.nOpaqueTriangles>0) {
-                    resourceCenter.bindTexture(this.texture);
-                    resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStart, 3*this.model.nOpaqueTriangles);
-                }
-            } else if ((depthMask===false)&&(this.model.nTransparentTriangles>0)) {
-                resourceCenter.bindTexture(this.texture);
+                resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStart, 3*this.model.nOpaqueTriangles);
+            } else {
                 resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStartTransparent, 3*this.model.nTransparentTriangles);
             }
     }
 };
+
+function ShipMesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
+    Mesh.call(this,modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,scalingMatrix,lineMode);
+
+    this.luminosityFactors = new Float32Array(20);
+    for(var i=0;i<this.luminosityFactors.length;i++) {
+        this.luminosityFactors[i]=0.0;
+    }
+    
+    var self = this;
+    
+    this.uniformValueFunctions["u_luminosityFactors"] = function() { return self.luminosityFactors; };
+}
+
+ShipMesh.prototype = new Mesh([]);
+ShipMesh.prototype.constructor = ShipMesh;
+
 
 /**
  * Creates a billboard type visual object, used for projectiles.
@@ -944,6 +991,7 @@ function Billboard(model,shader,texture,size,positionMatrix,orientationMatrix) {
 	var self = this;
 	
 	this.uniformValueFunctions["u_modelMatrix"] = function() { return mul(mul(self.scalingMatrix,self.orientationMatrix),self.positionMatrix); };
+        this.uniformValueFunctions["u_colorTexture"] = function() { return 0; };
 }
 
 Billboard.prototype = new VisualObject();
@@ -965,7 +1013,7 @@ Billboard.prototype.isInsideViewFrustum = function(camera) {
  * textures, the model and the shader.
  */
 Billboard.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.texture);
+	resourceCenter.bindTexture(this.texture,0);
 	
 	drawnPolyogons+=2;
 	this.model.render(resourceCenter.gl,false);
@@ -1003,6 +1051,7 @@ function DynamicParticle(model,shader,texture,color,size,positionMatrix,duration
 	this.uniformValueFunctions["u_billboardSize"] = function() { return self.scalingMatrix[0]; };
 	this.uniformValueFunctions["u_relAge"] = function() { return (new Date().getTime()-self.creationTime)/self.duration; };
 	this.uniformValueFunctions["u_color"] =   function() { return self.color; };
+        this.uniformValueFunctions["u_colorTexture"] = function() { return 0; };
 }
 
 DynamicParticle.prototype = new VisualObject();
@@ -1024,7 +1073,7 @@ DynamicParticle.prototype.isInsideViewFrustum = function(camera) {
  * textures, the model and the shader.
  */
 DynamicParticle.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.texture);
+	resourceCenter.bindTexture(this.texture,0);
 	if(new Date().getTime()>=this.creationTime+this.duration) {
 		this.toBeDeleted=true;
 	} else {
@@ -1050,6 +1099,7 @@ function StaticParticle(model,shader,texture,color,size,positionMatrix,smallestP
 	this._relSize=0;
 	var self = this;
 	this.uniformValueFunctions["u_relAge"] = function() { return 1.0-self._relSize; };
+        this.uniformValueFunctions["u_colorTexture"] = function() { return 0; };
 }
 
 StaticParticle.prototype = new DynamicParticle();
@@ -1078,7 +1128,7 @@ StaticParticle.prototype.setRelSize = function(newValue) {
  * textures, the model and the shader.
  */
 StaticParticle.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.texture);
+	resourceCenter.bindTexture(this.texture,0);
 	if(this._relSize>0) {
 		drawnPolyogons+=2;
 		this.model.render(resourceCenter.gl,false);
@@ -1500,7 +1550,7 @@ function ResourceCenter() {
 	this.renderTimes = new Array();
 	
 	this.currentShader=null;
-	this.boundTexture=null;
+	this.boundTextures=new Array();
 }
 
 /**
@@ -1683,7 +1733,8 @@ ResourceCenter.prototype.loadShaders = function(filename) {
 		for(var j=0;j<uniformTags.length;j++) {
 			this.shaders[i].uniforms.push(new ShaderUniform(
 				uniformTags[j].getAttribute("name"),
-				uniformTags[j].getAttribute("type"))
+				uniformTags[j].getAttribute("type"),
+                                uniformTags[j].hasAttribute("arraySize")?uniformTags[j].getAttribute("arraySize"):0)
 				);
 		}
 	}	
@@ -1743,7 +1794,7 @@ ResourceCenter.prototype.setupBuffers = function(shader,loadLines) {
 			shader.vertexBuffers[i].data,
 			this.gl.STATIC_DRAW);
 		this.gl.enableVertexAttribArray(shader.vertexBuffers[i].location);
-		this.gl.vertexAttribPointer(shader.vertexBuffers[i].location, shader.attributes[i].size, this.gl.FLOAT, false, 0, 0);
+                this.gl.vertexAttribPointer(shader.vertexBuffers[i].location, shader.attributes[i].size, this.gl.FLOAT, false, 0, 0);
 	}
 };
 
@@ -1770,17 +1821,28 @@ ResourceCenter.prototype.setCurrentShader = function(shader,scene) {
 /**
  * Binds the given texture or cubemap resource with webGL
  * @param {Texture|Cubemap} texture The resource to bind for rendering.
+ * @param {Number} place To which activeTexture place does it need to bind (for multi-texturing, starting with 0)
  */
-ResourceCenter.prototype.bindTexture = function(texture) {
-	if(this.boundTexture!==texture) {
-		if (texture instanceof Texture) {
-			this.gl.bindTexture(this.gl.TEXTURE_2D, texture.id);
-		} else
-		if (texture instanceof Cubemap) {
-			this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.id);
-		}
-		this.boundTexture=texture;
-	}
+ResourceCenter.prototype.bindTexture = function(texture,place) {
+    switch(place) {
+        case 0: this.gl.activeTexture(this.gl.TEXTURE0);
+            break;
+        case 1: this.gl.activeTexture(this.gl.TEXTURE1);
+            break;
+        case 2: this.gl.activeTexture(this.gl.TEXTURE2);
+            break;
+        case 3: this.gl.activeTexture(this.gl.TEXTURE3);
+            break;
+    }
+    if(this.boundTextures[place]!==texture) {
+            if (texture instanceof Texture) {
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, texture.id);
+            } else
+            if (texture instanceof Cubemap) {
+                    this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.id);
+            }
+            this.boundTextures[place]=texture;
+    }
 };
 
 /**
