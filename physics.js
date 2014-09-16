@@ -62,6 +62,18 @@ function Body(positionMatrix,orientationMatrix,width,height,depth) {
 	this.halfDepth=depth/2;
 }
 
+/**
+ * Defines a physical object instance.
+ * @class The basic entity for all physical simulations. Can have physical
+ * properties and interact with other objects.
+ * @param {Number} mass
+ * @param {Number} size
+ * @param {Float32Array} positionMatrix
+ * @param {Float32Array} orientationMatrix
+ * @param {Float32Array} initialVelocityMatrix
+ * @param {Body[]} bodies
+ * @returns {PhysicalObject}
+ */
 function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVelocityMatrix,bodies) {
 	this.mass=mass;
 	this.size=size;

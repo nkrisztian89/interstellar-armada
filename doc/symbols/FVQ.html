@@ -191,6 +191,10 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/AIController.html">AIController</a></li>
+	
+	<li><a href="../symbols/Barrel.html">Barrel</a></li>
+	
 	<li><a href="../symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
@@ -201,11 +205,15 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="../symbols/DustCloud.html">DustCloud</a></li>
+	
+	<li><a href="../symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
 	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
+	
+	<li><a href="../symbols/FighterController.html">FighterController</a></li>
 	
 	<li><a href="../symbols/Force.html">Force</a></li>
 	
@@ -214,6 +222,8 @@ ul.inheritsList
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
 	
 	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
+	
+	<li><a href="../symbols/Level.html">Level</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
 	
@@ -224,6 +234,14 @@ ul.inheritsList
 	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
 	
 	<li><a href="../symbols/ObjectView.html">ObjectView</a></li>
+	
+	<li><a href="../symbols/PhysicalObject.html">PhysicalObject</a></li>
+	
+	<li><a href="../symbols/PointParticle.html">PointParticle</a></li>
+	
+	<li><a href="../symbols/ProjectileClass.html">ProjectileClass</a></li>
+	
+	<li><a href="../symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -239,13 +257,21 @@ ul.inheritsList
 	
 	<li><a href="../symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
+	<li><a href="../symbols/SpacecraftClass.html">SpacecraftClass</a></li>
+	
 	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
 	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
 	
+	<li><a href="../symbols/ThrusterSlot.html">ThrusterSlot</a></li>
+	
 	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
+	
+	<li><a href="../symbols/WeaponClass.html">WeaponClass</a></li>
+	
+	<li><a href="../symbols/WeaponSlot.html">WeaponSlot</a></li>
 	
 </ul>
 <hr />
@@ -327,7 +353,7 @@ using a cube mapped texture.
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/FVQ.html#render">render</a></b>(resourceCenter, screenSize, lodContext)
+								<div class="fixedFont"><b><a href="../symbols/FVQ.html#render">render</a></b>(resourceCenter)
 								</div>
 								<div class="description">Renders the FVQ, binding the cube mapped texture.</div>
 							</td>
@@ -339,7 +365,7 @@ using a cube mapped texture.
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a>, <a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a>, <a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a>, <a href="../symbols/VisualObject.html#getSize">getSize</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a>, <a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a>, <a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a>, <a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a>, <a href="../symbols/VisualObject.html#getSize">getSize</a>, <a href="../symbols/VisualObject.html#needsToBeRendered">needsToBeRendered</a></dd>
 				</dl>
 				
 			
@@ -468,7 +494,7 @@ texture sampler for the drawing.</dd>
 					<div class="fixedFont">
 					
 					
-					<b>render</b>(resourceCenter, screenSize, lodContext)
+					<b>render</b>(resourceCenter)
 					
 					</div>
 					<div class="description">
@@ -489,18 +515,6 @@ texture sampler for the drawing.</dd>
 								</dt>
 								<dd>The resource center that holds the
 cube mapped textures, the FVQ model and the shader.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>screenSize</b>
-									
-								</dt>
-								<dd>Irrelevant in this case.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span> <b>lodContext</b>
-									
-								</dt>
-								<dd>Irrelevant in this case.</dd>
 							
 							</dl>
 						
@@ -525,7 +539,7 @@ cube mapped textures, the FVQ model and the shader.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:13 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

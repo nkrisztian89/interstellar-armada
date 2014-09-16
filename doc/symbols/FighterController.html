@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - EgomModel</title>
+		<title>JsDoc Reference - FighterController</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -282,7 +282,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class EgomModel
+				Class FighterController
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -290,17 +290,17 @@ ul.inheritsList
 				
 				
 			
-				Represents a 3D polygonal model. The Egom data stucture is optimized
-for generating and editing models from the program code.
+				Interprets the user input for controlling a fighter and translates it
+to actions such as firing weapons or thrusters.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class EgomModel.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class FighterController.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -313,10 +313,9 @@ for generating and editing models from the program code.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/EgomModel.html#constructor">EgomModel</a></b>(filename)
+								<b><a href="../symbols/FighterController.html#constructor">FighterController</a></b>(controlledEntity, graphicsContext, logicContext, controlContext)
 							</div>
-							<div class="description">Creates a new 3D model object, and if a file name was given, loads the data
-from the file.</div>
+							<div class="description">Defines a fighter controller instance.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -330,7 +329,7 @@ from the file.</div>
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class EgomModel.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class FighterController.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -343,9 +342,9 @@ from the file.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/EgomModel.html#addSphere">addSphere</a></b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
+								<div class="fixedFont"><b><a href="../symbols/FighterController.html#reset">reset</a></b>()
 								</div>
-								<div class="description">Adds vertices and triangles that form a sphere (UV sphere).</div>
+								<div class="description">Resetting the flight control settings (e.g.</div>
 							</td>
 						</tr>
 					
@@ -366,12 +365,11 @@ from the file.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>EgomModel</b>(filename)
+						<b>FighterController</b>(controlledEntity, graphicsContext, logicContext, controlContext)
 				</div>
 				
 				<div class="description">
-					Creates a new 3D model object, and if a file name was given, loads the data
-from the file. Only Egom XML format is supported.
+					Defines a fighter controller instance.
 					
 				</div>
 				
@@ -383,16 +381,41 @@ from the file. Only Egom XML format is supported.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{string}</span>  <b>filename</b>
+								<span class="light fixedFont">{<a href="../symbols/ControllableEntity.html">ControllableEntity</a>}</span>  <b>controlledEntity</b>
 								
 							</dt>
-								<dd>The name of the file to load the model from. (optional)</dd>
+								<dd></dd>
+						
+							<dt>
+								<span class="light fixedFont">{<a href="../symbols/GraphicsContext.html">GraphicsContext</a>}</span>  <b>graphicsContext</b>
+								
+							</dt>
+								<dd></dd>
+						
+							<dt>
+								<span class="light fixedFont">{LogicContext}</span>  <b>logicContext</b>
+								
+							</dt>
+								<dd></dd>
+						
+							<dt>
+								<span class="light fixedFont">{ControlContext}</span>  <b>controlContext</b>
+								
+							</dt>
+								<dd></dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/FighterController.html">FighterController</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -409,86 +432,22 @@ from the file. Only Egom XML format is supported.
 					Method Detail
 				</div>
 				
-					<a name="addSphere"> </a>
+					<a name="reset"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>addSphere</b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
+					<b>reset</b>()
 					
 					</div>
 					<div class="description">
-						Adds vertices and triangles that form a sphere (UV sphere).
+						Resetting the flight control settings (e.g. for the case if we assume control
+of a new ship)
 						
 						
 					</div>
 					
 					
 					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>x</b>
-									
-								</dt>
-								<dd>The X coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>y</b>
-									
-								</dt>
-								<dd>The Y coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>z</b>
-									
-								</dt>
-								<dd>The Z coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>radius</b>
-									
-								</dt>
-								<dd>The radius of the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>angles</b>
-									
-								</dt>
-								<dd>The number of angles one circle should have within the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[]}</span> <b>color</b>
-									
-								</dt>
-								<dd>The RGBA components of the desired color of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>luminosity</b>
-									
-								</dt>
-								<dd>The luminosity of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>shininess</b>
-									
-								</dt>
-								<dd>The shininess exponent of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[][]}</span> <b>textureCoordinates</b>
-									
-								</dt>
-								<dd>The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise</dd>
-							
-								<dt>
-									<span class="light fixedFont">{boolean}</span> <b>cullFace</b>
-									
-								</dt>
-								<dd>Whether to omit the triangles from the inside of the sphere.</dd>
-							
-							</dl>
 						
 						
 						

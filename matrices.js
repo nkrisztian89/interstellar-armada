@@ -17,6 +17,10 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+/**
+ * Returns a 3x3 identity matrix.
+ * @returns {Float32Array}
+ */
 function identityMatrix3() {
 	return new Float32Array([
 		1.0, 0.0, 0.0,

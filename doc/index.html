@@ -186,6 +186,10 @@ ul.inheritsList
 	
 	<li><i><a href="symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="symbols/AIController.html">AIController</a></li>
+	
+	<li><a href="symbols/Barrel.html">Barrel</a></li>
+	
 	<li><a href="symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="symbols/Camera.html">Camera</a></li>
@@ -196,11 +200,15 @@ ul.inheritsList
 	
 	<li><a href="symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="symbols/DustCloud.html">DustCloud</a></li>
+	
+	<li><a href="symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
 	<li><a href="symbols/EgomModel.html">EgomModel</a></li>
+	
+	<li><a href="symbols/FighterController.html">FighterController</a></li>
 	
 	<li><a href="symbols/Force.html">Force</a></li>
 	
@@ -209,6 +217,8 @@ ul.inheritsList
 	<li><a href="symbols/GraphicsContext.html">GraphicsContext</a></li>
 	
 	<li><a href="symbols/KeyCommand.html">KeyCommand</a></li>
+	
+	<li><a href="symbols/Level.html">Level</a></li>
 	
 	<li><a href="symbols/Line.html">Line</a></li>
 	
@@ -219,6 +229,14 @@ ul.inheritsList
 	<li><a href="symbols/ModelWithLOD.html">ModelWithLOD</a></li>
 	
 	<li><a href="symbols/ObjectView.html">ObjectView</a></li>
+	
+	<li><a href="symbols/PhysicalObject.html">PhysicalObject</a></li>
+	
+	<li><a href="symbols/PointParticle.html">PointParticle</a></li>
+	
+	<li><a href="symbols/ProjectileClass.html">ProjectileClass</a></li>
+	
+	<li><a href="symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
 	<li><a href="symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -234,13 +252,21 @@ ul.inheritsList
 	
 	<li><a href="symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
+	<li><a href="symbols/SpacecraftClass.html">SpacecraftClass</a></li>
+	
 	<li><a href="symbols/StaticParticle.html">StaticParticle</a></li>
 	
 	<li><a href="symbols/Texture.html">Texture</a></li>
 	
+	<li><a href="symbols/ThrusterSlot.html">ThrusterSlot</a></li>
+	
 	<li><a href="symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="symbols/VisualObject.html">VisualObject</a></li>
+	
+	<li><a href="symbols/WeaponClass.html">WeaponClass</a></li>
+	
+	<li><a href="symbols/WeaponSlot.html">WeaponSlot</a></li>
 	
 </ul>
 <hr />
@@ -253,6 +279,19 @@ ul.inheritsList
 			<div>
 				<h2><a href="symbols/_global_.html">_global_</a></h2>
 				
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/AIController.html">AIController</a></h2>
+				At the moment, does nothing.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/Barrel.html">Barrel</a></h2>
+				Every weapon can have multiple barrels, each of which shoot one 
+projectile.
 			</div>
 			<hr />
 			
@@ -271,8 +310,8 @@ object.
 			
 			<div>
 				<h2><a href="symbols/ControllableEntity.html">ControllableEntity</a></h2>
-				This is the parent class for all entity that can be controlled in the
-game by a controller object.
+				This is the parent class for all entities that can be controlled in 
+the game by a controller object.
 			</div>
 			<hr />
 			
@@ -290,9 +329,16 @@ entity from the logic module.
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/DustParticle.html">DustParticle</a></h2>
-				Visual object that renders a point like object as a line as it is
-moving.
+				<h2><a href="symbols/DustCloud.html">DustCloud</a></h2>
+				Represents a dust cloud instantiated for a certain level.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/DustCloudClass.html">DustCloudClass</a></h2>
+				Dust clouds represent a big group of tiny dust particles that are
+rendered when the camera (the player) is moving around of space, to give a
+visual clue about the velocity.
 			</div>
 			<hr />
 			
@@ -306,6 +352,13 @@ dynamically changing size during it's lifespan.
 			<div>
 				<h2><a href="symbols/EgomModel.html">EgomModel</a></h2>
 				Represents a 3D polygonal model.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/FighterController.html">FighterController</a></h2>
+				Interprets the user input for controlling a fighter and translates it
+to actions such as firing weapons or thrusters.
 			</div>
 			<hr />
 			
@@ -325,14 +378,22 @@ using a cube mapped texture.
 			
 			<div>
 				<h2><a href="symbols/GraphicsContext.html">GraphicsContext</a></h2>
-				A graphics context for other modules, containing the current resource
-center and scene.
+				A graphics context for other modules, to be used to pass the 
+important properties of the current graphics environment to functions that
+can manipulate it.
 			</div>
 			<hr />
 			
 			<div>
 				<h2><a href="symbols/KeyCommand.html">KeyCommand</a></h2>
 				Represents a keypress - command association.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/Level.html">Level</a></h2>
+				The domain specific part of the model of what happens in the game, 
+with spaceships, projectiles and so.
 			</div>
 			<hr />
 			
@@ -365,6 +426,32 @@ options.
 				<h2><a href="symbols/ObjectView.html">ObjectView</a></h2>
 				Describes the parameters of a certain view of an object, based on which
 a camera can be created if that object is deployed in a scene.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/PhysicalObject.html">PhysicalObject</a></h2>
+				The basic entity for all physical simulations.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/PointParticle.html">PointParticle</a></h2>
+				Visual object that renders a point like object as a line as it is
+moving.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/ProjectileClass.html">ProjectileClass</a></h2>
+				Projectiles such as bullets, plasma bursts can belong to different
+classes that can be described in classes.xml.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/PropulsionClass.html">PropulsionClass</a></h2>
+				Each spacecraft can be equipped with a propulsion system.
 			</div>
 			<hr />
 			
@@ -409,7 +496,16 @@ variable.
 			
 			<div>
 				<h2><a href="symbols/SkyboxClass.html">SkyboxClass</a></h2>
-				Represents a skybox class with associated shader and sampler name and cubemap resource.
+				A skybox represents the background picture rendered for the 
+environment.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/SpacecraftClass.html">SpacecraftClass</a></h2>
+				A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
+ship or a space station all belong to a certain class that determines their
+general properties such as appearance, mass and so on.
 			</div>
 			<hr />
 			
@@ -426,6 +522,12 @@ variable.
 			<hr />
 			
 			<div>
+				<h2><a href="symbols/ThrusterSlot.html">ThrusterSlot</a></h2>
+				Every ship (class) has slots for its thrusters.
+			</div>
+			<hr />
+			
+			<div>
 				<h2><a href="symbols/VertexBuffer.html">VertexBuffer</a></h2>
 				A wrapper object that represents a webGL vertex buffer object.
 			</div>
@@ -438,11 +540,25 @@ as full viewport quads, shaded meshes, billboards or particle systems.
 			</div>
 			<hr />
 			
+			<div>
+				<h2><a href="symbols/WeaponClass.html">WeaponClass</a></h2>
+				Each spacecraft can have weapons, all of which belong to a certain
+weapon class.
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/WeaponSlot.html">WeaponSlot</a></h2>
+				Every ship (class) can have several slots where it's weapons can be
+equipped.
+			</div>
+			<hr />
+			
 			
 		</div>
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

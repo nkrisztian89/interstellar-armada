@@ -4,6 +4,10 @@
 		<shader name="skybox" samplerName="u_skybox" />
 		<cubemap name="deepspace" />
 	</SkyboxClass>
+        
+        <DustCloudClass name="standard" numberOfParticles="300">
+            <shader name="dust" />
+        </DustCloudClass>
 	
 	<ProjectileClass name="plasma">
 		<graphics>

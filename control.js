@@ -26,7 +26,10 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-// the global variable used for manual spacecraft control (for test purposes)
+/**
+ * The global variable used for manual spacecraft control (for test purposes).
+ * @type FighterController
+ */ 
 var manualController;
 
 function KeyboardControlContext() {
@@ -451,6 +454,16 @@ CameraController.prototype.control = function() {
     }
 };
 
+/**
+ * Defines a fighter controller instance.
+ * @class Interprets the user input for controlling a fighter and translates it
+ * to actions such as firing weapons or thrusters.
+ * @param {ControllableEntity} controlledEntity
+ * @param {GraphicsContext} graphicsContext
+ * @param {LogicContext} logicContext
+ * @param {ControlContext} controlContext
+ * @returns {FighterController}
+ */
 function FighterController(controlledEntity,graphicsContext,logicContext,controlContext) {
 	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
         
@@ -694,6 +707,15 @@ function Goal(positionMatrix) {
 	this.positionMatrix = positionMatrix;
 }
 
+/**
+ * Defines an AI controller instance.
+ * @class At the moment, does nothing.
+ * @param {ControllableEntity} controlledEntity
+ * @param {GraphicsContext} graphicsContext
+ * @param {LogicContext} logicContext
+ * @param {ControlContext} controlContext
+ * @returns {FighterController}
+ */
 function AIController(controlledEntity,graphicsContext,logicContext,controlContext) {
 	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
 	this.goals=new Array();
@@ -1071,7 +1093,8 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
     globalCommands.push(controlContext.setOneShotActionForCommand("toggleHitboxVisibility",function(){
         for(i=0;i<logicContext.level.spacecrafts.length;i++) {
             for(j=0;j<logicContext.level.spacecrafts[i].visualModel.subnodes.length;j++) {
-                if(logicContext.level.spacecrafts[i].visualModel.subnodes[j].texture.filename==="textures/white.png") {
+                if((logicContext.level.spacecrafts[i].visualModel.subnodes[j].textures!==undefined)&&
+                   (logicContext.level.spacecrafts[i].visualModel.subnodes[j].textures['color'].filename==="textures/white.png")) {
                     logicContext.level.spacecrafts[i].visualModel.subnodes[j].visible=!logicContext.level.spacecrafts[i].visualModel.subnodes[j].visible;
                 }
             }

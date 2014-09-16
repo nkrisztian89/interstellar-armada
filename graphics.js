@@ -1146,7 +1146,7 @@ StaticParticle.prototype.render = function(resourceCenter) {
  * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
  */
-function DustParticle(model,shader,color,positionMatrix) {
+function PointParticle(model,shader,color,positionMatrix) {
 	VisualObject.call(this,shader,0,false,true);
 	this.color=color;
 	this.positionMatrix=positionMatrix;
@@ -1161,8 +1161,8 @@ function DustParticle(model,shader,color,positionMatrix) {
         this.uniformValueFunctions["u_shift"] =   function() { return self.shift; };
 }
 
-DustParticle.prototype = new VisualObject();
-DustParticle.prototype.constructor = DustParticle;
+PointParticle.prototype = new VisualObject();
+PointParticle.prototype.constructor = PointParticle;
 
 /**
  * Always returns true as is it faster to skip the check because anyway we are
@@ -1170,7 +1170,7 @@ DustParticle.prototype.constructor = DustParticle;
  * @param {Camera} camera Irrelevant in this case.
  * @returns {boolean} Always true.
  */
-DustParticle.prototype.isInsideViewFrustum = function(camera) {
+PointParticle.prototype.isInsideViewFrustum = function(camera) {
 	return true;
 };
 
@@ -1179,7 +1179,7 @@ DustParticle.prototype.isInsideViewFrustum = function(camera) {
  * @param {ResourceCenter} resourceCenter The resource center that holds the
  * the model and the shader.
  */
-DustParticle.prototype.render = function(resourceCenter) {
+PointParticle.prototype.render = function(resourceCenter) {
 	this.model.render(resourceCenter.gl,true);
 };
 
@@ -1413,6 +1413,14 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         
         this.firstRender=true;
 }
+
+/**
+ * Appends a new visual object to the topmost level of the scene graph.
+ * @param {VisualObject} newVisualObject The object to append.
+ */
+Scene.prototype.addObject = function(newVisualObject) {
+    this.objects.push(newVisualObject);
+};
 
 Scene.prototype.getLODContext = function() {
     return this.lodContext;
@@ -1977,8 +1985,9 @@ ResourceCenter.prototype.renderScenes = function() {
 
 /**
  * Creates a new graphics context object.
- * @class A graphics context for other modules, containing the current resource
- * center and scene.
+ * @class A graphics context for other modules, to be used to pass the 
+ * important properties of the current graphics environment to functions that
+ * can manipulate it.
  * @param {ResourceCenter} resourceCenter The resource center to be stored in the context.
  * @param {Scene} scene The scene to be stored in the context.
  */

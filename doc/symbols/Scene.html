@@ -191,6 +191,10 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/AIController.html">AIController</a></li>
+	
+	<li><a href="../symbols/Barrel.html">Barrel</a></li>
+	
 	<li><a href="../symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
@@ -201,11 +205,15 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="../symbols/DustCloud.html">DustCloud</a></li>
+	
+	<li><a href="../symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
 	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
+	
+	<li><a href="../symbols/FighterController.html">FighterController</a></li>
 	
 	<li><a href="../symbols/Force.html">Force</a></li>
 	
@@ -214,6 +222,8 @@ ul.inheritsList
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
 	
 	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
+	
+	<li><a href="../symbols/Level.html">Level</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
 	
@@ -224,6 +234,14 @@ ul.inheritsList
 	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
 	
 	<li><a href="../symbols/ObjectView.html">ObjectView</a></li>
+	
+	<li><a href="../symbols/PhysicalObject.html">PhysicalObject</a></li>
+	
+	<li><a href="../symbols/PointParticle.html">PointParticle</a></li>
+	
+	<li><a href="../symbols/ProjectileClass.html">ProjectileClass</a></li>
+	
+	<li><a href="../symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -239,13 +257,21 @@ ul.inheritsList
 	
 	<li><a href="../symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
+	<li><a href="../symbols/SpacecraftClass.html">SpacecraftClass</a></li>
+	
 	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
 	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
 	
+	<li><a href="../symbols/ThrusterSlot.html">ThrusterSlot</a></li>
+	
 	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
+	
+	<li><a href="../symbols/WeaponClass.html">WeaponClass</a></li>
+	
+	<li><a href="../symbols/WeaponSlot.html">WeaponSlot</a></li>
 	
 </ul>
 <hr />
@@ -315,6 +341,15 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Scene.html#addObject">addObject</a></b>(newVisualObject)
+								</div>
+								<div class="description">Appends a new visual object to the topmost level of the scene graph.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/Scene.html#assignUniforms">assignUniforms</a></b>(gl, shader)
 								</div>
 								<div class="description">Assigns all uniforms in the given shader program that
@@ -325,10 +360,30 @@ the scene has a value function for, using the appropriate webGL calls.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Scene.html#cleanUp">cleanUp</a></b>()
+								</div>
+								<div class="description">Cleans up the whole scene graph, removing all object that are deleted or are
+marked for deletion.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/Scene.html#render">render</a></b>(resourceCenter)
 								</div>
 								<div class="description">Renders the whole scene applying the general configuration and then rendering
 all visual objects in the graph.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Scene.html#resizeViewport">resizeViewport</a></b>(newWidth, newHeight)
+								</div>
+								<div class="description">Recalculates the perspective matrices of cameras in case the viewport size
+(and as a result, aspect) has changed.</div>
 							</td>
 						</tr>
 					
@@ -440,6 +495,42 @@ for rendering object with the appropriate level of detail.</dd>
 					Method Detail
 				</div>
 				
+					<a name="addObject"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>addObject</b>(newVisualObject)
+					
+					</div>
+					<div class="description">
+						Appends a new visual object to the topmost level of the scene graph.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/VisualObject.html">VisualObject</a>}</span> <b>newVisualObject</b>
+									
+								</dt>
+								<dd>The object to append.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name="assignUniforms"> </a>
 					<div class="fixedFont">
 					
@@ -474,6 +565,32 @@ The matching is done based on the names of the uniforms.
 								<dd>The shader program in which to assign the uniforms.</dd>
 							
 							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="cleanUp"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>cleanUp</b>()
+					
+					</div>
+					<div class="description">
+						Cleans up the whole scene graph, removing all object that are deleted or are
+marked for deletion.
+						
+						
+					</div>
+					
+					
+					
 						
 						
 						
@@ -520,6 +637,49 @@ shaders, textures, models of the scene.</dd>
 						
 						
 
+					<hr />
+				
+					<a name="resizeViewport"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>resizeViewport</b>(newWidth, newHeight)
+					
+					</div>
+					<div class="description">
+						Recalculates the perspective matrices of cameras in case the viewport size
+(and as a result, aspect) has changed.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>newWidth</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>newHeight</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
 					
 				
 			
@@ -534,7 +694,7 @@ shaders, textures, models of the scene.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

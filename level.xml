@@ -10,6 +10,8 @@
 	<Classes source="classes.xml" />
 	
 	<Skybox class="deepspace" />
+        
+        <DustCloud class="standard" />
 	
 	<Spacecraft class="falcon" owner="human">
 		<position x="0.0" y="0.0" z="-60.0" />

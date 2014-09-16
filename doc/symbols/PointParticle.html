@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - Mesh</title>
+		<title>JsDoc Reference - PointParticle</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -282,7 +282,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class Mesh
+				Class PointParticle
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -292,8 +292,9 @@ ul.inheritsList
 					<a href="../symbols/VisualObject.html">VisualObject</a>.<br />
 				
 			
-				Visual object that renders a 3D model from a set of different LOD
-options.
+				Visual object that renders a point like object as a line as it is
+moving. Used to represent dust particles that give a visual clue about the
+motion of the camera.
 				
 				
 					<br /><i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
@@ -302,7 +303,7 @@ options.
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Mesh.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class PointParticle.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -315,9 +316,9 @@ options.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/Mesh.html#constructor">Mesh</a></b>(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode)
+								<b><a href="../symbols/PointParticle.html#constructor">PointParticle</a></b>(model, shader, color, positionMatrix)
 							</div>
-							<div class="description">Creates a mesh type visual object.</div>
+							<div class="description">Creates a dust particle type visual object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -331,7 +332,7 @@ options.
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Mesh.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class PointParticle.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -344,67 +345,19 @@ options.
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getModelMatrix">getModelMatrix</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/PointParticle.html#isInsideViewFrustum">isInsideViewFrustum</a></b>(camera)
 								</div>
-								<div class="description">Returns the model transformation matrix of the mesh, also taking into account
-the parent's transformation.</div>
+								<div class="description">Always returns true as is it faster to skip the check because anyway we are
+only rendering one line here.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getOrientationMatrix">getOrientationMatrix</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/PointParticle.html#render">render</a></b>(resourceCenter)
 								</div>
-								<div class="description">Returns the rotation matrix describing the orientation of the mesh.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getPositionMatrix">getPositionMatrix</a></b>()
-								</div>
-								<div class="description">Returns the translation matrix describing the position of the mesh.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getScalingMatrix">getScalingMatrix</a></b>()
-								</div>
-								<div class="description">Returns the scaling matrix describing the size of the mesh.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#getSize">getSize</a></b>()
-								</div>
-								<div class="description">Returns the size of the largest model of the mesh.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#needsToBeRendered">needsToBeRendered</a></b>(screenWidth, screenHeight, lodContext, depthMask)
-								</div>
-								<div class="description">A method to check if the mesh needs to be rendered according to these
-LOD parameters and depth mask phase (a model at a certain LOD might or might 
-not contain transparent triangles) Also sets the model property to the model
-with the calculated LOD.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/Mesh.html#render">render</a></b>(resourceCenter, depthMask)
-								</div>
-								<div class="description">Renders the appropriate model of the mesh.</div>
+								<div class="description">Renders the particle.</div>
 							</td>
 						</tr>
 					
@@ -414,7 +367,7 @@ with the calculated LOD.</div>
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a>, <a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#isInsideViewFrustum">isInsideViewFrustum</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a>, <a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a>, <a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a>, <a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a>, <a href="../symbols/VisualObject.html#getSize">getSize</a>, <a href="../symbols/VisualObject.html#needsToBeRendered">needsToBeRendered</a></dd>
 				</dl>
 				
 			
@@ -429,11 +382,11 @@ with the calculated LOD.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>Mesh</b>(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode)
+						<b>PointParticle</b>(model, shader, color, positionMatrix)
 				</div>
 				
 				<div class="description">
-					Creates a mesh type visual object.
+					Creates a dust particle type visual object.
 					
 				</div>
 				
@@ -445,11 +398,10 @@ with the calculated LOD.</div>
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/ModelWithLOD.html">ModelWithLOD</a>[]}</span>  <b>modelsWithLOD</b>
+								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
 								
 							</dt>
-								<dd>The series of 3D models with their 
-associated LOD information.</dd>
+								<dd>A model of 2 vertices has to be passed (see dustModel()).</dd>
 						
 							<dt>
 								<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span>  <b>shader</b>
@@ -458,34 +410,16 @@ associated LOD information.</dd>
 								<dd>The shader that should be active while rendering this object.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{Object}</span>  <b>textures</b>
+								<span class="light fixedFont">{number[]}</span>  <b>color</b>
 								
 							</dt>
-								<dd>The textures that should be bound while rendering this object in an associative array, with the roles as keys.</dd>
+								<dd>The RGBA components of the color to modulate the billboard texture with.</dd>
 						
 							<dt>
 								<span class="light fixedFont">{Float32Array}</span>  <b>positionMatrix</b>
 								
 							</dt>
 								<dd>The 4x4 translation matrix representing the initial position of the object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{Float32Array}</span>  <b>orientationMatrix</b>
-								
-							</dt>
-								<dd>The 4x4 rotation matrix representing the initial orientation of the object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{Float32Array}</span>  <b>scalingMatrix</b>
-								
-							</dt>
-								<dd>The 4x4 scaling matrix representing the initial size of the object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{boolean}</span>  <b>lineMode</b>
-								
-							</dt>
-								<dd>Whether the mesh should be drawn as wireframe instead of solid.</dd>
 						
 						</dl>
 					
@@ -508,179 +442,16 @@ associated LOD information.</dd>
 					Method Detail
 				</div>
 				
-					<a name="getModelMatrix"> </a>
+					<a name="isInsideViewFrustum"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{Float32Array}</span>
-					<b>getModelMatrix</b>()
+					<span class="light">{boolean}</span>
+					<b>isInsideViewFrustum</b>(camera)
 					
 					</div>
 					<div class="description">
-						Returns the model transformation matrix of the mesh, also taking into account
-the parent's transformation.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 model transformation matrix of the object.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="getOrientationMatrix"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{Float32Array}</span>
-					<b>getOrientationMatrix</b>()
-					
-					</div>
-					<div class="description">
-						Returns the rotation matrix describing the orientation of the mesh.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 rotation matrix indicating the orientation.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="getPositionMatrix"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{Float32Array}</span>
-					<b>getPositionMatrix</b>()
-					
-					</div>
-					<div class="description">
-						Returns the translation matrix describing the position of the mesh.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 translation matrix indicating the position.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="getScalingMatrix"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{Float32Array}</span>
-					<b>getScalingMatrix</b>()
-					
-					</div>
-					<div class="description">
-						Returns the scaling matrix describing the size of the mesh.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{Float32Array}</span> The 4x4 scaling matrix indicating the size.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="getSize"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{number}</span>
-					<b>getSize</b>()
-					
-					</div>
-					<div class="description">
-						Returns the size of the largest model of the mesh.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{number}</span> The size of the largest model of the mesh.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="needsToBeRendered"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{Boolean}</span>
-					<b>needsToBeRendered</b>(screenWidth, screenHeight, lodContext, depthMask)
-					
-					</div>
-					<div class="description">
-						A method to check if the mesh needs to be rendered according to these
-LOD parameters and depth mask phase (a model at a certain LOD might or might 
-not contain transparent triangles) Also sets the model property to the model
-with the calculated LOD.
+						Always returns true as is it faster to skip the check because anyway we are
+only rendering one line here.
 						
 						
 					</div>
@@ -692,28 +463,10 @@ with the calculated LOD.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{Number}</span> <b>screenWidth</b>
+									<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> <b>camera</b>
 									
 								</dt>
-								<dd></dd>
-							
-								<dt>
-									<span class="light fixedFont">{Number}</span> <b>screenHeight</b>
-									
-								</dt>
-								<dd></dd>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span> <b>lodContext</b>
-									
-								</dt>
-								<dd></dd>
-							
-								<dt>
-									<span class="light fixedFont">{Boolean}</span> <b>depthMask</b>
-									
-								</dt>
-								<dd></dd>
+								<dd>Irrelevant in this case.</dd>
 							
 							</dl>
 						
@@ -724,7 +477,7 @@ with the calculated LOD.
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{Boolean}</span> </dd>
+								<dd><span class="light fixedFont">{boolean}</span> Always true.</dd>
 							
 							</dl>
 						
@@ -737,11 +490,11 @@ with the calculated LOD.
 					<div class="fixedFont">
 					
 					
-					<b>render</b>(resourceCenter, depthMask)
+					<b>render</b>(resourceCenter)
 					
 					</div>
 					<div class="description">
-						Renders the appropriate model of the mesh.
+						Renders the particle.
 						
 						
 					</div>
@@ -757,13 +510,7 @@ with the calculated LOD.
 									
 								</dt>
 								<dd>The resource center that holds the
-texture, the models and the shader.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{boolean}</span> <b>depthMask</b>
-									
-								</dt>
-								<dd>Tells whether the depth mask is turned on during this render pass.</dd>
+the model and the shader.</dd>
 							
 							</dl>
 						

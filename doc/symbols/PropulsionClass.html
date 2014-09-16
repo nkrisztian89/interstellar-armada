@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - EgomModel</title>
+		<title>JsDoc Reference - PropulsionClass</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -282,7 +282,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class EgomModel
+				Class PropulsionClass
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -290,17 +290,18 @@ ul.inheritsList
 				
 				
 			
-				Represents a 3D polygonal model. The Egom data stucture is optimized
-for generating and editing models from the program code.
+				Each spacecraft can be equipped with a propulsion system. This class
+represents one of the classes to which such a system can belong, describing
+the properties of such a propulsion system.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class EgomModel.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class PropulsionClass.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -313,10 +314,9 @@ for generating and editing models from the program code.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/EgomModel.html#constructor">EgomModel</a></b>(filename)
+								<b><a href="../symbols/PropulsionClass.html#constructor">PropulsionClass</a></b>(name, shaderName, textureFileName, color, thrust, angularThrust)
 							</div>
-							<div class="description">Creates a new 3D model object, and if a file name was given, loads the data
-from the file.</div>
+							<div class="description">Defines a propulsion class.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -327,33 +327,6 @@ from the file.</div>
 			
 
 <!-- ============================== methods summary ======================== -->
-			
-				
-				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class EgomModel.">
-					<caption>Method Summary</caption>
-					<thead>
-						<tr>
-							<th scope="col">Method Attributes</th>
-							<th scope="col">Method Name and Description</th>
-						</tr>
-					</thead>
-					<tbody>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/EgomModel.html#addSphere">addSphere</a></b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
-								</div>
-								<div class="description">Adds vertices and triangles that form a sphere (UV sphere).</div>
-							</td>
-						</tr>
-					
-					</tbody>
-				</table>
-				
-				
-				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -366,12 +339,11 @@ from the file.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>EgomModel</b>(filename)
+						<b>PropulsionClass</b>(name, shaderName, textureFileName, color, thrust, angularThrust)
 				</div>
 				
 				<div class="description">
-					Creates a new 3D model object, and if a file name was given, loads the data
-from the file. Only Egom XML format is supported.
+					Defines a propulsion class.
 					
 				</div>
 				
@@ -383,16 +355,59 @@ from the file. Only Egom XML format is supported.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{string}</span>  <b>filename</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The name of the file to load the model from. (optional)</dd>
+								<dd>When describing the equipped propulsion system, it's
+class has to be referred to by this name.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{String}</span>  <b>shaderName</b>
+								
+							</dt>
+								<dd>The shader that will be used for rendering the
+particles shown when thrusters of the ship fire.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{String}</span>  <b>textureFileName</b>
+								
+							</dt>
+								<dd>The file to be used for the texture of
+the thruster particles.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number[3]}</span>  <b>color</b>
+								
+							</dt>
+								<dd>The color that can be used to modulate the color of
+thruster particles, if defined so by the shader. [red,green,blue]</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number}</span>  <b>thrust</b>
+								
+							</dt>
+								<dd>The strength of the force applied to the ship when
+the thrusters are fired in one direction, measured in newtons.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number}</span>  <b>angularThrust</b>
+								
+							</dt>
+								<dd>The strength of the torque applied to the ship
+when the thrusters are used to turn it.</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/PropulsionClass.html">PropulsionClass</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -405,101 +420,6 @@ from the file. Only Egom XML format is supported.
 
 <!-- ============================== method details ========================= -->		
 			
-				<div class="sectionTitle">
-					Method Detail
-				</div>
-				
-					<a name="addSphere"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>addSphere</b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
-					
-					</div>
-					<div class="description">
-						Adds vertices and triangles that form a sphere (UV sphere).
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>x</b>
-									
-								</dt>
-								<dd>The X coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>y</b>
-									
-								</dt>
-								<dd>The Y coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>z</b>
-									
-								</dt>
-								<dd>The Z coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>radius</b>
-									
-								</dt>
-								<dd>The radius of the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>angles</b>
-									
-								</dt>
-								<dd>The number of angles one circle should have within the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[]}</span> <b>color</b>
-									
-								</dt>
-								<dd>The RGBA components of the desired color of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>luminosity</b>
-									
-								</dt>
-								<dd>The luminosity of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>shininess</b>
-									
-								</dt>
-								<dd>The shininess exponent of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[][]}</span> <b>textureCoordinates</b>
-									
-								</dt>
-								<dd>The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise</dd>
-							
-								<dt>
-									<span class="light fixedFont">{boolean}</span> <b>cullFace</b>
-									
-								</dt>
-								<dd>Whether to omit the triangles from the inside of the sphere.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					
-				
-			
 			
 <!-- ============================== event details ========================= -->		
 			
@@ -511,7 +431,7 @@ from the file. Only Egom XML format is supported.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:13 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

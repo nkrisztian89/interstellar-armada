@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - EgomModel</title>
+		<title>JsDoc Reference - ThrusterSlot</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -282,7 +282,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class EgomModel
+				Class ThrusterSlot
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -290,17 +290,18 @@ ul.inheritsList
 				
 				
 			
-				Represents a 3D polygonal model. The Egom data stucture is optimized
-for generating and editing models from the program code.
+				Every ship (class) has slots for its thrusters. The fire of the
+thrusters is represented by showing particles at these thruster slots with
+a size proportional to the thruster burn.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class EgomModel.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ThrusterSlot.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -313,10 +314,9 @@ for generating and editing models from the program code.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/EgomModel.html#constructor">EgomModel</a></b>(filename)
+								<b><a href="../symbols/ThrusterSlot.html#constructor">ThrusterSlot</a></b>(x, y, z, size, usesString, group)
 							</div>
-							<div class="description">Creates a new 3D model object, and if a file name was given, loads the data
-from the file.</div>
+							<div class="description">Defines a thruster slot on a ship (class).</div>
 						</td>
 					</tr>
 				</tbody>
@@ -327,33 +327,6 @@ from the file.</div>
 			
 
 <!-- ============================== methods summary ======================== -->
-			
-				
-				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class EgomModel.">
-					<caption>Method Summary</caption>
-					<thead>
-						<tr>
-							<th scope="col">Method Attributes</th>
-							<th scope="col">Method Name and Description</th>
-						</tr>
-					</thead>
-					<tbody>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/EgomModel.html#addSphere">addSphere</a></b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
-								</div>
-								<div class="description">Adds vertices and triangles that form a sphere (UV sphere).</div>
-							</td>
-						</tr>
-					
-					</tbody>
-				</table>
-				
-				
-				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -366,12 +339,11 @@ from the file.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>EgomModel</b>(filename)
+						<b>ThrusterSlot</b>(x, y, z, size, usesString, group)
 				</div>
 				
 				<div class="description">
-					Creates a new 3D model object, and if a file name was given, loads the data
-from the file. Only Egom XML format is supported.
+					Defines a thruster slot on a ship (class).
 					
 				</div>
 				
@@ -383,16 +355,62 @@ from the file. Only Egom XML format is supported.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{string}</span>  <b>filename</b>
+								<span class="light fixedFont">{Number}</span>  <b>x</b>
 								
 							</dt>
-								<dd>The name of the file to load the model from. (optional)</dd>
+								<dd>The X coordinate of the position of the slot relative to
+the ship.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number}</span>  <b>y</b>
+								
+							</dt>
+								<dd>The Y coordinate of the position of the slot relative to
+the ship.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number}</span>  <b>z</b>
+								
+							</dt>
+								<dd>The Z coordinate of the position of the slot relative to
+the ship.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number}</span>  <b>size</b>
+								
+							</dt>
+								<dd>The thruster particle at this slot will be shown scaled
+by this size.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{String}</span>  <b>usesString</b>
+								
+							</dt>
+								<dd>The list of uses this thruster has. Possible uses
+are: (direction:) forward,reverse,slideLeft,slideRight,raise,lower, (turn:)
+yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight</dd>
+						
+							<dt>
+								<span class="light fixedFont">{Number}</span>  <b>group</b>
+								
+							</dt>
+								<dd>The index of the thruster group this slot belongs to.
+Members of the same group should have the same uses list. The parts of the
+ship model representing thrusters of a group should bear the same group 
+index, allowing to manipulate their appearance using uniform arrays.</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/ThrusterSlot.html">ThrusterSlot</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -405,101 +423,6 @@ from the file. Only Egom XML format is supported.
 
 <!-- ============================== method details ========================= -->		
 			
-				<div class="sectionTitle">
-					Method Detail
-				</div>
-				
-					<a name="addSphere"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>addSphere</b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
-					
-					</div>
-					<div class="description">
-						Adds vertices and triangles that form a sphere (UV sphere).
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>x</b>
-									
-								</dt>
-								<dd>The X coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>y</b>
-									
-								</dt>
-								<dd>The Y coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>z</b>
-									
-								</dt>
-								<dd>The Z coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>radius</b>
-									
-								</dt>
-								<dd>The radius of the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>angles</b>
-									
-								</dt>
-								<dd>The number of angles one circle should have within the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[]}</span> <b>color</b>
-									
-								</dt>
-								<dd>The RGBA components of the desired color of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>luminosity</b>
-									
-								</dt>
-								<dd>The luminosity of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>shininess</b>
-									
-								</dt>
-								<dd>The shininess exponent of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[][]}</span> <b>textureCoordinates</b>
-									
-								</dt>
-								<dd>The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise</dd>
-							
-								<dt>
-									<span class="light fixedFont">{boolean}</span> <b>cullFace</b>
-									
-								</dt>
-								<dd>Whether to omit the triangles from the inside of the sphere.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					
-				
-			
 			
 <!-- ============================== event details ========================= -->		
 			
@@ -511,7 +434,7 @@ from the file. Only Egom XML format is supported.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:13 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

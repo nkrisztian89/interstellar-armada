@@ -191,6 +191,10 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/AIController.html">AIController</a></li>
+	
+	<li><a href="../symbols/Barrel.html">Barrel</a></li>
+	
 	<li><a href="../symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
@@ -201,11 +205,15 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="../symbols/DustCloud.html">DustCloud</a></li>
+	
+	<li><a href="../symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
 	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
+	
+	<li><a href="../symbols/FighterController.html">FighterController</a></li>
 	
 	<li><a href="../symbols/Force.html">Force</a></li>
 	
@@ -214,6 +222,8 @@ ul.inheritsList
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
 	
 	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
+	
+	<li><a href="../symbols/Level.html">Level</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
 	
@@ -224,6 +234,14 @@ ul.inheritsList
 	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
 	
 	<li><a href="../symbols/ObjectView.html">ObjectView</a></li>
+	
+	<li><a href="../symbols/PhysicalObject.html">PhysicalObject</a></li>
+	
+	<li><a href="../symbols/PointParticle.html">PointParticle</a></li>
+	
+	<li><a href="../symbols/ProjectileClass.html">ProjectileClass</a></li>
+	
+	<li><a href="../symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -239,13 +257,21 @@ ul.inheritsList
 	
 	<li><a href="../symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
+	<li><a href="../symbols/SpacecraftClass.html">SpacecraftClass</a></li>
+	
 	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
 	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
 	
+	<li><a href="../symbols/ThrusterSlot.html">ThrusterSlot</a></li>
+	
 	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
+	
+	<li><a href="../symbols/WeaponClass.html">WeaponClass</a></li>
+	
+	<li><a href="../symbols/WeaponSlot.html">WeaponSlot</a></li>
 	
 </ul>
 <hr />
@@ -288,7 +314,7 @@ as a node, contains references to its parent and subnodes as well.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/VisualObject.html#constructor">VisualObject</a></b>(shader, smallestParentSizeWhenDrawn)
+								<b><a href="../symbols/VisualObject.html#constructor">VisualObject</a></b>(shader, smallestParentSizeWhenDrawn, renderedWithDepthMask, renderedWithoutDepthMask)
 							</div>
 							<div class="description">Creates a new VisualObject.</div>
 						</td>
@@ -317,6 +343,15 @@ as a node, contains references to its parent and subnodes as well.
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a></b>(subnode)
+								</div>
+								<div class="description">Adds a subnode to the rendering tree.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a></b>(gl)
 								</div>
 								<div class="description">Assigns all uniforms in the shader program associated with this object that
@@ -327,9 +362,29 @@ this object has a value function for, using the appropriate webGL calls.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a></b>(parent, resourceCenter, scene, screenSize, depthMaskPhase)
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a></b>()
+								</div>
+								<div class="description">Removes all subnodes from the subtree of this object that are deleted or
+are marked for deletion.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a></b>(resourceCenter, scene, screenWidth, depthMaskPhase, depthMaskPhase)
 								</div>
 								<div class="description">Renders the object and all its subnodes.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a></b>()
+								</div>
+								<div class="description">Sets the modelMatrixCalculated property of this object and its whole subtree
+to false.</div>
 							</td>
 						</tr>
 					
@@ -422,6 +477,18 @@ taking into account the parents of the object as well.</div>
 							</td>
 						</tr>
 					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/VisualObject.html#needsToBeRendered">needsToBeRendered</a></b>(screenWidth, screenHeight, lodContext, depthMask)
+								</div>
+								<div class="description">A method to check if the visual object needs to be rendered according to this
+LOD parameters and depth mask phase (a model at a certain LOD might or might 
+not contain transparent triangles) Needs to be implemented in the descendant
+classes.</div>
+							</td>
+						</tr>
+					
 					</tbody>
 				</table>
 				
@@ -439,7 +506,7 @@ taking into account the parents of the object as well.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>VisualObject</b>(shader, smallestParentSizeWhenDrawn)
+						<b>VisualObject</b>(shader, smallestParentSizeWhenDrawn, renderedWithDepthMask, renderedWithoutDepthMask)
 				</div>
 				
 				<div class="description">
@@ -466,6 +533,18 @@ taking into account the parents of the object as well.</div>
 							</dt>
 								<dd>If the rendering parent's apparent size is smaller than this value, render will not take place.</dd>
 						
+							<dt>
+								<span class="light fixedFont">{boolean}</span>  <b>renderedWithDepthMask</b>
+								
+							</dt>
+								<dd>Tells whether this object should be rendered when the depth mask is on (= it contains non-transparent triangles)</dd>
+						
+							<dt>
+								<span class="light fixedFont">{boolean}</span>  <b>renderedWithoutDepthMask</b>
+								
+							</dt>
+								<dd>Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)</dd>
+						
 						</dl>
 					
 					
@@ -486,6 +565,43 @@ taking into account the parents of the object as well.</div>
 				<div class="sectionTitle">
 					Method Detail
 				</div>
+				
+					<a name="addSubnode"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>addSubnode</b>(subnode)
+					
+					</div>
+					<div class="description">
+						Adds a subnode to the rendering tree.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/VisualObject.html">VisualObject</a>}</span> <b>subnode</b>
+									
+								</dt>
+								<dd>The subnode to be added to the rendering tree. 
+It will be rendered relative to this object (transformation matrices stack)</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
 				
 					<a name="assignUniforms"> </a>
 					<div class="fixedFont">
@@ -525,11 +641,37 @@ The matching is done based on the names of the uniforms.
 
 					<hr />
 				
+					<a name="cascadeCleanUp"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>cascadeCleanUp</b>()
+					
+					</div>
+					<div class="description">
+						Removes all subnodes from the subtree of this object that are deleted or
+are marked for deletion.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name="cascadeRender"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>cascadeRender</b>(parent, resourceCenter, scene, screenSize, depthMaskPhase)
+					<b>cascadeRender</b>(resourceCenter, scene, screenWidth, depthMaskPhase, depthMaskPhase)
 					
 					</div>
 					<div class="description">
@@ -545,13 +687,6 @@ The matching is done based on the names of the uniforms.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{<a href="../symbols/VisualObject.html">VisualObject</a>}</span> <b>parent</b>
-									
-								</dt>
-								<dd>The rendering parent to which the position,
-orientation and scaling of the object is relative.</dd>
-							
-								<dt>
 									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
 									
 								</dt>
@@ -565,10 +700,12 @@ necessary rendering resources .</dd>
 								<dd>The scene within which the object is located.</dd>
 							
 								<dt>
-									<span class="light fixedFont">{number}</span> <b>screenSize</b>
+									<span class="light fixedFont">{number}</span> <b>screenWidth</b>
 									
 								</dt>
 								<dd>The size of the rendering viewport in pixels,
+to determine the actual drawn size of the object (for dynamic LOD)
+* @param {number} screenHeight The size of the rendering viewport in pixels,
 to determine the actual drawn size of the object (for dynamic LOD)</dd>
 							
 								<dt>
@@ -577,9 +714,41 @@ to determine the actual drawn size of the object (for dynamic LOD)</dd>
 								</dt>
 								<dd>Whether we are drawing in the depthmask
 enabled or disabled phase (renders only phase matches with the type of the
-shared the object has)</dd>
+shader the object has)</dd>
+							
+								<dt>
+									<b>depthMaskPhase</b>
+									
+								</dt>
+								<dd></dd>
 							
 							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="cascadeResetModelMatrixCalculated"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>cascadeResetModelMatrixCalculated</b>()
+					
+					</div>
+					<div class="description">
+						Sets the modelMatrixCalculated property of this object and its whole subtree
+to false.
+						
+						
+					</div>
+					
+					
+					
 						
 						
 						
@@ -868,6 +1037,70 @@ width and height members of the object.
 						
 						
 
+					<hr />
+				
+					<a name="needsToBeRendered"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Boolean}</span>
+					<b>needsToBeRendered</b>(screenWidth, screenHeight, lodContext, depthMask)
+					
+					</div>
+					<div class="description">
+						A method to check if the visual object needs to be rendered according to this
+LOD parameters and depth mask phase (a model at a certain LOD might or might 
+not contain transparent triangles) Needs to be implemented in the descendant
+classes.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>screenWidth</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>screenHeight</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/LODContext.html">LODContext</a>}</span> <b>lodContext</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{Boolean}</span> <b>depthMask</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Boolean}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
 					
 				
 			
@@ -882,7 +1115,7 @@ width and height members of the object.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

@@ -191,6 +191,10 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="../symbols/AIController.html">AIController</a></li>
+	
+	<li><a href="../symbols/Barrel.html">Barrel</a></li>
+	
 	<li><a href="../symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
@@ -201,11 +205,15 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="../symbols/DustCloud.html">DustCloud</a></li>
+	
+	<li><a href="../symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
 	<li><a href="../symbols/EgomModel.html">EgomModel</a></li>
+	
+	<li><a href="../symbols/FighterController.html">FighterController</a></li>
 	
 	<li><a href="../symbols/Force.html">Force</a></li>
 	
@@ -214,6 +222,8 @@ ul.inheritsList
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
 	
 	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
+	
+	<li><a href="../symbols/Level.html">Level</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
 	
@@ -224,6 +234,14 @@ ul.inheritsList
 	<li><a href="../symbols/ModelWithLOD.html">ModelWithLOD</a></li>
 	
 	<li><a href="../symbols/ObjectView.html">ObjectView</a></li>
+	
+	<li><a href="../symbols/PhysicalObject.html">PhysicalObject</a></li>
+	
+	<li><a href="../symbols/PointParticle.html">PointParticle</a></li>
+	
+	<li><a href="../symbols/ProjectileClass.html">ProjectileClass</a></li>
+	
+	<li><a href="../symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -239,13 +257,21 @@ ul.inheritsList
 	
 	<li><a href="../symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
+	<li><a href="../symbols/SpacecraftClass.html">SpacecraftClass</a></li>
+	
 	<li><a href="../symbols/StaticParticle.html">StaticParticle</a></li>
 	
 	<li><a href="../symbols/Texture.html">Texture</a></li>
 	
+	<li><a href="../symbols/ThrusterSlot.html">ThrusterSlot</a></li>
+	
 	<li><a href="../symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="../symbols/VisualObject.html">VisualObject</a></li>
+	
+	<li><a href="../symbols/WeaponClass.html">WeaponClass</a></li>
+	
+	<li><a href="../symbols/WeaponSlot.html">WeaponSlot</a></li>
 	
 </ul>
 <hr />
@@ -292,10 +318,7 @@ ul.inheritsList
 								<div class="fixedFont">
 								<b><a href="../symbols/_global_.html#manualController">manualController</a></b>
 								</div>
-								<div class="description">*******************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.</div>
+								<div class="description">The global variable used for manual spacecraft control (for test purposes).</div>
 							</td>
 						</tr>
 					
@@ -315,10 +338,8 @@ ul.inheritsList
 								<div class="fixedFont">
 								<b><a href="../symbols/_global_.html#TIME_UNIT">TIME_UNIT</a></b>
 								</div>
-								<div class="description">*******************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.</div>
+								<div class="description">The length of impulse-like events in milliseconds (such as thruster bursts or 
+weapon shots)</div>
 							</td>
 						</tr>
 					
@@ -398,10 +419,7 @@ stored in the XML tags.</div>
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/_global_.html#identityMatrix3">identityMatrix3</a></b>()
 								</div>
-								<div class="description">*******************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.</div>
+								<div class="description">Returns a 3x3 identity matrix.</div>
 							</td>
 						</tr>
 					
@@ -450,6 +468,16 @@ the fact that only the 3rd row of the matrix holds useful information.</div>
 								<div class="fixedFont"><b><a href="../symbols/_global_.html#loadScripts">loadScripts</a></b>(urls, callback)
 								</div>
 								<div class="description">Function to load additional JavaScript code from a list of source files.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#ModelReference">ModelReference</a></b>(filename, lod)
+								</div>
+								<div class="description">Defines a model reference, which holds a reference to a model file name and
+the model's associated LOD (Level Of Detail)</div>
 							</td>
 						</tr>
 					
@@ -506,6 +534,15 @@ containing the name of the variable type.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#Spacecraft">Spacecraft</a></b>(graphicsContext, logicContext, controlContext, SpacecraftClass, owner, positionMatrix, controller)
+								</div>
+								<div class="description">Creates and initializes a Spacecraft object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/_global_.html#squareModel">squareModel</a></b>()
 								</div>
 								<div class="description">Sets up and returns a simple EgomModel that contains a two sided XY square.</div>
@@ -542,29 +579,12 @@ containing the name of the variable type.</div>
 					<a name="manualController"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{<a href="../symbols/FighterController.html">FighterController</a>}</span>
 					<b>manualController</b>
 					
 					</div>
 					<div class="description">
-						*******************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
-*********************************************************************
+						The global variable used for manual spacecraft control (for test purposes).
 						
 							<br />
 							<i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
@@ -609,29 +629,13 @@ containing the name of the variable type.</div>
 					<a name="TIME_UNIT"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{Number}</span>
 					<b>TIME_UNIT</b>
 					
 					</div>
 					<div class="description">
-						*******************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
-*********************************************************************
+						The length of impulse-like events in milliseconds (such as thruster bursts or 
+weapon shots)
 						
 							<br />
 							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
@@ -908,29 +912,12 @@ stored in the XML tags.
 					<a name="identityMatrix3"> </a>
 					<div class="fixedFont">
 					
-					
+					<span class="light">{Float32Array}</span>
 					<b>identityMatrix3</b>()
 					
 					</div>
 					<div class="description">
-						*******************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
-*********************************************************************
+						Returns a 3x3 identity matrix.
 						
 							<br />
 							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
@@ -944,6 +931,13 @@ stored in the XML tags.
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Float32Array}</span> </dd>
+							
+							</dl>
 						
 						
 						
@@ -1181,6 +1175,59 @@ Loads the scripts in the specified order, then executes a callback function.
 
 					<hr />
 				
+					<a name="ModelReference"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/_global_.html#ModelReference">ModelReference</a>}</span>
+					<b>ModelReference</b>(filename, lod)
+					
+					</div>
+					<div class="description">
+						Defines a model reference, which holds a reference to a model file name and
+the model's associated LOD (Level Of Detail)
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>filename</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>lod</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/_global_.html#ModelReference">ModelReference</a>}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="mul3"> </a>
 					<div class="fixedFont">
 					
@@ -1399,6 +1446,90 @@ containing the name of the variable type.
 
 					<hr />
 				
+					<a name="Spacecraft"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/_global_.html#Spacecraft">Spacecraft</a>}</span>
+					<b>Spacecraft</b>(graphicsContext, logicContext, controlContext, SpacecraftClass, owner, positionMatrix, controller)
+					
+					</div>
+					<div class="description">
+						Creates and initializes a Spacecraft object. Loads all necessary models into
+the resource center of graphicsContext, taking into account the maximum
+enabled LOD defined in the scene of graphicsContext.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/GraphicsContext.html">GraphicsContext</a>}</span> <b>graphicsContext</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{LogicContext}</span> <b>logicContext</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{ControlContext}</span> <b>controlContext</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/SpacecraftClass.html">SpacecraftClass</a>}</span> <b>SpacecraftClass</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>owner</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{Number[]}</span> <b>positionMatrix</b>
+									
+								</dt>
+								<dd></dd>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>controller</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/_global_.html#Spacecraft">Spacecraft</a>}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="squareModel"> </a>
 					<div class="fixedFont">
 					
@@ -1475,7 +1606,7 @@ script files and the external resources.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:13 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - EgomModel</title>
+		<title>JsDoc Reference - Level</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -282,7 +282,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class EgomModel
+				Class Level
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -290,17 +290,17 @@ ul.inheritsList
 				
 				
 			
-				Represents a 3D polygonal model. The Egom data stucture is optimized
-for generating and editing models from the program code.
+				The domain specific part of the model of what happens in the game, 
+with spaceships, projectiles and so.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class EgomModel.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Level.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -313,10 +313,9 @@ for generating and editing models from the program code.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/EgomModel.html#constructor">EgomModel</a></b>(filename)
+								<b><a href="../symbols/Level.html#constructor">Level</a></b>(resourceCenter, scene, controlContext)
 							</div>
-							<div class="description">Creates a new 3D model object, and if a file name was given, loads the data
-from the file.</div>
+							<div class="description">Defines a level.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -330,7 +329,7 @@ from the file.</div>
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class EgomModel.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Level.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -343,9 +342,9 @@ from the file.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/EgomModel.html#addSphere">addSphere</a></b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
+								<div class="fixedFont"><b><a href="../symbols/Level.html#loadDustCloudClasses">loadDustCloudClasses</a></b>(source)
 								</div>
-								<div class="description">Adds vertices and triangles that form a sphere (UV sphere).</div>
+								<div class="description"></div>
 							</td>
 						</tr>
 					
@@ -366,12 +365,11 @@ from the file.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>EgomModel</b>(filename)
+						<b>Level</b>(resourceCenter, scene, controlContext)
 				</div>
 				
 				<div class="description">
-					Creates a new 3D model object, and if a file name was given, loads the data
-from the file. Only Egom XML format is supported.
+					Defines a level.
 					
 				</div>
 				
@@ -383,16 +381,35 @@ from the file. Only Egom XML format is supported.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{string}</span>  <b>filename</b>
+								<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span>  <b>resourceCenter</b>
 								
 							</dt>
-								<dd>The name of the file to load the model from. (optional)</dd>
+								<dd></dd>
+						
+							<dt>
+								<span class="light fixedFont">{<a href="../symbols/Scene.html">Scene</a>}</span>  <b>scene</b>
+								
+							</dt>
+								<dd></dd>
+						
+							<dt>
+								<span class="light fixedFont">{ControlContext}</span>  <b>controlContext</b>
+								
+							</dt>
+								<dd></dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/Level.html">Level</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -409,15 +426,15 @@ from the file. Only Egom XML format is supported.
 					Method Detail
 				</div>
 				
-					<a name="addSphere"> </a>
+					<a name="loadDustCloudClasses"> </a>
 					<div class="fixedFont">
 					
-					
-					<b>addSphere</b>(x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace)
+					<span class="light">{<a href="../symbols/DustCloudClass.html">DustCloudClass</a>[]}</span>
+					<b>loadDustCloudClasses</b>(source)
 					
 					</div>
 					<div class="description">
-						Adds vertices and triangles that form a sphere (UV sphere).
+						
 						
 						
 					</div>
@@ -429,70 +446,23 @@ from the file. Only Egom XML format is supported.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{number}</span> <b>x</b>
+									<span class="light fixedFont">{Document}</span> <b>source</b>
 									
 								</dt>
-								<dd>The X coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>y</b>
-									
-								</dt>
-								<dd>The Y coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>z</b>
-									
-								</dt>
-								<dd>The Z coordinate of the center.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>radius</b>
-									
-								</dt>
-								<dd>The radius of the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>angles</b>
-									
-								</dt>
-								<dd>The number of angles one circle should have within the sphere.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[]}</span> <b>color</b>
-									
-								</dt>
-								<dd>The RGBA components of the desired color of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>luminosity</b>
-									
-								</dt>
-								<dd>The luminosity of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number}</span> <b>shininess</b>
-									
-								</dt>
-								<dd>The shininess exponent of the triangles.</dd>
-							
-								<dt>
-									<span class="light fixedFont">{number[][]}</span> <b>textureCoordinates</b>
-									
-								</dt>
-								<dd>The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise</dd>
-							
-								<dt>
-									<span class="light fixedFont">{boolean}</span> <b>cullFace</b>
-									
-								</dt>
-								<dd>Whether to omit the triangles from the inside of the sphere.</dd>
+								<dd></dd>
 							
 							</dl>
 						
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/DustCloudClass.html">DustCloudClass</a>[]}</span> </dd>
+							
+							</dl>
 						
 						
 						

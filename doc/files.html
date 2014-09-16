@@ -186,6 +186,10 @@ ul.inheritsList
 	
 	<li><i><a href="symbols/_global_.html">_global_</a></i></li>
 	
+	<li><a href="symbols/AIController.html">AIController</a></li>
+	
+	<li><a href="symbols/Barrel.html">Barrel</a></li>
+	
 	<li><a href="symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="symbols/Camera.html">Camera</a></li>
@@ -196,11 +200,15 @@ ul.inheritsList
 	
 	<li><a href="symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="symbols/DustCloud.html">DustCloud</a></li>
+	
+	<li><a href="symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
 	<li><a href="symbols/EgomModel.html">EgomModel</a></li>
+	
+	<li><a href="symbols/FighterController.html">FighterController</a></li>
 	
 	<li><a href="symbols/Force.html">Force</a></li>
 	
@@ -209,6 +217,8 @@ ul.inheritsList
 	<li><a href="symbols/GraphicsContext.html">GraphicsContext</a></li>
 	
 	<li><a href="symbols/KeyCommand.html">KeyCommand</a></li>
+	
+	<li><a href="symbols/Level.html">Level</a></li>
 	
 	<li><a href="symbols/Line.html">Line</a></li>
 	
@@ -219,6 +229,14 @@ ul.inheritsList
 	<li><a href="symbols/ModelWithLOD.html">ModelWithLOD</a></li>
 	
 	<li><a href="symbols/ObjectView.html">ObjectView</a></li>
+	
+	<li><a href="symbols/PhysicalObject.html">PhysicalObject</a></li>
+	
+	<li><a href="symbols/PointParticle.html">PointParticle</a></li>
+	
+	<li><a href="symbols/ProjectileClass.html">ProjectileClass</a></li>
+	
+	<li><a href="symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
 	<li><a href="symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
@@ -234,13 +252,21 @@ ul.inheritsList
 	
 	<li><a href="symbols/SkyboxClass.html">SkyboxClass</a></li>
 	
+	<li><a href="symbols/SpacecraftClass.html">SpacecraftClass</a></li>
+	
 	<li><a href="symbols/StaticParticle.html">StaticParticle</a></li>
 	
 	<li><a href="symbols/Texture.html">Texture</a></li>
 	
+	<li><a href="symbols/ThrusterSlot.html">ThrusterSlot</a></li>
+	
 	<li><a href="symbols/VertexBuffer.html">VertexBuffer</a></li>
 	
 	<li><a href="symbols/VisualObject.html">VisualObject</a></li>
+	
+	<li><a href="symbols/WeaponClass.html">WeaponClass</a></li>
+	
+	<li><a href="symbols/WeaponSlot.html">WeaponSlot</a></li>
 	
 </ul>
 <hr />
@@ -251,10 +277,11 @@ ul.inheritsList
 			
 			
 			<div>
-				<h2><a href="symbols/src/logic.js.html">logic.js</a></h2>
+				<h2><a href="symbols/src/egom.js.html">egom.js</a></h2>
 				
-This file implements the game logic of the Interstellar 
-Armada program.
+This file provides limited functionality to interact with
+EgomModel 3D models, including loading the data from EgomModel XML files.
+EgomModel is a simple 3D modeling library written in object pascal.
 				<dl>
 					
 						<dt class="heading">Author:</dt>
@@ -291,52 +318,10 @@ Interstellar Armada program.
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/graphics.js.html">graphics.js</a></h2>
+				<h2><a href="symbols/src/logic.js.html">logic.js</a></h2>
 				
-This file contains the classes, methods and global variables
-for the creation, manipulation and rendering of graphical objects using webGL,
-as well as managing the required resources (such as textures).
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/armada.js.html">armada.js</a></h2>
-				
-This file contains the entry point for the Interstellar
-Armada (working name) program.
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/egom.js.html">egom.js</a></h2>
-				
-This file provides limited functionality to interact with
-EgomModel 3D models, including loading the data from EgomModel XML files.
-EgomModel is a simple 3D modeling library written in object pascal.
+This file implements the game logic of the Interstellar 
+Armada program.
 				<dl>
 					
 						<dt class="heading">Author:</dt>
@@ -375,6 +360,47 @@ intelligence.
 			<hr />
 			
 			<div>
+				<h2><a href="symbols/src/armada.js.html">armada.js</a></h2>
+				
+This file contains the entry point for the Interstellar
+Armada (working name) program.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/graphics.js.html">graphics.js</a></h2>
+				
+This file contains the classes, methods and global variables
+for the creation, manipulation and rendering of graphical objects using webGL,
+as well as managing the required resources (such as textures).
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
 				<h2><a href="symbols/src/matrices.js.html">./matrices.js</a></h2>
 				
 				<dl>
@@ -390,7 +416,7 @@ intelligence.
 		</div>
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Wed Sep 03 2014 19:49:38 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>
