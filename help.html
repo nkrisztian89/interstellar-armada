@@ -1,102 +1,106 @@
 <!DOCTYPE html>
 
 <html lang='en'>
+    <head>
+        <title>Interstellar Armada</title>
+        <!-- The content of this page is dynamically loaded from the JS code,
+             not opened by the browser. Since only the body is loaded, the
+             head tags are not needed here. The ones in index.html remain in
+             effect for the whole time the application is running. -->
+    </head>
 
-<head>
-<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-<meta name="author" content="Krisztián Nagy"/>
-<meta name="description" content="Help page for Interstellar Armada"/>
-
-<title>Help | Interstellar Armada</title>
-
-<link href="css/style.css" rel="stylesheet" type="text/css"/>
-</head>
-
-<body>
-	<h1>Help</h1>
-	<h2>Keyboard commands</h2>
-	<table>
-		<thead>
-			<th>Key</th>
-			<th>Command</th>
-		</thead>
-		<tr>
-			<td>p</td>
-			<td>Pause the game.</td>
-		</tr>
-		<tr>
-			<td>l</td>
-			<td>Toggle rotation of directional light.</td>
-		</tr>
-		<!--tr>
-			<td>0</td>
-			<td>Delete the goals of AI controlled spacecrafts and make all of them stop.</td>
-		</tr-->
-		<tr>
-			<td>h</td>
-			<td>Toggle the visibility of hitboxes.</td>
-		</tr>
-		<tr>
-			<td>c</td>
-			<td>Follow next spacecraft.</td>
-		</tr>
-		<tr>
-			<td>x</td>
-			<td>Follow previous spacecraft.</td>
-		</tr>
-		<tr>
-			<td>v</td>
-			<td>Change view of currently followed spacecraft.</td>
-		</tr>
-		<tr>
-			<td>m</td>
-			<td>Switch the control of the currently followed spacecraft to manual.</td>
-		</tr>
-		<tr>
-			<td>n</td>
-			<td>Switch the control of the currently followed spacecraft to AI<!-- and assign new random goals to it-->.</td>
-		</tr>
-		<tr>
-			<td>space</td>
-			<td>Fire the weapons of the manually controlled spacecraft.</td>
-		</tr>
-		<tr>
-			<td>o</td>
-			<td>Toggle the controlled spacecraft between free and compensated flight modes.</td>
-		</tr>
-		<tr>
-			<td>w</td>
-			<td>Forward thrust (free mode) or increase speed (compensated mode).</td>
-		</tr>
-		<tr>
-			<td>s</td>
-			<td>Reverse thrust (free mode) or decrease speed (compensated mode).</td>
-		</tr>
-		<tr>
-			<td>backspace</td>
-			<td>Reset speed to zero (compensated mode).</td>
-		</tr>
-		<tr>
-			<td>arrows</td>
-			<td>Turn around the controlled spacecraft or move the free camera.</td>
-		</tr>
-		<tr>
-			<td>page up/down</td>
-			<td>Roll the controlled spacecrafts or move the free camera up/down.</td>
-		</tr>
-		<tr>
-			<td>ctrl + arrows</td>
-			<td>Turn around the free camera.</td>
-		</tr>
-		<tr>
-			<td>z</td>
-			<td>Zoom in. (decrease field of view of current camera)</td>
-		</tr>
-		<tr>
-			<td>u</td>
-			<td>Zoom out. (increase field of view of current camera)</td>
-		</tr>
-	</table>
+    <body onkeypress="game.setCurrentScreen('mainMenu')">
+        <h1>Help</h1>
+        <p>Press any key to return to the main menu.</p>
+        <h2>Keyboard controls</h2>
+        <table>
+            <thead>
+            <th>Key</th>
+            <th>Command</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>p</td>
+                <td>Pause the game.</td>
+            </tr>
+            <tr>
+                <td>escape</td>
+                <td>Quit to main menu.</td>
+            </tr>
+            <tr>
+                <td>l</td>
+                <td>Toggle rotation of directional light.</td>
+            </tr>
+            <!--tr>
+                    <td>0</td>
+                    <td>Delete the goals of AI controlled spacecrafts and make all of them stop.</td>
+            </tr-->
+            <tr>
+                <td>h</td>
+                <td>Toggle the visibility of hitboxes.</td>
+            </tr>
+            <tr>
+                <td>c</td>
+                <td>Follow next spacecraft.</td>
+            </tr>
+            <tr>
+                <td>x</td>
+                <td>Follow previous spacecraft.</td>
+            </tr>
+            <tr>
+                <td>v</td>
+                <td>Change view of currently followed spacecraft.</td>
+            </tr>
+            <tr>
+                <td>m</td>
+                <td>Switch the control of the currently followed spacecraft to manual.</td>
+            </tr>
+            <tr>
+                <td>n</td>
+                <td>Switch the control of the currently followed spacecraft to AI<!-- and assign new random goals to it-->.</td>
+            </tr>
+            <tr>
+                <td>space</td>
+                <td>Fire the weapons of the manually controlled spacecraft.</td>
+            </tr>
+            <tr>
+                <td>o</td>
+                <td>Toggle the controlled spacecraft between free and compensated flight modes.</td>
+            </tr>
+            <tr>
+                <td>w</td>
+                <td>Forward thrust (free mode) or increase speed (compensated mode).</td>
+            </tr>
+            <tr>
+                <td>s</td>
+                <td>Reverse thrust (free mode) or decrease speed (compensated mode).</td>
+            </tr>
+            <tr>
+                <td>backspace</td>
+                <td>Reset speed to zero (compensated mode).</td>
+            </tr>
+            <tr>
+                <td>arrows</td>
+                <td>Turn around the controlled spacecraft or move the free camera.</td>
+            </tr>
+            <tr>
+                <td>page up/down</td>
+                <td>Roll the controlled spacecrafts or move the free camera up/down.</td>
+            </tr>
+            <tr>
+                <td>ctrl + arrows</td>
+                <td>Turn around the free camera.</td>
+            </tr>
+            <tr>
+                <td>z</td>
+                <td>Zoom in. (decrease field of view of current camera)</td>
+            </tr>
+            <tr>
+                <td>u</td>
+                <td>Zoom out. (increase field of view of current camera)</td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 
 </html>

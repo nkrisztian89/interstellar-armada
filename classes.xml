@@ -109,7 +109,7 @@
 		<shader name="permanentParticle" />
 		<texture filename="textures/flare.png" />
 		<color r="0.0" g="0.8" b="1.0" />
-		<power thrust="300000" angularThrust="0.5" />
+		<power thrust="500000" angularThrust="0.5" />
 	</PropulsionClass>
         
         <PropulsionClass name="bomber">

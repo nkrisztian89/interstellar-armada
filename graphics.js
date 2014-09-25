@@ -57,7 +57,7 @@ Texture.prototype.chainLoad = function(resourceCenter,index,callback) {
 		self.image.onload = callback;
 	} else {
 		self.image.onload = function() {
-                    document.getElementById("status").innerHTML="loaded texture: "+self.filename+".";
+                    game.getCurrentScreen().updateStatus("loaded texture: "+self.filename+".");
                     self.chainLoad(resourceCenter,index+1,callback);
                 };
 	}
@@ -1626,7 +1626,7 @@ ResourceCenter.prototype.getCubemap = function(name) {
  * @returns {EgomModel} The found or added model object in the resource center.
  */
 ResourceCenter.prototype.getModel = function(filename) {
-    document.getElementById("status").innerHTML="loading model: "+filename+"...";
+    game.getCurrentScreen().updateStatus("loading model: "+filename+"...");
 	var i = 0;
 	while((i<this.models.length)&&(this.models[i].filename!==filename)) {
 		i++;
@@ -1638,7 +1638,7 @@ ResourceCenter.prototype.getModel = function(filename) {
 		this.models.push(model);
 		return model;
 	}
-    document.getElementById("status").innerHTML="loading model: "+filename+"... done.";
+    game.getCurrentScreen().updateStatus("loading model: "+filename+"... done.");
 };
 
 /**
@@ -1904,17 +1904,17 @@ ResourceCenter.prototype.setupWebGL = function(canvas) {
  */
 ResourceCenter.prototype.init = function(canvas,freq) {
 	var self=this;
-	document.getElementById("status").innerHTML="loading textures...";
+        game.getCurrentScreen().updateStatus("loading textures...");
 	this.loadTextures(function() {
-		document.getElementById("status").innerHTML="initializing WebGL...";
+                game.getCurrentScreen().updateStatus("initializing WebGL...");
 		if (self.setupWebGL(canvas)) {
                     document.getElementById("status").style.display="none";
                     document.getElementById("progress").value=100;
-                    alert("ready!");
+                    alert("Ready!");
                     document.getElementById("progress").style.display="none";
                     document.getElementById("output").style.display="block";
                     document.getElementById("ui").style.display="block";
-                    setInterval(
+                    battleRenderLoop = setInterval(
                             function() {
                                     self.cleanUpScenes();
                                     self.renderScenes();
@@ -1992,6 +1992,12 @@ ResourceCenter.prototype.renderScenes = function() {
  * @param {Scene} scene The scene to be stored in the context.
  */
 function GraphicsContext(resourceCenter,scene) {
-	this.resourceCenter=resourceCenter;
-	this.scene=scene;
+    this.resourceCenter=resourceCenter;
+    this.scene=scene;
+
+    // temporary test variable indicating the angle of directional lighting
+    this.lightAngle=0.7;
+    // temporary test variable indicating whether the direction of directional
+    // lighting should keep turning around
+    this.lightIsTurning=false;
 }

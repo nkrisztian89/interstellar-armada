@@ -583,10 +583,10 @@ FighterController.prototype.control = function() {
                 // correcting to reach intended speed
 		if(relativeVelocityMatrix[13]<this.intendedSpeed-0.0001) {
 			this.controlledEntity.addThrusterBurnCapped("forward",0.5,this.controlledEntity.getNeededBurnForSpeedChange(this.intendedSpeed-relativeVelocityMatrix[13]));
-                        document.getElementById('ui').innerHTML+="[forward] ";
+                        //document.getElementById('ui').innerHTML+="[forward] ";
 		} else if(relativeVelocityMatrix[13]>this.intendedSpeed+0.0001) {
 			this.controlledEntity.addThrusterBurnCapped("reverse",0.5,this.controlledEntity.getNeededBurnForSpeedChange(relativeVelocityMatrix[13]-this.intendedSpeed));
-                        document.getElementById('ui').innerHTML+="[reverse] ";
+                        //document.getElementById('ui').innerHTML+="[reverse] ";
 		}
 	} else
         {
@@ -692,13 +692,16 @@ FighterController.prototype.control = function() {
 	}
         
         document.getElementById('ui').innerHTML+=
-                "speed: "+vector3Length(getPositionVector(physicalModel.velocityMatrix))+" m/s"+
+                "speed: "+vector3Length(getPositionVector(physicalModel.velocityMatrix)).toFixed(3)+" m/s"+
                 "<br/>"+
-                "forward speed: "+relativeVelocityMatrix[13]+" m/s"+
+                "forward speed: "+relativeVelocityMatrix[13].toFixed(3)+" m/s"+
                 "<br/>"+
                 "set speed: "+this.intendedSpeed+" m/s"+
                 "<br/>"+
-                "distance: "+getPositionVector(physicalModel.positionMatrix)[1]+" m"+
+                "position: "+
+                    getPositionVector(physicalModel.positionMatrix)[0].toFixed(3)+" m, "+
+                    getPositionVector(physicalModel.positionMatrix)[1].toFixed(3)+" m, "+
+                    getPositionVector(physicalModel.positionMatrix)[2].toFixed(3)+" m"+
                 "<br/>"+
                 "mass: "+physicalModel.mass+" kg";
 };
@@ -1088,7 +1091,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         }
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("toggleLightRotation",function(){
-        lightTurn=!lightTurn;
+        game.graphicsContext.lightIsTurning=!game.graphicsContext.lightIsTurning;
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("toggleHitboxVisibility",function(){
         for(i=0;i<logicContext.level.spacecrafts.length;i++) {
@@ -1099,6 +1102,11 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
                 }
             }
         }
+    }));
+    globalCommands.push(controlContext.setOneShotActionForCommand("quit",function(){
+        clearInterval(battleRenderLoop);
+        clearInterval(battleSimulationLoop);
+        game.setCurrentScreen("mainMenu");
     }));
     
     return globalCommands;

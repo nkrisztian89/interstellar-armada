@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 
 <html lang="en">
-<head>
-<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-<meta name="author" content="Krisztián Nagy"/>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="author" content="Krisztián Nagy"/>
 
-<title>Interstellar Armada (WIP)</title>
+        <title>Interstellar Armada</title>
 
-<link href="css/style.css" rel="stylesheet" type="text/css"/>
-</head>
-
-<body>
-<ul class="mainmenu">
-<li>
-	<h3>
-		<img src="pictures/sa.png" alt="logo" /><br/>
-		Interstellar Armada<br/>
-	</h3>
-	<ul>
-		<li class="menubutton"><a href="armada.html">Play the game</a></li>
-		<li class="menubutton"><a href="help.html">Keyboard commands</a></li>
-		<li class="menubutton"><a href="doc">Documentation</a></li>
-	</ul>
-    <p>&nbsp;</p>
-</li>
-</ul>
-</body>
+        <link href="css/style.css" rel="stylesheet" type="text/css"/>
+        <link href="css/game.css" rel="stylesheet" type="text/css"/>
+        
+        <!-- Adding the ?123 bypasses caching, to make sure the newest version
+             of the source file is loaded (only used on this page, other pages
+             can load from cache) -->
+        <script src="armada.js?123"></script>
+    </head>
+    <body onload="initialize()">
+        <ul class="mainmenu">
+            <li>
+                <h3>
+                    <img src="pictures/sa.png" alt="logo" /><br/>
+                    Interstellar Armada<br/>
+                </h3>
+                <ul>
+                    <li class="menubutton" onclick="initializeBattle()"><a href="#">Play the game</a></li>
+                    <li class="menubutton" onclick="initializeDatabase()"><a href="#">Database</a></li>
+                    <li class="menubutton" onclick="initializeHelp()"><a href="#">Keyboard controls</a></li>
+                    <li class="menubutton"><a href="doc">Documentation</a></li>
+                </ul>
+                <p>&nbsp;</p>
+            </li>
+        </ul>
+    </body>
 </html>

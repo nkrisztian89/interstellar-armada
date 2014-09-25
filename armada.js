@@ -24,25 +24,52 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+/**
+ * Holds the Game object that contains the global properties of the game. This
+ * should be the only global variable in the application.
+ * @type Game
+ */
+var game;
+
+/**
+ * Returns an array containing the name of all the JavaScript source files of
+ * the game.
+ * @returns {String[]}
+ */
+function getSourceFiles() {
+    return [
+        "matrices.js",
+        "egom.js",
+        "graphics.js",
+        "physics.js",
+        "logic.js",
+        "control.js"
+    ];
+}
+
 /** 
  * Function to load additional JavaScript code from a list of source files.
  * Loads the scripts in the specified order, then executes a callback function.
  * @param {String[]} urls The list of JavaScript sourse files to load
  * @param {function} callback The function to call after loading the scripts
+ * @param {Boolean} bypassCaching If true, the script files will be forcefully
+ * downloaded again, even if they are in the cache already.
  */
-function loadScripts(urls,callback) {
+function loadScripts(urls,bypassCaching,callback) {
     // We add a new script tag inside the head of the document
     var head = document.getElementsByTagName('head')[0];
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = urls.shift()+"?123";
+    script.src = (bypassCaching?
+                    urls.shift()+"?123":
+                    urls.shift());        
 
     // Then bind the event to the callback function.
     // There are several events for cross browser compatibility.
     if(urls.length>0) {
-		script.onload = function() {loadScripts(urls,callback);};
-		script.onreadystatechange = function() {loadScripts(urls,callback);};
-	} else {
+		script.onload = function() {loadScripts(urls,bypassCaching,callback);};
+		script.onreadystatechange = function() {loadScripts(urls,bypassCaching,callback);};
+	} else if (callback!==undefined) {
 		script.onload = callback;
 		script.onreadystatechange = callback;
 	}
@@ -51,34 +78,187 @@ function loadScripts(urls,callback) {
     head.appendChild(script);
 }
 
-/** 
- * Entry point of the whole JavaScript program. Initiates loading the other
- * script files and the external resources.
+/**
+ * Defines a Game object.
+ * @class Holds the general properties of the game (the current context for the
+ * different modules)
+ * @returns {Game}
  */
-function start() {
-	document.getElementById("status").innerHTML="loading program source...";
-	loadScripts(["matrices.js","egom.js","graphics.js","physics.js","logic.js","control.js"],loadResources);
+function Game() {
+    this._screens = new Object();
+    this._currentScreen = null;
+    this.graphicsContext = new GraphicsContext(new ResourceCenter(),null);
 }
 
-// temporary test variable indicating the angle of directional lighting
-var ang=0.7;
-// temporary test variable indicating whether the direction of directional
-// lighting should keep turning around
-var lightTurn=false;
+/**
+ * Adds a new screen to the list that can be set as current later.
+ * @param {GameScreen} screen The new game screen to be added.
+ */
+Game.prototype.addScreen = function(screen) {
+    this._screens[screen.getName()]=screen;
+};
 
-// test variable: number of random goals the AI controllers get at start
-var num_test_goals=10;
-// test variable: number of random fighters generated
-var num_test_fighters=40;
-// test variable: number of random ships generated
-var num_test_ships=15;
-// test variable: indicating the range within the random positions of fighters
-// and ships and the destinations of their goals are generated
-var mapSize=3000;
+/**
+ * Returns the game screen with the specified name that the game has.
+ * @param {String} screenName
+ * @returns {GameScreen}
+ */
+Game.prototype.getScreen = function(screenName) {
+    return this._screens[screenName];
+};
+
+/**
+ * Sets the current game screen to the one with the specified name (from the
+ * list of available screens), including refreshing the HTML body.
+ * @param {String} screenName
+ */
+Game.prototype.setCurrentScreen = function(screenName) {
+    var screen = this.getScreen(screenName);
+    screen.buildPage();
+    this._currentScreen = screen;
+};
+
+/**
+ * Gets the object corresponding to the currently set game screen.
+ * @returns {GameScreen}
+ */
+Game.prototype.getCurrentScreen = function() {
+    return this._currentScreen;
+};
+
+/**
+ * Defines a GameScreen object.
+ * @class Holds the logical model of a screen of the game. The different
+ * screens should be defined as descendants of this class.
+ * @param {String} name The name by which this screen can be identified.
+ * @param {String} source The name of the HTML file where the structure of this
+ * screen is defined.
+ * @returns {GameScreen}
+ */
+function GameScreen(name,source) {
+    // general properties
+    this._name=name;
+    this._source=source;
+    this._model=null;
+    
+    // default components
+    this._status=null;
+    
+    // function to execute when the model is loaded
+    this._onModelLoad = function() {};
+    
+    // send an asynchronous request to grab the HTML file containing the DOM of
+    // this screen
+    if(this._source!==undefined) {
+        var request = new XMLHttpRequest();
+        request.open('GET', location.pathname+this._source+"?123", true);
+        var self = this;
+        request.onreadystatechange = function() {
+                self._model = document.implementation.createHTMLDocument(self._name);
+                self._model.documentElement.innerHTML = this.responseText;
+                self._onModelLoad();
+            };
+        request.send(null);
+    }
+}
+
+/**
+ * Getter for the _name property.
+ * @returns {String}
+ */
+GameScreen.prototype.getName = function() {
+    return this._name;
+};
+
+/**
+ * Replaces the current HTML page's body with the sctructure of the screen.
+ */
+GameScreen.prototype.buildPage = function() {
+    var self = this;
+    var buildPageFunction = function() {
+        document.body=self._model.body.cloneNode(true);
+        self._initializeComponents();
+    };
+    // if we have built up the model of the screen already, then load it
+    if(this._model!==null) {
+        buildPageFunction();
+    // if not yet, set the callback function which fires when the model is 
+    // loaded
+    } else {
+        this._onModelLoad = buildPageFunction;
+    }
+};
+
+/**
+ * Setting the properties that will be used to easier access DOM elements later.
+ * In descendants, this method should be overwritten, adding the additional
+ * components of the screen after calling this parent method.
+ */
+GameScreen.prototype._initializeComponents = function() {
+    this._status = document.getElementById("status");
+};
+
+/**
+ * Provides visual information to the user about the current status of the game.
+ * @param {String} newStatus The new status to display.
+ */
+GameScreen.prototype.updateStatus = function(newStatus) {
+    if (this._status!==null) {
+        this._status.innerHTML=newStatus;
+    } else {
+        alert(newStatus);
+    }
+};
+
+/** 
+ * Downloads the newest version of all source files from the server and sets up
+ * the global Game object. (to be called when index.html is loaded)
+ */
+function initialize() {
+    loadScripts(getSourceFiles(),true,function(){ 
+        game = new Game(); 
+        game.addScreen(new GameScreen("mainMenu","index.html"));
+        game.addScreen(new GameScreen("battle","battle.html"));
+        game.addScreen(new GameScreen("database","database.html"));
+        game.addScreen(new GameScreen("help","help.html"));
+    });
+}
+
+/**
+ * Goes to the battle screen, loads the needed resources and starts the
+ * simulation and rendering loops.
+ */
+function initializeBattle() {
+    game.setCurrentScreen("battle");
+    loadBattleResources();
+}
+
+/**
+ * Goes to the database screen, loads the needed resources and starts the
+ * simulation and rendering loops. (not implemented yet)
+ */
+function initializeDatabase() {
+    game.setCurrentScreen("database");
+    loadDatabaseResources();
+}
+
+/**
+ * Goes to the help screen.
+ */
+function initializeHelp() {
+    game.setCurrentScreen("help");
+}
 
 var prevDate,curDate;
 var mainScene;
 
+var battleSimulationLoop;
+var battleRenderLoop;
+
+/**
+ * Updates all needed variables when the screen is resized (camera perspective
+ * matrices as well!)
+ */
 function resizeCanvas() {
    // only change the size of the canvas if the size it's being displayed
    // has changed.
@@ -100,7 +280,7 @@ function resizeCanvas() {
  * Main function loading the external resources required by the program. Builds
  * the test scene populated with random ships and fighters controlled by AI.
  * */
-function loadResources() {
+function loadBattleResources() {
 	document.getElementById("output").style.display="none";
         document.getElementById("ui").style.display="none";
         
@@ -146,8 +326,20 @@ function loadResources() {
         controlContext.addKeyCommand(new controlContext.KeyCommand("stopAIShips",           "0",false,false,false));
         controlContext.addKeyCommand(new controlContext.KeyCommand("toggleLightRotation",   "l",false,false,false));
         controlContext.addKeyCommand(new controlContext.KeyCommand("toggleHitboxVisibility","h",false,false,false));
+        controlContext.addKeyCommand(new controlContext.KeyCommand("quit",                  "escape",false,false,false));
 
-	var resourceCenter = new ResourceCenter();
+        // test variable: number of random goals the AI controllers get at start
+        var num_test_goals=10;
+        // test variable: number of random fighters generated
+        var num_test_fighters=40;
+        // test variable: number of random ships generated
+        var num_test_ships=15;
+        // test variable: indicating the range within the random positions of fighters
+        // and ships and the destinations of their goals are generated
+        var mapSize=3000;
+
+	var resourceCenter = game.graphicsContext.resourceCenter;
+        resourceCenter.scenes= new Array();
 	  
         resizeCanvas(); 
         // based on screen (canvas) size, set a maximum enabled LOD, so that
@@ -169,7 +361,7 @@ function loadResources() {
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
-	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(ang),0.0,Math.sin(ang)]; };
+	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]; };
 	mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
 	mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
 	mainScene.uniformValueFunctions['u_eyePos'] = function() 
@@ -193,7 +385,7 @@ function loadResources() {
 	test_level.loadFromFile("level.xml");
 	
 	progress.value=50;
-	document.getElementById("status").innerHTML="loading additional configuration...";
+	game.getCurrentScreen().updateStatus("loading additional configuration...");
 	
         // we turn the cruizer around so it looks nicer at start :)
 	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientationMatrix=
@@ -284,12 +476,16 @@ function loadResources() {
 
 	prevDate = new Date();
 
-	setInterval(function()
+	battleSimulationLoop = setInterval(function()
 		{
 			curDate=new Date();
 			test_level.tick(curDate-prevDate);
                         prevDate=curDate;
 			control(mainScene,test_level,globalCommands);
-			ang+=lightTurn?0.07:0.0;
+			game.graphicsContext.lightAngle+=game.graphicsContext.lightIsTurning?0.07:0.0;
 		},1000/freq);
+}
+
+function loadDatabaseResources() {
+    
 }
