@@ -617,7 +617,6 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
                 var yOffsetPosition = vector4Matrix4Product([0.0,0.0,0.0,1.0],mul(mul(baseMatrix,translationMatrix(0.0,this.getSize()*this.getCascadeScalingMatrix()[0],0.0)),camera.perspectiveMatrix));
 		var xOffset = Math.abs(xOffsetPosition[0]/xOffsetPosition[3]-position[0]);
                 var yOffset = Math.abs(yOffsetPosition[1]/yOffsetPosition[3]-position[1]);
-                //alert(offset);
 		if (
                     !(((position[0]+xOffset<-1)&&(position[0]-xOffset<-1))||((position[0]+xOffset>1)&&(position[0]-xOffset>1)))&&
 		    !(((position[1]+yOffset<-1)&&(position[1]-yOffset<-1))||((position[1]+yOffset>1)&&(position[1]-yOffset>1)))
@@ -1865,7 +1864,7 @@ ResourceCenter.prototype.setupWebGL = function(canvas) {
 
 	// If we don't have a GL context, give up now
 	if (!this.gl) {
-		alert("Unable to initialize WebGL. Your browser might not support it.");
+		game.showError("Unable to initialize WebGL. Your browser might not support it.");
                 return false;
 	}
 	

@@ -80,6 +80,85 @@ function loadScripts(urls,bypassCaching,callback) {
 }
 
 /**
+ * Defines a resource object.
+ * @class Ancestor class for all classes representing resources that need to be 
+ * prepared (e.g. loaded from external source) before they can be used. As the
+ * loading happends asynchronously in many cases, this class provides a safe way
+ * to interact with the objects at any time, queuing the actions if the resource
+ * is not ready yet to use.
+ * @returns {Resource}
+ */
+function Resource() {
+    this._readyToUse = false;
+    
+    this._onReadyQueue = new Array();
+}
+
+/**
+ * Adds the given function to the queue to be executed ones the resource gets
+ * ready.
+ * @param {Function} onReadyFunction
+ */
+Resource.prototype.addOnReadyFunction = function(onReadyFunction) {
+    this._onReadyQueue.push(onReadyFunction);
+};
+
+/**
+ * Returns if the resource is ready to be used at the moment. (i.e. properties
+ * are initialized)
+ * @returns {Boolean}
+ */
+Resource.prototype.isReadyToUse = function() {
+    return this._readyToUse;
+};
+
+/**
+ * Resets the state of the resource to be not ready, resetting the queued 
+ * actions as well.
+ */
+Resource.prototype.reset = function() {
+    this._readyToUse = false;
+    this._onReadyQueue = new Array();
+};
+
+/**
+ * Sets the ready state of the resource and executes the queued actions that
+ * were requested in advance. Also erases the queue.
+ */
+Resource.prototype.setToReady = function() {
+    this._readyToUse = true;
+    for(var i=0;i<this._onReadyQueue.length;i++) {
+        this._onReadyQueue[i]();
+    }
+    this._onReadyQueue=new Array();
+};
+
+/**
+ * Executes the first given function if the resourse is ready, otherwise queues
+ * it to be executed when it gets ready. Optionally takes a second function to
+ * be executed right now in case the resource is not ready yet to execute the
+ * first one (such as notifying the user).
+ * @param {Function} functionToExecute The function to execute when the resource
+ * is ready (now or later).
+ * @param {Function} functionToExecuteIfNotReady The function to be executed if
+ * the resource is not ready yet.
+ * @returns {Boolean} True if the first function got executed, false if it got
+ * queued.
+ */
+Resource.prototype.executeWhenReady = function(functionToExecute,functionToExecuteIfNotReady) {
+    if(this._readyToUse) {
+        functionToExecute();
+        return true;
+    } else {
+        this.addOnReadyFunction(functionToExecute);
+        if (functionToExecuteIfNotReady) {
+            functionToExecuteIfNotReady();
+        }
+        return false;
+    }
+};
+
+/**
  * Defines a Game object.
  * @class Holds the general properties of the game (the current context for the
  * different modules)
@@ -94,6 +173,14 @@ function Game() {
     
     this.requestSettingsLoad();
 }
+
+/**
+ * Notifies the user of an error that happened while running the game.
+ * @param {String} message The message to show.
+ */
+Game.prototype.showError = function(message) {
+    alert(message);
+};
 
 /**
  * Sends an asynchronous request to get the XML file describing the game

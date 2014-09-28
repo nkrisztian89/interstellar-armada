@@ -30,6 +30,7 @@
  * @class A reusable component that consist of HTML elements (a fragment of a 
  * HTML document) and can be appended to game screens. Various components have
  * to be the descendants of this class, and implement their own various methods.
+ * @extends Resource
  * @param {String} name The name of the component to be identified by.
  * @param {String} source The filename of the HTML document where the structure
  * of the component should be defined. The component will be loaded as the first
@@ -37,6 +38,8 @@
  * @returns {ScreenComponent}
  */
 function ScreenComponent(name,source) {
+    Resource.call(this);
+    
     this._name=name;
     this._source=source;
     
@@ -53,6 +56,9 @@ function ScreenComponent(name,source) {
         this.requestModelLoad();
     }
 }
+
+ScreenComponent.prototype = new Resource();
+ScreenComponent.prototype.constructor = ScreenComponent;
 
 /**
  * Initiates the asynchronous loading of the component's structure from the
@@ -83,6 +89,7 @@ ScreenComponent.prototype.appendToPage = function() {
         self._rootElement = document.body.appendChild(document.importNode(self._model.body.firstElementChild,true));
         self._rootElementDefaultDisplayMode = self._rootElement.style.display;
         self._initializeComponents();
+        self.setToReady();
     };
     // if we have built up the model of the screen already, then load it
     if(this._model!==null) {
@@ -106,14 +113,20 @@ ScreenComponent.prototype._initializeComponents = function() {
  * Sets the display property of the root element of the component to show it.
  */
 ScreenComponent.prototype.show = function() {
-    this._rootElement.style.display = this._rootElementDefaultDisplayMode;
+    var self = this;
+    this.executeWhenReady(function() {
+        self._rootElement.style.display = this._rootElementDefaultDisplayMode;
+    });
 };
 
 /**
  * Sets the display property of the root element of the component to hide it.
  */
 ScreenComponent.prototype.hide = function() {
-    this._rootElement.style.display = "none";
+    var self = this;
+    this.executeWhenReady(function() {
+        self._rootElement.style.display = "none";
+    });
 };
 
 /**
@@ -151,7 +164,10 @@ LoadingBox.prototype._initializeComponents = function() {
  * @param {Number} value The new value of the progress bar.
  */
 LoadingBox.prototype.updateProgress= function(value) {
-    this._progress.value = value;
+    var self = this;
+    this.executeWhenReady(function() {
+        self._progress.value = value;
+    });
 };
 
 /**
@@ -159,7 +175,10 @@ LoadingBox.prototype.updateProgress= function(value) {
  * @param {String} status The new status to show.
  */
 LoadingBox.prototype.updateStatus= function(status) {
-    this._status.innerHTML = status;
+    var self = this;
+    this.executeWhenReady(function() {
+        self._status.innerHTML = status;
+    });
 };
 
 /**
@@ -368,7 +387,7 @@ GameScreenWithCanvases.prototype.getCanvas = function() {
     } else if((this._fixCanvases.length===0)&&(this._resizeableCanvases.length===1)) {
         return this._resizeableCanvases[0];
     } else {
-        alert("Screen '"+this._name+"' has zero or more than one canvases, cannot return one!");
+        game.showError("Screen '"+this._name+"' has zero or more than one canvases, cannot return one!");
         return null;
     }
 };

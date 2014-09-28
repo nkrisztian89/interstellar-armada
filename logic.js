@@ -576,7 +576,7 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 	} else if (controller==="keyboard") {
             this.controller = new FighterController(this,graphicsContext,logicContext,controlContext);
 	} else {
-		alert("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
+		game.showError("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
 	}
     
         this.graphicsContext=graphicsContext;
