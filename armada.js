@@ -295,6 +295,7 @@ function loadBattleResources() {
     // this is dirty, we don't know that its class is BattleScreen
     game.getCurrentScreen().hideStats();
     game.getCurrentScreen().hideUI();
+    game.getCurrentScreen().getInfoBox().hide();
         
     var canvas = game.getCurrentScreen().getCanvas();
         

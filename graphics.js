@@ -1906,7 +1906,7 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                 game.getCurrentScreen().updateStatus("initializing WebGL...");
 		if (self.setupWebGL(canvas)) {
                     game.getCurrentScreen().updateStatus("",100);
-                    alert("Ready!");
+                    game.getCurrentScreen().showMessage("Ready!");
                     game.getCurrentScreen().getLoadingBox().hide();
                     game.getCurrentScreen().showStats();
                     battleRenderLoop = setInterval(

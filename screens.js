@@ -115,7 +115,7 @@ ScreenComponent.prototype._initializeComponents = function() {
 ScreenComponent.prototype.show = function() {
     var self = this;
     this.executeWhenReady(function() {
-        self._rootElement.style.display = this._rootElementDefaultDisplayMode;
+        self._rootElement.style.display = self._rootElementDefaultDisplayMode;
     });
 };
 
@@ -178,6 +178,48 @@ LoadingBox.prototype.updateStatus= function(status) {
     var self = this;
     this.executeWhenReady(function() {
         self._status.innerHTML = status;
+    });
+};
+
+/**
+ * Defines an info box component object.
+ * @class An info box component, that has a title, and a message to tell to the
+ * user and appears in the middle of the screen (the corresponding stylesheet 
+ * needs to be statically referenced in the head of index.html as of now)
+ * @extends ScreenComponent
+ * @param {String} name Check ScreenComponent
+ * @param {String} source Check ScreenComponent
+ * @returns {InfoBox}
+ */
+function InfoBox(name,source) {
+    ScreenComponent.call(this,name,source);
+    
+    this._message = null;
+}
+
+InfoBox.prototype = new ScreenComponent();
+InfoBox.prototype.constructor = InfoBox;
+
+/**
+ * Sets the properties for easier access of the DOM elements.
+ */
+InfoBox.prototype._initializeComponents = function() {
+    ScreenComponent.prototype._initializeComponents.call(this);
+    
+    var self = this;
+    
+    this._message = this._rootElement.querySelector("p.infoBoxMessage");
+    this._rootElement.querySelector("a.infoBoxOKButton").onclick=function(){self.hide();};
+};
+
+/**
+ * Updates the message shown on the info box.
+ * @param {String} message The new message to show.
+ */
+InfoBox.prototype.updateMessage= function(message) {
+    var self = this;
+    this.executeWhenReady(function() {
+        self._message.innerHTML = message;
     });
 };
 
@@ -446,6 +488,7 @@ BattleScreen.prototype._initializeComponents = function() {
     this._ui= document.getElementById("ui");
     
     this._loadingBox = this.addExternalComponent(new LoadingBox("loadingBox","loadingbox.html"));
+    this._infoBox = this.addExternalComponent(new InfoBox("infoBox","infobox.html"));
 };
 
 /**
@@ -454,6 +497,14 @@ BattleScreen.prototype._initializeComponents = function() {
  */
 BattleScreen.prototype.getLoadingBox = function() {
     return this._loadingBox;
+};
+
+/**
+ * Getter for the _infoBox property.
+ * @returns {InfoBox}
+ */
+BattleScreen.prototype.getInfoBox = function() {
+    return this._infoBox;
 };
 
 /**
@@ -498,6 +549,15 @@ BattleScreen.prototype.showStats = function() {
  */
 BattleScreen.prototype.showUI = function() {
     this._ui.style.display="block";
+};
+
+/**
+ * Shows the given message to the user in an information box.
+ * @param {String} message
+ */
+BattleScreen.prototype.showMessage = function(message) {
+    this._infoBox.updateMessage(message);
+    this._infoBox.show();
 };
 
 /**
