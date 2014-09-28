@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <graphics>
+        <shaders source="shaders.xml" />
+    </graphics>
+    <logic>
+        <classes source="classes.xml" />
+    </logic>
+    <control>
+        <descriptions>
+            <command name="quit" description="Quit to main menu." />
+            <command name="pause" description="Pause the game." />
+            <command name="cameraMoveLeft" description="Move the camera to the left (free camera mode)." />
+            <command name="cameraMoveRight" description="Move the camera to the right (free camera mode)." />
+            <command name="cameraMoveUp" description="Move the camera upwards (free camera mode)." />
+            <command name="cameraMoveDown" description="Move the camera downwards (free camera mode)." />
+            <command name="cameraMoveForward" description="Move the camera forward (free camera mode)." />
+            <command name="cameraMoveBackward" description="Move the camera backward (free camera mode)." />
+            <command name="cameraTurnLeft" description="Turn the camera to the left." />
+            <command name="cameraTurnRight" description="Turn the camera to the right." />
+            <command name="cameraTurnUp" description="Turn the camera upwards." />
+            <command name="cameraTurnDown" description="Turn the camera downwards." />
+            <command name="followNext" description="Follow next spacecraft." />
+            <command name="followPrevious" description="Follow previous spacecraft." />
+            <command name="changeView" description="Change view of currently followed spacecraft." />
+            <command name="setManualControl" description="Switch the control of the currently followed spacecraft to manual." />
+            <command name="changeFlightMode" description="Toggle the controlled spacecraft between free and compensated flight modes." />
+            <command name="fire" description="Fire the weapons of the manually controlled spacecraft." />
+            <command name="forward" description="Forward thrust (free mode) or increase speed (compensated mode)." />
+            <command name="reverse" description="Reverse thrust (free mode) or decrease speed (compensated mode)." />
+            <command name="resetSpeed" description="Reset speed to zero (compensated mode)." />
+            <command name="yawLeft" description="Turn spacecraft to the left." />
+            <command name="yawRight" description="Turn spacecraft to the right." />
+            <command name="pitchUp" description="Turn spacecraft upwards." />
+            <command name="pitchDown" description="Turn spacecraft downwards." />
+            <command name="rollLeft" description="Roll spacecraft to the left." />
+            <command name="rollRight" description="Roll spacecraft to the right." />
+            <command name="toggleLightRotation" description="Toggle rotation of directional light." />
+            <command name="setAIControl" description="Switch the control of the currently followed spacecraft to AI." />
+            <command name="stopAIShips" description="Delete the goals of AI controlled spacecrafts and make all of them stop." />
+            <command name="toggleHitboxVisibility" description="Toggle the visibility of hitboxes." />
+            <command name="cameraDecreaseFOV" description="Zoom in. (decrease field of view of current camera)" />
+            <command name="cameraIncreaseFOV" description="Zoom out. (increase field of view of current camera)" />
+        </descriptions>
+        <keyboard>
+            <command name="fire" key="space" />
+            <command name="changeFlightMode" key="o" />
+            <command name="forward" key="w" />
+            <command name="reverse" key="s" />
+            <command name="resetSpeed" key="backspace" />
+            <command name="yawLeft" key="left" />
+            <command name="yawRight" key="right" />
+            <command name="pitchDown" key="up" />
+            <command name="pitchUp" key="down" />
+            <command name="rollRight" key="page down" />
+            <command name="rollLeft" key="page up" />
+            
+            <command name="cameraTurnLeft" key="left" ctrl="true" />
+            <command name="cameraTurnRight" key="right" ctrl="true" />
+            <command name="cameraTurnUp" key="up" ctrl="true" />
+            <command name="cameraTurnDown" key="down" ctrl="true" />
+            <command name="cameraMoveLeft" key="left" />
+            <command name="cameraMoveRight" key="right" />
+            <command name="cameraMoveUp" key="page up" />
+            <command name="cameraMoveDown" key="page down" />
+            <command name="cameraMoveForward" key="up" />
+            <command name="cameraMoveBackward" key="down" />
+            <command name="cameraDecreaseFOV" key="z" />
+            <command name="cameraIncreaseFOV" key="u" />
+            
+            <command name="pause" key="p" />
+            <command name="changeView" key="v" />
+            <command name="followNext" key="c" />
+            <command name="followPrevious" key="x" />
+            <command name="setManualControl" key="m" />
+            <command name="setAIControl" key="n" />
+            <command name="stopAIShips" key="0" />
+            <command name="toggleLightRotation" key="l" />
+            <command name="toggleHitboxVisibility" key="h" />
+            <command name="quit" key="escape" />
+        </keyboard>
+    </control>
+</settings>

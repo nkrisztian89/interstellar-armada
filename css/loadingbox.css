@@ -1,0 +1,36 @@
+.loadingBox {
+    text-align: center;
+    display: block;
+    
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 300px;
+    height: 130px;
+    margin: auto;
+    padding: 10px;
+    
+    background-color: #111111;
+    border: 2px solid #333333;
+    box-shadow: 0em 0em 0.5em #00FF00;
+}
+
+.loadingBoxContent {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    width: 250px;
+    text-align: center;
+}
+
+.loadingBoxProgress {
+    display: block;
+}
+
+.loadingBoxHeader,.loadingBoxStatus {
+    display: inline;
+}

@@ -1429,13 +1429,11 @@ Scene.prototype.getLODContext = function() {
 /**
  * Recalculates the perspective matrices of cameras in case the viewport size
  * (and as a result, aspect) has changed.
- * @param {Number} newWidth
- * @param {Number} newHeight
  */
-Scene.prototype.resizeViewport = function(newWidth,newHeight) {
+Scene.prototype.resizeViewport = function() {
     var i;
-    this.width=newWidth;
-    this.height=newHeight;
+    //this.width=newWidth;
+    //this.height=newHeight;
     for(var i=0;i<this.cameras.length;i++) {
         this.cameras[i].setAspect(this.width/this.height);
     }
@@ -1481,7 +1479,7 @@ var drawnPolygons = 0;
  * shaders, textures, models of the scene.
  */
 Scene.prototype.render = function(resourceCenter) {
-	document.getElementById("output").innerHTML="";
+	document.getElementById("stats").innerHTML="";
 	drawnPolyogons=0;
 	
 	var gl = resourceCenter.gl;
@@ -1523,7 +1521,7 @@ Scene.prototype.render = function(resourceCenter) {
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
 	}
-	document.getElementById("output").innerHTML+=drawnPolyogons;
+	document.getElementById("stats").innerHTML+=drawnPolyogons;
 };
 
 /**
@@ -1908,12 +1906,10 @@ ResourceCenter.prototype.init = function(canvas,freq) {
 	this.loadTextures(function() {
                 game.getCurrentScreen().updateStatus("initializing WebGL...");
 		if (self.setupWebGL(canvas)) {
-                    document.getElementById("status").style.display="none";
-                    document.getElementById("progress").value=100;
+                    game.getCurrentScreen().updateStatus("",100);
                     alert("Ready!");
-                    document.getElementById("progress").style.display="none";
-                    document.getElementById("output").style.display="block";
-                    document.getElementById("ui").style.display="block";
+                    game.getCurrentScreen().getLoadingBox().hide();
+                    game.getCurrentScreen().showStats();
                     battleRenderLoop = setInterval(
                             function() {
                                     self.cleanUpScenes();
@@ -1924,7 +1920,7 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                                             self.renderTimes.shift();
                                     }
                                     if (self.renderTimes.length>1) {
-                                            document.getElementById("output").innerHTML+=
+                                            document.getElementById("stats").innerHTML+=
                                                     "<br/>FPS: "+
                                                     Math.round(1000/((self.renderTimes[self.renderTimes.length-1]-self.renderTimes[0])/(self.renderTimes.length-1))*10)/10;
                                     }

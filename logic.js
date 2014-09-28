@@ -1241,10 +1241,10 @@ Level.prototype.loadFromFile = function(filename) {
 		this.players.push(new Player(playerTags[i].getAttribute("name")));
 	}
 	
-	document.getElementById("status").innerHTML="loading shaders...";
+	game.getCurrentScreen().updateStatus("loading shaders...");
 	this.resourceCenter.loadShaders(levelSource.getElementsByTagName("Shaders")[0].getAttribute("source"));
 	
-	document.getElementById("status").innerHTML="loading level information...";
+	game.getCurrentScreen().updateStatus("loading level information...");
         
         var request2 = new XMLHttpRequest();
 	request2.open('GET', levelSource.getElementsByTagName("Classes")[0].getAttribute("source")+"?12345", false); //timestamp added to URL to bypass cache
@@ -1274,9 +1274,7 @@ Level.prototype.loadFromFile = function(filename) {
 	
 	this.spacecrafts = new Array();
 	
-	document.getElementById("progress").value=25;
-	
-	document.getElementById("status").innerHTML="loading models...";
+	game.getCurrentScreen().updateStatus("loading models...",25);
         
         var graphicsContext = new GraphicsContext(this.resourceCenter,this.scene);
         var logicContext = new LogicContext(this);

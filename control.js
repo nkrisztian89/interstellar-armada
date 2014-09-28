@@ -32,7 +32,21 @@
  */ 
 var manualController;
 
+function ControlContext() {
+    this._commandDescriptions = new Object();
+}
+
+ControlContext.prototype.loadFromXML = function(xmlSource) {
+    var i;
+    var commandDescriptionTags = xmlSource.getElementsByTagName("descriptions")[0].getElementsByTagName("command");
+    for(i=0;i<commandDescriptionTags.length;i++) {
+        this._commandDescriptions[commandDescriptionTags[i].getAttribute("name")]=commandDescriptionTags[i].getAttribute("description");
+    }
+};
+
 function KeyboardControlContext() {
+    ControlContext.call(this);
+    
     var currentlyPressedKeys = new Array(256);
     var i;
     //var keyPressEvents = new Array();
@@ -67,16 +81,19 @@ function KeyboardControlContext() {
         "f1": 112, "f2": 113, "f3": 114, "f4": 115, "f5": 116, "f6": 117, "f7": 118, "f8": 119, "f9": 120,
         "f10": 121, "f11": 122, "f12": 123
     };
-     var keyCommands={};
+    var keyCommands={};
     
     for(i=0;i<currentlyPressedKeys.length;i++) { currentlyPressedKeys[i]=false; }
+    
+    // don't move the methods below under the prototype, it will break
+    // functionality
 
     this.handleKeyDown = function(event) {
-	currentlyPressedKeys[event.keyCode] = true;
-    };  
+        currentlyPressedKeys[event.keyCode] = true;
+    };
 
     this.handleKeyUp = function(event) {
-	currentlyPressedKeys[event.keyCode] = false;
+        currentlyPressedKeys[event.keyCode] = false;
     };
     
     /**
@@ -94,6 +111,16 @@ function KeyboardControlContext() {
         this.shiftState=shiftState;
         this.ctrlState=ctrlState;
         this.altState=altState;
+        this._keyString=key;
+        if(this.shiftState) {
+            this._keyString="shift + "+this._keyString;
+        }
+        if(this.ctrlState) {
+            this._keyString="ctrl + "+this._keyString;
+        }
+        if(this.altState) {
+            this._keyString="alt + "+this._keyString;
+        }
         var oneShotExecuted=false;
         
         /**
@@ -157,6 +184,10 @@ function KeyboardControlContext() {
                 oneShotExecuted=false;
             }
         };
+        
+        this.getKeyString=function() {
+            return this._keyString;
+        };
     };
     
     this.addKeyCommand = function(keyCommand) {
@@ -169,14 +200,39 @@ function KeyboardControlContext() {
         }
         return keyCommands[commandName];
     };
-    
+
     this.setContinuousActionForCommand = function(commandName,action) {
         if(keyCommands[commandName]!==undefined) {
             keyCommands[commandName].executeContinuousCommand=action;
         }
         return keyCommands[commandName];
     };
+    
+    this.getCommandExplanationsAndKeys = function () {
+        var result = new Array();
+        for (var commandName in this._commandDescriptions) {
+            result.push([this._commandDescriptions[commandName], keyCommands[commandName].getKeyString()]);
+        }
+        return result;
+    };
 }
+
+KeyboardControlContext.prototype = new ControlContext();
+KeyboardControlContext.prototype.constructor = KeyboardControlContext;
+
+KeyboardControlContext.prototype.loadFromXML = function(xmlSource) {
+    ControlContext.prototype.loadFromXML.call(this,xmlSource);
+    var i;
+    var keyCommandTags = xmlSource.getElementsByTagName("keyboard")[0].getElementsByTagName("command");
+    for(i=0;i<keyCommandTags.length;i++) {
+        this.addKeyCommand(new this.KeyCommand(
+                keyCommandTags[i].getAttribute("name"),
+                keyCommandTags[i].getAttribute("key"),
+                (keyCommandTags[i].getAttribute("shift")==="true"),
+                (keyCommandTags[i].getAttribute("ctrl")==="true"),
+                (keyCommandTags[i].getAttribute("alt")==="true")));
+    }
+};
 
 /**
  * Creates a new controller object.
@@ -1003,6 +1059,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         // cancel spacecraft control
         if (manualController!==undefined) {
             manualController.setControlledEntity(null);
+            game.getCurrentScreen().hideUI();
         }
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("followPrevious",function(){
@@ -1055,6 +1112,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         // cancel spacecraft control
         if (manualController!==undefined) {
             manualController.setControlledEntity(null);
+            game.getCurrentScreen().hideUI();
         }
     }));
     // assuming manual control of a spacecraft
@@ -1070,6 +1128,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
                     manualController.setControlledEntity(followedSpacecraft);
                     manualController.reset();
                 }
+                game.getCurrentScreen().showUI();
         }
     }));
     // setting the AI to control the followed spacecraft (does not do anything at the moment)
@@ -1077,6 +1136,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         var followedSpacecraft = graphicsContext.scene.activeCamera.getFollowedSpacecraft(logicContext);
         if (followedSpacecraft!==null) {
             followedSpacecraft.setController(new AIController(followedSpacecraft,graphicsContext,logicContext,controlContext));
+            game.getCurrentScreen().hideUI();
             //for(j=0;j<10;j++) {
             //    followedSpacecraft.controller.goals.push(new Goal(translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2)));
             //}    

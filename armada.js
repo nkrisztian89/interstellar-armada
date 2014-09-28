@@ -41,6 +41,7 @@ function getSourceFiles() {
         "matrices.js",
         "egom.js",
         "graphics.js",
+        "screens.js",
         "physics.js",
         "logic.js",
         "control.js"
@@ -87,15 +88,42 @@ function loadScripts(urls,bypassCaching,callback) {
 function Game() {
     this._screens = new Object();
     this._currentScreen = null;
+    
     this.graphicsContext = new GraphicsContext(new ResourceCenter(),null);
+    this.controlContext = null;
+    
+    this.requestSettingsLoad();
 }
+
+/**
+ * Sends an asynchronous request to get the XML file describing the game
+ * settings and sets the callback function to set them.
+ */
+Game.prototype.requestSettingsLoad = function () {
+    var request = new XMLHttpRequest();
+    request.open('GET', "settings.xml?123", true);
+    var self = this;
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            var settingsXML = this.responseXML;
+            self.controlContext = new KeyboardControlContext();
+            self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
+        }
+    };
+    request.send(null);
+};
 
 /**
  * Adds a new screen to the list that can be set as current later.
  * @param {GameScreen} screen The new game screen to be added.
+ * @param {Boolean} isDefaultScreen If true, this screen will be taken as the
+ * default, starting screen. (and will be set, but not reloaded)
  */
-Game.prototype.addScreen = function(screen) {
+Game.prototype.addScreen = function(screen,isDefaultScreen) {
     this._screens[screen.getName()]=screen;
+    if(isDefaultScreen===true) {
+        this._currentScreen=screen;
+    }
 };
 
 /**
@@ -113,6 +141,7 @@ Game.prototype.getScreen = function(screenName) {
  * @param {String} screenName
  */
 Game.prototype.setCurrentScreen = function(screenName) {
+    this._currentScreen.closePage();
     var screen = this.getScreen(screenName);
     screen.buildPage();
     this._currentScreen = screen;
@@ -126,90 +155,6 @@ Game.prototype.getCurrentScreen = function() {
     return this._currentScreen;
 };
 
-/**
- * Defines a GameScreen object.
- * @class Holds the logical model of a screen of the game. The different
- * screens should be defined as descendants of this class.
- * @param {String} name The name by which this screen can be identified.
- * @param {String} source The name of the HTML file where the structure of this
- * screen is defined.
- * @returns {GameScreen}
- */
-function GameScreen(name,source) {
-    // general properties
-    this._name=name;
-    this._source=source;
-    this._model=null;
-    
-    // default components
-    this._status=null;
-    
-    // function to execute when the model is loaded
-    this._onModelLoad = function() {};
-    
-    // send an asynchronous request to grab the HTML file containing the DOM of
-    // this screen
-    if(this._source!==undefined) {
-        var request = new XMLHttpRequest();
-        request.open('GET', location.pathname+this._source+"?123", true);
-        var self = this;
-        request.onreadystatechange = function() {
-                self._model = document.implementation.createHTMLDocument(self._name);
-                self._model.documentElement.innerHTML = this.responseText;
-                self._onModelLoad();
-            };
-        request.send(null);
-    }
-}
-
-/**
- * Getter for the _name property.
- * @returns {String}
- */
-GameScreen.prototype.getName = function() {
-    return this._name;
-};
-
-/**
- * Replaces the current HTML page's body with the sctructure of the screen.
- */
-GameScreen.prototype.buildPage = function() {
-    var self = this;
-    var buildPageFunction = function() {
-        document.body=self._model.body.cloneNode(true);
-        self._initializeComponents();
-    };
-    // if we have built up the model of the screen already, then load it
-    if(this._model!==null) {
-        buildPageFunction();
-    // if not yet, set the callback function which fires when the model is 
-    // loaded
-    } else {
-        this._onModelLoad = buildPageFunction;
-    }
-};
-
-/**
- * Setting the properties that will be used to easier access DOM elements later.
- * In descendants, this method should be overwritten, adding the additional
- * components of the screen after calling this parent method.
- */
-GameScreen.prototype._initializeComponents = function() {
-    this._status = document.getElementById("status");
-};
-
-/**
- * Provides visual information to the user about the current status of the game.
- * @param {String} newStatus The new status to display.
- */
-GameScreen.prototype.updateStatus = function(newStatus) {
-    if (this._status!==null) {
-        this._status.innerHTML=newStatus;
-    } else {
-        alert(newStatus);
-    }
-};
-
 /** 
  * Downloads the newest version of all source files from the server and sets up
  * the global Game object. (to be called when index.html is loaded)
@@ -217,10 +162,10 @@ GameScreen.prototype.updateStatus = function(newStatus) {
 function initialize() {
     loadScripts(getSourceFiles(),true,function(){ 
         game = new Game(); 
-        game.addScreen(new GameScreen("mainMenu","index.html"));
-        game.addScreen(new GameScreen("battle","battle.html"));
-        game.addScreen(new GameScreen("database","database.html"));
-        game.addScreen(new GameScreen("help","help.html"));
+        game.addScreen(new GameScreen("mainMenu","index.html"),true);
+        game.addScreen(new BattleScreen("battle","battle.html"));
+        game.addScreen(new GameScreenWithCanvases("database","database.html"));
+        game.addScreen(new HelpScreen("help","help.html"));
     });
 }
 
@@ -234,12 +179,10 @@ function initializeBattle() {
 }
 
 /**
- * Goes to the database screen, loads the needed resources and starts the
- * simulation and rendering loops. (not implemented yet)
+ * Goes to the database screen.
  */
 function initializeDatabase() {
     game.setCurrentScreen("database");
-    loadDatabaseResources();
 }
 
 /**
@@ -249,85 +192,22 @@ function initializeHelp() {
     game.setCurrentScreen("help");
 }
 
-var prevDate,curDate;
-var mainScene;
-
-var battleSimulationLoop;
-var battleRenderLoop;
-
-/**
- * Updates all needed variables when the screen is resized (camera perspective
- * matrices as well!)
- */
-function resizeCanvas() {
-   // only change the size of the canvas if the size it's being displayed
-   // has changed.
-   var canvas = document.getElementById("canvas");
-   var width = canvas.clientWidth;
-   var height = canvas.clientHeight;
-   if (canvas.width !== width ||
-       canvas.height !== height) {
-     // Change the size of the canvas to match the size it's being displayed
-     canvas.width = width;
-     canvas.height = height;
-   }
-   if (mainScene!==undefined) {
-       mainScene.resizeViewport(width,height);
-   } 
-}
-
 /**
  * Main function loading the external resources required by the program. Builds
  * the test scene populated with random ships and fighters controlled by AI.
  * */
 function loadBattleResources() {
-	document.getElementById("output").style.display="none";
-        document.getElementById("ui").style.display="none";
+    // this is dirty, we don't know that its class is BattleScreen
+    game.getCurrentScreen().hideStats();
+    game.getCurrentScreen().hideUI();
         
-        var canvas = document.getElementById("canvas");
-	var progress = document.getElementById("progress");
+    var canvas = game.getCurrentScreen().getCanvas();
         
-        var controlContext = new KeyboardControlContext();
+    var controlContext = game.controlContext;
 	
-	document.onkeydown = controlContext.handleKeyDown;
-        document.onkeyup = controlContext.handleKeyUp;
+    document.onkeydown = controlContext.handleKeyDown;
+    document.onkeyup = controlContext.handleKeyUp;
         
-        controlContext.addKeyCommand(new controlContext.KeyCommand("fire",              "space",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("changeFlightMode",  "o",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("forward",           "w",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("reverse",           "s",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("resetSpeed",        "backspace",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("yawLeft",           "left",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("yawRight",          "right",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("pitchDown",         "up",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("pitchUp",           "down",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("rollRight",         "page down",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("rollLeft",          "page up",false,false,false));
-        
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnLeft",    "left",false,true,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnRight",   "right",false,true,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnUp",      "up",false,true,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraTurnDown",    "down",false,true,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveLeft",    "left",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveRight",   "right",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveUp",      "page up",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveDown",    "page down",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveForward", "up",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraMoveBackward","down",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraDecreaseFOV", "z",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("cameraIncreaseFOV", "u",false,false,false));
-        
-        controlContext.addKeyCommand(new controlContext.KeyCommand("pause",                 "p",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("changeView",            "v",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("followNext",            "c",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("followPrevious",        "x",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("setManualControl",      "m",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("setAIControl",          "n",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("stopAIShips",           "0",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("toggleLightRotation",   "l",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("toggleHitboxVisibility","h",false,false,false));
-        controlContext.addKeyCommand(new controlContext.KeyCommand("quit",                  "escape",false,false,false));
-
         // test variable: number of random goals the AI controllers get at start
         var num_test_goals=10;
         // test variable: number of random fighters generated
@@ -341,7 +221,7 @@ function loadBattleResources() {
 	var resourceCenter = game.graphicsContext.resourceCenter;
         resourceCenter.scenes= new Array();
 	  
-        resizeCanvas(); 
+        game.getCurrentScreen().resizeCanvases(); 
         // based on screen (canvas) size, set a maximum enabled LOD, so that
         // higher LOD models won't even get loaded during level initialization
         //(sparing memory, download time and performance)
@@ -384,8 +264,7 @@ function loadBattleResources() {
         // from the XML files
 	test_level.loadFromFile("level.xml");
 	
-	progress.value=50;
-	game.getCurrentScreen().updateStatus("loading additional configuration...");
+	game.getCurrentScreen().updateStatus("loading additional configuration...",50);
 	
         // we turn the cruizer around so it looks nicer at start :)
 	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientationMatrix=
@@ -468,7 +347,7 @@ function loadBattleResources() {
 	
 	var freq = 60;
 	
-	progress.value=75;
+	game.getCurrentScreen().updateStatus("",75);
 	
 	resourceCenter.init(canvas,freq);
         
@@ -484,8 +363,4 @@ function loadBattleResources() {
 			control(mainScene,test_level,globalCommands);
 			game.graphicsContext.lightAngle+=game.graphicsContext.lightIsTurning?0.07:0.0;
 		},1000/freq);
-}
-
-function loadDatabaseResources() {
-    
 }
