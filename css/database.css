@@ -1,0 +1,10 @@
+canvas.databaseViewScreen {
+    width: 300px;
+    height: 300px;
+    border: 1px solid #333333;
+    display: block;
+    margin-left: auto; 
+    margin-right: auto; 
+    margin-top: 5px; 
+    margin-bottom: 5px; 
+}

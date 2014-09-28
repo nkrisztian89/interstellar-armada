@@ -8,10 +8,17 @@
              head tags are not needed here. The ones in index.html remain in
              effect for the whole time the application is running. -->
     </head>
-    <body onkeypress="game.setCurrentScreen('mainMenu')">
-        <h1>In-game database</h1>
-        <p>Press any key to return to the main menu.</p>
-        <p>This page is under development.</p>
-        <canvas id="canvas" class ="databaseViewScreen fix"></canvas>
+    <body>
+        <div class="horizontallyCentered contentWide outerContainer">
+            <div class="horizontallyCentered contentWide innerContainer">
+                <div class="fullWide separatorBar">
+                    <a class="horizontallyCentered separate button" href="#" onclick="game.setCurrentScreen('mainMenu')" >
+                        Back to main menu
+                    </a>
+                </div>
+                <h1>In-game database</h1>
+                <p>This page is under development.</p>
+                <canvas id="canvas" class ="databaseViewScreen fix"></canvas>
+            </div></div>
     </body>
 </html>

@@ -253,6 +253,7 @@ function initialize() {
         game.addScreen(new BattleScreen("battle","battle.html"));
         game.addScreen(new GameScreenWithCanvases("database","database.html"));
         game.addScreen(new HelpScreen("help","help.html"));
+        game.addScreen(new GameScreen("about","about.html"));
     });
 }
 
@@ -277,6 +278,13 @@ function initializeDatabase() {
  */
 function initializeHelp() {
     game.setCurrentScreen("help");
+}
+
+/**
+ * Goes to the help screen.
+ */
+function initializeAbout() {
+    game.setCurrentScreen("about");
 }
 
 /**

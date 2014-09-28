@@ -9,18 +9,26 @@
              effect for the whole time the application is running. -->
     </head>
 
-    <body onkeypress="game.setCurrentScreen('mainMenu')">
-        <h1>Help</h1>
-        <p>Press any key to return to the main menu.</p>
-        <h2>Keyboard controls</h2>
-        <table>
-            <thead>
-            <th>Key</th>
-            <th>Command</th>
-        </thead>
-        <tbody id="keyCommandsTable">
-        </tbody>
-    </table>
-</body>
+    <body>
+        <div class="horizontallyCentered contentWide outerContainer">
+            <div class="horizontallyCentered contentWide innerContainer">
+                <div class="fullWide separatorBar">
+                    <a class="horizontallyCentered separate button" href="#" onclick="game.setCurrentScreen('mainMenu')" >
+                        Back to main menu
+                    </a>
+                </div>
+                <h1>Help</h1>
+                <h2>Keyboard controls</h2>
+                <table class="horizontallyCentered outerContainer">
+                    <thead>
+                    <th>Key</th>
+                    <th>Command</th>
+                    </thead>
+                    <tbody id="keyCommandsTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
 
 </html>

@@ -8,8 +8,9 @@
 
         <title>Interstellar Armada</title>
 
-        <link href="css/style.css" rel="stylesheet" type="text/css"/>
-        <link href="css/game.css" rel="stylesheet" type="text/css"/>
+        <link href="css/general.css" rel="stylesheet" type="text/css"/>
+        <link href="css/battle.css" rel="stylesheet" type="text/css"/>
+        <link href="css/database.css" rel="stylesheet" type="text/css"/>
         <link href="css/loadingbox.css" rel="stylesheet" type="text/css"/>
         
         <!-- Adding the ?123 bypasses caching, to make sure the newest version
@@ -18,20 +19,20 @@
         <script src="armada.js?123"></script>
     </head>
     <body onload="initialize()">
-        <ul class="mainmenu">
-            <li>
+        <div class="horizontallyCentered narrowFix outerContainer">
+            <div class="horizontallyCentered wideFluid innerContainer">
                 <h3>
                     <img src="pictures/sa.png" alt="logo" /><br/>
                     Interstellar Armada<br/>
                 </h3>
-                <ul>
-                    <li class="menubutton" onclick="initializeBattle()"><a href="#">Play the game</a></li>
-                    <li class="menubutton" onclick="initializeDatabase()"><a href="#">Database</a></li>
-                    <li class="menubutton" onclick="initializeHelp()"><a href="#">Keyboard controls</a></li>
-                    <li class="menubutton"><a href="doc">Documentation</a></li>
-                </ul>
-                <p>&nbsp;</p>
-            </li>
-        </ul>
+                    <ul class="horizontallyCentered outerContainer">
+                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeBattle()">Play the game</a></li>
+                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeDatabase()">Database</a></li>
+                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeHelp()">Keyboard controls</a></li>
+                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeAbout()">About</a></li>
+                        <li class="transparentContainer"><a href="doc" class="menu button" >Documentation</a></li>
+                    </ul>
+            </div>
+        </div>
     </body>
 </html>

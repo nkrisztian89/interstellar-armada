@@ -1,0 +1,167 @@
+body {
+    color: #DDDDDD;
+    background-color: black;
+    font-family: Ubuntu light, Verdana, Geneva, sans-serif;
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+.outerContainer {
+    background-color: #111111;
+    border: 2px solid #333333;
+    box-shadow: 0em 0em 0.5em #00FF00;
+    padding: 1em;
+    margin-top: 1em;
+}
+
+.innerContainer {
+    background-color: #222222;
+    border: none;
+    box-shadow: 0em 0em 0.5em #000000;
+}
+
+.horizontallyCentered {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.centered {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    margin: auto;
+}
+
+.fullScreen {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.wideFluid {
+    width: 80%;
+    padding: 2em;
+}
+
+.fullWide {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.narrowFix {
+    width: 350px;
+}
+
+.contentWide {
+    display: table;
+    padding: 1em;
+}
+
+.transparentContainer {
+    padding: 0;
+    border: none;
+    background-color: rgba(0,0,0,0);
+}
+
+.separatorBar {
+    display: block;
+    background-color: #111111;
+    padding: 0.4em;
+}
+
+ul {
+    display: table;
+    padding: 1.0em;
+}
+
+th, td {
+    padding: 0.5em;
+}
+
+th {
+    text-align: left;
+    color: white;
+}
+
+td {
+    border: none;
+    background-color: #222222;
+    box-shadow: 0em 0em 0.5em #000000;
+    font-size: 0.9em;
+}
+
+li {
+    list-style-type: none;
+}
+
+a {
+    color: #000000;
+    text-decoration: none;
+    text-shadow:
+        #00FF00 0 0 0.2em,
+        #00FF00 0 0 0.2em;
+    font-weight: bold;
+    font-variant: small-caps;
+}
+
+a.separate {
+    display: table;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+}
+
+a.menu {
+    display: block;
+    margin: 0.2em;
+}
+
+a.button {
+    font-size: 0.9em;
+    text-align: center;
+    padding: 0.5em;
+    background-color: #222222;
+    box-shadow: 0em 0em 0.5em #000000;
+}
+
+a:hover {
+    color: #FFFFFF;
+}
+
+a.button:hover {
+    background-color: #333333;
+}
+
+img {
+    margin: 0.5em;
+}
+
+p {
+    font-size: 14px;
+}
+
+h1 {
+    text-shadow: #888888 0.1em 0.1em 0.5em;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 0.2em 0 0.5em 0;
+}
+
+h2 {
+    text-shadow: #888888 0.1em 0.1em 0.5em;
+    text-align: center;
+    font-variant: small-caps;
+}
+
+h3 {
+    text-shadow: #000000 0.0em 0.0em 0.4em;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 10px;
+    padding: 10px;
+}
