@@ -1,7 +1,18 @@
+@font-face {
+    font-family: gameFont;
+    src: url(../fonts/Sansation_Light.ttf);
+}
+
+@font-face {
+    font-family: gameFont;
+    src: url(../fonts/Sansation_Regular.ttf);
+    font-weight: bold;
+}
+
 body {
     color: #DDDDDD;
     background-color: black;
-    font-family: Ubuntu light, Verdana, Geneva, sans-serif;
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 16px;
     margin: 0;
     padding: 0;

@@ -18,7 +18,6 @@ canvas#battleCanvas {
 }
 
 p#stats {
-    font-family: Helvetica-Narrow;
     font-size: 9pt;
     border:1px solid #333333;
     width: 90%;
@@ -27,7 +26,6 @@ p#stats {
 }
 
 p#ui {
-    font-family: Helvetica-Narrow;
     font-size: 9pt; color: #EEFFEE;
     text-shadow: #88FF88 0 0 0.2em;
     background-color: #00AA00;
