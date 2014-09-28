@@ -19,7 +19,7 @@ body {
 }
 
 .outerContainer {
-    background-color: #111111;
+    background-color: rgba(17,17,17,0.75);
     border: 2px solid #333333;
     box-shadow: 0em 0em 0.5em #00FF00;
     padding: 1em;
@@ -27,12 +27,19 @@ body {
 }
 
 .innerContainer {
-    background-color: #222222;
+    background-color: rgba(34,34,34,0.75);
     border: none;
     box-shadow: 0em 0em 0.5em #000000;
 }
 
+.withBackgroundSign {
+    background-image: url(../pictures/empire_back_dark350.png);
+    background-position: center 10%;
+    background-repeat: no-repeat;
+}
+
 .horizontallyCentered {
+    display: table;
     margin-left: auto;
     margin-right: auto;
 }
@@ -82,8 +89,17 @@ body {
 
 .separatorBar {
     display: block;
-    background-color: #111111;
     padding: 0.4em;
+    background: 
+        url(../pictures/empire_white50.png) left center,
+        url(../pictures/empire_white50.png) right center;
+    background-color: #111111;
+    background-repeat: no-repeat;
+    box-sizing: border-box; 
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: none;
+    border-bottom: none;
 }
 
 ul {
