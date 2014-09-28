@@ -61,7 +61,7 @@
 	</ProjectileClass>
 	
 	<WeaponClass name="plasma">
-		<model filename="models/weapons/plazmaveto4k.egm_converted" lod="1" />
+		<model filename="models/weapons/plasma.egm" lod="1" />
 		<logic cooldown="250" />
                 <barrels>
 			<barrel projectile="plasma" force="1200" x="0" y="10" z="0" />
@@ -69,10 +69,10 @@
 	</WeaponClass>
 	
 	<WeaponClass name="turret">
-		<model filename="models/weapons/loveg1_r3.egm_converted" lod="3" />
-		<model filename="models/weapons/loveg1_r2.egm_converted" lod="2" />
-		<model filename="models/weapons/loveg1_r1.egm_converted" lod="1" />
-		<model filename="models/weapons/loveg1_r0.egm_converted" lod="0" />
+		<model filename="models/weapons/turret_lod3.egm" lod="3" />
+		<model filename="models/weapons/turret_lod2.egm" lod="2" />
+		<model filename="models/weapons/turret_lod1.egm" lod="1" />
+		<model filename="models/weapons/turret_lod0.egm" lod="0" />
 		<logic cooldown="250" />
                 <barrels>
 			<barrel projectile="plasma" force="1500" x="2" y="25" z="10" />
@@ -83,10 +83,10 @@
 	</WeaponClass>
 	
 	<WeaponClass name="cannon">
-		<model filename="models/weapons/kagyu1_r3.egm_converted" lod="3" />
-		<model filename="models/weapons/kagyu1_r2.egm_converted" lod="2" />
-		<model filename="models/weapons/kagyu1_r1.egm_converted" lod="1" />
-		<model filename="models/weapons/kagyu1_r0.egm_converted" lod="0" />
+		<model filename="models/weapons/cannon_lod3.egm" lod="3" />
+		<model filename="models/weapons/cannon_lod2.egm" lod="2" />
+		<model filename="models/weapons/cannon_lod1.egm" lod="1" />
+		<model filename="models/weapons/cannon_lod0.egm" lod="0" />
 		<logic cooldown="1500" />
                 <barrels>
 			<barrel projectile="proton" force="8000" x="0" y="100" z="0" />
@@ -94,11 +94,11 @@
 	</WeaponClass>
 	
 	<WeaponClass name="largeCannon">
-		<model filename="models/weapons/cannon_r4.egm_converted" lod="4" />
-		<model filename="models/weapons/cannon_r3.egm_converted" lod="3" />
-		<model filename="models/weapons/cannon_r2.egm_converted" lod="2" />
-		<model filename="models/weapons/cannon_r1.egm_converted" lod="1" />
-		<model filename="models/weapons/cannon_r0.egm_converted" lod="0" />
+		<model filename="models/weapons/largeCannon_lod4.egm" lod="4" />
+		<model filename="models/weapons/largeCannon_lod3.egm" lod="3" />
+		<model filename="models/weapons/largeCannon_lod2.egm" lod="2" />
+		<model filename="models/weapons/largeCannon_lod1.egm" lod="1" />
+		<model filename="models/weapons/largeCannon_lod0.egm" lod="0" />
 		<logic cooldown="5000" />
                 <barrels>
 			<barrel projectile="ion" force="50000" x="0" y="320" z="0" />
@@ -133,7 +133,7 @@
 		<power thrust="33000000" angularThrust="20" />
 	</PropulsionClass>
 	
-	<PropulsionClass name="cruizer">
+	<PropulsionClass name="cruiser">
 		<shader name="permanentParticle" />
 		<texture filename="textures/flare.png" />
 		<color r="0.0" g="0.8" b="1.0" />
@@ -141,13 +141,13 @@
 	</PropulsionClass>
 	
 	<SpacecraftClass name="falcon">
-		<model filename="models/fecske_r4.egm_converted" lod="4" size="0.2"/>
-		<model filename="models/fecske_r3.egm_converted" lod="3"/>
-		<model filename="models/fecske_r2.egm_converted" lod="2"/>
-		<model filename="models/fecske_r1.egm_converted" lod="1"/>
-		<model filename="models/fecske_r0.egm_converted" lod="0"/>
-		<texture filename="textures/fem.png" type="color" />
-                <texture filename="textures/fem_luminosity.png" type="luminosity" />
+		<model filename="models/falcon_lod4.egm" lod="4" size="0.2"/>
+		<model filename="models/falcon_lod3.egm" lod="3"/>
+		<model filename="models/falcon_lod2.egm" lod="2"/>
+		<model filename="models/falcon_lod1.egm" lod="1"/>
+		<model filename="models/falcon_lod0.egm" lod="0"/>
+		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="10000">
 			<body x="0" y="0" z="5" w="80" h="20" d="10" />
@@ -223,13 +223,13 @@
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="viper">
-		<model filename="models/delfin_r4.egm_converted" lod="4" size="0.2"/>
-                <model filename="models/delfin_r3.egm_converted" lod="3"/>
-                <model filename="models/delfin_r2.egm_converted" lod="2"/>
-                <model filename="models/delfin_r1.egm_converted" lod="1"/>
-                <model filename="models/delfin_r0.egm_converted" lod="0"/>
-		<texture filename="textures/fem.png" type="color" />
-                <texture filename="textures/fem_luminosity.png" type="luminosity" />
+		<model filename="models/viper_lod4.egm" lod="4" size="0.2"/>
+                <model filename="models/viper_lod3.egm" lod="3"/>
+                <model filename="models/viper_lod2.egm" lod="2"/>
+                <model filename="models/viper_lod1.egm" lod="1"/>
+                <model filename="models/viper_lod0.egm" lod="0"/>
+		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="35000">
 			<body x="0" y="30" z="5" w="30" h="70" d="10" />
@@ -303,13 +303,13 @@
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="aries">
-		<model filename="models/aries_r4.egm_converted" lod="4" size="0.2"/>
-                <model filename="models/aries_r3.egm_converted" lod="3" />
-                <model filename="models/aries_r2.egm_converted" lod="2" />
-                <model filename="models/aries_r1.egm_converted" lod="1" />
-                <model filename="models/aries_r0.egm_converted" lod="0" />
-		<texture filename="textures/fem.png" type="color" />
-                <texture filename="textures/fem_luminosity.png" type="luminosity" />
+		<model filename="models/aries_lod4.egm" lod="4" size="0.2"/>
+                <model filename="models/aries_lod3.egm" lod="3" />
+                <model filename="models/aries_lod2.egm" lod="2" />
+                <model filename="models/aries_lod1.egm" lod="1" />
+                <model filename="models/aries_lod0.egm" lod="0" />
+		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="800000">
 			<body x="0" y="70" z="0" w="130" h="300" d="80" />
@@ -372,13 +372,13 @@
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="taurus">
-		<model filename="models/taurus_r4.egm_converted" lod="4" size="0.2"/>
-		<model filename="models/taurus_r3.egm_converted" lod="3"/>
-		<model filename="models/taurus_r2.egm_converted" lod="2"/>
-		<model filename="models/taurus_r1.egm_converted" lod="1"/>
-		<model filename="models/taurus_r0.egm_converted" lod="0"/>
-		<texture filename="textures/fem.png" type="color" />
-                <texture filename="textures/fem_luminosity.png" type="luminosity" />
+		<model filename="models/taurus_lod4.egm" lod="4" size="0.2"/>
+		<model filename="models/taurus_lod3.egm" lod="3"/>
+		<model filename="models/taurus_lod2.egm" lod="2"/>
+		<model filename="models/taurus_lod1.egm" lod="1"/>
+		<model filename="models/taurus_lod0.egm" lod="0"/>
+		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="2200000">
 			<body x="0" y="65" z="55" w="140" h="160" d="75" />
@@ -482,11 +482,11 @@
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="libra">
-		<model filename="models/libra_r4.egm_converted" lod="4" size="0.2"/>
-		<model filename="models/libra_r3.egm_converted" lod="3"/>
-		<model filename="models/libra_r2.egm_converted" lod="2"/>
-		<model filename="models/libra_r1.egm_converted" lod="1"/>
-		<model filename="models/libra_r0.egm_converted" lod="0"/>
+		<model filename="models/libra_lod4.egm" lod="4" size="0.2"/>
+		<model filename="models/libra_lod3.egm" lod="3"/>
+		<model filename="models/libra_lod2.egm" lod="2"/>
+		<model filename="models/libra_lod1.egm" lod="1"/>
+		<model filename="models/libra_lod0.egm" lod="0"/>
 		<texture filename="textures/libra.png" type="color" />
                 <texture filename="textures/libra_luminosity.png" type="luminosity" />
 		<shader name="ship" />

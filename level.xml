@@ -105,6 +105,6 @@
 			<weapon class="turret" />
 			<weapon class="turret" />
 		</weapons>
-		<propulsion class="cruizer" />
+		<propulsion class="cruiser" />
 	</Spacecraft>
 </level>
