@@ -34,6 +34,12 @@
  */
 var game;
 
+// This function initializes the game by downloading all needed source files
+// and setting up the game functions. The only function called directly from
+// javascript source - all others are inside classes, are general utility
+// functions or assignments of prototypes and constructors for inheritance.
+initialize();
+
 /* The names of source files and folders are defined in global functions, as
  * - game should be the only global variable
  * - they don't belong to the game object (the game object is initialized after
@@ -56,10 +62,12 @@ function getSourceFiles() {
         "egom.js",
         "graphics.js",
         "resource.js",
+        "components.js",
         "screens.js",
         "physics.js",
         "logic.js",
-        "control.js"
+        "control.js",
+        "game.js"
     ];
 }
 
@@ -124,190 +132,71 @@ function getXMLFolder() {
  * @param {Boolean} bypassCaching If true, the script files will be forcefully
  * downloaded again, even if they are in the cache already.
  */
-function loadScripts(folder,filenames,bypassCaching,callback) {
+function loadScripts(folder, filenames, bypassCaching, callback) {
     // NOTE: recursive function - if the arguments are changed, change the calls
     // as well
     // We add a new script tag inside the head of the document
-    var head = document.getElementsByTagName('head')[0];
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = folder + (bypassCaching?
-                    filenames.shift()+"?123":
-                    filenames.shift());        
+    script.src = folder + (bypassCaching ?
+            filenames.shift() + "?123" :
+            filenames.shift());
 
+    var loadNextScriptFunction = function () {
+        loadScripts(folder, filenames, bypassCaching, callback);
+    };
     // Then bind the event to the callback function.
     // There are several events for cross browser compatibility.
-    if(filenames.length>0) {
-		script.onload = function() {loadScripts(folder,filenames,bypassCaching,callback);};
-		script.onreadystatechange = function() {loadScripts(folder,filenames,bypassCaching,callback);};
-	} else if (callback!==undefined) {
-		script.onload = callback;
-		script.onreadystatechange = callback;
-	}
+    if (filenames.length > 0) {
+        script.addEventListener("load",loadNextScriptFunction);
+        script.addEventListener("readystatechange",loadNextScriptFunction);
+    } else if (callback !== undefined) {
+        script.addEventListener("load",callback);
+        script.addEventListener("readystatechange",callback);
+    }
 
     // Fire the loading
-    head.appendChild(script);
+    document.head.appendChild(script);
 }
-
-/**
- * Defines a Game object.
- * @class Holds the general properties of the game (the current context for the
- * different modules)
- * @returns {Game}
- */
-function Game() {
-    /**
-     * The game's available screens stored in an associative array, with the 
-     * keys being the names of the screens.
-     * @name Game#_screens
-     * @type Object
-     * @default {}
-     */
-    this._screens = new Object();
-    /**
-     * A reference to the currently active (displayed) screen of the game.
-     * @name Game#_currentScreen
-     * @type GameScreen
-     * @default null
-     */
-    this._currentScreen = null;
-    
-    /**
-     * The graphics context of the game, that can be used to access and 
-     * manipulate graphical resources.
-     * @name Game#graphicsContext
-     * @type GraphicsContext
-     */
-    this.graphicsContext = new GraphicsContext(new ResourceCenter(),null);
-    /**
-     * The control context of the game, that can be used to bind input controls
-     * to in-game actions.
-     * @name Game#controlContext
-     * @type ControlContext
-     * @default null
-     */
-    this.controlContext = null;
-    
-    this.requestSettingsLoad();
-}
-
-/**
- * Notifies the user of an error that happened while running the game.
- * @param {String} message The message to show.
- */
-Game.prototype.showError = function(message) {
-    alert(message);
-};
-
-/**
- * Sends an asynchronous request to get the XML file describing the game
- * settings and sets the callback function to set them.
- */
-Game.prototype.requestSettingsLoad = function () {
-    var request = new XMLHttpRequest();
-    request.open('GET', getXMLFolder()+"settings.xml?123", true);
-    var self = this;
-    request.onreadystatechange = function () {
-        if (request.readyState === 4) {
-            var settingsXML = this.responseXML;
-            self.controlContext = new KeyboardControlContext();
-            self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
-        }
-    };
-    request.send(null);
-};
-
-/**
- * Adds a new screen to the list that can be set as current later.
- * @param {GameScreen} screen The new game screen to be added.
- * @param {Boolean} [isDefaultScreen=false] If true, this screen will be taken 
- * as the default, starting screen. (and will be set, but not reloaded)
- */
-Game.prototype.addScreen = function(screen,isDefaultScreen) {
-    this._screens[screen.getName()]=screen;
-    if(isDefaultScreen===true) {
-        this._currentScreen=screen;
-    }
-};
-
-/**
- * Returns the game screen with the specified name that the game has.
- * @param {String} screenName
- * @returns {GameScreen}
- */
-Game.prototype.getScreen = function(screenName) {
-    return this._screens[screenName];
-};
-
-/**
- * Sets the current game screen to the one with the specified name (from the
- * list of available screens), including refreshing the HTML body.
- * @param {String} screenName
- */
-Game.prototype.setCurrentScreen = function(screenName) {
-    this._currentScreen.closePage();
-    var screen = this.getScreen(screenName);
-    screen.buildPage();
-    this._currentScreen = screen;
-};
-
-/**
- * Gets the object corresponding to the currently set game screen.
- * @returns {GameScreen}
- */
-Game.prototype.getCurrentScreen = function() {
-    return this._currentScreen;
-};
 
 /** 
- * Downloads the newest version of all source files from the server and sets up
- * the global Game object. (to be called when index.html is loaded)
+ * Downloads the newest version of all source files from the server and after 
+ * that sets up the global Game object.
  */
 function initialize() {
     loadScripts(getJavaScriptFolder(),getSourceFiles(),true,function(){ 
         game = new Game(); 
-        game.addScreen(new GameScreen("mainMenu","index.html"),true);
+        game.addScreen(new MenuScreen("mainMenu","index.html",
+            [
+                {
+                    caption: "Play the game", 
+                    action: function() {game.setCurrentScreen("battle"); loadBattleResources();} 
+                },
+                {
+                    caption: "Database", 
+                    action: function(){ game.setCurrentScreen("database"); } 
+                },
+                {
+                    caption: "Keyboard controls", 
+                    action: function(){ game.setCurrentScreen("help"); } 
+                },
+                {
+                    caption: "About", 
+                    action: function(){ game.setCurrentScreen("about"); } 
+                }
+            ],"menuContainer"));
         game.addScreen(new BattleScreen("battle","battle.html"));
         game.addScreen(new GameScreenWithCanvases("database","database.html"));
         game.addScreen(new HelpScreen("help","help.html"));
         game.addScreen(new GameScreen("about","about.html"));
+        game.setCurrentScreen("mainMenu");
     });
 }
 
 /**
- * Goes to the battle screen, loads the needed resources and starts the
- * simulation and rendering loops.
+ * Old function under refactoring, its content will go under several methods of
+ * different classes.
  */
-function initializeBattle() {
-    game.setCurrentScreen("battle");
-    loadBattleResources();
-}
-
-/**
- * Goes to the database screen.
- */
-function initializeDatabase() {
-    game.setCurrentScreen("database");
-}
-
-/**
- * Goes to the help screen.
- */
-function initializeHelp() {
-    game.setCurrentScreen("help");
-}
-
-/**
- * Goes to the help screen.
- */
-function initializeAbout() {
-    game.setCurrentScreen("about");
-}
-
-/**
- * Main function loading the external resources required by the program. Builds
- * the test scene populated with random ships and fighters controlled by AI.
- * */
 function loadBattleResources() {
     // this is dirty, we don't know that its class is BattleScreen
     game.getCurrentScreen().hideStats();

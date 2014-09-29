@@ -26,204 +26,6 @@
  ***********************************************************************/
 
 /**
- * Defines a screen component object.
- * @class A reusable component that consist of HTML elements (a fragment of a 
- * HTML document) and can be appended to game screens. Various components have
- * to be the descendants of this class, and implement their own various methods.
- * @extends Resource
- * @param {String} name The name of the component to be identified by.
- * @param {String} source The filename of the HTML document where the structure
- * of the component should be defined. The component will be loaded as the first
- * element (and all its children) inside the body tag of this file.
- * @returns {ScreenComponent}
- */
-function ScreenComponent(name,source) {
-    Resource.call(this);
-    
-    this._name=name;
-    this._source=source;
-    
-    this._model=null;
-    
-    this._rootElement = null;
-    this._rootElementDefaultDisplayMode = null;
-    
-    // function to execute when the model is loaded
-    this._onModelLoad = function() {};
-    
-    // source will be undefined when setting the prototypes for inheritance
-    if(source!==undefined) {
-        this.requestModelLoad();
-    }
-}
-
-ScreenComponent.prototype = new Resource();
-ScreenComponent.prototype.constructor = ScreenComponent;
-
-/**
- * Initiates the asynchronous loading of the component's structure from the
- * external HTML file.
- */
-ScreenComponent.prototype.requestModelLoad = function() {
-    // send an asynchronous request to grab the XML file containing the DOM of
-    // this component
-    var request = new XMLHttpRequest();
-    request.open('GET', location.pathname+getComponentFolder()+this._source+"?123", true);
-    var self = this;
-    request.onreadystatechange = function() {
-            if(request.readyState===4) {
-                self._model = document.implementation.createHTMLDocument(self._name);
-                self._model.documentElement.innerHTML = this.responseText;
-                self._onModelLoad();
-            }
-        };
-    request.send(null);
-};
-
-/**
- * Appends the component's elements to the current document.
- */
-ScreenComponent.prototype.appendToPage = function() {
-    var self = this;
-    var appendToPageFunction = function() {
-        self._rootElement = document.body.appendChild(document.importNode(self._model.body.firstElementChild,true));
-        self._rootElementDefaultDisplayMode = self._rootElement.style.display;
-        self._initializeComponents();
-        self.setToReady();
-    };
-    // if we have built up the model of the screen already, then load it
-    if(this._model!==null) {
-        appendToPageFunction();
-    // if not yet, set the callback function which fires when the model is 
-    // loaded
-    } else {
-        this._onModelLoad = appendToPageFunction;
-    }
-};
-
-/**
- * Setting the properties that will be used to easier access DOM elements later.
- * In descendants, this method should be overwritten, adding the additional
- * components of the screen after calling this parent method.
- */
-ScreenComponent.prototype._initializeComponents = function() {
-};
-
-/**
- * Sets the display property of the root element of the component to show it.
- */
-ScreenComponent.prototype.show = function() {
-    var self = this;
-    this.executeWhenReady(function() {
-        self._rootElement.style.display = self._rootElementDefaultDisplayMode;
-    });
-};
-
-/**
- * Sets the display property of the root element of the component to hide it.
- */
-ScreenComponent.prototype.hide = function() {
-    var self = this;
-    this.executeWhenReady(function() {
-        self._rootElement.style.display = "none";
-    });
-};
-
-/**
- * Defines a loading box component object.
- * @class A loading box component, that has a title, a progress bar and a status
- * message and appears in the middle of the screen (the corresponding stylesheet 
- * needs to be statically referenced in the head of index.html as of now)
- * @extends ScreenComponent
- * @param {String} name Check ScreenComponent
- * @param {String} source Check ScreenComponent
- * @returns {LoadingBox}
- */
-function LoadingBox(name,source) {
-    ScreenComponent.call(this,name,source);
-    
-    this._progress = null;
-    this._status = null;
-}
-
-LoadingBox.prototype = new ScreenComponent();
-LoadingBox.prototype.constructor = LoadingBox;
-
-/**
- * Sets the properties for easier access of the DOM elements.
- */
-LoadingBox.prototype._initializeComponents = function() {
-    ScreenComponent.prototype._initializeComponents.call(this);
-    
-    this._progress = this._rootElement.querySelector("progress.loadingBoxProgress");
-    this._status = this._rootElement.querySelector("p.loadingBoxStatus");
-};
-
-/**
- * Updates the value of the progress bar shown on the loading box.
- * @param {Number} value The new value of the progress bar.
- */
-LoadingBox.prototype.updateProgress= function(value) {
-    var self = this;
-    this.executeWhenReady(function() {
-        self._progress.value = value;
-    });
-};
-
-/**
- * Updates the status message shown on the loading box.
- * @param {String} status The new status to show.
- */
-LoadingBox.prototype.updateStatus= function(status) {
-    var self = this;
-    this.executeWhenReady(function() {
-        self._status.innerHTML = status;
-    });
-};
-
-/**
- * Defines an info box component object.
- * @class An info box component, that has a title, and a message to tell to the
- * user and appears in the middle of the screen (the corresponding stylesheet 
- * needs to be statically referenced in the head of index.html as of now)
- * @extends ScreenComponent
- * @param {String} name Check ScreenComponent
- * @param {String} source Check ScreenComponent
- * @returns {InfoBox}
- */
-function InfoBox(name,source) {
-    ScreenComponent.call(this,name,source);
-    
-    this._message = null;
-}
-
-InfoBox.prototype = new ScreenComponent();
-InfoBox.prototype.constructor = InfoBox;
-
-/**
- * Sets the properties for easier access of the DOM elements.
- */
-InfoBox.prototype._initializeComponents = function() {
-    ScreenComponent.prototype._initializeComponents.call(this);
-    
-    var self = this;
-    
-    this._message = this._rootElement.querySelector("p.infoBoxMessage");
-    this._rootElement.querySelector("a.infoBoxOKButton").onclick=function(){self.hide();};
-};
-
-/**
- * Updates the message shown on the info box.
- * @param {String} message The new message to show.
- */
-InfoBox.prototype.updateMessage= function(message) {
-    var self = this;
-    this.executeWhenReady(function() {
-        self._message.innerHTML = message;
-    });
-};
-
-/**
  * Defines a GameScreen object.
  * @class Holds the logical model of a screen of the game. The different
  * screens should be defined as descendants of this class.
@@ -318,10 +120,12 @@ GameScreen.prototype._initializeComponents = function() {
  * defined in an external xml file) to the DOM tree and returns the same 
  * component.
  * @param {ScreenComponent} screenComponent
+ * @param {Node} [parentNode] The node in the document to which to append the
+ * component (if omitted, it will be appended to the body)
  * @returns {ScreenComponent}
  */
-GameScreen.prototype.addExternalComponent = function(screenComponent) {
-    screenComponent.appendToPage();
+GameScreen.prototype.addExternalComponent = function(screenComponent,parentNode) {
+    screenComponent.appendToPage(parentNode);
     return screenComponent;
 };
 
@@ -472,21 +276,24 @@ function BattleScreen(name,source) {
     
     this._stats=null;
     this._ui=null;
+    
+    this._loadingBox = new LoadingBox("loadingBox","loadingbox.html");
+    this._infoBox = new InfoBox("infoBox","infobox.html");
 };
 
 BattleScreen.prototype=new GameScreenWithCanvases();
 BattleScreen.prototype.constructor=BattleScreen;
 
 /**
- * Stops the render loop and nulls out the components.
+ * Nulls out the components.
  */
 BattleScreen.prototype.closePage = function() {
     GameScreenWithCanvases.prototype.closePage.call(this);
     
     this._stats = null;
     this._ui = null;
-    this._loadingBox = null;
-    this._infoBox = null;
+    this._loadingBox.resetComponent();
+    this._infoBox.resetComponent();
 };
 
 /**
@@ -499,8 +306,8 @@ BattleScreen.prototype._initializeComponents = function() {
     this._stats = document.getElementById("stats");
     this._ui= document.getElementById("ui");
     
-    this._loadingBox = this.addExternalComponent(new LoadingBox("loadingBox","loadingbox.html"));
-    this._infoBox = this.addExternalComponent(new InfoBox("infoBox","infobox.html"));
+    this.addExternalComponent(this._loadingBox);
+    this.addExternalComponent(this._infoBox);
 };
 
 /**
@@ -603,4 +410,66 @@ HelpScreen.prototype._initializeComponents = function() {
         trElement.innerHTML="<td>"+keyCommands[i][1]+"</td><td>"+keyCommands[i][0]+"</td>";
         keyCommandsTable.appendChild(trElement);
     }
+};
+
+/**
+ * Defines a menu screen object.
+ * @class A game screen with a {@link MenuComponent}.
+ * @extends GameScreen
+ * @param {String} name @see {@link GameScreen}
+ * @param {String} source @see {@link GameScreen}
+ * @param {Object[]} menuOptions The menuOptions for creating the {@link MenuComponent}
+ * @param {String} [menuContainerID] The ID of the HTML element inside of which
+ * the menu should be added (if omitted, it will be appended to body)
+ * @returns {MenuScreen}
+ */
+function MenuScreen(name,source,menuOptions,menuContainerID) {
+    GameScreen.call(this,name,source);
+    
+    /**
+     * @see MenuComponent
+     * @name MenuScreen#_menuOptions 
+     * @type Object[]
+     */
+    this._menuOptions = menuOptions;
+    /**
+     * The ID of the HTML element inside of which the menu will be added. If
+     * undefined, it will be appended to the document body.
+     * @name MenuScreen#_menuContainerID 
+     * @type String
+     */
+    this._menuContainerID = menuContainerID;
+    /**
+     * The component generating the HTML menu.
+     * @name MenuScreen#_menuComponent 
+     * @type MenuComponent
+     */
+    this._menuComponent = new MenuComponent("menu","menucomponent.html",this._menuOptions);
+};
+
+MenuScreen.prototype=new GameScreen();
+MenuScreen.prototype.constructor=MenuScreen;
+
+/**
+ * Builds up the HTML menu on the page using the {@link MenuComponent}
+ */
+MenuScreen.prototype._initializeComponents = function() {
+    GameScreen.prototype._initializeComponents.call(this);
+    
+    var parentNode;
+    if(this._menuContainerID!==undefined) {
+        parentNode = document.getElementById(this._menuContainerID);
+    }
+    // otherwise just leave it undefined, nothing to pass to the method below
+    
+    this.addExternalComponent(this._menuComponent,parentNode);
+};
+
+/**
+ * Nulls out the components.
+ */
+MenuScreen.prototype.closePage = function() {
+    GameScreen.prototype.closePage.call(this);
+    
+    this._menuComponent.resetComponent();
 };

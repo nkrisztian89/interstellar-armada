@@ -15,24 +15,16 @@
         <link href="css/infobox.css" rel="stylesheet" type="text/css"/>
         
         <!-- Adding the ?123 bypasses caching, to make sure the newest version
-             of the source file is loaded (only used on this page, other pages
-             can load from cache) -->
+             of the source file is loaded -->
         <script src="js/armada.js?123"></script>
     </head>
-    <body onload="initialize()">
+    <body>
         <div class="horizontallyCentered narrowFix outerContainer">
-            <div class="horizontallyCentered wideFluid innerContainer withBackgroundSign">
+            <div id="menuContainer" class="horizontallyCentered wideFluid innerContainer withBackgroundSign">
                 <h3>
                     <img src="pictures/sa.png" alt="logo" /><br/>
                     Interstellar Armada<br/>
                 </h3>
-                    <ul class="horizontallyCentered outerContainer">
-                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeBattle()">Play the game</a></li>
-                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeDatabase()">Database</a></li>
-                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeHelp()">Keyboard controls</a></li>
-                        <li class="transparentContainer" ><a href="#" class="menu button" onclick="initializeAbout()">About</a></li>
-                        <li class="transparentContainer"><a href="doc" class="menu button" >Documentation</a></li>
-                    </ul>
             </div>
         </div>
     </body>

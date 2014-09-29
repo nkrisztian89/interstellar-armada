@@ -74,7 +74,7 @@ Resource.prototype.isReadyToUse = function() {
  * Resets the state of the resource to be not ready, resetting the queued 
  * actions as well.
  */
-Resource.prototype.reset = function() {
+Resource.prototype.resetResource = function() {
     this._readyToUse = false;
     this._onReadyQueue = new Array();
 };
