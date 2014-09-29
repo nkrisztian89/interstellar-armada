@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ModelWithLOD</title>
+		<title>JsDoc Reference - Resource</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,7 +300,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ModelWithLOD
+				Class Resource
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -308,16 +308,20 @@ ul.inheritsList
 				
 				
 			
-				A 3D model paired up with Level Of Detail indicator.
+				Ancestor class for all classes representing resources that need to be 
+prepared (e.g. loaded from external source) before they can be used. As the
+loading happends asynchronously in many cases, this class provides a safe way
+to interact with the objects at any time, queuing the actions if the resource
+is not ready yet to use.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_resource.js.html">resource.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ModelWithLOD.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Resource.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -330,9 +334,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ModelWithLOD.html#constructor">ModelWithLOD</a></b>(model, lod)
+								<b><a href="../symbols/Resource.html#constructor">Resource</a></b>()
 							</div>
-							<div class="description">Creates a LOD associated 3D model object.</div>
+							<div class="description">Defines a resource object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -343,6 +347,73 @@ ul.inheritsList
 			
 
 <!-- ============================== methods summary ======================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Resource.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Resource.html#addOnReadyFunction">addOnReadyFunction</a></b>(onReadyFunction)
+								</div>
+								<div class="description">Adds the given function to the queue to be executed ones the resource gets
+ready.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Resource.html#executeWhenReady">executeWhenReady</a></b>(functionToExecute, functionToExecuteIfNotReady)
+								</div>
+								<div class="description">Executes the first given function if the resourse is ready, otherwise queues
+it to be executed when it gets ready.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Resource.html#isReadyToUse">isReadyToUse</a></b>()
+								</div>
+								<div class="description">Returns if the resource is ready to be used at the moment.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Resource.html#reset">reset</a></b>()
+								</div>
+								<div class="description">Resets the state of the resource to be not ready, resetting the queued 
+actions as well.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Resource.html#setToReady">setToReady</a></b>()
+								</div>
+								<div class="description">Sets the ready state of the resource and executes the queued actions that
+were requested in advance.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -355,11 +426,11 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>ModelWithLOD</b>(model, lod)
+						<b>Resource</b>()
 				</div>
 				
 				<div class="description">
-					Creates a LOD associated 3D model object.
+					Defines a resource object.
 					
 				</div>
 				
@@ -367,26 +438,16 @@ ul.inheritsList
 				
 				
 					
+					
+					
+					
+					
 						<dl class="detailList">
-						<dt class="heading">Parameters:</dt>
+						<dt class="heading">Returns:</dt>
 						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
-								
-							</dt>
-								<dd>The 3D model data.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>lod</b>
-								
-							</dt>
-								<dd>The LOD level to be associated with the model.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/Resource.html">Resource</a>}</span> </dd>
 						
 						</dl>
-					
-					
-					
-					
 					
 					
 					
@@ -398,6 +459,188 @@ ul.inheritsList
 			
 
 <!-- ============================== method details ========================= -->		
+			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="addOnReadyFunction"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>addOnReadyFunction</b>(onReadyFunction)
+					
+					</div>
+					<div class="description">
+						Adds the given function to the queue to be executed ones the resource gets
+ready.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Function}</span> <b>onReadyFunction</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="executeWhenReady"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Boolean}</span>
+					<b>executeWhenReady</b>(functionToExecute, functionToExecuteIfNotReady)
+					
+					</div>
+					<div class="description">
+						Executes the first given function if the resourse is ready, otherwise queues
+it to be executed when it gets ready. Optionally takes a second function to
+be executed right now in case the resource is not ready yet to execute the
+first one (such as notifying the user).
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Function}</span> <b>functionToExecute</b>
+									
+								</dt>
+								<dd>The function to execute when the resource
+is ready (now or later).</dd>
+							
+								<dt>
+									<span class="light fixedFont">{Function}</span> <b>functionToExecuteIfNotReady</b>
+									<i>Optional</i>
+								</dt>
+								<dd>The function to be executed if
+the resource is not ready yet.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Boolean}</span> True if the first function got executed, false if it got
+queued.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="isReadyToUse"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Boolean}</span>
+					<b>isReadyToUse</b>()
+					
+					</div>
+					<div class="description">
+						Returns if the resource is ready to be used at the moment. (i.e. properties
+are initialized)
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Boolean}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="reset"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>reset</b>()
+					
+					</div>
+					<div class="description">
+						Resets the state of the resource to be not ready, resetting the queued 
+actions as well.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="setToReady"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>setToReady</b>()
+					
+					</div>
+					<div class="description">
+						Sets the ready state of the resource and executes the queued actions that
+were requested in advance. Also erases the queue.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					
+				
 			
 			
 <!-- ============================== event details ========================= -->		

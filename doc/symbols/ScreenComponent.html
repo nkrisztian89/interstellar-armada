@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ModelWithLOD</title>
+		<title>JsDoc Reference - ScreenComponent</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,24 +300,28 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ModelWithLOD
+				Class ScreenComponent
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
+				<br />Extends
+					<a href="../symbols/Resource.html">Resource</a>.<br />
 				
 			
-				A 3D model paired up with Level Of Detail indicator.
+				A reusable component that consist of HTML elements (a fragment of a 
+HTML document) and can be appended to game screens. Various components have
+to be the descendants of this class, and implement their own various methods.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_screens.js.html">screens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ModelWithLOD.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ScreenComponent.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -330,9 +334,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ModelWithLOD.html#constructor">ModelWithLOD</a></b>(model, lod)
+								<b><a href="../symbols/ScreenComponent.html#constructor">ScreenComponent</a></b>(name, source)
 							</div>
-							<div class="description">Creates a LOD associated 3D model object.</div>
+							<div class="description">Defines a screen component object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -343,6 +347,65 @@ ul.inheritsList
 			
 
 <!-- ============================== methods summary ======================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class ScreenComponent.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/ScreenComponent.html#appendToPage">appendToPage</a></b>()
+								</div>
+								<div class="description">Appends the component's elements to the current document.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/ScreenComponent.html#hide">hide</a></b>()
+								</div>
+								<div class="description">Sets the display property of the root element of the component to hide it.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/ScreenComponent.html#requestModelLoad">requestModelLoad</a></b>()
+								</div>
+								<div class="description">Initiates the asynchronous loading of the component's structure from the
+external HTML file.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/ScreenComponent.html#show">show</a></b>()
+								</div>
+								<div class="description">Sets the display property of the root element of the component to show it.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+				<dl class="inheritsList">
+				<dt>Methods borrowed from class <a href="../symbols/Resource.html">Resource</a>: </dt><dd><a href="../symbols/Resource.html#addOnReadyFunction">addOnReadyFunction</a>, <a href="../symbols/Resource.html#executeWhenReady">executeWhenReady</a>, <a href="../symbols/Resource.html#isReadyToUse">isReadyToUse</a>, <a href="../symbols/Resource.html#reset">reset</a>, <a href="../symbols/Resource.html#setToReady">setToReady</a></dd>
+				</dl>
+				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -355,11 +418,11 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>ModelWithLOD</b>(model, lod)
+						<b>ScreenComponent</b>(name, source)
 				</div>
 				
 				<div class="description">
-					Creates a LOD associated 3D model object.
+					Defines a screen component object.
 					
 				</div>
 				
@@ -371,22 +434,31 @@ ul.inheritsList
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The 3D model data.</dd>
+								<dd>The name of the component to be identified by.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>lod</b>
+								<span class="light fixedFont">{String}</span>  <b>source</b>
 								
 							</dt>
-								<dd>The LOD level to be associated with the model.</dd>
+								<dd>The filename of the HTML document where the structure
+of the component should be defined. The component will be loaded as the first
+element (and all its children) inside the body tag of this file.</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/ScreenComponent.html">ScreenComponent</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -398,6 +470,112 @@ ul.inheritsList
 			
 
 <!-- ============================== method details ========================= -->		
+			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="appendToPage"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>appendToPage</b>()
+					
+					</div>
+					<div class="description">
+						Appends the component's elements to the current document.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="hide"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>hide</b>()
+					
+					</div>
+					<div class="description">
+						Sets the display property of the root element of the component to hide it.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="requestModelLoad"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>requestModelLoad</b>()
+					
+					</div>
+					<div class="description">
+						Initiates the asynchronous loading of the component's structure from the
+external HTML file.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="show"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>show</b>()
+					
+					</div>
+					<div class="description">
+						Sets the display property of the root element of the component to show it.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					
+				
 			
 			
 <!-- ============================== event details ========================= -->		

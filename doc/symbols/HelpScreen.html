@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - DustParticle</title>
+		<title>JsDoc Reference - HelpScreen</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -195,6 +195,8 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Barrel.html">Barrel</a></li>
 	
+	<li><a href="../symbols/BattleScreen.html">BattleScreen</a></li>
+	
 	<li><a href="../symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
@@ -205,9 +207,9 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Cubemap.html">Cubemap</a></li>
 	
-	<li><a href="../symbols/DustCloudClass.html">DustCloudClass</a></li>
+	<li><a href="../symbols/DustCloud.html">DustCloud</a></li>
 	
-	<li><a href="../symbols/DustParticle.html">DustParticle</a></li>
+	<li><a href="../symbols/DustCloudClass.html">DustCloudClass</a></li>
 	
 	<li><a href="../symbols/DynamicParticle.html">DynamicParticle</a></li>
 	
@@ -219,11 +221,25 @@ ul.inheritsList
 	
 	<li><a href="../symbols/FVQ.html">FVQ</a></li>
 	
+	<li><a href="../symbols/Game.html">Game</a></li>
+	
+	<li><a href="../symbols/GameScreen.html">GameScreen</a></li>
+	
+	<li><a href="../symbols/GameScreenWithCanvases.html">GameScreenWithCanvases</a></li>
+	
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/HelpScreen.html">HelpScreen</a></li>
+	
+	<li><a href="../symbols/InfoBox.html">InfoBox</a></li>
 	
 	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
 	
+	<li><a href="../symbols/Level.html">Level</a></li>
+	
 	<li><a href="../symbols/Line.html">Line</a></li>
+	
+	<li><a href="../symbols/LoadingBox.html">LoadingBox</a></li>
 	
 	<li><a href="../symbols/LODContext.html">LODContext</a></li>
 	
@@ -235,15 +251,21 @@ ul.inheritsList
 	
 	<li><a href="../symbols/PhysicalObject.html">PhysicalObject</a></li>
 	
+	<li><a href="../symbols/PointParticle.html">PointParticle</a></li>
+	
 	<li><a href="../symbols/ProjectileClass.html">ProjectileClass</a></li>
 	
 	<li><a href="../symbols/PropulsionClass.html">PropulsionClass</a></li>
+	
+	<li><a href="../symbols/Resource.html">Resource</a></li>
 	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
 	<li><a href="../symbols/Scene.html">Scene</a></li>
 	
 	<li><a href="../symbols/SceneCamera.html">SceneCamera</a></li>
+	
+	<li><a href="../symbols/ScreenComponent.html">ScreenComponent</a></li>
 	
 	<li><a href="../symbols/Shader.html">Shader</a></li>
 	
@@ -278,28 +300,27 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class DustParticle
+				Class HelpScreen
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
 				<br />Extends
-					<a href="../symbols/VisualObject.html">VisualObject</a>.<br />
+					<a href="../symbols/GameScreen.html">GameScreen</a>.<br />
 				
 			
-				Visual object that renders a point like object as a line as it is
-moving. Used to represent dust particles that give a visual clue about the
-motion of the camera.
+				Represents the help screen, which currently just shows the available
+keyboard controls.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_screens.js.html">screens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class DustParticle.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class HelpScreen.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -312,9 +333,9 @@ motion of the camera.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/DustParticle.html#constructor">DustParticle</a></b>(model, shader, color, positionMatrix)
+								<b><a href="../symbols/HelpScreen.html#constructor">HelpScreen</a></b>(name, source)
 							</div>
-							<div class="description">Creates a dust particle type visual object.</div>
+							<div class="description">Defines a help screen object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -328,42 +349,10 @@ motion of the camera.
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class DustParticle.">
-					<caption>Method Summary</caption>
-					<thead>
-						<tr>
-							<th scope="col">Method Attributes</th>
-							<th scope="col">Method Name and Description</th>
-						</tr>
-					</thead>
-					<tbody>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/DustParticle.html#isInsideViewFrustum">isInsideViewFrustum</a></b>(camera)
-								</div>
-								<div class="description">Always returns true as is it faster to skip the check because anyway we are
-only rendering one line here.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/DustParticle.html#render">render</a></b>(resourceCenter)
-								</div>
-								<div class="description">Renders the particle.</div>
-							</td>
-						</tr>
-					
-					</tbody>
-				</table>
-				
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a>, <a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a>, <a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a>, <a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a>, <a href="../symbols/VisualObject.html#getSize">getSize</a>, <a href="../symbols/VisualObject.html#needsToBeRendered">needsToBeRendered</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/GameScreen.html">GameScreen</a>: </dt><dd><a href="../symbols/GameScreen.html#addExternalComponent">addExternalComponent</a>, <a href="../symbols/GameScreen.html#buildPage">buildPage</a>, <a href="../symbols/GameScreen.html#closePage">closePage</a>, <a href="../symbols/GameScreen.html#getName">getName</a>, <a href="../symbols/GameScreen.html#requestModelLoad">requestModelLoad</a>, <a href="../symbols/GameScreen.html#updateStatus">updateStatus</a></dd>
 				</dl>
 				
 			
@@ -378,11 +367,11 @@ only rendering one line here.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>DustParticle</b>(model, shader, color, positionMatrix)
+						<b>HelpScreen</b>(name, source)
 				</div>
 				
 				<div class="description">
-					Creates a dust particle type visual object.
+					Defines a help screen object.
 					
 				</div>
 				
@@ -394,34 +383,29 @@ only rendering one line here.</div>
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>A model of 2 vertices has to be passed (see dustModel()).</dd>
+								<dd>Check GameScreen</dd>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span>  <b>shader</b>
+								<span class="light fixedFont">{String}</span>  <b>source</b>
 								
 							</dt>
-								<dd>The shader that should be active while rendering this object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number[]}</span>  <b>color</b>
-								
-							</dt>
-								<dd>The RGBA components of the color to modulate the billboard texture with.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{Float32Array}</span>  <b>positionMatrix</b>
-								
-							</dt>
-								<dd>The 4x4 translation matrix representing the initial position of the object.</dd>
+								<dd>Check GameScreen</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/HelpScreen.html">HelpScreen</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -434,92 +418,6 @@ only rendering one line here.</div>
 
 <!-- ============================== method details ========================= -->		
 			
-				<div class="sectionTitle">
-					Method Detail
-				</div>
-				
-					<a name="isInsideViewFrustum"> </a>
-					<div class="fixedFont">
-					
-					<span class="light">{boolean}</span>
-					<b>isInsideViewFrustum</b>(camera)
-					
-					</div>
-					<div class="description">
-						Always returns true as is it faster to skip the check because anyway we are
-only rendering one line here.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> <b>camera</b>
-									
-								</dt>
-								<dd>Irrelevant in this case.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd><span class="light fixedFont">{boolean}</span> Always true.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="render"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>render</b>(resourceCenter)
-					
-					</div>
-					<div class="description">
-						Renders the particle.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
-									
-								</dt>
-								<dd>The resource center that holds the
-the model and the shader.</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					
-				
-			
 			
 <!-- ============================== event details ========================= -->		
 			
@@ -531,7 +429,7 @@ the model and the shader.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 00:48:28 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Mon Sep 29 2014 18:00:26 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

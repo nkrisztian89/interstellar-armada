@@ -68,7 +68,7 @@ ScreenComponent.prototype.requestModelLoad = function() {
     // send an asynchronous request to grab the XML file containing the DOM of
     // this component
     var request = new XMLHttpRequest();
-    request.open('GET', location.pathname+this._source+"?123", true);
+    request.open('GET', location.pathname+getComponentFolder()+this._source+"?123", true);
     var self = this;
     request.onreadystatechange = function() {
             if(request.readyState===4) {
@@ -476,6 +476,18 @@ function BattleScreen(name,source) {
 
 BattleScreen.prototype=new GameScreenWithCanvases();
 BattleScreen.prototype.constructor=BattleScreen;
+
+/**
+ * Stops the render loop and nulls out the components.
+ */
+BattleScreen.prototype.closePage = function() {
+    GameScreenWithCanvases.prototype.closePage.call(this);
+    
+    this._stats = null;
+    this._ui = null;
+    this._loadingBox = null;
+    this._infoBox = null;
+};
 
 /**
  * Initializes the components of the parent class, then the additional ones for

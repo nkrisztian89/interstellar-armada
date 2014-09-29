@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - DynamicParticle</title>
+		<title>JsDoc Reference - Game</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,28 +300,25 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class DynamicParticle
+				Class Game
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
-				<br />Extends
-					<a href="../symbols/VisualObject.html">VisualObject</a>.<br />
 				
 			
-				Visual object that renders a 2D billboard positioned in 3D space and
-dynamically changing size during it's lifespan. Used for flashes and
-particle systems.
+				Holds the general properties of the game (the current context for the
+different modules)
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class DynamicParticle.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class Game.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -334,10 +331,9 @@ particle systems.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/DynamicParticle.html#constructor">DynamicParticle</a></b>(model, shader, texture, color, size, positionMatrix, duration, smallestParentSizeWhenDrawn)
+								<b><a href="../symbols/Game.html#constructor">Game</a></b>()
 							</div>
-							<div class="description">Creates a dynamic particle type visual object that has a certain lifespan
-and GLSL takes into account its age when rendering.</div>
+							<div class="description">Defines a Game object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -346,12 +342,52 @@ and GLSL takes into account its age when rendering.</div>
 
 <!-- ============================== properties summary ===================== -->
 			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the fields documented in the class Game.">
+					<caption>Field Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Field Attributes</th>
+							<th scope="col">Field Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/Game.html#controlContext">controlContext</a></b>
+								</div>
+								<div class="description">The control context of the game, that can be used to bind input controls
+to in-game actions.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/Game.html#graphicsContext">graphicsContext</a></b>
+								</div>
+								<div class="description">The graphics context of the game, that can be used to access and 
+manipulate graphical resources.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+			
 
 <!-- ============================== methods summary ======================== -->
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class DynamicParticle.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class Game.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -364,19 +400,56 @@ and GLSL takes into account its age when rendering.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/DynamicParticle.html#isInsideViewFrustum">isInsideViewFrustum</a></b>(camera)
+								<div class="fixedFont"><b><a href="../symbols/Game.html#addScreen">addScreen</a></b>(screen, isDefaultScreen)
 								</div>
-								<div class="description">Always returns true as is it faster to skip the check because anyway we are
-only rendering 2 triangles here.</div>
+								<div class="description">Adds a new screen to the list that can be set as current later.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/DynamicParticle.html#render">render</a></b>(resourceCenter)
+								<div class="fixedFont"><b><a href="../symbols/Game.html#getCurrentScreen">getCurrentScreen</a></b>()
 								</div>
-								<div class="description">Renders the particle, binding the needed texture.</div>
+								<div class="description">Gets the object corresponding to the currently set game screen.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Game.html#getScreen">getScreen</a></b>(screenName)
+								</div>
+								<div class="description">Returns the game screen with the specified name that the game has.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Game.html#requestSettingsLoad">requestSettingsLoad</a></b>()
+								</div>
+								<div class="description">Sends an asynchronous request to get the XML file describing the game
+settings and sets the callback function to set them.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Game.html#setCurrentScreen">setCurrentScreen</a></b>(screenName)
+								</div>
+								<div class="description">Sets the current game screen to the one with the specified name (from the
+list of available screens), including refreshing the HTML body.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Game.html#showError">showError</a></b>(message)
+								</div>
+								<div class="description">Notifies the user of an error that happened while running the game.</div>
 							</td>
 						</tr>
 					
@@ -384,10 +457,6 @@ only rendering 2 triangles here.</div>
 				</table>
 				
 				
-				
-				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a>, <a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a>, <a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a>, <a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a>, <a href="../symbols/VisualObject.html#getSize">getSize</a>, <a href="../symbols/VisualObject.html#needsToBeRendered">needsToBeRendered</a></dd>
-				</dl>
 				
 			
 <!-- ============================== events summary ======================== -->
@@ -401,12 +470,11 @@ only rendering 2 triangles here.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>DynamicParticle</b>(model, shader, texture, color, size, positionMatrix, duration, smallestParentSizeWhenDrawn)
+						<b>Game</b>()
 				</div>
 				
 				<div class="description">
-					Creates a dynamic particle type visual object that has a certain lifespan
-and GLSL takes into account its age when rendering.
+					Defines a Game object.
 					
 				</div>
 				
@@ -414,62 +482,16 @@ and GLSL takes into account its age when rendering.
 				
 				
 					
+					
+					
+					
+					
 						<dl class="detailList">
-						<dt class="heading">Parameters:</dt>
+						<dt class="heading">Returns:</dt>
 						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
-								
-							</dt>
-								<dd>The model to store the simple billboard data.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span>  <b>shader</b>
-								
-							</dt>
-								<dd>The shader that should be active while rendering this object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Texture.html">Texture</a>}</span>  <b>texture</b>
-								
-							</dt>
-								<dd>The texture that should be bound while rendering this object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number[]}</span>  <b>color</b>
-								
-							</dt>
-								<dd>The RGBA components of the color to modulate the billboard texture with.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>size</b>
-								
-							</dt>
-								<dd>The size of the billboard</dd>
-						
-							<dt>
-								<span class="light fixedFont">{Float32Array}</span>  <b>positionMatrix</b>
-								
-							</dt>
-								<dd>The 4x4 translation matrix representing the initial position of the object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>duration</b>
-								
-							</dt>
-								<dd>The lifespan of the particle in milliseconds.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>smallestParentSizeWhenDrawn</b>
-								
-							</dt>
-								<dd>If the rendering parent's apparent size is smaller than this, render will not take place.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/Game.html">Game</a>}</span> </dd>
 						
 						</dl>
-					
-					
-					
-					
 					
 					
 					
@@ -479,6 +501,64 @@ and GLSL takes into account its age when rendering.
 
 <!-- ============================== field details ========================== -->		
 			
+				<div class="sectionTitle">
+					Field Detail
+				</div>
+				
+					<a name="controlContext"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{ControlContext}</span>
+					<b>controlContext</b>
+					
+					</div>
+					<div class="description">
+						The control context of the game, that can be used to bind input controls
+to in-game actions.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Default Value:</dt>
+							<dd>
+								null
+							</dd>
+							</dl>
+						
+
+					<hr />
+				
+					<a name="graphicsContext"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/GraphicsContext.html">GraphicsContext</a>}</span>
+					<b>graphicsContext</b>
+					
+					</div>
+					<div class="description">
+						The graphics context of the game, that can be used to access and 
+manipulate graphical resources.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					
+				
+			
 
 <!-- ============================== method details ========================= -->		
 			
@@ -486,16 +566,15 @@ and GLSL takes into account its age when rendering.
 					Method Detail
 				</div>
 				
-					<a name="isInsideViewFrustum"> </a>
+					<a name="addScreen"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{boolean}</span>
-					<b>isInsideViewFrustum</b>(camera)
+					
+					<b>addScreen</b>(screen, isDefaultScreen)
 					
 					</div>
 					<div class="description">
-						Always returns true as is it faster to skip the check because anyway we are
-only rendering 2 triangles here.
+						Adds a new screen to the list that can be set as current later.
 						
 						
 					</div>
@@ -507,10 +586,85 @@ only rendering 2 triangles here.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> <b>camera</b>
+									<span class="light fixedFont">{<a href="../symbols/GameScreen.html">GameScreen</a>}</span> <b>screen</b>
 									
 								</dt>
-								<dd>Irrelevant in this case.</dd>
+								<dd>The new game screen to be added.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{Boolean}</span> <b>isDefaultScreen</b>
+									<i>Optional, Default: false</i>
+								</dt>
+								<dd>If true, this screen will be taken 
+as the default, starting screen. (and will be set, but not reloaded)</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getCurrentScreen"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/GameScreen.html">GameScreen</a>}</span>
+					<b>getCurrentScreen</b>()
+					
+					</div>
+					<div class="description">
+						Gets the object corresponding to the currently set game screen.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/GameScreen.html">GameScreen</a>}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getScreen"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/GameScreen.html">GameScreen</a>}</span>
+					<b>getScreen</b>(screenName)
+					
+					</div>
+					<div class="description">
+						Returns the game screen with the specified name that the game has.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>screenName</b>
+									
+								</dt>
+								<dd></dd>
 							
 							</dl>
 						
@@ -521,7 +675,7 @@ only rendering 2 triangles here.
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{boolean}</span> Always true.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/GameScreen.html">GameScreen</a>}</span> </dd>
 							
 							</dl>
 						
@@ -530,15 +684,42 @@ only rendering 2 triangles here.
 
 					<hr />
 				
-					<a name="render"> </a>
+					<a name="requestSettingsLoad"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>render</b>(resourceCenter)
+					<b>requestSettingsLoad</b>()
 					
 					</div>
 					<div class="description">
-						Renders the particle, binding the needed texture.
+						Sends an asynchronous request to get the XML file describing the game
+settings and sets the callback function to set them.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="setCurrentScreen"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>setCurrentScreen</b>(screenName)
+					
+					</div>
+					<div class="description">
+						Sets the current game screen to the one with the specified name (from the
+list of available screens), including refreshing the HTML body.
 						
 						
 					</div>
@@ -550,11 +731,46 @@ only rendering 2 triangles here.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
+									<span class="light fixedFont">{String}</span> <b>screenName</b>
 									
 								</dt>
-								<dd>The resource center that holds the
-textures, the model and the shader.</dd>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="showError"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>showError</b>(message)
+					
+					</div>
+					<div class="description">
+						Notifies the user of an error that happened while running the game.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>message</b>
+									
+								</dt>
+								<dd>The message to show.</dd>
 							
 							</dl>
 						

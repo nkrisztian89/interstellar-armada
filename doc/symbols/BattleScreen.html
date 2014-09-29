@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - DynamicParticle</title>
+		<title>JsDoc Reference - BattleScreen</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,28 +300,26 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class DynamicParticle
+				Class BattleScreen
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
 				<br />Extends
-					<a href="../symbols/VisualObject.html">VisualObject</a>.<br />
+					<a href="../symbols/GameScreenWithCanvases.html">GameScreenWithCanvases</a>.<br />
 				
 			
-				Visual object that renders a 2D billboard positioned in 3D space and
-dynamically changing size during it's lifespan. Used for flashes and
-particle systems.
+				Represents the battle screen.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_screens.js.html">screens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class DynamicParticle.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BattleScreen.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -334,10 +332,9 @@ particle systems.
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/DynamicParticle.html#constructor">DynamicParticle</a></b>(model, shader, texture, color, size, positionMatrix, duration, smallestParentSizeWhenDrawn)
+								<b><a href="../symbols/BattleScreen.html#constructor">BattleScreen</a></b>(name, source)
 							</div>
-							<div class="description">Creates a dynamic particle type visual object that has a certain lifespan
-and GLSL takes into account its age when rendering.</div>
+							<div class="description">Defines a battle screen object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -351,7 +348,7 @@ and GLSL takes into account its age when rendering.</div>
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class DynamicParticle.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BattleScreen.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -364,19 +361,72 @@ and GLSL takes into account its age when rendering.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/DynamicParticle.html#isInsideViewFrustum">isInsideViewFrustum</a></b>(camera)
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#getInfoBox">getInfoBox</a></b>()
 								</div>
-								<div class="description">Always returns true as is it faster to skip the check because anyway we are
-only rendering 2 triangles here.</div>
+								<div class="description">Getter for the _infoBox property.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/DynamicParticle.html#render">render</a></b>(resourceCenter)
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#getLoadingBox">getLoadingBox</a></b>()
 								</div>
-								<div class="description">Renders the particle, binding the needed texture.</div>
+								<div class="description">Getter for the _loadingBox property.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#hideStats">hideStats</a></b>()
+								</div>
+								<div class="description">Hides the stats (FPS, draw stats) component.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#hideUI">hideUI</a></b>()
+								</div>
+								<div class="description">Hides the UI (information about controlled spacecraft) component.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#showMessage">showMessage</a></b>(message)
+								</div>
+								<div class="description">Shows the given message to the user in an information box.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#showStats">showStats</a></b>()
+								</div>
+								<div class="description">Shows the stats (FPS, draw stats) component.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#showUI">showUI</a></b>()
+								</div>
+								<div class="description">Shows the UI (information about controlled spacecraft) component.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BattleScreen.html#updateStatus">updateStatus</a></b>(newStatus, newProgress)
+								</div>
+								<div class="description">Uses the loading box to show the status to the user.</div>
 							</td>
 						</tr>
 					
@@ -386,7 +436,7 @@ only rendering 2 triangles here.</div>
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/VisualObject.html">VisualObject</a>: </dt><dd><a href="../symbols/VisualObject.html#addSubnode">addSubnode</a>, <a href="../symbols/VisualObject.html#assignUniforms">assignUniforms</a>, <a href="../symbols/VisualObject.html#cascadeCleanUp">cascadeCleanUp</a>, <a href="../symbols/VisualObject.html#cascadeRender">cascadeRender</a>, <a href="../symbols/VisualObject.html#cascadeResetModelMatrixCalculated">cascadeResetModelMatrixCalculated</a>, <a href="../symbols/VisualObject.html#getCascadePositionVector">getCascadePositionVector</a>, <a href="../symbols/VisualObject.html#getCascadeScalingMatrix">getCascadeScalingMatrix</a>, <a href="../symbols/VisualObject.html#getModelMatrix">getModelMatrix</a>, <a href="../symbols/VisualObject.html#getOrientationMatrix">getOrientationMatrix</a>, <a href="../symbols/VisualObject.html#getParentModelMatrix">getParentModelMatrix</a>, <a href="../symbols/VisualObject.html#getPositionMatrix">getPositionMatrix</a>, <a href="../symbols/VisualObject.html#getScalingMatrix">getScalingMatrix</a>, <a href="../symbols/VisualObject.html#getSize">getSize</a>, <a href="../symbols/VisualObject.html#needsToBeRendered">needsToBeRendered</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/GameScreenWithCanvases.html">GameScreenWithCanvases</a>: </dt><dd><a href="../symbols/GameScreenWithCanvases.html#addScene">addScene</a>, <a href="../symbols/GameScreenWithCanvases.html#closePage">closePage</a>, <a href="../symbols/GameScreenWithCanvases.html#getCanvas">getCanvas</a>, <a href="../symbols/GameScreenWithCanvases.html#render">render</a>, <a href="../symbols/GameScreenWithCanvases.html#resizeCanvases">resizeCanvases</a>, <a href="../symbols/GameScreenWithCanvases.html#startRenderLoop">startRenderLoop</a>, <a href="../symbols/GameScreenWithCanvases.html#stopRenderLoop">stopRenderLoop</a></dd><dt>Methods borrowed from class <a href="../symbols/GameScreen.html">GameScreen</a>: </dt><dd><a href="../symbols/GameScreen.html#addExternalComponent">addExternalComponent</a>, <a href="../symbols/GameScreen.html#buildPage">buildPage</a>, <a href="../symbols/GameScreen.html#getName">getName</a>, <a href="../symbols/GameScreen.html#requestModelLoad">requestModelLoad</a></dd>
 				</dl>
 				
 			
@@ -401,12 +451,11 @@ only rendering 2 triangles here.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>DynamicParticle</b>(model, shader, texture, color, size, positionMatrix, duration, smallestParentSizeWhenDrawn)
+						<b>BattleScreen</b>(name, source)
 				</div>
 				
 				<div class="description">
-					Creates a dynamic particle type visual object that has a certain lifespan
-and GLSL takes into account its age when rendering.
+					Defines a battle screen object.
 					
 				</div>
 				
@@ -418,58 +467,30 @@ and GLSL takes into account its age when rendering.
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The model to store the simple billboard data.</dd>
+								<dd>The name by which this screen can be identified.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Shader.html">Shader</a>}</span>  <b>shader</b>
+								<span class="light fixedFont">{String}</span>  <b>source</b>
 								
 							</dt>
-								<dd>The shader that should be active while rendering this object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{<a href="../symbols/Texture.html">Texture</a>}</span>  <b>texture</b>
-								
-							</dt>
-								<dd>The texture that should be bound while rendering this object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number[]}</span>  <b>color</b>
-								
-							</dt>
-								<dd>The RGBA components of the color to modulate the billboard texture with.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>size</b>
-								
-							</dt>
-								<dd>The size of the billboard</dd>
-						
-							<dt>
-								<span class="light fixedFont">{Float32Array}</span>  <b>positionMatrix</b>
-								
-							</dt>
-								<dd>The 4x4 translation matrix representing the initial position of the object.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>duration</b>
-								
-							</dt>
-								<dd>The lifespan of the particle in milliseconds.</dd>
-						
-							<dt>
-								<span class="light fixedFont">{number}</span>  <b>smallestParentSizeWhenDrawn</b>
-								
-							</dt>
-								<dd>If the rendering parent's apparent size is smaller than this, render will not take place.</dd>
+								<dd>The name of the HTML file where the structure of this
+screen is defined.</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/BattleScreen.html">BattleScreen</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -486,33 +507,21 @@ and GLSL takes into account its age when rendering.
 					Method Detail
 				</div>
 				
-					<a name="isInsideViewFrustum"> </a>
+					<a name="getInfoBox"> </a>
 					<div class="fixedFont">
 					
-					<span class="light">{boolean}</span>
-					<b>isInsideViewFrustum</b>(camera)
+					<span class="light">{<a href="../symbols/InfoBox.html">InfoBox</a>}</span>
+					<b>getInfoBox</b>()
 					
 					</div>
 					<div class="description">
-						Always returns true as is it faster to skip the check because anyway we are
-only rendering 2 triangles here.
+						Getter for the _infoBox property.
 						
 						
 					</div>
 					
 					
 					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<span class="light fixedFont">{<a href="../symbols/Camera.html">Camera</a>}</span> <b>camera</b>
-									
-								</dt>
-								<dd>Irrelevant in this case.</dd>
-							
-							</dl>
 						
 						
 						
@@ -521,7 +530,7 @@ only rendering 2 triangles here.
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{boolean}</span> Always true.</dd>
+								<dd><span class="light fixedFont">{<a href="../symbols/InfoBox.html">InfoBox</a>}</span> </dd>
 							
 							</dl>
 						
@@ -530,15 +539,97 @@ only rendering 2 triangles here.
 
 					<hr />
 				
-					<a name="render"> </a>
+					<a name="getLoadingBox"> </a>
 					<div class="fixedFont">
 					
-					
-					<b>render</b>(resourceCenter)
+					<span class="light">{<a href="../symbols/LoadingBox.html">LoadingBox</a>}</span>
+					<b>getLoadingBox</b>()
 					
 					</div>
 					<div class="description">
-						Renders the particle, binding the needed texture.
+						Getter for the _loadingBox property.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/LoadingBox.html">LoadingBox</a>}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="hideStats"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>hideStats</b>()
+					
+					</div>
+					<div class="description">
+						Hides the stats (FPS, draw stats) component.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="hideUI"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>hideUI</b>()
+					
+					</div>
+					<div class="description">
+						Hides the UI (information about controlled spacecraft) component.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="showMessage"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>showMessage</b>(message)
+					
+					</div>
+					<div class="description">
+						Shows the given message to the user in an information box.
 						
 						
 					</div>
@@ -550,11 +641,104 @@ only rendering 2 triangles here.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{<a href="../symbols/ResourceCenter.html">ResourceCenter</a>}</span> <b>resourceCenter</b>
+									<span class="light fixedFont">{String}</span> <b>message</b>
 									
 								</dt>
-								<dd>The resource center that holds the
-textures, the model and the shader.</dd>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="showStats"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>showStats</b>()
+					
+					</div>
+					<div class="description">
+						Shows the stats (FPS, draw stats) component.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="showUI"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>showUI</b>()
+					
+					</div>
+					<div class="description">
+						Shows the UI (information about controlled spacecraft) component.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="updateStatus"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>updateStatus</b>(newStatus, newProgress)
+					
+					</div>
+					<div class="description">
+						Uses the loading box to show the status to the user.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>newStatus</b>
+									
+								</dt>
+								<dd>The status to show on the loading box. If
+undefined, the status won't be updated.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>newProgress</b>
+									
+								</dt>
+								<dd>The new value of the progress bar on the loading
+box. If undefined, the value won't be updated.</dd>
 							
 							</dl>
 						

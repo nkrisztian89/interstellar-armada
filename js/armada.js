@@ -1,8 +1,11 @@
 /**
- * @fileOverview This file contains the entry point for the Interstellar
- * Armada (working name) program.
+ * @fileOverview This is the main source file of Interstellar Armada. It has
+ * to be referenced by index.html. It defines the folders where the resource
+ * files can be found, loads all the other sources and initializes the game
+ * by creating the global {@link game} object.<br/>
+ * This is the only file that should contain global variables and functions.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1
+ * @version 0.1-dev
  */
 
 /**********************************************************************
@@ -31,6 +34,17 @@
  */
 var game;
 
+/* The names of source files and folders are defined in global functions, as
+ * - game should be the only global variable
+ * - they don't belong to the game object (the game object is initialized after
+ * all source files are loaded)
+ * - they might contain calculations/functions later, which is more appropriate
+ * to put inside a function then a global variable definition
+ * - the declarations are moved above all definitions, and this way the 
+ * operations to get the names happen when the function is called, not when the
+ * definition is executed (as is the case with variables)
+ */
+
 /**
  * Returns an array containing the name of all the JavaScript source files of
  * the game.
@@ -41,6 +55,7 @@ function getSourceFiles() {
         "matrices.js",
         "egom.js",
         "graphics.js",
+        "resource.js",
         "screens.js",
         "physics.js",
         "logic.js",
@@ -48,28 +63,83 @@ function getSourceFiles() {
     ];
 }
 
+/**
+ * All the JavaScript (.js) source files (returned by getSourceFiles()) have to 
+ * be placed in this folder.
+ * @returns {String}
+ */
+function getJavaScriptFolder() {
+    return "js/";
+}
+
+/**
+ * All the components' (ScreenComponent class) HTML source files have to be 
+ * placed in this folder.
+ * @returns {String}
+ */
+function getComponentFolder() {
+    return "components/";
+}
+
+/**
+ * All the 3D model files (.egm) have to be placed in this folder.
+ * @returns {String}
+ */
+function getModelFolder() {
+    return "models/";
+}
+
+/**
+ * All the GLSL shader source files (.vert, .frag) have to be placed in this 
+ * folder.
+ * @returns {String}
+ */
+function getShaderFolder() {
+    return "shaders/";
+}
+
+/**
+ * All the texture files have to be placed in this folder.
+ * @returns {String}
+ */
+function getTextureFolder() {
+    return "textures/";
+}
+
+/**
+ * Folder to place the XML files to (settings, descriptions of in-game classes,
+ * levels, etc)
+ * @returns {String}
+ */
+function getXMLFolder() {
+    return "xml/";
+}
+
 /** 
  * Function to load additional JavaScript code from a list of source files.
  * Loads the scripts in the specified order, then executes a callback function.
- * @param {String[]} urls The list of JavaScript sourse files to load
- * @param {function} callback The function to call after loading the scripts
+ * @param {String} folder The folder where the scripts reside
+ * @param {String[]} filenames The list of JavaScript sourse files to load
+ * @param {Function} callback The function to call after loading the scripts
  * @param {Boolean} bypassCaching If true, the script files will be forcefully
  * downloaded again, even if they are in the cache already.
  */
-function loadScripts(urls,bypassCaching,callback) {
+function loadScripts(folder,filenames,bypassCaching,callback) {
+    // NOTE: recursive function - if the arguments are changed, change the calls
+    // as well
     // We add a new script tag inside the head of the document
     var head = document.getElementsByTagName('head')[0];
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = (bypassCaching?
-                    urls.shift()+"?123":
-                    urls.shift());        
+    script.src = folder + (bypassCaching?
+                    filenames.shift()+"?123":
+                    filenames.shift());        
 
     // Then bind the event to the callback function.
     // There are several events for cross browser compatibility.
-    if(urls.length>0) {
-		script.onload = function() {loadScripts(urls,bypassCaching,callback);};
-		script.onreadystatechange = function() {loadScripts(urls,bypassCaching,callback);};
+    if(filenames.length>0) {
+		script.onload = function() {loadScripts(folder,filenames,bypassCaching,callback);};
+		script.onreadystatechange = function() {loadScripts(folder,filenames,bypassCaching,callback);};
 	} else if (callback!==undefined) {
 		script.onload = callback;
 		script.onreadystatechange = callback;
@@ -80,95 +150,42 @@ function loadScripts(urls,bypassCaching,callback) {
 }
 
 /**
- * Defines a resource object.
- * @class Ancestor class for all classes representing resources that need to be 
- * prepared (e.g. loaded from external source) before they can be used. As the
- * loading happends asynchronously in many cases, this class provides a safe way
- * to interact with the objects at any time, queuing the actions if the resource
- * is not ready yet to use.
- * @returns {Resource}
- */
-function Resource() {
-    this._readyToUse = false;
-    
-    this._onReadyQueue = new Array();
-}
-
-/**
- * Adds the given function to the queue to be executed ones the resource gets
- * ready.
- * @param {Function} onReadyFunction
- */
-Resource.prototype.addOnReadyFunction = function(onReadyFunction) {
-    this._onReadyQueue.push(onReadyFunction);
-};
-
-/**
- * Returns if the resource is ready to be used at the moment. (i.e. properties
- * are initialized)
- * @returns {Boolean}
- */
-Resource.prototype.isReadyToUse = function() {
-    return this._readyToUse;
-};
-
-/**
- * Resets the state of the resource to be not ready, resetting the queued 
- * actions as well.
- */
-Resource.prototype.reset = function() {
-    this._readyToUse = false;
-    this._onReadyQueue = new Array();
-};
-
-/**
- * Sets the ready state of the resource and executes the queued actions that
- * were requested in advance. Also erases the queue.
- */
-Resource.prototype.setToReady = function() {
-    this._readyToUse = true;
-    for(var i=0;i<this._onReadyQueue.length;i++) {
-        this._onReadyQueue[i]();
-    }
-    this._onReadyQueue=new Array();
-};
-
-/**
- * Executes the first given function if the resourse is ready, otherwise queues
- * it to be executed when it gets ready. Optionally takes a second function to
- * be executed right now in case the resource is not ready yet to execute the
- * first one (such as notifying the user).
- * @param {Function} functionToExecute The function to execute when the resource
- * is ready (now or later).
- * @param {Function} functionToExecuteIfNotReady The function to be executed if
- * the resource is not ready yet.
- * @returns {Boolean} True if the first function got executed, false if it got
- * queued.
- */
-Resource.prototype.executeWhenReady = function(functionToExecute,functionToExecuteIfNotReady) {
-    if(this._readyToUse) {
-        functionToExecute();
-        return true;
-    } else {
-        this.addOnReadyFunction(functionToExecute);
-        if (functionToExecuteIfNotReady) {
-            functionToExecuteIfNotReady();
-        }
-        return false;
-    }
-};
-
-/**
  * Defines a Game object.
  * @class Holds the general properties of the game (the current context for the
  * different modules)
  * @returns {Game}
  */
 function Game() {
+    /**
+     * The game's available screens stored in an associative array, with the 
+     * keys being the names of the screens.
+     * @name Game#_screens
+     * @type Object
+     * @default {}
+     */
     this._screens = new Object();
+    /**
+     * A reference to the currently active (displayed) screen of the game.
+     * @name Game#_currentScreen
+     * @type GameScreen
+     * @default null
+     */
     this._currentScreen = null;
     
+    /**
+     * The graphics context of the game, that can be used to access and 
+     * manipulate graphical resources.
+     * @name Game#graphicsContext
+     * @type GraphicsContext
+     */
     this.graphicsContext = new GraphicsContext(new ResourceCenter(),null);
+    /**
+     * The control context of the game, that can be used to bind input controls
+     * to in-game actions.
+     * @name Game#controlContext
+     * @type ControlContext
+     * @default null
+     */
     this.controlContext = null;
     
     this.requestSettingsLoad();
@@ -188,7 +205,7 @@ Game.prototype.showError = function(message) {
  */
 Game.prototype.requestSettingsLoad = function () {
     var request = new XMLHttpRequest();
-    request.open('GET', "settings.xml?123", true);
+    request.open('GET', getXMLFolder()+"settings.xml?123", true);
     var self = this;
     request.onreadystatechange = function () {
         if (request.readyState === 4) {
@@ -203,8 +220,8 @@ Game.prototype.requestSettingsLoad = function () {
 /**
  * Adds a new screen to the list that can be set as current later.
  * @param {GameScreen} screen The new game screen to be added.
- * @param {Boolean} isDefaultScreen If true, this screen will be taken as the
- * default, starting screen. (and will be set, but not reloaded)
+ * @param {Boolean} [isDefaultScreen=false] If true, this screen will be taken 
+ * as the default, starting screen. (and will be set, but not reloaded)
  */
 Game.prototype.addScreen = function(screen,isDefaultScreen) {
     this._screens[screen.getName()]=screen;
@@ -247,7 +264,7 @@ Game.prototype.getCurrentScreen = function() {
  * the global Game object. (to be called when index.html is loaded)
  */
 function initialize() {
-    loadScripts(getSourceFiles(),true,function(){ 
+    loadScripts(getJavaScriptFolder(),getSourceFiles(),true,function(){ 
         game = new Game(); 
         game.addScreen(new GameScreen("mainMenu","index.html"),true);
         game.addScreen(new BattleScreen("battle","battle.html"));
@@ -358,7 +375,7 @@ function loadBattleResources() {
 	
         // this loads the level and all needed other resources (models, shaders)
         // from the XML files
-	test_level.loadFromFile("level.xml");
+	test_level.loadFromFile(getXMLFolder()+"level.xml");
 	
 	game.getCurrentScreen().updateStatus("loading additional configuration...",50);
 	

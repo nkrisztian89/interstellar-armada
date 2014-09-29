@@ -190,6 +190,8 @@ ul.inheritsList
 	
 	<li><a href="symbols/Barrel.html">Barrel</a></li>
 	
+	<li><a href="symbols/BattleScreen.html">BattleScreen</a></li>
+	
 	<li><a href="symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="symbols/Camera.html">Camera</a></li>
@@ -214,13 +216,25 @@ ul.inheritsList
 	
 	<li><a href="symbols/FVQ.html">FVQ</a></li>
 	
+	<li><a href="symbols/Game.html">Game</a></li>
+	
+	<li><a href="symbols/GameScreen.html">GameScreen</a></li>
+	
+	<li><a href="symbols/GameScreenWithCanvases.html">GameScreenWithCanvases</a></li>
+	
 	<li><a href="symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="symbols/HelpScreen.html">HelpScreen</a></li>
+	
+	<li><a href="symbols/InfoBox.html">InfoBox</a></li>
 	
 	<li><a href="symbols/KeyCommand.html">KeyCommand</a></li>
 	
 	<li><a href="symbols/Level.html">Level</a></li>
 	
 	<li><a href="symbols/Line.html">Line</a></li>
+	
+	<li><a href="symbols/LoadingBox.html">LoadingBox</a></li>
 	
 	<li><a href="symbols/LODContext.html">LODContext</a></li>
 	
@@ -238,11 +252,15 @@ ul.inheritsList
 	
 	<li><a href="symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
+	<li><a href="symbols/Resource.html">Resource</a></li>
+	
 	<li><a href="symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
 	<li><a href="symbols/Scene.html">Scene</a></li>
 	
 	<li><a href="symbols/SceneCamera.html">SceneCamera</a></li>
+	
+	<li><a href="symbols/ScreenComponent.html">ScreenComponent</a></li>
 	
 	<li><a href="symbols/Shader.html">Shader</a></li>
 	
@@ -277,7 +295,131 @@ ul.inheritsList
 			
 			
 			<div>
-				<h2><a href="symbols/src/egom.js.html">egom.js</a></h2>
+				<h2><a href="symbols/src/js_logic.js.html">logic.js</a></h2>
+				
+This file implements the game logic of the Interstellar 
+Armada program.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/js_resource.js.html">resource.js</a></h2>
+				
+This file contains the declaration of the <a href="symbols/Resource.html">Resource</a> class.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1-dev</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/js_screens.js.html">screens.js</a></h2>
+				
+This file defines the GameScreen class and its descendant
+classes, which load and manipulate the DOM of the HTML pages and control
+the rendering of scenes to the canvas elements.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/js_physics.js.html">physics.js</a></h2>
+				
+This file implements the simple newtonian physics engine of the
+Interstellar Armada program.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/js_graphics.js.html">graphics.js</a></h2>
+				
+This file contains the classes, methods and global variables
+for the creation, manipulation and rendering of graphical objects using webGL,
+as well as managing the required resources (such as textures).
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/js_armada.js.html">armada.js</a></h2>
+				
+This is the main source file of Interstellar Armada. It has
+to be referenced by index.html. It defines the folders where the resource
+files can be found, loads all the other sources and initializes the game
+by creating the global <a href="symbols/_global_.html#game">game</a> object.<br/>
+This is the only file that should contain global variables and functions.
+				<dl>
+					
+						<dt class="heading">Author:</dt>
+						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
+					
+					
+						<dt class="heading">Version:</dt>
+							<dd>0.1-dev</dd>
+					
+					
+					
+				</dl>
+			</div>
+			<hr />
+			
+			<div>
+				<h2><a href="symbols/src/js_egom.js.html">egom.js</a></h2>
 				
 This file provides limited functionality to interact with
 EgomModel 3D models, including loading the data from EgomModel XML files.
@@ -298,47 +440,7 @@ EgomModel is a simple 3D modeling library written in object pascal.
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/physics.js.html">physics.js</a></h2>
-				
-This file implements the simple newtonian physics engine of the
-Interstellar Armada program.
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/logic.js.html">logic.js</a></h2>
-				
-This file implements the game logic of the Interstellar 
-Armada program.
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/control.js.html">control.js</a></h2>
+				<h2><a href="symbols/src/js_control.js.html">control.js</a></h2>
 				
 This file contains the classes, methods and global variables
 that implement the control module for the Interstellar Armada project. 
@@ -360,48 +462,7 @@ intelligence.
 			<hr />
 			
 			<div>
-				<h2><a href="symbols/src/armada.js.html">armada.js</a></h2>
-				
-This file contains the entry point for the Interstellar
-Armada (working name) program.
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/graphics.js.html">graphics.js</a></h2>
-				
-This file contains the classes, methods and global variables
-for the creation, manipulation and rendering of graphical objects using webGL,
-as well as managing the required resources (such as textures).
-				<dl>
-					
-						<dt class="heading">Author:</dt>
-						<dd><a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a></dd>
-					
-					
-						<dt class="heading">Version:</dt>
-							<dd>0.1</dd>
-					
-					
-					
-				</dl>
-			</div>
-			<hr />
-			
-			<div>
-				<h2><a href="symbols/src/matrices.js.html">./matrices.js</a></h2>
+				<h2><a href="symbols/src/js_matrices.js.html">./js/matrices.js</a></h2>
 				
 				<dl>
 					
@@ -416,7 +477,7 @@ as well as managing the required resources (such as textures).
 		</div>
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:14 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Mon Sep 29 2014 18:00:26 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>

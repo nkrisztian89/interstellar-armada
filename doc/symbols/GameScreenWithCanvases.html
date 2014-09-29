@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ModelWithLOD</title>
+		<title>JsDoc Reference - GameScreenWithCanvases</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,24 +300,27 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ModelWithLOD
+				Class GameScreenWithCanvases
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
+				<br />Extends
+					<a href="../symbols/GameScreen.html">GameScreen</a>.<br />
 				
 			
-				A 3D model paired up with Level Of Detail indicator.
+				Represents a game screen that has one or more canvases where WebGL
+scenes can be rendered.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_screens.js.html">screens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ModelWithLOD.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class GameScreenWithCanvases.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -330,9 +333,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ModelWithLOD.html#constructor">ModelWithLOD</a></b>(model, lod)
+								<b><a href="../symbols/GameScreenWithCanvases.html#constructor">GameScreenWithCanvases</a></b>(name, source)
 							</div>
-							<div class="description">Creates a LOD associated 3D model object.</div>
+							<div class="description">Defines a game screen with canvases object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -343,6 +346,93 @@ ul.inheritsList
 			
 
 <!-- ============================== methods summary ======================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class GameScreenWithCanvases.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#addScene">addScene</a></b>(scene)
+								</div>
+								<div class="description">Adds a WebGL scene that can be rendered to the canvases.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#closePage">closePage</a></b>()
+								</div>
+								<div class="description">Stops the render loop and nulls out the components.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#getCanvas">getCanvas</a></b>()
+								</div>
+								<div class="description">If there is only one canvas, returns is.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#render">render</a></b>()
+								</div>
+								<div class="description">The render function that needs to be described in the descendant classes.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#resizeCanvases">resizeCanvases</a></b>()
+								</div>
+								<div class="description">Updates all needed variables when the screen is resized (camera perspective
+matrices as well!)</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#startRenderLoop">startRenderLoop</a></b>(interval)
+								</div>
+								<div class="description">Starts the render loop, by beginning to execute the render function every
+interval milliseconds.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreenWithCanvases.html#stopRenderLoop">stopRenderLoop</a></b>()
+								</div>
+								<div class="description">Stops the render loop.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+				<dl class="inheritsList">
+				<dt>Methods borrowed from class <a href="../symbols/GameScreen.html">GameScreen</a>: </dt><dd><a href="../symbols/GameScreen.html#addExternalComponent">addExternalComponent</a>, <a href="../symbols/GameScreen.html#buildPage">buildPage</a>, <a href="../symbols/GameScreen.html#getName">getName</a>, <a href="../symbols/GameScreen.html#requestModelLoad">requestModelLoad</a>, <a href="../symbols/GameScreen.html#updateStatus">updateStatus</a></dd>
+				</dl>
+				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -355,11 +445,11 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>ModelWithLOD</b>(model, lod)
+						<b>GameScreenWithCanvases</b>(name, source)
 				</div>
 				
 				<div class="description">
-					Creates a LOD associated 3D model object.
+					Defines a game screen with canvases object.
 					
 				</div>
 				
@@ -371,22 +461,30 @@ ul.inheritsList
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The 3D model data.</dd>
+								<dd>The name by which this screen can be identified.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>lod</b>
+								<span class="light fixedFont">{String}</span>  <b>source</b>
 								
 							</dt>
-								<dd>The LOD level to be associated with the model.</dd>
+								<dd>The name of the HTML file where the structure of this
+screen is defined.</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/GameScreenWithCanvases.html">GameScreenWithCanvases</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -398,6 +496,218 @@ ul.inheritsList
 			
 
 <!-- ============================== method details ========================= -->		
+			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="addScene"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>addScene</b>(scene)
+					
+					</div>
+					<div class="description">
+						Adds a WebGL scene that can be rendered to the canvases. This has to be set
+in the render method.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/Scene.html">Scene</a>}</span> <b>scene</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="closePage"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>closePage</b>()
+					
+					</div>
+					<div class="description">
+						Stops the render loop and nulls out the components.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getCanvas"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{Element}</span>
+					<b>getCanvas</b>()
+					
+					</div>
+					<div class="description">
+						If there is only one canvas, returns is.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{Element}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="render"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>render</b>()
+					
+					</div>
+					<div class="description">
+						The render function that needs to be described in the descendant classes.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="resizeCanvases"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>resizeCanvases</b>()
+					
+					</div>
+					<div class="description">
+						Updates all needed variables when the screen is resized (camera perspective
+matrices as well!)
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="startRenderLoop"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>startRenderLoop</b>(interval)
+					
+					</div>
+					<div class="description">
+						Starts the render loop, by beginning to execute the render function every
+interval milliseconds.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{Number}</span> <b>interval</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="stopRenderLoop"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>stopRenderLoop</b>()
+					
+					</div>
+					<div class="description">
+						Stops the render loop.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					
+				
 			
 			
 <!-- ============================== event details ========================= -->		

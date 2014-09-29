@@ -5,9 +5,9 @@
 		<Player name="computer" />
 	</Players>
 	
-	<Shaders source="shaders.xml" />
+	<Shaders source="xml/shaders.xml" />
 	
-	<Classes source="classes.xml" />
+	<Classes source="xml/classes.xml" />
 	
 	<Skybox class="deepspace" />
         

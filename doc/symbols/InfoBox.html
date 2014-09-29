@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ModelWithLOD</title>
+		<title>JsDoc Reference - InfoBox</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,24 +300,28 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ModelWithLOD
+				Class InfoBox
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
 			<p class="description">
 				
+				<br />Extends
+					<a href="../symbols/ScreenComponent.html">ScreenComponent</a>.<br />
 				
 			
-				A 3D model paired up with Level Of Detail indicator.
+				An info box component, that has a title, and a message to tell to the
+user and appears in the middle of the screen (the corresponding stylesheet 
+needs to be statically referenced in the head of index.html as of now)
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_screens.js.html">screens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ModelWithLOD.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class InfoBox.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -330,9 +334,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ModelWithLOD.html#constructor">ModelWithLOD</a></b>(model, lod)
+								<b><a href="../symbols/InfoBox.html#constructor">InfoBox</a></b>(name, source)
 							</div>
-							<div class="description">Creates a LOD associated 3D model object.</div>
+							<div class="description">Defines an info box component object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -343,6 +347,37 @@ ul.inheritsList
 			
 
 <!-- ============================== methods summary ======================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class InfoBox.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/InfoBox.html#updateMessage">updateMessage</a></b>(message)
+								</div>
+								<div class="description">Updates the message shown on the info box.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
+				<dl class="inheritsList">
+				<dt>Methods borrowed from class <a href="../symbols/ScreenComponent.html">ScreenComponent</a>: </dt><dd><a href="../symbols/ScreenComponent.html#appendToPage">appendToPage</a>, <a href="../symbols/ScreenComponent.html#hide">hide</a>, <a href="../symbols/ScreenComponent.html#requestModelLoad">requestModelLoad</a>, <a href="../symbols/ScreenComponent.html#show">show</a></dd><dt>Methods borrowed from class <a href="../symbols/Resource.html">Resource</a>: </dt><dd><a href="../symbols/Resource.html#addOnReadyFunction">addOnReadyFunction</a>, <a href="../symbols/Resource.html#executeWhenReady">executeWhenReady</a>, <a href="../symbols/Resource.html#isReadyToUse">isReadyToUse</a>, <a href="../symbols/Resource.html#reset">reset</a>, <a href="../symbols/Resource.html#setToReady">setToReady</a></dd>
+				</dl>
+				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -355,11 +390,11 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>ModelWithLOD</b>(model, lod)
+						<b>InfoBox</b>(name, source)
 				</div>
 				
 				<div class="description">
-					Creates a LOD associated 3D model object.
+					Defines an info box component object.
 					
 				</div>
 				
@@ -371,22 +406,29 @@ ul.inheritsList
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The 3D model data.</dd>
+								<dd>Check ScreenComponent</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>lod</b>
+								<span class="light fixedFont">{String}</span>  <b>source</b>
 								
 							</dt>
-								<dd>The LOD level to be associated with the model.</dd>
+								<dd>Check ScreenComponent</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/InfoBox.html">InfoBox</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -398,6 +440,47 @@ ul.inheritsList
 			
 
 <!-- ============================== method details ========================= -->		
+			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="updateMessage"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>updateMessage</b>(message)
+					
+					</div>
+					<div class="description">
+						Updates the message shown on the info box.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>message</b>
+									
+								</dt>
+								<dd>The new message to show.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					
+				
 			
 			
 <!-- ============================== event details ========================= -->		

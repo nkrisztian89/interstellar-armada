@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - ModelWithLOD</title>
+		<title>JsDoc Reference - GameScreen</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -300,7 +300,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class ModelWithLOD
+				Class GameScreen
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -308,16 +308,17 @@ ul.inheritsList
 				
 				
 			
-				A 3D model paired up with Level Of Detail indicator.
+				Holds the logical model of a screen of the game. The different
+screens should be defined as descendants of this class.
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/js_screens.js.html">screens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class ModelWithLOD.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class GameScreen.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -330,9 +331,9 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/ModelWithLOD.html#constructor">ModelWithLOD</a></b>(model, lod)
+								<b><a href="../symbols/GameScreen.html#constructor">GameScreen</a></b>(name, source)
 							</div>
-							<div class="description">Creates a LOD associated 3D model object.</div>
+							<div class="description">Defines a GameScreen object.</div>
 						</td>
 					</tr>
 				</tbody>
@@ -343,6 +344,81 @@ ul.inheritsList
 			
 
 <!-- ============================== methods summary ======================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class GameScreen.">
+					<caption>Method Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Method Attributes</th>
+							<th scope="col">Method Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreen.html#addExternalComponent">addExternalComponent</a></b>(screenComponent)
+								</div>
+								<div class="description">Appends the elements of an external component (a HTML document fragment
+defined in an external xml file) to the DOM tree and returns the same 
+component.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreen.html#buildPage">buildPage</a></b>()
+								</div>
+								<div class="description">Replaces the current HTML page's body with the sctructure of the screen.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreen.html#closePage">closePage</a></b>()
+								</div>
+								<div class="description">Executes the necessary actions required when closing the page.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreen.html#getName">getName</a></b>()
+								</div>
+								<div class="description">Getter for the _name property.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreen.html#requestModelLoad">requestModelLoad</a></b>()
+								</div>
+								<div class="description">Initiates the asynchronous loading of the screen's structure from the
+external HTML file.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/GameScreen.html#updateStatus">updateStatus</a></b>(newStatus)
+								</div>
+								<div class="description">Provides visual information to the user about the current status of the game.</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
 			
 <!-- ============================== events summary ======================== -->
 			
@@ -355,11 +431,11 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>ModelWithLOD</b>(model, lod)
+						<b>GameScreen</b>(name, source)
 				</div>
 				
 				<div class="description">
-					Creates a LOD associated 3D model object.
+					Defines a GameScreen object.
 					
 				</div>
 				
@@ -371,22 +447,30 @@ ul.inheritsList
 						<dt class="heading">Parameters:</dt>
 						
 							<dt>
-								<span class="light fixedFont">{<a href="../symbols/EgomModel.html">EgomModel</a>}</span>  <b>model</b>
+								<span class="light fixedFont">{String}</span>  <b>name</b>
 								
 							</dt>
-								<dd>The 3D model data.</dd>
+								<dd>The name by which this screen can be identified.</dd>
 						
 							<dt>
-								<span class="light fixedFont">{number}</span>  <b>lod</b>
+								<span class="light fixedFont">{String}</span>  <b>source</b>
 								
 							</dt>
-								<dd>The LOD level to be associated with the model.</dd>
+								<dd>The name of the HTML file where the structure of this
+screen is defined.</dd>
 						
 						</dl>
 					
 					
 					
 					
+					
+						<dl class="detailList">
+						<dt class="heading">Returns:</dt>
+						
+								<dd><span class="light fixedFont">{<a href="../symbols/GameScreen.html">GameScreen</a>}</span> </dd>
+						
+						</dl>
 					
 					
 					
@@ -398,6 +482,202 @@ ul.inheritsList
 			
 
 <!-- ============================== method details ========================= -->		
+			
+				<div class="sectionTitle">
+					Method Detail
+				</div>
+				
+					<a name="addExternalComponent"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/ScreenComponent.html">ScreenComponent</a>}</span>
+					<b>addExternalComponent</b>(screenComponent)
+					
+					</div>
+					<div class="description">
+						Appends the elements of an external component (a HTML document fragment
+defined in an external xml file) to the DOM tree and returns the same 
+component.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{<a href="../symbols/ScreenComponent.html">ScreenComponent</a>}</span> <b>screenComponent</b>
+									
+								</dt>
+								<dd></dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/ScreenComponent.html">ScreenComponent</a>}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="buildPage"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>buildPage</b>()
+					
+					</div>
+					<div class="description">
+						Replaces the current HTML page's body with the sctructure of the screen.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="closePage"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>closePage</b>()
+					
+					</div>
+					<div class="description">
+						Executes the necessary actions required when closing the page. This method
+only nulls out the default components, additional functions need to be added
+in the descendant classes.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="getName"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getName</b>()
+					
+					</div>
+					<div class="description">
+						Getter for the _name property.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="requestModelLoad"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>requestModelLoad</b>()
+					
+					</div>
+					<div class="description">
+						Initiates the asynchronous loading of the screen's structure from the
+external HTML file.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="updateStatus"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>updateStatus</b>(newStatus)
+					
+					</div>
+					<div class="description">
+						Provides visual information to the user about the current status of the game.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{String}</span> <b>newStatus</b>
+									
+								</dt>
+								<dd>The new status to display.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					
+				
 			
 			
 <!-- ============================== event details ========================= -->		

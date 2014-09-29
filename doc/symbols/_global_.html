@@ -195,6 +195,8 @@ ul.inheritsList
 	
 	<li><a href="../symbols/Barrel.html">Barrel</a></li>
 	
+	<li><a href="../symbols/BattleScreen.html">BattleScreen</a></li>
+	
 	<li><a href="../symbols/Billboard.html">Billboard</a></li>
 	
 	<li><a href="../symbols/Camera.html">Camera</a></li>
@@ -219,13 +221,25 @@ ul.inheritsList
 	
 	<li><a href="../symbols/FVQ.html">FVQ</a></li>
 	
+	<li><a href="../symbols/Game.html">Game</a></li>
+	
+	<li><a href="../symbols/GameScreen.html">GameScreen</a></li>
+	
+	<li><a href="../symbols/GameScreenWithCanvases.html">GameScreenWithCanvases</a></li>
+	
 	<li><a href="../symbols/GraphicsContext.html">GraphicsContext</a></li>
+	
+	<li><a href="../symbols/HelpScreen.html">HelpScreen</a></li>
+	
+	<li><a href="../symbols/InfoBox.html">InfoBox</a></li>
 	
 	<li><a href="../symbols/KeyCommand.html">KeyCommand</a></li>
 	
 	<li><a href="../symbols/Level.html">Level</a></li>
 	
 	<li><a href="../symbols/Line.html">Line</a></li>
+	
+	<li><a href="../symbols/LoadingBox.html">LoadingBox</a></li>
 	
 	<li><a href="../symbols/LODContext.html">LODContext</a></li>
 	
@@ -243,11 +257,15 @@ ul.inheritsList
 	
 	<li><a href="../symbols/PropulsionClass.html">PropulsionClass</a></li>
 	
+	<li><a href="../symbols/Resource.html">Resource</a></li>
+	
 	<li><a href="../symbols/ResourceCenter.html">ResourceCenter</a></li>
 	
 	<li><a href="../symbols/Scene.html">Scene</a></li>
 	
 	<li><a href="../symbols/SceneCamera.html">SceneCamera</a></li>
+	
+	<li><a href="../symbols/ScreenComponent.html">ScreenComponent</a></li>
 	
 	<li><a href="../symbols/Shader.html">Shader</a></li>
 	
@@ -311,6 +329,16 @@ ul.inheritsList
 						</tr>
 					</thead>
 					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/_global_.html#game">game</a></b>
+								</div>
+								<div class="description">Holds the Game object that contains the global properties of the game.</div>
+							</td>
+						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
@@ -407,10 +435,78 @@ rendering Full Viewport Quads.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getComponentFolder">getComponentFolder</a></b>()
+								</div>
+								<div class="description">All the components' (ScreenComponent class) HTML source files have to be 
+placed in this folder.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getJavaScriptFolder">getJavaScriptFolder</a></b>()
+								</div>
+								<div class="description">All the JavaScript (.js) source files (returned by getSourceFiles()) have to 
+be placed in this folder.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getModelFolder">getModelFolder</a></b>()
+								</div>
+								<div class="description">All the 3D model files (.egm) have to be placed in this folder.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/_global_.html#getRotationMatrixFromXMLTags">getRotationMatrixFromXMLTags</a></b>(tags)
 								</div>
 								<div class="description">Constructs and returns a rotation matrix described by a series of rotations
 stored in the XML tags.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getShaderFolder">getShaderFolder</a></b>()
+								</div>
+								<div class="description">All the GLSL shader source files (.vert, .frag) have to be placed in this 
+folder.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getSourceFiles">getSourceFiles</a></b>()
+								</div>
+								<div class="description">Returns an array containing the name of all the JavaScript source files of
+the game.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getTextureFolder">getTextureFolder</a></b>()
+								</div>
+								<div class="description">All the texture files have to be placed in this folder.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#getXMLFolder">getXMLFolder</a></b>()
+								</div>
+								<div class="description">Folder to place the XML files to (settings, descriptions of in-game classes,
+levels, etc)</div>
 							</td>
 						</tr>
 					
@@ -430,6 +526,53 @@ stored in the XML tags.</div>
 								</div>
 								<div class="description">Initializes the global keyboard commands by looking for the appropriate associations
 in the given control context and setting their execution actions.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#initialize">initialize</a></b>()
+								</div>
+								<div class="description">Downloads the newest version of all source files from the server and sets up
+the global Game object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#initializeAbout">initializeAbout</a></b>()
+								</div>
+								<div class="description">Goes to the help screen.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#initializeBattle">initializeBattle</a></b>()
+								</div>
+								<div class="description">Goes to the battle screen, loads the needed resources and starts the
+simulation and rendering loops.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#initializeDatabase">initializeDatabase</a></b>()
+								</div>
+								<div class="description">Goes to the database screen.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#initializeHelp">initializeHelp</a></b>()
+								</div>
+								<div class="description">Goes to the help screen.</div>
 							</td>
 						</tr>
 					
@@ -456,7 +599,7 @@ the fact that only the 3rd row of the matrix holds useful information.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/_global_.html#loadResources">loadResources</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#loadBattleResources">loadBattleResources</a></b>()
 								</div>
 								<div class="description">Main function loading the external resources required by the program.</div>
 							</td>
@@ -465,7 +608,7 @@ the fact that only the 3rd row of the matrix holds useful information.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/_global_.html#loadScripts">loadScripts</a></b>(urls, callback)
+								<div class="fixedFont"><b><a href="../symbols/_global_.html#loadScripts">loadScripts</a></b>(folder, filenames, callback, bypassCaching)
 								</div>
 								<div class="description">Function to load additional JavaScript code from a list of source files.</div>
 							</td>
@@ -549,15 +692,6 @@ containing the name of the variable type.</div>
 							</td>
 						</tr>
 					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/_global_.html#start">start</a></b>()
-								</div>
-								<div class="description">Entry point of the whole JavaScript program.</div>
-							</td>
-						</tr>
-					
 					</tbody>
 				</table>
 				
@@ -576,6 +710,32 @@ containing the name of the variable type.</div>
 					Field Detail
 				</div>
 				
+					<a name="game"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{<a href="../symbols/Game.html">Game</a>}</span>
+					<b>game</b>
+					
+					</div>
+					<div class="description">
+						Holds the Game object that contains the global properties of the game. This
+should be the only global variable in the application.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name="manualController"> </a>
 					<div class="fixedFont">
 					
@@ -587,7 +747,7 @@ containing the name of the variable type.</div>
 						The global variable used for manual spacecraft control (for test purposes).
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_control.js.html">control.js</a>.
 						
 						
 					</div>
@@ -612,7 +772,7 @@ containing the name of the variable type.</div>
 						Enumeration defining the available variables types of shaders.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
 						
 						
 					</div>
@@ -638,7 +798,7 @@ containing the name of the variable type.</div>
 weapon shots)
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_logic.js.html">logic.js</a>.
 						
 						
 					</div>
@@ -672,7 +832,7 @@ weapon shots)
 numbers) in radian.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -725,7 +885,7 @@ numbers) in radian.
 with the given properties.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -791,7 +951,7 @@ desired box color.</dd>
 with a line for drawing dust particles.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -838,7 +998,7 @@ with a line for drawing dust particles.
 rendering Full Viewport Quads. (FVQ)
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -862,6 +1022,113 @@ rendering Full Viewport Quads. (FVQ)
 
 					<hr />
 				
+					<a name="getComponentFolder"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getComponentFolder</b>()
+					
+					</div>
+					<div class="description">
+						All the components' (ScreenComponent class) HTML source files have to be 
+placed in this folder.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getJavaScriptFolder"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getJavaScriptFolder</b>()
+					
+					</div>
+					<div class="description">
+						All the JavaScript (.js) source files (returned by getSourceFiles()) have to 
+be placed in this folder.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getModelFolder"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getModelFolder</b>()
+					
+					</div>
+					<div class="description">
+						All the 3D model files (.egm) have to be placed in this folder.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="getRotationMatrixFromXMLTags"> </a>
 					<div class="fixedFont">
 					
@@ -874,7 +1141,7 @@ rendering Full Viewport Quads. (FVQ)
 stored in the XML tags.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_logic.js.html">logic.js</a>.
 						
 						
 					</div>
@@ -909,6 +1176,149 @@ stored in the XML tags.
 
 					<hr />
 				
+					<a name="getShaderFolder"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getShaderFolder</b>()
+					
+					</div>
+					<div class="description">
+						All the GLSL shader source files (.vert, .frag) have to be placed in this 
+folder.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getSourceFiles"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String[]}</span>
+					<b>getSourceFiles</b>()
+					
+					</div>
+					<div class="description">
+						Returns an array containing the name of all the JavaScript source files of
+the game.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String[]}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getTextureFolder"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getTextureFolder</b>()
+					
+					</div>
+					<div class="description">
+						All the texture files have to be placed in this folder.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getXMLFolder"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{String}</span>
+					<b>getXMLFolder</b>()
+					
+					</div>
+					<div class="description">
+						Folder to place the XML files to (settings, descriptions of in-game classes,
+levels, etc)
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{String}</span> </dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="identityMatrix3"> </a>
 					<div class="fixedFont">
 					
@@ -920,7 +1330,7 @@ stored in the XML tags.
 						Returns a 3x3 identity matrix.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -956,7 +1366,7 @@ stored in the XML tags.
 in the given control context and setting their execution actions.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/control.js.html">control.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_control.js.html">control.js</a>.
 						
 						
 					</div>
@@ -1003,6 +1413,148 @@ in the given control context and setting their execution actions.
 
 					<hr />
 				
+					<a name="initialize"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>initialize</b>()
+					
+					</div>
+					<div class="description">
+						Downloads the newest version of all source files from the server and sets up
+the global Game object. (to be called when index.html is loaded)
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="initializeAbout"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>initializeAbout</b>()
+					
+					</div>
+					<div class="description">
+						Goes to the help screen.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="initializeBattle"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>initializeBattle</b>()
+					
+					</div>
+					<div class="description">
+						Goes to the battle screen, loads the needed resources and starts the
+simulation and rendering loops.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="initializeDatabase"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>initializeDatabase</b>()
+					
+					</div>
+					<div class="description">
+						Goes to the database screen.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="initializeHelp"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>initializeHelp</b>()
+					
+					</div>
+					<div class="description">
+						Goes to the help screen.
+						
+							<br />
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name="inverseRotationMatrix"> </a>
 					<div class="fixedFont">
 					
@@ -1018,7 +1570,7 @@ the 3x3 part of a 4x4 matrix without letting the optional translation
 interfere with it.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -1065,7 +1617,7 @@ interfere with it.
 the fact that only the 3rd row of the matrix holds useful information.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -1100,11 +1652,11 @@ the fact that only the 3rd row of the matrix holds useful information.
 
 					<hr />
 				
-					<a name="loadResources"> </a>
+					<a name="loadBattleResources"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>loadResources</b>()
+					<b>loadBattleResources</b>()
 					
 					</div>
 					<div class="description">
@@ -1112,7 +1664,7 @@ the fact that only the 3rd row of the matrix holds useful information.
 the test scene populated with random ships and fighters controlled by AI.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada.js.html">armada.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
 						
 						
 					</div>
@@ -1133,7 +1685,7 @@ the test scene populated with random ships and fighters controlled by AI.
 					<div class="fixedFont">
 					
 					
-					<b>loadScripts</b>(urls, callback)
+					<b>loadScripts</b>(folder, filenames, callback, bypassCaching)
 					
 					</div>
 					<div class="description">
@@ -1141,7 +1693,7 @@ the test scene populated with random ships and fighters controlled by AI.
 Loads the scripts in the specified order, then executes a callback function.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada.js.html">armada.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_armada.js.html">armada.js</a>.
 						
 						
 					</div>
@@ -1153,16 +1705,29 @@ Loads the scripts in the specified order, then executes a callback function.
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{String[]}</span> <b>urls</b>
+									<span class="light fixedFont">{String}</span> <b>folder</b>
+									
+								</dt>
+								<dd>The folder where the scripts reside</dd>
+							
+								<dt>
+									<span class="light fixedFont">{String[]}</span> <b>filenames</b>
 									
 								</dt>
 								<dd>The list of JavaScript sourse files to load</dd>
 							
 								<dt>
-									<span class="light fixedFont">{function}</span> <b>callback</b>
+									<span class="light fixedFont">{Function}</span> <b>callback</b>
 									
 								</dt>
 								<dd>The function to call after loading the scripts</dd>
+							
+								<dt>
+									<span class="light fixedFont">{Boolean}</span> <b>bypassCaching</b>
+									
+								</dt>
+								<dd>If true, the script files will be forcefully
+downloaded again, even if they are in the cache already.</dd>
 							
 							</dl>
 						
@@ -1187,7 +1752,7 @@ Loads the scripts in the specified order, then executes a callback function.
 the model's associated LOD (Level Of Detail)
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_logic.js.html">logic.js</a>.
 						
 						
 					</div>
@@ -1239,7 +1804,7 @@ the model's associated LOD (Level Of Detail)
 						Multiplies two 3x3 matrices.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -1291,7 +1856,7 @@ the model's associated LOD (Level Of Detail)
 						
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
 						
 						
 					</div>
@@ -1322,7 +1887,7 @@ a set of intersecting squares that are perpendicular to the first one, to
 serve as the front view(s) of the projectile.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -1371,7 +1936,7 @@ be created along the side view square.</dd>
 arbitrary axis.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/matrices.js.html">matrices.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_matrices.js.html">matrices.js</a>.
 						
 						
 					</div>
@@ -1418,7 +1983,7 @@ rotation</dd>
 containing the name of the variable type.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/graphics.js.html">graphics.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_graphics.js.html">graphics.js</a>.
 						
 						
 					</div>
@@ -1459,7 +2024,7 @@ the resource center of graphicsContext, taking into account the maximum
 enabled LOD defined in the scene of graphicsContext.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/logic.js.html">logic.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_logic.js.html">logic.js</a>.
 						
 						
 					</div>
@@ -1541,7 +2106,7 @@ enabled LOD defined in the scene of graphicsContext.
 						Sets up and returns a simple EgomModel that contains a two sided XY square.
 						
 							<br />
-							<i>Defined in: </i> <a href="../symbols/src/egom.js.html">egom.js</a>.
+							<i>Defined in: </i> <a href="../symbols/src/js_egom.js.html">egom.js</a>.
 						
 						
 					</div>
@@ -1563,35 +2128,6 @@ enabled LOD defined in the scene of graphicsContext.
 						
 						
 
-					<hr />
-				
-					<a name="start"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>start</b>()
-					
-					</div>
-					<div class="description">
-						Entry point of the whole JavaScript program. Initiates loading the other
-script files and the external resources.
-						
-							<br />
-							<i>Defined in: </i> <a href="../symbols/src/armada.js.html">armada.js</a>.
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-						
-						
-
 					
 				
 			
@@ -1606,7 +2142,7 @@ script files and the external resources.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Tue Sep 16 2014 01:54:13 GMT+0200 (CEST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Mon Sep 29 2014 18:00:26 GMT+0200 (CEST)
 		</div>
 	</body>
 </html>
