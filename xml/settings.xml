@@ -8,7 +8,7 @@
     </logic>
     <control>
         <descriptions>
-            <command name="quit" description="Quit to main menu." />
+            <command name="quit" description="Quit to menu." />
             <command name="pause" description="Pause the game." />
             <command name="cameraMoveLeft" description="Move the camera to the left (free camera mode)." />
             <command name="cameraMoveRight" description="Move the camera to the right (free camera mode)." />

@@ -1,0 +1,11 @@
+.ingameMenuContainer {
+    width: 275px;
+    height: 260px;
+    padding: 1em;
+}
+
+.ingameMenuInnerContainer {
+    padding-top: 2em;
+    padding-left: 1em;
+    padding-right: 1em;
+}

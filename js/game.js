@@ -39,6 +39,14 @@ function Game() {
      */
     this._screens = new Object();
     /**
+     * The list of screens that have been covered by superimposing (instead of
+     * switching to) other pages on top.
+     * @name Game#_coveredScreens
+     * @type GameScreen[]
+     * @default []
+     */
+    this._coveredScreens = new Array();
+    /**
      * A reference to the currently active (displayed) screen of the game.
      * @name Game#_currentScreen
      * @type GameScreen
@@ -110,16 +118,39 @@ Game.prototype.getScreen = function(screenName) {
 
 /**
  * Sets the current game screen to the one with the specified name (from the
- * list of available screens), including refreshing the HTML body.
+ * list of available screens), including updating the HTML body.
  * @param {String} screenName
+ * @param {Boolean} [superimpose=false] Whether the screen should be 
+ * superimposed on top of the current one.
+ * @param {Number[3]} [backgroundColor] The color of the background in case the
+ * screen is set superimposed. @see GameScreen#superimposeOnPage
+ * @param {Number} [backgroundOpacity] The opacity of the background in case the
+ * screen is set superimposed. @see GameScreen#superimposeOnPage
  */
-Game.prototype.setCurrentScreen = function(screenName) {
-    if(this._currentScreen!==null) {
+Game.prototype.setCurrentScreen = function(screenName,superimpose,backgroundColor,backgroundOpacity) {
+    var i;
+    if((superimpose!==true)&&(this._currentScreen!==null)) {
         this._currentScreen.closePage();
+        for(i=0;i<this._coveredScreens.length;i++) {
+            this._coveredScreens[i].closePage();
+        }
     }
     var screen = this.getScreen(screenName);
-    screen.buildPage();
+    if(superimpose===true) {
+        this._coveredScreens.push(this._currentScreen);
+        screen.superimposeOnPage(backgroundColor,backgroundOpacity);
+    } else {
+        screen.buildPage();
+    }
     this._currentScreen = screen;
+};
+
+/**
+ * Closes the topmost superimposed screen, revealing the one below.
+ */
+Game.prototype.closeSuperimposedScreen = function() {
+    this._currentScreen.closeSuperimposedPage();
+    this._currentScreen=this._coveredScreens.pop();
 };
 
 /**

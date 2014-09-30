@@ -189,6 +189,25 @@ function initialize() {
         game.addScreen(new GameScreenWithCanvases("database","database.html"));
         game.addScreen(new HelpScreen("help","help.html"));
         game.addScreen(new GameScreen("about","about.html"));
+        game.addScreen(new MenuScreen("ingameMenu","ingamemenu.html",
+            [
+                {
+                    caption: "Resume game",
+                    action: function () { game.closeSuperimposedScreen(); }
+                },
+                {
+                    caption: "Controls",
+                    action: function () { game.setCurrentScreen("help",true,[64,64,64],0.5); }
+                },
+                {
+                    caption: "Quit to main menu",
+                    action: function () { 
+                        clearInterval(battleRenderLoop);
+                        clearInterval(battleSimulationLoop);
+                        game.setCurrentScreen("mainMenu"); 
+                    }
+                }
+            ],"menuContainer"));
         game.setCurrentScreen("mainMenu");
     });
 }

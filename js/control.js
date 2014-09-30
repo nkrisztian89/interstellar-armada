@@ -1164,9 +1164,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         }
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("quit",function(){
-        clearInterval(battleRenderLoop);
-        clearInterval(battleSimulationLoop);
-        game.setCurrentScreen("mainMenu");
+        game.setCurrentScreen("ingameMenu",true,[64,64,64],0.5);
     }));
     
     return globalCommands;

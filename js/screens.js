@@ -42,9 +42,12 @@ function GameScreen(name,source) {
     
     // default components
     this._status=null;
+    this._background=null;
     
     // function to execute when the model is loaded
     this._onModelLoad = function() {};
+    
+    var self = this;
     
     // source will be undefined when setting the prototypes for inheritance
     if(source!==undefined) {
@@ -98,12 +101,65 @@ GameScreen.prototype.buildPage = function() {
 };
 
 /**
+ * Superimposes the screen on the current page, by appending a full screen
+ * container and the screen structure as its child inside it.
+ * @param {Number[3]} color The color of the full screen background. ([r,g,b],
+ * where all color components should be 0-255)
+ * @param {Number} opacity The opacity of the background (0.0-1.0)
+ */
+GameScreen.prototype.superimposeOnPage = function(color,opacity) {
+    var self = this;
+    var superimposeOnPageFunction = function() {
+        self._background = document.createElement("div");
+        self._background.className = "fullScreenFix";
+        self._background.style.backgroundColor = "rgba("+color[0]+","+color[1]+","+color[2]+","+opacity+")";
+        var container = document.createElement("div");
+        container.className = "fullScreenContainer";
+        container.innerHTML = self._model.body.innerHTML;
+        document.body.appendChild(self._background);
+        document.body.appendChild(container);
+        self._initializeComponents();
+    };
+    // if we have built up the model of the screen already, then load it
+    if(this._model!==null) {
+        superimposeOnPageFunction();
+    // if not yet, set the callback function which fires when the model is 
+    // loaded
+    } else {
+        this._onModelLoad = superimposeOnPageFunction;
+    }
+};
+
+/**
+ * Tells whether the screen is superimposed on top of another one.
+ * @returns {Boolean}
+ */
+GameScreen.prototype.isSuperimposed = function() {
+    return this._background!==null;
+};
+
+/**
  * Executes the necessary actions required when closing the page. This method
  * only nulls out the default components, additional functions need to be added
  * in the descendant classes.
  */
 GameScreen.prototype.closePage = function() {
     this._status = null;
+};
+
+/**
+ * Closes the superimposed page by removing the background container next to
+ * the regular page closing actions.
+ */
+GameScreen.prototype.closeSuperimposedPage = function() {
+    if(!this.isSuperimposed()) {
+        game.showError("Attempting to close a page ("+this._name+") as if it was superimposed, but in fact it is not.");
+    } else {
+        document.body.removeChild(this._background.nextSibling);
+        document.body.removeChild(this._background);
+        this._background = null;
+        this.closePage();
+    }
 };
 
 /**
@@ -274,6 +330,8 @@ GameScreenWithCanvases.prototype.resizeCanvases = function() {
 function BattleScreen(name,source) {
     GameScreenWithCanvases.call(this,name,source);
     
+    var self = this;
+    
     this._stats=null;
     this._ui=null;
     
@@ -401,6 +459,15 @@ HelpScreen.prototype.constructor=HelpScreen;
  */
 HelpScreen.prototype._initializeComponents = function() {
     GameScreen.prototype._initializeComponents.call(this);
+    
+    var backButton = document.getElementById("backButton");
+    backButton.addEventListener("click",function(){
+        if(game.getCurrentScreen().isSuperimposed()) {
+            game.closeSuperimposedScreen();
+        } else {
+            game.setCurrentScreen('mainMenu');
+        }
+    });
     
     var keyCommandsTable = document.getElementById("keyCommandsTable");
     var keyCommands = game.controlContext.getCommandExplanationsAndKeys();
