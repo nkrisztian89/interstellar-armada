@@ -9,6 +9,17 @@
     font-weight: bold;
 }
 
+/* In order to size elements according to screen size relatively, all
+   their parents' size must be explicit, so give them explicit auto. This
+   will mean 100% together with padding, border and margin. (instead of explicit
+   100%, which would make it 100% without padding, border and margin, meaning
+   added padding would make it more than 100%, resulting in unnecessary scroll
+   bar) */
+body,html {
+    width: auto;
+    height: auto;
+}
+
 body {
     color: #DDDDDD;
     background-color: black;
@@ -16,20 +27,26 @@ body {
     font-size: 16px;
     margin: 0;
     padding: 0;
+    border: 5px transparent;
 }
 
 .outerContainer {
     background-color: rgba(17,17,17,0.75);
     border: 2px solid #333333;
     box-shadow: 0em 0em 0.5em #00FF00;
-    padding: 1em;
-    margin-top: 1em;
 }
 
 .innerContainer {
     background-color: rgba(34,34,34,0.75);
     border: none;
     box-shadow: 0em 0em 0.5em #000000;
+}
+
+/* To use with the outermost container div which houses the page content */
+.pageContainer {
+    padding: 1em;
+    margin-bottom: 1em;
+    margin-top: 1em;
 }
 
 .withBackgroundSign {
@@ -57,6 +74,8 @@ body {
     margin: auto;
 }
 
+/* A full screen element that stays at the same place regardless of scrolling,
+ * as does all of its children. Ideal for (non-moving) background. */
 .fullScreenFix {
     position: fixed;
     top: 0; bottom: 0;
@@ -68,6 +87,9 @@ body {
     border: none;
 }
 
+/* A full screen element that can be used to overlay (scrollable) content on
+ * top of the existing page, by appending it and putting the new content 
+ * inside. */
 .fullScreenContainer {
     position: absolute;
     top: 0; bottom: 0;
