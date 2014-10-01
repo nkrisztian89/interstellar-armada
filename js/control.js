@@ -44,11 +44,27 @@ ControlContext.prototype.loadFromXML = function(xmlSource) {
     }
 };
 
+/**
+ * Start processing the user input in this context. Needs to be overwritten in
+ * descendants.
+ */
+ControlContext.prototype.activate = function() {
+    game.showError("Attempting to activate a generic control context!");
+};
+
+/**
+ * Stop processing the user input in this context. Needs to be overwritten in
+ * descendants.
+ */
+ControlContext.prototype.deactivate = function() {
+    game.showError("Attempting to deactivate a generic control context!");
+};
+
 function KeyboardControlContext() {
     ControlContext.call(this);
     
     var currentlyPressedKeys = new Array(256);
-    var i;
+    
     //var keyPressEvents = new Array();
     var keyCodeTable = {
         "backspace": 8,
@@ -83,7 +99,14 @@ function KeyboardControlContext() {
     };
     var keyCommands={};
     
-    for(i=0;i<currentlyPressedKeys.length;i++) { currentlyPressedKeys[i]=false; }
+    this.cancelPressedKeys = function() {
+        var i;
+        for(i=0;i<currentlyPressedKeys.length;i++) { 
+            currentlyPressedKeys[i]=false; 
+        }
+    };
+    
+    this.cancelPressedKeys();
     
     // don't move the methods below under the prototype, it will break
     // functionality
@@ -232,6 +255,23 @@ KeyboardControlContext.prototype.loadFromXML = function(xmlSource) {
                 (keyCommandTags[i].getAttribute("ctrl")==="true"),
                 (keyCommandTags[i].getAttribute("alt")==="true")));
     }
+};
+
+/**
+ * Start processing the user input in this context.
+ */
+KeyboardControlContext.prototype.activate = function() {
+    document.addEventListener("keydown",this.handleKeyDown);
+    document.addEventListener("keyup",this.handleKeyUp);
+};
+
+/**
+ * Stop processing the user input in this context.
+ */
+KeyboardControlContext.prototype.deactivate = function() {
+    document.removeEventListener("keydown",this.handleKeyDown);
+    document.removeEventListener("keyup",this.handleKeyUp);
+    this.cancelPressedKeys();
 };
 
 /**
@@ -1164,6 +1204,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         }
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("quit",function(){
+        game.controlContext.deactivate();
         game.setCurrentScreen("ingameMenu",true,[64,64,64],0.5);
     }));
     

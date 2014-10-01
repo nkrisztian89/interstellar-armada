@@ -1988,6 +1988,9 @@ ResourceCenter.prototype.renderScenes = function() {
  */
 function GraphicsContext(resourceCenter,scene) {
     this.resourceCenter=resourceCenter;
+    
+    
+    
     this.scene=scene;
 
     // temporary test variable indicating the angle of directional lighting

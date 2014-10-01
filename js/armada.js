@@ -193,7 +193,10 @@ function initialize() {
             [
                 {
                     caption: "Resume game",
-                    action: function () { game.closeSuperimposedScreen(); }
+                    action: function () { 
+                        game.closeSuperimposedScreen();
+                        game.controlContext.activate();
+                    }
                 },
                 {
                     caption: "Controls",
@@ -217,7 +220,6 @@ function initialize() {
  * different classes.
  */
 function loadBattleResources() {
-    // this is dirty, we don't know that its class is BattleScreen
     game.getCurrentScreen().hideStats();
     game.getCurrentScreen().hideUI();
     game.getCurrentScreen().getInfoBox().hide();
@@ -226,20 +228,9 @@ function loadBattleResources() {
         
     var controlContext = game.controlContext;
 	
-    document.onkeydown = controlContext.handleKeyDown;
-    document.onkeyup = controlContext.handleKeyUp;
-        
-        // test variable: number of random goals the AI controllers get at start
-        var num_test_goals=10;
-        // test variable: number of random fighters generated
-        var num_test_fighters=40;
-        // test variable: number of random ships generated
-        var num_test_ships=15;
-        // test variable: indicating the range within the random positions of fighters
-        // and ships and the destinations of their goals are generated
-        var mapSize=3000;
+    controlContext.activate();
 
-	var resourceCenter = game.graphicsContext.resourceCenter;
+    var resourceCenter = game.graphicsContext.resourceCenter;
         resourceCenter.scenes= new Array();
 	  
         game.getCurrentScreen().resizeCanvases(); 
@@ -279,7 +270,17 @@ function loadBattleResources() {
 	//resourceCenter.scenes.push(pipScene);
         //pipScene.objects.push(new VisualObject(fregattModel,metalTexture,greenShader,0.0045,translationMatrix(0.0,0.0,-2.0),true));
 	
-	var test_level = new Level(resourceCenter,mainScene,controlContext);
+        // test variable: number of random goals the AI controllers get at start
+        var num_test_goals=10;
+        // test variable: number of random fighters generated
+        var num_test_fighters=40;
+        // test variable: number of random ships generated
+        var num_test_ships=15;
+        // test variable: indicating the range within the random positions of fighters
+        // and ships and the destinations of their goals are generated
+        var mapSize=3000;	
+        
+        var test_level = new Level(resourceCenter,mainScene,controlContext);
 	
         // this loads the level and all needed other resources (models, shaders)
         // from the XML files
