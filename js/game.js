@@ -60,7 +60,7 @@ function Game() {
      * @name Game#graphicsContext
      * @type GraphicsContext
      */
-    this.graphicsContext = new GraphicsContext(new ResourceCenter(),null);
+    this.graphicsContext = new GraphicsContext();
     /**
      * The control context of the game, that can be used to bind input controls
      * to in-game actions.
@@ -68,7 +68,7 @@ function Game() {
      * @type ControlContext
      * @default null
      */
-    this.controlContext = null;
+    this.controlContext = new KeyboardControlContext();
     
     this.requestSettingsLoad();
 }
@@ -92,7 +92,7 @@ Game.prototype.requestSettingsLoad = function () {
     request.onreadystatechange = function () {
         if (request.readyState === 4) {
             var settingsXML = this.responseXML;
-            self.controlContext = new KeyboardControlContext();
+            self.graphicsContext.loadFromXML(settingsXML.getElementsByTagName("graphics")[0]);
             self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
         }
     };

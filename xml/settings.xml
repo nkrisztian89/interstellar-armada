@@ -2,6 +2,20 @@
 <settings>
     <graphics>
         <shaders source="shaders.xml" />
+        <levelOfDetailSettings>
+            <lodLoadProfile maxLevel="4" autoLimitByScreenWidth="true">
+                <limit screenSizeLessThan="60" level="0" />
+                <limit screenSizeLessThan="120" level="1" />
+                <limit screenSizeLessThan="500" level="2" />
+                <limit screenSizeLessThan="800" level="3" />
+            </lodLoadProfile>
+            <lodDisplayProfile maxLevel="4">
+                <limit objectSizeLessThan="30" level="0" />
+                <limit objectSizeLessThan="60" level="1" />
+                <limit objectSizeLessThan="250" level="2" />
+                <limit objectSizeLessThan="400" level="3" />
+            </lodDisplayProfile>
+        </levelOfDetailSettings>
     </graphics>
     <logic>
         <classes source="classes.xml" />

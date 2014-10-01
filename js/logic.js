@@ -864,7 +864,7 @@ function Level(resourceCenter,scene,controlContext) {
 	this.scene=scene;
         this.controlContext=controlContext;
         
-        this.cameraController=new CameraController(scene.activeCamera,new GraphicsContext(resourceCenter,scene),new LogicContext(this),controlContext);
+        this.cameraController=new CameraController(scene.activeCamera,game.graphicsContext,new LogicContext(this),controlContext);
 }
 
 Level.prototype.loadSkyboxClasses = function(filename) {
@@ -1276,7 +1276,7 @@ Level.prototype.loadFromFile = function(filename) {
 	
 	game.getCurrentScreen().updateStatus("loading models...",25);
         
-        var graphicsContext = new GraphicsContext(this.resourceCenter,this.scene);
+        var graphicsContext = game.graphicsContext;
         var logicContext = new LogicContext(this);
 	
 	var skyboxTags = levelSource.getElementsByTagName("Skybox");

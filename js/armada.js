@@ -205,7 +205,7 @@ function initialize() {
                 {
                     caption: "Quit to main menu",
                     action: function () { 
-                        clearInterval(battleRenderLoop);
+                        game.getCurrentScreen().stopRenderLoop();
                         clearInterval(battleSimulationLoop);
                         game.setCurrentScreen("mainMenu"); 
                     }
@@ -231,44 +231,30 @@ function loadBattleResources() {
     controlContext.activate();
 
     var resourceCenter = game.graphicsContext.resourceCenter;
-        resourceCenter.scenes= new Array();
 	  
-        game.getCurrentScreen().resizeCanvases(); 
-        // based on screen (canvas) size, set a maximum enabled LOD, so that
-        // higher LOD models won't even get loaded during level initialization
-        //(sparing memory, download time and performance)
-        var maxLOD;
-        if(canvas.width>=800) {
-            maxLOD=4;
-        } else if (canvas.width>=500) {
-            maxLOD=3;
-        } else if (canvas.width>=120) {
-            maxLOD=2;
-        } else {
-            maxLOD=1;
-        }
-	mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,new LODContext(maxLOD,[0,30,60,250,400]));
-	//var pipScene = new Scene(canvas.width*2/3,canvas.height/4,canvas.width/3,canvas.height/2,false,[true,true,true,true],[0,0.5,0,0.5],true);
-	
-        // setting uniform valuables that are universal to all scene graph 
-        // objects, so any shader used in the scene will be able to get their
-        // values
-	mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]; };
-	mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
-	mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
-	mainScene.uniformValueFunctions['u_eyePos'] = function() 
-		{
-			var eyePos = [
-				-mainScene.activeCamera.positionMatrix[12],
-				-mainScene.activeCamera.positionMatrix[13],
-				-mainScene.activeCamera.positionMatrix[14]
-				];
-			return [eyePos[0],eyePos[1],eyePos[2]]; 
-		};
-	
-	resourceCenter.scenes.push(mainScene);
-	//resourceCenter.scenes.push(pipScene);
-        //pipScene.objects.push(new VisualObject(fregattModel,metalTexture,greenShader,0.0045,translationMatrix(0.0,0.0,-2.0),true));
+    game.getCurrentScreen().resizeCanvases(); 
+          
+    mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
+
+    // setting uniform valuables that are universal to all scene graph 
+    // objects, so any shader used in the scene will be able to get their
+    // values
+    mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]; };
+    mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
+    mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
+    mainScene.uniformValueFunctions['u_eyePos'] = function() 
+            {
+                    var eyePos = [
+                            -mainScene.activeCamera.positionMatrix[12],
+                            -mainScene.activeCamera.positionMatrix[13],
+                            -mainScene.activeCamera.positionMatrix[14]
+                            ];
+                    return [eyePos[0],eyePos[1],eyePos[2]]; 
+            };
+
+    game.getCurrentScreen().addScene(mainScene);
+    
+    game.graphicsContext.scene = mainScene;
 	
         // test variable: number of random goals the AI controllers get at start
         var num_test_goals=10;
@@ -295,7 +281,7 @@ function loadBattleResources() {
 			rotationMatrix4([0,0,1],3.1415/2)
 			);
                 
-        var graphicsContext = new GraphicsContext(resourceCenter,mainScene);
+        var graphicsContext = game.graphicsContext;
         var logicContext = new LogicContext(test_level);
 	
         // adding random fighters to the scene to test performance

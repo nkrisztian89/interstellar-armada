@@ -1909,10 +1909,10 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                     game.getCurrentScreen().showMessage("Ready!");
                     game.getCurrentScreen().getLoadingBox().hide();
                     game.getCurrentScreen().showStats();
-                    battleRenderLoop = setInterval(
+                    game.getCurrentScreen().render = 
                             function() {
-                                    self.cleanUpScenes();
-                                    self.renderScenes();
+                                    mainScene.cleanUp();
+                                    mainScene.render(game.graphicsContext.resourceCenter);
                                     var d = new Date();
                                     self.renderTimes.push(d.getTime());
                                     if(self.renderTimes.length>self.maxRenderTimes) {
@@ -1923,8 +1923,8 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                                                     "<br/>FPS: "+
                                                     Math.round(1000/((self.renderTimes[self.renderTimes.length-1]-self.renderTimes[0])/(self.renderTimes.length-1))*10)/10;
                                     }
-                            },
-                            1000/freq);
+                            };
+                    game.getCurrentScreen().startRenderLoop(1000/freq);
                 }
 	});
 };
@@ -1983,19 +1983,47 @@ ResourceCenter.prototype.renderScenes = function() {
  * @class A graphics context for other modules, to be used to pass the 
  * important properties of the current graphics environment to functions that
  * can manipulate it.
- * @param {ResourceCenter} resourceCenter The resource center to be stored in the context.
- * @param {Scene} scene The scene to be stored in the context.
  */
-function GraphicsContext(resourceCenter,scene) {
-    this.resourceCenter=resourceCenter;
+function GraphicsContext() {
+    this.resourceCenter=new ResourceCenter();
     
+    this._maxLoadedLOD = null;
+    this._lodContext = null;
     
-    
-    this.scene=scene;
-
     // temporary test variable indicating the angle of directional lighting
     this.lightAngle=0.7;
     // temporary test variable indicating whether the direction of directional
     // lighting should keep turning around
     this.lightIsTurning=false;
 }
+
+GraphicsContext.prototype.loadFromXML = function(xmlSource) {
+    var i;
+    var lodLoadProfileTag = xmlSource.getElementsByTagName("lodLoadProfile")[0];
+    this._maxLoadedLOD = lodLoadProfileTag.getAttribute("maxLevel");
+    if(lodLoadProfileTag.getAttribute("autoLimitByScreenWidth")==="true") {
+        var loadLoadLimitTags = lodLoadProfileTag.getElementsByTagName("limit");
+        for (i=0;i<loadLoadLimitTags.length;i++) {
+            if((window.innerWidth<loadLoadLimitTags[i].getAttribute("screenSizeLessThan"))&&
+                    (this._maxLoadedLOD>loadLoadLimitTags[i].getAttribute("level"))) {
+                this._maxLoadedLOD = Number(loadLoadLimitTags[i].getAttribute("level"));
+            }
+        }
+    }
+    
+    var lodDisplayProfileTag = xmlSource.getElementsByTagName("lodDisplayProfile")[0];
+    var lodDisplayLimitTags = lodDisplayProfileTag.getElementsByTagName("limit");
+    var lodDisplayLimits = new Array(lodDisplayLimitTags.length+1,0);
+    for (i=0;i<lodDisplayLimitTags.length;i++) {
+        lodDisplayLimits[Number(lodDisplayLimitTags[i].getAttribute("level"))+1]=lodDisplayLimitTags[i].getAttribute("objectSizeLessThan");
+    }
+    this._lodContext = new LODContext(lodDisplayProfileTag.getAttribute("maxLevel"),lodDisplayLimits);
+};
+
+GraphicsContext.prototype.getMaxLoadedLOD = function() {
+    return this._maxLoadedLOD;
+};
+
+GraphicsContext.prototype.getLODContext = function() {
+    return this._lodContext;
+};
