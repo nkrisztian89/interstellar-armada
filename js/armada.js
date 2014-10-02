@@ -207,7 +207,6 @@ function initialize() {
                 {
                     caption: "Quit to main menu",
                     action: function () { 
-                        game.getScreen("battle").stopRenderLoop();
                         clearInterval(battleSimulationLoop);
                         game.setCurrentScreen("mainMenu"); 
                     }

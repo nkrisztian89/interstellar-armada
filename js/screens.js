@@ -216,6 +216,8 @@ function GameScreenWithCanvases(name,source) {
     this._scenes=new Array();
     
     this._renderLoop = null;
+    
+    this._renderTimes = null;
 };
 
 GameScreenWithCanvases.prototype=new GameScreen();
@@ -257,9 +259,19 @@ GameScreenWithCanvases.prototype.addScene = function(scene) {
 };
 
 /**
- * The render function that needs to be described in the descendant classes.
+ * Renders the scenes displayed on this screen.
  */
 GameScreenWithCanvases.prototype.render = function() {
+    var i;
+    for(i=0;i<this._scenes.length;i++) {
+        this._scenes[i].cleanUp();
+        this._scenes[i].render(game.graphicsContext.resourceCenter);
+    }
+    var d = new Date();
+    this._renderTimes.push(d);
+    while((this._renderTimes.length>1)&&((d-this._renderTimes[0])>1000)) {
+        this._renderTimes.shift();
+    }
 };
 
 /**
@@ -269,7 +281,8 @@ GameScreenWithCanvases.prototype.render = function() {
  */
 GameScreenWithCanvases.prototype.startRenderLoop = function(interval) {
     var self = this;
-    this._renderLoop = setInterval(self.render,interval);
+    this._renderTimes = [new Date()];
+    this._renderLoop = setInterval(function() { self.render(); },interval);
 };
 
 /**
@@ -277,6 +290,10 @@ GameScreenWithCanvases.prototype.startRenderLoop = function(interval) {
  */
 GameScreenWithCanvases.prototype.stopRenderLoop = function() {
     clearInterval(this._renderLoop);
+};
+
+GameScreenWithCanvases.prototype.getFPS = function() {
+    return this._renderTimes.length;
 };
 
 /**
@@ -329,9 +346,7 @@ GameScreenWithCanvases.prototype.resizeCanvases = function() {
  */
 function BattleScreen(name,source) {
     GameScreenWithCanvases.call(this,name,source);
-    
-    var self = this;
-    
+        
     this._stats=null;
     this._ui=null;
     
@@ -435,6 +450,11 @@ BattleScreen.prototype.showUI = function() {
 BattleScreen.prototype.showMessage = function(message) {
     this._infoBox.updateMessage(message);
     this._infoBox.show();
+};
+
+BattleScreen.prototype.render = function() {
+    GameScreenWithCanvases.prototype.render.call(this);
+    this._stats.innerHTML = this.getFPS()+"<br/>"+this._scenes[0].getNumberOfDrawnTriangles();
 };
 
 /**

@@ -57,6 +57,8 @@ function VisualObject(shader,smallestParentSizeWhenDrawn,renderedWithDepthMask,r
         this.renderedWithoutDepthMask = renderedWithoutDepthMask;
         
         this.modelMatrixCalculated = false;
+        
+        this._wasRendered = false;
 }
 
 /**
@@ -297,6 +299,7 @@ VisualObject.prototype.needsToBeRendered = function(screenWidth,screenHeight,lod
  * shader the object has)
  * */ 
 VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase) {
+    this._wasRendered = false;
     // the visible property determines visibility of all subnodes as well
     if(this.visible) {
         // subnodes (children) are only rendered if the parent's visible size
@@ -318,6 +321,7 @@ VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth
                         resourceCenter.setCurrentShader(this.shader,scene);
                         this.assignUniforms(resourceCenter.gl);
                         this.render(resourceCenter,depthMaskPhase);
+                        this._wasRendered = true;
                     }
                 }
             }
@@ -339,6 +343,21 @@ VisualObject.prototype.cascadeResetModelMatrixCalculated = function() {
     for(var i=0;i<this.subnodes.length;i++) {
         this.subnodes[i].cascadeResetModelMatrixCalculated();
     }    
+};
+
+VisualObject.prototype.getNumberOfDrawnTriangles = function() {
+    return 0;
+};
+
+VisualObject.prototype.cascadeGetNumberOfDrawnTriangles = function() {
+    var result = 0;
+    if(this._wasRendered) {
+        result+=this.getNumberOfDrawnTriangles();
+    }
+    for(var i=0;i<this.subnodes.length;i++) {
+        result+=this.subnodes[i].cascadeGetNumberOfDrawnTriangles();
+    }    
+    return result;
 };
 
 /**
@@ -386,8 +405,11 @@ FVQ.prototype.isInsideViewFrustum = function(camera) {
 FVQ.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.cubemap,0);
 	
-        drawnPolyogons+=2;
 	this.model.render(resourceCenter.gl,false);
+};
+
+FVQ.prototype.getNumberOfDrawnTriangles = function() {
+    return 2;
 };
 
 /**
@@ -574,12 +596,15 @@ Mesh.prototype.render = function(resourceCenter,depthMask) {
             resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, this.model.bufferStartLines, 2*this.model.lines.length);
     } else {
             if(depthMask===true) {
-                drawnPolyogons+=this.model.triangles.length;
                 resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStart, 3*this.model.nOpaqueTriangles);
             } else {
                 resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStartTransparent, 3*this.model.nTransparentTriangles);
             }
     }
+};
+
+Mesh.prototype.getNumberOfDrawnTriangles = function() {
+    return this.model.triangles.length;
 };
 
 function ShipMesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,scalingMatrix,lineMode) {
@@ -645,8 +670,11 @@ Billboard.prototype.isInsideViewFrustum = function(camera) {
 Billboard.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.texture,0);
 	
-	drawnPolyogons+=2;
 	this.model.render(resourceCenter.gl,false);
+};
+
+Billboard.prototype.getNumberOfDrawnTriangles = function() {
+    return 2;
 };
 
 /**
@@ -707,9 +735,12 @@ DynamicParticle.prototype.render = function(resourceCenter) {
 	if(new Date().getTime()>=this.creationTime+this.duration) {
 		this.toBeDeleted=true;
 	} else {
-		drawnPolyogons+=2;
 		this.model.render(resourceCenter.gl,false);
 	}
+};
+
+DynamicParticle.prototype.getNumberOfDrawnTriangles = function() {
+    return 2;
 };
 
 /**
@@ -760,7 +791,6 @@ StaticParticle.prototype.setRelSize = function(newValue) {
 StaticParticle.prototype.render = function(resourceCenter) {
 	resourceCenter.bindTexture(this.texture,0);
 	if(this._relSize>0) {
-		drawnPolyogons+=2;
 		this.model.render(resourceCenter.gl,false);
 	}
 };
@@ -1042,6 +1072,7 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
 	this.uniformValueFunctions = new Object();
         
         this.firstRender=true;
+        this._drawnTriangles = 0;
 }
 
 /**
@@ -1054,6 +1085,10 @@ Scene.prototype.addObject = function(newVisualObject) {
 
 Scene.prototype.getLODContext = function() {
     return this.lodContext;
+};
+
+Scene.prototype.getNumberOfDrawnTriangles = function() {
+    return this._drawnTriangles;
 };
 
 /**
@@ -1099,9 +1134,6 @@ Scene.prototype.cleanUp = function() {
     }
 };
 
-// Global variable to store the number of polygon drawn so far in the current render.
-var drawnPolygons = 0;
-
 /**
  * Renders the whole scene applying the general configuration and then rendering
  * all visual objects in the graph.
@@ -1109,9 +1141,8 @@ var drawnPolygons = 0;
  * shaders, textures, models of the scene.
  */
 Scene.prototype.render = function(resourceCenter) {
-	document.getElementById("stats").innerHTML="";
-	drawnPolyogons=0;
-	
+        this._drawnTriangles = 0;
+        
 	var gl = resourceCenter.gl;
 	
 	gl.viewport(this.left, this.top, this.width, this.height);
@@ -1143,6 +1174,7 @@ Scene.prototype.render = function(resourceCenter) {
         gl.disable(gl.BLEND);
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,true);
+                this._drawnTriangles+=this.objects[i].cascadeGetNumberOfDrawnTriangles();
 	}
         // second rendering pass: rendering the transparent triangles with 
         // Z buffer writing turned off
@@ -1150,6 +1182,6 @@ Scene.prototype.render = function(resourceCenter) {
         gl.enable(gl.BLEND);
 	for(var i=0;i<this.objects.length;i++) {
 		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
+                this._drawnTriangles+=this.objects[i].cascadeGetNumberOfDrawnTriangles();
 	}
-	document.getElementById("stats").innerHTML+=drawnPolyogons;
 };

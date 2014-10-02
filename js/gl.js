@@ -395,7 +395,7 @@ Shader.prototype.bindBuffers = function(gl) {
 /**
  * Creates a new Resource Center object.
  * @class This class holds and manages all the various resources and their 
- * configuration that are needed for rendering: textures, shaders, models, cameras, scenes.
+ * configuration that are needed for rendering: textures, shaders, models.
  */
 function ResourceCenter() {
 	this.gl=null;
@@ -404,12 +404,8 @@ function ResourceCenter() {
 	this.cubemaps=new Array();
 	this.shaders=new Array();
 	this.models=new Array();
-	this.scenes=new Array();
 	
 	this.vertexBuffers=new Array();
-		
-	this.maxRenderTimes = 30;
-	this.renderTimes = new Array();
 	
 	this.currentShader=null;
 	this.boundTextures=new Array();
@@ -766,21 +762,6 @@ ResourceCenter.prototype.init = function(canvas,freq) {
                     game.getCurrentScreen().showMessage("Ready!");
                     game.getCurrentScreen().getLoadingBox().hide();
                     game.getCurrentScreen().showStats();
-                    game.getCurrentScreen().render = 
-                            function() {
-                                    mainScene.cleanUp();
-                                    mainScene.render(game.graphicsContext.resourceCenter);
-                                    var d = new Date();
-                                    self.renderTimes.push(d.getTime());
-                                    if(self.renderTimes.length>self.maxRenderTimes) {
-                                            self.renderTimes.shift();
-                                    }
-                                    if (self.renderTimes.length>1) {
-                                            document.getElementById("stats").innerHTML+=
-                                                    "<br/>FPS: "+
-                                                    Math.round(1000/((self.renderTimes[self.renderTimes.length-1]-self.renderTimes[0])/(self.renderTimes.length-1))*10)/10;
-                                    }
-                            };
                     game.getCurrentScreen().startRenderLoop(1000/freq);
                 }
 	});
@@ -811,26 +792,4 @@ ResourceCenter.prototype.setupShaders = function() {
 	for(var i=0;i<this.shaders.length;i++) {
 		this.shaders[i].setup(this.gl);
 	}
-};
-
-/**
- * Cleans up all the contained scenes.
- */
-ResourceCenter.prototype.cleanUpScenes = function() {
-	for(var i=0;i<this.scenes.length;i++) {
-		this.scenes[i].cleanUp();
-	}
-};
-
-/**
- * Renders all the contained scenes.
- */
-ResourceCenter.prototype.renderScenes = function() {
-    // we need to set the current shader to null in the beginning of each render
-    // since otherwise if only one shader is used, its uniforms would never
-    // be updated, as they are updated whenever a new shader is set
-    this.currentShader=null;
-    for(var i=0;i<this.scenes.length;i++) {
-        this.scenes[i].render(this);
-    }
 };
