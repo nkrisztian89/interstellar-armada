@@ -240,7 +240,11 @@ function loadBattleResources() {
     // setting uniform valuables that are universal to all scene graph 
     // objects, so any shader used in the scene will be able to get their
     // values
-    mainScene.uniformValueFunctions['u_lightDir'] = function() { return [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]; };
+    mainScene.uniformValueFunctions['u_numLights'] = function() { return 2; };
+    mainScene.uniformValueFunctions['u_lights'] = function() { return [
+        { color: [1.0,1.0,1.0], direction: [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]},
+        { color: [0.02,0.2,0.2], direction: [Math.cos(game.graphicsContext.lightAngle),0.0,-Math.sin(game.graphicsContext.lightAngle)]}
+        ]; };
     mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
     mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
     mainScene.uniformValueFunctions['u_eyePos'] = function() 

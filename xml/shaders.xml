@@ -29,7 +29,10 @@
 			<uniform name="u_projMatrix" type="mat4" />
 			<uniform name="u_normalMatrix" type="mat3" />
 			<uniform name="u_colorTexture" type="sampler2D" />
-			<uniform name="u_lightDir" type="vec3" />
+			<uniform name="u_numLights" type="int" />
+                        <uniform name="u_lights" type="struct" arraySize="12" />
+                        <uniform name="color" memberOf="u_lights" type="vec3" />
+                        <uniform name="direction" memberOf="u_lights" type="vec3" />
 			<uniform name="u_eyePos" type="vec3" />
 		</uniforms>
 	</Shader>
@@ -56,7 +59,10 @@
 			<uniform name="u_normalMatrix" type="mat3" />
 			<uniform name="u_colorTexture" type="sampler2D" />
                         <uniform name="u_luminosityTexture" type="sampler2D" />
-			<uniform name="u_lightDir" type="vec3" />
+			<uniform name="u_numLights" type="int" />
+                        <uniform name="u_lights" type="struct" arraySize="12" />
+                        <uniform name="color" memberOf="u_lights" type="vec3" />
+                        <uniform name="direction" memberOf="u_lights" type="vec3" />
 			<uniform name="u_eyePos" type="vec3" />
                         <uniform name="u_luminosityFactors" type="float" arraySize="20" />
 		</uniforms>
@@ -74,7 +80,6 @@
 		<uniforms>
 			<uniform name="u_viewDirectionProjectionInverse" type="mat4" />
 			<uniform name="u_skybox" type="samplerCube" />
-			<uniform name="u_lightDir" type="vec3" />
 		</uniforms>
 	</Shader>
 	

@@ -196,7 +196,7 @@ VisualObject.prototype.getParentModelMatrix = function() {
 VisualObject.prototype.assignUniforms = function(gl) {
 	for(var i=0;i<this.shader.uniforms.length;i++) {
 		if(this.uniformValueFunctions[this.shader.uniforms[i].name]!==undefined) {
-			this.shader.uniforms[i].setValue(gl,this.uniformValueFunctions[this.shader.uniforms[i].name]);
+			this.shader.uniforms[i].setValue(gl,this.shader.id,this.uniformValueFunctions[this.shader.uniforms[i].name]);
 		}
 	}
 };
@@ -1115,7 +1115,7 @@ Scene.prototype.resizeViewport = function() {
 Scene.prototype.assignUniforms = function(gl,shader) {
 	for(var i=0;i<shader.uniforms.length;i++) {
 		if(this.uniformValueFunctions[shader.uniforms[i].name]!==undefined) {
-			shader.uniforms[i].setValue(gl,this.uniformValueFunctions[shader.uniforms[i].name]);
+			shader.uniforms[i].setValue(gl,shader.id,this.uniformValueFunctions[shader.uniforms[i].name]);
 		}
 	}
 };

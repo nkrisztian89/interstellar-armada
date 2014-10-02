@@ -194,7 +194,7 @@ var ShaderVariableTypes = Object.freeze(
             vec4: 5,
             sampler2D: 6,
             samplerCube: 7,
-            uint: 8
+            int: 8
         });
  
 /**
@@ -210,7 +210,8 @@ function ShaderVariableTypeFromString(type) {
     if (type==="vec4") return ShaderVariableTypes.vec4;
     if (type==="sampler2D") return ShaderVariableTypes.sampler2D;
     if (type==="samplerCube") return ShaderVariableTypes.samplerCube;
-    if (type==="uint") return ShaderVariableTypes.uint;
+    if (type==="int") return ShaderVariableTypes.int;
+    if (type==="struct") return ShaderVariableTypes.struct;
     return ShaderVariableTypes.none;
 }
 
@@ -233,71 +234,81 @@ function ShaderUniform(name,type,arraySize) {
         } else {
             this.arraySize=0;
         }
-	this.location=-1;
+	this.location=new Object();
+        
+        this._members = null;
+        if(this.type===ShaderVariableTypes.struct) {
+            this._members = new Array();
+        }
 }
 
-/**
- * Gets the location of the uniform variable in the specified GLSL program
- * within the specified GL context, and sets the location member of the class
- * to remember it.
- * @param {WebGLRenderingContext} gl The GL context.
- * @param {number} programID The GLSL shader program ID.
- * @returns {number} The location ID of the uniform in the program.
- * */
-ShaderUniform.prototype.getAndSetLocation = function(gl,programID) {
-	this.location=gl.getUniformLocation(programID,this.name);
-        return this.location;
+ShaderUniform.prototype.addMember = function(member) {
+    this._members.push(member);
 };
 
-/**
- * Get the GL function that sets the uniform of the specified type at the
- * specified location to the specified value. Used directly from the prototype,
- * do not use private properties here!
- * @param {WebGLRenderingContext} gl The GL context
- * @param {number} location The location of the uniform
- * @param {ShaderVariableTypes member} type The type of the uniform
- * @param {object} value The value to set the uniform to (can be of different
- * types)
- * @param {Number} arraySize The size of the uniform array. If 0, it is not an array.
- * @returns {function} A function that executes the webGL query of setting the
- * uniform to the specified value.
- */
-ShaderUniform.prototype.getSetterFunction = function(gl,location,type,value,arraySize) {
-    if(arraySize>0) {
-        switch(type) {
-            case ShaderVariableTypes.float: return function() { gl.uniform1fv(location,value); };
-                break;
-        }
-    } else {
-        switch(type) {
-            case ShaderVariableTypes.float: return function() { gl.uniform1f(location,value); };
-                break;
-            case ShaderVariableTypes.mat4: return function() { gl.uniformMatrix4fv(location,false,value); };
-                break;
-            case ShaderVariableTypes.mat3: return function() { gl.uniformMatrix3fv(location,false,value); };
-                break;
-            case ShaderVariableTypes.vec3: return function() { gl.uniform3fv(location,value); };
-                break;
-            case ShaderVariableTypes.vec4: return function() { gl.uniform4fv(location,value); };
-                break;
-            case ShaderVariableTypes.sampler2D: return function() { gl.uniform1i(location,value); };
-                break;
-            case ShaderVariableTypes.samplerCube: return function() { gl.uniform1i(location,value); };
-                break;
-            case ShaderVariableTypes.uint: return function() { gl.uniform1i(location,value); };
-                break;
-        }
-    }
+ShaderUniform.prototype.setLocation = function(gl,programID) {
+    if(this.location[gl]===undefined) {
+        this.location[gl]=new Object();
+    } 
+    this.location[gl][programID] = gl.getUniformLocation(programID,this.name);
+};
+
+ShaderUniform.prototype.getLocation = function(gl,programID) {
+    return this.location[gl][programID];
 };
 
 /**
  * Sets the value of the shader in the specified GL context to the return value
  * of the passed value function.
  * @param {WebGLRenderingContext} gl The GL context
+ * @param {Number} programID
  * @param {function} valueFunction The function to calculate the uniform value
+ * @param {String} locationPrefix
  */
-ShaderUniform.prototype.setValue = function(gl,valueFunction) {
-    ShaderUniform.prototype.getSetterFunction(gl,this.location,this.type,valueFunction(),this.arraySize)();
+ShaderUniform.prototype.setValue = function(gl,programID,valueFunction,locationPrefix) {
+    var value = valueFunction();
+    var location;
+    if (locationPrefix!==undefined) {
+        location = gl.getUniformLocation(programID,locationPrefix+this.name);
+    } else {
+        location = this.getLocation(gl,programID);
+    }
+    var i,j;
+    if(this.arraySize>0) {
+        switch(this.type) {
+            case ShaderVariableTypes.float: gl.uniform1fv(location,value);
+                break;
+            case ShaderVariableTypes.struct:
+                    for(i=0;i<value.length;i++) {
+                        for(j=0;j<this._members.length;j++) {
+                            if(value[i][this._members[j].name]!==undefined) {
+                                var memberName = this._members[j].name; 
+                                this._members[j].setValue(gl,programID,function(){ return value[i][memberName]; },this.name+"["+i+"].");
+                            }
+                        }
+                    }
+                break;
+        }
+    } else {
+        switch(this.type) {
+            case ShaderVariableTypes.float: gl.uniform1f(location,value);
+                break;
+            case ShaderVariableTypes.mat4: gl.uniformMatrix4fv(location,false,value);
+                break;
+            case ShaderVariableTypes.mat3: gl.uniformMatrix3fv(location,false,value);
+                break;
+            case ShaderVariableTypes.vec3: gl.uniform3fv(location,value);
+                break;
+            case ShaderVariableTypes.vec4: gl.uniform4fv(location,value);
+                break;
+            case ShaderVariableTypes.sampler2D: gl.uniform1i(location,value);
+                break;
+            case ShaderVariableTypes.samplerCube: gl.uniform1i(location,value);
+                break;
+            case ShaderVariableTypes.int: gl.uniform1i(location,value);
+                break;
+        }
+    }    
 };
 
 /**
@@ -377,7 +388,7 @@ Shader.prototype.setup = function(gl) {
         gl.linkProgram(this.id);
 	
 	for(var i=0;i<this.uniforms.length;i++) {
-		this.uniforms[i].getAndSetLocation(gl,this.id);
+		this.uniforms[i].setLocation(gl,this.id);
 	}
 };
 
@@ -594,6 +605,14 @@ ResourceCenter.prototype.loadShaders = function(filename) {
 				uniformTags[j].getAttribute("type"),
                                 uniformTags[j].hasAttribute("arraySize")?uniformTags[j].getAttribute("arraySize"):0)
 				);
+                        if(uniformTags[j].hasAttribute("memberOf")) {
+                            var parent = uniformTags[j].getAttribute("memberOf");
+                            for(var k=0;k<this.shaders[i].uniforms.length;k++) {
+                                if(this.shaders[i].uniforms[k].name===parent) {
+                                    this.shaders[i].uniforms[k].addMember(this.shaders[i].uniforms[this.shaders[i].uniforms.length-1]);
+                                }
+                            }
+                        }
 		}
 	}	
 };
