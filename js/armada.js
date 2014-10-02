@@ -59,8 +59,10 @@ initialize();
 function getSourceFiles() {
     return [
         "matrices.js",
+        "gl.js",
         "egom.js",
         "graphics.js",
+        "scene.js",
         "resource.js",
         "components.js",
         "screens.js",
@@ -205,7 +207,7 @@ function initialize() {
                 {
                     caption: "Quit to main menu",
                     action: function () { 
-                        game.getCurrentScreen().stopRenderLoop();
+                        game.getScreen("battle").stopRenderLoop();
                         clearInterval(battleSimulationLoop);
                         game.setCurrentScreen("mainMenu"); 
                     }
