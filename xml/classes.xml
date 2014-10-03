@@ -147,6 +147,7 @@
 		<model filename="models/falcon_lod1.egm" lod="1"/>
 		<model filename="models/falcon_lod0.egm" lod="0"/>
 		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_specular.png" type="specular" />
                 <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="10000">
@@ -229,6 +230,7 @@
                 <model filename="models/viper_lod1.egm" lod="1"/>
                 <model filename="models/viper_lod0.egm" lod="0"/>
 		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_specular.png" type="specular" />
                 <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="35000">
@@ -309,6 +311,7 @@
                 <model filename="models/aries_lod1.egm" lod="1" />
                 <model filename="models/aries_lod0.egm" lod="0" />
 		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_specular.png" type="specular" />
                 <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="800000">
@@ -378,6 +381,7 @@
 		<model filename="models/taurus_lod1.egm" lod="1"/>
 		<model filename="models/taurus_lod0.egm" lod="0"/>
 		<texture filename="textures/falcon.png" type="color" />
+                <texture filename="textures/falcon_specular.png" type="specular" />
                 <texture filename="textures/falcon_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="2200000">
@@ -488,6 +492,7 @@
 		<model filename="models/libra_lod1.egm" lod="1"/>
 		<model filename="models/libra_lod0.egm" lod="0"/>
 		<texture filename="textures/libra.png" type="color" />
+                <texture filename="textures/libra_specular.png" type="specular" />
                 <texture filename="textures/libra_luminosity.png" type="luminosity" />
 		<shader name="ship" />
 		<physics mass="25000000">

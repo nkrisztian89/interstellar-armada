@@ -29,6 +29,7 @@
 			<uniform name="u_projMatrix" type="mat4" />
 			<uniform name="u_normalMatrix" type="mat3" />
 			<uniform name="u_colorTexture" type="sampler2D" />
+                        <uniform name="u_specularTexture" type="sampler2D" />
 			<uniform name="u_numLights" type="int" />
                         <uniform name="u_lights" type="struct" arraySize="12" />
                         <uniform name="color" memberOf="u_lights" type="vec3" />
@@ -58,6 +59,7 @@
 			<uniform name="u_projMatrix" type="mat4" />
 			<uniform name="u_normalMatrix" type="mat3" />
 			<uniform name="u_colorTexture" type="sampler2D" />
+                        <uniform name="u_specularTexture" type="sampler2D" />
                         <uniform name="u_luminosityTexture" type="sampler2D" />
 			<uniform name="u_numLights" type="int" />
                         <uniform name="u_lights" type="struct" arraySize="12" />

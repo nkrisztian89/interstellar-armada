@@ -9,6 +9,7 @@ struct Light
     };
 
 uniform sampler2D u_colorTexture;
+uniform sampler2D u_specularTexture;
 uniform sampler2D u_luminosityTexture;
 uniform vec3 u_eyePos;
 uniform Light u_lights[12];
@@ -32,6 +33,7 @@ void main() {
     vec3 reflDir = reflect (viewDir, normal);
 
     vec4 texCol = texture2D(u_colorTexture, v_texCoord);
+    vec4 texSpec = texture2D(u_specularTexture, v_texCoord);
     vec4 texLum = texture2D(u_luminosityTexture, v_texCoord);
 
     gl_FragColor.rgb = 
@@ -58,7 +60,7 @@ void main() {
                         // the modulated diffuse texture
                         * v_color.rgb * texCol.rgb
                         // add specular lighting, this can make the surface "overlighted"
-                        + specularFactor * u_lights[i].color
+                        + specularFactor * u_lights[i].color * texSpec.rgb
                 );
         }
     }

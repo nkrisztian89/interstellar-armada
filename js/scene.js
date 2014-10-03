@@ -467,8 +467,11 @@ function Mesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,sca
             if(textureType==="color") {
                 this.uniformValueFunctions["u_colorTexture"] = function() { return 0; };
             } else
+            if(textureType==="specular") {
+                this.uniformValueFunctions["u_specularTexture"] = function() { return 1; };
+            } else
             if(textureType==="luminosity") {
-                this.uniformValueFunctions["u_luminosityTexture"] = function() { return 1; };
+                this.uniformValueFunctions["u_luminosityTexture"] = function() { return 2; };
             }
         }
 }
