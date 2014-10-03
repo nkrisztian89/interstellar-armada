@@ -725,12 +725,15 @@ ResourceCenter.prototype.bindTexture = function(texture,place) {
 /**
  * Sets up a webGL context and performs the basic configuration with it.
  * @param {object} canvas The HMTL5 canvas to get and configure the context for.
+ * @param {Boolean} antialiasing Whether antialising should be turned on. (given
+ * that the implementation supports it)
  * @returns {boolean} Indicates whether the creation of the WebGL context succeeded.
  */
-ResourceCenter.prototype.setupWebGL = function(canvas) {
+ResourceCenter.prototype.setupWebGL = function(canvas,antialiasing) {
 	try {
+                var contextParameters = {alpha: false, antialias: antialiasing};
 		// Try to grab the standard context. If it fails, fallback to experimental.
-		this.gl = canvas.getContext("webgl",{alpha: false, antialias: true}) || canvas.getContext("experimental-webgl",{alpha: false, antialias: true});
+		this.gl = canvas.getContext("webgl",contextParameters) || canvas.getContext("experimental-webgl",contextParameters);
 	}
 	catch(e) {}
 
@@ -769,14 +772,16 @@ ResourceCenter.prototype.setupWebGL = function(canvas) {
  * Loads and sets up all resources for rendering the scenes to the given HTML5
  * canvas, then start the rendering loop with the given frequency.
  * @param {object} canvas The HTML5 canvas to render to.
+ * @param {Boolean} antialiasing Whether antialising should be turned on. (given
+ * that the implementation supports it)
  * @param {number} freq The frequency for the rendering loop, in Hertz.
  */
-ResourceCenter.prototype.init = function(canvas,freq) {
+ResourceCenter.prototype.init = function(canvas,antialiasing,freq) {
 	var self=this;
         game.getCurrentScreen().updateStatus("loading textures...");
 	this.loadTextures(function() {
                 game.getCurrentScreen().updateStatus("initializing WebGL...");
-		if (self.setupWebGL(canvas)) {
+		if (self.setupWebGL(canvas,antialiasing)) {
                     game.getCurrentScreen().updateStatus("",100);
                     game.getCurrentScreen().showMessage("Ready!");
                     game.getCurrentScreen().getLoadingBox().hide();

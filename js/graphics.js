@@ -45,6 +45,8 @@ function LODContext(maxEnabledLOD,thresholds) {
 function GraphicsContext() {
     this.resourceCenter=new ResourceCenter();
     
+    this._antialiasing = false;
+    
     this._maxLoadedLOD = null;
     this._lodContext = null;
     
@@ -57,6 +59,12 @@ function GraphicsContext() {
 
 GraphicsContext.prototype.loadFromXML = function(xmlSource) {
     var i;
+    var contextTag = xmlSource.getElementsByTagName("context")[0];
+    if(contextTag!==null) {
+        if(contextTag.hasAttribute("antialiasing")) {
+            this._antialiasing = (contextTag.getAttribute("antialiasing")==="true");
+        }
+    }
     var lodLoadProfileTag = xmlSource.getElementsByTagName("lodLoadProfile")[0];
     this._maxLoadedLOD = lodLoadProfileTag.getAttribute("maxLevel");
     if(lodLoadProfileTag.getAttribute("autoLimitByScreenWidth")==="true") {
@@ -76,6 +84,10 @@ GraphicsContext.prototype.loadFromXML = function(xmlSource) {
         lodDisplayLimits[Number(lodDisplayLimitTags[i].getAttribute("level"))+1]=lodDisplayLimitTags[i].getAttribute("objectSizeLessThan");
     }
     this._lodContext = new LODContext(lodDisplayProfileTag.getAttribute("maxLevel"),lodDisplayLimits);
+};
+
+GraphicsContext.prototype.getAntialiasing = function() {
+    return this._antialiasing;
 };
 
 GraphicsContext.prototype.getMaxLoadedLOD = function() {

@@ -235,41 +235,13 @@ function loadBattleResources() {
 	  
     game.getCurrentScreen().resizeCanvases(); 
           
-    mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
+    var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
 
-    // setting uniform valuables that are universal to all scene graph 
-    // objects, so any shader used in the scene will be able to get their
-    // values
-    mainScene.uniformValueFunctions['u_numLights'] = function() { return 2; };
-    mainScene.uniformValueFunctions['u_lights'] = function() { return [
-        { color: [1.0,1.0,1.0], direction: [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]},
-        { color: [0.02,0.2,0.2], direction: [Math.cos(game.graphicsContext.lightAngle),0.0,-Math.sin(game.graphicsContext.lightAngle)]}
-        ]; };
-    mainScene.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(mainScene.activeCamera.positionMatrix,mainScene.activeCamera.orientationMatrix); };
-    mainScene.uniformValueFunctions['u_projMatrix'] = function() { return mainScene.activeCamera.perspectiveMatrix; };
-    mainScene.uniformValueFunctions['u_eyePos'] = function() 
-            {
-                    var eyePos = [
-                            -mainScene.activeCamera.positionMatrix[12],
-                            -mainScene.activeCamera.positionMatrix[13],
-                            -mainScene.activeCamera.positionMatrix[14]
-                            ];
-                    return [eyePos[0],eyePos[1],eyePos[2]]; 
-            };
-
+    mainScene.addLightSource(new LightSource([1.0,1.0,1.0],[-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]));
+    mainScene.addLightSource(new LightSource([0.02,0.2,0.2],[Math.cos(game.graphicsContext.lightAngle),0.0,-Math.sin(game.graphicsContext.lightAngle)]));
     game.getCurrentScreen().addScene(mainScene);
     
     game.graphicsContext.scene = mainScene;
-	
-        // test variable: number of random goals the AI controllers get at start
-        var num_test_goals=10;
-        // test variable: number of random fighters generated
-        var num_test_fighters=40;
-        // test variable: number of random ships generated
-        var num_test_ships=15;
-        // test variable: indicating the range within the random positions of fighters
-        // and ships and the destinations of their goals are generated
-        var mapSize=3000;	
         
         var test_level = new Level(resourceCenter,mainScene,controlContext);
 	
@@ -279,7 +251,7 @@ function loadBattleResources() {
 	
 	game.getCurrentScreen().updateStatus("loading additional configuration...",50);
 	
-        // we turn the cruizer around so it looks nicer at start :)
+        // we turn the cruiser around so it looks nicer at start :)
 	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientationMatrix=
 		mul(
 			rotationMatrix4([0,1,0],3.1415/4),
@@ -288,6 +260,14 @@ function loadBattleResources() {
                 
         var graphicsContext = game.graphicsContext;
         var logicContext = new LogicContext(test_level);
+        
+        // test variable: number of random fighters generated
+        var num_test_fighters=40;
+        // test variable: number of random ships generated
+        var num_test_ships=15;
+        // test variable: indicating the range within the random positions of fighters
+        // and ships and the destinations of their goals are generated
+        var mapSize=3000;	
 	
         // adding random fighters to the scene to test performance
 	for(var i=0;i<num_test_fighters;i++) {
@@ -342,6 +322,8 @@ function loadBattleResources() {
         sphereModel.addSphere(0,0,0,5,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
         sphereModel.filename="sphere";
         sphereModel.size=10;
+        // test variable: number of random goals the AI controllers get at start
+        var num_test_goals=10;
         // adding random goals to the AI for testing
 	for(var i=0;i<test_level.spacecrafts.length;i++) {
 		for(var j=0;j<num_test_goals;j++) {
@@ -362,7 +344,7 @@ function loadBattleResources() {
 	
 	game.getCurrentScreen().updateStatus("",75);
 	
-	resourceCenter.init(canvas,freq);
+	resourceCenter.init(canvas,graphicsContext.getAntialiasing(),freq);
         
         var globalCommands=initGlobalCommands(graphicsContext,logicContext,controlContext);
 
@@ -374,6 +356,10 @@ function loadBattleResources() {
 			test_level.tick(curDate-prevDate);
                         prevDate=curDate;
 			control(mainScene,test_level,globalCommands);
-			game.graphicsContext.lightAngle+=game.graphicsContext.lightIsTurning?0.07:0.0;
+                        if(game.graphicsContext.lightIsTurning) {
+                            game.graphicsContext.lightAngle+=0.07;
+                            game.graphicsContext.scene.lights[0].direction = [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)];
+                            game.graphicsContext.scene.lights[1].direction = [-game.graphicsContext.scene.lights[1].direction[0],-game.graphicsContext.scene.lights[1].direction[1],-game.graphicsContext.scene.lights[1].direction[2]];
+                        }
 		},1000/freq);
 }

@@ -1037,6 +1037,11 @@ SceneCamera.prototype.getFollowedSpacecraft = function(logicContext) {
     return null;
 };
 
+function LightSource(color,direction) {
+    this.color = color;
+    this.direction = direction;
+}
+
 /**
  * Creates a new scene graph object.
  * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
@@ -1064,6 +1069,7 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
 	
         this.objects = new Array();
         this.cameras = new Array();
+        this.lights = new Array();
         
 	this.activeCamera = new SceneCamera(width/height,60,1000);
 		
@@ -1073,6 +1079,25 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         
         this.firstRender=true;
         this._drawnTriangles = 0;
+        
+        var self = this;
+        // setting uniform valuables that are universal to all scene graph 
+        // objects, so any shader used in the scene will be able to get their
+        // values
+        this.uniformValueFunctions['u_numLights'] = function() { return self.lights.length; };
+        this.uniformValueFunctions['u_lights'] = function() { return self.lights; };
+   
+        this.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(self.activeCamera.positionMatrix,self.activeCamera.orientationMatrix); };
+        this.uniformValueFunctions['u_projMatrix'] = function() { return self.activeCamera.perspectiveMatrix; };
+        this.uniformValueFunctions['u_eyePos'] = function() 
+            {
+                    var eyePos = [
+                            -self.activeCamera.positionMatrix[12],
+                            -self.activeCamera.positionMatrix[13],
+                            -self.activeCamera.positionMatrix[14]
+                            ];
+                    return [eyePos[0],eyePos[1],eyePos[2]]; 
+            };
 }
 
 /**
@@ -1081,6 +1106,10 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
  */
 Scene.prototype.addObject = function(newVisualObject) {
     this.objects.push(newVisualObject);
+};
+
+Scene.prototype.addLightSource = function(newLightSource) {
+    this.lights.push(newLightSource);
 };
 
 Scene.prototype.getLODContext = function() {
