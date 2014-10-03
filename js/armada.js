@@ -217,6 +217,80 @@ function initialize() {
     });
 }
 
+function loadTestConfiguration(test_level,num_test_fighters,num_test_ships,mapSize) {
+    // adding random fighters to the scene to test performance
+    for (var i = 0; i < num_test_fighters; i++) {
+        test_level.spacecrafts.push(
+            new Spacecraft(
+                game.graphicsContext,
+                game.logicContext,
+                game.controlContext,
+                game.logicContext.getSpacecraftClass("falcon"),
+                test_level.getPlayer("human"),
+                translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
+                identityMatrix4(),
+                "ai"
+                )
+            );
+        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("plasma"));
+        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("plasma"));
+        test_level.spacecrafts[test_level.spacecrafts.length - 1].addPropulsion(game.graphicsContext.resourceCenter, game.logicContext.getPropulsionClass("fighter"));
+    }
+
+    // adding random ships to the scene to test performance
+    for (var i = 0; i < num_test_ships; i++) {
+        test_level.spacecrafts.push(
+            new Spacecraft(
+                game.graphicsContext,
+                game.logicContext,
+                game.controlContext,
+                game.logicContext.getSpacecraftClass("taurus"),
+                test_level.getPlayer("human"),
+                translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
+                identityMatrix4(),
+                "ai"
+                )
+            );
+        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("cannon"));
+        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("cannon"));
+        test_level.spacecrafts[test_level.spacecrafts.length - 1].addPropulsion(game.graphicsContext.resourceCenter, game.logicContext.getPropulsionClass("frigate"));
+    }
+    // adding a sphere model for testing the shading
+    /*var sphereModel = new EgomModel();
+    // 100x downsized earth
+    sphereModel.addSphere(0,0,0,63710,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
+    sphereModel.filename="sphere";
+    sphereModel.size=127420;
+    mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),translationMatrix(0,0,-73710),identityMatrix4(),identityMatrix4(),false));
+    mainScene.objects[mainScene.objects.length-1].orientationMatrix=
+        //mul(
+        //    rotationMatrix4([1,0,0],3.1415/4),
+            rotationMatrix4([1,0,0],-3.1415*0.75);
+        //);*/
+	
+    /*var sphereModel = new EgomModel();
+    sphereModel.addSphere(0,0,0,5,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
+    sphereModel.filename="sphere";
+    sphereModel.size=10;
+    // test variable: number of random goals the AI controllers get at start
+    var num_test_goals=10;
+    // adding random goals to the AI for testing
+    for(var i=0;i<test_level.spacecrafts.length;i++) {
+        for(var j=0;j<num_test_goals;j++) {
+            var goalPosition = translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2);
+            test_level.spacecrafts[i].controller.goals.push(new Goal(goalPosition));
+            if (i===0) {
+                mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),goalPosition,identityMatrix4(),identityMatrix4(),false));
+            }
+        }
+    }*/
+    /*
+    // setting up the position and direction of the main camera
+    mainScene.activeCamera.positionMatrix=translationMatrix(0,10,-10);
+    mainScene.activeCamera.orientationMatrix=rotationMatrix4([1,0,0],3.1415/4);
+    */
+}
+
 /**
  * Old function under refactoring, its content will go under several methods of
  * different classes.
@@ -225,141 +299,48 @@ function loadBattleResources() {
     game.getCurrentScreen().hideStats();
     game.getCurrentScreen().hideUI();
     game.getCurrentScreen().getInfoBox().hide();
-        
-    var canvas = game.getCurrentScreen().getCanvas();
-        
-    var controlContext = game.controlContext;
 	
-    controlContext.activate();
-
-    var resourceCenter = game.graphicsContext.resourceCenter;
+    game.controlContext.activate();
 	  
     game.getCurrentScreen().resizeCanvases(); 
           
+    var canvas = game.getCurrentScreen().getCanvas();
     var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
     
     game.getCurrentScreen().addScene(mainScene);
     
     game.graphicsContext.scene = mainScene;
         
-    var test_level = new Level(resourceCenter,mainScene,controlContext);
-	
-        // this loads the level and all needed other resources (models, shaders)
-        // from the XML files
-	test_level.loadFromFile(getXMLFolder()+"level.xml");
-	
-	game.getCurrentScreen().updateStatus("loading additional configuration...",50);
-	
-        // we turn the cruiser around so it looks nicer at start :)
-	test_level.spacecrafts[test_level.spacecrafts.length-1].physicalModel.orientationMatrix=
-		mul(
-			rotationMatrix4([0,1,0],3.1415/4),
-			rotationMatrix4([0,0,1],3.1415/2)
-			);
-                
-        var graphicsContext = game.graphicsContext;
-        var logicContext = game.logicContext;
-        logicContext.level = test_level;
-        
-        // test variable: number of random fighters generated
-        var num_test_fighters=40;
-        // test variable: number of random ships generated
-        var num_test_ships=15;
-        // test variable: indicating the range within the random positions of fighters
-        // and ships and the destinations of their goals are generated
-        var mapSize=3000;	
-	
-        // adding random fighters to the scene to test performance
-	for(var i=0;i<num_test_fighters;i++) {
-		test_level.spacecrafts.push(
-			new Spacecraft(
-				graphicsContext,
-				logicContext,
-                                controlContext,
-				logicContext.getSpacecraftClass("falcon"),
-				test_level.getPlayer("human"),
-				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
-				"ai"
-				)
-			);
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("plasma"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("plasma"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,logicContext.getPropulsionClass("fighter"));
-	}
-	
-        // adding random ships to the scene to test performance
-	for(var i=0;i<num_test_ships;i++) {
-		test_level.spacecrafts.push(
-			new Spacecraft(
-				graphicsContext,
-				logicContext,
-                                controlContext,
-				logicContext.getSpacecraftClass("taurus"),
-				test_level.getPlayer("human"),
-				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
-				"ai"
-				)
-			);
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("cannon"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("cannon"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,logicContext.getPropulsionClass("frigate"));
-	}
-        
-        // adding a sphere model for testing the shading
-        /*var sphereModel = new EgomModel();
-        // 100x downsized earth
-        sphereModel.addSphere(0,0,0,63710,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
-        sphereModel.filename="sphere";
-        sphereModel.size=127420;
-        mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),translationMatrix(0,0,-73710),identityMatrix4(),identityMatrix4(),false));
-        mainScene.objects[mainScene.objects.length-1].orientationMatrix=
-                //mul(
-                //    rotationMatrix4([1,0,0],3.1415/4),
-                    rotationMatrix4([1,0,0],-3.1415*0.75);
-                //);*/
-	
-        /*var sphereModel = new EgomModel();
-        sphereModel.addSphere(0,0,0,5,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
-        sphereModel.filename="sphere";
-        sphereModel.size=10;
-        // test variable: number of random goals the AI controllers get at start
-        var num_test_goals=10;
-        // adding random goals to the AI for testing
-	for(var i=0;i<test_level.spacecrafts.length;i++) {
-		for(var j=0;j<num_test_goals;j++) {
-                        var goalPosition = translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2);
-			test_level.spacecrafts[i].controller.goals.push(new Goal(goalPosition));
-                        if (i===0) {
-                            mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),goalPosition,identityMatrix4(),identityMatrix4(),false));
-                        }
-		}
-	}*/
-	/*
-        // setting up the position and direction of the main camera
-	mainScene.activeCamera.positionMatrix=translationMatrix(0,10,-10);
-	mainScene.activeCamera.orientationMatrix=rotationMatrix4([1,0,0],3.1415/4);
-        */
-	
-	var freq = 60;
-	
-	game.getCurrentScreen().updateStatus("",75);
-	
-	resourceCenter.init(canvas,graphicsContext.getAntialiasing(),freq);
-        
-        var globalCommands=initGlobalCommands(graphicsContext,logicContext,controlContext);
+    var test_level = new Level();
+    game.logicContext.level = test_level;
+	    
+    test_level.onLoad = function () {
+        game.getCurrentScreen().updateStatus("loading additional configuration...", 50);
+        loadTestConfiguration(test_level, 40, 15, 3000);
+        game.getCurrentScreen().updateStatus("", 75);
 
-	prevDate = new Date();
+        var freq = 60;
+        game.graphicsContext.resourceCenter.init(canvas, game.graphicsContext.getAntialiasing(), freq);
 
-	battleSimulationLoop = setInterval(function()
-		{
-			curDate=new Date();
-			test_level.tick(curDate-prevDate);
-                        prevDate=curDate;
-			control(mainScene,test_level,globalCommands);
-                        if(game.graphicsContext.lightIsTurning) {
-                            game.graphicsContext.lightAngle+=0.07;
-                            game.graphicsContext.scene.lights[0].direction = [-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)];
-                            game.graphicsContext.scene.lights[1].direction = [-game.graphicsContext.scene.lights[1].direction[0],-game.graphicsContext.scene.lights[1].direction[1],-game.graphicsContext.scene.lights[1].direction[2]];
-                        }
-		},1000/freq);
+        var globalCommands = initGlobalCommands(game.graphicsContext, game.logicContext, game.controlContext);
+
+        prevDate = new Date();
+
+        battleSimulationLoop = setInterval(function ()
+        {
+            var i;
+            curDate = new Date();
+            test_level.tick(curDate - prevDate);
+            prevDate = curDate;
+            control(game.graphicsContext.scene, test_level, globalCommands);
+            if (game.graphicsContext.lightIsTurning) {
+                var rotMatrix = rotationMatrix4([0.0,1.0,0.0],0.07);
+                for(i=0;i<test_level.backgroundObjects.length;i++) {
+                    test_level.backgroundObjects[i].position = vector3Matrix4Product(test_level.backgroundObjects[i].position,rotMatrix);
+                }                
+            }
+        }, 1000 / freq);
+    };
+    
+    test_level.requestLoadFromFile("level.xml");
 }

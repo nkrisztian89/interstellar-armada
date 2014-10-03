@@ -50,8 +50,6 @@ function GraphicsContext() {
     this._maxLoadedLOD = null;
     this._lodContext = null;
     
-    // temporary test variable indicating the angle of directional lighting
-    this.lightAngle=0.7;
     // temporary test variable indicating whether the direction of directional
     // lighting should keep turning around
     this.lightIsTurning=false;
@@ -59,6 +57,9 @@ function GraphicsContext() {
 
 GraphicsContext.prototype.loadFromXML = function(xmlSource) {
     var i;
+    
+    this.resourceCenter.requestShaderLoad(xmlSource.getElementsByTagName("shaders")[0].getAttribute("source"));
+    
     var contextTag = xmlSource.getElementsByTagName("context")[0];
     if(contextTag!==null) {
         if(contextTag.hasAttribute("antialiasing")) {

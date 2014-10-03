@@ -86,12 +86,12 @@ function BackgroundObject(graphicsContext,backgroundObjectClass,angleAlpha,angle
     var position;
     var layerParticle;
     this.class=backgroundObjectClass;
-    position = [
+    this.position = [
                     Math.cos(angleAlpha/180*Math.PI)*Math.cos(angleBeta/180*Math.PI),
                     Math.sin(angleAlpha/180*Math.PI)*Math.cos(angleBeta/180*Math.PI),
                     Math.sin(angleBeta/180*Math.PI)
                 ];
-    graphicsContext.scene.addLightSource(new LightSource(this.class.lightColor,position));
+    graphicsContext.scene.addLightSource(new LightSource(this.class.lightColor,this.position));
     for(i=0;i<this.class.layers.length;i++) {  
         layerParticle =new StaticParticle(
                 graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
@@ -99,7 +99,7 @@ function BackgroundObject(graphicsContext,backgroundObjectClass,angleAlpha,angle
 		graphicsContext.resourceCenter.getTexture(this.class.layers[i].textureFileName),
                 this.class.layers[i].color,
                 this.class.layers[i].size,
-                translationMatrixv(scalarVector3Product(4500,position))
+                translationMatrixv(scalarVector3Product(4500,this.position))
             );
         layerParticle.setRelSize(1.0);
         graphicsContext.scene.addBackgroundObject(layerParticle);
@@ -374,11 +374,12 @@ ControllableEntity.prototype.setController = function(newController) {
  * @param {ControlContext} controlContext
  * @param {SpacecraftClass} SpacecraftClass
  * @param {String} owner
- * @param {Number[]} positionMatrix
+ * @param {Float32Array} positionMatrix
+ * @param {Float32Array} orientationMatrix
  * @param {String} controller
  * @returns {Spacecraft}
  */
-function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,controller) {
+function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,orientationMatrix,controller) {
 	// creating the appropriate controller object based on the supplied string
         // and assigning it using the parent's constructor
         ControllableEntity.call(this,null);
@@ -411,10 +412,10 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 		graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
 		textures,
 		positionMatrix,
-		identityMatrix4(),
+		orientationMatrix,
 		scalingMatrix(SpacecraftClass.modelSize,SpacecraftClass.modelSize,SpacecraftClass.modelSize),
 		false);
-	this.physicalModel=new PhysicalObject(SpacecraftClass.mass,SpacecraftClass.modelSize,positionMatrix,identityMatrix4(),identityMatrix4(),SpacecraftClass.bodies);
+	this.physicalModel=new PhysicalObject(SpacecraftClass.mass,SpacecraftClass.modelSize,positionMatrix,orientationMatrix,identityMatrix4(),SpacecraftClass.bodies);
 	
 		
 	this.owner=owner;
@@ -654,12 +655,9 @@ ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
  * Defines a level.
  * @class The domain specific part of the model of what happens in the game, 
  * with spaceships, projectiles and so.
- * @param {ResourceCenter} resourceCenter
- * @param {Scene} scene
- * @param {ControlContext} controlContext
  * @returns {Level}
  */
-function Level(resourceCenter,scene,controlContext) {
+function Level() {
 	this.players=new Array();
 	
 	this.skyboxes=new Array();
@@ -668,11 +666,10 @@ function Level(resourceCenter,scene,controlContext) {
 	this.spacecrafts=new Array();
 	this.projectiles=new Array();
 	
-	this.resourceCenter=resourceCenter;
-	this.scene=scene;
-        this.controlContext=controlContext;
+        this.camera = null;
+        this.cameraController= null;
         
-        this.cameraController=new CameraController(scene.activeCamera,game.graphicsContext,new LogicContext(this),controlContext);
+        this.onLoad = null;
 }
 
 Level.prototype.getPlayer = function(name) {
@@ -687,30 +684,43 @@ Level.prototype.getPlayer = function(name) {
 	}
 };
 
-Level.prototype.loadFromFile = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	levelSource = request.responseXML;
-	
+Level.prototype.requestLoadFromFile = function(filename) {
+    var request = new XMLHttpRequest();
+    request.open('GET', getXMLFolder()+filename+"?123", true);
+    var self = this;
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            var levelSource = this.responseXML;
+            self.loadFromXML(levelSource);
+            if(self.onLoad!==null) {
+                self.onLoad();
+            }
+        }
+    };
+    request.send(null);
+};
+
+Level.prototype.loadFromXML= function(levelSource) {
+    var scene = game.graphicsContext.scene;
+    
+        this.camera = scene.activeCamera;
+        this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
+        
 	var playerTags = levelSource.getElementsByTagName("Player");
 	for(var i=0;i<playerTags.length;i++) {
 		this.players.push(new Player(playerTags[i].getAttribute("name")));
 	}
 	
-	game.getCurrentScreen().updateStatus("loading shaders...");
-	this.resourceCenter.loadShaders(levelSource.getElementsByTagName("Shaders")[0].getAttribute("source"));
-	
 	game.getCurrentScreen().updateStatus("loading level information...");
 	
 	for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
-		this.resourceCenter.getShader(game.logicContext.projectileClasses[i].shaderName);
-		this.resourceCenter.getTexture(game.logicContext.projectileClasses[i].textureFileName);
-		this.resourceCenter.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
-		this.resourceCenter.getTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename);
-		this.resourceCenter.addModel(projectileModel(game.logicContext.projectileClasses[i].intersections),"projectileModel-"+game.logicContext.projectileClasses[i].name);
+		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].shaderName);
+		game.graphicsContext.resourceCenter.getTexture(game.logicContext.projectileClasses[i].textureFileName);
+		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
+		game.graphicsContext.resourceCenter.getTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename);
+		game.graphicsContext.resourceCenter.addModel(projectileModel(game.logicContext.projectileClasses[i].intersections),"projectileModel-"+game.logicContext.projectileClasses[i].name);
 	}
-	this.resourceCenter.addModel(squareModel(),"squareModel");
+	game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel");
 	
 	this.spacecrafts = new Array();
 	
@@ -722,8 +732,8 @@ Level.prototype.loadFromFile = function(filename) {
 	var skyboxTags = levelSource.getElementsByTagName("Skybox");
 	for(var i=0;i<skyboxTags.length;i++) {
 		this.skyboxes.push(new Skybox(
-			this.resourceCenter,
-			this.scene,
+			game.graphicsContext.resourceCenter,
+			scene,
 			logicContext.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
 	}
         
@@ -750,7 +760,7 @@ Level.prototype.loadFromFile = function(filename) {
 		this.spacecrafts.push(new Spacecraft(
 			graphicsContext,
 			logicContext,
-                        this.controlContext,
+                        game.controlContext,
 			spacecraftClass,
 			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
 			translationMatrix(
@@ -758,24 +768,25 @@ Level.prototype.loadFromFile = function(filename) {
 				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("y")),
 				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("z"))
 				),
+                        getRotationMatrixFromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
 			"ai"
 			)
 		);
 		var weaponTags = spacecraftTags[i].getElementsByTagName("weapon");
 		for(var j=0;j<weaponTags.length;j++) {
 			this.spacecrafts[this.spacecrafts.length-1].addWeapon(
-				this.resourceCenter,
+				game.graphicsContext.resourceCenter,
 				logicContext.getWeaponClass(weaponTags[j].getAttribute("class")));
 		}
-		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(this.resourceCenter,logicContext.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
+		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(game.graphicsContext.resourceCenter,logicContext.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
                 for(var j=0;j<spacecraftClass.views.length;j++) {
-                    this.scene.cameras.push(spacecraftClass.views[j].createCameraForObject(this.scene.width/this.scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
+                    scene.cameras.push(spacecraftClass.views[j].createCameraForObject(scene.width/scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
                     if (j>0) {
-                        this.scene.cameras[this.scene.cameras.length-2].nextView = this.scene.cameras[this.scene.cameras.length-1];
+                        scene.cameras[scene.cameras.length-2].nextView = scene.cameras[scene.cameras.length-1];
                     }
                 }
                 if (spacecraftClass.views.length>0) {
-                    this.scene.cameras[this.scene.cameras.length-1].nextView = this.scene.cameras[this.scene.cameras.length-spacecraftClass.views.length];
+                    scene.cameras[scene.cameras.length-1].nextView = scene.cameras[scene.cameras.length-spacecraftClass.views.length];
                 }
 	}
 };
@@ -798,7 +809,7 @@ Level.prototype.tick = function(dt) {
 		}
 	}
         for (var i=0;i<this.dustClouds.length;i++) {
-		this.dustClouds[i].simulate(this.scene.activeCamera);
+		this.dustClouds[i].simulate(this.camera);
 	}
 };
 

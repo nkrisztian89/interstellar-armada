@@ -5,10 +5,6 @@
 		<Player name="computer" />
 	</Players>
 	
-	<Shaders source="xml/shaders.xml" />
-	
-	<Classes source="xml/classes.xml" />
-	
 	<Skybox class="deepspace" />
         
         <BackgroundObject class="standardSun">
@@ -80,6 +76,10 @@
 	
 	<Spacecraft class="taurus" owner="human">
 		<position x="200" y="-80" z="-350" />
+                <orientation>
+                    <turn axis="y" degree="45" />
+                    <turn axis="z" degree="90" />
+                </orientation>
 		<weapons>
 			<weapon class="cannon" />
 			<weapon class="cannon" />
@@ -91,6 +91,10 @@
 	
 	<Spacecraft class="libra" owner="human">
 		<position x="-100" y="100" z="-1000" />
+                <orientation>
+                    <turn axis="y" degree="45" />
+                    <turn axis="z" degree="90" />
+                </orientation>
 		<weapons>
 			<weapon class="largeCannon" />
 			<weapon class="largeCannon" />

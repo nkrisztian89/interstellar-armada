@@ -540,20 +540,26 @@ ResourceCenter.prototype.loadTextures = function(callback) {
 	}
 };
 
+ResourceCenter.prototype.requestShaderLoad = function(filename) {
+    var request = new XMLHttpRequest();
+    request.open('GET', getXMLFolder()+filename+"?123", true);
+    var self = this;
+    request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+            self.loadShadersFromXML(request.responseXML);
+        }
+    };
+    request.send(null);
+};
+
 /**
  * Loads the shader configuration from an external XML file into the resource
  * center.
- * @param {string} filename The XML file where the shader configuration is stored.
  */
-ResourceCenter.prototype.loadShaders = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	shadersSource = request.responseXML;
-	
+ResourceCenter.prototype.loadShadersFromXML = function(xmlSource) {	
 	this.cubemaps=new Array();
 	
-	var cubemapTags = shadersSource.getElementsByTagName("Cubemap");
+	var cubemapTags = xmlSource.getElementsByTagName("Cubemap");
 	for(var i=0;i<cubemapTags.length;i++) {
 		var imageTags = cubemapTags[i].getElementsByTagName("image");
 		var imageURLs = new Array(6);
@@ -580,7 +586,7 @@ ResourceCenter.prototype.loadShaders = function(filename) {
 	
 	this.shaders=new Array();
 	
-	var shaderTags = shadersSource.getElementsByTagName("Shader");
+	var shaderTags = xmlSource.getElementsByTagName("Shader");
 	for(var i=0;i<shaderTags.length;i++) {
 		this.shaders.push(new Shader(
 			shaderTags[i].getAttribute("name"),
