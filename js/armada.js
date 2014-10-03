@@ -67,6 +67,7 @@ function getSourceFiles() {
         "components.js",
         "screens.js",
         "physics.js",
+        "classes.js",
         "logic.js",
         "control.js",
         "game.js"
@@ -241,7 +242,7 @@ function loadBattleResources() {
     
     game.graphicsContext.scene = mainScene;
         
-        var test_level = new Level(resourceCenter,mainScene,controlContext);
+    var test_level = new Level(resourceCenter,mainScene,controlContext);
 	
         // this loads the level and all needed other resources (models, shaders)
         // from the XML files
@@ -257,7 +258,8 @@ function loadBattleResources() {
 			);
                 
         var graphicsContext = game.graphicsContext;
-        var logicContext = new LogicContext(test_level);
+        var logicContext = game.logicContext;
+        logicContext.level = test_level;
         
         // test variable: number of random fighters generated
         var num_test_fighters=40;
@@ -274,15 +276,15 @@ function loadBattleResources() {
 				graphicsContext,
 				logicContext,
                                 controlContext,
-				test_level.getSpacecraftClass("falcon"),
+				logicContext.getSpacecraftClass("falcon"),
 				test_level.getPlayer("human"),
 				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
 				"ai"
 				)
 			);
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,test_level.getWeaponClass("plasma"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,test_level.getWeaponClass("plasma"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,test_level.getPropulsionClass("fighter"));
+		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("plasma"));
+		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("plasma"));
+		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,logicContext.getPropulsionClass("fighter"));
 	}
 	
         // adding random ships to the scene to test performance
@@ -292,15 +294,15 @@ function loadBattleResources() {
 				graphicsContext,
 				logicContext,
                                 controlContext,
-				test_level.getSpacecraftClass("taurus"),
+				logicContext.getSpacecraftClass("taurus"),
 				test_level.getPlayer("human"),
 				translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2),
 				"ai"
 				)
 			);
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,test_level.getWeaponClass("cannon"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,test_level.getWeaponClass("cannon"));
-		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,test_level.getPropulsionClass("frigate"));
+		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("cannon"));
+		test_level.spacecrafts[test_level.spacecrafts.length-1].addWeapon(resourceCenter,logicContext.getWeaponClass("cannon"));
+		test_level.spacecrafts[test_level.spacecrafts.length-1].addPropulsion(resourceCenter,logicContext.getPropulsionClass("frigate"));
 	}
         
         // adding a sphere model for testing the shading

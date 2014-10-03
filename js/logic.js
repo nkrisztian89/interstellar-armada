@@ -31,263 +31,43 @@
  */
 var TIME_UNIT = 50;
 
-/**
- * Defines a skybox class.
- * @class A skybox represents the background picture rendered for the 
- * environment. Skybox classes can be defined with different properties (in
- * classes.xml) for different backgrounds, and then the right one can be
- * instantiated for each level (Skybox class).
- * @param {String} name The name of the skybox class.
- * @param {String} shaderName The name of the shader object to be used for
- * rendering this skybox. (as defined in shaders.xml)
- * @param {String} samplerName The name of the sampler variable in the shader
- * to be set.
- * @param {Cubemap} cubemap The cube map resource to be used.
- * @returns {SkyboxClass}
- */
-function SkyboxClass(name, shaderName, samplerName, cubemap) {
-	this.name=name;
-	this.shaderName=shaderName;
-	this.samplerName=samplerName;
-	this.cubemap=cubemap; 
-}
-
-function BackgroundObjectClass(name,lightColor,layers) {
-    this.name=name;
-    this.lightColor=lightColor;
-    this.layers=layers;
+function getRGBColorFromXMLTag(tag) {
+    return [
+        parseFloat(tag.getAttribute("r")),
+        parseFloat(tag.getAttribute("g")),
+        parseFloat(tag.getAttribute("b"))
+    ];
 }
 
 /**
- * Defines a dust cloud class.
- * @class Dust clouds represent a big group of tiny dust particles that are
- * rendered when the camera (the player) is moving around of space, to give a
- * visual clue about the velocity. Dust cloud classes can be defined (in 
- * classes.xml) for different environments (such as denser in an asteroid field 
- * or the rings of a planet, or having different color), and then the right one 
- * instantiated (with the DustCloud class) for the level.
- * @param {String} name The name to identify the class of dust cloud.
- * @param {String} shaderName The name of the shader used for rendering this 
- * dust cloud. (as defined in shaders.xml)
- * @param {Number} numberOfParticles The number of dust particles that should 
- * be created when such a dust class is instantiated.
- * @returns {DustCloudClass}
+ * Constructs and returns a rotation matrix described by a series of rotations
+ * stored in the XML tags.
+ * @param {XMLElement[]} tags The tags describing rotations.
+ * @returns {Float32Array} The costructed rotation matrix.
  */
-function DustCloudClass(name, shaderName, numberOfParticles) {
-    this.name=name;
-    this.shaderName=shaderName;
-    this.numberOfParticles=numberOfParticles;
-}
-
-/**
- * Defines a model reference, which holds a reference to a model file name and
- * the model's associated LOD (Level Of Detail)
- * @param {String} filename
- * @param {Number} lod
- * @returns {ModelReference}
- */
-function ModelReference(filename,lod) {
-	this.filename=filename;
-	this.lod=lod;
-}
-
-/**
- * Defines a projectile class.
- * @class Projectiles such as bullets, plasma bursts can belong to different
- * classes that can be described in classes.xml. This class represents such a 
- * projectile class, defining the common properties of the projectiles belonging
- * to the class.
- * @param {String} name The name by which the class goes by, for example to
- * refer to when describing what projectiles does a certain weapon class fire. 
- * @param {Number} size The size by which the model representing the projectile
- * (see projectileModel()) will be scaled.
- * @param {Number[]} intersections How many perpendicular planes should be part
- * of the projectile model, and where are they positioned. (the array of
- * positions)
- * @param {String} shaderName The name of the shader to be used with the
- * projectile. (as defined in shaders.xml)
- * @param {String} textureFileName The name of the texture to be used on the
- * projectile model.
- * @param {Number} mass Mass of the projectile in kilograms. Determines how
- * fast will it fly when shot from weapons.
- * @param {Number} duration The length of life of the projectile in 
- * milliseconds, after which it will disappear.
- * @param {String} muzzleFlashShaderName The name for the shader to be used to
- * render the muzzle flash which is created when this projectile is shot from
- * a weapon.
- * @param {String} muzzleFlashTextureFilename The name of the texture file to
- * be used for rendering the muzzle flash.
- * @param {Number[3]} muzzleFlashColor The rendered muzzle flash will be 
- * modulated with this color. (if defined so be the shader) [red,green,blue]
- * @returns {ProjectileClass}
- */
-function ProjectileClass(name,size,intersections,shaderName,textureFileName,mass,duration,muzzleFlashShaderName,muzzleFlashTextureFilename,muzzleFlashColor) {
-	this.name=name;
-	this.size=size;
-	this.intersections=intersections;
-	this.shaderName=shaderName;
-	this.textureFileName=textureFileName;
-	this.mass=mass;
-	this.duration=duration;
-	this.muzzleFlashShaderName=muzzleFlashShaderName;
-	this.muzzleFlashTextureFilename=muzzleFlashTextureFilename;
-	this.muzzleFlashColor=muzzleFlashColor;
-}
-
-/**
- * Defines a weapon class's barrel.
- * @class Every weapon can have multiple barrels, each of which shoot one 
- * projectile. Barrels are defined for each weapon class.
- * @param {ProjectileClass} projectileClass The class of the projectile being
- * shot from this barrelt.
- * @param {Number} force The force with which the barrel shoots the projectile
- * (used for initial acceleration, resulting in the speed of the projectile)
- * The force is applied on the projectile for burst time (TIME_UNIT), and is
- * measured in newtons.
- * @param {Number} x X coordinate of the barrel's position relative to the 
- * weapon itself.
- * @param {Number} y Y coordinate of the barrel's position relative to the 
- * weapon itself.
- * @param {Number} z Z coordinate of the barrel's position relative to the 
- * weapon itself.
- * @returns {Barrel}
- */
-function Barrel(projectileClass,force,x,y,z) {
-	this.projectileClass=projectileClass;
-	this.force=force;
-	this.positionVector=[x,y,z];
-}
-
-/**
- * Defines a weapon class.
- * @class Each spacecraft can have weapons, all of which belong to a certain
- * weapon class. This class represent one of such classes, describing the 
- * general properties of all weapons in that class.
- * @param {String} name The name by which the weapon class can be referred to,
- * such as when describing what weapons are a certain ship equipped with.
- * @param {ModelReference[]} modelReferences The file names and associated LODs
- * (Levels Of Detail) for the models of this weapon. (will be rendered on the
- * ships)
- * @param {Number} cooldown The time the weapon needs between two shots to
- * "cool down", in milliseconds.
- * @param {Barrel[]} barrels The list of barrels of this weapon.
- * @returns {WeaponClass}
- */
-function WeaponClass(name,modelReferences,cooldown,barrels) {
-	this.name=name;
-	this.modelReferences=modelReferences;
-        this.cooldown=cooldown;
-	this.barrels=barrels;
-}
-
-/**
- * Defines a propulsion class.
- * @class Each spacecraft can be equipped with a propulsion system. This class
- * represents one of the classes to which such a system can belong, describing
- * the properties of such a propulsion system.
- * @param {String} name When describing the equipped propulsion system, it's
- * class has to be referred to by this name.
- * @param {String} shaderName The shader that will be used for rendering the
- * particles shown when thrusters of the ship fire.
- * @param {String} textureFileName The file to be used for the texture of
- * the thruster particles.
- * @param {Number[3]} color The color that can be used to modulate the color of
- * thruster particles, if defined so by the shader. [red,green,blue]
- * @param {Number} thrust The strength of the force applied to the ship when
- * the thrusters are fired in one direction, measured in newtons.
- * @param {Number} angularThrust The strength of the torque applied to the ship
- * when the thrusters are used to turn it.
- * @returns {PropulsionClass}
- */
-function PropulsionClass(name,shaderName,textureFileName,color,thrust,angularThrust) {
-	this.name=name;
-	this.shaderName=shaderName;
-	this.textureFileName=textureFileName;
-	this.color=color;
-	this.thrust=thrust;
-	this.angularThrust=angularThrust;
-}
-
-/**
- * Defines a weapon slot on a ship (class).
- * @class Every ship (class) can have several slots where it's weapons can be
- * equipped. The weapons are rendered and shot from these slots. This class 
- * represents such a slot.
- * @param {Number} x The X coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} y The Y coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} z The Z coordinate of the position of the slot relative to
- * the ship.
- * @returns {WeaponSlot}
- */
-function WeaponSlot(x,y,z) {
-	this.positionMatrix=translationMatrix(x,y,z);
-	this.orientationMatrix=identityMatrix4();
-}
-
-/**
- * Defines a thruster slot on a ship (class).
- * @class Every ship (class) has slots for its thrusters. The fire of the
- * thrusters is represented by showing particles at these thruster slots with
- * a size proportional to the thruster burn.
- * @param {Number} x The X coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} y The Y coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} z The Z coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} size The thruster particle at this slot will be shown scaled
- * by this size.
- * @param {String} usesString The list of uses this thruster has. Possible uses
- * are: (direction:) forward,reverse,slideLeft,slideRight,raise,lower, (turn:)
- * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
- * @param {Number} group The index of the thruster group this slot belongs to.
- * Members of the same group should have the same uses list. The parts of the
- * ship model representing thrusters of a group should bear the same group 
- * index, allowing to manipulate their appearance using uniform arrays.
- * @returns {ThrusterSlot}
- */
-function ThrusterSlot(x,y,z,size,usesString,group) {
-	this.positionVector=[x,y,z,1.0];
-	this.size=size;
-	this.uses=usesString.split(',');
-        this.group=group;
-}
-
-/**
- * Defines a spacecraft class.
- * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
- * ship or a space station all belong to a certain class that determines their
- * general properties such as appearance, mass and so on. This class represent
- * such a spacecraft class.
- * @param {String} name The name by which the class can be referred to.
- * @param {ModelReference[]} modelReferences The file names and their 
- * associated LODs (Levels Of Detail) of the model files of this class.
- * @param {Number} modelSize The model will be scaled by this number (on all
- * 3 axes)
- * @param {Object} textureFileNames The associative array containing the 
- * texture file names for different uses (such as color, luminosity map) in the
- * form of { use: filename, ... }
- * @param {String} shaderName The name of the shader to be used for rendering
- * these ships (as defined in shaders.xml)
- * @param {Number} mass The mass of the spacecraft in kilograms.
- * @returns {SpacecraftClass}
- */
-function SpacecraftClass(name,modelReferences,modelSize,textureFileNames,shaderName,mass) {
-	this.name=name;
-	
-	this.modelReferences=modelReferences;
-	this.modelSize=modelSize;
-	this.textureFileNames=textureFileNames;
-	this.shaderName=shaderName;
-	
-	this.mass=mass;
-	this.bodies=new Array();
-	
-	this.weaponSlots=new Array();
-	this.thrusterSlots=new Array();
-        this.views=new Array();
+function getRotationMatrixFromXMLTags(tags) {
+    var result = identityMatrix4();
+    for(var i=0;i<tags.length;i++) {
+        var axis=[0,0,0];
+        if (tags[i].getAttribute("axis")==="x") {
+                axis=[1,0,0];
+        } else
+        if (tags[i].getAttribute("axis")==="y") {
+                axis=[0,1,0];
+        } else
+        if (tags[i].getAttribute("axis")==="z") {
+                axis=[0,0,1];
+        }
+        result=
+                mul(
+                        result,
+                        rotationMatrix4(
+                                axis,
+                                parseFloat(tags[i].getAttribute("degree"))/180*3.1415
+                                )
+                        );
+    }
+    return result;
 }
 
 function Skybox(resourceCenter,scene,skyboxClass) {
@@ -881,13 +661,7 @@ ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
  */
 function Level(resourceCenter,scene,controlContext) {
 	this.players=new Array();
-	this.skyboxClasses=new Array();
-        this.backgroundObjectClasses=new Array();
-        this.dustCloudClasses=new Array();
-	this.weaponClasses=new Array();
-	this.spacecraftClasses=new Array();
-	this.projectileClasses=new Array();
-	this.propulsionClasses=new Array();
+	
 	this.skyboxes=new Array();
         this.backgroundObjects=new Array();
         this.dustClouds=new Array();
@@ -901,15 +675,153 @@ function Level(resourceCenter,scene,controlContext) {
         this.cameraController=new CameraController(scene.activeCamera,game.graphicsContext,new LogicContext(this),controlContext);
 }
 
-Level.prototype.loadSkyboxClasses = function(filename) {
+Level.prototype.getPlayer = function(name) {
+	var i = 0;
+	while((i<this.players.length)&&(this.players[i].name!==name)) {
+		i++;
+	}
+	if(i<this.players.length) {
+		return this.players[i];
+	} else {
+		return null;
+	}
+};
+
+Level.prototype.loadFromFile = function(filename) {
 	var request = new XMLHttpRequest();
 	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
 	request.send(null);
-	classesSource = request.responseXML;
+	levelSource = request.responseXML;
 	
+	var playerTags = levelSource.getElementsByTagName("Player");
+	for(var i=0;i<playerTags.length;i++) {
+		this.players.push(new Player(playerTags[i].getAttribute("name")));
+	}
+	
+	game.getCurrentScreen().updateStatus("loading shaders...");
+	this.resourceCenter.loadShaders(levelSource.getElementsByTagName("Shaders")[0].getAttribute("source"));
+	
+	game.getCurrentScreen().updateStatus("loading level information...");
+	
+	for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
+		this.resourceCenter.getShader(game.logicContext.projectileClasses[i].shaderName);
+		this.resourceCenter.getTexture(game.logicContext.projectileClasses[i].textureFileName);
+		this.resourceCenter.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
+		this.resourceCenter.getTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename);
+		this.resourceCenter.addModel(projectileModel(game.logicContext.projectileClasses[i].intersections),"projectileModel-"+game.logicContext.projectileClasses[i].name);
+	}
+	this.resourceCenter.addModel(squareModel(),"squareModel");
+	
+	this.spacecrafts = new Array();
+	
+	game.getCurrentScreen().updateStatus("loading models...",25);
+        
+        var graphicsContext = game.graphicsContext;
+        var logicContext = game.logicContext;
+	
+	var skyboxTags = levelSource.getElementsByTagName("Skybox");
+	for(var i=0;i<skyboxTags.length;i++) {
+		this.skyboxes.push(new Skybox(
+			this.resourceCenter,
+			this.scene,
+			logicContext.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
+	}
+        
+        var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
+	for(var i=0;i<backgroundObjectTags.length;i++) {
+		this.backgroundObjects.push(new BackgroundObject(
+			graphicsContext,
+			logicContext.getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
+                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")));		
+	}
+        
+        var dustCloudTags = levelSource.getElementsByTagName("DustCloud");
+	for(var i=0;i<dustCloudTags.length;i++) {
+		this.dustClouds.push(new DustCloud(
+			graphicsContext,
+			logicContext.getDustCloudClass(dustCloudTags[i].getAttribute("class"))));		
+	}
+	
+	var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
+        
+	for(var i=0;i<spacecraftTags.length;i++) {
+                var spacecraftClass = logicContext.getSpacecraftClass(spacecraftTags[i].getAttribute("class"));
+		this.spacecrafts.push(new Spacecraft(
+			graphicsContext,
+			logicContext,
+                        this.controlContext,
+			spacecraftClass,
+			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
+			translationMatrix(
+				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("x")),
+				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("y")),
+				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("z"))
+				),
+			"ai"
+			)
+		);
+		var weaponTags = spacecraftTags[i].getElementsByTagName("weapon");
+		for(var j=0;j<weaponTags.length;j++) {
+			this.spacecrafts[this.spacecrafts.length-1].addWeapon(
+				this.resourceCenter,
+				logicContext.getWeaponClass(weaponTags[j].getAttribute("class")));
+		}
+		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(this.resourceCenter,logicContext.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
+                for(var j=0;j<spacecraftClass.views.length;j++) {
+                    this.scene.cameras.push(spacecraftClass.views[j].createCameraForObject(this.scene.width/this.scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
+                    if (j>0) {
+                        this.scene.cameras[this.scene.cameras.length-2].nextView = this.scene.cameras[this.scene.cameras.length-1];
+                    }
+                }
+                if (spacecraftClass.views.length>0) {
+                    this.scene.cameras[this.scene.cameras.length-1].nextView = this.scene.cameras[this.scene.cameras.length-spacecraftClass.views.length];
+                }
+	}
+};
+
+Level.prototype.tick = function(dt) {
+	for (var i=0;i<this.spacecrafts.length;i++) {
+		if ((this.spacecrafts[i]===undefined)||(this.spacecrafts[i].toBeDeleted)) {
+			delete this.spacecrafts[i];
+			this.spacecrafts.splice(i,1);
+		} else {
+			this.spacecrafts[i].simulate(dt);
+		}
+	}
+	for (var i=0;i<this.projectiles.length;i++) {
+		if ((this.projectiles[i]===undefined)||(this.projectiles[i].toBeDeleted)) {
+			delete this.projectiles[i];
+			this.projectiles.splice(i,1);
+		} else {
+			this.projectiles[i].simulate(dt,this.spacecrafts);
+		}
+	}
+        for (var i=0;i<this.dustClouds.length;i++) {
+		this.dustClouds[i].simulate(this.scene.activeCamera);
+	}
+};
+
+function Player(name) {
+	this.name=name;
+}
+
+function LogicContext() {
+    this._classesSourceFileName = null;
+    
+    this.skyboxClasses=new Array();
+    this.backgroundObjectClasses=new Array();
+    this.dustCloudClasses=new Array();
+    this.weaponClasses=new Array();
+    this.spacecraftClasses=new Array();
+    this.projectileClasses=new Array();
+    this.propulsionClasses=new Array();
+}
+
+LogicContext.prototype.loadSkyboxClasses = function(classesXML) {
 	var result=new Array();
 	
-	var classTags = classesSource.getElementsByTagName("SkyboxClass");
+	var classTags = classesXML.getElementsByTagName("SkyboxClass");
 	for(var i=0;i<classTags.length;i++) {
 		result.push(new SkyboxClass(
 			classTags[i].getAttribute("name"),
@@ -922,21 +834,13 @@ Level.prototype.loadSkyboxClasses = function(filename) {
 	return result;
 };
 
-function getRGBColorFromXMLTag(tag) {
-    return [
-        parseFloat(tag.getAttribute("r")),
-        parseFloat(tag.getAttribute("g")),
-        parseFloat(tag.getAttribute("b"))
-    ];
-}
-
-Level.prototype.loadBackgroundObjectClasses = function(source) {
+LogicContext.prototype.loadBackgroundObjectClasses = function(classesXML) {
 	var result=new Array();
         var layers;
         var layerTags;
         var i,j;
 	
-	var classTags = source.getElementsByTagName("BackgroundObjectClass");
+	var classTags = classesXML.getElementsByTagName("BackgroundObjectClass");
 	for(i=0;i<classTags.length;i++) {
                 layers = new Array();
                 layerTags = classTags[i].getElementsByTagName("layer");
@@ -962,10 +866,10 @@ Level.prototype.loadBackgroundObjectClasses = function(source) {
  * @param {Document} source
  * @returns {DustCloudClass[]}
  */
-Level.prototype.loadDustCloudClasses = function(source) {
+LogicContext.prototype.loadDustCloudClasses = function(classesXML) {
 	var result=new Array();
 	
-	var classTags = source.getElementsByTagName("DustCloudClass");
+	var classTags = classesXML.getElementsByTagName("DustCloudClass");
 	for(var i=0;i<classTags.length;i++) {
 		result.push(new DustCloudClass(
 			classTags[i].getAttribute("name"),
@@ -978,15 +882,10 @@ Level.prototype.loadDustCloudClasses = function(source) {
 	return result;
 };
 
-Level.prototype.loadProjectileClasses = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	classesSource = request.responseXML;
-	
+LogicContext.prototype.loadProjectileClasses = function(classesXML) {
 	var result=new Array();
 	
-	var classTags = classesSource.getElementsByTagName("ProjectileClass");
+	var classTags = classesXML.getElementsByTagName("ProjectileClass");
 	for(var i=0;i<classTags.length;i++) {
 		var intersections=[];
 		var intersectionTags = classTags[i].getElementsByTagName("intersection");
@@ -1014,15 +913,10 @@ Level.prototype.loadProjectileClasses = function(filename) {
 	return result;
 };
 
-Level.prototype.loadWeaponClasses = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	classesSource = request.responseXML;
-	
+LogicContext.prototype.loadWeaponClasses = function(classesXML) {
 	var result=new Array();
 	
-	var classTags = classesSource.getElementsByTagName("WeaponClass");
+	var classTags = classesXML.getElementsByTagName("WeaponClass");
 	for(var i=0;i<classTags.length;i++) {
 		var modelTags=classTags[i].getElementsByTagName("model");
 		var modelReferences = new Array();
@@ -1053,15 +947,10 @@ Level.prototype.loadWeaponClasses = function(filename) {
 	return result;
 };
 
-Level.prototype.loadPropulsionClasses = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	classesSource = request.responseXML;
-	
+LogicContext.prototype.loadPropulsionClasses = function(classesXML) {
 	var result=new Array();
 	
-	var classTags = classesSource.getElementsByTagName("PropulsionClass");
+	var classTags = classesXML.getElementsByTagName("PropulsionClass");
 	for(var i=0;i<classTags.length;i++) {
 		result.push(new PropulsionClass(
 			classTags[i].getAttribute("name"),
@@ -1081,46 +970,10 @@ Level.prototype.loadPropulsionClasses = function(filename) {
 	return result;
 };
 
-/**
- * Constructs and returns a rotation matrix described by a series of rotations
- * stored in the XML tags.
- * @param {XMLElement[]} tags The tags describing rotations.
- * @returns {Float32Array} The costructed rotation matrix.
- */
-function getRotationMatrixFromXMLTags(tags) {
-    var result = identityMatrix4();
-    for(var i=0;i<tags.length;i++) {
-        var axis=[0,0,0];
-        if (tags[i].getAttribute("axis")==="x") {
-                axis=[1,0,0];
-        } else
-        if (tags[i].getAttribute("axis")==="y") {
-                axis=[0,1,0];
-        } else
-        if (tags[i].getAttribute("axis")==="z") {
-                axis=[0,0,1];
-        }
-        result=
-                mul(
-                        result,
-                        rotationMatrix4(
-                                axis,
-                                parseFloat(tags[i].getAttribute("degree"))/180*3.1415
-                                )
-                        );
-    }
-    return result;
-}
-
-Level.prototype.loadSpacecraftClasses = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	classesSource = request.responseXML;
-	
+LogicContext.prototype.loadSpacecraftClasses = function(classesXML) {
 	var result=new Array();
 	
-	var classTags = classesSource.getElementsByTagName("SpacecraftClass");
+	var classTags = classesXML.getElementsByTagName("SpacecraftClass");
 	for(var i=0;i<classTags.length;i++) {
 		var modelTags=classTags[i].getElementsByTagName("model");
 		var modelReferences = new Array();
@@ -1214,19 +1067,36 @@ Level.prototype.loadSpacecraftClasses = function(filename) {
 };
 
 
-Level.prototype.getPlayer = function(name) {
-	var i = 0;
-	while((i<this.players.length)&&(this.players[i].name!==name)) {
-		i++;
-	}
-	if(i<this.players.length) {
-		return this.players[i];
-	} else {
-		return null;
-	}
+LogicContext.prototype.loadClassesFromXML = function(xmlSource) {
+    this.loadSkyboxClasses(xmlSource);
+    this.loadBackgroundObjectClasses(xmlSource);
+    this.loadDustCloudClasses(xmlSource);
+    this.loadProjectileClasses(xmlSource);
+    this.loadWeaponClasses(xmlSource);	
+    this.loadPropulsionClasses(xmlSource);	
+    this.loadSpacecraftClasses(xmlSource);
 };
 
-Level.prototype.getSkyboxClass = function(name) {
+LogicContext.prototype.requestClassesLoad = function() {
+    var request = new XMLHttpRequest();
+    request.open('GET', getXMLFolder()+this._classesSourceFileName+"?123", true);
+    var self = this;
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            var classesXML = this.responseXML;
+            self.loadClassesFromXML(classesXML);
+        }
+    };
+    request.send(null);
+};
+
+
+LogicContext.prototype.loadFromXML = function(xmlSource) {
+    this._classesSourceFileName = xmlSource.getElementsByTagName("classes")[0].getAttribute("source");
+    this.requestClassesLoad();
+};
+
+LogicContext.prototype.getSkyboxClass = function(name) {
 	var i = 0;
 	while((i<this.skyboxClasses.length)&&(this.skyboxClasses[i].name!==name)) {
 		i++;
@@ -1238,7 +1108,7 @@ Level.prototype.getSkyboxClass = function(name) {
 	}
 };
 
-Level.prototype.getBackgroundObjectClass = function(name) {
+LogicContext.prototype.getBackgroundObjectClass = function(name) {
 	var i = 0;
 	while((i<this.backgroundObjectClasses.length)&&(this.backgroundObjectClasses[i].name!==name)) {
 		i++;
@@ -1250,7 +1120,7 @@ Level.prototype.getBackgroundObjectClass = function(name) {
 	}
 };
 
-Level.prototype.getDustCloudClass = function(name) {
+LogicContext.prototype.getDustCloudClass = function(name) {
 	var i = 0;
 	while((i<this.dustCloudClasses.length)&&(this.dustCloudClasses[i].name!==name)) {
 		i++;
@@ -1262,7 +1132,7 @@ Level.prototype.getDustCloudClass = function(name) {
 	}
 };
 
-Level.prototype.getProjectileClass = function(name) {
+LogicContext.prototype.getProjectileClass = function(name) {
 	var i = 0;
 	while((i<this.projectileClasses.length)&&(this.projectileClasses[i].name!==name)) {
 		i++;
@@ -1275,7 +1145,7 @@ Level.prototype.getProjectileClass = function(name) {
 };
 
 
-Level.prototype.getWeaponClass = function(name) {
+LogicContext.prototype.getWeaponClass = function(name) {
 	var i = 0;
 	while((i<this.weaponClasses.length)&&(this.weaponClasses[i].name!==name)) {
 		i++;
@@ -1287,7 +1157,7 @@ Level.prototype.getWeaponClass = function(name) {
 	}
 };
 
-Level.prototype.getPropulsionClass = function(name) {
+LogicContext.prototype.getPropulsionClass = function(name) {
 	var i = 0;
 	while((i<this.propulsionClasses.length)&&(this.propulsionClasses[i].name!==name)) {
 		i++;
@@ -1299,7 +1169,7 @@ Level.prototype.getPropulsionClass = function(name) {
 	}
 };
 
-Level.prototype.getSpacecraftClass = function(name) {
+LogicContext.prototype.getSpacecraftClass = function(name) {
 	var i = 0;
 	while((i<this.spacecraftClasses.length)&&(this.spacecraftClasses[i].name!==name)) {
 		i++;
@@ -1310,145 +1180,3 @@ Level.prototype.getSpacecraftClass = function(name) {
 		return null;
 	}
 };
-
-Level.prototype.loadFromFile = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	levelSource = request.responseXML;
-	
-	var playerTags = levelSource.getElementsByTagName("Player");
-	for(var i=0;i<playerTags.length;i++) {
-		this.players.push(new Player(playerTags[i].getAttribute("name")));
-	}
-	
-	game.getCurrentScreen().updateStatus("loading shaders...");
-	this.resourceCenter.loadShaders(levelSource.getElementsByTagName("Shaders")[0].getAttribute("source"));
-	
-	game.getCurrentScreen().updateStatus("loading level information...");
-        
-        var request2 = new XMLHttpRequest();
-	request2.open('GET', levelSource.getElementsByTagName("Classes")[0].getAttribute("source")+"?12345", false); //timestamp added to URL to bypass cache
-	request2.send(null);
-	classesSource = request2.responseXML;
-	
-	this.loadSkyboxClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
-        
-        this.loadBackgroundObjectClasses(classesSource);
-        
-        this.loadDustCloudClasses(classesSource);
-		
-	this.loadProjectileClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
-	
-	for(var i=0;i<this.projectileClasses.length;i++) {
-		this.resourceCenter.getShader(this.projectileClasses[i].shaderName);
-		this.resourceCenter.getTexture(this.projectileClasses[i].textureFileName);
-		this.resourceCenter.getShader(this.projectileClasses[i].muzzleFlashShaderName);
-		this.resourceCenter.getTexture(this.projectileClasses[i].muzzleFlashTextureFilename);
-		this.resourceCenter.addModel(projectileModel(this.projectileClasses[i].intersections),"projectileModel-"+this.projectileClasses[i].name);
-	}
-	this.resourceCenter.addModel(squareModel(),"squareModel");
-		
-	this.loadWeaponClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
-	
-	this.loadPropulsionClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
-	
-	this.loadSpacecraftClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
-	
-	this.spacecrafts = new Array();
-	
-	game.getCurrentScreen().updateStatus("loading models...",25);
-        
-        var graphicsContext = game.graphicsContext;
-        var logicContext = new LogicContext(this);
-	
-	var skyboxTags = levelSource.getElementsByTagName("Skybox");
-	for(var i=0;i<skyboxTags.length;i++) {
-		this.skyboxes.push(new Skybox(
-			this.resourceCenter,
-			this.scene,
-			this.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
-	}
-        
-        var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
-	for(var i=0;i<backgroundObjectTags.length;i++) {
-		this.backgroundObjects.push(new BackgroundObject(
-			graphicsContext,
-			this.getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
-                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
-                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")));		
-	}
-        
-        var dustCloudTags = levelSource.getElementsByTagName("DustCloud");
-	for(var i=0;i<dustCloudTags.length;i++) {
-		this.dustClouds.push(new DustCloud(
-			graphicsContext,
-			this.getDustCloudClass(dustCloudTags[i].getAttribute("class"))));		
-	}
-	
-	var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
-        
-	for(var i=0;i<spacecraftTags.length;i++) {
-                var spacecraftClass = this.getSpacecraftClass(spacecraftTags[i].getAttribute("class"));
-		this.spacecrafts.push(new Spacecraft(
-			graphicsContext,
-			logicContext,
-                        this.controlContext,
-			spacecraftClass,
-			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
-			translationMatrix(
-				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("x")),
-				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("y")),
-				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("z"))
-				),
-			"ai"
-			)
-		);
-		var weaponTags = spacecraftTags[i].getElementsByTagName("weapon");
-		for(var j=0;j<weaponTags.length;j++) {
-			this.spacecrafts[this.spacecrafts.length-1].addWeapon(
-				this.resourceCenter,
-				this.getWeaponClass(weaponTags[j].getAttribute("class")));
-		}
-		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(this.resourceCenter,this.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
-                for(var j=0;j<spacecraftClass.views.length;j++) {
-                    this.scene.cameras.push(spacecraftClass.views[j].createCameraForObject(this.scene.width/this.scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
-                    if (j>0) {
-                        this.scene.cameras[this.scene.cameras.length-2].nextView = this.scene.cameras[this.scene.cameras.length-1];
-                    }
-                }
-                if (spacecraftClass.views.length>0) {
-                    this.scene.cameras[this.scene.cameras.length-1].nextView = this.scene.cameras[this.scene.cameras.length-spacecraftClass.views.length];
-                }
-	}
-};
-
-Level.prototype.tick = function(dt) {
-	for (var i=0;i<this.spacecrafts.length;i++) {
-		if ((this.spacecrafts[i]===undefined)||(this.spacecrafts[i].toBeDeleted)) {
-			delete this.spacecrafts[i];
-			this.spacecrafts.splice(i,1);
-		} else {
-			this.spacecrafts[i].simulate(dt);
-		}
-	}
-	for (var i=0;i<this.projectiles.length;i++) {
-		if ((this.projectiles[i]===undefined)||(this.projectiles[i].toBeDeleted)) {
-			delete this.projectiles[i];
-			this.projectiles.splice(i,1);
-		} else {
-			this.projectiles[i].simulate(dt,this.spacecrafts);
-		}
-	}
-        for (var i=0;i<this.dustClouds.length;i++) {
-		this.dustClouds[i].simulate(this.scene.activeCamera);
-	}
-};
-
-function Player(name) {
-	this.name=name;
-}
-
-function LogicContext(level) {
-	this.level=level;
-}

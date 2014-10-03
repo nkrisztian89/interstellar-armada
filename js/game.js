@@ -62,11 +62,17 @@ function Game() {
      */
     this.graphicsContext = new GraphicsContext();
     /**
+     * The logic context of the game, containing the domain specific model (e.g.
+     * what classes of spaceships are there)
+     * @name Game#logicContext
+     * @type LogicContext
+     */
+    this.logicContext = new LogicContext();
+    /**
      * The control context of the game, that can be used to bind input controls
      * to in-game actions.
      * @name Game#controlContext
      * @type ControlContext
-     * @default null
      */
     this.controlContext = new KeyboardControlContext();
     
@@ -93,6 +99,7 @@ Game.prototype.requestSettingsLoad = function () {
         if (request.readyState === 4) {
             var settingsXML = this.responseXML;
             self.graphicsContext.loadFromXML(settingsXML.getElementsByTagName("graphics")[0]);
+            self.logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
             self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
         }
     };
