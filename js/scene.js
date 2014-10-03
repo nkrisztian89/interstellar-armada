@@ -373,7 +373,7 @@ VisualObject.prototype.cascadeGetNumberOfDrawnTriangles = function() {
  * @param {Camera} camera The camera to be used for querying the cube map.
  * */
 function FVQ(model,shader,samplerName,cubemap,camera) {
-	VisualObject.call(this,shader,0,true,false);
+	VisualObject.call(this,shader,0,false,true);
 	this.model=model;
 	this.samplerName=samplerName;
 	this.cubemap=cubemap;
@@ -792,10 +792,10 @@ StaticParticle.prototype.setRelSize = function(newValue) {
  * textures, the model and the shader.
  */
 StaticParticle.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.texture,0);
-	if(this._relSize>0) {
-		this.model.render(resourceCenter.gl,false);
-	}
+    resourceCenter.bindTexture(this.texture, 0);
+    if (this._relSize > 0) {
+        this.model.render(resourceCenter.gl, false);
+    }
 };
 
 /**
@@ -1070,6 +1070,7 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
 	this.clearColor=clearColor;
 	this.clearDepthOnRender=clearDepthOnRender;
 	
+        this._backgroundObjects = new Array();
         this.objects = new Array();
         this.cameras = new Array();
         this.lights = new Array();
@@ -1091,6 +1092,7 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         this.uniformValueFunctions['u_lights'] = function() { return self.lights; };
    
         this.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(self.activeCamera.positionMatrix,self.activeCamera.orientationMatrix); };
+        this.uniformValueFunctions['u_cameraOrientationMatrix'] = function() { return self.activeCamera.orientationMatrix; };
         this.uniformValueFunctions['u_projMatrix'] = function() { return self.activeCamera.perspectiveMatrix; };
         this.uniformValueFunctions['u_eyePos'] = function() 
             {
@@ -1102,6 +1104,14 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
                     return [eyePos[0],eyePos[1],eyePos[2]]; 
             };
 }
+
+/**
+ * Appends a new visual object to the list of background objects.
+ * @param {VisualObject} newVisualObject The object to append.
+ */
+Scene.prototype.addBackgroundObject = function(newVisualObject) {
+    this._backgroundObjects.push(newVisualObject);
+};
 
 /**
  * Appends a new visual object to the topmost level of the scene graph.
@@ -1194,6 +1204,18 @@ Scene.prototype.render = function(resourceCenter) {
 	var clear = this.clearColorOnRender?gl.COLOR_BUFFER_BIT:0;
 	clear=this.clearDepthOnRender?clear|gl.DEPTH_BUFFER_BIT:clear;
 	gl.clear(clear);
+        
+        gl.disable(gl.DEPTH_TEST);
+        gl.depthMask(false);
+        
+        for(var i=0;i<this._backgroundObjects.length;i++) {
+                this._backgroundObjects[i].cascadeResetModelMatrixCalculated();
+		this._backgroundObjects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
+                this._drawnTriangles+=this._backgroundObjects[i].cascadeGetNumberOfDrawnTriangles();
+	}
+        
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthMask(true);
 	
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render

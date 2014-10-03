@@ -5,6 +5,38 @@
 		<cubemap name="deepspace" />
 	</SkyboxClass>
         
+        <BackgroundObjectClass name="standardSun">
+            <light>
+                <color r="1.0" g="1.0" b="1.0" />
+            </light>
+            <layer size="300">
+                <shader name="backgroundBillboard" />
+                <texture filename="textures/flare.png" />
+                <color r="1.0" g="1.0" b="0.0" />
+            </layer>
+            <layer size="250">
+                <shader name="backgroundBillboard" />
+                <texture filename="textures/flare.png" />
+                <color r="1.0" g="1.0" b="1.0" />
+            </layer>
+        </BackgroundObjectClass>
+        
+        <BackgroundObjectClass name="smallBlueStar">
+            <light>
+                <color r="0.02" g="0.2" b="0.2" />
+            </light>
+            <layer size="150">
+                <shader name="backgroundBillboard" />
+                <texture filename="textures/flare.png" />
+                <color r="0.1" g="1.0" b="1.0" />
+            </layer>
+            <layer size="50">
+                <shader name="backgroundBillboard" />
+                <texture filename="textures/flare.png" />
+                <color r="1.0" g="1.0" b="1.0" />
+            </layer>
+        </BackgroundObjectClass>
+        
         <DustCloudClass name="standard" numberOfParticles="300">
             <shader name="dust" />
         </DustCloudClass>

@@ -236,9 +236,7 @@ function loadBattleResources() {
     game.getCurrentScreen().resizeCanvases(); 
           
     var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
-
-    mainScene.addLightSource(new LightSource([1.0,1.0,1.0],[-Math.cos(game.graphicsContext.lightAngle),0.0,Math.sin(game.graphicsContext.lightAngle)]));
-    mainScene.addLightSource(new LightSource([0.02,0.2,0.2],[Math.cos(game.graphicsContext.lightAngle),0.0,-Math.sin(game.graphicsContext.lightAngle)]));
+    
     game.getCurrentScreen().addScene(mainScene);
     
     game.graphicsContext.scene = mainScene;

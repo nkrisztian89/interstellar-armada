@@ -52,6 +52,12 @@ function SkyboxClass(name, shaderName, samplerName, cubemap) {
 	this.cubemap=cubemap; 
 }
 
+function BackgroundObjectClass(name,lightColor,layers) {
+    this.name=name;
+    this.lightColor=lightColor;
+    this.layers=layers;
+}
+
 /**
  * Defines a dust cloud class.
  * @class Dust clouds represent a big group of tiny dust particles that are
@@ -286,13 +292,38 @@ function SpacecraftClass(name,modelReferences,modelSize,textureFileNames,shaderN
 
 function Skybox(resourceCenter,scene,skyboxClass) {
 	this.class=skyboxClass;
-	scene.objects.push(new FVQ(
+	scene.addBackgroundObject(new FVQ(
 		resourceCenter.addModel(fvqModel(),"fvqModel"),
 		resourceCenter.getShader(skyboxClass.shaderName),
 		skyboxClass.samplerName,
 		resourceCenter.getCubemap(skyboxClass.cubemap),
                 scene.activeCamera
 		));
+}
+
+function BackgroundObject(graphicsContext,backgroundObjectClass,angleAlpha,angleBeta) {
+    var i;
+    var position;
+    var layerParticle;
+    this.class=backgroundObjectClass;
+    position = [
+                    Math.cos(angleAlpha/180*Math.PI)*Math.cos(angleBeta/180*Math.PI),
+                    Math.sin(angleAlpha/180*Math.PI)*Math.cos(angleBeta/180*Math.PI),
+                    Math.sin(angleBeta/180*Math.PI)
+                ];
+    graphicsContext.scene.addLightSource(new LightSource(this.class.lightColor,position));
+    for(i=0;i<this.class.layers.length;i++) {  
+        layerParticle =new StaticParticle(
+                graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
+		graphicsContext.resourceCenter.getShader(this.class.layers[i].shaderName),
+		graphicsContext.resourceCenter.getTexture(this.class.layers[i].textureFileName),
+                this.class.layers[i].color,
+                this.class.layers[i].size,
+                translationMatrixv(scalarVector3Product(4500,position))
+            );
+        layerParticle.setRelSize(1.0);
+        graphicsContext.scene.addBackgroundObject(layerParticle);
+    }
 }
 
 function DustParticle(graphicsContext,shader,positionMatrix) {
@@ -851,12 +882,14 @@ ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
 function Level(resourceCenter,scene,controlContext) {
 	this.players=new Array();
 	this.skyboxClasses=new Array();
+        this.backgroundObjectClasses=new Array();
         this.dustCloudClasses=new Array();
 	this.weaponClasses=new Array();
 	this.spacecraftClasses=new Array();
 	this.projectileClasses=new Array();
 	this.propulsionClasses=new Array();
 	this.skyboxes=new Array();
+        this.backgroundObjects=new Array();
         this.dustClouds=new Array();
 	this.spacecrafts=new Array();
 	this.projectiles=new Array();
@@ -886,6 +919,41 @@ Level.prototype.loadSkyboxClasses = function(filename) {
 	}
 	
 	this.skyboxClasses=result;
+	return result;
+};
+
+function getRGBColorFromXMLTag(tag) {
+    return [
+        parseFloat(tag.getAttribute("r")),
+        parseFloat(tag.getAttribute("g")),
+        parseFloat(tag.getAttribute("b"))
+    ];
+}
+
+Level.prototype.loadBackgroundObjectClasses = function(source) {
+	var result=new Array();
+        var layers;
+        var layerTags;
+        var i,j;
+	
+	var classTags = source.getElementsByTagName("BackgroundObjectClass");
+	for(i=0;i<classTags.length;i++) {
+                layers = new Array();
+                layerTags = classTags[i].getElementsByTagName("layer");
+                for(j=0;j<layerTags.length;j++) {
+                    layers.push({
+                        size: layerTags[j].getAttribute("size"),
+                        shaderName: layerTags[j].getElementsByTagName("shader")[0].getAttribute("name"),
+                        textureFileName: layerTags[j].getElementsByTagName("texture")[0].getAttribute("filename"),
+                        color: getRGBColorFromXMLTag(layerTags[j].getElementsByTagName("color")[0])
+                    });
+                }
+		result.push(new BackgroundObjectClass(
+			classTags[i].getAttribute("name"),
+                        getRGBColorFromXMLTag(classTags[i].getElementsByTagName("light")[0].getElementsByTagName("color")[0]),
+			layers));
+	}
+	this.backgroundObjectClasses=result;
 	return result;
 };
 
@@ -1170,6 +1238,18 @@ Level.prototype.getSkyboxClass = function(name) {
 	}
 };
 
+Level.prototype.getBackgroundObjectClass = function(name) {
+	var i = 0;
+	while((i<this.backgroundObjectClasses.length)&&(this.backgroundObjectClasses[i].name!==name)) {
+		i++;
+	}
+	if(i<this.backgroundObjectClasses.length) {
+		return this.backgroundObjectClasses[i];
+	} else {
+		return null;
+	}
+};
+
 Level.prototype.getDustCloudClass = function(name) {
 	var i = 0;
 	while((i<this.dustCloudClasses.length)&&(this.dustCloudClasses[i].name!==name)) {
@@ -1254,6 +1334,8 @@ Level.prototype.loadFromFile = function(filename) {
 	
 	this.loadSkyboxClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
         
+        this.loadBackgroundObjectClasses(classesSource);
+        
         this.loadDustCloudClasses(classesSource);
 		
 	this.loadProjectileClasses(levelSource.getElementsByTagName("Classes")[0].getAttribute("source"));
@@ -1286,6 +1368,15 @@ Level.prototype.loadFromFile = function(filename) {
 			this.resourceCenter,
 			this.scene,
 			this.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
+	}
+        
+        var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
+	for(var i=0;i<backgroundObjectTags.length;i++) {
+		this.backgroundObjects.push(new BackgroundObject(
+			graphicsContext,
+			this.getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
+                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")));		
 	}
         
         var dustCloudTags = levelSource.getElementsByTagName("DustCloud");

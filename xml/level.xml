@@ -11,6 +11,14 @@
 	
 	<Skybox class="deepspace" />
         
+        <BackgroundObject class="standardSun">
+            <position angleAlpha="90" angleBeta="40" />
+        </BackgroundObject>
+        
+        <BackgroundObject class="smallBlueStar">
+            <position angleAlpha="-90" angleBeta="-40" />
+        </BackgroundObject>
+        
         <DustCloud class="standard" />
 	
 	<Spacecraft class="falcon" owner="human">
