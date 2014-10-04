@@ -264,11 +264,6 @@ function loadTestConfiguration(test_level,testShips,mapSize) {
             }
         }
     }*/
-    /*
-    // setting up the position and direction of the main camera
-    mainScene.activeCamera.positionMatrix=translationMatrix(0,10,-10);
-    mainScene.activeCamera.orientationMatrix=rotationMatrix4([1,0,0],3.1415/4);
-    */
 }
 
 /**

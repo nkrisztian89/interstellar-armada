@@ -747,17 +747,27 @@ Level.prototype.requestLoadFromFile = function(filename) {
 };
 
 Level.prototype.loadFromXML= function(levelSource) {
+    game.getCurrentScreen().updateStatus("loading level information...");
+    
     var scene = game.graphicsContext.scene;
     
-        this.camera = scene.activeCamera;
-        this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
+    this.camera = scene.activeCamera;
+    this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
         
-	var playerTags = levelSource.getElementsByTagName("Player");
-	for(var i=0;i<playerTags.length;i++) {
-		this.players.push(new Player(playerTags[i].getAttribute("name")));
-	}
+    var playerTags = levelSource.getElementsByTagName("Player");
+    for(var i=0;i<playerTags.length;i++) {
+        this.players.push(new Player(playerTags[i].getAttribute("name")));
+    }
 	
-	game.getCurrentScreen().updateStatus("loading level information...");
+    var cameraTags = levelSource.getElementsByTagName("Camera");
+    if(cameraTags.length>0) {
+        if(cameraTags[0].getElementsByTagName("position").length>0) {
+            this.camera.positionMatrix=translationMatrixv(scalarVector3Product(-1,getVector3FromXMLTag(cameraTags[0].getElementsByTagName("position")[0])));
+        }        
+        if(cameraTags[0].getElementsByTagName("orientation").length>0) {
+            this.camera.orientationMatrix=getRotationMatrixFromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
+        }
+    }
 	
 	for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
 		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].shaderName);

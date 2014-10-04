@@ -16,6 +16,13 @@
     </BackgroundObject>
         
     <DustCloud class="standard" />
+    
+    <Camera>
+        <position x="0.0" y="-850.0" z="300.0" />
+        <orientation>
+            <turn axis="x" degree="60" />
+        </orientation>
+    </Camera>
 	
     <Spacecraft class="falcon" owner="human">
         <position x="0.0" y="0.0" z="-60.0" />
@@ -56,16 +63,14 @@
     <Spacecraft class="taurus" owner="human">
         <position x="200" y="-80" z="-350" />
         <orientation>
-            <turn axis="y" degree="45" />
             <turn axis="z" degree="90" />
         </orientation>
         <equipment profile="full" />
     </Spacecraft>
 	
     <Spacecraft class="libra" owner="human">
-        <position x="-100" y="100" z="-1000" />
+        <position x="-100" y="400" z="-400" />
         <orientation>
-            <turn axis="y" degree="45" />
             <turn axis="z" degree="90" />
         </orientation>
     </Spacecraft>
