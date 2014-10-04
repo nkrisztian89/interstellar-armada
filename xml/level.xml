@@ -1,122 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <level>
-	<Players count="2">
-		<Player name="human" />
-		<Player name="computer" />
-	</Players>
+    <Players count="2">
+        <Player name="human" />
+        <Player name="computer" />
+    </Players>
 	
-	<Skybox class="deepspace" />
+    <Skybox class="deepspace" />
         
-        <BackgroundObject class="standardSun">
-            <position angleAlpha="90" angleBeta="40" />
-        </BackgroundObject>
+    <BackgroundObject class="standardSun">
+        <position angleAlpha="90" angleBeta="40" />
+    </BackgroundObject>
         
-        <BackgroundObject class="smallBlueStar">
-            <position angleAlpha="-90" angleBeta="-40" />
-        </BackgroundObject>
+    <BackgroundObject class="smallBlueStar">
+        <position angleAlpha="-90" angleBeta="-40" />
+    </BackgroundObject>
         
-        <DustCloud class="standard" />
+    <DustCloud class="standard" />
 	
-	<Spacecraft class="falcon" owner="human">
-		<position x="0.0" y="0.0" z="-60.0" />
-		<weapons>
-			<weapon class="plasma" />
-			<weapon class="plasma" />
-		</weapons>
-		<propulsion class="fighter" />
-	</Spacecraft>
+    <Spacecraft class="falcon" owner="human">
+        <position x="0.0" y="0.0" z="-60.0" />
+        <equipment profile="full" />
+    </Spacecraft>
 	
-	<Spacecraft class="falcon" owner="human">
-		<position x="-7.5" y="20" z="-160" />
-		<weapons>
-			<weapon class="plasma" />
-			<weapon class="plasma" />
-			<weapon class="plasma" />
-			<weapon class="plasma" />
-		</weapons>
-		<propulsion class="fighter" />
-	</Spacecraft>
+    <Spacecraft class="falcon" owner="human">
+        <position x="-7.5" y="20" z="-160" />
+    </Spacecraft>
 	
-	<Spacecraft class="falcon" owner="human">
-		<position x="-1050" y="-150" z="-300" />
-		<weapons>
-			<weapon class="plasma" />
-			<weapon class="plasma" />
-		</weapons>
-		<propulsion class="fighter" />
-	</Spacecraft>
+    <Spacecraft class="falcon" owner="human">
+        <position x="-1050" y="-150" z="-300" />
+    </Spacecraft>
 	
-	<Spacecraft class="viper" owner="human">
-		<position x="50" y="-30" z="-170" />
-                <weapons>
-			<weapon class="plasma" />
-			<weapon class="plasma" />
-		</weapons>
-		<propulsion class="bomber" />
-	</Spacecraft>
+    <Spacecraft class="viper" owner="human">
+        <position x="50" y="-30" z="-170" />
+        <equipment profile="full" />
+    </Spacecraft>
 	
-	<Spacecraft class="viper" owner="human">
-		<position x="50" y="50" z="-160" />
-		<propulsion class="bomber" />
-	</Spacecraft>
+    <Spacecraft class="viper" owner="human">
+        <position x="50" y="50" z="-160" />
+        <equipment>
+            <weapons>
+                <weapon class="plasma" />
+            </weapons>
+            <propulsion class="bomber" />
+        </equipment>
+    </Spacecraft>
 	
-	<Spacecraft class="viper" owner="human">
-		<position x="50" y="50" z="-1160" />
-		<propulsion class="bomber" />
-	</Spacecraft>
+    <Spacecraft class="viper" owner="human">
+        <position x="50" y="50" z="-1160" />
+    </Spacecraft>
 	
-	<Spacecraft class="aries" owner="human">
-		<position x="-60" y="-50" z="-280" />
-		<weapons>
-			<weapon class="turret" />
-			<weapon class="turret" />
-		</weapons>
-		<propulsion class="corvette" />
-	</Spacecraft>
+    <Spacecraft class="aries" owner="human">
+        <position x="-60" y="-50" z="-280" />
+    </Spacecraft>
 	
-	<Spacecraft class="taurus" owner="human">
-		<position x="200" y="-80" z="-350" />
-                <orientation>
-                    <turn axis="y" degree="45" />
-                    <turn axis="z" degree="90" />
-                </orientation>
-		<weapons>
-			<weapon class="cannon" />
-			<weapon class="cannon" />
-			<weapon class="cannon" />
-			<weapon class="cannon" />
-		</weapons>
-		<propulsion class="frigate" />
-	</Spacecraft>
+    <Spacecraft class="taurus" owner="human">
+        <position x="200" y="-80" z="-350" />
+        <orientation>
+            <turn axis="y" degree="45" />
+            <turn axis="z" degree="90" />
+        </orientation>
+        <equipment profile="full" />
+    </Spacecraft>
 	
-	<Spacecraft class="libra" owner="human">
-		<position x="-100" y="100" z="-1000" />
-                <orientation>
-                    <turn axis="y" degree="45" />
-                    <turn axis="z" degree="90" />
-                </orientation>
-		<weapons>
-			<weapon class="largeCannon" />
-			<weapon class="largeCannon" />
-			<weapon class="largeCannon" />
-			<weapon class="largeCannon" />
-			<weapon class="largeCannon" />
-			<weapon class="largeCannon" />
-			
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-			<weapon class="turret" />
-		</weapons>
-		<propulsion class="cruiser" />
-	</Spacecraft>
+    <Spacecraft class="libra" owner="human">
+        <position x="-100" y="100" z="-1000" />
+        <orientation>
+            <turn axis="y" degree="45" />
+            <turn axis="z" degree="90" />
+        </orientation>
+    </Spacecraft>
 </level>

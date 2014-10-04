@@ -253,6 +253,23 @@
                     </view>
                     <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-40" z="0"/>
                 </views>
+                
+                <equipmentProfile name="default">
+                    <weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+                    </weapons>
+                    <propulsion class="fighter" />
+                </equipmentProfile>
+                <equipmentProfile name="full">
+                    <weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+                        <weapon class="plasma" />
+                        <weapon class="plasma" />
+                    </weapons>
+                    <propulsion class="fighter" />
+                </equipmentProfile>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="viper">
@@ -334,6 +351,17 @@
                     </view>
                     <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-55" z="0"/>
                 </views>
+                
+                <equipmentProfile name="default">
+                    <propulsion class="bomber" />
+                </equipmentProfile>
+                <equipmentProfile name="full">
+                    <weapons>
+			<weapon class="plasma" />
+			<weapon class="plasma" />
+                    </weapons>
+                    <propulsion class="bomber" />
+                </equipmentProfile>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="aries">
@@ -404,6 +432,14 @@
                     </view>
                     <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-140" z="0"/>
                 </views>
+                
+                <equipmentProfile name="default">
+                    <weapons>
+			<weapon class="turret" />
+			<weapon class="turret" />
+                    </weapons>
+                    <propulsion class="corvette" />
+                </equipmentProfile>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="taurus">
@@ -515,6 +551,23 @@
                     </view>
                     <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-185" z="0"/>
                 </views>
+                
+                <equipmentProfile name="default">
+                    <weapons>
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+                    </weapons>
+                    <propulsion class="frigate" />
+                </equipmentProfile>
+                <equipmentProfile name="full">
+                    <weapons>
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+			<weapon class="cannon" />
+                    </weapons>
+                    <propulsion class="frigate" />
+                </equipmentProfile>
 	</SpacecraftClass>
 	
 	<SpacecraftClass name="libra">
@@ -782,5 +835,31 @@
                     </view>
                     <view name="free" fov="60" movable="false" turnable="true" rotationCenterIsObject="true" x="0" y="-1050" z="0"/>
                 </views>
+                
+                <equipmentProfile name="default">
+                    <weapons>
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			<weapon class="largeCannon" />
+			
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+			<weapon class="turret" />
+                    </weapons>
+                    <propulsion class="cruiser" />
+                </equipmentProfile>
 	</SpacecraftClass>
 </Classes>

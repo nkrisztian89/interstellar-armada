@@ -217,43 +217,23 @@ function initialize() {
     });
 }
 
-function loadTestConfiguration(test_level,num_test_fighters,num_test_ships,mapSize) {
-    // adding random fighters to the scene to test performance
-    for (var i = 0; i < num_test_fighters; i++) {
-        test_level.spacecrafts.push(
-            new Spacecraft(
-                game.graphicsContext,
-                game.logicContext,
-                game.controlContext,
-                game.logicContext.getSpacecraftClass("falcon"),
-                test_level.getPlayer("human"),
-                translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
-                identityMatrix4(),
-                "ai"
+function loadTestConfiguration(test_level,testShips,mapSize) {
+    for(var shipClass in testShips) {
+        for (var i = 0; i < testShips[shipClass]; i++) {
+            test_level.spacecrafts.push(
+                new Spacecraft(
+                    game.graphicsContext,
+                    game.logicContext,
+                    game.controlContext,
+                    game.logicContext.getSpacecraftClass(shipClass),
+                    test_level.getPlayer("human"),
+                    translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
+                    identityMatrix4(),
+                    "ai",
+                    "default"
                 )
             );
-        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("plasma"));
-        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("plasma"));
-        test_level.spacecrafts[test_level.spacecrafts.length - 1].addPropulsion(game.graphicsContext.resourceCenter, game.logicContext.getPropulsionClass("fighter"));
-    }
-
-    // adding random ships to the scene to test performance
-    for (var i = 0; i < num_test_ships; i++) {
-        test_level.spacecrafts.push(
-            new Spacecraft(
-                game.graphicsContext,
-                game.logicContext,
-                game.controlContext,
-                game.logicContext.getSpacecraftClass("taurus"),
-                test_level.getPlayer("human"),
-                translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
-                identityMatrix4(),
-                "ai"
-                )
-            );
-        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("cannon"));
-        test_level.spacecrafts[test_level.spacecrafts.length - 1].addWeapon(game.graphicsContext.resourceCenter, game.logicContext.getWeaponClass("cannon"));
-        test_level.spacecrafts[test_level.spacecrafts.length - 1].addPropulsion(game.graphicsContext.resourceCenter, game.logicContext.getPropulsionClass("frigate"));
+        }
     }
     // adding a sphere model for testing the shading
     /*var sphereModel = new EgomModel();
@@ -316,7 +296,7 @@ function loadBattleResources() {
 	    
     test_level.onLoad = function () {
         game.getCurrentScreen().updateStatus("loading additional configuration...", 50);
-        loadTestConfiguration(test_level, 40, 15, 3000);
+        loadTestConfiguration(test_level, {falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
         game.getCurrentScreen().updateStatus("", 75);
 
         var freq = 60;

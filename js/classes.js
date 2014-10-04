@@ -186,6 +186,13 @@ function WeaponClass(name,modelReferences,cooldown,barrels) {
 	this.barrels=barrels;
 }
 
+WeaponClass.prototype.toString = function() {
+    return "[Weapon class | name: "+
+            this.name+", "+
+            this.barrels.length+((this.barrels.length===1)?" barrel, ":" barrels, ")+
+            "cooldown time: "+this.cooldown+" ms]";
+};
+
 /**
  * Defines a propulsion class.
  * @class Each spacecraft can be equipped with a propulsion system. This class
@@ -219,17 +226,15 @@ function PropulsionClass(name,shaderName,textureFileName,color,thrust,angularThr
  * @class Every ship (class) can have several slots where it's weapons can be
  * equipped. The weapons are rendered and shot from these slots. This class 
  * represents such a slot.
- * @param {Number} x The X coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} y The Y coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} z The Z coordinate of the position of the slot relative to
- * the ship.
+ * @param {Number[3]} positionVector The coordinates of the position of the slot 
+ * relative to the ship.
+ * @param {Float32Array} orientationMatrix The rotation matrix describing the 
+ * orientation of the weapon slot relative to the ship.
  * @returns {WeaponSlot}
  */
-function WeaponSlot(x,y,z) {
-	this.positionMatrix=translationMatrix(x,y,z);
-	this.orientationMatrix=identityMatrix4();
+function WeaponSlot(positionVector,orientationMatrix) {
+	this.positionMatrix=translationMatrixv(positionVector);
+	this.orientationMatrix=orientationMatrix;
 }
 
 /**
@@ -237,12 +242,8 @@ function WeaponSlot(x,y,z) {
  * @class Every ship (class) has slots for its thrusters. The fire of the
  * thrusters is represented by showing particles at these thruster slots with
  * a size proportional to the thruster burn.
- * @param {Number} x The X coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} y The Y coordinate of the position of the slot relative to
- * the ship.
- * @param {Number} z The Z coordinate of the position of the slot relative to
- * the ship.
+ * @param {Number[3]} positionVector The coordinates of the position of the slot 
+ * relative to the ship.
  * @param {Number} size The thruster particle at this slot will be shown scaled
  * by this size.
  * @param {String} usesString The list of uses this thruster has. Possible uses
@@ -254,12 +255,52 @@ function WeaponSlot(x,y,z) {
  * index, allowing to manipulate their appearance using uniform arrays.
  * @returns {ThrusterSlot}
  */
-function ThrusterSlot(x,y,z,size,usesString,group) {
-	this.positionVector=[x,y,z,1.0];
+function ThrusterSlot(positionVector,size,usesString,group) {
+	this.positionVector=positionVector;
+        this.positionVector.push(1.0);
 	this.size=size;
 	this.uses=usesString.split(',');
         this.group=group;
 }
+
+function EquipmentProfile(xmlSource) {
+    this.name = "-";
+    this.weapons = null;
+    this.propulsion = null;
+    
+    if (xmlSource !== undefined) {
+        this.loadFromXMLTag(xmlSource);
+    }
+}
+
+EquipmentProfile.prototype.toString = function() {
+    return "[Equipment profile | name: "+
+            this.name+", "+
+            ((this.weapons===null)?"no":this.weapons.length)+" weapons, "+
+            ((this.propulsion===null)?"no":this.propulsion+" class")+" propulsion]";
+};
+
+EquipmentProfile.prototype.loadFromXMLTag = function(xmlTag) {
+    var i;
+    if(xmlTag.hasAttribute("name")) {
+        this.name = xmlTag.getAttribute("name");
+    }
+    this.weapons = new Array();
+    if (xmlTag.getElementsByTagName("weapons").length>0) {
+        var weaponTags = xmlTag.getElementsByTagName("weapons")[0].getElementsByTagName("weapon");
+        for(i=0;i<weaponTags.length;i++) {
+            this.weapons.push(weaponTags[i].getAttribute("class"));
+        }
+    }
+    this.propulsion = null;
+    if (xmlTag.getElementsByTagName("propulsion").length>0) {
+        this.propulsion = xmlTag.getElementsByTagName("propulsion")[0].getAttribute("class");
+    }
+};
+
+SpacecraftClass.prototype.getEquipmentProfile = function(name) {
+    return this.equipmentProfiles[name];
+};
 
 /**
  * Defines a spacecraft class.
@@ -267,31 +308,160 @@ function ThrusterSlot(x,y,z,size,usesString,group) {
  * ship or a space station all belong to a certain class that determines their
  * general properties such as appearance, mass and so on. This class represent
  * such a spacecraft class.
- * @param {String} name The name by which the class can be referred to.
- * @param {ModelReference[]} modelReferences The file names and their 
- * associated LODs (Levels Of Detail) of the model files of this class.
- * @param {Number} modelSize The model will be scaled by this number (on all
- * 3 axes)
- * @param {Object} textureFileNames The associative array containing the 
- * texture file names for different uses (such as color, luminosity map) in the
- * form of { use: filename, ... }
- * @param {String} shaderName The name of the shader to be used for rendering
- * these ships (as defined in shaders.xml)
- * @param {Number} mass The mass of the spacecraft in kilograms.
+ * @param {Element} [xmlSource] The XML tag which contains the description of
+ * this spacecraft class.
  * @returns {SpacecraftClass}
  */
-function SpacecraftClass(name,modelReferences,modelSize,textureFileNames,shaderName,mass) {
-	this.name=name;
-	
-	this.modelReferences=modelReferences;
-	this.modelSize=modelSize;
-	this.textureFileNames=textureFileNames;
-	this.shaderName=shaderName;
-	
-	this.mass=mass;
-	this.bodies=new Array();
-	
-	this.weaponSlots=new Array();
-	this.thrusterSlots=new Array();
-        this.views=new Array();
+function SpacecraftClass(xmlSource) {
+    /**
+     * The name by which the class can be referred to.
+     * @name SpacecraftClass#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The file names and their associated LODs (Levels Of Detail) of the model 
+     * files of this class.
+     * @name SpacecraftClass#modelReferences
+     * @type ModelReference[]
+     */
+    this.modelReferences = null;
+    /**
+     * The model will be scaled by this number (on all 3 axes)
+     * @name SpacecraftClass#modelSize
+     * @type Number
+     */
+    this.modelSize = null;
+    /**
+     * The associative array containing the texture file names for different 
+     * uses (such as color, luminosity map) in the form of { use: filename, ... }
+     * @name SpacecraftClass#textureFileNames
+     * @type Object
+     */
+    this.textureFileNames = null;
+    /**
+     * The name of the shader to be used for rendering these ships (as defined 
+     * in shaders.xml)
+     * @name SpacecraftClass#shaderName
+     * @type String
+     */
+    this.shaderName = null;
+    /**
+     * The mass of the spacecraft in kilograms.
+     * @name SpacecraftClass#mass
+     * @type Number
+     */
+    this.mass = null;
+    /**
+     * The physical bodies that model the spacecraft's shape for hit checks.
+     * @name SpacecraftClass#bodies
+     * @type Body[]
+     */
+    this.bodies = null;
+    /**
+     * The slots where weapons can be equipped on the ship.
+     * @name SpacecraftClass#weaponSlots
+     * @type WeaponSlot[]
+     */
+    this.weaponSlots = null;
+    /**
+     * The slots where the thrusters are located on the ship.
+     * @name SpacecraftClass#thrusterSlots
+     * @type ThrusterSlot[]
+     */
+    this.thrusterSlots = null;
+    /**
+     * The available views of the ship (e.g. front, cockpit) where cameras can
+     * be positioned.
+     * @name SpacecraftClass#views
+     * @type ObjectView[]
+     */
+    this.views = null;
+    /**
+     * The available equipment profiles (possible sets of equipment that can be
+     * equipped by default, referring to this profile) for this ship, stored in
+     * an associative array (the profile names are keys)
+     * @name SpacecraftClass#equipmentProfiles
+     * @type Object
+     */
+    this.equipmentProfiles = null;
+
+    if (xmlSource !== undefined) {
+        this.loadFromXMLTag(xmlSource);
+    }
 }
+
+SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
+    //name,modelReferences,modelSize,textureFileNames,shaderName,mass
+    var i;
+    this.name = xmlTag.getAttribute("name");
+    this.modelReferences = new Array();
+    var modelTags=xmlTag.getElementsByTagName("model");
+    for(i=0;i<modelTags.length;i++) {
+        this.modelReferences.push(new ModelReference(
+            modelTags[i].getAttribute("filename"),
+            modelTags[i].getAttribute("lod"))
+        );
+    }
+    this.modelSize = parseFloat(modelTags[0].getAttribute("size"));
+    // reading the textures into an object, where the texture type are the
+    // name of the properties
+    this.textureFileNames = new Object();
+    var textureTags=xmlTag.getElementsByTagName("texture");
+    for(var i=0;i<textureTags.length;i++) {
+        this.textureFileNames[textureTags[i].getAttribute("type")]=textureTags[i].getAttribute("filename");
+    }
+    this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
+    this.mass = xmlTag.getElementsByTagName("physics")[0].getAttribute("mass");
+    this.bodies = new Array();
+    var bodyTags = xmlTag.getElementsByTagName("body");
+    for(i=0;i<bodyTags.length;i++) {
+        this.bodies.push(new Body(
+            translationMatrixv(scalarVector3Product(this.modelSize,getVector3FromXMLTag(bodyTags[i]))),
+            getRotationMatrixFromXMLTags(bodyTags[i].getElementsByTagName("turn")),
+            scalarVector3Product(this.modelSize,getDimensionsFromXMLTag(bodyTags[i]))
+        ));
+    }
+    this.weaponSlots = new Array();
+    if (xmlTag.getElementsByTagName("weaponSlots").length>0) {
+        var weaponSlotTags = xmlTag.getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
+        for(i=0;i<weaponSlotTags.length;i++) {
+            this.weaponSlots.push(new WeaponSlot(
+                getVector3FromXMLTag(weaponSlotTags[i]),
+                getRotationMatrixFromXMLTags(weaponSlotTags[i].getElementsByTagName("direction"))
+            ));
+        }
+    }
+    this.thrusterSlots = new Array();
+    if (xmlTag.getElementsByTagName("thrusterSlots").length>0) {
+        var thrusterSlotTags = xmlTag.getElementsByTagName("thrusterSlots")[0].getElementsByTagName("slot");
+        for(i=0;i<thrusterSlotTags.length;i++) {
+            this.thrusterSlots.push(new ThrusterSlot(
+                getVector3FromXMLTag(thrusterSlotTags[i]),
+                parseFloat(thrusterSlotTags[i].getAttribute("size")),
+		thrusterSlotTags[i].getAttribute("use"),
+                (thrusterSlotTags[i].hasAttribute("group")?thrusterSlotTags[i].getAttribute("group"):0)
+            ));
+        }
+    }
+    this.views = new Array();
+    if (xmlTag.getElementsByTagName("views").length>0) {
+        var viewTags = xmlTag.getElementsByTagName("views")[0].getElementsByTagName("view");
+        for(i=0;i<viewTags.length;i++) {
+            this.views.push(new ObjectView(
+                viewTags[i].getAttribute("name"),
+                parseFloat(viewTags[i].getAttribute("fov")),
+                viewTags[i].getAttribute("movable")==="true",
+                viewTags[i].getAttribute("turnable")==="true",
+                getTranslationMatrixFromXMLTag(viewTags[i]),
+                getRotationMatrixFromXMLTags(viewTags[i].getElementsByTagName("turn")),
+                viewTags[i].getAttribute("rotationCenterIsObject")==="true"
+            ));
+        }  
+    }
+    this.equipmentProfiles = new Object();
+    var equipmentProfileTags = xmlTag.getElementsByTagName("equipmentProfile");
+    for(i=0;i<equipmentProfileTags.length;i++) {
+        this.equipmentProfiles[equipmentProfileTags[i].getAttribute("name")] = new EquipmentProfile(equipmentProfileTags[i]);
+    }
+};

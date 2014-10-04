@@ -50,16 +50,16 @@ function Torque(id,strength,axis,duration) {
 	this.duration=duration;
 }
 
-function Body(positionMatrix,orientationMatrix,width,height,depth) {
+function Body(positionMatrix,orientationMatrix,dimensions) {
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
 	this.modelMatrixInverse=mul(inverseTranslationMatrix(this.positionMatrix),inverseRotationMatrix(this.orientationMatrix));
-	this.width=width;
-	this.height=height;
-	this.depth=depth;
-	this.halfWidth=width/2;
-	this.halfHeight=height/2;
-	this.halfDepth=depth/2;
+	this.width=dimensions[0];
+	this.height=dimensions[1];
+	this.depth=dimensions[2];
+	this.halfWidth=this.width/2;
+	this.halfHeight=this.height/2;
+	this.halfDepth=this.depth/2;
 }
 
 /**

@@ -39,6 +39,26 @@ function getRGBColorFromXMLTag(tag) {
     ];
 }
 
+function getVector3FromXMLTag(tag) {
+    return [
+        parseFloat(tag.getAttribute("x")),
+        parseFloat(tag.getAttribute("y")),
+        parseFloat(tag.getAttribute("z"))
+    ];
+}
+
+function getTranslationMatrixFromXMLTag(tag) {
+    return translationMatrixv(getVector3FromXMLTag(tag));
+}
+
+function getDimensionsFromXMLTag(tag) {
+    return [
+        parseFloat(tag.getAttribute("w")),
+        parseFloat(tag.getAttribute("h")),
+        parseFloat(tag.getAttribute("d"))
+    ];
+}
+
 /**
  * Constructs and returns a rotation matrix described by a series of rotations
  * stored in the XML tags.
@@ -377,9 +397,10 @@ ControllableEntity.prototype.setController = function(newController) {
  * @param {Float32Array} positionMatrix
  * @param {Float32Array} orientationMatrix
  * @param {String} controller
+ * @param {String} [equipmentProfileName]
  * @returns {Spacecraft}
  */
-function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,orientationMatrix,controller) {
+function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,orientationMatrix,controller,equipmentProfileName) {
 	// creating the appropriate controller object based on the supplied string
         // and assigning it using the parent's constructor
         ControllableEntity.call(this,null);
@@ -469,6 +490,10 @@ function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,
 	}
 	
 	this.toBeDeleted = false;
+        
+        if(equipmentProfileName!==undefined) {
+            this.equipProfile(this.class.getEquipmentProfile(equipmentProfileName));
+        }
 }
 
 Spacecraft.prototype = new ControllableEntity();
@@ -517,6 +542,27 @@ Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
 			this.thrusters[slot.uses[j]].push(thruster);
 		}
 	}
+};
+
+/**
+ * Equips the spacecraft according to the specifications in the given equipment
+ * profile.
+ * @param {EquipmentProfile} equipmentProfile
+ */
+Spacecraft.prototype.equipProfile = function(equipmentProfile) {
+    var i;
+    for(i=0;i<equipmentProfile.weapons.length;i++) {
+        this.addWeapon(
+            game.graphicsContext.resourceCenter,
+            game.logicContext.getWeaponClass(equipmentProfile.weapons[i])
+        );
+    }
+    if(equipmentProfile.propulsion!==null) {
+        this.addPropulsion(
+            game.graphicsContext.resourceCenter,
+            game.logicContext.getPropulsionClass(equipmentProfile.propulsion)
+        );
+    }    
 };
 
 Spacecraft.prototype.fire = function(resourceCenter,scene,projectiles) {
@@ -763,22 +809,26 @@ Level.prototype.loadFromXML= function(levelSource) {
                         game.controlContext,
 			spacecraftClass,
 			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
-			translationMatrix(
-				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("x")),
-				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("y")),
-				parseFloat(spacecraftTags[i].getElementsByTagName("position")[0].getAttribute("z"))
-				),
+                        getTranslationMatrixFromXMLTag(spacecraftTags[i].getElementsByTagName("position")[0]),
                         getRotationMatrixFromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
 			"ai"
 			)
 		);
-		var weaponTags = spacecraftTags[i].getElementsByTagName("weapon");
-		for(var j=0;j<weaponTags.length;j++) {
-			this.spacecrafts[this.spacecrafts.length-1].addWeapon(
-				game.graphicsContext.resourceCenter,
-				logicContext.getWeaponClass(weaponTags[j].getAttribute("class")));
-		}
-		this.spacecrafts[this.spacecrafts.length-1].addPropulsion(game.graphicsContext.resourceCenter,logicContext.getPropulsionClass(spacecraftTags[i].getElementsByTagName("propulsion")[0].getAttribute("class")));
+                if(spacecraftTags[i].getElementsByTagName("equipment").length>0) {
+                    var equipmentTag = spacecraftTags[i].getElementsByTagName("equipment")[0];
+                    if(equipmentTag.hasAttribute("profile")) {
+                        this.spacecrafts[this.spacecrafts.length-1].equipProfile(spacecraftClass.getEquipmentProfile(equipmentTag.getAttribute("profile")));
+                    } else {
+                        var equipmentProfile = new EquipmentProfile(equipmentTag);
+                        this.spacecrafts[this.spacecrafts.length-1].equipProfile(equipmentProfile);
+                    }
+                } else {
+                    if(spacecraftClass.getEquipmentProfile("default")!==undefined) {
+                        this.spacecrafts[this.spacecrafts.length-1].equipProfile(spacecraftClass.getEquipmentProfile("default"));
+                    }
+                }
+		
+		
                 for(var j=0;j<spacecraftClass.views.length;j++) {
                     scene.cameras.push(spacecraftClass.views[j].createCameraForObject(scene.width/scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
                     if (j>0) {
@@ -874,7 +924,7 @@ LogicContext.prototype.loadBackgroundObjectClasses = function(classesXML) {
 
 /**
  * 
- * @param {Document} source
+ * @param {Element} classesXML
  * @returns {DustCloudClass[]}
  */
 LogicContext.prototype.loadDustCloudClasses = function(classesXML) {
@@ -986,91 +1036,7 @@ LogicContext.prototype.loadSpacecraftClasses = function(classesXML) {
 	
 	var classTags = classesXML.getElementsByTagName("SpacecraftClass");
 	for(var i=0;i<classTags.length;i++) {
-		var modelTags=classTags[i].getElementsByTagName("model");
-		var modelReferences = new Array();
-		for(var j=0;j<modelTags.length;j++) {
-			modelReferences.push(new ModelReference(
-				modelTags[j].getAttribute("filename"),
-				modelTags[j].getAttribute("lod")));
-		}
-                // reading the textures into an object, where the texture type are the
-                // name of the properties
-                var textureTags=classTags[i].getElementsByTagName("texture");
-                var textures = new Object();
-                for(var j=0;j<textureTags.length;j++) {
-                    textures[textureTags[j].getAttribute("type")]=textureTags[j].getAttribute("filename");
-                }
-		result.push(new SpacecraftClass(
-			classTags[i].getAttribute("name"),
-			modelReferences,
-			parseFloat(modelTags[0].getAttribute("size")),
-			textures,
-			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			classTags[i].getElementsByTagName("physics")[0].getAttribute("mass")
-			)
-		);
-		var bodyTags = classTags[i].getElementsByTagName("body");
-		result[i].bodies=new Array();
-		for(var j=0;j<bodyTags.length;j++) {
-			result[i].bodies.push(new Body(
-				translationMatrix(
-					parseFloat(bodyTags[j].getAttribute("x"))*result[i].modelSize,
-					parseFloat(bodyTags[j].getAttribute("y"))*result[i].modelSize,
-					parseFloat(bodyTags[j].getAttribute("z"))*result[i].modelSize
-					),
-				getRotationMatrixFromXMLTags(bodyTags[j].getElementsByTagName("turn")),
-				parseFloat(bodyTags[j].getAttribute("w"))*result[i].modelSize,
-				parseFloat(bodyTags[j].getAttribute("h"))*result[i].modelSize,
-				parseFloat(bodyTags[j].getAttribute("d"))*result[i].modelSize
-				));
-		}
-		if (classTags[i].getElementsByTagName("weaponSlots").length>0) {
-			var weaponSlotTags = classTags[i].getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
-			result[i].weaponSlots=new Array();
-			for(var j=0;j<weaponSlotTags.length;j++) {
-				result[i].weaponSlots.push(new WeaponSlot(
-					parseFloat(weaponSlotTags[j].getAttribute("x")),
-					parseFloat(weaponSlotTags[j].getAttribute("y")),
-					parseFloat(weaponSlotTags[j].getAttribute("z"))
-					));
-				var directionTags=weaponSlotTags[j].getElementsByTagName("direction");
-				result[i].weaponSlots[j].orientationMatrix=getRotationMatrixFromXMLTags(directionTags);
-			}
-		}
-		
-		if (classTags[i].getElementsByTagName("thrusterSlots").length>0) {
-			var thrusterSlotTags = classTags[i].getElementsByTagName("thrusterSlots")[0].getElementsByTagName("slot");
-			result[i].thrusterSlots=new Array();
-			for(var j=0;j<thrusterSlotTags.length;j++) {
-				result[i].thrusterSlots.push(new ThrusterSlot(
-					parseFloat(thrusterSlotTags[j].getAttribute("x")),
-					parseFloat(thrusterSlotTags[j].getAttribute("y")),
-					parseFloat(thrusterSlotTags[j].getAttribute("z")),
-					parseFloat(thrusterSlotTags[j].getAttribute("size")),
-					thrusterSlotTags[j].getAttribute("use"),
-                                        (thrusterSlotTags[j].hasAttribute("group")?thrusterSlotTags[j].getAttribute("group"):0)
-					));
-			}
-		}
-                
-                if (classTags[i].getElementsByTagName("views").length>0) {
-			var viewTags = classTags[i].getElementsByTagName("views")[0].getElementsByTagName("view");
-			result[i].views=new Array();
-			for(var j=0;j<viewTags.length;j++) {
-				result[i].views.push(new ObjectView(
-                                        viewTags[j].getAttribute("name"),
-                                        parseFloat(viewTags[j].getAttribute("fov")),
-                                        viewTags[j].getAttribute("movable")==="true",
-                                        viewTags[j].getAttribute("turnable")==="true",
-                                        translationMatrix(
-                                            parseFloat(viewTags[j].getAttribute("x")),
-                                            parseFloat(viewTags[j].getAttribute("y")),
-                                            parseFloat(viewTags[j].getAttribute("z"))),
-                                        getRotationMatrixFromXMLTags(viewTags[j].getElementsByTagName("turn")),
-                                        viewTags[j].getAttribute("rotationCenterIsObject")==="true"
-					));
-			}  
-		}
+            result.push(new SpacecraftClass(classTags[i]));
 	}
 	
 	this.spacecraftClasses=result;
