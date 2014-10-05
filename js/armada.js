@@ -217,55 +217,6 @@ function initialize() {
     });
 }
 
-function loadTestConfiguration(test_level,testShips,mapSize) {
-    for(var shipClass in testShips) {
-        for (var i = 0; i < testShips[shipClass]; i++) {
-            test_level.spacecrafts.push(
-                new Spacecraft(
-                    game.graphicsContext,
-                    game.logicContext,
-                    game.controlContext,
-                    game.logicContext.getSpacecraftClass(shipClass),
-                    test_level.getPlayer("human"),
-                    translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
-                    identityMatrix4(),
-                    "ai",
-                    "default"
-                )
-            );
-        }
-    }
-    // adding a sphere model for testing the shading
-    /*var sphereModel = new EgomModel();
-    // 100x downsized earth
-    sphereModel.addSphere(0,0,0,63710,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
-    sphereModel.filename="sphere";
-    sphereModel.size=127420;
-    mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),translationMatrix(0,0,-73710),identityMatrix4(),identityMatrix4(),false));
-    mainScene.objects[mainScene.objects.length-1].orientationMatrix=
-        //mul(
-        //    rotationMatrix4([1,0,0],3.1415/4),
-            rotationMatrix4([1,0,0],-3.1415*0.75);
-        //);*/
-	
-    /*var sphereModel = new EgomModel();
-    sphereModel.addSphere(0,0,0,5,64,[1.0,1.0,1.0,1.0],0,20,[[0,0],[0,1.0],[1.0,1.0]],false);
-    sphereModel.filename="sphere";
-    sphereModel.size=10;
-    // test variable: number of random goals the AI controllers get at start
-    var num_test_goals=10;
-    // adding random goals to the AI for testing
-    for(var i=0;i<test_level.spacecrafts.length;i++) {
-        for(var j=0;j<num_test_goals;j++) {
-            var goalPosition = translationMatrix(Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2,Math.random()*mapSize-mapSize/2);
-            test_level.spacecrafts[i].controller.goals.push(new Goal(goalPosition));
-            if (i===0) {
-                mainScene.objects.push(new Mesh([new ModelWithLOD(resourceCenter.addModel(sphereModel,"sphere"),0)],resourceCenter.getShader("simple"),resourceCenter.getTexture("textures/earthmap1k.jpg"),goalPosition,identityMatrix4(),identityMatrix4(),false));
-            }
-        }
-    }*/
-}
-
 /**
  * Old function under refactoring, its content will go under several methods of
  * different classes.
@@ -274,30 +225,27 @@ function loadBattleResources() {
     game.getCurrentScreen().hideStats();
     game.getCurrentScreen().hideUI();
     game.getCurrentScreen().getInfoBox().hide();
-	
-    game.controlContext.activate();
-	  
     game.getCurrentScreen().resizeCanvases(); 
-          
-    var canvas = game.getCurrentScreen().getCanvas();
-    var mainScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
-    
-    game.getCurrentScreen().addScene(mainScene);
-    
-    game.graphicsContext.scene = mainScene;
         
     var test_level = new Level();
     game.logicContext.level = test_level;
 	    
     test_level.onLoad = function () {
-        game.getCurrentScreen().updateStatus("loading additional configuration...", 50);
-        loadTestConfiguration(test_level, {falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
-        game.getCurrentScreen().updateStatus("", 75);
+        game.getCurrentScreen().updateStatus("loading additional configuration...", 10);
+        test_level.addRandomShips("human",{falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
+        
+        game.getCurrentScreen().updateStatus("loading models...",25);
+        var canvas = game.getCurrentScreen().getCanvas();
+        game.graphicsContext.scene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
+        game.getCurrentScreen().addScene(game.graphicsContext.scene);
+        test_level.buildScene(game.graphicsContext.scene);
 
+        game.getCurrentScreen().updateStatus("",75);
         var freq = 60;
         game.graphicsContext.resourceCenter.init(canvas, game.graphicsContext.getAntialiasing(), freq);
 
         var globalCommands = initGlobalCommands(game.graphicsContext, game.logicContext, game.controlContext);
+        game.controlContext.activate();
 
         prevDate = new Date();
 
@@ -317,5 +265,6 @@ function loadBattleResources() {
         }, 1000 / freq);
     };
     
+    game.getCurrentScreen().updateStatus("loading level information...",0);
     test_level.requestLoadFromFile("level.xml");
 }

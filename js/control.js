@@ -579,7 +579,7 @@ function FighterController(controlledEntity,graphicsContext,logicContext,control
                                     // the craft to a halt
         
         this.fireCommand=controlContext.setContinuousActionForCommand("fire",function(){
-            self.controlledEntity.fire(self.graphicsContext.resourceCenter,self.graphicsContext.scene,self.logicContext.level.projectiles);
+            self.controlledEntity.fire(self.graphicsContext.scene,self.logicContext.level.projectiles);
         });
         this.changeFlightModeCommand=controlContext.setOneShotActionForCommand("changeFlightMode",function(){
             self.flightMode=(self.flightMode+1)%self.NUM_FLIGHTMODES;

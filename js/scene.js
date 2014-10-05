@@ -1028,13 +1028,13 @@ SceneCamera.prototype.getFollowedSpacecraft = function(logicContext) {
         // look up the spacecraft being followed (these references need to be cleaned up
         // to make this part transparent)
         i=0;
-        while ((i<logicContext.level.spacecrafts.length)&&
-                (logicContext.level.spacecrafts[i].visualModel!==this.followedCamera.followedObject)) {
+        while ((i<logicContext.level._spacecrafts.length)&&
+                (logicContext.level._spacecrafts[i].visualModel!==this.followedCamera.followedObject)) {
             i++;
         }
         // if we found it, set the proper controller
-        if (i<logicContext.level.spacecrafts.length) {
-            return logicContext.level.spacecrafts[i];
+        if (i<logicContext.level._spacecrafts.length) {
+            return logicContext.level._spacecrafts[i];
         }
     }
     return null;
@@ -1131,6 +1131,20 @@ Scene.prototype.getLODContext = function() {
 
 Scene.prototype.getNumberOfDrawnTriangles = function() {
     return this._drawnTriangles;
+};
+
+/**
+ * 
+ * @param {Camera} camera
+ */
+Scene.prototype.addCamera = function(camera) {
+    this.cameras.push(camera);
+    if((this.cameras.length>=2)&&(this.cameras[this.cameras.length-1].followedObject === this.cameras[this.cameras.length-2].followedObject)) {
+        this.cameras[this.cameras.length-1].nextView = this.cameras[this.cameras.length-2].nextView;
+        this.cameras[this.cameras.length-2].nextView = this.cameras[this.cameras.length-1];
+    } else {
+        this.cameras[this.cameras.length-1].nextView = this.cameras[this.cameras.length-1];
+    }
 };
 
 /**

@@ -90,50 +90,56 @@ function getRotationMatrixFromXMLTags(tags) {
     return result;
 }
 
-function Skybox(resourceCenter,scene,skyboxClass) {
-	this.class=skyboxClass;
-	scene.addBackgroundObject(new FVQ(
-		resourceCenter.addModel(fvqModel(),"fvqModel"),
-		resourceCenter.getShader(skyboxClass.shaderName),
-		skyboxClass.samplerName,
-		resourceCenter.getCubemap(skyboxClass.cubemap),
-                scene.activeCamera
-		));
+function Skybox(skyboxClass) {
+    this.class=skyboxClass;
 }
 
-function BackgroundObject(graphicsContext,backgroundObjectClass,angleAlpha,angleBeta) {
-    var i;
-    var position;
-    var layerParticle;
-    this.class=backgroundObjectClass;
+Skybox.prototype.addToScene = function(scene) {
+    scene.addBackgroundObject(new FVQ(
+        game.graphicsContext.resourceCenter.addModel(fvqModel(),"fvqModel"),
+        game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+        this.class.samplerName,
+        game.graphicsContext.resourceCenter.getCubemap(this.class.cubemap),
+        scene.activeCamera
+    ));
+};
+
+function BackgroundObject(backgroundObjectClass,angleAlpha,angleBeta) {
+    this.class = backgroundObjectClass;
     this.position = [
                     Math.cos(angleAlpha/180*Math.PI)*Math.cos(angleBeta/180*Math.PI),
                     Math.sin(angleAlpha/180*Math.PI)*Math.cos(angleBeta/180*Math.PI),
                     Math.sin(angleBeta/180*Math.PI)
                 ];
-    graphicsContext.scene.addLightSource(new LightSource(this.class.lightColor,this.position));
-    for(i=0;i<this.class.layers.length;i++) {  
-        layerParticle =new StaticParticle(
-                graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
-		graphicsContext.resourceCenter.getShader(this.class.layers[i].shaderName),
-		graphicsContext.resourceCenter.getTexture(this.class.layers[i].textureFileName),
-                this.class.layers[i].color,
-                this.class.layers[i].size,
-                translationMatrixv(scalarVector3Product(4500,this.position))
-            );
-        layerParticle.setRelSize(1.0);
-        graphicsContext.scene.addBackgroundObject(layerParticle);
-    }
 }
 
-function DustParticle(graphicsContext,shader,positionMatrix) {
+BackgroundObject.prototype.addToScene = function(scene) {
+    var i;
+    var layerParticle;
+    scene.addLightSource(new LightSource(this.class.lightColor,this.position));
+    for(i=0;i<this.class.layers.length;i++) {  
+        layerParticle =new StaticParticle(
+            game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
+            game.graphicsContext.resourceCenter.getShader(this.class.layers[i].shaderName),
+            game.graphicsContext.resourceCenter.getTexture(this.class.layers[i].textureFileName),
+            this.class.layers[i].color,
+            this.class.layers[i].size,
+            translationMatrixv(scalarVector3Product(4500,this.position))
+        );
+        layerParticle.setRelSize(1.0);
+        scene.addBackgroundObject(layerParticle);
+    }
+};
+
+
+function DustParticle(scene,shader,positionMatrix) {
     this.visualModel = new PointParticle(
-        graphicsContext.resourceCenter.addModel(dustModel([0.5,0.5,0.5]),"dust"),
+        game.graphicsContext.resourceCenter.addModel(dustModel([0.5,0.5,0.5]),"dust"),
         shader,
         [0.5,0.5,0.5],
         positionMatrix
         );
-    graphicsContext.scene.addObject(this.visualModel);
+    scene.addObject(this.visualModel);
 	
     this.toBeDeleted = false;
 }
@@ -161,45 +167,53 @@ DustParticle.prototype.simulate = function(camera) {
 /**
  * Defines a dust cloud.
  * @class Represents a dust cloud instantiated for a certain level.
- * @param {GraphicsContext} graphicsContext
  * @param {DustCloudClass} dustCloudClass
  * @returns {DustCloud}
  */
-function DustCloud(graphicsContext,dustCloudClass) {
-    var i;
+function DustCloud(dustCloudClass) {
     this.class=dustCloudClass;
-    this.particles=new Array();
-    for(i=0;i<this.class.numberOfParticles;i++) {
-        this.particles.push(
-                new DustParticle(
-                    graphicsContext,
-                    graphicsContext.resourceCenter.getShader(this.class.shaderName),
-                    translationMatrix(Math.random()*50-25.0,Math.random()*50-25.0,Math.random()*50-25.0)
-                    )
-                );
-    }
+    /**
+     * @name DustCloud#_particles
+     * @type DustParticle[]
+     */
+    this._particles = null;
 }
 
-DustCloud.prototype.simulate = function(camera) {
-    for(var i=0;i<this.class.numberOfParticles;i++) {
-        this.particles[i].simulate(camera);
+DustCloud.prototype.addToScene = function(scene) {
+    var i;
+    this._particles = new Array();
+    for(i=0;i<this.class.numberOfParticles;i++) {
+        this._particles.push(
+            new DustParticle(
+                scene,
+                game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+                translationMatrix(Math.random()*50-25.0,Math.random()*50-25.0,Math.random()*50-25.0)
+            )
+        );
     }
 };
 
-function Projectile(resourceCenter,scene,projectileClass,positionMatrix,orientationMatrix,muzzleFlashPositionMatrix,spacecraft,weapon) {
+
+DustCloud.prototype.simulate = function(camera) {
+    for(var i=0;i<this.class.numberOfParticles;i++) {
+        this._particles[i].simulate(camera);
+    }
+};
+
+function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzleFlashPositionMatrix,spacecraft,weapon) {
 	this.class=projectileClass;
 	this.visualModel = new Billboard(
-		resourceCenter.addModel(projectileModel(this.class.intersections),"projectileModel-"+this.class.name),
-		resourceCenter.getShader(projectileClass.shaderName),
-		resourceCenter.getTexture(projectileClass.textureFileName),
+		game.graphicsContext.resourceCenter.addModel(projectileModel(this.class.intersections),"projectileModel-"+this.class.name),
+		game.graphicsContext.resourceCenter.getShader(projectileClass.shaderName),
+		game.graphicsContext.resourceCenter.getTexture(projectileClass.textureFileName),
 		projectileClass.size,
 		positionMatrix,
 		orientationMatrix
 		);
 	var muzzleFlash = new DynamicParticle(
-		resourceCenter.addModel(squareModel(),"squareModel"),
-		resourceCenter.getShader(projectileClass.muzzleFlashShaderName),
-		resourceCenter.getTexture(projectileClass.muzzleFlashTextureFilename),
+		game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
+		game.graphicsContext.resourceCenter.getShader(projectileClass.muzzleFlashShaderName),
+		game.graphicsContext.resourceCenter.getTexture(projectileClass.muzzleFlashTextureFilename),
 		projectileClass.muzzleFlashColor,
 		projectileClass.size,
 		muzzleFlashPositionMatrix,
@@ -238,15 +252,15 @@ Projectile.prototype.simulate = function(dt,hitObjects) {
 	}
 };
 
-function Weapon(weaponClass,spacecraft,slot,visualModel) {
-	this.class=weaponClass;
-	this.spacecraft=spacecraft;
-	this.slot=slot;
-	this.visualModel=visualModel;
-        this.lastFireTime=0;
+function Weapon(weaponClass,spacecraft,slot) {
+	this.class = weaponClass;
+	this.spacecraft = spacecraft;
+	this.slot = slot;
+        this.lastFireTime = 0;
+        this.visualModel = null;
 }
 
-Weapon.prototype.fire = function(resourceCenter,scene,projectiles,positionMatrix,orientationMatrix,scalingMatrix) {
+Weapon.prototype.fire = function(scene,projectiles,positionMatrix,orientationMatrix,scalingMatrix) {
 	// check cooldown
         var curTime = new Date();
         if ((curTime-this.lastFireTime)>this.class.cooldown) {
@@ -258,7 +272,6 @@ Weapon.prototype.fire = function(resourceCenter,scene,projectiles,positionMatrix
                     var barrelPosVector = vector3Matrix3Product(this.class.barrels[i].positionVector,matrix3from4(mul(this.slot.orientationMatrix,mul(scalingMatrix,orientationMatrix))));
                     var muzzleFlashPosMatrix = translationMatrixv(this.class.barrels[i].positionVector);
                     var p = new Projectile(
-                            resourceCenter,
                             scene,
                             this.class.barrels[i].projectileClass,
                             mul(projectilePosMatrix,translationMatrixv(barrelPosVector)),
@@ -389,10 +402,7 @@ ControllableEntity.prototype.setController = function(newController) {
  * Creates and initializes a Spacecraft object. Loads all necessary models into
  * the resource center of graphicsContext, taking into account the maximum
  * enabled LOD defined in the scene of graphicsContext.
- * @param {GraphicsContext} graphicsContext
- * @param {LogicContext} logicContext
- * @param {ControlContext} controlContext
- * @param {SpacecraftClass} SpacecraftClass
+ * @param {SpacecraftClass} spacecraftClass
  * @param {String} owner
  * @param {Float32Array} positionMatrix
  * @param {Float32Array} orientationMatrix
@@ -400,148 +410,182 @@ ControllableEntity.prototype.setController = function(newController) {
  * @param {String} [equipmentProfileName]
  * @returns {Spacecraft}
  */
-function Spacecraft(graphicsContext,logicContext,controlContext,SpacecraftClass,owner,positionMatrix,orientationMatrix,controller,equipmentProfileName) {
-	// creating the appropriate controller object based on the supplied string
-        // and assigning it using the parent's constructor
-        ControllableEntity.call(this,null);
-        if (controller==="ai") {
-            this.controller = new AIController(this,graphicsContext,logicContext,controlContext);
-	} else if (controller==="keyboard") {
-            this.controller = new FighterController(this,graphicsContext,logicContext,controlContext);
-	} else {
-		game.showError("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
-	}
+function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,controller,equipmentProfileName) {
+    ControllableEntity.call(this,null);
     
-        this.graphicsContext=graphicsContext;
-	this.logicContext=logicContext;
-	this.class=SpacecraftClass;
-        // loading or setting models
-	var modelsWithLOD=new Array();
-	for(var i=0;i<SpacecraftClass.modelReferences.length;i++) {
-                if(graphicsContext.scene.getLODContext().maxEnabledLOD>=SpacecraftClass.modelReferences[i].lod) {
-                    modelsWithLOD.push(new ModelWithLOD(
-                        graphicsContext.resourceCenter.getModel(SpacecraftClass.modelReferences[i].filename),
-                        SpacecraftClass.modelReferences[i].lod));
-                }
-	}
-        var textures=new Object();
-        for(var textureType in SpacecraftClass.textureFileNames) {
-            textures[textureType]=graphicsContext.resourceCenter.getTexture(SpacecraftClass.textureFileNames[textureType]);
-        }
-	this.visualModel = new ShipMesh(
-		modelsWithLOD,
-		graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
-		textures,
-		positionMatrix,
-		orientationMatrix,
-		scalingMatrix(SpacecraftClass.modelSize,SpacecraftClass.modelSize,SpacecraftClass.modelSize),
-		false);
-	this.physicalModel=new PhysicalObject(SpacecraftClass.mass,SpacecraftClass.modelSize,positionMatrix,orientationMatrix,identityMatrix4(),SpacecraftClass.bodies);
-	
-		
-	this.owner=owner;
-	
-	this.weapons=new Array();
-	
-	this.thrusters={
-		"forward":    [],
-		"reverse":    [],
-		"slideLeft":  [],
-		"slideRight": [],
-		"raise":      [],
-		"lower":      [],
-		
-		"yawLeft":   [],
-		"yawRight":  [],
-		"pitchUp":   [],
-		"pitchDown": [],
-		"rollLeft":  [],
-		"rollRight": []
-	};
-	
-	this.propulsion=null;
-		
-	graphicsContext.scene.objects.push(this.visualModel);
-	// visualize physical model
-	for(var i=0;i<SpacecraftClass.bodies.length;i++) {
-		var phyModelWithLOD = new ModelWithLOD(
-			graphicsContext.resourceCenter.addModel(
-				cuboidModel(
-					SpacecraftClass.bodies[i].width/this.class.modelSize,
-					SpacecraftClass.bodies[i].height/this.class.modelSize,
-					SpacecraftClass.bodies[i].depth/this.class.modelSize,
-					[0.0,1.0,1.0,0.5]
-					),
-					SpacecraftClass.name+"-body"+i
-				),
-			0);
-		var hitZoneMesh = new Mesh(
-			[phyModelWithLOD],
-			graphicsContext.resourceCenter.getShader(SpacecraftClass.shaderName),
-			{color: graphicsContext.resourceCenter.getTexture("textures/white.png"),
-                        specular: graphicsContext.resourceCenter.getTexture("textures/white.png"),
-                        luminosity: graphicsContext.resourceCenter.getTexture("textures/white.png")},
-			translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(SpacecraftClass.bodies[i].positionMatrix))),
-			SpacecraftClass.bodies[i].orientationMatrix,
-			identityMatrix4(),
-			false);
-		hitZoneMesh.visible=false;
-		this.visualModel.addSubnode(hitZoneMesh);
-	}
-	
-	this.toBeDeleted = false;
+    this.class = spacecraftClass;
+    this.owner=owner;
+    
+    /**
+     * @name Spacecraft#visualModel
+     * @type VisualObject
+     */
+    this.visualModel = null;
+    /**
+     * @name Spacecraft#physicalModel
+     * @type PhysicalObject
+     */
+    this.physicalModel=new PhysicalObject(
+        this.class.mass,
+        this.class.modelSize,
+        positionMatrix,
+        orientationMatrix,
+        identityMatrix4(),
+        this.class.bodies);
         
-        if(equipmentProfileName!==undefined) {
-            this.equipProfile(this.class.getEquipmentProfile(equipmentProfileName));
-        }
+    // creating the appropriate controller object based on the supplied string
+    // and assigning it using the parent's constructor
+    if (controller==="ai") {
+        this.controller = new AIController(this,game.graphicsContext,game.logicContext,game.controlContext);
+    } else if (controller==="keyboard") {
+        this.controller = new FighterController(this,game.graphicsContext,game.logicContext,game.controlContext);
+    } else {
+        game.showError("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
+    }
+	
+    this.weapons=new Array();
+	
+    this.thrusters={
+        "forward":    [],
+        "reverse":    [],
+        "slideLeft":  [],
+        "slideRight": [],
+        "raise":      [],
+        "lower":      [],
+
+        "yawLeft":   [],
+        "yawRight":  [],
+        "pitchUp":   [],
+        "pitchDown": [],
+        "rollLeft":  [],
+        "rollRight": []
+    };
+	
+    this.propulsion=null;
+        
+    if(equipmentProfileName!==undefined) {
+        this.equipProfile(this.class.getEquipmentProfile(equipmentProfileName));
+    }
+        
+    this.toBeDeleted = false;
 }
 
 Spacecraft.prototype = new ControllableEntity();
 Spacecraft.prototype.constructor = Spacecraft;
 
-Spacecraft.prototype.addWeapon = function(resourceCenter,weaponClass) {
-	if(this.weapons.length<this.class.weaponSlots.length) {
-		var slot = this.class.weaponSlots[this.weapons.length];
-		var modelsWithLOD=new Array();
-		for(var i=0;i<weaponClass.modelReferences.length;i++) {
-			modelsWithLOD.push(new ModelWithLOD(
-				resourceCenter.getModel(weaponClass.modelReferences[i].filename),
-				weaponClass.modelReferences[i].lod));
-		}
-		var weaponMesh = new Mesh(
-				modelsWithLOD,
-				resourceCenter.getShader(this.class.shaderName),
-				{color: resourceCenter.getTexture(this.class.textureFileNames['color'])},
-				slot.positionMatrix,
-				slot.orientationMatrix,
-				identityMatrix4(),
-				false
-				);
-		this.visualModel.addSubnode(weaponMesh);
-		this.weapons.push(new Weapon(weaponClass,this,slot,weaponMesh));
-	}
+Spacecraft.prototype.addToScene = function(scene) {
+    var i,j;
+    var modelsWithLOD;
+    // loading or setting models
+    modelsWithLOD=new Array();
+    for(i=0;i<this.class.modelReferences.length;i++) {
+        if(game.graphicsContext.getMaxLoadedLOD()>=this.class.modelReferences[i].lod) {
+            modelsWithLOD.push(new ModelWithLOD(
+                game.graphicsContext.resourceCenter.getModel(this.class.modelReferences[i].filename),
+                this.class.modelReferences[i].lod
+            ));
+        }
+    }
+    var textures=new Object();
+    for(var textureType in this.class.textureFileNames) {
+        textures[textureType]=game.graphicsContext.resourceCenter.getTexture(this.class.textureFileNames[textureType]);
+    }
+    this.visualModel = new ShipMesh(
+        modelsWithLOD,
+        game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+        textures,
+        this.physicalModel.positionMatrix,
+        this.physicalModel.orientationMatrix,
+        scalingMatrix(this.class.modelSize,this.class.modelSize,this.class.modelSize),
+        false);
+    scene.objects.push(this.visualModel);
+    
+    // visualize physical model
+    for(i=0;i<this.class.bodies.length;i++) {
+        var phyModelWithLOD = new ModelWithLOD(
+            game.graphicsContext.resourceCenter.addModel(
+                cuboidModel(
+                    this.class.bodies[i].width/this.class.modelSize,
+                    this.class.bodies[i].height/this.class.modelSize,
+                    this.class.bodies[i].depth/this.class.modelSize,
+                    [0.0,1.0,1.0,0.5]
+                ),
+                this.class.name+"-body"+i
+            ),
+            0
+        );
+        var hitZoneMesh = new Mesh(
+            [phyModelWithLOD],
+            game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+            {
+                color: game.graphicsContext.resourceCenter.getTexture("textures/white.png"),
+                specular: game.graphicsContext.resourceCenter.getTexture("textures/white.png"),
+                luminosity: game.graphicsContext.resourceCenter.getTexture("textures/white.png")
+            },
+            translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(this.class.bodies[i].positionMatrix))),
+            this.class.bodies[i].orientationMatrix,
+            identityMatrix4(),
+            false
+        );
+        hitZoneMesh.visible=false;
+        this.visualModel.addSubnode(hitZoneMesh);
+    }
+    
+    // add the weapons
+    for(i=0;i<this.weapons.length;i++) {
+        // loading or setting models
+        modelsWithLOD=new Array();
+        for(j=0;j<this.weapons[i].class.modelReferences.length;j++) {
+            if(game.graphicsContext.getMaxLoadedLOD()>=this.weapons[i].class.modelReferences[j].lod) {
+                modelsWithLOD.push(new ModelWithLOD(
+                    game.graphicsContext.resourceCenter.getModel(this.weapons[i].class.modelReferences[j].filename),
+                    this.weapons[i].class.modelReferences[j].lod
+                ));
+            }
+        }
+        var weaponMesh = new Mesh(
+            modelsWithLOD,
+            game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+            textures,
+            this.class.weaponSlots[i].positionMatrix,
+            this.class.weaponSlots[i].orientationMatrix,
+            identityMatrix4(),
+            false
+        );
+        this.visualModel.addSubnode(weaponMesh);
+        this.weapons[i].visualModel = weaponMesh;
+    }
+    // add the thruster particles
+    for(i=0;i<this.class.thrusterSlots.length;i++) {
+        var slot = this.class.thrusterSlots[i];
+		
+        var thrusterParticle = new StaticParticle(
+            game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
+            game.graphicsContext.resourceCenter.getShader(this.propulsion.class.shaderName),
+            game.graphicsContext.resourceCenter.getTexture(this.propulsion.class.textureFileName),
+            this.propulsion.class.color,
+            slot.size,
+            translationMatrixv(slot.positionVector),
+            20
+        );
+        this.visualModel.addSubnode(thrusterParticle);
+        var thruster = new Thruster(slot,thrusterParticle);
+        for(j=0;j<slot.uses.length;j++) {
+            this.thrusters[slot.uses[j]].push(thruster);
+        }
+    }
 };
 
-Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
-	this.propulsion=new Propulsion(propulsionClass,this.physicalModel);
-	for(var i=0;i<this.class.thrusterSlots.length;i++) {
-		var slot = this.class.thrusterSlots[i];
-		
-		var thrusterParticle = new StaticParticle(
-				resourceCenter.addModel(squareModel(),"squareModel"),
-				resourceCenter.getShader(propulsionClass.shaderName),
-				resourceCenter.getTexture(propulsionClass.textureFileName),
-				propulsionClass.color,
-				slot.size,
-				translationMatrixv(slot.positionVector),
-                                20
-				);
-		this.visualModel.addSubnode(thrusterParticle);
-		var thruster = new Thruster(slot,thrusterParticle);
-		for(var j=0;j<slot.uses.length;j++) {
-			this.thrusters[slot.uses[j]].push(thruster);
-		}
-	}
+
+Spacecraft.prototype.addWeapon = function(weaponClass) {
+    if(this.weapons.length<this.class.weaponSlots.length) {
+        var slot = this.class.weaponSlots[this.weapons.length];
+        this.weapons.push(new Weapon(weaponClass,this,slot));
+    }
+};
+
+Spacecraft.prototype.addPropulsion = function(propulsionClass) {
+    this.propulsion=new Propulsion(propulsionClass,this.physicalModel);
 };
 
 /**
@@ -552,23 +596,17 @@ Spacecraft.prototype.addPropulsion = function(resourceCenter,propulsionClass) {
 Spacecraft.prototype.equipProfile = function(equipmentProfile) {
     var i;
     for(i=0;i<equipmentProfile.weapons.length;i++) {
-        this.addWeapon(
-            game.graphicsContext.resourceCenter,
-            game.logicContext.getWeaponClass(equipmentProfile.weapons[i])
-        );
+        this.addWeapon(game.logicContext.getWeaponClass(equipmentProfile.weapons[i]));
     }
     if(equipmentProfile.propulsion!==null) {
-        this.addPropulsion(
-            game.graphicsContext.resourceCenter,
-            game.logicContext.getPropulsionClass(equipmentProfile.propulsion)
-        );
-    }    
+        this.addPropulsion(game.logicContext.getPropulsionClass(equipmentProfile.propulsion));
+    }
 };
 
-Spacecraft.prototype.fire = function(resourceCenter,scene,projectiles) {
-	for(var i=0;i<this.weapons.length;i++) {
-		this.weapons[i].fire(resourceCenter,scene,projectiles,this.visualModel.getPositionMatrix(),this.visualModel.getOrientationMatrix(),this.visualModel.getScalingMatrix(),this);
-	}
+Spacecraft.prototype.fire = function(scene,projectiles) {
+    for(var i=0;i<this.weapons.length;i++) {
+        this.weapons[i].fire(scene,projectiles,this.visualModel.getPositionMatrix(),this.visualModel.getOrientationMatrix(),this.visualModel.getScalingMatrix(),this);
+    }
 };
 
 Spacecraft.prototype.setThrusterBurn = function(use,value) {
@@ -704,12 +742,45 @@ ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
  * @returns {Level}
  */
 function Level() {
-	this.players=new Array();
-	
-	this.skyboxes=new Array();
-        this.backgroundObjects=new Array();
-        this.dustClouds=new Array();
-	this.spacecrafts=new Array();
+    /**
+     * The associative array of players that compete on this level. The keys
+     * are the names of the players.
+     * @name Level#_players
+     * @type Object
+     */
+    this._players = null;
+    /**
+     * The list of skyboxes this level contains as background.
+     * @name Level#_skyboxes
+     * @type Skybox[]
+     */
+    this._skyboxes = null;
+    /**
+     * The list of background objects (stars, nebulae) this level contains.
+     * @name Level#_backgroundObject
+     * @type BackgroundObject[]
+     */
+    this._backgroundObjects = null;
+    /**
+     * The list of dust clouds this level contains.
+     * @name Level#_dustClouds
+     * @type DustCloud[]
+     */
+    this._dustClouds = null;
+    /**
+     * The starting position and orientation of the camera if a scene is 
+     * generated for this level. The position and orientation matrices has to be
+     * stored in this object.
+     * @name Level#_cameraStartPosition
+     * @type Object
+     */
+    this._cameraStartPosition = null;
+    /**
+     * The list of spacecrafts that are placed on the map of this level.
+     * @name Level#_spacecrafts
+     * @type Spacecraft[]
+     */
+    this._spacecrafts = null;
 	this.projectiles=new Array();
 	
         this.camera = null;
@@ -719,15 +790,11 @@ function Level() {
 }
 
 Level.prototype.getPlayer = function(name) {
-	var i = 0;
-	while((i<this.players.length)&&(this.players[i].name!==name)) {
-		i++;
-	}
-	if(i<this.players.length) {
-		return this.players[i];
-	} else {
-		return null;
-	}
+    return this._players[name];
+};
+
+Level.prototype.addPlayer = function(player) {
+    this._players[player.name] = player;
 };
 
 Level.prototype.requestLoadFromFile = function(filename) {
@@ -747,29 +814,130 @@ Level.prototype.requestLoadFromFile = function(filename) {
 };
 
 Level.prototype.loadFromXML= function(levelSource) {
-    game.getCurrentScreen().updateStatus("loading level information...");
+    var i;
     
-    var scene = game.graphicsContext.scene;
-    
-    this.camera = scene.activeCamera;
-    this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
-        
+    this._players = new Object();
     var playerTags = levelSource.getElementsByTagName("Player");
     for(var i=0;i<playerTags.length;i++) {
-        this.players.push(new Player(playerTags[i].getAttribute("name")));
+        this.addPlayer(new Player(playerTags[i].getAttribute("name")));
+    }
+    
+    this._skyboxes = new Array();
+    var skyboxTags = levelSource.getElementsByTagName("Skybox");
+    for(i=0;i<skyboxTags.length;i++) {
+        this._skyboxes.push(new Skybox(game.logicContext.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
+    }
+    
+    this._backgroundObjects = new Array();
+    var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
+    for(i=0;i<backgroundObjectTags.length;i++) {
+        this._backgroundObjects.push(new BackgroundObject(
+            game.logicContext.getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+            backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
+            backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
+        ));		
+    }
+    
+    this._dustClouds = new Array();
+    var dustCloudTags = levelSource.getElementsByTagName("DustCloud");
+    for(i=0;i<dustCloudTags.length;i++) {
+        this._dustClouds.push(new DustCloud(game.logicContext.getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
     }
 	
+    this._cameraStartPosition = new Object();
     var cameraTags = levelSource.getElementsByTagName("Camera");
     if(cameraTags.length>0) {
         if(cameraTags[0].getElementsByTagName("position").length>0) {
-            this.camera.positionMatrix=translationMatrixv(scalarVector3Product(-1,getVector3FromXMLTag(cameraTags[0].getElementsByTagName("position")[0])));
+            this._cameraStartPosition.positionMatrix=translationMatrixv(scalarVector3Product(-1,getVector3FromXMLTag(cameraTags[0].getElementsByTagName("position")[0])));
         }        
         if(cameraTags[0].getElementsByTagName("orientation").length>0) {
-            this.camera.orientationMatrix=getRotationMatrixFromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
+            this._cameraStartPosition.orientationMatrix=getRotationMatrixFromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
         }
     }
 	
-	for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
+    this._spacecrafts = new Array();
+    var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
+    for(i=0;i<spacecraftTags.length;i++) {
+        var spacecraft = new Spacecraft(
+            game.logicContext.getSpacecraftClass(spacecraftTags[i].getAttribute("class")),
+            this.getPlayer(spacecraftTags[i].getAttribute("owner")),
+            getTranslationMatrixFromXMLTag(spacecraftTags[i].getElementsByTagName("position")[0]),
+            getRotationMatrixFromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
+            "ai"
+        );
+        // equipping the created spacecraft
+        // if there is an quipment tag...
+        if(spacecraftTags[i].getElementsByTagName("equipment").length>0) {
+            var equipmentTag = spacecraftTags[i].getElementsByTagName("equipment")[0];
+            // if a profile is referenced in the equipment tag, look up that profile 
+            // and equip according to that
+            if(equipmentTag.hasAttribute("profile")) {
+                spacecraft.equipProfile(spacecraft.class.getEquipmentProfile(equipmentTag.getAttribute("profile")));
+            // if no profile is referenced, simply create a custom profile from the tags inside
+            // the equipment tag, and equip that
+            } else {
+                var equipmentProfile = new EquipmentProfile(equipmentTag);
+                spacecraft.equipProfile(equipmentProfile);
+            }
+        // if there is no equipment tag, attempt to load the profile named "default"    
+        } else if(spacecraft.class.getEquipmentProfile("default")!==undefined) {
+            spacecraft.equipProfile(spacecraft.class.getEquipmentProfile("default"));
+        }
+        this._spacecrafts.push(spacecraft);
+    }
+};
+
+Level.prototype.addRandomShips = function(owner,shipNumbersPerClass,mapSize) {
+    for(var shipClass in shipNumbersPerClass) {
+        for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
+            this._spacecrafts.push(
+                new Spacecraft(
+                    game.logicContext.getSpacecraftClass(shipClass),
+                    this.getPlayer(owner),
+                    translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
+                    identityMatrix4(),
+                    "ai",
+                    "default"
+                )
+            );
+        }
+    }
+};
+
+Level.prototype.buildScene = function(scene) {
+    var i,j;
+    
+    for(i=0;i<this._skyboxes.length;i++) {
+        this._skyboxes[i].addToScene(scene);
+    }
+    
+    for(i=0;i<this._backgroundObjects.length;i++) {
+        this._backgroundObjects[i].addToScene(scene);
+    }
+    
+    for(i=0;i<this._dustClouds.length;i++) {
+        this._dustClouds[i].addToScene(scene);
+    }
+    
+    this.camera = scene.activeCamera;
+    if(this._cameraStartPosition.positionMatrix !== undefined) {
+        this.camera.positionMatrix = this._cameraStartPosition.positionMatrix;
+    }
+    if(this._cameraStartPosition.orientationMatrix !== undefined) {
+        this.camera.orientationMatrix = this._cameraStartPosition.orientationMatrix;
+    }
+    
+    for(i=0;i<this._spacecrafts.length;i++) {
+        this._spacecrafts[i].addToScene(scene);
+        // creating the cameras for the different views of the ship
+        for(j=0;j<this._spacecrafts[i].class.views.length;j++) {
+            scene.addCamera(this._spacecrafts[i].class.views[j].createCameraForObject(scene.width/scene.height,this._spacecrafts[i].visualModel));
+        }
+    }
+    
+    this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
+    
+    for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
 		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].shaderName);
 		game.graphicsContext.resourceCenter.getTexture(game.logicContext.projectileClasses[i].textureFileName);
 		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
@@ -777,87 +945,15 @@ Level.prototype.loadFromXML= function(levelSource) {
 		game.graphicsContext.resourceCenter.addModel(projectileModel(game.logicContext.projectileClasses[i].intersections),"projectileModel-"+game.logicContext.projectileClasses[i].name);
 	}
 	game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel");
-	
-	this.spacecrafts = new Array();
-	
-	game.getCurrentScreen().updateStatus("loading models...",25);
-        
-        var graphicsContext = game.graphicsContext;
-        var logicContext = game.logicContext;
-	
-	var skyboxTags = levelSource.getElementsByTagName("Skybox");
-	for(var i=0;i<skyboxTags.length;i++) {
-		this.skyboxes.push(new Skybox(
-			game.graphicsContext.resourceCenter,
-			scene,
-			logicContext.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
-	}
-        
-        var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
-	for(var i=0;i<backgroundObjectTags.length;i++) {
-		this.backgroundObjects.push(new BackgroundObject(
-			graphicsContext,
-			logicContext.getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
-                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
-                        backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")));		
-	}
-        
-        var dustCloudTags = levelSource.getElementsByTagName("DustCloud");
-	for(var i=0;i<dustCloudTags.length;i++) {
-		this.dustClouds.push(new DustCloud(
-			graphicsContext,
-			logicContext.getDustCloudClass(dustCloudTags[i].getAttribute("class"))));		
-	}
-	
-	var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
-        
-	for(var i=0;i<spacecraftTags.length;i++) {
-                var spacecraftClass = logicContext.getSpacecraftClass(spacecraftTags[i].getAttribute("class"));
-		this.spacecrafts.push(new Spacecraft(
-			graphicsContext,
-			logicContext,
-                        game.controlContext,
-			spacecraftClass,
-			this.getPlayer(spacecraftTags[i].getAttribute("owner")),
-                        getTranslationMatrixFromXMLTag(spacecraftTags[i].getElementsByTagName("position")[0]),
-                        getRotationMatrixFromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
-			"ai"
-			)
-		);
-                if(spacecraftTags[i].getElementsByTagName("equipment").length>0) {
-                    var equipmentTag = spacecraftTags[i].getElementsByTagName("equipment")[0];
-                    if(equipmentTag.hasAttribute("profile")) {
-                        this.spacecrafts[this.spacecrafts.length-1].equipProfile(spacecraftClass.getEquipmentProfile(equipmentTag.getAttribute("profile")));
-                    } else {
-                        var equipmentProfile = new EquipmentProfile(equipmentTag);
-                        this.spacecrafts[this.spacecrafts.length-1].equipProfile(equipmentProfile);
-                    }
-                } else {
-                    if(spacecraftClass.getEquipmentProfile("default")!==undefined) {
-                        this.spacecrafts[this.spacecrafts.length-1].equipProfile(spacecraftClass.getEquipmentProfile("default"));
-                    }
-                }
-		
-		
-                for(var j=0;j<spacecraftClass.views.length;j++) {
-                    scene.cameras.push(spacecraftClass.views[j].createCameraForObject(scene.width/scene.height,this.spacecrafts[this.spacecrafts.length-1].visualModel));
-                    if (j>0) {
-                        scene.cameras[scene.cameras.length-2].nextView = scene.cameras[scene.cameras.length-1];
-                    }
-                }
-                if (spacecraftClass.views.length>0) {
-                    scene.cameras[scene.cameras.length-1].nextView = scene.cameras[scene.cameras.length-spacecraftClass.views.length];
-                }
-	}
 };
 
 Level.prototype.tick = function(dt) {
-	for (var i=0;i<this.spacecrafts.length;i++) {
-		if ((this.spacecrafts[i]===undefined)||(this.spacecrafts[i].toBeDeleted)) {
-			delete this.spacecrafts[i];
-			this.spacecrafts.splice(i,1);
+	for (var i=0;i<this._spacecrafts.length;i++) {
+		if ((this._spacecrafts[i]===undefined)||(this._spacecrafts[i].toBeDeleted)) {
+			delete this._spacecrafts[i];
+			this._spacecrafts.splice(i,1);
 		} else {
-			this.spacecrafts[i].simulate(dt);
+			this._spacecrafts[i].simulate(dt);
 		}
 	}
 	for (var i=0;i<this.projectiles.length;i++) {
@@ -865,11 +961,11 @@ Level.prototype.tick = function(dt) {
 			delete this.projectiles[i];
 			this.projectiles.splice(i,1);
 		} else {
-			this.projectiles[i].simulate(dt,this.spacecrafts);
+			this.projectiles[i].simulate(dt,this._spacecrafts);
 		}
 	}
-        for (var i=0;i<this.dustClouds.length;i++) {
-		this.dustClouds[i].simulate(this.camera);
+        for (var i=0;i<this._dustClouds.length;i++) {
+		this._dustClouds[i].simulate(this.camera);
 	}
 };
 
