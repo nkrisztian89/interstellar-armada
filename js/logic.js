@@ -96,10 +96,10 @@ function Skybox(skyboxClass) {
 
 Skybox.prototype.addToScene = function(scene) {
     scene.addBackgroundObject(new FVQ(
-        game.graphicsContext.resourceCenter.addModel(fvqModel(),"fvqModel"),
-        game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+        game.graphicsContext.resourceManager.getOrAddModelByName("fvqModel",fvqModel()),
+        game.graphicsContext.resourceManager.getShader(this.class.shaderName),
         this.class.samplerName,
-        game.graphicsContext.resourceCenter.getCubemap(this.class.cubemap),
+        game.graphicsContext.resourceManager.getCubemappedTexture(this.class.cubemap),
         scene.activeCamera
     ));
 };
@@ -119,9 +119,9 @@ BackgroundObject.prototype.addToScene = function(scene) {
     scene.addLightSource(new LightSource(this.class.lightColor,this.position));
     for(i=0;i<this.class.layers.length;i++) {  
         layerParticle =new StaticParticle(
-            game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
-            game.graphicsContext.resourceCenter.getShader(this.class.layers[i].shaderName),
-            game.graphicsContext.resourceCenter.getTexture(this.class.layers[i].textureFileName),
+            game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
+            game.graphicsContext.resourceManager.getShader(this.class.layers[i].shaderName),
+            game.graphicsContext.resourceManager.getOrAddTexture(this.class.layers[i].textureFileName),
             this.class.layers[i].color,
             this.class.layers[i].size,
             translationMatrixv(scalarVector3Product(4500,this.position))
@@ -134,7 +134,7 @@ BackgroundObject.prototype.addToScene = function(scene) {
 
 function DustParticle(scene,shader,positionMatrix) {
     this.visualModel = new PointParticle(
-        game.graphicsContext.resourceCenter.addModel(dustModel([0.5,0.5,0.5]),"dust"),
+        game.graphicsContext.resourceManager.getOrAddModelByName("dust",dustModel([0.5,0.5,0.5])),
         shader,
         [0.5,0.5,0.5],
         positionMatrix
@@ -186,7 +186,7 @@ DustCloud.prototype.addToScene = function(scene) {
         this._particles.push(
             new DustParticle(
                 scene,
-                game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+                game.graphicsContext.resourceManager.getShader(this.class.shaderName),
                 translationMatrix(Math.random()*50-25.0,Math.random()*50-25.0,Math.random()*50-25.0)
             )
         );
@@ -203,17 +203,17 @@ DustCloud.prototype.simulate = function(camera) {
 function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzleFlashPositionMatrix,spacecraft,weapon) {
 	this.class=projectileClass;
 	this.visualModel = new Billboard(
-		game.graphicsContext.resourceCenter.addModel(projectileModel(this.class.intersections),"projectileModel-"+this.class.name),
-		game.graphicsContext.resourceCenter.getShader(projectileClass.shaderName),
-		game.graphicsContext.resourceCenter.getTexture(projectileClass.textureFileName),
+		game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+this.class.name,projectileModel(this.class.intersections)),
+		game.graphicsContext.resourceManager.getShader(projectileClass.shaderName),
+		game.graphicsContext.resourceManager.getOrAddTexture(projectileClass.textureFileName),
 		projectileClass.size,
 		positionMatrix,
 		orientationMatrix
 		);
 	var muzzleFlash = new DynamicParticle(
-		game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
-		game.graphicsContext.resourceCenter.getShader(projectileClass.muzzleFlashShaderName),
-		game.graphicsContext.resourceCenter.getTexture(projectileClass.muzzleFlashTextureFilename),
+		game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
+		game.graphicsContext.resourceManager.getShader(projectileClass.muzzleFlashShaderName),
+		game.graphicsContext.resourceManager.getOrAddTexture(projectileClass.muzzleFlashTextureFilename),
 		projectileClass.muzzleFlashColor,
 		projectileClass.size,
 		muzzleFlashPositionMatrix,
@@ -481,18 +481,18 @@ Spacecraft.prototype.addToScene = function(scene) {
     for(i=0;i<this.class.modelReferences.length;i++) {
         if(game.graphicsContext.getMaxLoadedLOD()>=this.class.modelReferences[i].lod) {
             modelsWithLOD.push(new ModelWithLOD(
-                game.graphicsContext.resourceCenter.getModel(this.class.modelReferences[i].filename),
+                game.graphicsContext.resourceManager.getOrAddModelFromFile(this.class.modelReferences[i].filename),
                 this.class.modelReferences[i].lod
             ));
         }
     }
     var textures=new Object();
     for(var textureType in this.class.textureFileNames) {
-        textures[textureType]=game.graphicsContext.resourceCenter.getTexture(this.class.textureFileNames[textureType]);
+        textures[textureType]=game.graphicsContext.resourceManager.getOrAddTexture(this.class.textureFileNames[textureType]);
     }
     this.visualModel = new ShipMesh(
         modelsWithLOD,
-        game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+        game.graphicsContext.resourceManager.getShader(this.class.shaderName),
         textures,
         this.physicalModel.positionMatrix,
         this.physicalModel.orientationMatrix,
@@ -503,24 +503,24 @@ Spacecraft.prototype.addToScene = function(scene) {
     // visualize physical model
     for(i=0;i<this.class.bodies.length;i++) {
         var phyModelWithLOD = new ModelWithLOD(
-            game.graphicsContext.resourceCenter.addModel(
+            game.graphicsContext.resourceManager.getOrAddModelByName(
+                this.class.name+"-body"+i,
                 cuboidModel(
                     this.class.bodies[i].width/this.class.modelSize,
                     this.class.bodies[i].height/this.class.modelSize,
                     this.class.bodies[i].depth/this.class.modelSize,
                     [0.0,1.0,1.0,0.5]
-                ),
-                this.class.name+"-body"+i
+                )
             ),
             0
         );
         var hitZoneMesh = new Mesh(
             [phyModelWithLOD],
-            game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+            game.graphicsContext.resourceManager.getShader(this.class.shaderName),
             {
-                color: game.graphicsContext.resourceCenter.getTexture("textures/white.png"),
-                specular: game.graphicsContext.resourceCenter.getTexture("textures/white.png"),
-                luminosity: game.graphicsContext.resourceCenter.getTexture("textures/white.png")
+                color: game.graphicsContext.resourceManager.getOrAddTexture("textures/white.png"),
+                specular: game.graphicsContext.resourceManager.getOrAddTexture("textures/white.png"),
+                luminosity: game.graphicsContext.resourceManager.getOrAddTexture("textures/white.png")
             },
             translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(this.class.bodies[i].positionMatrix))),
             this.class.bodies[i].orientationMatrix,
@@ -538,14 +538,14 @@ Spacecraft.prototype.addToScene = function(scene) {
         for(j=0;j<this.weapons[i].class.modelReferences.length;j++) {
             if(game.graphicsContext.getMaxLoadedLOD()>=this.weapons[i].class.modelReferences[j].lod) {
                 modelsWithLOD.push(new ModelWithLOD(
-                    game.graphicsContext.resourceCenter.getModel(this.weapons[i].class.modelReferences[j].filename),
+                    game.graphicsContext.resourceManager.getOrAddModelFromFile(this.weapons[i].class.modelReferences[j].filename),
                     this.weapons[i].class.modelReferences[j].lod
                 ));
             }
         }
         var weaponMesh = new Mesh(
             modelsWithLOD,
-            game.graphicsContext.resourceCenter.getShader(this.class.shaderName),
+            game.graphicsContext.resourceManager.getShader(this.class.shaderName),
             textures,
             this.class.weaponSlots[i].positionMatrix,
             this.class.weaponSlots[i].orientationMatrix,
@@ -560,9 +560,9 @@ Spacecraft.prototype.addToScene = function(scene) {
         var slot = this.class.thrusterSlots[i];
 		
         var thrusterParticle = new StaticParticle(
-            game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel"),
-            game.graphicsContext.resourceCenter.getShader(this.propulsion.class.shaderName),
-            game.graphicsContext.resourceCenter.getTexture(this.propulsion.class.textureFileName),
+            game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
+            game.graphicsContext.resourceManager.getShader(this.propulsion.class.shaderName),
+            game.graphicsContext.resourceManager.getOrAddTexture(this.propulsion.class.textureFileName),
             this.propulsion.class.color,
             slot.size,
             translationMatrixv(slot.positionVector),
@@ -937,14 +937,27 @@ Level.prototype.buildScene = function(scene) {
     
     this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
     
+    // adding the projectile resources to make sure they will be requested for
+    // loading, as they are not added to the scene in the beginning
     for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
-		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].shaderName);
-		game.graphicsContext.resourceCenter.getTexture(game.logicContext.projectileClasses[i].textureFileName);
-		game.graphicsContext.resourceCenter.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
-		game.graphicsContext.resourceCenter.getTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename);
-		game.graphicsContext.resourceCenter.addModel(projectileModel(game.logicContext.projectileClasses[i].intersections),"projectileModel-"+game.logicContext.projectileClasses[i].name);
-	}
-	game.graphicsContext.resourceCenter.addModel(squareModel(),"squareModel");
+        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName);
+        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].textureFileName);
+        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
+        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename);
+        game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections));
+    }
+    game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel());
+};
+
+Level.prototype.addProjectileResourcesToContext = function(context) {
+    for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
+        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].textureFileName).addToContext(context);
+        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections)).addToContext(context);
+    }
+    game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()).addToContext(context);
 };
 
 Level.prototype.tick = function(dt) {

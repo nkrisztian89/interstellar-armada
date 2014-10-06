@@ -80,15 +80,24 @@ Resource.prototype.resetResource = function() {
 };
 
 /**
+ * Executes the onReady queue then erases it.
+ */
+Resource.prototype.executeOnReadyQueue = function() {
+    for(var i=0;i<this._onReadyQueue.length;i++) {
+        this._onReadyQueue[i].call(this);
+    }
+    this._onReadyQueue=new Array();
+};
+
+/**
  * Sets the ready state of the resource and executes the queued actions that
  * were requested in advance. Also erases the queue.
  */
 Resource.prototype.setToReady = function() {
-    this._readyToUse = true;
-    for(var i=0;i<this._onReadyQueue.length;i++) {
-        this._onReadyQueue[i]();
+    if(this._readyToUse===false) {
+        this._readyToUse = true;
+        this.executeOnReadyQueue();
     }
-    this._onReadyQueue=new Array();
 };
 
 /**
@@ -105,12 +114,12 @@ Resource.prototype.setToReady = function() {
  */
 Resource.prototype.executeWhenReady = function(functionToExecute,functionToExecuteIfNotReady) {
     if(this._readyToUse) {
-        functionToExecute();
+        functionToExecute.call(this);
         return true;
     } else {
         this.addOnReadyFunction(functionToExecute);
-        if (functionToExecuteIfNotReady) {
-            functionToExecuteIfNotReady();
+        if (functionToExecuteIfNotReady!==undefined) {
+            functionToExecuteIfNotReady.call(this);
         }
         return false;
     }

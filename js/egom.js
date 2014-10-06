@@ -3,7 +3,7 @@
  * EgomModel 3D models, including loading the data from EgomModel XML files.
  * EgomModel is a simple 3D modeling library written in object pascal.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1
+ * @version 0.1-dev
  */
 
 /**********************************************************************
@@ -86,6 +86,8 @@ function Triangle(a,b,c,red,green,blue,alpha,luminosity,shininess,tax,tay,tbx,tb
  * @param {string} filename The name of the file to load the model from. (optional)
  */
 function EgomModel(filename) {
+        Resource.call(this);
+        // properties for file resource management
 	this.vertices = new Array();
 	this.lines = new Array();
 	this.triangles = new Array();
@@ -95,40 +97,65 @@ function EgomModel(filename) {
         this.nTransparentTriangles = 0;
         
         this.filename=filename;
-	if(filename!==undefined) {
-		this.loadFromFile(filename);
-	}
+        this.loadRequestSent = false;
+        if (filename===undefined) {
+            this.setToReady();
+        }
 	
-	this.bufferStart = 0;
-        this.bufferStartTransparent = 0;
-	this.bufferStartLines = 0;
+        // properties for WebGL resource management
+        this._addedToContext = new Object();
+	this._bufferStart = new Object();
+        this._bufferStartTransparent = new Object();
+	this._bufferStartLines = new Object();
 }
 
-EgomModel.prototype.clear = function() {
-	this.vertices = new Array();
-	this.lines = new Array();
-	this.triangles = new Array();
-	this.size = 0;
-	
-	this.filename=null;
-	
-	this.nOpaqueTriangles = 0;
-        this.nTransparentTriangles = 0;
-	
-	this.bufferStart = 0;
-        this.bufferStartTransparent = 0;
-	this.bufferStartLines = 0;
+EgomModel.prototype = new Resource();
+EgomModel.prototype.constructor = EgomModel;
+
+EgomModel.prototype.getBufferStartForContext = function(context,buffer) {
+    if((buffer===undefined) || (buffer==="base")) {
+        return this._bufferStart[context];
+    }
+    if(buffer==="transparent") {
+        return this._bufferStartTransparent[context];
+    }
+    if(buffer==="lines") {
+        return this._bufferStartLines[context];
+    }
 };
 
-EgomModel.prototype.loadFromFile = function(filename) {
-	var request = new XMLHttpRequest();
-	request.open('GET', filename+"?12345", false); //timestamp added to URL to bypass cache
-	request.send(null);
-	modelSource = request.responseXML;
-	
-	var nVertices = parseInt(modelSource.getElementsByTagName("vertices")[0].getAttribute("count"));
+EgomModel.prototype.setBufferStartForContext = function(context,buffer,value) {
+    if((buffer===undefined) || (buffer==="base")) {
+        this._bufferStart[context] = value;
+    }
+    if(buffer==="transparent") {
+        this._bufferStartTransparent[context] = value;
+    }
+    if(buffer==="lines") {
+        this._bufferStartLines[context] = value;
+    }
+};
+
+EgomModel.prototype.requestLoadFromFile = function() {
+    if((this.isReadyToUse()===false)&&(this.loadRequestSent===false)) {
+        this.loadRequestSent = true;
+        var request = new XMLHttpRequest();
+        request.open('GET', this.filename+"?123", true); 
+        var self = this;
+        request.onreadystatechange = function() {
+                if(request.readyState===4) {
+                    self.loadFromXML(request.responseXML);
+                    self.setToReady();
+                }
+        };
+        request.send(null);
+    }
+};
+
+EgomModel.prototype.loadFromXML = function(sourceXML) {
+	var nVertices = parseInt(sourceXML.getElementsByTagName("vertices")[0].getAttribute("count"));
 	this.vertices = new Array();
-	vertexTags = modelSource.getElementsByTagName("vertex");
+	var vertexTags = sourceXML.getElementsByTagName("vertex");
 	for(var i=0; i<nVertices; i++) {
 		var index=vertexTags[i].getAttribute("i");
 		if (this.vertices.length<index) {
@@ -151,9 +178,9 @@ EgomModel.prototype.loadFromFile = function(filename) {
 		}
 	}
 	
-	var nLines = parseInt(modelSource.getElementsByTagName("lines")[0].getAttribute("count"));
+	var nLines = parseInt(sourceXML.getElementsByTagName("lines")[0].getAttribute("count"));
 	this.lines = new Array(nLines);
-	lineTags = modelSource.getElementsByTagName("line");
+	var lineTags = sourceXML.getElementsByTagName("line");
 	for(var i=0; i<nLines; i++) {
 		this.lines[i]=new Line(
 			lineTags[i].getAttribute("a"),
@@ -168,9 +195,9 @@ EgomModel.prototype.loadFromFile = function(filename) {
 			);
 	}
 	
-	var nTriangles = parseInt(modelSource.getElementsByTagName("triangles")[0].getAttribute("count"));
+	var nTriangles = parseInt(sourceXML.getElementsByTagName("triangles")[0].getAttribute("count"));
 	this.triangles = new Array(nTriangles);
-	triangleTags = modelSource.getElementsByTagName("triangle");
+	var triangleTags = sourceXML.getElementsByTagName("triangle");
 	for(var i=0; i<nTriangles; i++) {
 		this.triangles[i]=new Triangle(
 			triangleTags[i].getAttribute("a"),
@@ -206,7 +233,21 @@ EgomModel.prototype.loadFromFile = function(filename) {
         this.nOpaqueTriangles=nTriangles-this.nTransparentTriangles;
 };
 
-EgomModel.prototype.getBuffers = function(lineMode) {
+EgomModel.prototype.addToContext = function(context) {
+    if(this._addedToContext[context] !== true) {
+        context.addModel(this);
+        this._addedToContext[context] = true;
+    }
+};
+
+/**
+ * Clears all previous bindings to managed WebGL contexts.
+ */
+EgomModel.prototype.clearContextBindings = function() {
+    this._addedToContext = new Object();
+};
+
+EgomModel.prototype.getBufferData = function(lineMode) {
 	if(lineMode===true) {
 		var vertexData = new Float32Array(this.lines.length*6);
 		for(var i=0;i<this.lines.length;i++) {
@@ -335,103 +376,17 @@ EgomModel.prototype.getBuffers = function(lineMode) {
 		"color": colorData,
 		"luminosity": luminosityData,
 		"shininess": shininessData,
-                "groupIndex": groupIndexData
+                "groupIndex": groupIndexData,
+                "dataSize": (lineMode?this.lines.length*2:this.triangles.length*3)
 		};
 };
 
-EgomModel.prototype.setupBuffers = function(gl,program) {
-	var bufferData=this.getBuffers();
-	var vertexData=bufferData[0];
-	var texCoordData=bufferData[1];
-	var normalData=bufferData[2];
-	var colorData=bufferData[3];
-	var luminosityData=bufferData[4];
-	var shininessData=bufferData[5];
-        var groupIndexData=bufferData[6];
-	
-	// look up where the vertex data needs to go.
-	var positionLocation = gl.getAttribLocation(program, "a_position");
-	// Create a buffer and put a single clipspace rectangle in
-	// it (2 triangles)
-	var buffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER, 
-		vertexData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(positionLocation);
-	gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-	
-	// look up where the texture coordinates need to go.
-	var texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
-	// provide texture coordinates for the rectangle.
-	var texCoordBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER,
-		texCoordData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(texCoordLocation);
-	gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
-	
-	// look up where the normal data needs to go.
-	var normalLocation = gl.getAttribLocation(program, "a_normal");
-	var normalBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER, 
-		normalData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(normalLocation);
-	gl.vertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 0, 0);
-	
-	var colorLocation = gl.getAttribLocation(program, "a_color");
-	var colorBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER, 
-		colorData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(colorLocation);
-	gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
-	
-	var luminosityLocation = gl.getAttribLocation(program, "a_luminosity");
-	var luminosityBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, luminosityBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER, 
-		luminosityData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(luminosityLocation);
-	gl.vertexAttribPointer(luminosityLocation, 1, gl.FLOAT, false, 0, 0);
-	
-	var shininessLocation = gl.getAttribLocation(program, "a_shininess");
-	var shininessBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, shininessBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER, 
-		shininessData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(shininessLocation);
-	gl.vertexAttribPointer(shininessLocation, 1, gl.FLOAT, false, 0, 0);
-        
-        var groupIndexLocation = gl.getAttribLocation(program, "a_groupIndex");
-	var groupIndexBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, groupIndexBuffer);
-	gl.bufferData(
-		gl.ARRAY_BUFFER, 
-		groupIndexData,
-		gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(groupIndexLocation);
-	gl.vertexAttribPointer(groupIndexLocation, 1, gl.UINT, false, 0, 0);
-};
-
-EgomModel.prototype.render = function(gl,lineMode) {
-	if (lineMode===true) {
-		gl.drawArrays(gl.LINES, this.bufferStartLines, 2*this.lines.length);
-	} else {
-		gl.drawArrays(gl.TRIANGLES, this.bufferStart, 3*this.triangles.length);
-	}
+EgomModel.prototype.render = function(context,lineMode) {
+    if (lineMode===true) {
+        context.gl.drawArrays(context.gl.LINES, this._bufferStartLines[context], 2*this.lines.length);
+    } else {
+        context.gl.drawArrays(context.gl.TRIANGLES, this._bufferStart[context], 3*this.triangles.length);
+    }
 };
 
 

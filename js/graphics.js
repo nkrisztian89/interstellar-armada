@@ -43,7 +43,7 @@ function LODContext(maxEnabledLOD,thresholds) {
  * can manipulate it.
  */
 function GraphicsContext() {
-    this.resourceCenter=new ResourceCenter();
+    this.resourceManager=new ResourceManager();
     
     this._antialiasing = false;
     
@@ -58,7 +58,7 @@ function GraphicsContext() {
 GraphicsContext.prototype.loadFromXML = function(xmlSource) {
     var i;
     
-    this.resourceCenter.requestShaderLoad(xmlSource.getElementsByTagName("shaders")[0].getAttribute("source"));
+    this.resourceManager.requestShaderAndCubemapObjectLoad(xmlSource.getElementsByTagName("shaders")[0].getAttribute("source"));
     
     var contextTag = xmlSource.getElementsByTagName("context")[0];
     if(contextTag!==null) {

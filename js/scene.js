@@ -61,6 +61,18 @@ function VisualObject(shader,smallestParentSizeWhenDrawn,renderedWithDepthMask,r
         this._wasRendered = false;
 }
 
+VisualObject.prototype.addToContext = function(context) {
+    this.shader.addToContext(context);
+};
+
+VisualObject.prototype.cascadeAddToContext = function(context) {
+    this.addToContext(context);
+    var i;
+    for(var i=0;i<this.subnodes.length;i++) {
+        this.subnodes[i].cascadeAddToContext(context);
+    }    
+};
+
 /**
  * Adds a subnode to the rendering tree.
  * @param {VisualObject} subnode The subnode to be added to the rendering tree. 
@@ -191,14 +203,10 @@ VisualObject.prototype.getParentModelMatrix = function() {
  * Assigns all uniforms in the shader program associated with this object that
  * this object has a value function for, using the appropriate webGL calls.
  * The matching is done based on the names of the uniforms.
- * @param {WebGLRenderingContext} gl The webGL context to use
+ * @param {ManagedGLContext} context The webGL context to use
  */
-VisualObject.prototype.assignUniforms = function(gl) {
-	for(var i=0;i<this.shader.uniforms.length;i++) {
-		if(this.uniformValueFunctions[this.shader.uniforms[i].name]!==undefined) {
-			this.shader.uniforms[i].setValue(gl,this.shader.id,this.uniformValueFunctions[this.shader.uniforms[i].name]);
-		}
-	}
+VisualObject.prototype.assignUniforms = function(context) {
+    this.shader.assignUniforms(context,this.uniformValueFunctions);
 };
 
 /**
@@ -287,8 +295,7 @@ VisualObject.prototype.needsToBeRendered = function(screenWidth,screenHeight,lod
 
 /**
  * Renders the object and all its subnodes.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * necessary rendering resources .
+ * @param {ManagedGLContext} managedGLContext
  * @param {Scene} scene The scene within which the object is located.
  * @param {number} screenWidth The size of the rendering viewport in pixels,
  * to determine the actual drawn size of the object (for dynamic LOD)
@@ -298,7 +305,7 @@ VisualObject.prototype.needsToBeRendered = function(screenWidth,screenHeight,lod
  * enabled or disabled phase (renders only phase matches with the type of the
  * shader the object has)
  * */ 
-VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase) {
+VisualObject.prototype.cascadeRender = function(managedGLContext,scene,screenWidth,screenHeight,depthMaskPhase) {
     this._wasRendered = false;
     // the visible property determines visibility of all subnodes as well
     if(this.visible) {
@@ -318,16 +325,16 @@ VisualObject.prototype.cascadeRender = function(resourceCenter,scene,screenWidth
                         &&(this.isInsideViewFrustum(scene.activeCamera))
                     )||(this.lastInsideFrustumState===true)) {
                     if(this.needsToBeRendered(screenWidth,screenHeight,scene.lodContext,depthMaskPhase)) {
-                        resourceCenter.setCurrentShader(this.shader,scene);
-                        this.assignUniforms(resourceCenter.gl);
-                        this.render(resourceCenter,depthMaskPhase);
+                        managedGLContext.setCurrentShader(this.shader,scene);
+                        this.assignUniforms(managedGLContext);
+                        this.render(managedGLContext,depthMaskPhase);
                         this._wasRendered = true;
                     }
                 }
             }
             // recursive rendering of all subnodes
             for(var i=0;i<this.subnodes.length;i++) {
-                this.subnodes[i].cascadeRender(resourceCenter,scene,screenWidth,screenHeight,depthMaskPhase);
+                this.subnodes[i].cascadeRender(managedGLContext,scene,screenWidth,screenHeight,depthMaskPhase);
             }
         }
     }
@@ -388,6 +395,12 @@ function FVQ(model,shader,samplerName,cubemap,camera) {
 FVQ.prototype = new VisualObject();
 FVQ.prototype.constructor = FVQ;
 
+FVQ.prototype.addToContext = function(context) {
+    VisualObject.prototype.addToContext.call(this,context);
+    this.model.addToContext(context);
+    this.cubemap.addToContext(context);
+};
+
 /**
  * Always returns true as the FVQ always has to be rendered.
  * @param {Camera} camera Irrelevant in this case, FVQ is visible in all directions.
@@ -399,13 +412,12 @@ FVQ.prototype.isInsideViewFrustum = function(camera) {
 
 /**
  * Renders the FVQ, binding the cube mapped texture.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * cube mapped textures, the FVQ model and the shader.
+ * @param {ManagedGLContext} context
  */
-FVQ.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.cubemap,0);
+FVQ.prototype.render = function(context) {
+    context.bindTexture(this.cubemap,0);
 	
-	this.model.render(resourceCenter.gl,false);
+    this.model.render(context,false);
 };
 
 FVQ.prototype.getNumberOfDrawnTriangles = function() {
@@ -448,12 +460,7 @@ function Mesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,sca
         
         this.model=null;
 	
-	this.modelSize=0;
-	for(var i=0;i<this.modelsWithLOD.length;i++) {
-		if(this.modelsWithLOD[i].model.size>this.modelSize) {
-			this.modelSize=this.modelsWithLOD[i].model.size;
-		}
-	}
+	this.modelSize = 0;
 	
 	this.submeshes=new Array();
 	
@@ -478,6 +485,20 @@ function Mesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,sca
 
 Mesh.prototype = new VisualObject();
 Mesh.prototype.constructor = Mesh;
+
+Mesh.prototype.addToContext = function(context) {
+    VisualObject.prototype.addToContext.call(this,context);
+    var i;
+    for(i=0;i<this.modelsWithLOD.length;i++) {
+        this.modelsWithLOD[i].model.addToContext(context);
+        if(this.modelsWithLOD[i].model.size>this.modelSize) {
+            this.modelSize=this.modelsWithLOD[i].model.size;
+        }
+    }
+    for(var role in this.textures) {
+        this.textures[role].addToContext(context);
+    }
+};
 
 /**
  * Returns the translation matrix describing the position of the mesh.
@@ -585,24 +606,23 @@ Mesh.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,
 
 /**
  * Renders the appropriate model of the mesh.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * texture, the models and the shader.
+ * @param {ManagedGLContext} context
  * @param {boolean} depthMask Tells whether the depth mask is turned on during this render pass.
  */
-Mesh.prototype.render = function(resourceCenter,depthMask) {
+Mesh.prototype.render = function(context,depthMask) {
     var i=0;
     for(var textureType in this.textures) {        
-        resourceCenter.bindTexture(this.textures[textureType],i);
+        context.bindTexture(this.textures[textureType],i);
         i++;
     }
     if (this.lineMode===true) {
-            resourceCenter.gl.drawArrays(resourceCenter.gl.LINES, this.model.bufferStartLines, 2*this.model.lines.length);
+        context.gl.drawArrays(context.gl.LINES, this.model.getBufferStartForContext(context,"lines"), 2*this.model.lines.length);
     } else {
-            if(depthMask===true) {
-                resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStart, 3*this.model.nOpaqueTriangles);
-            } else {
-                resourceCenter.gl.drawArrays(resourceCenter.gl.TRIANGLES, this.model.bufferStartTransparent, 3*this.model.nTransparentTriangles);
-            }
+        if(depthMask===true) {
+            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context), 3*this.model.nOpaqueTriangles);
+        } else {
+            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context,"transparent"), 3*this.model.nTransparentTriangles);
+        }
     }
 };
 
@@ -655,6 +675,12 @@ function Billboard(model,shader,texture,size,positionMatrix,orientationMatrix) {
 Billboard.prototype = new VisualObject();
 Billboard.prototype.constructor = Billboard;
 
+Billboard.prototype.addToContext = function(context) {
+    VisualObject.prototype.addToContext.call(this,context);
+    this.model.addToContext(context);
+    this.texture.addToContext(context);
+};
+
 /**
  * Always returns true as is it faster to skip the check because anyway we are
  * only rendering 2 triangles here.
@@ -667,13 +693,12 @@ Billboard.prototype.isInsideViewFrustum = function(camera) {
 
 /**
  * Renders the billboard, binding the texture.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * textures, the model and the shader.
+ * @param {Managed3DContext} context
  */
-Billboard.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.texture,0);
+Billboard.prototype.render = function(context) {
+    context.bindTexture(this.texture,0);
 	
-	this.model.render(resourceCenter.gl,false);
+    this.model.render(context,false);
 };
 
 Billboard.prototype.getNumberOfDrawnTriangles = function() {
@@ -718,6 +743,12 @@ function DynamicParticle(model,shader,texture,color,size,positionMatrix,duration
 DynamicParticle.prototype = new VisualObject();
 DynamicParticle.prototype.constructor = DynamicParticle;
 
+DynamicParticle.prototype.addToContext = function(context) {
+    VisualObject.prototype.addToContext.call(this,context);
+    this.model.addToContext(context);
+    this.texture.addToContext(context);
+};
+
 /**
  * Always returns true as is it faster to skip the check because anyway we are
  * only rendering 2 triangles here.
@@ -730,15 +761,14 @@ DynamicParticle.prototype.isInsideViewFrustum = function(camera) {
 
 /**
  * Renders the particle, binding the needed texture.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * textures, the model and the shader.
+ * @param {Managed3DContext} context
  */
-DynamicParticle.prototype.render = function(resourceCenter) {
-	resourceCenter.bindTexture(this.texture,0);
+DynamicParticle.prototype.render = function(context) {
+	context.bindTexture(this.texture,0);
 	if(new Date().getTime()>=this.creationTime+this.duration) {
 		this.toBeDeleted=true;
 	} else {
-		this.model.render(resourceCenter.gl,false);
+		this.model.render(context,false);
 	}
 };
 
@@ -788,13 +818,12 @@ StaticParticle.prototype.setRelSize = function(newValue) {
 
 /**
  * Renders the particle, binding the needed texture.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * textures, the model and the shader.
+ * @param {Managed3DContext} context
  */
-StaticParticle.prototype.render = function(resourceCenter) {
-    resourceCenter.bindTexture(this.texture, 0);
+StaticParticle.prototype.render = function(context) {
+    context.bindTexture(this.texture, 0);
     if (this._relSize > 0) {
-        this.model.render(resourceCenter.gl, false);
+        this.model.render(context, false);
     }
 };
 
@@ -827,6 +856,11 @@ function PointParticle(model,shader,color,positionMatrix) {
 PointParticle.prototype = new VisualObject();
 PointParticle.prototype.constructor = PointParticle;
 
+PointParticle.prototype.addToContext = function(context) {
+    VisualObject.prototype.addToContext.call(this,context);
+    this.model.addToContext(context);
+};
+
 /**
  * Always returns true as is it faster to skip the check because anyway we are
  * only rendering one line here.
@@ -839,11 +873,10 @@ PointParticle.prototype.isInsideViewFrustum = function(camera) {
 
 /**
  * Renders the particle.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * the model and the shader.
+ * @param {Managed3DContext} context
  */
-PointParticle.prototype.render = function(resourceCenter) {
-	this.model.render(resourceCenter.gl,true);
+PointParticle.prototype.render = function(context) {
+	this.model.render(context,true);
 };
 
 /**
@@ -1150,11 +1183,13 @@ Scene.prototype.addCamera = function(camera) {
 /**
  * Recalculates the perspective matrices of cameras in case the viewport size
  * (and as a result, aspect) has changed.
+ * @param {Number} newWidth
+ * @param {Number} newHeight
  */
-Scene.prototype.resizeViewport = function() {
+Scene.prototype.resizeViewport = function(newWidth,newHeight) {
     var i;
-    //this.width=newWidth;
-    //this.height=newHeight;
+    this.width=newWidth;
+    this.height=newHeight;
     for(var i=0;i<this.cameras.length;i++) {
         this.cameras[i].setAspect(this.width/this.height);
     }
@@ -1165,15 +1200,11 @@ Scene.prototype.resizeViewport = function() {
  * Assigns all uniforms in the given shader program that
  * the scene has a value function for, using the appropriate webGL calls.
  * The matching is done based on the names of the uniforms.
- * @param {WebGLRenderingContext} gl The webGL context to use
+ * @param {ManagedGLContext} context The webGL context to use
  * @param {Shader} shader The shader program in which to assign the uniforms.
  */
-Scene.prototype.assignUniforms = function(gl,shader) {
-	for(var i=0;i<shader.uniforms.length;i++) {
-		if(this.uniformValueFunctions[shader.uniforms[i].name]!==undefined) {
-			shader.uniforms[i].setValue(gl,shader.id,this.uniformValueFunctions[shader.uniforms[i].name]);
-		}
-	}
+Scene.prototype.assignUniforms = function(context,shader) {
+    shader.assignUniforms(context,this.uniformValueFunctions);
 };
 
 /**
@@ -1191,42 +1222,55 @@ Scene.prototype.cleanUp = function() {
 };
 
 /**
+ * 
+ * @param {ManagedGLContext} context
+ */
+Scene.prototype.addToContext = function(context) {
+    var i;
+    for(i=0;i<this._backgroundObjects.length;i++) {
+        this._backgroundObjects[i].cascadeAddToContext(context);
+    }
+    for(i=0;i<this.objects.length;i++) {
+        this.objects[i].cascadeAddToContext(context);
+    }
+};
+
+/**
  * Renders the whole scene applying the general configuration and then rendering
  * all visual objects in the graph.
- * @param {ResourceCenter} resourceCenter The resource center that holds the
- * shaders, textures, models of the scene.
+ * @param {ManagedGLContext} context
  */
-Scene.prototype.render = function(resourceCenter) {
-        this._drawnTriangles = 0;
+Scene.prototype.render = function(context) {
+    this._drawnTriangles = 0;
         
-	var gl = resourceCenter.gl;
+    var gl = context.gl;
 	
-	gl.viewport(this.left, this.top, this.width, this.height);
-	gl.scissor(this.left, this.top, this.width, this.height);
+    gl.viewport(this.left, this.top, this.width, this.height);
+    gl.scissor(this.left, this.top, this.width, this.height);
 	
-	if (this.clearColorOnRender) {
-		gl.colorMask(this.colorMask[0], this.colorMask[1], this.colorMask[2], this.colorMask[3]);
-		gl.clearColor(this.clearColor[0],this.clearColor[1],this.clearColor[2],this.clearColor[3]);
-	}
+    if (this.clearColorOnRender) {
+        gl.colorMask(this.colorMask[0], this.colorMask[1], this.colorMask[2], this.colorMask[3]);
+        gl.clearColor(this.clearColor[0],this.clearColor[1],this.clearColor[2],this.clearColor[3]);
+    }
 
-	this.firstRender=false;
+    this.firstRender=false;
 	
-        // glClear is affected by the depth mask, so we need to turn it on here!
-        // (it's disabled for the second (transparent) render pass)
-        gl.depthMask(true);
-        // clearing color and depth buffers as set for this scene
-	var clear = this.clearColorOnRender?gl.COLOR_BUFFER_BIT:0;
-	clear=this.clearDepthOnRender?clear|gl.DEPTH_BUFFER_BIT:clear;
-	gl.clear(clear);
+    // glClear is affected by the depth mask, so we need to turn it on here!
+    // (it's disabled for the second (transparent) render pass)
+    gl.depthMask(true);
+    // clearing color and depth buffers as set for this scene
+    var clear = this.clearColorOnRender?gl.COLOR_BUFFER_BIT:0;
+    clear=this.clearDepthOnRender?clear|gl.DEPTH_BUFFER_BIT:clear;
+    gl.clear(clear);
         
-        gl.disable(gl.DEPTH_TEST);
-        gl.depthMask(false);
+    gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false);
         
-        for(var i=0;i<this._backgroundObjects.length;i++) {
-                this._backgroundObjects[i].cascadeResetModelMatrixCalculated();
-		this._backgroundObjects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
-                this._drawnTriangles+=this._backgroundObjects[i].cascadeGetNumberOfDrawnTriangles();
-	}
+    for(var i=0;i<this._backgroundObjects.length;i++) {
+        this._backgroundObjects[i].cascadeResetModelMatrixCalculated();
+        this._backgroundObjects[i].cascadeRender(context,this,this.width,this.height,false);
+        this._drawnTriangles+=this._backgroundObjects[i].cascadeGetNumberOfDrawnTriangles();
+    }
         
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
@@ -1241,7 +1285,7 @@ Scene.prototype.render = function(resourceCenter) {
         // Z buffer writing turned on
         gl.disable(gl.BLEND);
 	for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,true);
+		this.objects[i].cascadeRender(context,this,this.width,this.height,true);
                 this._drawnTriangles+=this.objects[i].cascadeGetNumberOfDrawnTriangles();
 	}
         // second rendering pass: rendering the transparent triangles with 
@@ -1249,7 +1293,7 @@ Scene.prototype.render = function(resourceCenter) {
 	gl.depthMask(false);
         gl.enable(gl.BLEND);
 	for(var i=0;i<this.objects.length;i++) {
-		this.objects[i].cascadeRender(resourceCenter,this,this.width,this.height,false);
+		this.objects[i].cascadeRender(context,this,this.width,this.height,false);
                 this._drawnTriangles+=this.objects[i].cascadeGetNumberOfDrawnTriangles();
 	}
 };

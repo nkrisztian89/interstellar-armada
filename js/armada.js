@@ -59,11 +59,11 @@ initialize();
 function getSourceFiles() {
     return [
         "matrices.js",
+        "resource.js",
         "gl.js",
         "egom.js",
         "graphics.js",
         "scene.js",
-        "resource.js",
         "components.js",
         "screens.js",
         "physics.js",
@@ -173,7 +173,10 @@ function initialize() {
             [
                 {
                     caption: "Play the game", 
-                    action: function() {game.setCurrentScreen("battle"); loadBattleResources();} 
+                    action: function() {
+                        game.setCurrentScreen("battle"); 
+                        game.getCurrentScreen().startNewBattle("level.xml");
+                    } 
                 },
                 {
                     caption: "Database", 
@@ -215,56 +218,4 @@ function initialize() {
             ],"menuContainer"));
         game.setCurrentScreen("mainMenu");
     });
-}
-
-/**
- * Old function under refactoring, its content will go under several methods of
- * different classes.
- */
-function loadBattleResources() {
-    game.getCurrentScreen().hideStats();
-    game.getCurrentScreen().hideUI();
-    game.getCurrentScreen().getInfoBox().hide();
-    game.getCurrentScreen().resizeCanvases(); 
-        
-    var test_level = new Level();
-    game.logicContext.level = test_level;
-	    
-    test_level.onLoad = function () {
-        game.getCurrentScreen().updateStatus("loading additional configuration...", 10);
-        test_level.addRandomShips("human",{falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
-        
-        game.getCurrentScreen().updateStatus("loading models...",25);
-        var canvas = game.getCurrentScreen().getCanvas();
-        game.graphicsContext.scene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
-        game.getCurrentScreen().addScene(game.graphicsContext.scene);
-        test_level.buildScene(game.graphicsContext.scene);
-
-        game.getCurrentScreen().updateStatus("",75);
-        var freq = 60;
-        game.graphicsContext.resourceCenter.init(canvas, game.graphicsContext.getAntialiasing(), freq);
-
-        var globalCommands = initGlobalCommands(game.graphicsContext, game.logicContext, game.controlContext);
-        game.controlContext.activate();
-
-        prevDate = new Date();
-
-        battleSimulationLoop = setInterval(function ()
-        {
-            var i;
-            curDate = new Date();
-            test_level.tick(curDate - prevDate);
-            prevDate = curDate;
-            control(game.graphicsContext.scene, test_level, globalCommands);
-            if (game.graphicsContext.lightIsTurning) {
-                var rotMatrix = rotationMatrix4([0.0,1.0,0.0],0.07);
-                for(i=0;i<test_level.backgroundObjects.length;i++) {
-                    test_level.backgroundObjects[i].position = vector3Matrix4Product(test_level.backgroundObjects[i].position,rotMatrix);
-                }                
-            }
-        }, 1000 / freq);
-    };
-    
-    game.getCurrentScreen().updateStatus("loading level information...",0);
-    test_level.requestLoadFromFile("level.xml");
 }
