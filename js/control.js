@@ -33,15 +33,32 @@
 var manualController;
 
 function ControlContext() {
+    this._xmlSource = null;
     this._commandDescriptions = new Object();
 }
 
-ControlContext.prototype.loadFromXML = function(xmlSource) {
+/**
+ * @param {Element} xmlSource
+ * @param {Boolean} [onlyRestoreSettings=false]
+ */
+ControlContext.prototype.loadFromXML = function(xmlSource,onlyRestoreSettings) {
     var i;
-    var commandDescriptionTags = xmlSource.getElementsByTagName("descriptions")[0].getElementsByTagName("command");
-    for(i=0;i<commandDescriptionTags.length;i++) {
-        this._commandDescriptions[commandDescriptionTags[i].getAttribute("name")]=commandDescriptionTags[i].getAttribute("description");
+    
+    if((onlyRestoreSettings===undefined)||(onlyRestoreSettings===false)) {
+        this._xmlSource = xmlSource;
+        
+        var commandDescriptionTags = xmlSource.getElementsByTagName("descriptions")[0].getElementsByTagName("command");
+        for(i=0;i<commandDescriptionTags.length;i++) {
+            this._commandDescriptions[commandDescriptionTags[i].getAttribute("name")]=commandDescriptionTags[i].getAttribute("description");
+        }
     }
+};
+
+ControlContext.prototype.loadFromLocalStorage = function() {
+};
+
+ControlContext.prototype.restoreDefaults = function() {
+    this.loadFromXML(this._xmlSource,true);
 };
 
 /**
@@ -65,38 +82,6 @@ function KeyboardControlContext() {
     
     var currentlyPressedKeys = new Array(256);
     
-    //var keyPressEvents = new Array();
-    var keyCodeTable = {
-        "backspace": 8,
-        "tab": 9,
-        "enter": 13,
-        "shift": 16,
-        "ctrl": 17,
-        "alt": 18,
-        "pause": 19,
-        "caps lock": 20,
-        "escape": 27,
-        "space": 32,
-        "page up": 33,
-        "page down": 34,
-        "end": 35,
-        "home": 36,
-        "left": 37,
-        "up": 38,
-        "right": 39,
-        "down": 40,
-        "insert": 45,
-        "delete": 46,
-        "0": 48, "1": 49, "2": 50, "3": 51, "4": 52, "5": 53, "6": 54, "7": 55, "8": 56, "9": 57,
-        "a": 65, "b": 66, "c": 67, "d": 68, "e": 69, "f": 70, "g": 71, "h": 72, "i": 73, "j": 74,
-        "k": 75, "l": 76, "m": 77, "n": 78, "o": 79, "p": 80, "q": 81, "r": 82, "s": 83, "t": 84,
-        "u": 85, "v": 86, "w": 87, "x": 88, "y": 89, "z": 90,
-        "left window": 91, "right window": 92, "select": 93,
-        "numpad 0": 96, "numpad 1": 97, "numpad 2": 98, "numpad 3": 99, "numpad 4": 100,
-        "numpad 5": 101, "numpad 6": 102, "numpad 7": 103, "numpad 8": 104, "numpad 9": 105,
-        "f1": 112, "f2": 113, "f3": 114, "f4": 115, "f5": 116, "f6": 117, "f7": 118, "f8": 119, "f9": 120,
-        "f10": 121, "f11": 122, "f12": 123
-    };
     var keyCommands={};
     
     this.cancelPressedKeys = function() {
@@ -122,15 +107,16 @@ function KeyboardControlContext() {
     /**
      * Creates a new keyboard command object.
      * @class Represents a keypress - command association.
-     * @param {string} name Name of the command. The different controllers identify the command association by this name.
-     * @param {string} key The string representation of the pressed key (see keyCodeTable).
-     * @param {boolean} shiftState Whether the shift key should be held pressed while activating this command.
-     * @param {boolean} ctrlState Whether the control key should be held pressed while activating this command.
-     * @param {boolean} altState Whether the alt key should be held pressed while activating this command.
+     * @param {String} name Name of the command. The different controllers identify the command association by this name.
+     * @param {String} key The string representation of the pressed key
+     * @param {Boolean} shiftState Whether the shift key should be held pressed while activating this command.
+     * @param {Boolean} ctrlState Whether the control key should be held pressed while activating this command.
+     * @param {Boolean} altState Whether the alt key should be held pressed while activating this command.
      */
     this.KeyCommand = function(name,key,shiftState,ctrlState,altState) {
         this.name=name;
-        this.keyCode=keyCodeTable[key];
+        this.key=key;
+        this.keyCode=KeyboardControlContext.prototype.getKeyCodeOf(key);
         this.shiftState=shiftState;
         this.ctrlState=ctrlState;
         this.altState=altState;
@@ -213,8 +199,20 @@ function KeyboardControlContext() {
         };
     };
     
-    this.addKeyCommand = function(keyCommand) {
+    this.setKeyCommand = function(keyCommand) {
         keyCommands[keyCommand.name]=keyCommand;
+    };
+    
+    this.setAndStoreKeyCommand = function(keyCommand) {
+        this.setKeyCommand(keyCommand);
+        localStorage['interstellarArmada_control_'+keyCommand.name+'_key'] = keyCommand.key;
+        localStorage['interstellarArmada_control_'+keyCommand.name+'_shift'] = keyCommand.shiftState;
+        localStorage['interstellarArmada_control_'+keyCommand.name+'_ctrl'] = keyCommand.ctrlState;
+        localStorage['interstellarArmada_control_'+keyCommand.name+'_alt'] = keyCommand.altState;
+    };
+    
+    this.getKeyStringForCommand = function(commandName) {
+        return keyCommands[commandName].getKeyString();
     };
     
     this.setOneShotActionForCommand = function(commandName,action) {
@@ -234,7 +232,11 @@ function KeyboardControlContext() {
     this.getCommandExplanationsAndKeys = function () {
         var result = new Array();
         for (var commandName in this._commandDescriptions) {
-            result.push([this._commandDescriptions[commandName], keyCommands[commandName].getKeyString()]);
+            result.push({
+                name: commandName,
+                description: this._commandDescriptions[commandName],
+                key: keyCommands[commandName].getKeyString()
+            });
         }
         return result;
     };
@@ -243,12 +245,58 @@ function KeyboardControlContext() {
 KeyboardControlContext.prototype = new ControlContext();
 KeyboardControlContext.prototype.constructor = KeyboardControlContext;
 
-KeyboardControlContext.prototype.loadFromXML = function(xmlSource) {
-    ControlContext.prototype.loadFromXML.call(this,xmlSource);
+KeyboardControlContext.prototype.getKeyCodeTable = function() {
+    return {
+        "backspace": 8,
+        "tab": 9,
+        "enter": 13,
+        "shift": 16,
+        "ctrl": 17,
+        "alt": 18,
+        "pause": 19,
+        "caps lock": 20,
+        "escape": 27,
+        "space": 32,
+        "page up": 33,
+        "page down": 34,
+        "end": 35,
+        "home": 36,
+        "left": 37,
+        "up": 38,
+        "right": 39,
+        "down": 40,
+        "insert": 45,
+        "delete": 46,
+        "0": 48, "1": 49, "2": 50, "3": 51, "4": 52, "5": 53, "6": 54, "7": 55, "8": 56, "9": 57,
+        "a": 65, "b": 66, "c": 67, "d": 68, "e": 69, "f": 70, "g": 71, "h": 72, "i": 73, "j": 74,
+        "k": 75, "l": 76, "m": 77, "n": 78, "o": 79, "p": 80, "q": 81, "r": 82, "s": 83, "t": 84,
+        "u": 85, "v": 86, "w": 87, "x": 88, "y": 89, "z": 90,
+        "left window": 91, "right window": 92, "select": 93,
+        "numpad 0": 96, "numpad 1": 97, "numpad 2": 98, "numpad 3": 99, "numpad 4": 100,
+        "numpad 5": 101, "numpad 6": 102, "numpad 7": 103, "numpad 8": 104, "numpad 9": 105,
+        "f1": 112, "f2": 113, "f3": 114, "f4": 115, "f5": 116, "f6": 117, "f7": 118, "f8": 119, "f9": 120,
+        "f10": 121, "f11": 122, "f12": 123
+    };
+};
+
+KeyboardControlContext.prototype.getKeyCodeOf = function(key) {
+    return this.getKeyCodeTable()[key];
+};
+
+KeyboardControlContext.prototype.getKeyOfCode = function(keyCode) {
+    for(var key in this.getKeyCodeTable()) {
+        if(this.getKeyCodeTable()[key]===keyCode) {
+            return key;
+        }
+    }
+};
+
+KeyboardControlContext.prototype.loadFromXML = function(xmlSource,onlyRestoreSettings) {
+    ControlContext.prototype.loadFromXML.call(this,xmlSource,onlyRestoreSettings);
     var i;
     var keyCommandTags = xmlSource.getElementsByTagName("keyboard")[0].getElementsByTagName("command");
     for(i=0;i<keyCommandTags.length;i++) {
-        this.addKeyCommand(new this.KeyCommand(
+        this.setKeyCommand(new this.KeyCommand(
                 keyCommandTags[i].getAttribute("name"),
                 keyCommandTags[i].getAttribute("key"),
                 (keyCommandTags[i].getAttribute("shift")==="true"),
@@ -257,10 +305,43 @@ KeyboardControlContext.prototype.loadFromXML = function(xmlSource) {
     }
 };
 
+KeyboardControlContext.prototype.loadFromLocalStorage = function() {
+    ControlContext.prototype.loadFromLocalStorage.call(this);
+    for(var commandName in this._commandDescriptions) {
+        if(localStorage['interstellarArmada_control_'+commandName+'_key']!==undefined) {
+            this.setKeyCommand(new this.KeyCommand(
+                commandName,
+                localStorage['interstellarArmada_control_'+commandName+'_key'],
+                (localStorage['interstellarArmada_control_'+commandName+'_shift']==="true"),
+                (localStorage['interstellarArmada_control_'+commandName+'_ctrl']==="true"),
+                (localStorage['interstellarArmada_control_'+commandName+'_alt']==="true")
+            ));
+        }
+    }
+};
+
+KeyboardControlContext.prototype.restoreDefaults = function() {
+    ControlContext.prototype.restoreDefaults.call(this);
+    for(var commandName in this._commandDescriptions) {
+        if(localStorage['interstellarArmada_control_'+commandName+'_key']!==undefined) {
+            localStorage.removeItem('interstellarArmada_control_'+commandName+'_key');
+            localStorage.removeItem('interstellarArmada_control_'+commandName+'_shift');
+            localStorage.removeItem('interstellarArmada_control_'+commandName+'_ctrl');
+            localStorage.removeItem('interstellarArmada_control_'+commandName+'_alt');
+        }
+    }
+};
+
 /**
  * Start processing the user input in this context.
  */
 KeyboardControlContext.prototype.activate = function() {
+    // temporary solution before refactoring of control module. Make sure new
+    // key assigments take effect immediately
+    if(manualController!==undefined) {
+        manualController = new FighterController(manualController.controlledEntity,game.graphicsContext,game.logicContext,game.controlContext);
+    }
+    this.globalCommands = initGlobalCommands(game.graphicsContext, game.logicContext, this);
     document.addEventListener("keydown",this.handleKeyDown);
     document.addEventListener("keyup",this.handleKeyUp);
 };
@@ -1185,9 +1266,6 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
                 logicContext.level.spacecrafts[i].controller.goals=new Array();
             }
         }
-    }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("toggleLightRotation",function(){
-        game.graphicsContext.lightIsTurning=!game.graphicsContext.lightIsTurning;
     }));
     globalCommands.push(controlContext.setOneShotActionForCommand("toggleHitboxVisibility",function(){
         for(i=0;i<logicContext.level.spacecrafts.length;i++) {

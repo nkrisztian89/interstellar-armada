@@ -99,8 +99,10 @@ Game.prototype.requestSettingsLoad = function () {
         if (request.readyState === 4) {
             var settingsXML = this.responseXML;
             self.graphicsContext.loadFromXML(settingsXML.getElementsByTagName("graphics")[0]);
+            self.graphicsContext.loadFromLocalStorage();
             self.logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
             self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
+            self.controlContext.loadFromLocalStorage();
         }
     };
     request.send(null);

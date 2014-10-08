@@ -41,8 +41,9 @@ function GameScreen(name,source) {
     this._model=null;
     
     // default components
-    this._status=null;
-    this._background=null;
+    this._status = null;
+    this._background = null;
+    this._registeredComponents = new Array();
     
     // function to execute when the model is loaded
     this._onModelLoad = function() {};
@@ -143,6 +144,10 @@ GameScreen.prototype.isSuperimposed = function() {
  */
 GameScreen.prototype.closePage = function() {
     this._status = null;
+    
+    for(var i=0;i<this._registeredComponents.length;i++) {
+        this._registeredComponents[i].component.resetComponent();
+    }
 };
 
 /**
@@ -167,6 +172,23 @@ GameScreen.prototype.closeSuperimposedPage = function() {
  */
 GameScreen.prototype._initializeComponents = function() {
     this._status = document.getElementById("status");
+    
+    for(var i=0;i<this._registeredComponents.length;i++) {
+        var parentNode;
+        if(this._registeredComponents[i].parentNodeID!==undefined) {
+            parentNode = document.getElementById(this._registeredComponents[i].parentNodeID);
+        }
+        // otherwise just leave it undefined, nothing to pass to the method below
+        this.addExternalComponent(this._registeredComponents[i].component,parentNode);
+    }
+};
+
+GameScreen.prototype.registerComponent = function(screenComponent,parentNodeID) {
+    this._registeredComponents.push({
+        component: screenComponent,
+        parentNodeID: parentNodeID
+    });
+    return screenComponent;
 };
 
 /**
@@ -435,8 +457,8 @@ function BattleScreen(name,source) {
     this._stats=null;
     this._ui=null;
     
-    this._loadingBox = new LoadingBox("loadingBox","loadingbox.html");
-    this._infoBox = new InfoBox("infoBox","infobox.html");
+    this._loadingBox = this.registerComponent(new LoadingBox("loadingBox","loadingbox.html"));
+    this._infoBox = this.registerComponent(new InfoBox("infoBox","infobox.html"));
 };
 
 BattleScreen.prototype=new GameScreenWithCanvases();
@@ -450,8 +472,6 @@ BattleScreen.prototype.closePage = function() {
     
     this._stats = null;
     this._ui = null;
-    this._loadingBox.resetComponent();
-    this._infoBox.resetComponent();
 };
 
 /**
@@ -463,9 +483,6 @@ BattleScreen.prototype._initializeComponents = function() {
     
     this._stats = document.getElementById("stats");
     this._ui= document.getElementById("ui");
-    
-    this.addExternalComponent(this._loadingBox);
-    this.addExternalComponent(this._infoBox);
 };
 
 /**
@@ -581,24 +598,16 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
         
         game.graphicsContext.resourceManager.requestResourceLoad();
 
-        var globalCommands = initGlobalCommands(game.graphicsContext, game.logicContext, game.controlContext);
         game.controlContext.activate();
 
         prevDate = new Date();
         
         battleSimulationLoop = setInterval(function ()
         {
-            var i;
             curDate = new Date();
             test_level.tick(curDate - prevDate);
             prevDate = curDate;
-            control(game.graphicsContext.scene, test_level, globalCommands);
-            if (game.graphicsContext.lightIsTurning) {
-                var rotMatrix = rotationMatrix4([0.0,1.0,0.0],0.07);
-                for(i=0;i<test_level.backgroundObjects.length;i++) {
-                    test_level.backgroundObjects[i].position = vector3Matrix4Product(test_level.backgroundObjects[i].position,rotMatrix);
-                }                
-            }
+            control(game.graphicsContext.scene, test_level, game.controlContext.globalCommands);
         }, 1000 / freq);
     };
     
@@ -618,7 +627,7 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
 function DatabaseScreen(name,source) {
     GameScreenWithCanvases.call(this,name,source);
     
-    this._loadingBox = new LoadingBox("loadingBox","loadingbox.html");
+    this._loadingBox = this.registerComponent(new LoadingBox("loadingBox","loadingbox.html"));
     
     this._itemName = null;
     this._itemType = null;
@@ -638,9 +647,7 @@ DatabaseScreen.prototype.constructor=DatabaseScreen;
  */
 DatabaseScreen.prototype.closePage = function() {
     GameScreenWithCanvases.prototype.closePage.call(this);
-    
-    this._loadingBox.resetComponent();
-    
+        
     this._itemName = null;
     this._itemType = null;
     this._itemDescription = null;
@@ -673,7 +680,6 @@ DatabaseScreen.prototype._initializeComponents = function() {
     this._itemType = document.getElementById("itemType");
     this._itemDescription = document.getElementById("itemDescription");
     
-    this.addExternalComponent(this._loadingBox);
     this.initializeCanvas();
 };
 
@@ -793,26 +799,96 @@ DatabaseScreen.prototype.loadShip = function() {
 };
 
 /**
- * Defines a help screen object.
- * @class Represents the help screen, which currently just shows the available
+ * Defines a graphics setting screen object.
+ * @class Represents the graphics settings screen.
+ * @extends GameScreen
+ * @param {String} name @see GameScreen
+ * @param {String} source @see GameScreen
+ * @returns {GraphicsScreen}
+ */
+function GraphicsScreen(name,source) {
+    GameScreen.call(this,name,source);
+    
+    this._antialiasingSelector = this.registerComponent(new Selector("aaSelector","selector.html","Anti-aliasing:",["on","off"]),"settingsDiv");
+    this._filteringSelector = this.registerComponent(new Selector("filteringSelector","selector.html","Texture filtering:",["bilinear","trilinear","anisotropic"]),"settingsDiv");
+    this._lodSelector = this.registerComponent(new Selector("lodSelector","selector.html","Model details:",["very low","low","medium","high","very high"]),"settingsDiv");
+};
+
+GraphicsScreen.prototype=new GameScreen();
+GraphicsScreen.prototype.constructor=GraphicsScreen;
+
+GraphicsScreen.prototype._initializeComponents = function() {
+    GameScreen.prototype._initializeComponents.call(this);
+    
+    var self = this;
+    var backButton = document.getElementById("backButton");
+    backButton.addEventListener("click",function(){
+        game.graphicsContext.setAntialiasing((self._antialiasingSelector.getSelectedValue()==="on"));
+        game.graphicsContext.setFiltering(self._filteringSelector.getSelectedValue());
+        game.graphicsContext.setMaxLOD(self._lodSelector.getSelectedIndex());
+        if(self.isSuperimposed()) {
+            game.closeSuperimposedScreen();
+        } else {
+            game.setCurrentScreen('settings');
+        }
+    });
+    var defaultsButton = document.getElementById("defaultsButton");
+    defaultsButton.addEventListener("click",function(){
+        game.graphicsContext.restoreDefaults();
+        self.updateValues();
+    });
+    
+    this.updateValues();
+};
+
+GraphicsScreen.prototype.updateValues = function() {
+    this._antialiasingSelector.selectValue((game.graphicsContext.getAntialiasing()===true)?"on":"off");
+    this._filteringSelector.selectValue(game.graphicsContext.getFiltering());
+    this._lodSelector.selectValueWithIndex(game.graphicsContext.getMaxLoadedLOD());
+};
+
+/**
+ * Defines a controls screen object.
+ * @class Represents the controls screen, which currently just shows the available
  * keyboard controls.
  * @extends GameScreen
  * @param {String} name Check GameScreen
  * @param {String} source Check GameScreen
- * @returns {HelpScreen}
+ * @returns {ControlsScreen}
  */
-function HelpScreen(name,source) {
+function ControlsScreen(name,source) {
     GameScreen.call(this,name,source);
 };
 
-HelpScreen.prototype=new GameScreen();
-HelpScreen.prototype.constructor=HelpScreen;
+ControlsScreen.prototype=new GameScreen();
+ControlsScreen.prototype.constructor=ControlsScreen;
+
+ControlsScreen.prototype.listenForKeySetting = function() {
+    var self = this;
+    this.innerHTML = "?";
+    this.className = "highlightedItem";
+    document.onkeydown = function(event) {
+        game.getCurrentScreen().setKey(event,self.getAttribute("id"));
+    };
+};
+
+ControlsScreen.prototype.setKey = function(event,commandName) {
+    game.controlContext.setAndStoreKeyCommand(new game.controlContext.KeyCommand(
+        commandName,
+        KeyboardControlContext.prototype.getKeyOfCode(event.keyCode),
+        false,
+        false,
+        false
+    ));
+    this.refreshKeyForCommand(commandName);
+    document.onkeydown = null;
+};
 
 /**
  * Builds the dynamic part of the HTML structure, adding the table rows to list
  * the set key commands.
  */
-HelpScreen.prototype._initializeComponents = function() {
+ControlsScreen.prototype._initializeComponents = function() {
     GameScreen.prototype._initializeComponents.call(this);
     
     var backButton = document.getElementById("backButton");
@@ -820,18 +896,46 @@ HelpScreen.prototype._initializeComponents = function() {
         if(game.getCurrentScreen().isSuperimposed()) {
             game.closeSuperimposedScreen();
         } else {
-            game.setCurrentScreen('mainMenu');
+            game.setCurrentScreen('settings');
         }
     });
+    var self = this;
+    var defaultsButton = document.getElementById("defaultsButton");
+    defaultsButton.addEventListener("click",function(){
+        game.controlContext.restoreDefaults();
+        self.generateTable();
+    });
     
+    this.generateTable();
+};
+
+ControlsScreen.prototype.generateTable = function() {
+    var self = this;
     var keyCommandsTable = document.getElementById("keyCommandsTable");
+    keyCommandsTable.innerHTML = "";
     var keyCommands = game.controlContext.getCommandExplanationsAndKeys();
     var trElement = null;
+    var td1Element = null;
+    var td2Element = null;
     for(var i=0;i<keyCommands.length;i++) {
         trElement = document.createElement("tr");
-        trElement.innerHTML="<td>"+keyCommands[i][1]+"</td><td>"+keyCommands[i][0]+"</td>";
+        td1Element = document.createElement("td");
+        td1Element.setAttribute("id",keyCommands[i].name);
+        td1Element.className = "clickable";
+        td1Element.onclick = self.listenForKeySetting;
+        td1Element.innerHTML = keyCommands[i].key;
+        td2Element = document.createElement("td");
+        td2Element.innerHTML = keyCommands[i].description;
+        trElement.appendChild(td1Element);
+        trElement.appendChild(td2Element);
         keyCommandsTable.appendChild(trElement);
     }
+};
+
+
+ControlsScreen.prototype.refreshKeyForCommand = function(commandName) {
+    document.getElementById(commandName).innerHTML = game.controlContext.getKeyStringForCommand(commandName);
+    document.getElementById(commandName).className = "clickable";
 };
 
 /**
@@ -866,32 +970,8 @@ function MenuScreen(name,source,menuOptions,menuContainerID) {
      * @name MenuScreen#_menuComponent 
      * @type MenuComponent
      */
-    this._menuComponent = new MenuComponent("menu","menucomponent.html",this._menuOptions);
+    this._menuComponent = this.registerComponent(new MenuComponent("menu","menucomponent.html",this._menuOptions),this._menuContainerID);
 };
 
 MenuScreen.prototype=new GameScreen();
 MenuScreen.prototype.constructor=MenuScreen;
-
-/**
- * Builds up the HTML menu on the page using the {@link MenuComponent}
- */
-MenuScreen.prototype._initializeComponents = function() {
-    GameScreen.prototype._initializeComponents.call(this);
-    
-    var parentNode;
-    if(this._menuContainerID!==undefined) {
-        parentNode = document.getElementById(this._menuContainerID);
-    }
-    // otherwise just leave it undefined, nothing to pass to the method below
-    
-    this.addExternalComponent(this._menuComponent,parentNode);
-};
-
-/**
- * Nulls out the components.
- */
-MenuScreen.prototype.closePage = function() {
-    GameScreen.prototype.closePage.call(this);
-    
-    this._menuComponent.resetComponent();
-};

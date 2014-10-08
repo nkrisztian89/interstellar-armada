@@ -27,7 +27,7 @@ body {
     font-size: 16px;
     margin: 0;
     padding: 0;
-    border: 5px transparent;
+    border: 5px transparent;;
 }
 
 .outerContainer {
@@ -142,6 +142,10 @@ body {
     border-bottom: none;
 }
 
+table {
+    margin-bottom: 1em;
+}
+
 ul {
     display: table;
     padding: 1.0em;
@@ -195,6 +199,7 @@ a.horizontalMenu {
 }
 
 a.button {
+    min-width: 120px;
     font-size: 0.9em;
     text-align: center;
     padding: 0.5em;
@@ -208,6 +213,19 @@ a:hover {
 
 a.button:hover {
     background-color: #333333;
+}
+
+.clickable:hover {
+    color: #FFFFFF;
+    background-color: #333333;
+    cursor: pointer;
+}
+
+.highlightedItem {
+    color: #FFFFFF;
+    background-color: #333333;
+    box-shadow: 0em 0em 0.5em #00FF00 inset;
+    text-shadow: #888888 0.1em 0.1em 0.5em;
 }
 
 img {

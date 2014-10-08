@@ -32,8 +32,8 @@
  * For each object the highest LOD, for which its size exceed the threshold, will be used.
  */
 function LODContext(maxEnabledLOD,thresholds) {
-	this.maxEnabledLOD=maxEnabledLOD;
-	this.thresholds=thresholds;
+	this.maxEnabledLOD = parseInt(maxEnabledLOD);
+	this.thresholds = thresholds;
 }
 
 /**
@@ -45,21 +45,27 @@ function LODContext(maxEnabledLOD,thresholds) {
 function GraphicsContext() {
     this.resourceManager=new ResourceManager();
     
+    this._xmlSource = null;
+    
     this._antialiasing = null;
     this._filtering = null;
     
     this._maxLoadedLOD = null;
     this._lodContext = null;
-    
-    // temporary test variable indicating whether the direction of directional
-    // lighting should keep turning around
-    this.lightIsTurning=false;
 }
 
-GraphicsContext.prototype.loadFromXML = function(xmlSource) {
+/**
+ * 
+ * @param {Element} xmlSource
+ * @param {Boolean} [onlyRestoreSettings=false]
+ */
+GraphicsContext.prototype.loadFromXML = function(xmlSource,onlyRestoreSettings) {
     var i;
     
-    this.resourceManager.requestShaderAndCubemapObjectLoad(xmlSource.getElementsByTagName("shaders")[0].getAttribute("source"));
+    if((onlyRestoreSettings===undefined)||(onlyRestoreSettings===false)) {
+        this._xmlSource = xmlSource;
+        this.resourceManager.requestShaderAndCubemapObjectLoad(xmlSource.getElementsByTagName("shaders")[0].getAttribute("source"));
+    }
     
     this._antialiasing = false;
     this._filtering = "bilinear";
@@ -73,13 +79,15 @@ GraphicsContext.prototype.loadFromXML = function(xmlSource) {
         }
     }
     var lodLoadProfileTag = xmlSource.getElementsByTagName("lodLoadProfile")[0];
-    this._maxLoadedLOD = lodLoadProfileTag.getAttribute("maxLevel");
+    this._maxLoadedLOD = parseInt(lodLoadProfileTag.getAttribute("maxLevel"));
+    // if the maximum loaded LOD is limited by screen width, check the current width
+    // and apply the limit
     if(lodLoadProfileTag.getAttribute("autoLimitByScreenWidth")==="true") {
         var loadLoadLimitTags = lodLoadProfileTag.getElementsByTagName("limit");
         for (i=0;i<loadLoadLimitTags.length;i++) {
             if((window.innerWidth<loadLoadLimitTags[i].getAttribute("screenSizeLessThan"))&&
                     (this._maxLoadedLOD>loadLoadLimitTags[i].getAttribute("level"))) {
-                this._maxLoadedLOD = Number(loadLoadLimitTags[i].getAttribute("level"));
+                this._maxLoadedLOD = parseInt(loadLoadLimitTags[i].getAttribute("level"));
             }
         }
     }
@@ -88,23 +96,80 @@ GraphicsContext.prototype.loadFromXML = function(xmlSource) {
     var lodDisplayLimitTags = lodDisplayProfileTag.getElementsByTagName("limit");
     var lodDisplayLimits = new Array(lodDisplayLimitTags.length+1,0);
     for (i=0;i<lodDisplayLimitTags.length;i++) {
-        lodDisplayLimits[Number(lodDisplayLimitTags[i].getAttribute("level"))+1]=lodDisplayLimitTags[i].getAttribute("objectSizeLessThan");
+        lodDisplayLimits[parseInt(lodDisplayLimitTags[i].getAttribute("level"))+1]=parseInt(lodDisplayLimitTags[i].getAttribute("objectSizeLessThan"));
     }
-    this._lodContext = new LODContext(lodDisplayProfileTag.getAttribute("maxLevel"),lodDisplayLimits);
+    this._lodContext = new LODContext(parseInt(lodDisplayProfileTag.getAttribute("maxLevel")),lodDisplayLimits);
 };
 
+GraphicsContext.prototype.loadFromLocalStorage = function() {
+    if(localStorage.interstellarArmada_graphics_antialiasing!==undefined) {
+        this._antialiasing = (localStorage.interstellarArmada_graphics_antialiasing==="true");
+    }
+    if(localStorage.interstellarArmada_graphics_filtering!==undefined) {
+        this._filtering = localStorage.interstellarArmada_graphics_filtering;
+    }
+    if(localStorage.interstellarArmada_graphics_maxLOD!==undefined) {
+        this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD));
+    }
+};
+
+GraphicsContext.prototype.restoreDefaults = function() {
+    this.loadFromXML(this._xmlSource,true);
+    localStorage.removeItem("interstellarArmada_graphics_antialiasing");
+    localStorage.removeItem("interstellarArmada_graphics_filtering");
+    localStorage.removeItem("interstellarArmada_graphics_maxLOD");
+};
+
+
+/**
+ * @returns {Boolean}
+ */
 GraphicsContext.prototype.getAntialiasing = function() {
     return this._antialiasing;
 };
 
+/**
+ * @param {Boolean} value
+ */
+GraphicsContext.prototype.setAntialiasing = function(value) {
+    this._antialiasing = value;
+    localStorage.interstellarArmada_graphics_antialiasing = this._antialiasing;
+};
+
+/**
+ * @returns {String}
+ */
 GraphicsContext.prototype.getFiltering = function() {
     return this._filtering;
 };
 
+/**
+ * @param {String} value
+ */
+GraphicsContext.prototype.setFiltering = function(value) {
+    this._filtering = value;
+    localStorage.interstellarArmada_graphics_filtering = this._filtering;
+};
+
+/**
+ * @returns {Number}
+ */
 GraphicsContext.prototype.getMaxLoadedLOD = function() {
     return this._maxLoadedLOD;
 };
 
+/**
+ * @returns {LODContext}
+ */
 GraphicsContext.prototype.getLODContext = function() {
     return this._lodContext;
+};
+
+/**
+ * @param {Number} value
+ */
+GraphicsContext.prototype.setMaxLOD = function(value) {
+   this._maxLoadedLOD = value;
+   this._lodContext.maxEnabledLOD = value;
+   localStorage.interstellarArmada_graphics_maxLOD = this._maxLoadedLOD;
 };

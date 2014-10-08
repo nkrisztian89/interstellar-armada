@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <graphics>
-        <context antialiasing="true" filtering="bilinear" />
+        <context antialiasing="true" filtering="trilinear" />
         <shaders source="shaders.xml" />
         <levelOfDetailSettings>
             <lodLoadProfile maxLevel="4" autoLimitByScreenWidth="true">
@@ -50,7 +50,6 @@
             <command name="pitchDown" description="Turn spacecraft downwards." />
             <command name="rollLeft" description="Roll spacecraft to the left." />
             <command name="rollRight" description="Roll spacecraft to the right." />
-            <command name="toggleLightRotation" description="Toggle rotation of directional light." />
             <command name="setAIControl" description="Switch the control of the currently followed spacecraft to AI." />
             <command name="stopAIShips" description="Delete the goals of AI controlled spacecrafts and make all of them stop." />
             <command name="toggleHitboxVisibility" description="Toggle the visibility of hitboxes." />
@@ -90,7 +89,6 @@
             <command name="setManualControl" key="m" />
             <command name="setAIControl" key="n" />
             <command name="stopAIShips" key="0" />
-            <command name="toggleLightRotation" key="l" />
             <command name="toggleHitboxVisibility" key="h" />
             <command name="quit" key="escape" />
         </keyboard>

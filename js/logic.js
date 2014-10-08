@@ -485,7 +485,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
     var i,j;
     var modelsWithLOD;
     // loading or setting models
-    modelsWithLOD=new Array();
+    modelsWithLOD = new Array();
     // if no specific level of detail is given, load all that are within the global LOD load limit
     // if a specific LOD is given only load that one
     for(i=0;i<this.class.modelReferences.length;i++) {

@@ -433,11 +433,11 @@ FVQ.prototype.getNumberOfDrawnTriangles = function() {
  * Creates a LOD associated 3D model object.
  * @class A 3D model paired up with Level Of Detail indicator.
  * @param {EgomModel} model The 3D model data.
- * @param {number} lod The LOD level to be associated with the model.
+ * @param {Number} lod The LOD level to be associated with the model.
  */
 function ModelWithLOD(model,lod) {
-	this.model=model;
-	this.lod=lod;
+	this.model = model;
+	this.lod = lod;
 }
 
 /**

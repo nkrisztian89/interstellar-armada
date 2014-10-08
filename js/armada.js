@@ -172,7 +172,7 @@ function initialize() {
         game.addScreen(new MenuScreen("mainMenu","index.html",
             [
                 {
-                    caption: "Play the game", 
+                    caption: "New game", 
                     action: function() {
                         game.setCurrentScreen("battle"); 
                         game.getCurrentScreen().startNewBattle("level.xml");
@@ -183,8 +183,8 @@ function initialize() {
                     action: function(){ game.setCurrentScreen("database"); }
                 },
                 {
-                    caption: "Keyboard controls", 
-                    action: function(){ game.setCurrentScreen("help"); } 
+                    caption: "Settings", 
+                    action: function(){ game.setCurrentScreen("settings"); } 
                 },
                 {
                     caption: "About", 
@@ -193,7 +193,23 @@ function initialize() {
             ],"menuContainer"));
         game.addScreen(new BattleScreen("battle","battle.html"));
         game.addScreen(new DatabaseScreen("database","database.html"));
-        game.addScreen(new HelpScreen("help","help.html"));
+        game.addScreen(new MenuScreen("settings","index.html",
+            [
+                {
+                    caption: "Graphics settings", 
+                    action: function() { game.setCurrentScreen("graphics"); } 
+                },
+                {
+                    caption: "Control settings", 
+                    action: function() { game.setCurrentScreen("controls"); } 
+                },
+                {
+                    caption: "Back", 
+                    action: function() { game.setCurrentScreen("mainMenu"); } 
+                }
+            ],"menuContainer"));
+        game.addScreen(new GraphicsScreen("graphics","graphics.html"));
+        game.addScreen(new ControlsScreen("controls","controls.html"));
         game.addScreen(new GameScreen("about","about.html"));
         game.addScreen(new MenuScreen("ingameMenu","ingamemenu.html",
             [
@@ -206,7 +222,7 @@ function initialize() {
                 },
                 {
                     caption: "Controls",
-                    action: function () { game.setCurrentScreen("help",true,[64,64,64],0.5); }
+                    action: function () { game.setCurrentScreen("controls",true,[64,64,64],0.5); }
                 },
                 {
                     caption: "Quit to main menu",

@@ -1,0 +1,21 @@
+div.selector {
+    display: table;
+    width: 90%;
+    background-color: #111111;
+    border: 2px solid #333333;
+    padding-left: 3%;
+    padding-right: 3%;
+    margin: 2%;
+}
+
+div.selectorButtonContainer {
+    display: table-cell;
+    width: 120px;
+}
+
+span.selector {
+    display: table-cell;
+    padding-right: 1em;
+    padding-bottom: 0.4em;
+    padding-top: 0.4em;
+}

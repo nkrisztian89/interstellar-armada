@@ -518,7 +518,7 @@ SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
     for(i=0;i<modelTags.length;i++) {
         this.modelReferences.push(new ModelReference(
             modelTags[i].getAttribute("filename"),
-            modelTags[i].getAttribute("lod"))
+            parseInt(modelTags[i].getAttribute("lod")))
         );
         if(modelTags[i].hasAttribute("size")) {
             this.modelSize = parseFloat(modelTags[i].getAttribute("size"));

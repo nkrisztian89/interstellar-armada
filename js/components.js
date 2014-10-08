@@ -317,3 +317,88 @@ MenuComponent.prototype._initializeComponents = function() {
 MenuComponent.prototype.resetComponent = function() {
     ScreenComponent.prototype.resetComponent.call(this);
 };
+
+/**
+ * 
+ * @param {String} name
+ * @param {String} source
+ * @param {String} propertyName
+ * @param {String[]} valueList
+ * @returns {Selector}
+ */
+function Selector(name,source,propertyName,valueList) {
+    ScreenComponent.call(this,name,source);
+    
+    this._propertyName = propertyName;
+    this._valueList = valueList;
+    this._valueIndex = null;
+    
+    this._propertyLabel = null;
+    this._valueSelector = null;
+}
+
+Selector.prototype = new ScreenComponent();
+Selector.prototype.constructor = Selector;
+
+/**
+ * Sets the properties for easier access of the DOM elements.
+ */
+Selector.prototype._initializeComponents = function() {
+    ScreenComponent.prototype._initializeComponents.call(this);
+    
+    this._propertyLabel = this._rootElement.querySelector("#property");
+    this._propertyLabel.innerHTML = this._propertyName;
+    this._valueSelector = this._rootElement.querySelector("#value");
+    this._valueSelector.innerHTML = this._valueList[0];
+    this._valueIndex = 0;
+    
+    var self = this;
+    this._valueSelector.onclick=function(){ self.selectNextValue(); };
+};
+
+/**
+ * When the page is closed, references to the DOM elements should be removed.
+ * In descendants, this method should be overloaded, clearing the additional
+ * properties.
+ */
+Selector.prototype.resetComponent = function() {
+    ScreenComponent.prototype.resetComponent.call(this);
+    
+    this._propertyLabel = null;
+    this._valueSelector = null;
+};
+
+/**
+ * 
+ * @param {String} value
+ */
+Selector.prototype.selectValue = function(value) {
+    var i = 0;
+    while((i<this._valueList.length)&&(this._valueList[i]!==value)) {
+        i++;
+    }
+    if(i<this._valueList.length) {
+        this.selectValueWithIndex(i);
+    }
+};
+
+/**
+ * 
+ * @param {Number} index
+ */
+Selector.prototype.selectValueWithIndex = function(index) {
+    this._valueIndex = index;
+    this._valueSelector.innerHTML = this._valueList[this._valueIndex];
+};
+
+Selector.prototype.getSelectedValue = function() {
+    return this._valueList[this._valueIndex];
+};
+
+Selector.prototype.getSelectedIndex = function() {
+    return this._valueIndex;
+};
+
+Selector.prototype.selectNextValue = function() {
+    this.selectValueWithIndex((this._valueIndex + 1)%this._valueList.length);
+};
