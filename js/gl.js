@@ -88,14 +88,16 @@ Texture.prototype.getIDForContext = function(context) {
  * the potentially queued actions are executed.
  */
 Texture.prototype.requestLoadFromFile = function() {
-    var self = this;
-    // when loaded, set the resource to ready and execute queued functions
-    this._image.onload = function() {
-        self.setToReady();
-    };
-    // setting the src property will automatically result in an asynchronous
-    // request to grab the texture file
-    this._image.src=this._filename;
+    if(this.isReadyToUse()===false) {
+        var self = this;
+        // when loaded, set the resource to ready and execute queued functions
+        this._image.onload = function() {
+            self.setToReady();
+        };
+        // setting the src property will automatically result in an asynchronous
+        // request to grab the texture file
+        this._image.src=this._filename;
+    }
 };
 
 /**
@@ -208,19 +210,21 @@ Cubemap.prototype.getIDForContext = function(context) {
  * ready to use and the potentially queued actions are executed.
  */
 Cubemap.prototype.requestLoadFromFile = function() {
-    var facesLoaded = 0;
-    var self = this;
-    for(var i=0;i<6;i++) {
-        // when all faces loaded, set the resource to ready and execute queued functions
-        this._images[i].onload = function() {
-            facesLoaded+=1;
-            if(facesLoaded===6) {
-                self.setToReady();
-            }
-        };
-        // setting the src property will automatically result in an asynchronous
-        // request to grab the texture file
-        this._images[i].src=this._imageURLs[i];
+    if(this.isReadyToUse()===false) {
+        var facesLoaded = 0;
+        var self = this;
+        for(var i=0;i<6;i++) {
+            // when all faces loaded, set the resource to ready and execute queued functions
+            this._images[i].onload = function() {
+                facesLoaded+=1;
+                if(facesLoaded===6) {
+                    self.setToReady();
+                }
+            };
+            // setting the src property will automatically result in an asynchronous
+            // request to grab the texture file
+            this._images[i].src=this._imageURLs[i];
+        }
     }
 };
 
@@ -616,6 +620,14 @@ VertexBuffer.prototype.enable = function(context) {
 };
 
 /**
+ * Deletes the corresponding WebGL buffer object.
+ * @param {ManagedGLContext} context
+ */
+VertexBuffer.prototype.delete = function(context) {
+    context.gl.deleteBuffer(this._id);
+};
+
+/**
  * If the passed shader has an attribute with the same name as this buffer,
  * binds the buffer to that attribute. If the buffer has already been bound
  * to the attribute from another shader that has a different index, shows a
@@ -669,19 +681,19 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attri
      * @name Shader#_name
      * @type String
      */
-    this._name=name;
+    this._name = name;
     /**
      * The URL of the vertex shader source file, relative to the site root.
      * @name Shader#_vertexShaderFileName
      * @type String
      */
-    this._vertexShaderFileName=vertexShaderFileName;
+    this._vertexShaderFileName = vertexShaderFileName;
     /**
      * The URL of the fragment shader source file, relative to the site root.
      * @name Shader#_fragmentShaderFileName
      * @type String
      */
-    this._fragmentShaderFileName=fragmentShaderFileName;
+    this._fragmentShaderFileName = fragmentShaderFileName;
     /**
      * The type of blending to be used with this shader. Options:
      * "mix": will overwrite the existing color up to the proportion of the 
@@ -690,19 +702,19 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attri
      * @name Shader#_blendType
      * @type String
      */
-    this._blendType=blendType;
+    this._blendType = blendType;
     /**
      * The list of shader attribute properties of this shader.
      * @name Shader#_attributes
      * @type ShaderAttribute[]
      */
-    this._attributes=attributes;
+    this._attributes = attributes;
     /**
      * The list of shader uniforms of this shader.
      * @name Shader#_uniforms
      * @type ShaderUniform[]
      */
-    this._uniforms=uniforms;
+    this._uniforms = uniforms;
     /**
      * The source code of the vertex shader.
      * @name Shader#_vertexShaderSource
@@ -723,7 +735,7 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attri
      * @name Shader#_ids
      * @type Object
      */
-    this._ids=new Object();
+    this._ids = new Object();
 }
 
 // as it is an asynchronously loaded resource, we set the Resource as parent
@@ -764,29 +776,31 @@ Shader.prototype.getAttributes = function() {
  * is marked ready to use and the potentially queued actions are executed.
  */
 Shader.prototype.requestLoadFromFile = function() {
-    var self = this;
-    var requestV = new XMLHttpRequest();
-    requestV.open('GET', this._vertexShaderFileName+"?1.0", true);
-    requestV.onreadystatechange = function() {
-        if(requestV.readyState===4) {
-            self._vertexShaderSource = requestV.responseText;
-            if(self._fragmentShaderSource!==null) {
-                self.setToReady();
+    if(this.isReadyToUse()===false) {
+        var self = this;
+        var requestV = new XMLHttpRequest();
+        requestV.open('GET', this._vertexShaderFileName+"?1.0", true);
+        requestV.onreadystatechange = function() {
+            if(requestV.readyState===4) {
+                self._vertexShaderSource = requestV.responseText;
+                if(self._fragmentShaderSource!==null) {
+                    self.setToReady();
+                }
             }
-        }
-    };
-    requestV.send(null);
-    var requestF = new XMLHttpRequest();
-    requestF.open('GET', this._fragmentShaderFileName+"?1.0", true);
-    requestF.onreadystatechange = function() {
-        if(requestF.readyState===4) {
-            self._fragmentShaderSource = requestF.responseText;
-            if(self._vertexShaderSource!==null) {
-                self.setToReady();
+        };
+        requestV.send(null);
+        var requestF = new XMLHttpRequest();
+        requestF.open('GET', this._fragmentShaderFileName+"?1.0", true);
+        requestF.onreadystatechange = function() {
+            if(requestF.readyState===4) {
+                self._fragmentShaderSource = requestF.responseText;
+                if(self._vertexShaderSource!==null) {
+                    self.setToReady();
+                }
             }
-        }
-    };
-    requestF.send(null);
+        };
+        requestF.send(null);
+    }
 };
 
 /**
@@ -885,6 +899,7 @@ Shader.prototype.enableVertexBuffers = function(context) {
  * @returns {ManagedGLContext}
  */
 function ManagedGLContext(canvas,antialiasing) {
+    Resource.call(this);
     /**
      * The contained basic WebGL rendering context.
      * @name ManagedGLContext#gl
@@ -939,7 +954,7 @@ function ManagedGLContext(canvas,antialiasing) {
     
     // creating the contained WebGLRenderingContext
     try {
-        var contextParameters = {alpha: false, antialias: antialiasing};
+        var contextParameters = {alpha: true, antialias: antialiasing};
         // Try to grab the standard context. If it fails, fallback to experimental.
         this.gl = canvas.getContext("webgl",contextParameters) || canvas.getContext("experimental-webgl",contextParameters);
     }
@@ -963,6 +978,9 @@ function ManagedGLContext(canvas,antialiasing) {
     this.gl.activeTexture(this.gl.TEXTURE0);
 }
 
+ManagedGLContext.prototype = new Resource();
+ManagedGLContext.prototype.constructor = ManagedGLContext;
+
 /**
  * Adds the shader reference to the list of shaders to be used when the vertex
  * buffer objects are created and bound to shader attributes. This method only
@@ -973,6 +991,7 @@ function ManagedGLContext(canvas,antialiasing) {
  */
 ManagedGLContext.prototype.addShader = function(shader) {
     this._shaders.push(shader);
+    this.resetReadyState();
 };
 
 /**
@@ -984,6 +1003,7 @@ ManagedGLContext.prototype.addShader = function(shader) {
  */
 ManagedGLContext.prototype.addModel = function(model) {
     this._models.push(model);
+    this.resetReadyState();
 };
 
 /**
@@ -1016,7 +1036,16 @@ ManagedGLContext.prototype.addVertexBuffer = function(vertexBuffer) {
  * for drawing lines (wireframe mode) as well next to triangles.
  */
 ManagedGLContext.prototype.setupVertexBuffers = function(loadLines) {
+    if(this.isReadyToUse()===true) {
+        return;
+    }
     var i,j;
+    var vbName;
+    
+    // delete possibly previously created buffers
+    for(vbName in this._vertexBuffers) {
+        this._vertexBuffers[vbName].delete(this);
+    }
     
     // counting the number of vertices we need to put into the vertex buffers
     var sumVertices=0;
@@ -1061,12 +1090,13 @@ ManagedGLContext.prototype.setupVertexBuffers = function(loadLines) {
 	
     // load the data to GPU memory and bind the attributes of the shaders with 
     // the corresponding VBOs
-    for(var vbName in this._vertexBuffers) {
+    for(vbName in this._vertexBuffers) {
         this._vertexBuffers[vbName].loadToGPUMemory(this);
         for(i=0;i<this._shaders.length;i++) {
             this._vertexBuffers[vbName].bindToAttribute(this,this._shaders[i]);
         }
     }
+    this.setToReady();
 };
 
 /**
@@ -1130,11 +1160,24 @@ function ResourceManager() {
      */
     this._cubemappedTextures = null;
     /**
-     * Number of stored cubemapped textures.
-     * @name ResourceManager#_numCubemappedTextures
+     * Associative array holding references to those cubemap textures which have
+     * been requested to be loaded. All cubemaps are added to _cubemappedTextures
+     * in the beginning of the game, when the XML file describing the shaders
+     * (and cubemapped textures) is loaded, but not all need to be loaded from 
+     * file for every scene. When a cubemap from _cubemappedTextures is requested 
+     * for an upcoming scene (with getCubemappedTexture()), it is added to this
+     * property to mark it for loading. The arrangement of the Object is the same 
+     * as {@link ResourceManager#_cubemappedTextures}.
+     * @name ResourceManager#_requestedCubemappedTextures
+     * @type Object
+     */
+    this._requestedCubemappedTextures = null;
+    /**
+     * Number of stored cubemapped textures requested for loading.
+     * @name ResourceManager#_numRequestedCubemappedTextures
      * @type Number
      */
-    this._numCubemappedTextures = null;
+    this._numRequestedCubemappedTextures = null;
     /**
      * Number of stored cubemapped textures that already have been loaded (from
      * files) and are ready to use.
@@ -1156,11 +1199,23 @@ function ResourceManager() {
      */
     this._shaders = null;
     /**
-     * Number of stored shaders.
+     * Associative array holding references to those shader programs which have
+     * been requested to be loaded. All shader programs are added to _shaders
+     * in the beginning of the game, when the XML file describing the shaders
+     * is loaded, but not all need to be loaded from file for every scene. When
+     * a shader from _shaders is requested for an upcoming scene (with 
+     * getShader()), it is added to this property to mark it for loading. The
+     * arrangement of the Object is the same as {@link ResourceManager#_shaders}.
+     * @name ResourceManager#_requestedShaders
+     * @type Object
+     */
+    this._requestedShaders = null;
+    /**
+     * Number of shaders requested for loading.
      * @name ResourceManager#_numShaders
      * @type Number
      */
-    this._numShaders = null;
+    this._numRequestedShaders = null;
     /**
      * Number of stored shaders that already have been loaded (from files) and 
      * are ready to use.
@@ -1235,14 +1290,6 @@ function ResourceManager() {
      * @type Function
      */
     this.onResourceLoad = function() {};
-    /**
-     * The associative array of managed WebGL contexts. The keys are the 
-     * canvases of the contexts. The values are instances of 
-     * {@link ManagedGLContext}.
-     * @name ResourceManager#_managedContexts
-     * @type Object
-     */
-    this._managedContexts = new Object();
 }
 
 // we set the Resource class as parent to add an execution queue to the resource
@@ -1255,15 +1302,15 @@ ResourceManager.prototype.constructor = ResourceManager;
  * @returns {Boolean}
  */
 ResourceManager.prototype.allCubemappedTexturesLoaded = function() {
-    return (this._numCubemappedTextures===this._numCubemappedTexturesLoaded);
+    return (this._numRequestedCubemappedTextures===this._numCubemappedTexturesLoaded);
 };
 
 /**
- * Tells if all added shaders have been already loaded.
+ * Tells if all requested shaders have been already loaded.
  * @returns {Boolean}
  */
 ResourceManager.prototype.allShadersLoaded = function() {
-    return (this._numShaders===this._numShadersLoaded);
+    return (this._numRequestedShaders===this._numShadersLoaded);
 };
 
 /**
@@ -1296,11 +1343,11 @@ ResourceManager.prototype.allResourcesLoaded = function() {
 };
 
 /**
- * Returns the total number of resources stored by the manager.
+ * Returns the total number of resources requested for loading.
  * @returns {Number}
  */
 ResourceManager.prototype.getNumberOfResources = function() {
-    return this._numCubemappedTextures + this._numShaders + this._numTextures + this._numModels;
+    return this._numRequestedCubemappedTextures + this._numRequestedShaders + this._numTextures + this._numModels;
 };
 
 /**
@@ -1321,6 +1368,7 @@ ResourceManager.prototype.getNumberOfLoadedResources = function() {
 ResourceManager.prototype.getOrAddTexture = function(filename) {
     if(this._textures[filename]===undefined) {
         this._numTextures+=1;
+        this.resetReadyState();
         this._textures[filename] = new Texture(filename);
         var self = this;
         this._textures[filename].executeWhenReady(function() {
@@ -1342,19 +1390,7 @@ ResourceManager.prototype.getOrAddTexture = function(filename) {
  * @param {Cubemap} cubemappedTexture
  */
 ResourceManager.prototype.addCubemappedTexture = function(cubemappedTexture) {
-    this._numCubemappedTextures+=1;
     this._cubemappedTextures[cubemappedTexture.getName()] = cubemappedTexture;
-    var self = this;
-    this._cubemappedTextures[cubemappedTexture.getName()].executeWhenReady(function() {
-        self._numCubemappedTexturesLoaded+=1;
-        self.onResourceLoad(cubemappedTexture.getName(),self.getNumberOfResources(),self.getNumberOfLoadedResources());
-        if(self.allCubemappedTexturesLoaded()) {
-            self.onAllCubemappedTexturesLoad();
-        }
-        if(self.allResourcesLoaded()) {
-            self.setToReady();
-        }
-    });
 };
 
 /**
@@ -1367,8 +1403,25 @@ ResourceManager.prototype.getCubemappedTexture = function(name) {
     if(this._cubemappedTextures[name]===undefined) {
         game.showError("Asked for a cube mapped texture named '"+name+"', which does not exist.");
         return null;
+    } else {
+        if(this._requestedCubemappedTextures[name]===undefined) {
+            this._numRequestedCubemappedTextures+=1;
+            this.resetReadyState();
+            this._requestedCubemappedTextures[name] = this._cubemappedTextures[name];
+            var self = this;
+            this._requestedCubemappedTextures[name].executeWhenReady(function() {
+                self._numCubemappedTexturesLoaded+=1;
+                self.onResourceLoad(name,self.getNumberOfResources(),self.getNumberOfLoadedResources());
+                if(self.allCubemappedTexturesLoaded()) {
+                    self.onAllCubemappedTexturesLoad();
+                }
+                if(self.allResourcesLoaded()) {
+                    self.setToReady();
+                }
+            });
+        }
+        return this._cubemappedTextures[name];
     }
-    return this._cubemappedTextures[name];
 };
 
 /**
@@ -1376,19 +1429,7 @@ ResourceManager.prototype.getCubemappedTexture = function(name) {
  * @param {Shader} shader
  */
 ResourceManager.prototype.addShader = function(shader) {
-    this._numShaders += 1;
     this._shaders[shader.getName()] = shader;
-    var self = this;
-    this._shaders[shader.getName()].executeWhenReady(function() {
-        self._numShadersLoaded += 1;
-        self.onResourceLoad(shader.getName(),self.getNumberOfResources(),self.getNumberOfLoadedResources());
-        if(self.allShadersLoaded()) {
-            self.onAllShadersLoad();
-        }
-        if(self.allResourcesLoaded()) {
-            self.setToReady();
-        }
-    });
 };
 
 /**
@@ -1400,35 +1441,25 @@ ResourceManager.prototype.getShader = function(name) {
     if(this._shaders[name]===undefined) {
         game.showError("Asked for a shader named '"+name+"', which does not exist.");
         return null;
+    } else {
+        if(this._requestedShaders[name]===undefined) {
+            this._numRequestedShaders += 1;
+            this.resetReadyState();
+            this._requestedShaders[name] = this._shaders[name];
+            var self = this;
+            this._requestedShaders[name].executeWhenReady(function() {
+                self._numShadersLoaded += 1;
+                self.onResourceLoad(name,self.getNumberOfResources(),self.getNumberOfLoadedResources());
+                if(self.allShadersLoaded()) {
+                    self.onAllShadersLoad();
+                }
+                if(self.allResourcesLoaded()) {
+                    self.setToReady();
+                }
+            });
+        }
+        return this._requestedShaders[name];
     }
-    return this._shaders[name];
-};
-
-/**
- * Creates a managed WebGL context for the passed canvas, adds it to the stored
- * references, and returns it.
- * @param {HTMLCanvasElement} canvas
- * @param {Boolean} antialiasing Whether antialiasing should be enabled.
- * @see ManagedGLCanvas
- * @returns {ManagedGLCanvas}
- */
-ResourceManager.prototype.createContextForCanvas = function(canvas,antialiasing) {
-    this._managedContexts[canvas] = new ManagedGLContext(canvas,antialiasing);
-    return this._managedContexts[canvas];
-};
-
-/**
- * Returns the stored managed WebGL canvas associated with the passed canvas
- * element.
- * @param {HTMLCanvasElement} canvas
- * @returns {ManagedGLCanvas}
- */
-ResourceManager.prototype.getContextForCanvas = function(canvas) {
-    if(this._managedContexts[canvas]===undefined) {
-        game.showError("Asked for a context that does not exist.");
-        return null;
-    }
-    return this._managedContexts[canvas];
 };
 
 /**
@@ -1440,6 +1471,7 @@ ResourceManager.prototype.getContextForCanvas = function(canvas) {
 ResourceManager.prototype.getOrAddModelFromFile = function(filename) {
     if(this._models[filename]===undefined) {
         this._numModels += 1;
+        this.resetReadyState();
         this._models[filename] = new EgomModel(filename);
         var self = this;
         this._models[filename].executeWhenReady(function() {
@@ -1486,18 +1518,18 @@ ResourceManager.prototype.requestTextureLoadFromFile = function() {
  * from their associated files.
  */
 ResourceManager.prototype.requestCubemappedTextureLoadFromFile = function() {
-    for(var texture in this._cubemappedTextures) {
-        this._cubemappedTextures[texture].requestLoadFromFile();
+    for(var texture in this._requestedCubemappedTextures) {
+        this._requestedCubemappedTextures[texture].requestLoadFromFile();
     }
 };
 
 /**
- * Initiates the requests to load all the stored shader resources from their 
- * associated files.
+ * Initiates the requests to load all the shader resources that have been
+ * requested for loading from their associated files.
  */
 ResourceManager.prototype.requestShaderLoadFromFile = function() {
-    for(var shader in this._shaders) {
-        this._shaders[shader].requestLoadFromFile();
+    for(var shader in this._requestedShaders) {
+        this._requestedShaders[shader].requestLoadFromFile();
     }
 };
 
@@ -1539,9 +1571,10 @@ ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function(xmlSourc
     var i,j,k;
     var index;
     
-    this._numCubemappedTextures = 0;
+    this._numRequestedCubemappedTextures = 0;
     this._numCubemappedTexturesLoaded = 0;
-    this._cubemappedTextures=new Object();
+    this._cubemappedTextures = new Object();
+    this._requestedCubemappedTextures = new Object();
     var cubemapTags = xmlSource.getElementsByTagName("Cubemap");
     for(i=0;i<cubemapTags.length;i++) {
         var imageTags = cubemapTags[i].getElementsByTagName("image");
@@ -1567,9 +1600,10 @@ ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function(xmlSourc
         this.addCubemappedTexture(new Cubemap(cubemapTags[i].getAttribute("name"),imageURLs));
     }
 	
-    this._numShaders = 0;
+    this._numRequestedShaders = 0;
     this._numShadersLoaded = 0;
-    this._shaders=new Object();
+    this._shaders = new Object();
+    this._requestedShaders = new Object();
     var shaderTags = xmlSource.getElementsByTagName("Shader");
     for(i=0;i<shaderTags.length;i++) {    
         var attributes = new Array();

@@ -1,3 +1,25 @@
+div.itemDataSheet {
+    display: inline-block;
+    vertical-align: top;
+    padding: 1em;
+    width: 275px;
+}
+
+div.itemView {
+    display: inline-block;
+    padding: 1em;
+}
+
+.withSubtitle {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.subtitle {
+    margin-top: 0;
+    margin-bottom: 0.6em;
+}
+
 canvas.databaseViewScreen {
     width: 300px;
     height: 300px;

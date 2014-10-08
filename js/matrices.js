@@ -70,10 +70,10 @@ function rotationMatrix4(axis,angle) {
 
 function perspectiveMatrix4(right,top,near,far) {
 	return new Float32Array([
-		near/right, 0.0, 0.0, 0.0,
-		0.0, near/top, 0.0, 0.0,
-		0.0, 0.0, (near+far)/(near-far), -1.0,
-		0.0, 0.0, 2*near*far/(near-far), 0.0]);
+		near/right, 0.0,      0.0,                    0.0,
+		0.0,        near/top, 0.0,                    0.0,
+		0.0,        0.0,      (near+far)/(near-far), -1.0,
+		0.0,        0.0,      2*near*far/(near-far),  0.0]);
 }
 
 function translationMatrix(x,y,z) {
@@ -132,6 +132,11 @@ function angleDifferenceOfUnitVectors2D(v1,v2) {
 	);
 }
 
+/**
+ * Returns the passed 3D vector scaled to unit length.
+ * @param {Number[3]} v A 3D vector
+ * @returns {Number[3]}
+ */
 function normalizeVector(v) {
 	var divisor = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
 	var factor = (divisor===0)?1.0:1.0/divisor;
@@ -452,15 +457,11 @@ function vectorAdd3(v1,v2) {
 }
 
 function vector3ToString(v) {
-	return Math.round(v[0]*1000)/1000+" "+Math.round(v[1]*1000)/1000+" "+Math.round(v[2]*1000)/1000;
+	return v[0].toFixed(3)+" "+v[1].toFixed(3)+" "+v[2].toFixed(3);
 }
 
 function vector4ToString(v) {
-	return Math.round(v[0]*1000)/1000+" "+Math.round(v[1]*1000)/1000+" "+Math.round(v[2]*1000)/1000+" "+Math.round(v[3]*1000)/1000;
-}
-
-function r3(x) {
-	return Math.round(x*1000)/1000;
+	return v[0].toFixed(3)+" "+v[1].toFixed(3)+" "+v[2].toFixed(3)+" "+v[3].toFixed(3);
 }
 
 function equalMatrices4(m1,m2) {

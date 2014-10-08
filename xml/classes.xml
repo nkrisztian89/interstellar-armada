@@ -171,8 +171,36 @@
 		<color r="0.0" g="0.8" b="1.0" />
 		<power thrust="250000000" angularThrust="140" />
 	</PropulsionClass>
+        
+        <SpacecraftType name="interceptor">
+            <fullName>Interceptor</fullName>
+        </SpacecraftType>
+        
+        <SpacecraftType name="bomber">
+            <fullName>Bomber</fullName>
+        </SpacecraftType>
+        
+        <SpacecraftType name="corvette">
+            <fullName>Corvette</fullName>
+        </SpacecraftType>
+        
+        <SpacecraftType name="frigate">
+            <fullName>Frigate</fullName>
+        </SpacecraftType>
+        
+        <SpacecraftType name="cruiser">
+            <fullName>Cruiser</fullName>
+        </SpacecraftType>
 	
-	<SpacecraftClass name="falcon">
+	<SpacecraftClass name="falcon" type="interceptor">
+            <information>
+                <fullName>Falcon</fullName>
+                <description>
+                    The standard interceptor class of the Galactic Empire. Excellent for dogfighting, with a
+                    thin cross-section making it difficult to hit, a high number and variety of battle equipment
+                    it can carry and a uniquely effective jammer arrangement.
+                </description>
+            </information>
 		<model filename="models/falcon_lod4.egm" lod="4" size="0.2"/>
 		<model filename="models/falcon_lod3.egm" lod="3"/>
 		<model filename="models/falcon_lod2.egm" lod="2"/>
@@ -272,7 +300,15 @@
                 </equipmentProfile>
 	</SpacecraftClass>
 	
-	<SpacecraftClass name="viper">
+	<SpacecraftClass name="viper" type="bomber">
+            <information>
+                <fullName>Viper</fullName>
+                <description>
+                    A light bomber class that has good self-defence and precision strike
+                    capabilities thanks to the large amount of smaller missiles it can carry
+                    and its relatively heavy armor and shielding.
+                </description>
+            </information>
 		<model filename="models/viper_lod4.egm" lod="4" size="0.2"/>
                 <model filename="models/viper_lod3.egm" lod="3"/>
                 <model filename="models/viper_lod2.egm" lod="2"/>
@@ -364,7 +400,16 @@
                 </equipmentProfile>
 	</SpacecraftClass>
 	
-	<SpacecraftClass name="aries">
+	<SpacecraftClass name="aries" type="corvette">
+            <information>
+                <fullName>Aries</fullName>
+                <description>
+                    The most common patrol ship of the Empire. Equipped with two rapid
+                    fire precision turrets, it does a very good job at taking out enemy
+                    fighters and light bombers. Its only protection against larger ships
+                    is its good maneuverability.
+                </description>
+            </information>
 		<model filename="models/aries_lod4.egm" lod="4" size="0.2"/>
                 <model filename="models/aries_lod3.egm" lod="3" />
                 <model filename="models/aries_lod2.egm" lod="2" />
@@ -442,7 +487,15 @@
                 </equipmentProfile>
 	</SpacecraftClass>
 	
-	<SpacecraftClass name="taurus">
+	<SpacecraftClass name="taurus" type="frigate">
+            <information>
+                <fullName>Taurus</fullName>
+                <description>
+                    A small warship fully dedicated to armor and firepower. Its main job
+                    is to take on the larger, more powerful ships of the enemy fleet and
+                    keep them under fire.
+                </description>
+            </information>
 		<model filename="models/taurus_lod4.egm" lod="4" size="0.2"/>
 		<model filename="models/taurus_lod3.egm" lod="3"/>
 		<model filename="models/taurus_lod2.egm" lod="2"/>
@@ -570,7 +623,18 @@
                 </equipmentProfile>
 	</SpacecraftClass>
 	
-	<SpacecraftClass name="libra">
+	<SpacecraftClass name="libra" type="cruiser">
+            <information>
+                <fullName>Libra</fullName>
+                <description>
+                    The main capital ship of the imperial armada. This class is equipped
+                    with protection against various threats, sporting heavy armor, both
+                    large caliber and small, precision turrets, two battle hangars that
+                    can house up to 48 fighters to battle off more maneuverable enemies
+                    if needed, or bombers to support the already significant firepower of
+                    the cruiser, and state-of-the-art countermeasure and jammer systems.
+                </description>
+            </information>
 		<model filename="models/libra_lod4.egm" lod="4" size="0.2"/>
 		<model filename="models/libra_lod3.egm" lod="3"/>
 		<model filename="models/libra_lod2.egm" lod="2"/>

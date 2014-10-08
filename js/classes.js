@@ -298,8 +298,51 @@ EquipmentProfile.prototype.loadFromXMLTag = function(xmlTag) {
     }
 };
 
-SpacecraftClass.prototype.getEquipmentProfile = function(name) {
-    return this.equipmentProfiles[name];
+/**
+ * Defines a spacecraft type.
+ * @class A type of spacecraft. This a more general classification of 
+ * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
+ * space station or freighter.
+ * @param {Element} [xmlSource] The XML tag which contains the description of
+ * this spacecraft type.
+ * @returns {SpacecraftType}
+ */
+function SpacecraftType(xmlSource) {
+    /**
+     * The name by which the type can be referred to.
+     * @name SpacecraftType#_name
+     * @type String
+     */
+    this._name = null;
+    /**
+     * The full name of this type as displayed in the game.
+     * @name SpacecraftType#_fullName
+     * @type String
+     */
+    this._fullName = null;
+    
+    if (xmlSource !== undefined) {
+        this.loadFromXMLTag(xmlSource);
+    }
+}
+
+SpacecraftType.prototype.getName = function() {
+    return this._name;
+};
+
+SpacecraftType.prototype.getFullName = function() {
+    if(this._fullName!==null) {
+        return this._fullName;
+    } else {
+        return this._name;
+    }
+};
+
+SpacecraftType.prototype.loadFromXMLTag = function(xmlTag) {
+    this._name = xmlTag.getAttribute("name");
+    if(xmlTag.getElementsByTagName("fullName").length>0) {
+        this._fullName = xmlTag.getElementsByTagName("fullName")[0].textContent;
+    }
 };
 
 /**
@@ -319,6 +362,24 @@ function SpacecraftClass(xmlSource) {
      * @type String
      */
     this.name = null;
+    /**
+     * The type of spacecraft this class belongs to.
+     * @name SpacecraftClass#_spacecraftType
+     * @type SpacecraftType
+     */
+    this._spacecraftType = null;
+    /**
+     * The full name of this class as displayed in the game.
+     * @name SpacecraftClass#_fullName
+     * @type String
+     */
+    this._fullName = null;
+    /**
+     * The description of this class as can be viewed in the game.
+     * @name SpacecraftClass#_description
+     * @type String
+     */
+    this._description = null;
     /**
      * The file names and their associated LODs (Levels Of Detail) of the model 
      * files of this class.
@@ -391,10 +452,43 @@ function SpacecraftClass(xmlSource) {
     }
 }
 
+SpacecraftClass.prototype.getSpacecraftType = function() {
+    return this._spacecraftType;
+};
+
+SpacecraftClass.prototype.getFullName = function() {
+    if(this._fullName!==null) {
+        return this._fullName;
+    } else {
+        return this.name;
+    }
+};
+
+SpacecraftClass.prototype.getDescription = function() {
+    if(this._description!==null) {
+        return this._description;
+    } else {
+        return "Description not available.";
+    }
+};
+
+SpacecraftClass.prototype.getEquipmentProfile = function(name) {
+    return this.equipmentProfiles[name];
+};
+
 SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
-    //name,modelReferences,modelSize,textureFileNames,shaderName,mass
     var i;
     this.name = xmlTag.getAttribute("name");
+    this._spacecraftType = game.logicContext.getSpacecraftType(xmlTag.getAttribute("type"));
+    if(xmlTag.getElementsByTagName("information").length>0) {
+        var infoTag = xmlTag.getElementsByTagName("information")[0];
+        if(infoTag.getElementsByTagName("fullName").length>0) {
+            this._fullName = infoTag.getElementsByTagName("fullName")[0].textContent;
+        }
+        if(infoTag.getElementsByTagName("description").length>0) {
+            this._description = infoTag.getElementsByTagName("description")[0].textContent;
+        }
+    }
     this.modelReferences = new Array();
     var modelTags=xmlTag.getElementsByTagName("model");
     for(i=0;i<modelTags.length;i++) {
@@ -402,8 +496,10 @@ SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
             modelTags[i].getAttribute("filename"),
             modelTags[i].getAttribute("lod"))
         );
+        if(modelTags[i].hasAttribute("size")) {
+            this.modelSize = parseFloat(modelTags[i].getAttribute("size"));
+        }
     }
-    this.modelSize = parseFloat(modelTags[0].getAttribute("size"));
     // reading the textures into an object, where the texture type are the
     // name of the properties
     this.textureFileNames = new Object();

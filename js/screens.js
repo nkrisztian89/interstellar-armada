@@ -46,9 +46,7 @@ function GameScreen(name,source) {
     
     // function to execute when the model is loaded
     this._onModelLoad = function() {};
-    
-    var self = this;
-    
+        
     // source will be undefined when setting the prototypes for inheritance
     if(source!==undefined) {
         this.requestModelLoad();
@@ -198,26 +196,41 @@ GameScreen.prototype.updateStatus = function(newStatus) {
 };
 
 /**
- * 
- * @param {String} name
- * @param {HTMLCanvasElement} canvas
+ * An enhanced canvas element (a wrapper around a regular HTML canvas), that
+ * can create and hold a reference to a managed WebGL context for the canvas.
+ * @param {HTMLCanvasElement} canvas The canvas around which this object should
+ * be created.
  * @returns {ScreenCanvas}
  */
-function ScreenCanvas(name,canvas) {
-    this._name = name;
+function ScreenCanvas(canvas) {
     this._canvas = canvas;
+    this._name = canvas.getAttribute("id");
     this._resizeable = canvas.classList.contains("resizeable");
     this._context = null;
 }
 
+/**
+ * Returns the stored HTML canvas element.
+ * @returns {HTMLCanvasElement}
+ */
 ScreenCanvas.prototype.getCanvasElement = function() {
     return this._canvas;
 };
 
+/**
+ * Tells if the canvas is resizeable = if it has a dynamic size that changes
+ * when the window is resized.
+ * @returns {Boolean}
+ */
 ScreenCanvas.prototype.isResizeable = function() {
     return this._resizeable;
 };
 
+/**
+ * Returns a managed WebGL context created for the canvas. It creates the 
+ * context if it does not exist yet.
+ * @returns {ManagedGLContext}
+ */
 ScreenCanvas.prototype.getManagedContext = function() {
     if(this._context === null) {
         this._context = new ManagedGLContext(this._canvas,game.graphicsContext.getAntialiasing());
@@ -279,10 +292,7 @@ GameScreenWithCanvases.prototype._initializeComponents = function() {
     
     var canvasElements = document.getElementsByTagName("canvas");
     for(var i=0;i<canvasElements.length;i++) {
-        this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(
-            canvasElements[i].getAttribute("id"),
-            canvasElements[i]
-        );
+        this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(canvasElements[i]);
     }
     
     var self = this;
@@ -290,21 +300,41 @@ GameScreenWithCanvases.prototype._initializeComponents = function() {
     window.addEventListener("resize",this._resizeEventListener);
 };
 
+/**
+ * Returns the stored canvas component that has the passed name.
+ * @param {String} name
+ * @returns {ScreenCanvas}
+ */
 GameScreenWithCanvases.prototype.getScreenCanvas = function(name) {
     return this._canvases[name];
 }; 
 
 /**
- * 
+ * Creates a binding between the passed scene and canvas, causing the scene to
+ * be rendered on the canvas automatically in the render loop of this screen.
  * @param {Scene} scene
  * @param {ScreenCanvas} canvas
  */
 GameScreenWithCanvases.prototype.bindSceneToCanvas = function(scene,canvas) {
-    this._sceneCanvasBindings.push({
-        scene: scene,
-        canvas: canvas
-    });
+    var alreadyBound = false;
+    for(var i=0;i<this._sceneCanvasBindings.length;i++) {
+        if(
+            (this._sceneCanvasBindings[i].scene===scene)&&
+            (this._sceneCanvasBindings[i].canvas===canvas)
+        ) {
+            alreadyBound = true;
+        }
+    }
+    if (alreadyBound === false) {
+        this._sceneCanvasBindings.push({
+            scene: scene,
+            canvas: canvas
+        });
+    }
     scene.addToContext(canvas.getManagedContext());
+    if(this._renderLoop !== null) {
+        canvas.getManagedContext().setupVertexBuffers(true);
+    }
 };
 
 /**
@@ -343,10 +373,37 @@ GameScreenWithCanvases.prototype.startRenderLoop = function(interval) {
  */
 GameScreenWithCanvases.prototype.stopRenderLoop = function() {
     clearInterval(this._renderLoop);
+    this._renderLoop = null;
 };
 
+/**
+ * Returns the Frames Per Second count for this screen's render loop.
+ * @returns {Number}
+ */
 GameScreenWithCanvases.prototype.getFPS = function() {
     return this._renderTimes.length;
+};
+
+GameScreenWithCanvases.prototype.resizeCanvas = function(name) {
+    var i;
+    var canvasElement = this._canvases[name].getCanvasElement();
+    var width = canvasElement.clientWidth;
+    var height = canvasElement.clientHeight;
+    if (canvasElement.width !== width ||
+        canvasElement.height !== height) {
+        // Change the size of the canvas to match the size it's being displayed
+        canvasElement.width = width;
+        canvasElement.height = height;
+    }
+    // updated the variables in the scenes
+    for (i = 0; i < this._sceneCanvasBindings.length; i++) {
+        if(this._sceneCanvasBindings[i].canvas===this._canvases[name]) {
+            this._sceneCanvasBindings[i].scene.resizeViewport(
+                canvasElement.width,
+                canvasElement.height
+            );
+        }
+    }
 };
 
 /**
@@ -354,29 +411,11 @@ GameScreenWithCanvases.prototype.getFPS = function() {
  * matrices as well!)
  */
 GameScreenWithCanvases.prototype.resizeCanvases = function() {
-    var i;
     // first, update the canvas width and height properties if the client width/
     // height has changed
     for (var canvasName in this._canvases) {
         if(this._canvases[canvasName].isResizeable()===true) {
-            var canvasElement = this._canvases[canvasName].getCanvasElement();
-            var width = canvasElement.clientWidth;
-            var height = canvasElement.clientHeight;
-            if (canvasElement.width !== width ||
-                    canvasElement.height !== height) {
-                // Change the size of the canvas to match the size it's being displayed
-                canvasElement.width = width;
-                canvasElement.height = height;
-            }
-        }
-    }
-    // updated the variables in the scenes
-    for (i = 0; i < this._sceneCanvasBindings.length; i++) {
-        if(this._sceneCanvasBindings[i].canvas.isResizeable()===true) {
-            this._sceneCanvasBindings[i].scene.resizeViewport(
-                this._sceneCanvasBindings[i].canvas.getCanvasElement().width,
-                this._sceneCanvasBindings[i].canvas.getCanvasElement().height
-            );
+            this.resizeCanvas(canvasName);
         }
     }
 };
@@ -506,7 +545,8 @@ BattleScreen.prototype.render = function() {
 BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
     this.hideStats();
     this.hideUI();
-    this.getInfoBox().hide();
+    this._loadingBox.show();
+    this._infoBox.hide();
     this.resizeCanvases(); 
     
     var test_level = new Level();
@@ -564,6 +604,192 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
     
     self.updateStatus("loading level information...",0);
     test_level.requestLoadFromFile(levelSourceFilename);
+};
+
+/**
+ * Defines a database screen object.
+ * @class Represents the database screen.
+ * @extends GameScreenWithCanvases
+ * @param {String} name The name by which this screen can be identified.
+ * @param {String} source The name of the HTML file where the structure of this
+ * screen is defined.
+ * @returns {DatabaseScreen}
+ */
+function DatabaseScreen(name,source) {
+    GameScreenWithCanvases.call(this,name,source);
+    
+    this._loadingBox = new LoadingBox("loadingBox","loadingbox.html");
+    
+    this._itemName = null;
+    this._itemType = null;
+    this._itemDescription = null;
+    
+    this._scene = null;
+    this._item = null;
+    this._itemIndex = null;
+    this._rotationLoop = null;
+};
+
+DatabaseScreen.prototype=new GameScreenWithCanvases();
+DatabaseScreen.prototype.constructor=DatabaseScreen;
+
+/**
+ * Nulls out the components.
+ */
+DatabaseScreen.prototype.closePage = function() {
+    GameScreenWithCanvases.prototype.closePage.call(this);
+    
+    this._loadingBox.resetComponent();
+    
+    this._itemName = null;
+    this._itemType = null;
+    this._itemDescription = null;
+    
+    clearInterval(this._rotationLoop);
+    this._item = null;
+    this._itemIndex = null;
+    this._scene = null;
+};
+
+/**
+ * Initializes the components of the parent class, then the additional ones for
+ * this class.
+ */
+DatabaseScreen.prototype._initializeComponents = function() {
+    GameScreenWithCanvases.prototype._initializeComponents.call(this);
+    
+    var prevButton = document.getElementById("prevButton");
+    var self = this;
+    prevButton.addEventListener("click",function(){
+        self.selectPreviousShip();
+    });
+    var nextButton = document.getElementById("nextButton");
+    var self = this;
+    nextButton.addEventListener("click",function(){
+        self.selectNextShip();
+    });
+    
+    this._itemName = document.getElementById("itemName");
+    this._itemType = document.getElementById("itemType");
+    this._itemDescription = document.getElementById("itemDescription");
+    
+    this.addExternalComponent(this._loadingBox);
+    this.initializeCanvas();
+};
+
+/**
+ * Getter for the _loadingBox property.
+ * @returns {LoadingBox}
+ */
+DatabaseScreen.prototype.getLoadingBox = function() {
+    return this._loadingBox;
+};
+
+/**
+ * Uses the loading box to show the status to the user.
+ * @param {String} newStatus The status to show on the loading box. If
+ * undefined, the status won't be updated.
+ * @param {Number} newProgress The new value of the progress bar on the loading
+ * box. If undefined, the value won't be updated.
+ */
+DatabaseScreen.prototype.updateStatus = function(newStatus,newProgress) {
+    if(newStatus!==undefined) {
+        this._loadingBox.updateStatus(newStatus);
+    }
+    if(newProgress!==undefined) {
+        this._loadingBox.updateProgress(newProgress);
+    }
+};
+
+DatabaseScreen.prototype.startRotationLoop = function() {
+    var prevDate = new Date();
+    var self = this;    
+    this._rotationLoop = setInterval(function ()
+    {
+        var i;
+        var curDate = new Date();
+        self._item.visualModel.rotate(self._item.visualModel.getZDirectionVector(),0.001*(curDate-prevDate));
+        prevDate = curDate;
+    }, 1000 / 60);
+};
+
+DatabaseScreen.prototype.stopRotationLoop = function() {
+    clearInterval(this._rotationLoop);
+};
+
+DatabaseScreen.prototype.initializeCanvas = function() {
+    this._loadingBox.show();
+    this.updateStatus("initializing database...", 0);
+        
+    this.resizeCanvas("databaseCanvas");
+    var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
+    this._scene = new Scene(0,0,canvas.clientWidth,canvas.clientHeight,false,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
+    this._scene.addLightSource(new LightSource([1.0,1.0,1.0],[-1.0,0.0,1.0]));
+
+    var self = this;
+    game.graphicsContext.resourceManager.onResourceLoad = function(resourceName,totalResources,loadedResources) {
+        self.updateStatus("loaded "+resourceName+", total progress: "+loadedResources+"/"+totalResources,20+(loadedResources/totalResources)*60);
+    };
+    game.graphicsContext.resourceManager.executeWhenReady(function() { 
+        self.updateStatus("",100);
+        self._loadingBox.hide();
+    });
+    
+    this.updateStatus("loading graphical resources...",15);
+    
+    this._itemIndex = 0;
+    this.loadShip();
+};
+
+DatabaseScreen.prototype.selectPreviousShip = function() {
+    this._itemIndex -= 1;
+    if(this._itemIndex===-1) {
+        this._itemIndex = game.logicContext.getSpacecraftClasses().length-1;
+    }
+    this.loadShip();
+};
+
+DatabaseScreen.prototype.selectNextShip = function() {
+    this._itemIndex = (this._itemIndex+1)%game.logicContext.getSpacecraftClasses().length;
+    this.loadShip();
+};
+
+DatabaseScreen.prototype.loadShip = function() {
+    var shipClass = game.logicContext.getSpacecraftClasses()[this._itemIndex];
+    
+    this.stopRotationLoop();
+    this.stopRenderLoop();
+    this._item = new Spacecraft(
+        shipClass,
+        "",
+        identityMatrix4(),
+        identityMatrix4(),
+        "ai",
+        "default"
+        );
+    this._scene.clearObjects();
+    this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,true);
+    this._item.visualModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
+    
+    var self = this;
+    game.graphicsContext.resourceManager.executeWhenReady(function() { 
+        self._itemName.innerHTML = shipClass.getFullName();
+        self._itemType.innerHTML = shipClass.getSpacecraftType().getFullName();
+        var length = self._item.visualModel.modelsWithLOD[0].model.dimensions[1]*0.2;
+        self._itemDescription.innerHTML = 
+            shipClass.getDescription()+"<br/>"+
+            "<br/>"+
+            "Length: "+((length<100)?length.toPrecision(3):Math.round(length))+" m<br/>"+
+            "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+
+            "Thrusters: "+shipClass.thrusterSlots.length;
+        
+        self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
+        self._scene.activeCamera.setPositionMatrix(translationMatrix(0,0,-self._item.visualModel.getScaledSize()));
+        self.startRenderLoop(1000/60);
+        self.startRotationLoop();
+    });
+    
+    game.graphicsContext.resourceManager.requestResourceLoad();
 };
 
 /**

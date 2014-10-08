@@ -71,6 +71,13 @@ Resource.prototype.isReadyToUse = function() {
 };
 
 /**
+ * Sets the ready state to false, but does not erase the queued actions.
+ */
+Resource.prototype.resetReadyState = function() {
+    this._readyToUse = false;
+};
+
+/**
  * Resets the state of the resource to be not ready, resetting the queued 
  * actions as well.
  */

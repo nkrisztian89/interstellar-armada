@@ -92,6 +92,7 @@ function EgomModel(filename) {
 	this.lines = new Array();
 	this.triangles = new Array();
 	this.size = 0;
+        this.dimensions = null;
         
         this.nOpaqueTriangles = 0;
         this.nTransparentTriangles = 0;
@@ -156,6 +157,12 @@ EgomModel.prototype.loadFromXML = function(sourceXML) {
 	var nVertices = parseInt(sourceXML.getElementsByTagName("vertices")[0].getAttribute("count"));
 	this.vertices = new Array();
 	var vertexTags = sourceXML.getElementsByTagName("vertex");
+        var maxX = 0;
+        var minX = 0;
+        var maxY = 0;
+        var minY = 0;
+        var maxZ = 0;
+        var minZ = 0;
 	for(var i=0; i<nVertices; i++) {
 		var index=vertexTags[i].getAttribute("i");
 		if (this.vertices.length<index) {
@@ -176,7 +183,26 @@ EgomModel.prototype.loadFromXML = function(sourceXML) {
 		if(Math.abs(this.vertices[index][2]*2)>this.size) {
 			this.size=Math.abs(this.vertices[index][2]*2);
 		}
+                if(this.vertices[index][0]>maxX) {
+                    maxX = this.vertices[index][0];
+                }
+                if(this.vertices[index][0]<minX) {
+                    minX = this.vertices[index][0];
+                }
+                if(this.vertices[index][1]>maxY) {
+                    maxY = this.vertices[index][1];
+                }
+                if(this.vertices[index][1]<minY) {
+                    minY = this.vertices[index][1];
+                }
+                if(this.vertices[index][2]>maxZ) {
+                    maxZ = this.vertices[index][2];
+                }
+                if(this.vertices[index][2]<minZ) {
+                    minZ = this.vertices[index][2];
+                }
 	}
+        this.dimensions = [maxX-minX,maxY-minY,maxZ-minZ];
 	
 	var nLines = parseInt(sourceXML.getElementsByTagName("lines")[0].getAttribute("count"));
 	this.lines = new Array(nLines);

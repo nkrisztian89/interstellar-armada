@@ -180,7 +180,7 @@ function initialize() {
                 },
                 {
                     caption: "Database", 
-                    action: function(){ game.setCurrentScreen("database"); } 
+                    action: function(){ game.setCurrentScreen("database"); }
                 },
                 {
                     caption: "Keyboard controls", 
@@ -192,7 +192,7 @@ function initialize() {
                 }
             ],"menuContainer"));
         game.addScreen(new BattleScreen("battle","battle.html"));
-        game.addScreen(new GameScreenWithCanvases("database","database.html"));
+        game.addScreen(new DatabaseScreen("database","database.html"));
         game.addScreen(new HelpScreen("help","help.html"));
         game.addScreen(new GameScreen("about","about.html"));
         game.addScreen(new MenuScreen("ingameMenu","ingamemenu.html",

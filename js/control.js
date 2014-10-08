@@ -454,17 +454,13 @@ CameraController.prototype.control = function() {
     }
 
     if (camera.controllablePosition) {
-        inverseOrientationMatrix=transposed3(inverse3(matrix3from4(camera.orientationMatrix)));
+        inverseOrientationMatrix=transposed3(inverse3(matrix3from4(camera.getOrientationMatrix())));
         translationVector = matrix3Vector3Product(
             camera.velocityVector,
             inverseOrientationMatrix
             );
         if(camera.followedObject===undefined) {
-            camera.positionMatrix=
-                    mul(
-                            camera.positionMatrix,
-                            translationMatrixv(translationVector)
-                            );
+            camera.translatev(translationVector);
         } else {
             camera.followPositionMatrix=
                     mul(
@@ -486,7 +482,7 @@ CameraController.prototype.control = function() {
                                 camera.angularVelocityVector[0]
                                 )    
                     );
-            camera.orientationMatrix=mul(camera.orientationMatrix,rotationMatrix);
+            camera.rotateByMatrix(rotationMatrix);
         } else {
             rotationMatrix=
                 mul(
@@ -520,7 +516,7 @@ CameraController.prototype.control = function() {
                                 ),
                         rotationMatrix4([1,0,0],3.1415/2)        
                         );
-        camera.orientationMatrix=newOrientationMatrix;
+        camera.setOrientationMatrix(newOrientationMatrix);
         var camPositionMatrix = 
                 mul(
                         mul(
@@ -542,11 +538,11 @@ CameraController.prototype.control = function() {
                         -camPositionMatrix[14]
                         );
         var velocityMatrix = mul(translationMatrix(
-                newPositionMatrix[12]-camera.positionMatrix[12],
-                newPositionMatrix[13]-camera.positionMatrix[13],
-                newPositionMatrix[14]-camera.positionMatrix[14]),camera.orientationMatrix);
+                newPositionMatrix[12]-camera.getPositionMatrix()[12],
+                newPositionMatrix[13]-camera.getPositionMatrix()[13],
+                newPositionMatrix[14]-camera.getPositionMatrix()[14]),camera.getOrientationMatrix());
         camera.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
-        camera.positionMatrix=newPositionMatrix;
+        camera.setPositionMatrix(newPositionMatrix);
     }
 };
 
@@ -1228,9 +1224,4 @@ function control(scene,level,globalCommands) {
         }
 
         scene.activeCamera.update();
-	scene.activeCamera.matrix =
-		mul(
-			scene.activeCamera.positionMatrix,
-			scene.activeCamera.orientationMatrix
-		);
 }

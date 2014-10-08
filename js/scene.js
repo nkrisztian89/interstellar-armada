@@ -45,10 +45,10 @@ function VisualObject(shader,smallestParentSizeWhenDrawn,renderedWithDepthMask,r
 	
 	this.visible=true;
 	
-	this.visibleWidth=0;
-	this.visibleHeight=0;
+	this.visibleWidth = 0;
+	this.visibleHeight = 0;
         
-        this.lastInsideFrustumState=true;
+        this.lastInsideFrustumState = false;
         
         this.insideParent=undefined;
         this.smallestParentSizeWhenDrawn=smallestParentSizeWhenDrawn;
@@ -187,6 +187,10 @@ VisualObject.prototype.getCascadeScalingMatrix = function() {
 	}
 };
 
+VisualObject.prototype.getScaledSize = function() {
+    return this.getSize()*this.getCascadeScalingMatrix()[0];
+};
+
 /**
  * Return the model transformation matrix of the parent of the visual object.
  * * @returns {Float32Array} A 4x4 transformation matrix of the parent.
@@ -236,28 +240,29 @@ VisualObject.prototype.isInsideViewFrustum = function(camera) {
             }
         }
 	var baseMatrix =
-			translationMatrixv(getPositionVector4(
-				mul(
-					translationMatrixv(this.getCascadePositionVector()),
-					camera.matrix
-					)
-				));
+            translationMatrixv(getPositionVector4(
+                mul(
+                    translationMatrixv(this.getCascadePositionVector()),
+                    camera.getCameraMatrix()
+                )
+            ));
         var fullMatrix =
-               mul(mul(this.getCascadeScalingMatrix(),baseMatrix),camera.perspectiveMatrix);
-		
+               mul(mul(this.getCascadeScalingMatrix(),baseMatrix),camera.getPerspectiveMatrix());
+	
 	var position = vector4Matrix4Product([0.0,0.0,0.0,1.0],fullMatrix);
-	position = [position[0]/position[3],position[1]/position[3],position[2]/position[3]];
+	position[0] = (position[0]===0.0)?0.0:position[0]/position[3];
+        position[1] = (position[1]===0.0)?0.0:position[1]/position[3];
+        position[2] = (position[2]===0.0)?0.0:position[2]/position[3];
 	var zOffsetPosition = vector4Matrix4Product([0.0,0.0,-this.getSize(),1.0],fullMatrix);
-	var zOffset = (zOffsetPosition[2]/zOffsetPosition[3]);
-		
+	var zOffset = (zOffsetPosition[2]===0.0)?0.0:(zOffsetPosition[2]/zOffsetPosition[3]);
+        
 	// frustum culling: back and front
 	if (((zOffset>-1.0) && (zOffset<1.0)) || ((position[2]>-1.0) && (position[2]<1.0))) {
-                
                 // frustum culling: sides
-                var xOffsetPosition = vector4Matrix4Product([0.0,0.0,0.0,1.0],mul(mul(baseMatrix,translationMatrix(this.getSize()*this.getCascadeScalingMatrix()[0],0.0,0.0)),camera.perspectiveMatrix));
-                var yOffsetPosition = vector4Matrix4Product([0.0,0.0,0.0,1.0],mul(mul(baseMatrix,translationMatrix(0.0,this.getSize()*this.getCascadeScalingMatrix()[0],0.0)),camera.perspectiveMatrix));
-		var xOffset = Math.abs(xOffsetPosition[0]/xOffsetPosition[3]-position[0]);
-                var yOffset = Math.abs(yOffsetPosition[1]/yOffsetPosition[3]-position[1]);
+                var xOffsetPosition = vector4Matrix4Product([this.getSize(),0.0,0.0,1.0],fullMatrix);
+                var yOffsetPosition = vector4Matrix4Product([0.0,this.getSize(),0.0,1.0],fullMatrix);
+                var xOffset = Math.abs(((xOffsetPosition[0]===0.0)?0.0:xOffsetPosition[0]/xOffsetPosition[3])-position[0]);
+                var yOffset = Math.abs(((yOffsetPosition[1]===0.0)?0.0:yOffsetPosition[1]/yOffsetPosition[3])-position[1]);
 		if (
                     !(((position[0]+xOffset<-1)&&(position[0]-xOffset<-1))||((position[0]+xOffset>1)&&(position[0]-xOffset>1)))&&
 		    !(((position[1]+yOffset<-1)&&(position[1]-yOffset<-1))||((position[1]+yOffset>1)&&(position[1]-yOffset>1)))
@@ -312,7 +317,7 @@ VisualObject.prototype.cascadeRender = function(managedGLContext,scene,screenWid
         // subnodes (children) are only rendered if the parent's visible size
         // reaches a set limit
         if ((this.renderParent===null) || (this.smallestParentSizeWhenDrawn===undefined) ||
-                (Math.max(this.renderParent.visibleWidth*screenWidth,this.renderParent.visibleHeight*screenHeight)>=this.smallestParentSizeWhenDrawn)) {
+                (Math.max(this.renderParent.visibleWidth*screenWidth/2,this.renderParent.visibleHeight*screenHeight/2)>=this.smallestParentSizeWhenDrawn)) {
             // checking if the object is rendered in this phase (depth mask on/
             // off) and it is inside the view frustum
             if(((this.renderedWithDepthMask===true)&&(depthMaskPhase===true))||
@@ -389,7 +394,7 @@ function FVQ(model,shader,samplerName,cubemap,camera) {
 	var self = this;
 	
 	this.uniformValueFunctions[this.samplerName] =                   function() { return self.cubemap.id; };
-	this.uniformValueFunctions["u_viewDirectionProjectionInverse"] = function() { return inverse4(mul(self.camera.orientationMatrix,self.camera.perspectiveMatrix)); };
+	this.uniformValueFunctions["u_viewDirectionProjectionInverse"] = function() { return inverse4(mul(self.camera.getOrientationMatrix(),self.camera.getPerspectiveMatrix())); };
 }
 
 FVQ.prototype = new VisualObject();
@@ -513,6 +518,10 @@ Mesh.prototype.setPositionMatrix = function(newValue) {
     this.modelMatrixCalculated = false;
 };
 
+Mesh.prototype.translate = function(x,y,z) {
+    this.setPositionMatrix(mul(this.positionMatrix,translationMatrix(x,y,z)));
+};
+
 /**
  * Returns the rotation matrix describing the orientation of the mesh.
  * @returns {Float32Array} The 4x4 rotation matrix indicating the orientation.
@@ -521,9 +530,37 @@ Mesh.prototype.getOrientationMatrix = function() {
     return this.orientationMatrix;
 };
 
+Mesh.prototype.getXDirectionVector = function() {
+    return [
+        this.orientationMatrix[0],
+        this.orientationMatrix[1],
+        this.orientationMatrix[2]
+    ];
+};
+
+Mesh.prototype.getYDirectionVector = function() {
+    return [
+        this.orientationMatrix[4],
+        this.orientationMatrix[5],
+        this.orientationMatrix[6]
+    ];
+};
+
+Mesh.prototype.getZDirectionVector = function() {
+    return [
+        this.orientationMatrix[8],
+        this.orientationMatrix[9],
+        this.orientationMatrix[10]
+    ];
+};
+
 Mesh.prototype.setOrientationMatrix = function(newValue) {
     this.orientationMatrix = newValue;
     this.modelMatrixCalculated = false;
+};
+
+Mesh.prototype.rotate = function(axis,angle) {
+    this.setOrientationMatrix(mul(this.orientationMatrix,rotationMatrix4(axis,angle)));
 };
 
 /**
@@ -573,7 +610,7 @@ Mesh.prototype.getModelMatrix = function() {
  */
 Mesh.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,depthMask) {
     // choose the model of appropriate LOD
-    var visibleSize = Math.max(this.visibleWidth*screenWidth,this.visibleHeight*screenHeight);
+    var visibleSize = Math.max(this.visibleWidth*screenWidth/2,this.visibleHeight*screenHeight/2);
     var closestLOD = -1;
     for(var i=0;i<this.modelsWithLOD.length;i++) {
             if(
@@ -895,9 +932,9 @@ PointParticle.prototype.render = function(context) {
  * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
  */
 function Camera(aspect,fov,controllablePosition,controllableDirection,followedObject,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject) {
-        this.positionMatrix=identityMatrix4();
-	this.orientationMatrix=identityMatrix4();
-	this.matrix=identityMatrix4();
+        this._positionMatrix=identityMatrix4();
+	this._orientationMatrix=identityMatrix4();
+	this._matrix=identityMatrix4();
 	this.velocityVector=[0,0,0];
 	this.maxSpeed=5;
 	this.acceleration=0.1;
@@ -907,13 +944,74 @@ function Camera(aspect,fov,controllablePosition,controllableDirection,followedOb
 	if(followedObject!==undefined) {
             this.followObject(followedObject,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject);
         }
-	this.aspect=aspect;
-	this.fov=fov;
+	this._aspect=aspect;
+	this._fov=fov;
         this.controllablePosition=controllablePosition;
         this.controllableDirection=controllableDirection;
 	this.updatePerspectiveMatrix();
         this.nextView=null;
 }
+
+Camera.prototype._updateMatrix = function() {
+    this._matrix = mul(this._positionMatrix,this._orientationMatrix);
+};
+
+Camera.prototype.getPositionMatrix = function() {
+    return this._positionMatrix;
+};
+
+Camera.prototype.getPositionVector = function() {
+    return [
+        this._positionMatrix[12],
+        this._positionMatrix[13],
+        this._positionMatrix[14]
+    ];
+};
+
+Camera.prototype.setPositionMatrix = function(matrix) {
+    this._positionMatrix = matrix;
+    this._updateMatrix();
+};
+
+Camera.prototype.translate = function(x,y,z) {
+    this._positionMatrix = mul(this._positionMatrix,translationMatrix(x,y,z));
+    this._updateMatrix();
+};
+
+Camera.prototype.translatev = function(v) {
+    this._positionMatrix = mul(this._positionMatrix,translationMatrixv(v));
+    this._updateMatrix();
+};
+
+Camera.prototype.translateByMatrix = function(matrix) {
+    this._positionMatrix = mul(this._positionMatrix,matrix);
+};
+
+Camera.prototype.getOrientationMatrix = function() {
+    return this._orientationMatrix;
+};
+
+Camera.prototype.setOrientationMatrix = function(matrix) {
+    this._orientationMatrix = matrix;
+    this._updateMatrix();
+};
+
+Camera.prototype.rotate = function(axis,angle) {
+    this._orientationMatrix = mul(this._orientationMatrix,rotationMatrix4(axis,angle));
+    this._updateMatrix();
+};
+
+Camera.prototype.rotateByMatrix = function(matrix) {
+    this._orientationMatrix = mul(this._orientationMatrix,matrix);
+};
+
+Camera.prototype.getCameraMatrix = function() {
+    return this._matrix;
+};
+
+Camera.prototype.getPerspectiveMatrix = function() {
+    return this._perspectiveMatrix;
+};
 
 /**
  * Sets the camera up to follow the given visual object.
@@ -947,7 +1045,7 @@ Camera.prototype.reset = function() {
 };
 
 Camera.prototype.updatePerspectiveMatrix = function() {
-    this.perspectiveMatrix=perspectiveMatrix4(this.aspect/20,1.0/20,this.aspect*Math.cos(this.fov*3.1415/360)*2/20,5000.0);
+    this._perspectiveMatrix=perspectiveMatrix4(this._aspect/20,1.0/20,this._aspect*Math.cos(this._fov*3.1415/360)*2/20,5000.0);
 };
 
 /**
@@ -955,7 +1053,7 @@ Camera.prototype.updatePerspectiveMatrix = function() {
  * @param {number} fov The new desired FOV in degrees.
  */
 Camera.prototype.setFOV = function(fov) {
-    this.fov=fov;
+    this._fov=fov;
     this.updatePerspectiveMatrix();
 };
 
@@ -964,7 +1062,7 @@ Camera.prototype.setFOV = function(fov) {
  * @param {number} aspect The new desired aspect ratio.
  */
 Camera.prototype.setAspect = function(aspect) {
-    this.aspect=aspect;
+    this._aspect=aspect;
     this.updatePerspectiveMatrix();
 };
 
@@ -1013,9 +1111,9 @@ SceneCamera.prototype.followCamera = function(camera,adaptationTime) {
     }
     this.followedCamera=camera;
     this.adaptationStartTime=new Date().getTime();
-    this.adaptationStartPositionMatrix=this.positionMatrix;
-    this.adaptationStartOrientationMatrix=this.orientationMatrix;
-    this.adaptationStartFOV=this.fov;
+    this.adaptationStartPositionMatrix=this._positionMatrix;
+    this.adaptationStartOrientationMatrix=this._orientationMatrix;
+    this.adaptationStartFOV=this._fov;
     this.adaptationTimeLeft=this.adaptationTime;
 };
 
@@ -1030,27 +1128,27 @@ SceneCamera.prototype.update = function() {
             var adaptationProgress=Math.min(1.0,(currentTime-this.adaptationStartTime)/this.adaptationTime);
             this.adaptationTimeLeft=this.adaptationTime-(currentTime-this.adaptationStartTime);
             var trans = translationMatrix(
-                    (this.followedCamera.positionMatrix[12]-this.adaptationStartPositionMatrix[12])*adaptationProgress,
-                    (this.followedCamera.positionMatrix[13]-this.adaptationStartPositionMatrix[13])*adaptationProgress,
-                    (this.followedCamera.positionMatrix[14]-this.adaptationStartPositionMatrix[14])*adaptationProgress
+                    (this.followedCamera._positionMatrix[12]-this.adaptationStartPositionMatrix[12])*adaptationProgress,
+                    (this.followedCamera._positionMatrix[13]-this.adaptationStartPositionMatrix[13])*adaptationProgress,
+                    (this.followedCamera._positionMatrix[14]-this.adaptationStartPositionMatrix[14])*adaptationProgress
                     );
             var newPositionMatrix=translate(this.adaptationStartPositionMatrix,trans);
             var velocityMatrix = mul(translationMatrix(
-                newPositionMatrix[12]-this.positionMatrix[12],
-                newPositionMatrix[13]-this.positionMatrix[13],
-                newPositionMatrix[14]-this.positionMatrix[14]),this.orientationMatrix);
+                newPositionMatrix[12]-this._positionMatrix[12],
+                newPositionMatrix[13]-this._positionMatrix[13],
+                newPositionMatrix[14]-this._positionMatrix[14]),this._orientationMatrix);
             this.velocityVector = [velocityMatrix[12],velocityMatrix[13],velocityMatrix[14]];
-            this.positionMatrix=newPositionMatrix;
-            this.orientationMatrix=correctOrthogonalMatrix(addMatrices4(
+            this._positionMatrix=newPositionMatrix;
+            this._orientationMatrix=correctOrthogonalMatrix(addMatrices4(
                 mulMatrix4Scalar(this.adaptationStartOrientationMatrix,1.0-adaptationProgress),
-                mulMatrix4Scalar(this.followedCamera.orientationMatrix,adaptationProgress)));
-            this.matrix=mul(this.positionMatrix,this.orientationMatrix);
-            this.setFOV(this.adaptationStartFOV+(this.followedCamera.fov-this.adaptationStartFOV)*adaptationProgress);
+                mulMatrix4Scalar(this.followedCamera._orientationMatrix,adaptationProgress)));
+            this._updateMatrix();
+            this.setFOV(this.adaptationStartFOV+(this.followedCamera._fov-this.adaptationStartFOV)*adaptationProgress);
         } else {
-            this.positionMatrix=this.followedCamera.positionMatrix;
-            this.orientationMatrix=this.followedCamera.orientationMatrix;
-            this.matrix=this.followedCamera.matrix;
-            this.perspectiveMatrix=this.followedCamera.perspectiveMatrix;
+            this._positionMatrix=this.followedCamera._positionMatrix;
+            this._orientationMatrix=this.followedCamera._orientationMatrix;
+            this._matrix=this.followedCamera._matrix;
+            this._perspectiveMatrix=this.followedCamera._perspectiveMatrix;
         }
     }
 };
@@ -1073,9 +1171,15 @@ SceneCamera.prototype.getFollowedSpacecraft = function(logicContext) {
     return null;
 };
 
+/**
+ * 
+ * @param {Number[3]} color
+ * @param {Number[3]} direction
+ * @returns {LightSource}
+ */
 function LightSource(color,direction) {
     this.color = color;
-    this.direction = direction;
+    this.direction = normalizeVector(direction);
 }
 
 /**
@@ -1124,17 +1228,18 @@ function Scene(left,top,width,height,clearColorOnRender,colorMask,clearColor,cle
         this.uniformValueFunctions['u_numLights'] = function() { return self.lights.length; };
         this.uniformValueFunctions['u_lights'] = function() { return self.lights; };
    
-        this.uniformValueFunctions['u_cameraMatrix'] = function() { return mul(self.activeCamera.positionMatrix,self.activeCamera.orientationMatrix); };
-        this.uniformValueFunctions['u_cameraOrientationMatrix'] = function() { return self.activeCamera.orientationMatrix; };
-        this.uniformValueFunctions['u_projMatrix'] = function() { return self.activeCamera.perspectiveMatrix; };
+        this.uniformValueFunctions['u_cameraMatrix'] = function() { return self.activeCamera.getCameraMatrix(); };
+        this.uniformValueFunctions['u_cameraOrientationMatrix'] = function() { return self.activeCamera.getOrientationMatrix(); };
+        this.uniformValueFunctions['u_projMatrix'] = function() { return self.activeCamera.getPerspectiveMatrix(); };
         this.uniformValueFunctions['u_eyePos'] = function() 
             {
-                    var eyePos = [
+                    /*var eyePos = [
                             -self.activeCamera.positionMatrix[12],
                             -self.activeCamera.positionMatrix[13],
                             -self.activeCamera.positionMatrix[14]
                             ];
-                    return [eyePos[0],eyePos[1],eyePos[2]]; 
+                    return [eyePos[0],eyePos[1],eyePos[2]]; */
+                    return scalarVector3Product(-1,self.activeCamera.getPositionVector());
             };
 }
 
@@ -1152,6 +1257,11 @@ Scene.prototype.addBackgroundObject = function(newVisualObject) {
  */
 Scene.prototype.addObject = function(newVisualObject) {
     this.objects.push(newVisualObject);
+};
+
+Scene.prototype.clearObjects = function() {
+    this._backgroundObjects = new Array();
+    this.objects = new Array();
 };
 
 Scene.prototype.addLightSource = function(newLightSource) {

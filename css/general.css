@@ -188,6 +188,12 @@ a.menu {
     margin: 0.2em;
 }
 
+a.horizontalMenu {
+    display: inline-table;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+}
+
 a.button {
     font-size: 0.9em;
     text-align: center;
