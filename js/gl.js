@@ -30,8 +30,10 @@
  * @extends Resource
  * @param {String} filename The name of file from which the texture resource 
  * is to be loaded. The constructor itself does not initiate the loading.
+ * @param {Boolean} [useMipmap=true] Whether mipmapping should be used with
+ * this texture.
  */
-function Texture(filename) {
+function Texture(filename,useMipmap) {
     Resource.call(this);
     // properties for file resource management
     /**
@@ -41,6 +43,12 @@ function Texture(filename) {
      * @type String
      */
     this._filename = filename;
+    /**
+     * Whether mipmapping should be used with this texture.
+     * @name Texture#_mipmap
+     * @type Boolean
+     */
+    this._mipmap = (useMipmap!==undefined)?useMipmap:true;
     /**
      * An Image object to manage the loading of the texture from file.
      * @name Texture#_image
@@ -114,14 +122,24 @@ Texture.prototype.addToContext = function(context) {
             var gl = context.gl;
             this._ids[context] = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, this._ids[context]);
+            // Upload the image into the texture.
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
             // Set the parameters so we can render any size image.
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-            // Upload the image into the texture.
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
+            if(this._mipmap===false) {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            } else {
+                if(context.getFiltering()==="bilinear") {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+                } else if(context.getFiltering()==="trilinear") {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                } else if(context.getFiltering()==="anisotropic") {
+                    gl.texParameterf(gl.TEXTURE_2D, context.getAnisotropicFilter().TEXTURE_MAX_ANISOTROPY_EXT, 4);
+                } 
+                gl.generateMipmap(gl.TEXTURE_2D);
+            }
         }
     });
 };
@@ -896,9 +914,12 @@ Shader.prototype.enableVertexBuffers = function(context) {
  * @param {Boolean} antialiasing Whether antialising should be turned on for
  * this context. If the WebGL implementation does not support antialiasing, this
  * will have no effect.
+ * @param {String} filtering What kind of texture filtering should be used for
+ * 2D textures. Supported values are: bilinear, trilinear, anisotropic (which
+ * will be 4:1)
  * @returns {ManagedGLContext}
  */
-function ManagedGLContext(canvas,antialiasing) {
+function ManagedGLContext(canvas,antialiasing,filtering) {
     Resource.call(this);
     /**
      * The contained basic WebGL rendering context.
@@ -906,6 +927,29 @@ function ManagedGLContext(canvas,antialiasing) {
      * @type WebGLRenderingContext
      */
     this.gl = null;
+    /**
+     * Whether antialiasing is enabled for the WebGL context.
+     * @name ManagedGLContext#_antialiasing
+     * @type Boolean
+     */
+    this._antialiasing = antialiasing;
+    /**
+     * What filtering is used for 2D textures. Supported values are: bilinear,
+     * trilinear and anisotropic. Attempting to create the context with anisotropic
+     * filtering will cause it to probe if the functionality is available, and will
+     * set 4:1 anisotropic filtering up if so, otherwise revert back to trilinear
+     * filtering.
+     * @name ManagedGLContext#_filtering
+     * @type String
+     */
+    this._filtering = filtering;
+    /**
+     * Holder for the handle of the anisotropic filter WebGL extension, should it
+     * be needed.
+     * @name ManagedGLContext#_anisotropicFilter
+     * @type Object
+     */
+    this._anisotropicFilter = null;
     /**
      * The list of associated shaders. This needs to be stored in order to bind
      * the vertex buffer objects to the corresponding attributes of the shaders
@@ -964,6 +1008,15 @@ function ManagedGLContext(canvas,antialiasing) {
         game.showError("Unable to initialize WebGL. Your browser might not support it.");
     }
     
+    // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
+    // fall back to trilinear filtering.
+    if(this._filtering === "anisotropic") {
+        this._anisotropicFilter = this.gl.getExtension("EXT_texture_filter_anisotropic");
+        if(this._anisotropicFilter === null) {
+            this._filtering = "trilinear";
+        }
+    }
+    
     // some basic settings on the context state machine
     this.gl.clearDepth(1.0);
     this.gl.colorMask(true, true, true, true);
@@ -980,6 +1033,22 @@ function ManagedGLContext(canvas,antialiasing) {
 
 ManagedGLContext.prototype = new Resource();
 ManagedGLContext.prototype.constructor = ManagedGLContext;
+
+/**
+ * Getter for the _filtering property.
+ * @returns {String}
+ */
+ManagedGLContext.prototype.getFiltering = function() {
+    return this._filtering;
+};
+
+/**
+ * Getter for the _anisotropicFilter property.
+ * @returns {Object}
+ */
+ManagedGLContext.prototype.getAnisotropicFilter = function() {
+    return this._anisotropicFilter;
+};
 
 /**
  * Adds the shader reference to the list of shaders to be used when the vertex
@@ -1363,15 +1432,20 @@ ResourceManager.prototype.getNumberOfLoadedResources = function() {
  * If a texture with the given filename is stored by the manager, returns a
  * reference to it, otherwise adds a new texture with this filename.
  * @param {String} filename
+ * @param {Boolean} [useMipmap=true]
  * @returns {Texture}
  */
-ResourceManager.prototype.getOrAddTexture = function(filename) {
-    if(this._textures[filename]===undefined) {
+ResourceManager.prototype.getOrAddTexture = function(filename,useMipmap) {
+    var textureName = filename;
+    if(useMipmap===false) {
+        textureName += "_noMipmap";
+    }
+    if(this._textures[textureName]===undefined) {
         this._numTextures+=1;
         this.resetReadyState();
-        this._textures[filename] = new Texture(filename);
+        this._textures[textureName] = new Texture(filename,useMipmap);
         var self = this;
-        this._textures[filename].executeWhenReady(function() {
+        this._textures[textureName].executeWhenReady(function() {
             self._numTexturesLoaded+=1;
             self.onResourceLoad(filename,self.getNumberOfResources(),self.getNumberOfLoadedResources());
             if(self.allTexturesLoaded()) {
@@ -1382,7 +1456,15 @@ ResourceManager.prototype.getOrAddTexture = function(filename) {
             }
         });
     }
-    return this._textures[filename];
+    return this._textures[textureName];
+};
+
+/**
+ * Performs a getOrAddTexture() using the properties of the texture descriptor.
+ * @param {TextureDescriptor} descriptor
+ */
+ResourceManager.prototype.getOrAddTextureFromDescriptor = function(descriptor) {
+    return this.getOrAddTexture(descriptor.filename,descriptor.useMipmap);
 };
 
 /**

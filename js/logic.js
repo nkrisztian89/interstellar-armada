@@ -121,7 +121,7 @@ BackgroundObject.prototype.addToScene = function(scene) {
         layerParticle =new StaticParticle(
             game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
             game.graphicsContext.resourceManager.getShader(this.class.layers[i].shaderName),
-            game.graphicsContext.resourceManager.getOrAddTexture(this.class.layers[i].textureFileName),
+            game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.class.layers[i].textureDescriptor),
             this.class.layers[i].color,
             this.class.layers[i].size,
             translationMatrixv(scalarVector3Product(4500,this.position))
@@ -205,7 +205,7 @@ function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzl
 	this.visualModel = new Billboard(
 		game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+this.class.name,projectileModel(this.class.intersections)),
 		game.graphicsContext.resourceManager.getShader(projectileClass.shaderName),
-		game.graphicsContext.resourceManager.getOrAddTexture(projectileClass.textureFileName),
+		game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(projectileClass.textureDescriptor),
 		projectileClass.size,
 		positionMatrix,
 		orientationMatrix
@@ -213,7 +213,7 @@ function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzl
 	var muzzleFlash = new DynamicParticle(
 		game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
 		game.graphicsContext.resourceManager.getShader(projectileClass.muzzleFlashShaderName),
-		game.graphicsContext.resourceManager.getOrAddTexture(projectileClass.muzzleFlashTextureFilename),
+		game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(projectileClass.muzzleFlashTextureDescriptor),
 		projectileClass.muzzleFlashColor,
 		projectileClass.size,
 		muzzleFlashPositionMatrix,
@@ -498,8 +498,8 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
         }
     }
     var textures=new Object();
-    for(var textureType in this.class.textureFileNames) {
-        textures[textureType]=game.graphicsContext.resourceManager.getOrAddTexture(this.class.textureFileNames[textureType]);
+    for(var textureType in this.class.textureDescriptors) {
+        textures[textureType] = game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.class.textureDescriptors[textureType]);
     }
     this.visualModel = new ShipMesh(
         modelsWithLOD,
@@ -601,7 +601,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             var thrusterParticle = new StaticParticle(
                 game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
                 game.graphicsContext.resourceManager.getShader(this.propulsion.class.shaderName),
-                game.graphicsContext.resourceManager.getOrAddTexture(this.propulsion.class.textureFileName),
+                game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.propulsion.class.textureDescriptor),
                 this.propulsion.class.color,
                 slot.size,
                 translationMatrixv(slot.positionVector),
@@ -981,9 +981,9 @@ Level.prototype.buildScene = function(scene) {
     // loading, as they are not added to the scene in the beginning
     for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName);
-        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].textureFileName);
+        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor);
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
-        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename);
+        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlashTextureDescriptor);
         game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections));
     }
     game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel());
@@ -992,9 +992,9 @@ Level.prototype.buildScene = function(scene) {
 Level.prototype.addProjectileResourcesToContext = function(context) {
     for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].textureFileName).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor).addToContext(context);
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddTexture(game.logicContext.projectileClasses[i].muzzleFlashTextureFilename).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlashTextureDescriptor).addToContext(context);
         game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections)).addToContext(context);
     }
     game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()).addToContext(context);
@@ -1069,7 +1069,7 @@ LogicContext.prototype.loadBackgroundObjectClasses = function(classesXML) {
                     layers.push({
                         size: layerTags[j].getAttribute("size"),
                         shaderName: layerTags[j].getElementsByTagName("shader")[0].getAttribute("name"),
-                        textureFileName: layerTags[j].getElementsByTagName("texture")[0].getAttribute("filename"),
+                        textureDescriptor: new TextureDescriptor(layerTags[j].getElementsByTagName("texture")[0]),
                         color: getRGBColorFromXMLTag(layerTags[j].getElementsByTagName("color")[0])
                     });
                 }
@@ -1118,11 +1118,11 @@ LogicContext.prototype.loadProjectileClasses = function(classesXML) {
 			classTags[i].getElementsByTagName("billboard")[0].getAttribute("size"),
 			intersections,
 			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			classTags[i].getElementsByTagName("texture")[0].getAttribute("filename"),
+			new TextureDescriptor(classTags[i].getElementsByTagName("texture")[0]),
 			classTags[i].getElementsByTagName("physics")[0].getAttribute("mass"),
 			classTags[i].getElementsByTagName("logic")[0].getAttribute("duration"),
 			classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("shader")[0].getAttribute("name"),
-			classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("texture")[0].getAttribute("filename"),
+			new TextureDescriptor(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("texture")[0]),
 			[
 				parseFloat(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("color")[0].getAttribute("r")),
 				parseFloat(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("color")[0].getAttribute("g")),
@@ -1176,7 +1176,7 @@ LogicContext.prototype.loadPropulsionClasses = function(classesXML) {
 		result.push(new PropulsionClass(
 			classTags[i].getAttribute("name"),
 			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			classTags[i].getElementsByTagName("texture")[0].getAttribute("filename"),
+			new TextureDescriptor(classTags[i].getElementsByTagName("texture")[0]),
 			[
 				parseFloat(classTags[i].getElementsByTagName("color")[0].getAttribute("r")),
 				parseFloat(classTags[i].getElementsByTagName("color")[0].getAttribute("g")),

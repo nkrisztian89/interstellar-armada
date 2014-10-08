@@ -45,7 +45,8 @@ function LODContext(maxEnabledLOD,thresholds) {
 function GraphicsContext() {
     this.resourceManager=new ResourceManager();
     
-    this._antialiasing = false;
+    this._antialiasing = null;
+    this._filtering = null;
     
     this._maxLoadedLOD = null;
     this._lodContext = null;
@@ -60,10 +61,15 @@ GraphicsContext.prototype.loadFromXML = function(xmlSource) {
     
     this.resourceManager.requestShaderAndCubemapObjectLoad(xmlSource.getElementsByTagName("shaders")[0].getAttribute("source"));
     
+    this._antialiasing = false;
+    this._filtering = "bilinear";
     var contextTag = xmlSource.getElementsByTagName("context")[0];
     if(contextTag!==null) {
         if(contextTag.hasAttribute("antialiasing")) {
             this._antialiasing = (contextTag.getAttribute("antialiasing")==="true");
+        }
+        if(contextTag.hasAttribute("filtering")) {
+            this._filtering = contextTag.getAttribute("filtering");
         }
     }
     var lodLoadProfileTag = xmlSource.getElementsByTagName("lodLoadProfile")[0];
@@ -89,6 +95,10 @@ GraphicsContext.prototype.loadFromXML = function(xmlSource) {
 
 GraphicsContext.prototype.getAntialiasing = function() {
     return this._antialiasing;
+};
+
+GraphicsContext.prototype.getFiltering = function() {
+    return this._filtering;
 };
 
 GraphicsContext.prototype.getMaxLoadedLOD = function() {

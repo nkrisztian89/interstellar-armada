@@ -46,6 +46,30 @@ function SkyboxClass(name, shaderName, samplerName, cubemap) {
 	this.cubemap=cubemap; 
 }
 
+function TextureDescriptor(xmlTag) {
+    this.filename = null;
+    this.useMipmap = null;
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * @param {Element} xmlTag
+ */
+TextureDescriptor.prototype.loadFromXMLTag = function(xmlTag) {
+    this.filename = xmlTag.getAttribute("filename");
+    if(xmlTag.hasAttribute("useMipmap")) {
+        this.useMipmap = (xmlTag.getAttribute("useMipmap")==="true");
+    } else {
+        this.useMipmap = true;
+    }
+};
+
+TextureDescriptor.prototype.toString = function() {
+    return "[TextureDescriptor: "+this.filename+", use mipmapping: "+this.useMipmap+"]";
+};
+
 /**
  * Defines a background object class.
  * @class Environments (levels) in the game can have several background objects,
@@ -55,7 +79,7 @@ function SkyboxClass(name, shaderName, samplerName, cubemap) {
  * emits to light the scene.
  * @param {Object[]} layers The layers of the object which can be rendered upon
  * each other. The layers need to have the following properties: size, 
- * shaderName, textureFileName, color.
+ * shaderName, textureDescriptor, color.
  * @returns {BackgroundObjectClass}
  */
 function BackgroundObjectClass(name,lightColor,layers) {
@@ -112,7 +136,7 @@ function ModelReference(filename,lod) {
  * positions)
  * @param {String} shaderName The name of the shader to be used with the
  * projectile. (as defined in shaders.xml)
- * @param {String} textureFileName The name of the texture to be used on the
+ * @param {String} textureDescriptor The descriptor of the texture to be used on the
  * projectile model.
  * @param {Number} mass Mass of the projectile in kilograms. Determines how
  * fast will it fly when shot from weapons.
@@ -121,22 +145,22 @@ function ModelReference(filename,lod) {
  * @param {String} muzzleFlashShaderName The name for the shader to be used to
  * render the muzzle flash which is created when this projectile is shot from
  * a weapon.
- * @param {String} muzzleFlashTextureFilename The name of the texture file to
+ * @param {String} muzzleFlashTextureDescriptor The descriptor of the texture file to
  * be used for rendering the muzzle flash.
  * @param {Number[3]} muzzleFlashColor The rendered muzzle flash will be 
  * modulated with this color. (if defined so be the shader) [red,green,blue]
  * @returns {ProjectileClass}
  */
-function ProjectileClass(name,size,intersections,shaderName,textureFileName,mass,duration,muzzleFlashShaderName,muzzleFlashTextureFilename,muzzleFlashColor) {
+function ProjectileClass(name,size,intersections,shaderName,textureDescriptor,mass,duration,muzzleFlashShaderName,muzzleFlashTextureDescriptor,muzzleFlashColor) {
 	this.name=name;
 	this.size=size;
 	this.intersections=intersections;
 	this.shaderName=shaderName;
-	this.textureFileName=textureFileName;
+	this.textureDescriptor=textureDescriptor;
 	this.mass=mass;
 	this.duration=duration;
 	this.muzzleFlashShaderName=muzzleFlashShaderName;
-	this.muzzleFlashTextureFilename=muzzleFlashTextureFilename;
+	this.muzzleFlashTextureDescriptor=muzzleFlashTextureDescriptor;
 	this.muzzleFlashColor=muzzleFlashColor;
 }
 
@@ -202,7 +226,7 @@ WeaponClass.prototype.toString = function() {
  * class has to be referred to by this name.
  * @param {String} shaderName The shader that will be used for rendering the
  * particles shown when thrusters of the ship fire.
- * @param {String} textureFileName The file to be used for the texture of
+ * @param {String} textureDescriptor The descriptor to be used for the texture of
  * the thruster particles.
  * @param {Number[3]} color The color that can be used to modulate the color of
  * thruster particles, if defined so by the shader. [red,green,blue]
@@ -212,10 +236,10 @@ WeaponClass.prototype.toString = function() {
  * when the thrusters are used to turn it.
  * @returns {PropulsionClass}
  */
-function PropulsionClass(name,shaderName,textureFileName,color,thrust,angularThrust) {
+function PropulsionClass(name,shaderName,textureDescriptor,color,thrust,angularThrust) {
 	this.name=name;
 	this.shaderName=shaderName;
-	this.textureFileName=textureFileName;
+	this.textureDescriptor=textureDescriptor;
 	this.color=color;
 	this.thrust=thrust;
 	this.angularThrust=angularThrust;
@@ -394,12 +418,12 @@ function SpacecraftClass(xmlSource) {
      */
     this.modelSize = null;
     /**
-     * The associative array containing the texture file names for different 
-     * uses (such as color, luminosity map) in the form of { use: filename, ... }
-     * @name SpacecraftClass#textureFileNames
+     * The associative array containing the texture  descriptors for different 
+     * uses (such as color, luminosity map) in the form of { use: descriptor, ... }
+     * @name SpacecraftClass#textureDescriptors
      * @type Object
      */
-    this.textureFileNames = null;
+    this.textureDescriptors = null;
     /**
      * The name of the shader to be used for rendering these ships (as defined 
      * in shaders.xml)
@@ -502,10 +526,10 @@ SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
     }
     // reading the textures into an object, where the texture type are the
     // name of the properties
-    this.textureFileNames = new Object();
+    this.textureDescriptors = new Object();
     var textureTags=xmlTag.getElementsByTagName("texture");
     for(var i=0;i<textureTags.length;i++) {
-        this.textureFileNames[textureTags[i].getAttribute("type")]=textureTags[i].getAttribute("filename");
+        this.textureDescriptors[textureTags[i].getAttribute("type")] = new TextureDescriptor(textureTags[i]);
     }
     this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
     this.mass = xmlTag.getElementsByTagName("physics")[0].getAttribute("mass");

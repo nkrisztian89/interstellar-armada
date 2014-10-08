@@ -233,7 +233,7 @@ ScreenCanvas.prototype.isResizeable = function() {
  */
 ScreenCanvas.prototype.getManagedContext = function() {
     if(this._context === null) {
-        this._context = new ManagedGLContext(this._canvas,game.graphicsContext.getAntialiasing());
+        this._context = new ManagedGLContext(this._canvas,game.graphicsContext.getAntialiasing(),game.graphicsContext.getFiltering());
     }
     return this._context;
 };

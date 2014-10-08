@@ -47,7 +47,7 @@
 				<intersection position="0" />
 			</billboard>
 			<shader name="billboard" />
-			<texture filename="textures/plasma_full.png" />
+			<texture filename="textures/plasma_full.png" useMipmap="false" />
 		</graphics>
 		<physics mass="1" />
 		<logic duration="5000" />
@@ -64,7 +64,7 @@
 				<intersection position="0.35" />
 			</billboard>
 			<shader name="billboard" />
-			<texture filename="textures/proton_full.png" />
+			<texture filename="textures/proton_full.png" useMipmap="false" />
 		</graphics>
 		<physics mass="5" />
 		<logic duration="5000" />
@@ -81,7 +81,7 @@
 				<intersection position="0" />
 			</billboard>
 			<shader name="billboard" />
-			<texture filename="textures/ion_full.png" />
+			<texture filename="textures/ion_full.png" useMipmap="false" />
 		</graphics>
 		<physics mass="15" />
 		<logic duration="5000" />
