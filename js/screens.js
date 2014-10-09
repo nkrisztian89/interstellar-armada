@@ -368,10 +368,12 @@ GameScreenWithCanvases.prototype.render = function() {
         this._sceneCanvasBindings[i].scene.cleanUp();
         this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext());
     }
-    var d = new Date();
-    this._renderTimes.push(d);
-    while((this._renderTimes.length>1)&&((d-this._renderTimes[0])>1000)) {
-        this._renderTimes.shift();
+    if(this._renderLoop!==null) {
+        var d = new Date();
+        this._renderTimes.push(d);
+        while((this._renderTimes.length>1)&&((d-this._renderTimes[0])>1000)) {
+            this._renderTimes.shift();
+        }
     }
 };
 
@@ -560,6 +562,7 @@ BattleScreen.prototype.render = function() {
 };
 
 BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
+    document.body.style.cursor='wait';
     this.hideStats();
     this.hideUI();
     this._loadingBox.show();
@@ -594,6 +597,7 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
             self.getLoadingBox().hide();
             self.showStats();
             self.startRenderLoop(1000/freq);
+            document.body.style.cursor='default';
         });
         
         game.graphicsContext.resourceManager.requestResourceLoad();
@@ -712,7 +716,6 @@ DatabaseScreen.prototype.startRotationLoop = function() {
     var self = this;    
     this._rotationLoop = setInterval(function ()
     {
-        var i;
         var curDate = new Date();
         self._item.visualModel.rotate(self._item.visualModel.getZDirectionVector(),0.001*(curDate-prevDate));
         prevDate = curDate;
@@ -729,7 +732,7 @@ DatabaseScreen.prototype.initializeCanvas = function() {
         
     this.resizeCanvas("databaseCanvas");
     var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
-    this._scene = new Scene(0,0,canvas.clientWidth,canvas.clientHeight,false,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
+    this._scene = new Scene(0,0,canvas.clientWidth,canvas.clientHeight,true,[true,true,true,true],[0,0,0,0],true,game.graphicsContext.getLODContext());
     this._scene.addLightSource(new LightSource([1.0,1.0,1.0],[-1.0,0.0,1.0]));
 
     var self = this;
@@ -747,7 +750,12 @@ DatabaseScreen.prototype.initializeCanvas = function() {
     this.loadShip();
 };
 
+/**
+ * Selects and displays the previous spacecraft class from the list on the database
+ * screen. Loops around.
+ */
 DatabaseScreen.prototype.selectPreviousShip = function() {
+    // using % operator does not work with -1, reverted to "if"
     this._itemIndex -= 1;
     if(this._itemIndex===-1) {
         this._itemIndex = game.logicContext.getSpacecraftClasses().length-1;
@@ -755,16 +763,41 @@ DatabaseScreen.prototype.selectPreviousShip = function() {
     this.loadShip();
 };
 
+/**
+ * Selects and displays the next spacecraft class from the list on the database
+ * screen. Loops around.
+ */
 DatabaseScreen.prototype.selectNextShip = function() {
     this._itemIndex = (this._itemIndex+1)%game.logicContext.getSpacecraftClasses().length;
     this.loadShip();
 };
 
+/**
+ * Load the information and model of the currently selected ship and display
+ * them on the page.
+ */
 DatabaseScreen.prototype.loadShip = function() {
-    var shipClass = game.logicContext.getSpacecraftClasses()[this._itemIndex];
-    
+    // the execution might take a few seconds, and is in the main thread, so
+    // better inform the user
+    document.body.style.cursor='wait';
+    // stop the possible ongoing loops that display the previous ship to avoid
+    // null reference
     this.stopRotationLoop();
     this.stopRenderLoop();
+    
+    // clear the previous scene graph and render the empty scene to clear the
+    // background of the canvas to transparent
+    this._scene.clearObjects();
+    this.render();
+    
+    // display the data that can be displayed right away, and show loading
+    // for the rest
+    var shipClass = game.logicContext.getSpacecraftClasses()[this._itemIndex];
+    this._itemName.innerHTML = shipClass.getFullName();
+    this._itemType.innerHTML = shipClass.getSpacecraftType().getFullName();
+    this._itemDescription.innerHTML = "Loading...";
+        
+    // create a scene with the new ship
     this._item = new Spacecraft(
         shipClass,
         "",
@@ -773,14 +806,17 @@ DatabaseScreen.prototype.loadShip = function() {
         "ai",
         "default"
         );
-    this._scene.clearObjects();
+    // we need to add the thruster particles as well, otherwise a bug will cause the
+    // change of camera position to be ineffective
     this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,true);
     this._item.visualModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
     
+    // set the callback for when the potentially needed additional file resources have 
+    // been loaded
     var self = this;
-    game.graphicsContext.resourceManager.executeWhenReady(function() { 
-        self._itemName.innerHTML = shipClass.getFullName();
-        self._itemType.innerHTML = shipClass.getSpacecraftType().getFullName();
+    game.graphicsContext.resourceManager.executeWhenReady(function() {
+        // get the length of the ship based on the length of its model (1 unit in
+        // model space equals to 20 cm)
         var length = self._item.visualModel.modelsWithLOD[0].model.dimensions[1]*0.2;
         self._itemDescription.innerHTML = 
             shipClass.getDescription()+"<br/>"+
@@ -788,13 +824,17 @@ DatabaseScreen.prototype.loadShip = function() {
             "Length: "+((length<100)?length.toPrecision(3):Math.round(length))+" m<br/>"+
             "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+
             "Thrusters: "+shipClass.thrusterSlots.length;
-        
+        // this will create the GL context if needed or update it with the new
+        // data if it already exists
         self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
+        // set the camera position so that the whole ship nicely fits into the picture
         self._scene.activeCamera.setPositionMatrix(translationMatrix(0,0,-self._item.visualModel.getScaledSize()));
         self.startRenderLoop(1000/60);
         self.startRotationLoop();
+        document.body.style.cursor='default';
     });
     
+    // initiate the loading of additional file resources if they are needed
     game.graphicsContext.resourceManager.requestResourceLoad();
 };
 
