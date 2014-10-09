@@ -34,7 +34,7 @@ var manualController;
 
 function ControlContext() {
     this._xmlSource = null;
-    this._commandDescriptions = new Object();
+    this._actionDescriptions = new Object();
 }
 
 /**
@@ -47,9 +47,9 @@ ControlContext.prototype.loadFromXML = function(xmlSource,onlyRestoreSettings) {
     if((onlyRestoreSettings===undefined)||(onlyRestoreSettings===false)) {
         this._xmlSource = xmlSource;
         
-        var commandDescriptionTags = xmlSource.getElementsByTagName("descriptions")[0].getElementsByTagName("command");
-        for(i=0;i<commandDescriptionTags.length;i++) {
-            this._commandDescriptions[commandDescriptionTags[i].getAttribute("name")]=commandDescriptionTags[i].getAttribute("description");
+        var actionDescriptionTags = xmlSource.getElementsByTagName("descriptions")[0].getElementsByTagName("action");
+        for(i=0;i<actionDescriptionTags.length;i++) {
+            this._actionDescriptions[actionDescriptionTags[i].getAttribute("name")]=actionDescriptionTags[i].getAttribute("description");
         }
     }
 };
@@ -82,7 +82,7 @@ function KeyboardControlContext() {
     
     var currentlyPressedKeys = new Array(256);
     
-    var keyCommands={};
+    var keyBindings={};
     
     this.cancelPressedKeys = function() {
         var i;
@@ -105,15 +105,15 @@ function KeyboardControlContext() {
     };
     
     /**
-     * Creates a new keyboard command object.
-     * @class Represents a keypress - command association.
-     * @param {String} name Name of the command. The different controllers identify the command association by this name.
+     * Creates a new key binding object.
+     * @class Represents a keypress - action association.
+     * @param {String} name Name of the action. The different controllers identify the action association by this name.
      * @param {String} key The string representation of the pressed key
-     * @param {Boolean} shiftState Whether the shift key should be held pressed while activating this command.
-     * @param {Boolean} ctrlState Whether the control key should be held pressed while activating this command.
-     * @param {Boolean} altState Whether the alt key should be held pressed while activating this command.
+     * @param {Boolean} shiftState Whether the shift key should be held pressed while activating this action.
+     * @param {Boolean} ctrlState Whether the control key should be held pressed while activating this action.
+     * @param {Boolean} altState Whether the alt key should be held pressed while activating this action.
      */
-    this.KeyCommand = function(name,key,shiftState,ctrlState,altState) {
+    this.KeyBinding = function(name,key,shiftState,ctrlState,altState) {
         this.name=name;
         this.key=key;
         this.keyCode=KeyboardControlContext.prototype.getKeyCodeOf(key);
@@ -136,16 +136,16 @@ function KeyboardControlContext() {
          * A function that can be executed with CheckAndExecute automatically
          * upon every new press (following a previous release) of the key(s).
          */
-        this.executeOneShotCommand=function() {};
+        this.executeOneShotAction = function() {};
         /**
          * A function that can be executed with CheckAndExecute automatically
          * continuously while the key(s) are pressed.
          */
-        this.executeContinuousCommand=function() {};
+        this.executeContinuousAction = function() {};
         /**
          * Checks if the key(s) are pressed currently, which means the continuous
-         * commands should be executed.
-         * @returns {boolean} Whether the continuous command should be executed now.
+         * actions should be executed.
+         * @returns {boolean} Whether the continuous action should be executed now.
          */
         this.checkContinuous=function () {
             return (currentlyPressedKeys[this.keyCode] &&
@@ -154,11 +154,11 @@ function KeyboardControlContext() {
                     (currentlyPressedKeys[18]===this.altState));
         };
         /**
-         * Checks if the one shot command should be executed and updates the
+         * Checks if the one shot action should be executed and updates the
          * state as if it was, but without actually executing it (allowing an
          * external code block to be used for this purpose, making it possible
          * to use local variables of an external block.
-         * @returns {boolean} Whether the one shot command should be executed now.
+         * @returns {boolean} Whether the one shot action should be executed now.
          */
         this.checkAndSetOneShot=function () {
             if (currentlyPressedKeys[this.keyCode] &&
@@ -176,7 +176,7 @@ function KeyboardControlContext() {
         };
         /**
          * Checks the current state of keys and executes both the one shot and
-         * continuous commands accordingly as well as updates the state for further
+         * continuous actions accordingly as well as updates the state for further
          * checks.
          */
         this.checkAndExecute=function () {
@@ -185,10 +185,10 @@ function KeyboardControlContext() {
                     (currentlyPressedKeys[17]===this.ctrlState) &&
                     (currentlyPressedKeys[18]===this.altState)) {
                 if (!oneShotExecuted) {
-                    this.executeOneShotCommand();
+                    this.executeOneShotAction();
                     oneShotExecuted=true;
                 }
-                this.executeContinuousCommand();
+                this.executeContinuousAction();
             } else {
                 oneShotExecuted=false;
             }
@@ -199,43 +199,43 @@ function KeyboardControlContext() {
         };
     };
     
-    this.setKeyCommand = function(keyCommand) {
-        keyCommands[keyCommand.name]=keyCommand;
+    this.setKeyBinding = function(keyBinding) {
+        keyBindings[keyBinding.name]=keyBinding;
     };
     
-    this.setAndStoreKeyCommand = function(keyCommand) {
-        this.setKeyCommand(keyCommand);
-        localStorage['interstellarArmada_control_'+keyCommand.name+'_key'] = keyCommand.key;
-        localStorage['interstellarArmada_control_'+keyCommand.name+'_shift'] = keyCommand.shiftState;
-        localStorage['interstellarArmada_control_'+keyCommand.name+'_ctrl'] = keyCommand.ctrlState;
-        localStorage['interstellarArmada_control_'+keyCommand.name+'_alt'] = keyCommand.altState;
+    this.setAndStoreKeyBinding = function(keyBinding) {
+        this.setKeyBinding(keyBinding);
+        localStorage['interstellarArmada_control_'+keyBinding.name+'_key'] = keyBinding.key;
+        localStorage['interstellarArmada_control_'+keyBinding.name+'_shift'] = keyBinding.shiftState;
+        localStorage['interstellarArmada_control_'+keyBinding.name+'_ctrl'] = keyBinding.ctrlState;
+        localStorage['interstellarArmada_control_'+keyBinding.name+'_alt'] = keyBinding.altState;
     };
     
-    this.getKeyStringForCommand = function(commandName) {
-        return keyCommands[commandName].getKeyString();
+    this.getKeyStringForAction = function(actionName) {
+        return keyBindings[actionName].getKeyString();
     };
     
-    this.setOneShotActionForCommand = function(commandName,action) {
-        if(keyCommands[commandName]!==undefined) {
-            keyCommands[commandName].executeOneShotCommand=action;
+    this.setOneShotAction = function(actionName,actionFunction) {
+        if(keyBindings[actionName]!==undefined) {
+            keyBindings[actionName].executeOneShotAction = actionFunction;
         }
-        return keyCommands[commandName];
+        return keyBindings[actionName];
     };
 
-    this.setContinuousActionForCommand = function(commandName,action) {
-        if(keyCommands[commandName]!==undefined) {
-            keyCommands[commandName].executeContinuousCommand=action;
+    this.setContinuousAction = function(actionName,actionFunction) {
+        if(keyBindings[actionName]!==undefined) {
+            keyBindings[actionName].executeContinuousAction = actionFunction;
         }
-        return keyCommands[commandName];
+        return keyBindings[actionName];
     };
     
-    this.getCommandExplanationsAndKeys = function () {
+    this.getActionExplanationsAndKeys = function () {
         var result = new Array();
-        for (var commandName in this._commandDescriptions) {
+        for (var actionName in this._actionDescriptions) {
             result.push({
-                name: commandName,
-                description: this._commandDescriptions[commandName],
-                key: keyCommands[commandName].getKeyString()
+                name: actionName,
+                description: this._actionDescriptions[actionName],
+                key: keyBindings[actionName].getKeyString()
             });
         }
         return result;
@@ -294,27 +294,27 @@ KeyboardControlContext.prototype.getKeyOfCode = function(keyCode) {
 KeyboardControlContext.prototype.loadFromXML = function(xmlSource,onlyRestoreSettings) {
     ControlContext.prototype.loadFromXML.call(this,xmlSource,onlyRestoreSettings);
     var i;
-    var keyCommandTags = xmlSource.getElementsByTagName("keyboard")[0].getElementsByTagName("command");
-    for(i=0;i<keyCommandTags.length;i++) {
-        this.setKeyCommand(new this.KeyCommand(
-                keyCommandTags[i].getAttribute("name"),
-                keyCommandTags[i].getAttribute("key"),
-                (keyCommandTags[i].getAttribute("shift")==="true"),
-                (keyCommandTags[i].getAttribute("ctrl")==="true"),
-                (keyCommandTags[i].getAttribute("alt")==="true")));
+    var keyBindingTags = xmlSource.getElementsByTagName("keyboard")[0].getElementsByTagName("action");
+    for(i=0;i<keyBindingTags.length;i++) {
+        this.setKeyBinding(new this.KeyBinding(
+                keyBindingTags[i].getAttribute("name"),
+                keyBindingTags[i].getAttribute("key"),
+                (keyBindingTags[i].getAttribute("shift")==="true"),
+                (keyBindingTags[i].getAttribute("ctrl")==="true"),
+                (keyBindingTags[i].getAttribute("alt")==="true")));
     }
 };
 
 KeyboardControlContext.prototype.loadFromLocalStorage = function() {
     ControlContext.prototype.loadFromLocalStorage.call(this);
-    for(var commandName in this._commandDescriptions) {
-        if(localStorage['interstellarArmada_control_'+commandName+'_key']!==undefined) {
-            this.setKeyCommand(new this.KeyCommand(
-                commandName,
-                localStorage['interstellarArmada_control_'+commandName+'_key'],
-                (localStorage['interstellarArmada_control_'+commandName+'_shift']==="true"),
-                (localStorage['interstellarArmada_control_'+commandName+'_ctrl']==="true"),
-                (localStorage['interstellarArmada_control_'+commandName+'_alt']==="true")
+    for(var actionName in this._actionDescriptions) {
+        if(localStorage['interstellarArmada_control_'+actionName+'_key']!==undefined) {
+            this.setKeyBinding(new this.KeyBinding(
+                actionName,
+                localStorage['interstellarArmada_control_'+actionName+'_key'],
+                (localStorage['interstellarArmada_control_'+actionName+'_shift']==="true"),
+                (localStorage['interstellarArmada_control_'+actionName+'_ctrl']==="true"),
+                (localStorage['interstellarArmada_control_'+actionName+'_alt']==="true")
             ));
         }
     }
@@ -322,12 +322,12 @@ KeyboardControlContext.prototype.loadFromLocalStorage = function() {
 
 KeyboardControlContext.prototype.restoreDefaults = function() {
     ControlContext.prototype.restoreDefaults.call(this);
-    for(var commandName in this._commandDescriptions) {
-        if(localStorage['interstellarArmada_control_'+commandName+'_key']!==undefined) {
-            localStorage.removeItem('interstellarArmada_control_'+commandName+'_key');
-            localStorage.removeItem('interstellarArmada_control_'+commandName+'_shift');
-            localStorage.removeItem('interstellarArmada_control_'+commandName+'_ctrl');
-            localStorage.removeItem('interstellarArmada_control_'+commandName+'_alt');
+    for(var actionName in this._actionDescriptions) {
+        if(localStorage['interstellarArmada_control_'+actionName+'_key']!==undefined) {
+            localStorage.removeItem('interstellarArmada_control_'+actionName+'_key');
+            localStorage.removeItem('interstellarArmada_control_'+actionName+'_shift');
+            localStorage.removeItem('interstellarArmada_control_'+actionName+'_ctrl');
+            localStorage.removeItem('interstellarArmada_control_'+actionName+'_alt');
         }
     }
 };
@@ -341,7 +341,7 @@ KeyboardControlContext.prototype.activate = function() {
     if(manualController!==undefined) {
         manualController = new FighterController(manualController.controlledEntity,game.graphicsContext,game.logicContext,game.controlContext);
     }
-    this.globalCommands = initGlobalCommands(game.graphicsContext, game.logicContext, this);
+    this.globalActions = initGlobalActions(game.graphicsContext, game.logicContext, this);
     document.addEventListener("keydown",this.handleKeyDown);
     document.addEventListener("keyup",this.handleKeyUp);
 };
@@ -404,20 +404,20 @@ Controller.prototype.setControlledEntity = function(newControlledEntity) {
 function CameraController(controlledEntity,graphicsContext,logicContext,controlContext) {
 	Controller.call(this,controlledEntity,graphicsContext,logicContext,controlContext);
         
-    this.turnLeftCommand=controlContext.setContinuousActionForCommand("cameraTurnLeft",function(){});
-    this.turnRightCommand=controlContext.setContinuousActionForCommand("cameraTurnRight",function(){});
-    this.turnUpCommand=controlContext.setContinuousActionForCommand("cameraTurnUp",function(){});
-    this.turnDownCommand=controlContext.setContinuousActionForCommand("cameraTurnDown",function(){});
+    this.turnLeftKeyBinding = controlContext.setContinuousAction("cameraTurnLeft",function(){});
+    this.turnRightKeyBinding = controlContext.setContinuousAction("cameraTurnRight",function(){});
+    this.turnUpKeyBinding = controlContext.setContinuousAction("cameraTurnUp",function(){});
+    this.turnDownKeyBinding = controlContext.setContinuousAction("cameraTurnDown",function(){});
     
-    this.moveLeftCommand=controlContext.setContinuousActionForCommand("cameraMoveLeft",function(){});
-    this.moveRightCommand=controlContext.setContinuousActionForCommand("cameraMoveRight",function(){});
-    this.moveUpCommand=controlContext.setContinuousActionForCommand("cameraMoveUp",function(){});
-    this.moveDownCommand=controlContext.setContinuousActionForCommand("cameraMoveDown",function(){});
-    this.moveForwardCommand=controlContext.setContinuousActionForCommand("cameraMoveForward",function(){});
-    this.moveBackwardCommand=controlContext.setContinuousActionForCommand("cameraMoveBackward",function(){});
+    this.moveLeftKeyBinding = controlContext.setContinuousAction("cameraMoveLeft",function(){});
+    this.moveRightKeyBinding = controlContext.setContinuousAction("cameraMoveRight",function(){});
+    this.moveUpKeyBinding = controlContext.setContinuousAction("cameraMoveUp",function(){});
+    this.moveDownKeyBinding = controlContext.setContinuousAction("cameraMoveDown",function(){});
+    this.moveForwardKeyBinding = controlContext.setContinuousAction("cameraMoveForward",function(){});
+    this.moveBackwardKeyBinding = controlContext.setContinuousAction("cameraMoveBackward",function(){});
     
-    this.decreaseFOVCommand=controlContext.setContinuousActionForCommand("cameraDecreaseFOV",function(){});
-    this.increaseFOVCommand=controlContext.setContinuousActionForCommand("cameraIncreaseFOV",function(){});
+    this.decreaseFOVKeyBinding = controlContext.setContinuousAction("cameraDecreaseFOV",function(){});
+    this.increaseFOVKeyBinding = controlContext.setContinuousAction("cameraIncreaseFOV",function(){});
 }
 
 CameraController.prototype = new Controller();
@@ -430,7 +430,7 @@ CameraController.prototype.control = function() {
     var rotationMatrix;
 
     if(camera.controllableDirection) {
-	if (this.turnLeftCommand.checkContinuous()) {
+	if (this.turnLeftKeyBinding.checkContinuous()) {
                 if (camera.angularVelocityVector[1]<camera.maxTurn) {
                                 camera.angularVelocityVector[1]+=camera.angularAcceleration;
                 }
@@ -440,7 +440,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.angularAcceleration,camera.angularVelocityVector[1]);
                 }
         }
-	if (this.turnRightCommand.checkContinuous()) {
+	if (this.turnRightKeyBinding.checkContinuous()) {
                 if (camera.angularVelocityVector[1]>-camera.maxTurn) {
                         camera.angularVelocityVector[1]-=camera.angularAcceleration;
                 }
@@ -450,7 +450,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.angularAcceleration,-camera.angularVelocityVector[1]);
                 }
         }
-	if (this.turnUpCommand.checkContinuous()) {
+	if (this.turnUpKeyBinding.checkContinuous()) {
                 if (camera.angularVelocityVector[0]<camera.maxTurn) {
                                 camera.angularVelocityVector[0]+=camera.angularAcceleration;
                 }
@@ -460,7 +460,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.angularAcceleration,camera.angularVelocityVector[0]);
                 }
         }
-	if (this.turnDownCommand.checkContinuous()) {
+	if (this.turnDownKeyBinding.checkContinuous()) {
                 if (camera.angularVelocityVector[0]>-camera.maxTurn) {
                         camera.angularVelocityVector[0]-=camera.angularAcceleration;
                 }
@@ -472,7 +472,7 @@ CameraController.prototype.control = function() {
         }
     }
     if(camera.controllablePosition) {
-	if (this.moveLeftCommand.checkContinuous()) {
+	if (this.moveLeftKeyBinding.checkContinuous()) {
                 if (camera.velocityVector[0]<camera.maxSpeed) {
                         camera.velocityVector[0]+=camera.acceleration;
                 }
@@ -482,7 +482,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.acceleration,camera.velocityVector[0]);
                 }
         }
-        if (this.moveRightCommand.checkContinuous()) {
+        if (this.moveRightKeyBinding.checkContinuous()) {
                 if (camera.velocityVector[0]>-camera.maxSpeed) {
                         camera.velocityVector[0]-=camera.acceleration;
                 }
@@ -492,7 +492,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.acceleration,-camera.velocityVector[0]);
                 }
         }
-        if (this.moveDownCommand.checkContinuous()) {
+        if (this.moveDownKeyBinding.checkContinuous()) {
                 if (camera.velocityVector[1]<camera.maxSpeed) {
                         camera.velocityVector[1]+=camera.acceleration;
                 }
@@ -502,7 +502,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.acceleration,camera.velocityVector[1]);
                 }
         }
-        if (this.moveUpCommand.checkContinuous()) {
+        if (this.moveUpKeyBinding.checkContinuous()) {
                 if (camera.velocityVector[1]>-camera.maxSpeed) {
                         camera.velocityVector[1]-=camera.acceleration;
                 }
@@ -512,7 +512,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.acceleration,-camera.velocityVector[1]);
                 }
         }
-        if (this.moveForwardCommand.checkContinuous()) {
+        if (this.moveForwardKeyBinding.checkContinuous()) {
                 if (camera.velocityVector[2]<camera.maxSpeed) {
                         camera.velocityVector[2]+=camera.acceleration;
                 }
@@ -522,7 +522,7 @@ CameraController.prototype.control = function() {
                                 Math.min(camera.acceleration,camera.velocityVector[2]);
                 }
         }
-        if (this.moveBackwardCommand.checkContinuous()) {
+        if (this.moveBackwardKeyBinding.checkContinuous()) {
                 if (camera.velocityVector[2]>-camera.maxSpeed) {
                         camera.velocityVector[2]-=camera.acceleration;
                 }
@@ -580,10 +580,10 @@ CameraController.prototype.control = function() {
         }
     }
             
-    if (this.decreaseFOVCommand.checkContinuous()) {
+    if (this.decreaseFOVKeyBinding.checkContinuous()) {
             camera.setFOV(camera.fov-1);
     }
-    if (this.increaseFOVCommand.checkContinuous()) {
+    if (this.increaseFOVKeyBinding.checkContinuous()) {
             camera.setFOV(camera.fov+1);
     }
     
@@ -655,13 +655,13 @@ function FighterController(controlledEntity,graphicsContext,logicContext,control
                                     // automatically by the thrusters to bring
                                     // the craft to a halt
         
-        this.fireCommand=controlContext.setContinuousActionForCommand("fire",function(){
+        this.fireKeyBinding = controlContext.setContinuousAction("fire",function(){
             self.controlledEntity.fire(self.graphicsContext.scene,self.logicContext.level.projectiles);
         });
-        this.changeFlightModeCommand=controlContext.setOneShotActionForCommand("changeFlightMode",function(){
+        this.changeFlightModeKeyBinding = controlContext.setOneShotAction("changeFlightMode",function(){
             self.flightMode=(self.flightMode+1)%self.NUM_FLIGHTMODES;
         });
-        this.forwardCommand=controlContext.setContinuousActionForCommand("forward",function(){
+        this.forwardKeyBinding = controlContext.setContinuousAction("forward",function(){
             switch(self.flightMode) {
                 case self.FM_INERTIAL:
                         self.controlledEntity.addThrusterBurn("forward",0.5);
@@ -671,7 +671,7 @@ function FighterController(controlledEntity,graphicsContext,logicContext,control
                         break;
             }
         });
-        this.reverseCommand=controlContext.setContinuousActionForCommand("reverse",function(){
+        this.reverseKeyBinding = controlContext.setContinuousAction("reverse",function(){
             switch(self.flightMode) {
                 case self.FM_INERTIAL:
                         self.controlledEntity.addThrusterBurn("reverse",0.5);
@@ -684,19 +684,19 @@ function FighterController(controlledEntity,graphicsContext,logicContext,control
                         break;
             }
         });
-        this.resetSpeedCommand=controlContext.setOneShotActionForCommand("resetSpeed",function(){
+        this.resetSpeedKeyBinding = controlContext.setOneShotAction("resetSpeed",function(){
             switch(self.flightMode) {
                 case self.FM_COMPENSATED:
                         self.intendedSpeed=0;
                         break;
             }
         });
-        this.yawLeftCommand=controlContext.setContinuousActionForCommand("yawLeft",function(){});
-        this.yawRightCommand=controlContext.setContinuousActionForCommand("yawRight",function(){});
-        this.pitchDownCommand=controlContext.setContinuousActionForCommand("pitchDown",function(){});
-        this.pitchUpCommand=controlContext.setContinuousActionForCommand("pitchUp",function(){});
-        this.rollRightCommand=controlContext.setContinuousActionForCommand("rollRight",function(){});
-        this.rollLeftCommand=controlContext.setContinuousActionForCommand("rollLeft",function(){});
+        this.yawLeftKeyBinding = controlContext.setContinuousAction("yawLeft",function(){});
+        this.yawRightKeyBinding = controlContext.setContinuousAction("yawRight",function(){});
+        this.pitchDownKeyBinding = controlContext.setContinuousAction("pitchDown",function(){});
+        this.pitchUpKeyBinding = controlContext.setContinuousAction("pitchUp",function(){});
+        this.rollRightKeyBinding = controlContext.setContinuousAction("rollRight",function(){});
+        this.rollLeftKeyBinding = controlContext.setContinuousAction("rollLeft",function(){});
 }
 
 FighterController.prototype = new Controller();
@@ -714,7 +714,7 @@ FighterController.prototype.reset = function() {
 FighterController.prototype.control = function() {
         document.getElementById('ui').innerHTML="";
     
-	this.fireCommand.checkAndExecute();
+	this.fireKeyBinding.checkAndExecute();
 	
 	var physicalModel = this.controlledEntity.physicalModel;
 	
@@ -729,13 +729,13 @@ FighterController.prototype.control = function() {
 			),
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
 	
-	this.changeFlightModeCommand.checkAndExecute();
+	this.changeFlightModeKeyBinding.checkAndExecute();
         
 	this.controlledEntity.resetThrusterBurn();
         
-	this.forwardCommand.checkAndExecute();
-	this.reverseCommand.checkAndExecute();
-	this.resetSpeedCommand.checkAndExecute();
+	this.forwardKeyBinding.checkAndExecute();
+	this.reverseKeyBinding.checkAndExecute();
+	this.resetSpeedKeyBinding.checkAndExecute();
         
         // compansating for drift in compensated flight mode by firing side
         // thrusters + correcting to reach intended speed
@@ -767,20 +767,20 @@ FighterController.prototype.control = function() {
         }
         
         // controlling yaw
-        // if yaw left command is given, fire thrusters until turning speed
+        // if yaw left key is pressed, fire thrusters until turning speed
         // limit is reached
-	if (this.yawLeftCommand.checkContinuous()) {
+	if (this.yawLeftKeyBinding.checkContinuous()) {
 		if(turningMatrix[4]>-this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("yawLeft",0.5);
 		}
 	} else
-        // if yaw right command is given, fire thrusters until turning speed
+        // if yaw right key is pressed, fire thrusters until turning speed
         // limit is reached
-	if (this.yawRightCommand.checkContinuous()) {
+	if (this.yawRightKeyBinding.checkContinuous()) {
 		if(turningMatrix[4]<this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("yawRight",0.5);
 		}
-        // if there is no yaw command given, but the craft is yawing to the
+        // if there is no yaw key is pressed, but the craft is yawing to the
         // left, then fire yaw right thrusters to stop the yaw
 	} else if(turningMatrix[4]<-this.TURN_TOLERANCE) {
                 // we need to calculate how strong burn is needed to bring the
@@ -807,12 +807,12 @@ FighterController.prototype.control = function() {
 					)*physicalModel.mass/2/this.controlledEntity.propulsion.class.angularThrust/10));
         } 
         // the pitch calculations are the same as for the yaw
-	if (this.pitchDownCommand.checkContinuous()) {
+	if (this.pitchDownKeyBinding.checkContinuous()) {
 		if(turningMatrix[6]>-this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("pitchDown",0.5);
 		}
 	} else
-	if (this.pitchUpCommand.checkContinuous()) {
+	if (this.pitchUpKeyBinding.checkContinuous()) {
 		if(turningMatrix[6]<this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("pitchUp",0.5);
 		}
@@ -837,12 +837,12 @@ FighterController.prototype.control = function() {
 					)*physicalModel.mass/2/this.controlledEntity.propulsion.class.angularThrust/10));                
 	}
         // rolling calculations are the same as yaw and pitch, see above
-	if (this.rollRightCommand.checkContinuous()) {
+	if (this.rollRightKeyBinding.checkContinuous()) {
 		if(turningMatrix[2]>-this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("rollRight",0.5);
 		}
 	} else
-	if (this.rollLeftCommand.checkContinuous()) {
+	if (this.rollLeftKeyBinding.checkContinuous()) {
 		if(turningMatrix[2]<this.TURNING_LIMIT) {
 			this.controlledEntity.addThrusterBurn("rollLeft",0.5);
 		}
@@ -933,8 +933,8 @@ AIController.prototype.control = function() {
 			),
 		matrix4from3(matrix3from4(physicalModel.modelMatrixInverse)));
         
-        // resetting thursters, below we will give the commands to fire them
-        // according to the current situation
+        // resetting thursters, below we will fire them according to the current 
+        // situation
 	this.controlledEntity.resetThrusterBurn();
 	
         /* 
@@ -1120,28 +1120,28 @@ AIController.prototype.control = function() {
 };
 
 /**
- * Initializes the global keyboard commands by looking for the appropriate associations
+ * Initializes the global action key bindings by looking for the appropriate associations
  * in the given control context and setting their execution actions.
- * @param {GraphicsContext} graphicsContext The graphics context within which to set the commands.
- * @param {LogicContext} logicContext The logic context within which to set the commands.
+ * @param {GraphicsContext} graphicsContext The graphics context within which to set the bindings.
+ * @param {LogicContext} logicContext The logic context within which to set the bindings.
  * @param {KeyboardControlContext} controlContext The context that contains the key (combination) - action associations.
- * @returns {KeyboardControlContext.KeyCommand[]} The global keyboard commands organized in an array.
+ * @returns {KeyboardControlContext.KeyBinding[]} The global keyboard bindings organized in an array.
  */
-function initGlobalCommands(graphicsContext,logicContext,controlContext) {
+function initGlobalActions(graphicsContext,logicContext,controlContext) {
     
-    var globalCommands=new Array();
+    var globalActions = new Array();
     var i,j;
     
-    globalCommands.push(controlContext.setOneShotActionForCommand("pause",function(){
+    globalActions.push(controlContext.setOneShotAction("pause",function(){
         alert("Game paused.");
     }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("changeView",function(){
+    globalActions.push(controlContext.setOneShotAction("changeView",function(){
         if ((graphicsContext.scene.activeCamera.followedCamera!==undefined) && 
                 (graphicsContext.scene.activeCamera.followedCamera.nextView!==null)) {
             graphicsContext.scene.activeCamera.followCamera(graphicsContext.scene.activeCamera.followedCamera.nextView,500);
         }
     }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("followNext",function(){
+    globalActions.push(controlContext.setOneShotAction("followNext",function(){
         // if we are currently following a camera, we have to look for the first subsequent
         // camera that follows a different object than the current
         if (graphicsContext.scene.activeCamera.followedCamera!==undefined) {
@@ -1179,7 +1179,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
             game.getCurrentScreen().hideUI();
         }
     }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("followPrevious",function(){
+    globalActions.push(controlContext.setOneShotAction("followPrevious",function(){
         // if we are currently following a camera, we have to look for the last preceding
         // camera that follows a different object than the current
         if (graphicsContext.scene.activeCamera.followedCamera!==undefined) {
@@ -1233,7 +1233,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         }
     }));
     // assuming manual control of a spacecraft
-    globalCommands.push(controlContext.setOneShotActionForCommand("setManualControl",function(){
+    globalActions.push(controlContext.setOneShotAction("setManualControl",function(){
         // we only assume control if a spacecraft is being followed by a camera
         var followedSpacecraft = graphicsContext.scene.activeCamera.getFollowedSpacecraft(logicContext);
         if (followedSpacecraft!==null) {
@@ -1249,7 +1249,7 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         }
     }));
     // setting the AI to control the followed spacecraft (does not do anything at the moment)
-    globalCommands.push(controlContext.setOneShotActionForCommand("setAIControl",function(){
+    globalActions.push(controlContext.setOneShotAction("setAIControl",function(){
         var followedSpacecraft = graphicsContext.scene.activeCamera.getFollowedSpacecraft(logicContext);
         if (followedSpacecraft!==null) {
             followedSpacecraft.setController(new AIController(followedSpacecraft,graphicsContext,logicContext,controlContext));
@@ -1260,14 +1260,14 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
         }
 
     }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("stopAIShips",function(){
+    globalActions.push(controlContext.setOneShotAction("stopAIShips",function(){
         for(i=0;i<logicContext.level.spacecrafts.length;i++) {
             if(logicContext.level.spacecrafts[i].controller instanceof AIController) {
                 logicContext.level.spacecrafts[i].controller.goals=new Array();
             }
         }
     }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("toggleHitboxVisibility",function(){
+    globalActions.push(controlContext.setOneShotAction("toggleHitboxVisibility",function(){
         for(i=0;i<logicContext.level.spacecrafts.length;i++) {
             for(j=0;j<logicContext.level.spacecrafts[i].visualModel.subnodes.length;j++) {
                 if((logicContext.level.spacecrafts[i].visualModel.subnodes[j].textures!==undefined)&&
@@ -1277,15 +1277,15 @@ function initGlobalCommands(graphicsContext,logicContext,controlContext) {
             }
         }
     }));
-    globalCommands.push(controlContext.setOneShotActionForCommand("quit",function(){
+    globalActions.push(controlContext.setOneShotAction("quit",function(){
         game.controlContext.deactivate();
         game.setCurrentScreen("ingameMenu",true,[64,64,64],0.5);
     }));
     
-    return globalCommands;
+    return globalActions;
 }
 
-function control(scene,level,globalCommands) {
+function control(scene,level,globalActions) {
         var i;
         
 	if (scene.activeCamera.followedCamera===undefined) {
@@ -1297,8 +1297,8 @@ function control(scene,level,globalCommands) {
             scene.activeCamera.velocityVector=scene.activeCamera.followedCamera.velocityVector;
         }
         
-        for(i=0;i<globalCommands.length;i++) {
-            globalCommands[i].checkAndExecute();
+        for(i=0;i<globalActions.length;i++) {
+            globalActions[i].checkAndExecute();
         }
 
         scene.activeCamera.update();

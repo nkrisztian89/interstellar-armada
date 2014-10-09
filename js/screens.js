@@ -607,7 +607,7 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
             curDate = new Date();
             test_level.tick(curDate - prevDate);
             prevDate = curDate;
-            control(game.graphicsContext.scene, test_level, game.controlContext.globalCommands);
+            control(game.graphicsContext.scene, test_level, game.controlContext.globalActions);
         }, 1000 / freq);
     };
     
@@ -849,59 +849,175 @@ GraphicsScreen.prototype.updateValues = function() {
 
 /**
  * Defines a controls screen object.
- * @class Represents the controls screen, which currently just shows the available
- * keyboard controls.
+ * @class Represents the controls screen, where the user can set up the game
+ * controls.
  * @extends GameScreen
- * @param {String} name Check GameScreen
- * @param {String} source Check GameScreen
+ * @param {String} name @see GameScreen
+ * @param {String} source @see GameScreen
  * @returns {ControlsScreen}
  */
 function ControlsScreen(name,source) {
     GameScreen.call(this,name,source);
+    
+    /**
+     * The name of the action currently being set (to get triggered by a new 
+     * key). If null, the user is not setting any actions.
+     * @name ControlScreen#_actionUnderSetting
+     * @type String
+     */
+    this._actionUnderSetting = null;
+    /**
+     * While the user sets a new key, this property tells if shift is pressed
+     * down.
+     * @name ControlScreen#_settingShiftState
+     * @type Boolean
+     */
+    this._settingShiftState = null;
+    /**
+     * While the user sets a new key, this property tells if control is pressed
+     * down.
+     * @name ControlScreen#_settingCtrlState
+     * @type Boolean
+     */
+    this._settingCtrlState = null;
+    /**
+     * While the user sets a new key, this property tells if alt is pressed
+     * down.
+     * @name ControlScreen#_settingAltState
+     * @type Boolean
+     */
+    this._settingAltState = null;
 };
 
 ControlsScreen.prototype=new GameScreen();
 ControlsScreen.prototype.constructor=ControlsScreen;
 
-ControlsScreen.prototype.listenForKeySetting = function() {
-    var self = this;
-    this.innerHTML = "?";
-    this.className = "highlightedItem";
-    document.onkeydown = function(event) {
-        game.getCurrentScreen().setKey(event,self.getAttribute("id"));
-    };
-};
-
-ControlsScreen.prototype.setKey = function(event,commandName) {
-    game.controlContext.setAndStoreKeyCommand(new game.controlContext.KeyCommand(
-        commandName,
-        KeyboardControlContext.prototype.getKeyOfCode(event.keyCode),
-        false,
-        false,
-        false
-    ));
-    this.refreshKeyForCommand(commandName);
-    document.onkeydown = null;
+/**
+ * Refreshes the cell showing the currently set key for the given action in the
+ * UI. (call after the key has changed)
+ * @param {String} actionName
+ */
+ControlsScreen.prototype.refreshKeyForAction = function(actionName) {
+    document.getElementById(actionName).innerHTML = game.controlContext.getKeyStringForAction(actionName);
+    document.getElementById(actionName).className = "clickable";
 };
 
 /**
- * Builds the dynamic part of the HTML structure, adding the table rows to list
- * the set key commands.
+ * Handler for the keydown event to be active while the user is setting a new key
+ * for an action. Updates the shift, control and alt states if one of those keys
+ * is pressed, so that key combinations such as "ctrl + left" can be set.
+ * @param {KeyboardEvent} event
+ */
+ControlsScreen.prototype.handleKeyDownWhileSetting = function(event) {
+    if(event.keyCode===16) {
+        this._settingShiftState = true;
+    }
+    if(event.keyCode===17) {
+        this._settingCtrlState = true;
+    }
+    if(event.keyCode===18) {
+        this._settingAltState = true;
+    }
+};
+
+/**
+ * Handler for the keyp event to be active while the user is setting a new key
+ * for an action. This actually sets the key to the one that has been released,
+ * taking into account the shift, control and alt states as well.
+ * @param {KeyboardEvent} event
+ */
+ControlsScreen.prototype.handleKeyUpWhileSetting = function(event) {
+    // if we released shift, ctrl or alt, update their state
+    // (assigning shift, ctrl or alt as a single key to an action is not allowed
+    // at the moment, as assigning them to a continuous action would break
+    // functionality of other continuous actions that the user would wish to
+    // apply simultaneously, since after the press the shift/ctrl/alt state
+    // would be different)
+    if(event.keyCode===16) {
+        this._settingShiftState = false;
+    } else if(event.keyCode===17) {
+        this._settingCtrlState = false;
+    } else if(event.keyCode===18) {
+        this._settingAltState = false;
+    } else {
+    // if it was any other key, respect the shift, ctrl, alt states and set the
+    // new key for the action
+        game.controlContext.setAndStoreKeyBinding(new game.controlContext.KeyBinding(
+            this._actionUnderSetting,
+            KeyboardControlContext.prototype.getKeyOfCode(event.keyCode),
+            this._settingShiftState,
+            this._settingCtrlState,
+            this._settingAltState
+        ));
+        this.stopKeySetting();
+    }
+};
+
+/**
+ * Cancels an ongoing key setting by updating the internal state, refreshing the
+ * UI (cancelling highlight and restoring it to show the original key) and cancelling
+ * key event handlers.
+ */
+ControlsScreen.prototype.stopKeySetting = function() {
+    if(this._actionUnderSetting !== null) {
+        this.refreshKeyForAction(this._actionUnderSetting);
+        this._actionUnderSetting = null;
+        document.onkeydown = null;
+        document.onkeyup = null;
+    }
+};
+
+/**
+ * Starts setting a new key for an action. Highlights the passed element and
+ * sets up the key event handlers to update the action represented by this
+ * element.
+ * @param {Element} tdElement
+ */
+ControlsScreen.prototype.startKeySetting = function(tdElement) {
+    var actionName = tdElement.getAttribute("id");
+    // if we are already in the process of setting this action, just cancel it,
+    // so setting an action can be cancelled by clicking on the same cell again
+    if(this._actionUnderSetting === actionName) {
+        this.stopKeySetting();
+    // otherwise cancel if we are in a process of setting another action, and 
+    // then start setting this one
+    } else {
+        this.stopKeySetting();
+        this._actionUnderSetting = actionName;
+        tdElement.innerHTML = "?";
+        tdElement.className = "highlightedItem";
+        this._settingShiftState = false;
+        this._settingCtrlState = false;
+        this._settingAltState = false;
+        var self = this;
+        document.onkeydown = function(event) {
+            self.handleKeyDownWhileSetting(event);
+        };
+        document.onkeyup = function(event) {
+            self.handleKeyUpWhileSetting(event);
+        };
+    }
+};
+
+/**
+ * Initializes the buttons and adds the table showing the current control settings.
  */
 ControlsScreen.prototype._initializeComponents = function() {
     GameScreen.prototype._initializeComponents.call(this);
     
+    var self = this;
     var backButton = document.getElementById("backButton");
     backButton.addEventListener("click",function(){
+        self.stopKeySetting();
         if(game.getCurrentScreen().isSuperimposed()) {
             game.closeSuperimposedScreen();
         } else {
             game.setCurrentScreen('settings');
         }
     });
-    var self = this;
     var defaultsButton = document.getElementById("defaultsButton");
     defaultsButton.addEventListener("click",function(){
+        self.stopKeySetting();
         game.controlContext.restoreDefaults();
         self.generateTable();
     });
@@ -909,33 +1025,32 @@ ControlsScreen.prototype._initializeComponents = function() {
     this.generateTable();
 };
 
+/**
+ * Adds the table showing available actions and their assigned keys as well as
+ * sets up a click handler for the cells showing the keys to initiate a change
+ * of that key binding.
+ */
 ControlsScreen.prototype.generateTable = function() {
     var self = this;
-    var keyCommandsTable = document.getElementById("keyCommandsTable");
-    keyCommandsTable.innerHTML = "";
-    var keyCommands = game.controlContext.getCommandExplanationsAndKeys();
+    var keyBindingsTable = document.getElementById("keyBindingsTable");
+    keyBindingsTable.innerHTML = "";
+    var keyBindings = game.controlContext.getActionExplanationsAndKeys();
     var trElement = null;
     var td1Element = null;
     var td2Element = null;
-    for(var i=0;i<keyCommands.length;i++) {
+    for(var i=0;i<keyBindings.length;i++) {
         trElement = document.createElement("tr");
         td1Element = document.createElement("td");
-        td1Element.setAttribute("id",keyCommands[i].name);
+        td1Element.setAttribute("id",keyBindings[i].name);
         td1Element.className = "clickable";
-        td1Element.onclick = self.listenForKeySetting;
-        td1Element.innerHTML = keyCommands[i].key;
+        td1Element.onclick = function() { self.startKeySetting(this); };
+        td1Element.innerHTML = keyBindings[i].key;
         td2Element = document.createElement("td");
-        td2Element.innerHTML = keyCommands[i].description;
+        td2Element.innerHTML = keyBindings[i].description;
         trElement.appendChild(td1Element);
         trElement.appendChild(td2Element);
-        keyCommandsTable.appendChild(trElement);
+        keyBindingsTable.appendChild(trElement);
     }
-};
-
-
-ControlsScreen.prototype.refreshKeyForCommand = function(commandName) {
-    document.getElementById(commandName).innerHTML = game.controlContext.getKeyStringForCommand(commandName);
-    document.getElementById(commandName).className = "clickable";
 };
 
 /**
