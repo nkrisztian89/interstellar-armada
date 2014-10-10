@@ -35,31 +35,39 @@
  * @param {boolean} renderedWithoutDepthMask Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)
  */
 function VisualObject(shader,smallestParentSizeWhenDrawn,renderedWithDepthMask,renderedWithoutDepthMask) {
-	this.shader = shader;
-	this.uniformValueFunctions = new Array();
-	
-	this.toBeDeleted=false;
-	
-	this.renderParent=null;
-	this.subnodes=new Array();
-	
-	this.visible=true;
-	
-	this.visibleWidth = 0;
-	this.visibleHeight = 0;
-        
-        this.lastInsideFrustumState = false;
-        
-        this.insideParent=undefined;
-        this.smallestParentSizeWhenDrawn=smallestParentSizeWhenDrawn;
-        
-        this.renderedWithDepthMask = renderedWithDepthMask;
-        this.renderedWithoutDepthMask = renderedWithoutDepthMask;
-        
-        this.modelMatrixCalculated = false;
-        
-        this._wasRendered = false;
+    this.shader = shader;
+    this.uniformValueFunctions = new Array();
+
+    this.toBeDeleted=false;
+
+    this.renderParent=null;
+    this.subnodes=new Array();
+
+    this.visible=true;
+
+    this.visibleWidth = 0;
+    this.visibleHeight = 0;
+
+    this.lastInsideFrustumState = false;
+
+    this.insideParent=undefined;
+    this.smallestParentSizeWhenDrawn=smallestParentSizeWhenDrawn;
+
+    this.renderedWithDepthMask = renderedWithDepthMask;
+    this.renderedWithoutDepthMask = renderedWithoutDepthMask;
+
+    this.modelMatrixCalculated = false;
+
+    this._wasRendered = false;
 }
+
+VisualObject.prototype.setUniformValueFunction = function(uniformName,valueFunction) {
+    this.uniformValueFunctions[uniformName] = valueFunction;
+};
+
+VisualObject.prototype.hide = function() {
+    this.visible = false;
+};
 
 VisualObject.prototype.addToContext = function(context) {
     this.shader.addToContext(context);
@@ -70,6 +78,18 @@ VisualObject.prototype.cascadeAddToContext = function(context) {
     var i;
     for(var i=0;i<this.subnodes.length;i++) {
         this.subnodes[i].cascadeAddToContext(context);
+    }    
+};
+
+VisualObject.prototype.setShader = function(shader) {
+    this.shader = shader;
+};
+
+VisualObject.prototype.cascadeSetShader = function(shader) {
+    this.setShader(shader);
+    var i;
+    for(var i=0;i<this.subnodes.length;i++) {
+        this.subnodes[i].setShader(shader);
     }    
 };
 
@@ -1276,6 +1296,10 @@ Scene.prototype.getNumberOfDrawnTriangles = function() {
     return this._drawnTriangles;
 };
 
+Scene.prototype.setUniformValueFunction = function(uniformName,valueFunction) {
+    this.uniformValueFunctions[uniformName] = valueFunction;
+};
+
 /**
  * 
  * @param {Camera} camera
@@ -1375,6 +1399,13 @@ Scene.prototype.render = function(context) {
         
     gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
+    
+    // if only one shader is used in rendering the whole scene, we will need to
+    // update its uniforms (as they are normally updated every time a new shader
+    // is set)
+    if(context.getCurrentShader()!==null) {
+        this.assignUniforms(context,context.getCurrentShader());
+    }
         
     for(var i=0;i<this._backgroundObjects.length;i++) {
         this._backgroundObjects[i].cascadeResetModelMatrixCalculated();

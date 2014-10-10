@@ -14,7 +14,6 @@ uniform vec3 u_eyePos;
 uniform Light u_lights[12];
 uniform int u_numLights;
 	
-// the texCoords passed in from the vertex shader.
 varying vec2 v_texCoord;
 varying vec3 v_normal;
 varying vec4 v_color;
@@ -23,7 +22,6 @@ varying float v_shininess;
 
 varying vec4 v_worldPos;
 
-	
 void main() {
     // interpolated normals can have different then unit length
     vec3 normal = normalize(v_normal);

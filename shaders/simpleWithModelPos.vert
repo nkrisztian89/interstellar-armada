@@ -1,3 +1,5 @@
+// shader similar to simple.vert, but adding also passing position in model space
+
 uniform mat4 u_modelMatrix;
 uniform mat4 u_cameraMatrix;
 uniform mat4 u_projMatrix;
@@ -16,14 +18,14 @@ varying vec4 v_color;
 varying float v_luminosity;
 varying float v_shininess;
 
+// the coordinates of this vertex in world space
 varying vec4 v_worldPos;
+// the coordinates of this vertex in model space
 varying vec4 v_modelPos;
-
 
 void main() {
 	gl_Position = u_projMatrix * u_cameraMatrix * u_modelMatrix * vec4(a_position,1.0);
-	// pass the texCoord to the fragment shader
-	// The GPU will interpolate this value between points
+
 	v_texCoord = a_texCoord;
 	v_normal = normalize(u_normalMatrix * a_normal);
 	v_color = a_color;

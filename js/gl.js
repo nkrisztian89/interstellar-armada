@@ -385,7 +385,8 @@ ShaderUniform.prototype.VariableTypes = Object.freeze(
             vec4: 5,
             sampler2D: 6,
             samplerCube: 7,
-            int: 8
+            int: 8,
+            bool: 9
         });
  
 /**
@@ -405,6 +406,7 @@ ShaderUniform.prototype.getVariableTypeFromString = function(type) {
     if (type==="samplerCube") return this.VariableTypes.samplerCube;
     if (type==="int") return this.VariableTypes.int;
     if (type==="struct") return this.VariableTypes.struct;
+    if (type==="bool") return this.VariableTypes.bool;
     return this.VariableTypes.none;
 };
 
@@ -520,6 +522,8 @@ ShaderUniform.prototype.setValue = function(context,shader,valueFunction,locatio
                 break;
             case this.VariableTypes.int: gl.uniform1i(location,value);
                 break;
+            case this.VariableTypes.bool: gl.uniform1i(location,value?1:0);
+                break;    
         }
     }    
 };
@@ -1166,6 +1170,14 @@ ManagedGLContext.prototype.setupVertexBuffers = function(loadLines) {
         }
     }
     this.setToReady();
+};
+
+/**
+ * Getter for the _currentShader property.
+ * @returns {Shader}
+ */
+ManagedGLContext.prototype.getCurrentShader = function() {
+    return this._currentShader;
 };
 
 /**

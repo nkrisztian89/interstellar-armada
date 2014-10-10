@@ -20,7 +20,6 @@ varying float v_shininess;
 
 varying vec4 v_worldPos;
 
-
 void main() {
 	gl_Position = u_projMatrix * u_cameraMatrix * u_modelMatrix * vec4(a_position,1.0);
 

@@ -38,6 +38,58 @@
 		</uniforms>
 	</Shader>
         
+        <Shader name="simpleReveal">
+		<vertex filename="shaders/simpleWithModelPos.vert" />
+		<fragment filename="shaders/simpleReveal.frag" />
+		<state>
+			<blendType value="mix" />
+		</state>
+		<attributes>
+			<attribute name="a_position" size="3" role="position" />
+			<attribute name="a_texCoord" size="2" role="texCoord" />
+			<attribute name="a_normal" size="3" role="normal" />
+			<attribute name="a_color" size="4" role="color" />
+			<attribute name="a_luminosity" size="1" role="luminosity" />
+			<attribute name="a_shininess" size="1" role="shininess" />	
+		</attributes>
+		<uniforms>
+			<uniform name="u_modelMatrix" type="mat4" />
+			<uniform name="u_cameraMatrix" type="mat4" />
+			<uniform name="u_projMatrix" type="mat4" />
+			<uniform name="u_normalMatrix" type="mat3" />
+			<uniform name="u_colorTexture" type="sampler2D" />
+                        <uniform name="u_specularTexture" type="sampler2D" />
+			<uniform name="u_numLights" type="int" />
+                        <uniform name="u_lights" type="struct" arraySize="12" />
+                        <uniform name="color" memberOf="u_lights" type="vec3" />
+                        <uniform name="direction" memberOf="u_lights" type="vec3" />
+			<uniform name="u_eyePos" type="vec3" />
+                        <uniform name="u_revealStart" type="float" />
+                        <uniform name="u_revealTransitionLength" type="float" />
+                        <uniform name="u_revealFront" type="bool" />
+		</uniforms>
+	</Shader>
+        
+        <Shader name="oneColorReveal">
+		<vertex filename="shaders/simpleWithModelPos.vert" />
+		<fragment filename="shaders/oneColorReveal.frag" />
+		<state>
+			<blendType value="mix" />
+		</state>
+		<attributes>
+			<attribute name="a_position" size="3" role="position" />
+		</attributes>
+		<uniforms>
+			<uniform name="u_modelMatrix" type="mat4" />
+			<uniform name="u_cameraMatrix" type="mat4" />
+			<uniform name="u_projMatrix" type="mat4" />
+			<uniform name="u_color" type="vec4" />
+                        <uniform name="u_revealStart" type="float" />
+                        <uniform name="u_revealTransitionLength" type="float" />
+                        <uniform name="u_revealFront" type="bool" />
+		</uniforms>
+	</Shader>
+        
         <Shader name="ship">
 		<vertex filename="shaders/ship.vert" />
 		<fragment filename="shaders/ship.frag" />

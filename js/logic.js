@@ -480,8 +480,10 @@ Spacecraft.prototype.constructor = Spacecraft;
  * @param {Boolean} [addHitBoxes=true]
  * @param {Boolean} [addWeapons=true]
  * @param {Boolean} [addThrusterParticles=true]
+ * @param {Boolean} [wireframe=false]
+ * @returns {ShipMesh}
  */
-Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addThrusterParticles) {
+Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addThrusterParticles,wireframe) {
     var i,j;
     var modelsWithLOD;
     // loading or setting models
@@ -508,7 +510,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
         this.physicalModel.positionMatrix,
         this.physicalModel.orientationMatrix,
         scalingMatrix(this.class.modelSize,this.class.modelSize,this.class.modelSize),
-        false);
+        (wireframe===true));
     scene.objects.push(this.visualModel);
     
     // visualize physical model
@@ -587,7 +589,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
                 this.class.weaponSlots[i].positionMatrix,
                 this.class.weaponSlots[i].orientationMatrix,
                 identityMatrix4(),
-                false
+                (wireframe===true)
             );
             this.visualModel.addSubnode(weaponMesh);
             this.weapons[i].visualModel = weaponMesh;
@@ -614,6 +616,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             }
         }
     }
+    return this.visualModel;
 };
 
 

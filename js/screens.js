@@ -640,7 +640,7 @@ function DatabaseScreen(name,source) {
     this._scene = null;
     this._item = null;
     this._itemIndex = null;
-    this._rotationLoop = null;
+    this._animationLoop = null;
 };
 
 DatabaseScreen.prototype=new GameScreenWithCanvases();
@@ -656,10 +656,17 @@ DatabaseScreen.prototype.closePage = function() {
     this._itemType = null;
     this._itemDescription = null;
     
-    clearInterval(this._rotationLoop);
+    this._itemLength = null;
+    this._itemFront = null;
+    this._revealState = null;
+    
+    clearInterval(this._animationLoop);
+    this._animationLoop = null;
     this._item = null;
     this._itemIndex = null;
     this._scene = null;
+    this._solidModel = null;
+    this._wireframeModel = null;
 };
 
 /**
@@ -711,31 +718,38 @@ DatabaseScreen.prototype.updateStatus = function(newStatus,newProgress) {
     }
 };
 
-DatabaseScreen.prototype.startRotationLoop = function() {
+DatabaseScreen.prototype.startAnimationLoop = function() {
     var prevDate = new Date();
     var self = this;    
-    this._rotationLoop = setInterval(function ()
+    this._animationLoop = setInterval(function ()
     {
         var curDate = new Date();
-        self._item.visualModel.rotate(self._item.visualModel.getZDirectionVector(),0.001*(curDate-prevDate));
+        self._solidModel.rotate(self._item.visualModel.getZDirectionVector(),(curDate-prevDate)/1000*Math.PI/2);
+        self._wireframeModel.rotate(self._item.visualModel.getZDirectionVector(),(curDate-prevDate)/1000*Math.PI/2);
+        if(self._revealState<2.0) {
+            self._revealState += (curDate-prevDate)/1000/2;
+        }
         prevDate = curDate;
     }, 1000 / 60);
 };
 
 DatabaseScreen.prototype.stopRotationLoop = function() {
-    clearInterval(this._rotationLoop);
+    clearInterval(this._animationLoop);
 };
 
 DatabaseScreen.prototype.initializeCanvas = function() {
+    var self = this;
+    
     this._loadingBox.show();
     this.updateStatus("initializing database...", 0);
         
     this.resizeCanvas("databaseCanvas");
     var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
+    // create a new scene and add a directional light source which will not change
+    // while different objects are shown
     this._scene = new Scene(0,0,canvas.clientWidth,canvas.clientHeight,true,[true,true,true,true],[0,0,0,0],true,game.graphicsContext.getLODContext());
     this._scene.addLightSource(new LightSource([1.0,1.0,1.0],[-1.0,0.0,1.0]));
 
-    var self = this;
     game.graphicsContext.resourceManager.onResourceLoad = function(resourceName,totalResources,loadedResources) {
         self.updateStatus("loaded "+resourceName+", total progress: "+loadedResources+"/"+totalResources,20+(loadedResources/totalResources)*60);
     };
@@ -797,7 +811,8 @@ DatabaseScreen.prototype.loadShip = function() {
     this._itemType.innerHTML = shipClass.getSpacecraftType().getFullName();
     this._itemDescription.innerHTML = "Loading...";
         
-    // create a scene with the new ship
+    // create a ship that can be used to add the models (ship with default weapons
+    // to the scene
     this._item = new Spacecraft(
         shipClass,
         "",
@@ -806,10 +821,29 @@ DatabaseScreen.prototype.loadShip = function() {
         "ai",
         "default"
         );
-    // we need to add the thruster particles as well, otherwise a bug will cause the
-    // change of camera position to be ineffective
-    this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,true);
-    this._item.visualModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
+    // add the ship to the scene in triangle drawing mode
+    this._solidModel = this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,false);
+    // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
+    this._solidModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("simpleReveal"));
+    // turn the ship to start the animation facing the camera
+    this._solidModel.rotate([0.0,0.0,1.0],Math.PI);
+    this._solidModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
+    // set the necessary uniform functions for the reveal shader
+    this._solidModel.setUniformValueFunction("u_revealFront",function() { return true; });
+    this._solidModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState-1.0)*self._itemLength*1.1); });
+    this._solidModel.setUniformValueFunction("u_revealTransitionLength",function() { return self._itemLength/10; });
+    // add the ship to the scene in line drawing mode as well
+    this._wireframeModel = this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,true);
+    // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
+    this._wireframeModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("oneColorReveal"));
+    // turn the ship to start the animation facing the camera
+    this._wireframeModel.rotate([0.0,0.0,1.0],Math.PI);
+    this._wireframeModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
+    // set the necessary uniform functions for the one colored reveal shader
+    this._wireframeModel.setUniformValueFunction("u_color",function() { return [0.0,1.0,0.0,1.0]; });
+    this._wireframeModel.setUniformValueFunction("u_revealFront",function() { return (self._revealState<=1.0); });
+    this._wireframeModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState>1.0?(self._revealState-1.0):self._revealState)*self._itemLength*1.1); });
+    this._wireframeModel.setUniformValueFunction("u_revealTransitionLength",function() { return (self._revealState<=1.0)?(self._itemLength/10):0; });
     
     // set the callback for when the potentially needed additional file resources have 
     // been loaded
@@ -817,11 +851,12 @@ DatabaseScreen.prototype.loadShip = function() {
     game.graphicsContext.resourceManager.executeWhenReady(function() {
         // get the length of the ship based on the length of its model (1 unit in
         // model space equals to 20 cm)
-        var length = self._item.visualModel.modelsWithLOD[0].model.dimensions[1]*0.2;
+        self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
+        self._itemFront = self._item.visualModel.modelsWithLOD[0].model.getMaxY();
         self._itemDescription.innerHTML = 
             shipClass.getDescription()+"<br/>"+
             "<br/>"+
-            "Length: "+((length<100)?length.toPrecision(3):Math.round(length))+" m<br/>"+
+            "Length: "+(((self._itemLength*0.2)<100)?(self._itemLength*0.2).toPrecision(3):Math.round(self._itemLength*0.2))+" m<br/>"+
             "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+
             "Thrusters: "+shipClass.thrusterSlots.length;
         // this will create the GL context if needed or update it with the new
@@ -829,8 +864,11 @@ DatabaseScreen.prototype.loadShip = function() {
         self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
         // set the camera position so that the whole ship nicely fits into the picture
         self._scene.activeCamera.setPositionMatrix(translationMatrix(0,0,-self._item.visualModel.getScaledSize()));
+        
+        self._revealState = 0.0;
+        
         self.startRenderLoop(1000/60);
-        self.startRotationLoop();
+        self.startAnimationLoop();
         document.body.style.cursor='default';
     });
     
