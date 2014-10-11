@@ -1099,15 +1099,19 @@ ManagedGLContext.prototype.addModel = function(model,wireframe) {
     // first check if the model is already in the list
     for (var i = 0; i < this._modelsWithParam.length; i++) {
         if (this._modelsWithParam[i].model.filename === model.filename) {
-            // if it was not added with wireframe drawing but now it is, add it
-            if ((wireframe === true) && (this._modelsWithParam[i].wireframe === false)) {
-                this._modelsWithParam[i].wireframe = true;
-                this.resetReadyState();
+            if (wireframe === true) {
+                // if it was not added with wireframe drawing but now it is, add it
+                if (this._modelsWithParam[i].wireframe === false) {
+                    this._modelsWithParam[i].wireframe = true;
+                    this.resetReadyState();
+                }
                 return;
-            // if it was not added with solid drawing but now it is, add it    
-            } else if ((wireframe === false) && (this._modelsWithParam[i].solid === false)) {
-                this._modelsWithParam[i].solid = true;
-                this.resetReadyState();
+            } else {
+                // if it was not added with solid drawing but now it is, add it    
+                if (this._modelsWithParam[i].solid === false) {
+                    this._modelsWithParam[i].solid = true;
+                    this.resetReadyState();
+                }
                 return;
             }
         }
@@ -1151,7 +1155,7 @@ ManagedGLContext.prototype.addVertexBuffer = function(vertexBuffer) {
 ManagedGLContext.prototype.setupVertexBuffers = function() {
     if(this.isReadyToUse()===true) {
         return;
-    }
+    }    
     var i,j;
     var vbName;
     

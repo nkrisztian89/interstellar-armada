@@ -661,12 +661,15 @@ DatabaseScreen.prototype.closePage = function() {
     this._revealState = null;
     
     clearInterval(this._animationLoop);
-    this._animationLoop = null;
+    this._revealLoop = null;
+    this._rotationLoop = null;
     this._item = null;
     this._itemIndex = null;
     this._scene = null;
     this._solidModel = null;
     this._wireframeModel = null;
+    
+    this._mousePos = null;
 };
 
 /**
@@ -676,13 +679,23 @@ DatabaseScreen.prototype.closePage = function() {
 DatabaseScreen.prototype._initializeComponents = function() {
     GameScreenWithCanvases.prototype._initializeComponents.call(this);
     
-    var prevButton = document.getElementById("prevButton");
     var self = this;
+    
+    var backButton = document.getElementById("backButton");
+    backButton.addEventListener("click",function() {
+        self.stopRevealLoop();
+        self.stopRotationLoop();
+        if(self.isSuperimposed()) {
+            game.closeSuperimposedScreen();
+        } else {
+            game.setCurrentScreen('mainMenu');
+        }
+    });
+    var prevButton = document.getElementById("prevButton");
     prevButton.addEventListener("click",function(){
         self.selectPreviousShip();
     });
     var nextButton = document.getElementById("nextButton");
-    var self = this;
     nextButton.addEventListener("click",function(){
         self.selectNextShip();
     });
@@ -718,23 +731,48 @@ DatabaseScreen.prototype.updateStatus = function(newStatus,newProgress) {
     }
 };
 
-DatabaseScreen.prototype.startAnimationLoop = function() {
+DatabaseScreen.prototype.startRevealLoop = function() {
     var prevDate = new Date();
     var self = this;    
-    this._animationLoop = setInterval(function ()
+    this._revealLoop = setInterval(function ()
     {
         var curDate = new Date();
-        self._solidModel.rotate(self._item.visualModel.getZDirectionVector(),(curDate-prevDate)/1000*Math.PI/2);
-        self._wireframeModel.rotate(self._item.visualModel.getZDirectionVector(),(curDate-prevDate)/1000*Math.PI/2);
         if(self._revealState<2.0) {
             self._revealState += (curDate-prevDate)/1000/2;
+        } else {
+            self.stopRevealLoop();
         }
         prevDate = curDate;
     }, 1000 / 60);
 };
 
+DatabaseScreen.prototype.startRotationLoop = function() {
+    // turn the ship to start the rotation facing the camera
+    this._solidModel.setOrientationMatrix(identityMatrix4());
+    this._solidModel.rotate([0.0,0.0,1.0],Math.PI);
+    this._solidModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
+    this._wireframeModel.setOrientationMatrix(identityMatrix4());
+    this._wireframeModel.rotate([0.0,0.0,1.0],Math.PI);
+    this._wireframeModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
+    var prevDate = new Date();
+    var self = this;    
+    this._rotationLoop = setInterval(function ()
+    {
+        var curDate = new Date();
+        self._solidModel.rotate(self._item.visualModel.getZDirectionVector(),(curDate-prevDate)/1000*Math.PI/2);
+        self._wireframeModel.rotate(self._item.visualModel.getZDirectionVector(),(curDate-prevDate)/1000*Math.PI/2);
+        prevDate = curDate;
+    }, 1000 / 60);
+};
+
+DatabaseScreen.prototype.stopRevealLoop = function() {
+    clearInterval(this._revealLoop);
+    this._revealLoop = null;
+};
+
 DatabaseScreen.prototype.stopRotationLoop = function() {
-    clearInterval(this._animationLoop);
+    clearInterval(this._rotationLoop);
+    this._rotationLoop = null;
 };
 
 DatabaseScreen.prototype.initializeCanvas = function() {
@@ -762,6 +800,30 @@ DatabaseScreen.prototype.initializeCanvas = function() {
     
     this._itemIndex = 0;
     this.loadShip();
+    
+    // when the user presses the mouse on the canvas, he can start rotating the model
+    // by moving the mouse
+    canvas.onmousedown = function(e) {
+        self._mousePos = [e.screenX,e.screenY];
+        // automatic rotation should stop for the time of manual rotation
+        self.stopRotationLoop();
+        // the mouse might go out from over the canvas during rotation, so register the
+        // move event handler on the document body
+        document.body.onmousemove = function(e) {
+            self._solidModel.rotate([0.0,1.0,0.0],-(e.screenX-self._mousePos[0])/180*Math.PI);
+            self._solidModel.rotate([1.0,0.0,0.0],-(e.screenY-self._mousePos[1])/180*Math.PI);
+            self._wireframeModel.rotate([0.0,1.0,0.0],-(e.screenX-self._mousePos[0])/180*Math.PI);
+            self._wireframeModel.rotate([1.0,0.0,0.0],-(e.screenY-self._mousePos[1])/180*Math.PI);
+            self._mousePos = [e.screenX,e.screenY];
+        };
+        // once the user releases the mouse button, the event handlers should be cancelled
+        // and the automatic rotation started again
+        document.body.onmouseup = function() {
+            document.body.onmousemove = null;
+            document.body.onmouseup = null;
+            self.startRotationLoop();
+        };
+    };
 };
 
 /**
@@ -796,6 +858,7 @@ DatabaseScreen.prototype.loadShip = function() {
     document.body.style.cursor='wait';
     // stop the possible ongoing loops that display the previous ship to avoid
     // null reference
+    this.stopRevealLoop();
     this.stopRotationLoop();
     this.stopRenderLoop();
     
@@ -825,9 +888,6 @@ DatabaseScreen.prototype.loadShip = function() {
     this._solidModel = this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,false);
     // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
     this._solidModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("simpleReveal"));
-    // turn the ship to start the animation facing the camera
-    this._solidModel.rotate([0.0,0.0,1.0],Math.PI);
-    this._solidModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
     // set the necessary uniform functions for the reveal shader
     this._solidModel.setUniformValueFunction("u_revealFront",function() { return true; });
     this._solidModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState-1.0)*self._itemLength*1.1); });
@@ -836,9 +896,6 @@ DatabaseScreen.prototype.loadShip = function() {
     this._wireframeModel = this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,true);
     // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
     this._wireframeModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("oneColorReveal"));
-    // turn the ship to start the animation facing the camera
-    this._wireframeModel.rotate([0.0,0.0,1.0],Math.PI);
-    this._wireframeModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
     // set the necessary uniform functions for the one colored reveal shader
     this._wireframeModel.setUniformValueFunction("u_color",function() { return [0.0,1.0,0.0,1.0]; });
     this._wireframeModel.setUniformValueFunction("u_revealFront",function() { return (self._revealState<=1.0); });
@@ -868,7 +925,8 @@ DatabaseScreen.prototype.loadShip = function() {
         self._revealState = 0.0;
         
         self.startRenderLoop(1000/60);
-        self.startAnimationLoop();
+        self.startRevealLoop();
+        self.startRotationLoop();
         document.body.style.cursor='default';
     });
     
