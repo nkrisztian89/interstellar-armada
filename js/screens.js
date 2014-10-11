@@ -255,7 +255,7 @@ ScreenCanvas.prototype.isResizeable = function() {
  */
 ScreenCanvas.prototype.getManagedContext = function() {
     if(this._context === null) {
-        this._context = new ManagedGLContext(this._canvas,game.graphicsContext.getAntialiasing(),game.graphicsContext.getFiltering());
+        this._context = new ManagedGLContext(this._canvas.getAttribute("id"),this._canvas,game.graphicsContext.getAntialiasing(),game.graphicsContext.getFiltering());
     }
     return this._context;
 };
@@ -355,7 +355,7 @@ GameScreenWithCanvases.prototype.bindSceneToCanvas = function(scene,canvas) {
     }
     scene.addToContext(canvas.getManagedContext());
     if(this._renderLoop !== null) {
-        canvas.getManagedContext().setupVertexBuffers(true);
+        canvas.getManagedContext().setupVertexBuffers();
     }
 };
 
@@ -385,7 +385,7 @@ GameScreenWithCanvases.prototype.render = function() {
 GameScreenWithCanvases.prototype.startRenderLoop = function(interval) {
     var i;
     for(i=0;i<this._sceneCanvasBindings.length;i++) {
-        this._sceneCanvasBindings[i].canvas.getManagedContext().setupVertexBuffers(true);
+        this._sceneCanvasBindings[i].canvas.getManagedContext().setupVertexBuffers();
     }
     var self = this;
     this._renderTimes = [new Date()];

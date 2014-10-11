@@ -58,7 +58,7 @@ function Texture(filename,useMipmap) {
     // properties for WebGL resource management
     /**
      * The associative array of WebGL texture IDs belonging to managed contexts 
-     * which this texture has been associated with. The keys are the managed
+     * which this texture has been associated with. The keys are the names of the managed
      * contexts, and values are the WebGL IDs (handles)
      * @name Texture#_ids
      * @type Object
@@ -87,7 +87,7 @@ Texture.prototype.getFilename = function() {
  * @returns {WebGLTexture}
  */
 Texture.prototype.getIDForContext = function(context) {
-    return this._ids[context];
+    return this._ids[context.getName()];
 };
 
 /**
@@ -118,10 +118,10 @@ Texture.prototype.requestLoadFromFile = function() {
  */
 Texture.prototype.addToContext = function(context) {
     this.executeWhenReady(function() {
-        if(this._ids[context]===undefined) {
+        if(this._ids[context.getName()]===undefined) {
             var gl = context.gl;
-            this._ids[context] = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this._ids[context]);
+            this._ids[context.getName()] = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, this._ids[context.getName()]);
             // Upload the image into the texture.
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
             // Set the parameters so we can render any size image.
@@ -190,7 +190,7 @@ function Cubemap(name,imageURLs) {
     // properties for WebGL resource management
     /**
      * The associative array of WebGL cubemap IDs belonging to managed contexts 
-     * which this cubemap has been associated with. The keys are the managed
+     * which this cubemap has been associated with. The keys are the names of the managed
      * contexts, and values are the WebGL IDs (handles)
      * @name Cubemap#_ids
      * @type Object
@@ -219,7 +219,7 @@ Cubemap.prototype.getName = function() {
  * @returns {WebGLTexture}
  */
 Cubemap.prototype.getIDForContext = function(context) {
-    return this._ids[context];
+    return this._ids[context.getName()];
 };
 
 /**
@@ -256,10 +256,10 @@ Cubemap.prototype.requestLoadFromFile = function() {
  */
 Cubemap.prototype.addToContext = function(context) {
     this.executeWhenReady( function() {
-        if(this._ids[context]===undefined) {
+        if(this._ids[context.getName()]===undefined) {
             var gl = context.gl;
-            this._ids[context] = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_CUBE_MAP, this._ids[context]);
+            this._ids[context.getName()] = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, this._ids[context.getName()]);
 
             // Set the parameters so we can render any size image.
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -363,7 +363,7 @@ function ShaderUniform(name,type,arraySize) {
     // properties for WebGL resource management
     /**
      * The associative array containing the locations of this uniform variable
-     * belonging to different managed WebGL contexts. The keys are the managed
+     * belonging to different managed WebGL contexts. The keys are the names of the managed
      * contexts, and values are the locations.
      * @name ShaderUniform#_locations
      * @type Object
@@ -438,7 +438,7 @@ ShaderUniform.prototype.addMember = function(member) {
  * @param {Shader} shader The shader which this uniform belongs to.
  */
 ShaderUniform.prototype.setLocation = function(context,shader) {
-    this._locations[context] = context.gl.getUniformLocation(shader.getIDForContext(context),this._name);
+    this._locations[context.getName()] = context.gl.getUniformLocation(shader.getIDForContext(context),this._name);
 };
 
 /**
@@ -449,7 +449,7 @@ ShaderUniform.prototype.setLocation = function(context,shader) {
  * @returns {WebGLUniformLocation}
  */
 ShaderUniform.prototype.getLocation = function(context) {
-    return this._locations[context];
+    return this._locations[context.getName()];
 };
 
 /**
@@ -752,7 +752,7 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attri
     // properties for WebGL resource management
     /**
      * The associative array of WebGL program IDs belonging to managed contexts 
-     * which this program has been associated with. The keys are the managed
+     * which this program has been associated with. The keys are the names of the managed
      * contexts, and values are the WebGL IDs (handles)
      * @name Shader#_ids
      * @type Object
@@ -781,7 +781,7 @@ Shader.prototype.getName = function() {
  * @returns {WebGLProgram}
  */
 Shader.prototype.getIDForContext = function(context) {
-    return this._ids[context];
+    return this._ids[context.getName()];
 };
 
 /**
@@ -835,7 +835,7 @@ Shader.prototype.requestLoadFromFile = function() {
  */
 Shader.prototype.addToContext = function(context) {
     this.executeWhenReady(function() {
-        if(this._ids[context]===undefined) {
+        if(this._ids[context.getName()]===undefined) {
             var gl = context.gl;
             var vertexShader = gl.createShader(gl.VERTEX_SHADER);
             gl.shaderSource(vertexShader, this._vertexShaderSource);
@@ -845,10 +845,10 @@ Shader.prototype.addToContext = function(context) {
             gl.shaderSource(fragmentShader, this._fragmentShaderSource);
             gl.compileShader(fragmentShader);
 
-            this._ids[context] = gl.createProgram();
-            gl.attachShader(this._ids[context], vertexShader);
-            gl.attachShader(this._ids[context], fragmentShader);
-            gl.linkProgram(this._ids[context]);
+            this._ids[context.getName()] = gl.createProgram();
+            gl.attachShader(this._ids[context.getName()], vertexShader);
+            gl.attachShader(this._ids[context.getName()], fragmentShader);
+            gl.linkProgram(this._ids[context.getName()]);
 
             for(var i=0;i<this._uniforms.length;i++) {
                 this._uniforms[i].setLocation(context,this);
@@ -913,6 +913,7 @@ Shader.prototype.enableVertexBuffers = function(context) {
  * class. {@link Texture}, {@link Cubemap}, {@link Shader} and 
  * {@link EgomModel} resources can be linked to it, and can set up the vertex
  * buffers according to the linked model resources.
+ * @param {String} name The name of the context.
  * @param {HTMLCanvasElement} canvas The canvas for which the context is to be
  * created.
  * @param {Boolean} antialiasing Whether antialising should be turned on for
@@ -923,8 +924,14 @@ Shader.prototype.enableVertexBuffers = function(context) {
  * will be 4:1)
  * @returns {ManagedGLContext}
  */
-function ManagedGLContext(canvas,antialiasing,filtering) {
+function ManagedGLContext(name,canvas,antialiasing,filtering) {
     Resource.call(this);
+    /**
+     * The name of the context by which it can be referred to.
+     * @name ManagedGLContext#_name
+     * @type String
+     */
+    this._name = name;
     /**
      * The contained basic WebGL rendering context.
      * @name ManagedGLContext#gl
@@ -968,14 +975,18 @@ function ManagedGLContext(canvas,antialiasing,filtering) {
      */
     this._shaders = new Array();
     /**
-     * The list of associated models. This needs to be stored in order to fill
-     * the vertex buffer objects with data from these models when they are 
-     * created. However, the models are created and managed using a 
-     * {@link ResourceManager}, and this context only references them.
+     * The list of associated models and their drawing parameters. This needs to 
+     * be stored in order to fill the vertex buffer objects with data from these 
+     * models when the buffers are created. One entry in the list has the
+     * following properties: model ({@link EgomModel}): the model reference; 
+     * wireframe (Boolean): whether this should be added for wireframe drawing;
+     * solid (Boolean): whether this should be added for solid (filled) drawing
+     * The model objects are created and managed using a {@link ResourceManager}, 
+     * and this context only references them.
      * @name ManagedGLContext#_models
-     * @type EgomModel[]
+     * @type Object
      */
-    this._models = new Array();
+    this._modelsWithParam = new Array();
     /**
      * The associative array of vertex buffer objects, stored by their names 
      * (which equal the names of their corresponding attributes) as the keys.
@@ -1039,6 +1050,14 @@ ManagedGLContext.prototype = new Resource();
 ManagedGLContext.prototype.constructor = ManagedGLContext;
 
 /**
+ * Getter for the _name property.
+ * @returns {String}
+ */
+ManagedGLContext.prototype.getName = function() {
+    return this._name;
+};
+
+/**
  * Getter for the _filtering property.
  * @returns {String}
  */
@@ -1068,14 +1087,37 @@ ManagedGLContext.prototype.addShader = function(shader) {
 };
 
 /**
- * Adds the model reference to the list of model to be used when the vertex
- * buffer objects are created and filled with data. This method simply
- * appends the reference, in order to avoid adding the same model multiple
- * times, the model's addToContext() method needs to be called instead!
+ * Adds the model reference to the list of models to be used when the vertex
+ * buffer objects are created and filled with data. It only makes the addition
+ * if the model is not yet added with the specified drawing mode (wireframe
+ * or not). 
  * @param {EgomModel} model
+ * @param {Boolean} wireframe Whether the model should be added for wireframe
+ * drawing or for solid (filled) drawing.
  */
-ManagedGLContext.prototype.addModel = function(model) {
-    this._models.push(model);
+ManagedGLContext.prototype.addModel = function(model,wireframe) {
+    // first check if the model is already in the list
+    for (var i = 0; i < this._modelsWithParam.length; i++) {
+        if (this._modelsWithParam[i].model.filename === model.filename) {
+            // if it was not added with wireframe drawing but now it is, add it
+            if ((wireframe === true) && (this._modelsWithParam[i].wireframe === false)) {
+                this._modelsWithParam[i].wireframe = true;
+                this.resetReadyState();
+                return;
+            // if it was not added with solid drawing but now it is, add it    
+            } else if ((wireframe === false) && (this._modelsWithParam[i].solid === false)) {
+                this._modelsWithParam[i].solid = true;
+                this.resetReadyState();
+                return;
+            }
+        }
+    }
+    // if the model was not added at all yet, add it with the appropriate mode
+    this._modelsWithParam.push({
+        model: model,
+        wireframe: (wireframe === true),
+        solid: (wireframe === false)
+    });
     this.resetReadyState();
 };
 
@@ -1105,10 +1147,8 @@ ManagedGLContext.prototype.addVertexBuffer = function(vertexBuffer) {
  * references and then binds the vertex buffer objects to the corresponding
  * attribute indices. After this method, the context is ready to render any
  * resources that have been added to it up to this point.
- * @param {Boolean} loadLines Whether to fill the buffers with data necessary
- * for drawing lines (wireframe mode) as well next to triangles.
  */
-ManagedGLContext.prototype.setupVertexBuffers = function(loadLines) {
+ManagedGLContext.prototype.setupVertexBuffers = function() {
     if(this.isReadyToUse()===true) {
         return;
     }
@@ -1122,10 +1162,10 @@ ManagedGLContext.prototype.setupVertexBuffers = function(loadLines) {
     
     // counting the number of vertices we need to put into the vertex buffers
     var sumVertices=0;
-    for(i=0;i<this._models.length;i++) {
+    for(i=0;i<this._modelsWithParam.length;i++) {
         sumVertices=sumVertices+
-            (loadLines?this._models[i].lines.length*2:0)+
-            this._models[i].triangles.length*3;
+            (this._modelsWithParam[i].wireframe?this._modelsWithParam[i].model.lines.length*2:0)+
+            (this._modelsWithParam[i].solid?this._modelsWithParam[i].model.triangles.length*3:0);
     }
 	
     // creating a Float32Array of the appropriate size for each needed buffer
@@ -1140,24 +1180,24 @@ ManagedGLContext.prototype.setupVertexBuffers = function(loadLines) {
     // filling the buffer data arrays from model data
     var bufferSize=0;
     var objectBufferData=null;
-    for(i=0;i<this._models.length;i++) {
-        var linesToLoad=loadLines;
-        var trianglesToLoad=true;
-        while(linesToLoad||trianglesToLoad) {
-            objectBufferData=this._models[i].getBufferData(linesToLoad);
-             if (linesToLoad) {
-                this._models[i].setBufferStartForContext(this,"lines",bufferSize);
+    for (i = 0; i < this._modelsWithParam.length; i++) {
+        var linesToLoad = this._modelsWithParam[i].wireframe;
+        var trianglesToLoad = this._modelsWithParam[i].solid;
+        while (linesToLoad || trianglesToLoad) {
+            objectBufferData = this._modelsWithParam[i].model.getBufferData(linesToLoad);
+            if (linesToLoad) {
+                this._modelsWithParam[i].model.setBufferStartForContext(this, "lines", bufferSize);
             } else {
-                this._models[i].setBufferStartForContext(this,"base",bufferSize);
-                this._models[i].setBufferStartForContext(this,"transparent",bufferSize+this._models[i].nOpaqueTriangles*3);
+                this._modelsWithParam[i].model.setBufferStartForContext(this, "base", bufferSize);
+                this._modelsWithParam[i].model.setBufferStartForContext(this, "transparent", bufferSize + this._modelsWithParam[i].model.nOpaqueTriangles * 3);
             }
-            for(var vbName in this._vertexBuffers) {
-                this._vertexBuffers[vbName].setData(objectBufferData[this._vertexBuffers[vbName].getRole()],bufferSize);
+            for (var vbName in this._vertexBuffers) {
+                this._vertexBuffers[vbName].setData(objectBufferData[this._vertexBuffers[vbName].getRole()], bufferSize);
             }
-            bufferSize+=objectBufferData.dataSize;
-            linesToLoad?
-                (linesToLoad=false):
-                (trianglesToLoad=false);
+            bufferSize += objectBufferData.dataSize;
+            linesToLoad ?
+                    (linesToLoad = false) :
+                    (trianglesToLoad = false);
         }
     }
 	

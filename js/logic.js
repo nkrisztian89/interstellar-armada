@@ -998,7 +998,7 @@ Level.prototype.addProjectileResourcesToContext = function(context) {
         game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor).addToContext(context);
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName).addToContext(context);
         game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlashTextureDescriptor).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections)).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections)).addToContext(context,false);
     }
     game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()).addToContext(context);
 };

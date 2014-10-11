@@ -422,7 +422,7 @@ FVQ.prototype.constructor = FVQ;
 
 FVQ.prototype.addToContext = function(context) {
     VisualObject.prototype.addToContext.call(this,context);
-    this.model.addToContext(context);
+    this.model.addToContext(context,false);
     this.cubemap.addToContext(context);
 };
 
@@ -515,7 +515,7 @@ Mesh.prototype.addToContext = function(context) {
     VisualObject.prototype.addToContext.call(this,context);
     var i;
     for(i=0;i<this.modelsWithLOD.length;i++) {
-        this.modelsWithLOD[i].model.addToContext(context);
+        this.modelsWithLOD[i].model.addToContext(context,this.lineMode);
         if(this.modelsWithLOD[i].model.size>this.modelSize) {
             this.modelSize=this.modelsWithLOD[i].model.size;
         }
@@ -734,7 +734,7 @@ Billboard.prototype.constructor = Billboard;
 
 Billboard.prototype.addToContext = function(context) {
     VisualObject.prototype.addToContext.call(this,context);
-    this.model.addToContext(context);
+    this.model.addToContext(context,false);
     this.texture.addToContext(context);
 };
 
@@ -802,7 +802,7 @@ DynamicParticle.prototype.constructor = DynamicParticle;
 
 DynamicParticle.prototype.addToContext = function(context) {
     VisualObject.prototype.addToContext.call(this,context);
-    this.model.addToContext(context);
+    this.model.addToContext(context,false);
     this.texture.addToContext(context);
 };
 
@@ -915,7 +915,7 @@ PointParticle.prototype.constructor = PointParticle;
 
 PointParticle.prototype.addToContext = function(context) {
     VisualObject.prototype.addToContext.call(this,context);
-    this.model.addToContext(context);
+    this.model.addToContext(context,false);
 };
 
 /**

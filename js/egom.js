@@ -109,7 +109,6 @@ function EgomModel(filename) {
         }
 	
         // properties for WebGL resource management
-        this._addedToContext = new Object();
 	this._bufferStart = new Object();
         this._bufferStartTransparent = new Object();
 	this._bufferStartLines = new Object();
@@ -120,25 +119,25 @@ EgomModel.prototype.constructor = EgomModel;
 
 EgomModel.prototype.getBufferStartForContext = function(context,buffer) {
     if((buffer===undefined) || (buffer==="base")) {
-        return this._bufferStart[context];
+        return this._bufferStart[context.getName()];
     }
     if(buffer==="transparent") {
-        return this._bufferStartTransparent[context];
+        return this._bufferStartTransparent[context.getName()];
     }
     if(buffer==="lines") {
-        return this._bufferStartLines[context];
+        return this._bufferStartLines[context.getName()];
     }
 };
 
 EgomModel.prototype.setBufferStartForContext = function(context,buffer,value) {
     if((buffer===undefined) || (buffer==="base")) {
-        this._bufferStart[context] = value;
+        this._bufferStart[context.getName()] = value;
     }
     if(buffer==="transparent") {
-        this._bufferStartTransparent[context] = value;
+        this._bufferStartTransparent[context.getName()] = value;
     }
     if(buffer==="lines") {
-        this._bufferStartLines[context] = value;
+        this._bufferStartLines[context.getName()] = value;
     }
 };
 
@@ -299,18 +298,27 @@ EgomModel.prototype.getDepth = function() {
     return this._maxZ-this._minZ;
 };
 
-EgomModel.prototype.addToContext = function(context) {
-    if(this._addedToContext[context] !== true) {
-        context.addModel(this);
-        this._addedToContext[context] = true;
-    }
+/**
+ * @param {ManagedGLContext} context
+ * @param {Boolean} wireframe
+ */
+EgomModel.prototype.addToContext = function(context,wireframe) {
+    context.addModel(this,wireframe);
 };
 
 /**
  * Clears all previous bindings to managed WebGL contexts.
  */
 EgomModel.prototype.clearContextBindings = function() {
-    this._addedToContext = new Object();
+    for(var contextName in this._bufferStart) {
+        this._bufferStart[contextName] = null;
+    }
+    for(var contextName in this._bufferStartLines) {
+        this._bufferStartLines[contextName] = null;
+    }
+    for(var contextName in this._bufferStartTransparent) {
+        this._bufferStartTransparent[contextName] = null;
+    }
 };
 
 EgomModel.prototype.getBufferData = function(lineMode) {
@@ -449,9 +457,9 @@ EgomModel.prototype.getBufferData = function(lineMode) {
 
 EgomModel.prototype.render = function(context,lineMode) {
     if (lineMode===true) {
-        context.gl.drawArrays(context.gl.LINES, this._bufferStartLines[context], 2*this.lines.length);
+        context.gl.drawArrays(context.gl.LINES, this._bufferStartLines[context.getName()], 2*this.lines.length);
     } else {
-        context.gl.drawArrays(context.gl.TRIANGLES, this._bufferStart[context], 3*this.triangles.length);
+        context.gl.drawArrays(context.gl.TRIANGLES, this._bufferStart[context.getName()], 3*this.triangles.length);
     }
 };
 
