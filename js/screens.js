@@ -35,15 +35,16 @@
  * @returns {GameScreen}
  */
 function GameScreen(name,source) {
+    Resource.call(this);
     // general properties
     this._name=name;
     this._source=source;
     this._model=null;
-    
-    // default components
-    this._status = null;
     this._background = null;
-    this._registeredComponents = new Array();
+    this._container = null;
+    
+    this._simpleComponents = new Array();
+    this._externalComponents = new Array();
     
     // function to execute when the model is loaded
     this._onModelLoad = function() {};
@@ -53,6 +54,9 @@ function GameScreen(name,source) {
         this.requestModelLoad();
     }
 }
+
+GameScreen.prototype = new Resource();
+GameScreen.prototype.constructor = GameScreen;
 
 /**
  * Initiates the asynchronous loading of the screen's structure from the
@@ -65,10 +69,13 @@ GameScreen.prototype.requestModelLoad = function() {
     request.open('GET', location.pathname+this._source+"?123", true);
     var self = this;
     request.onreadystatechange = function() {
+        if (request.readyState === 4) {
             self._model = document.implementation.createHTMLDocument(self._name);
             self._model.documentElement.innerHTML = this.responseText;
             self._onModelLoad();
-        };
+            self.setToReady();
+        }
+    };
     request.send(null);
 };
 
@@ -83,50 +90,65 @@ GameScreen.prototype.getName = function() {
 /**
  * Replaces the current HTML page's body with the sctructure of the screen.
  */
-GameScreen.prototype.buildPage = function() {
+GameScreen.prototype.replacePageWithScreen = function() {
+    document.body.innerHTML = "";
+    this.addScreenToPage();
+};
+
+/**
+ * Appends the content of the screen to the page in an invisible (display: none)
+ * div.
+ */
+GameScreen.prototype.addScreenToPage = function() {
     var self = this;
-    var buildPageFunction = function() {
-        document.body=self._model.body.cloneNode(true);
+    this.executeWhenReady(function() {
+        self._background = document.createElement("div");
+        self._background.setAttribute("id",self._name+"PageBackground");
+        self._background.className = "fullScreenFix";
+        self._background.style.display = "none";
+        self._container = document.createElement("div");
+        self._container.setAttribute("id",self._name+"PageContainer");
+        self._container.className = "fullScreenContainer";
+        self._container.style.display = "none";
+        self._container.innerHTML = self._model.body.innerHTML;
+        var namedElements = self._container.querySelectorAll("[id]");
+        for(var i = 0; i<namedElements.length; i++) {
+            namedElements[i].setAttribute("id",self._name+"_"+namedElements[i].getAttribute("id"));
+        }
+        document.body.appendChild(self._background);
+        document.body.appendChild(self._container);
         self._initializeComponents();
-    };
-    // if we have built up the model of the screen already, then load it
-    if(this._model!==null) {
-        buildPageFunction();
-    // if not yet, set the callback function which fires when the model is 
-    // loaded
-    } else {
-        this._onModelLoad = buildPageFunction;
-    }
+    });
+};
+
+GameScreen.prototype.show = function() {
+    this.executeWhenReady(function() {
+        this._container.style.display = "block";
+    });
 };
 
 /**
  * Superimposes the screen on the current page, by appending a full screen
  * container and the screen structure as its child inside it.
- * @param {Number[3]} color The color of the full screen background. ([r,g,b],
+ * @param {Number[3]} backgroundColor The color of the full screen background. ([r,g,b],
  * where all color components should be 0-255)
- * @param {Number} opacity The opacity of the background (0.0-1.0)
+ * @param {Number} backgroundOpacity The opacity of the background (0.0-1.0)
  */
-GameScreen.prototype.superimposeOnPage = function(color,opacity) {
-    var self = this;
-    var superimposeOnPageFunction = function() {
-        self._background = document.createElement("div");
-        self._background.className = "fullScreenFix";
-        self._background.style.backgroundColor = "rgba("+color[0]+","+color[1]+","+color[2]+","+opacity+")";
-        var container = document.createElement("div");
-        container.className = "fullScreenContainer";
-        container.innerHTML = self._model.body.innerHTML;
-        document.body.appendChild(self._background);
-        document.body.appendChild(container);
-        self._initializeComponents();
-    };
-    // if we have built up the model of the screen already, then load it
-    if(this._model!==null) {
-        superimposeOnPageFunction();
-    // if not yet, set the callback function which fires when the model is 
-    // loaded
-    } else {
-        this._onModelLoad = superimposeOnPageFunction;
-    }
+GameScreen.prototype.superimposeOnPage = function(backgroundColor,backgroundOpacity) {
+    this.executeWhenReady(function() {
+        this._background.style.backgroundColor = "rgba("+backgroundColor[0]+","+backgroundColor[1]+","+backgroundColor[2]+","+backgroundOpacity+")";
+        this._background.style.display = "block";
+        document.body.appendChild(this._background);
+        document.body.appendChild(this._container);
+        this.show();
+    });
+};
+
+GameScreen.prototype.hide = function() {
+    this.executeWhenReady(function() {
+        this._container.style.display = "none";
+        this._background.style.display = "none";
+    });
 };
 
 /**
@@ -134,7 +156,7 @@ GameScreen.prototype.superimposeOnPage = function(color,opacity) {
  * @returns {Boolean}
  */
 GameScreen.prototype.isSuperimposed = function() {
-    return this._background!==null;
+    return this._background.style.display !== "none";
 };
 
 /**
@@ -142,27 +164,18 @@ GameScreen.prototype.isSuperimposed = function() {
  * only nulls out the default components, additional functions need to be added
  * in the descendant classes.
  */
-GameScreen.prototype.closePage = function() {
-    this._status = null;
-    
-    for(var i=0;i<this._registeredComponents.length;i++) {
-        this._registeredComponents[i].component.resetComponent();
+GameScreen.prototype.removeFromPage = function() {
+    var i;
+    for(i=0;i<this._simpleComponents.length;i++) {
+        this._simpleComponents[i].resetComponent();
     }
-};
-
-/**
- * Closes the superimposed page by removing the background container next to
- * the regular page closing actions.
- */
-GameScreen.prototype.closeSuperimposedPage = function() {
-    if(!this.isSuperimposed()) {
-        game.showError("Attempting to close a page ("+this._name+") as if it was superimposed, but in fact it is not.");
-    } else {
-        document.body.removeChild(this._background.nextSibling);
-        document.body.removeChild(this._background);
-        this._background = null;
-        this.closePage();
+    for(var i=0;i<this._externalComponents.length;i++) {
+        this._externalComponents[i].component.resetComponent();
     }
+    document.dody.removeChild(this._background);
+    document.dody.removeChild(this._container);
+    this._background = null;
+    this._container = null;
 };
 
 /**
@@ -171,20 +184,28 @@ GameScreen.prototype.closeSuperimposedPage = function() {
  * components of the screen after calling this parent method.
  */
 GameScreen.prototype._initializeComponents = function() {
-    this._status = document.getElementById("status");
-    
-    for(var i=0;i<this._registeredComponents.length;i++) {
+    var i;
+    for (i = 0; i < this._simpleComponents.length; i++) {
+        this._simpleComponents[i].initComponent();
+    }
+    for (i = 0; i < this._externalComponents.length; i++) {
         var parentNode;
-        if(this._registeredComponents[i].parentNodeID!==undefined) {
-            parentNode = document.getElementById(this._registeredComponents[i].parentNodeID);
+        if (this._externalComponents[i].parentNodeID !== undefined) {
+            parentNode = document.getElementById(this._name+"_"+this._externalComponents[i].parentNodeID);
         }
         // otherwise just leave it undefined, nothing to pass to the method below
-        this.addExternalComponent(this._registeredComponents[i].component,parentNode);
+        this.addExternalComponent(this._externalComponents[i].component, parentNode);
     }
 };
 
-GameScreen.prototype.registerComponent = function(screenComponent,parentNodeID) {
-    this._registeredComponents.push({
+GameScreen.prototype.registerSimpleComponent = function(simpleComponentName) {
+    var component = new SimpleComponent(this._name+"_"+simpleComponentName);
+    this._simpleComponents.push(component);
+    return component;
+};
+
+GameScreen.prototype.registerExternalComponent = function(screenComponent,parentNodeID) {
+    this._externalComponents.push({
         component: screenComponent,
         parentNodeID: parentNodeID
     });
@@ -211,7 +232,7 @@ GameScreen.prototype.addExternalComponent = function(screenComponent,parentNode)
  */
 GameScreen.prototype.updateStatus = function(newStatus) {
     if (this._status!==null) {
-        this._status.innerHTML=newStatus;
+        this._status.setContent(newStatus);
     } else {
         alert(newStatus);
     }
@@ -290,8 +311,8 @@ GameScreenWithCanvases.prototype.constructor=GameScreenWithCanvases;
 /**
  * Stops the render loop and nulls out the components.
  */
-GameScreenWithCanvases.prototype.closePage = function() {
-    GameScreen.prototype.closePage.call(this);
+GameScreenWithCanvases.prototype.removeFromPage = function() {
+    GameScreen.prototype.removeFromPage.call(this);
     
     this.stopRenderLoop();
     
@@ -303,6 +324,11 @@ GameScreenWithCanvases.prototype.closePage = function() {
     this._sceneCanvasBindings = new Array();
     
     game.graphicsContext.resourceManager.clearResourceContextBindings();
+};
+
+GameScreenWithCanvases.prototype.hide = function() {
+    GameScreen.prototype.hide.call(this);
+    this.stopRenderLoop();
 };
 
 /**
@@ -328,7 +354,7 @@ GameScreenWithCanvases.prototype._initializeComponents = function() {
  * @returns {ScreenCanvas}
  */
 GameScreenWithCanvases.prototype.getScreenCanvas = function(name) {
-    return this._canvases[name];
+    return this._canvases[this._name+"_"+name];
 }; 
 
 /**
@@ -456,35 +482,25 @@ GameScreenWithCanvases.prototype.resizeCanvases = function() {
 function BattleScreen(name,source) {
     GameScreenWithCanvases.call(this,name,source);
         
-    this._stats=null;
-    this._ui=null;
+    this._stats = this.registerSimpleComponent("stats");
+    this._ui = this.registerSimpleComponent("ui");
     
-    this._loadingBox = this.registerComponent(new LoadingBox("loadingBox","loadingbox.html"));
-    this._infoBox = this.registerComponent(new InfoBox("infoBox","infobox.html"));
+    this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html"));
+    this._infoBox = this.registerExternalComponent(new InfoBox(name+"_infoBox","infobox.html"));
+    
+    this._level = null;
+    this._simulationLoop = null;
 };
 
 BattleScreen.prototype=new GameScreenWithCanvases();
 BattleScreen.prototype.constructor=BattleScreen;
 
-/**
- * Nulls out the components.
- */
-BattleScreen.prototype.closePage = function() {
-    GameScreenWithCanvases.prototype.closePage.call(this);
-    
-    this._stats = null;
-    this._ui = null;
-};
-
-/**
- * Initializes the components of the parent class, then the additional ones for
- * this class.
- */
-BattleScreen.prototype._initializeComponents = function() {
-    GameScreenWithCanvases.prototype._initializeComponents.call(this);
-    
-    this._stats = document.getElementById("stats");
-    this._ui= document.getElementById("ui");
+BattleScreen.prototype.hide = function() {
+    GameScreenWithCanvases.prototype.hide.call(this);
+    clearInterval(this._simulationLoop);
+    this._simulationLoop = null;
+    this._level = null;
+    game.graphicsContext.scene = null;
 };
 
 /**
@@ -523,28 +539,28 @@ BattleScreen.prototype.updateStatus = function(newStatus,newProgress) {
  * Hides the stats (FPS, draw stats) component.
  */
 BattleScreen.prototype.hideStats = function() {
-    this._stats.style.display="none";
+    this._stats.hide();
 };
 
 /**
  * Hides the UI (information about controlled spacecraft) component.
  */
 BattleScreen.prototype.hideUI = function() {
-    this._ui.style.display="none";
+    this._ui.hide();
 };
 
 /**
  * Shows the stats (FPS, draw stats) component.
  */
 BattleScreen.prototype.showStats = function() {
-    this._stats.style.display="block";
+    this._stats.show();
 };
 
 /**
  * Shows the UI (information about controlled spacecraft) component.
  */
 BattleScreen.prototype.showUI = function() {
-    this._ui.style.display="block";
+    this._ui.show();
 };
 
 /**
@@ -558,7 +574,7 @@ BattleScreen.prototype.showMessage = function(message) {
 
 BattleScreen.prototype.render = function() {
     GameScreenWithCanvases.prototype.render.call(this);
-    this._stats.innerHTML = this.getFPS()+"<br/>"+this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles();
+    this._stats.setContent(this.getFPS()+"<br/>"+this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
 };
 
 BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
@@ -569,19 +585,19 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
     this._infoBox.hide();
     this.resizeCanvases(); 
     
-    var test_level = new Level();
-    game.logicContext.level = test_level;
+    this._level = new Level();
+    game.logicContext.level = this._level;
     
     var self = this;
     
-    test_level.onLoad = function () {
+    this._level.onLoad = function () {
         self.updateStatus("loading additional configuration...", 5);
-        test_level.addRandomShips("human",{falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
+        self._level.addRandomShips("human",{falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
         
         self.updateStatus("building scene...",10);
         var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
         game.graphicsContext.scene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
-        test_level.buildScene(game.graphicsContext.scene);
+        self._level.buildScene(game.graphicsContext.scene);
 
         self.updateStatus("loading graphical resources...",15);
         game.graphicsContext.resourceManager.onResourceLoad = function(resourceName,totalResources,loadedResources) {
@@ -591,7 +607,7 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
         game.graphicsContext.resourceManager.executeWhenReady(function() { 
             self.updateStatus("initializing WebGL...",75);
             self.bindSceneToCanvas(game.graphicsContext.scene,self.getScreenCanvas("battleCanvas"));
-            test_level.addProjectileResourcesToContext(self.getScreenCanvas("battleCanvas").getManagedContext());
+            self._level.addProjectileResourcesToContext(self.getScreenCanvas("battleCanvas").getManagedContext());
             self.updateStatus("",100);
             self.showMessage("Ready!");
             self.getLoadingBox().hide();
@@ -604,19 +620,19 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
 
         game.controlContext.activate();
 
-        prevDate = new Date();
+        var prevDate = new Date();
         
-        battleSimulationLoop = setInterval(function ()
+        self._simulationLoop = setInterval(function ()
         {
-            curDate = new Date();
-            test_level.tick(curDate - prevDate);
+            var curDate = new Date();
+            self._level.tick(curDate - prevDate);
             prevDate = curDate;
-            control(game.graphicsContext.scene, test_level, game.controlContext.globalActions);
+            control(game.graphicsContext.scene, self._level, game.controlContext.globalActions);
         }, 1000 / freq);
     };
     
     self.updateStatus("loading level information...",0);
-    test_level.requestLoadFromFile(levelSourceFilename);
+    this._level.requestLoadFromFile(levelSourceFilename);
 };
 
 /**
@@ -631,16 +647,25 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
 function DatabaseScreen(name,source) {
     GameScreenWithCanvases.call(this,name,source);
     
-    this._loadingBox = this.registerComponent(new LoadingBox("loadingBox","loadingbox.html"));
+    this._itemName = this.registerSimpleComponent("itemName");
+    this._itemType = this.registerSimpleComponent("itemType");
+    this._itemDescription = this.registerSimpleComponent("itemDescription");
     
-    this._itemName = null;
-    this._itemType = null;
-    this._itemDescription = null;
+    this._backButton = this.registerSimpleComponent("backButton");
+    this._prevButton = this.registerSimpleComponent("prevButton");
+    this._nextButton = this.registerSimpleComponent("nextButton");
+    this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html"));
     
     this._scene = null;
     this._item = null;
     this._itemIndex = null;
     this._animationLoop = null;
+    this._revealLoop = null;
+    this._rotationLoop = null;
+    this._solidModel = null;
+    this._wireframeModel = null;
+    
+    this._mousePos = null;
 };
 
 DatabaseScreen.prototype=new GameScreenWithCanvases();
@@ -649,20 +674,15 @@ DatabaseScreen.prototype.constructor=DatabaseScreen;
 /**
  * Nulls out the components.
  */
-DatabaseScreen.prototype.closePage = function() {
-    GameScreenWithCanvases.prototype.closePage.call(this);
+DatabaseScreen.prototype.removeFromPage = function() {
+    GameScreenWithCanvases.prototype.removeFromPage.call(this);
         
-    this._itemName = null;
-    this._itemType = null;
-    this._itemDescription = null;
-    
     this._itemLength = null;
     this._itemFront = null;
     this._revealState = null;
     
-    clearInterval(this._animationLoop);
-    this._revealLoop = null;
-    this._rotationLoop = null;
+    this.stopRevealLoop();
+    this.stopRotationLoop();
     this._item = null;
     this._itemIndex = null;
     this._scene = null;
@@ -681,8 +701,7 @@ DatabaseScreen.prototype._initializeComponents = function() {
     
     var self = this;
     
-    var backButton = document.getElementById("backButton");
-    backButton.addEventListener("click",function() {
+    this._backButton.getElement().onclick = function() {
         self.stopRevealLoop();
         self.stopRotationLoop();
         if(self.isSuperimposed()) {
@@ -690,21 +709,13 @@ DatabaseScreen.prototype._initializeComponents = function() {
         } else {
             game.setCurrentScreen('mainMenu');
         }
-    });
-    var prevButton = document.getElementById("prevButton");
-    prevButton.addEventListener("click",function(){
+    };
+    this._prevButton.getElement().onclick = function(){
         self.selectPreviousShip();
-    });
-    var nextButton = document.getElementById("nextButton");
-    nextButton.addEventListener("click",function(){
+    };
+    this._nextButton.getElement().onclick = function(){
         self.selectNextShip();
-    });
-    
-    this._itemName = document.getElementById("itemName");
-    this._itemType = document.getElementById("itemType");
-    this._itemDescription = document.getElementById("itemDescription");
-    
-    this.initializeCanvas();
+    };
 };
 
 /**
@@ -775,13 +786,28 @@ DatabaseScreen.prototype.stopRotationLoop = function() {
     this._rotationLoop = null;
 };
 
+DatabaseScreen.prototype.show = function() {
+    GameScreenWithCanvases.prototype.show.call(this);
+    this.executeWhenReady(function() {
+        this.initializeCanvas();
+    });
+};
+
+DatabaseScreen.prototype.hide = function() {
+    GameScreenWithCanvases.prototype.hide.call(this);
+    this.executeWhenReady(function() {
+        this._scene.clearObjects();
+        this.render();
+    });
+};
+
 DatabaseScreen.prototype.initializeCanvas = function() {
     var self = this;
     
     this._loadingBox.show();
     this.updateStatus("initializing database...", 0);
         
-    this.resizeCanvas("databaseCanvas");
+    this.resizeCanvas(this._name+"_databaseCanvas");
     var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
     // create a new scene and add a directional light source which will not change
     // while different objects are shown
@@ -867,71 +893,73 @@ DatabaseScreen.prototype.loadShip = function() {
     this._scene.clearObjects();
     this.render();
     
-    // display the data that can be displayed right away, and show loading
-    // for the rest
-    var shipClass = game.logicContext.getSpacecraftClasses()[this._itemIndex];
-    this._itemName.innerHTML = shipClass.getFullName();
-    this._itemType.innerHTML = shipClass.getSpacecraftType().getFullName();
-    this._itemDescription.innerHTML = "Loading...";
-        
-    // create a ship that can be used to add the models (ship with default weapons
-    // to the scene
-    this._item = new Spacecraft(
-        shipClass,
-        "",
-        identityMatrix4(),
-        identityMatrix4(),
-        "ai",
-        "default"
-        );
-    // add the ship to the scene in triangle drawing mode
-    this._solidModel = this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,false);
-    // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-    this._solidModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("simpleReveal"));
-    // set the necessary uniform functions for the reveal shader
-    this._solidModel.setUniformValueFunction("u_revealFront",function() { return true; });
-    this._solidModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState-1.0)*self._itemLength*1.1); });
-    this._solidModel.setUniformValueFunction("u_revealTransitionLength",function() { return self._itemLength/10; });
-    // add the ship to the scene in line drawing mode as well
-    this._wireframeModel = this._item.addToScene(this._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,true);
-    // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-    this._wireframeModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("oneColorReveal"));
-    // set the necessary uniform functions for the one colored reveal shader
-    this._wireframeModel.setUniformValueFunction("u_color",function() { return [0.0,1.0,0.0,1.0]; });
-    this._wireframeModel.setUniformValueFunction("u_revealFront",function() { return (self._revealState<=1.0); });
-    this._wireframeModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState>1.0?(self._revealState-1.0):self._revealState)*self._itemLength*1.1); });
-    this._wireframeModel.setUniformValueFunction("u_revealTransitionLength",function() { return (self._revealState<=1.0)?(self._itemLength/10):0; });
-    
-    // set the callback for when the potentially needed additional file resources have 
-    // been loaded
     var self = this;
-    game.graphicsContext.resourceManager.executeWhenReady(function() {
-        // get the length of the ship based on the length of its model (1 unit in
-        // model space equals to 20 cm)
-        self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
-        self._itemFront = self._item.visualModel.modelsWithLOD[0].model.getMaxY();
-        self._itemDescription.innerHTML = 
-            shipClass.getDescription()+"<br/>"+
-            "<br/>"+
-            "Length: "+(((self._itemLength*0.2)<100)?(self._itemLength*0.2).toPrecision(3):Math.round(self._itemLength*0.2))+" m<br/>"+
-            "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+
-            "Thrusters: "+shipClass.thrusterSlots.length;
-        // this will create the GL context if needed or update it with the new
-        // data if it already exists
-        self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
-        // set the camera position so that the whole ship nicely fits into the picture
-        self._scene.activeCamera.setPositionMatrix(translationMatrix(0,0,-self._item.visualModel.getScaledSize()));
-        
-        self._revealState = 0.0;
-        
-        self.startRenderLoop(1000/60);
-        self.startRevealLoop();
-        self.startRotationLoop();
-        document.body.style.cursor='default';
+    game.logicContext.executeWhenReady(function() {
+        // display the data that can be displayed right away, and show loading
+        // for the rest
+        var shipClass = game.logicContext.getSpacecraftClasses()[self._itemIndex];
+        self._itemName.setContent(shipClass.getFullName());
+        self._itemType.setContent(shipClass.getSpacecraftType().getFullName());
+        self._itemDescription.setContent("Loading...");
+
+        // create a ship that can be used to add the models (ship with default weapons
+        // to the scene
+        self._item = new Spacecraft(
+            shipClass,
+            "",
+            identityMatrix4(),
+            identityMatrix4(),
+            "ai",
+            "default"
+            );
+        // add the ship to the scene in triangle drawing mode
+        self._solidModel = self._item.addToScene(self._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,false);
+        // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
+        self._solidModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("simpleReveal"));
+        // set the necessary uniform functions for the reveal shader
+        self._solidModel.setUniformValueFunction("u_revealFront",function() { return true; });
+        self._solidModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState-1.0)*self._itemLength*1.1); });
+        self._solidModel.setUniformValueFunction("u_revealTransitionLength",function() { return self._itemLength/10; });
+        // add the ship to the scene in line drawing mode as well
+        self._wireframeModel = self._item.addToScene(self._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,true);
+        // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
+        self._wireframeModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("oneColorReveal"));
+        // set the necessary uniform functions for the one colored reveal shader
+        self._wireframeModel.setUniformValueFunction("u_color",function() { return [0.0,1.0,0.0,1.0]; });
+        self._wireframeModel.setUniformValueFunction("u_revealFront",function() { return (self._revealState<=1.0); });
+        self._wireframeModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState>1.0?(self._revealState-1.0):self._revealState)*self._itemLength*1.1); });
+        self._wireframeModel.setUniformValueFunction("u_revealTransitionLength",function() { return (self._revealState<=1.0)?(self._itemLength/10):0; });
+
+        // set the callback for when the potentially needed additional file resources have 
+        // been loaded
+        game.graphicsContext.resourceManager.executeWhenReady(function() {
+            // get the length of the ship based on the length of its model (1 unit in
+            // model space equals to 20 cm)
+            self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
+            self._itemFront = self._item.visualModel.modelsWithLOD[0].model.getMaxY();
+            self._itemDescription.setContent( 
+                shipClass.getDescription()+"<br/>"+
+                "<br/>"+
+                "Length: "+(((self._itemLength*0.2)<100)?(self._itemLength*0.2).toPrecision(3):Math.round(self._itemLength*0.2))+" m<br/>"+
+                "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+
+                "Thrusters: "+shipClass.thrusterSlots.length);
+            // this will create the GL context if needed or update it with the new
+            // data if it already exists
+            self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
+            // set the camera position so that the whole ship nicely fits into the picture
+            self._scene.activeCamera.setPositionMatrix(translationMatrix(0,0,-self._item.visualModel.getScaledSize()));
+
+            self._revealState = 0.0;
+
+            self.startRenderLoop(1000/60);
+            self.startRevealLoop();
+            self.startRotationLoop();
+            document.body.style.cursor='default';
+        });
+
+        // initiate the loading of additional file resources if they are needed
+        game.graphicsContext.resourceManager.requestResourceLoad();
     });
-    
-    // initiate the loading of additional file resources if they are needed
-    game.graphicsContext.resourceManager.requestResourceLoad();
 };
 
 /**
@@ -945,9 +973,11 @@ DatabaseScreen.prototype.loadShip = function() {
 function GraphicsScreen(name,source) {
     GameScreen.call(this,name,source);
     
-    this._antialiasingSelector = this.registerComponent(new Selector("aaSelector","selector.html","Anti-aliasing:",["on","off"]),"settingsDiv");
-    this._filteringSelector = this.registerComponent(new Selector("filteringSelector","selector.html","Texture filtering:",["bilinear","trilinear","anisotropic"]),"settingsDiv");
-    this._lodSelector = this.registerComponent(new Selector("lodSelector","selector.html","Model details:",["very low","low","medium","high","very high"]),"settingsDiv");
+    this._backButton = this.registerSimpleComponent("backButton");
+    this._defaultsButton = this.registerSimpleComponent("defaultsButton");
+    this._antialiasingSelector = this.registerExternalComponent(new Selector(name+"_aaSelector","selector.html","Anti-aliasing:",["on","off"]),"settingsDiv");
+    this._filteringSelector = this.registerExternalComponent(new Selector(name+"_filteringSelector","selector.html","Texture filtering:",["bilinear","trilinear","anisotropic"]),"settingsDiv");
+    this._lodSelector = this.registerExternalComponent(new Selector(name+"_lodSelector","selector.html","Model details:",["very low","low","medium","high","very high"]),"settingsDiv");
 };
 
 GraphicsScreen.prototype=new GameScreen();
@@ -957,8 +987,7 @@ GraphicsScreen.prototype._initializeComponents = function() {
     GameScreen.prototype._initializeComponents.call(this);
     
     var self = this;
-    var backButton = document.getElementById("backButton");
-    backButton.addEventListener("click",function(){
+    this._backButton.getElement().onclick = function(){
         game.graphicsContext.setAntialiasing((self._antialiasingSelector.getSelectedValue()==="on"));
         game.graphicsContext.setFiltering(self._filteringSelector.getSelectedValue());
         game.graphicsContext.setMaxLOD(self._lodSelector.getSelectedIndex());
@@ -967,12 +996,11 @@ GraphicsScreen.prototype._initializeComponents = function() {
         } else {
             game.setCurrentScreen('settings');
         }
-    });
-    var defaultsButton = document.getElementById("defaultsButton");
-    defaultsButton.addEventListener("click",function(){
+    };
+    this._defaultsButton.getElement().onclick = function(){
         game.graphicsContext.restoreDefaults();
         self.updateValues();
-    });
+    };
     
     this.updateValues();
 };
@@ -994,7 +1022,8 @@ GraphicsScreen.prototype.updateValues = function() {
  */
 function ControlsScreen(name,source) {
     GameScreen.call(this,name,source);
-    
+    this._backButton = this.registerSimpleComponent("backButton");
+    this._defaultsButton = this.registerSimpleComponent("defaultsButton");
     /**
      * The name of the action currently being set (to get triggered by a new 
      * key). If null, the user is not setting any actions.
@@ -1142,21 +1171,19 @@ ControlsScreen.prototype._initializeComponents = function() {
     GameScreen.prototype._initializeComponents.call(this);
     
     var self = this;
-    var backButton = document.getElementById("backButton");
-    backButton.addEventListener("click",function(){
+    this._backButton.getElement().onclick = function(){
         self.stopKeySetting();
         if(game.getCurrentScreen().isSuperimposed()) {
             game.closeSuperimposedScreen();
         } else {
             game.setCurrentScreen('settings');
         }
-    });
-    var defaultsButton = document.getElementById("defaultsButton");
-    defaultsButton.addEventListener("click",function(){
+    };
+    this._defaultsButton.getElement().onclick = function(){
         self.stopKeySetting();
         game.controlContext.restoreDefaults();
         self.generateTable();
-    });
+    };
     
     this.generateTable();
 };
@@ -1168,7 +1195,7 @@ ControlsScreen.prototype._initializeComponents = function() {
  */
 ControlsScreen.prototype.generateTable = function() {
     var self = this;
-    var keyBindingsTable = document.getElementById("keyBindingsTable");
+    var keyBindingsTable = document.getElementById(this._name+"_keyBindingsTable");
     keyBindingsTable.innerHTML = "";
     var keyBindings = game.controlContext.getActionExplanationsAndKeys();
     var trElement = null;
@@ -1221,7 +1248,7 @@ function MenuScreen(name,source,menuOptions,menuContainerID) {
      * @name MenuScreen#_menuComponent 
      * @type MenuComponent
      */
-    this._menuComponent = this.registerComponent(new MenuComponent("menu","menucomponent.html",this._menuOptions),this._menuContainerID);
+    this._menuComponent = this.registerExternalComponent(new MenuComponent(name+"_menu","menucomponent.html",this._menuOptions),this._menuContainerID);
 };
 
 MenuScreen.prototype=new GameScreen();

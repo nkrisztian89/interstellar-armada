@@ -1030,6 +1030,8 @@ function Player(name) {
 }
 
 function LogicContext() {
+    Resource.call(this);
+    
     this._classesSourceFileName = null;
     
     this.skyboxClasses=new Array();
@@ -1041,6 +1043,9 @@ function LogicContext() {
     this.projectileClasses=new Array();
     this.propulsionClasses=new Array();
 }
+
+LogicContext.prototype = new Resource();
+LogicContext.prototype.constructor = LogicContext;
 
 LogicContext.prototype.loadSkyboxClasses = function(classesXML) {
 	var result=new Array();
@@ -1239,6 +1244,7 @@ LogicContext.prototype.requestClassesLoad = function() {
         if (request.readyState === 4) {
             var classesXML = this.responseXML;
             self.loadClassesFromXML(classesXML);
+            self.setToReady();
         }
     };
     request.send(null);

@@ -190,7 +190,7 @@ function initialize() {
                     caption: "About", 
                     action: function(){ game.setCurrentScreen("about"); } 
                 }
-            ],"menuContainer"));
+            ],"menuContainer"),true);
         game.addScreen(new BattleScreen("battle","battle.html"));
         game.addScreen(new DatabaseScreen("database","database.html"));
         game.addScreen(new MenuScreen("settings","index.html",
@@ -227,7 +227,6 @@ function initialize() {
                 {
                     caption: "Quit to main menu",
                     action: function () { 
-                        clearInterval(battleSimulationLoop);
                         game.setCurrentScreen("mainMenu"); 
                     }
                 }

@@ -1155,7 +1155,7 @@ ManagedGLContext.prototype.addVertexBuffer = function(vertexBuffer) {
 ManagedGLContext.prototype.setupVertexBuffers = function() {
     if(this.isReadyToUse()===true) {
         return;
-    }    
+    }  
     var i,j;
     var vbName;
     

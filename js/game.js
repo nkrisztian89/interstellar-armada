@@ -5,22 +5,22 @@
  */
 
 /**********************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+ Copyright 2014 Krisztián Nagy
+ 
+ This file is part of Interstellar Armada.
+ 
+ Interstellar Armada is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ Interstellar Armada is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 /**
@@ -53,7 +53,7 @@ function Game() {
      * @default null
      */
     this._currentScreen = null;
-    
+
     /**
      * The graphics context of the game, that can be used to access and 
      * manipulate graphical resources.
@@ -75,7 +75,7 @@ function Game() {
      * @type ControlContext
      */
     this.controlContext = new KeyboardControlContext();
-    
+
     this.requestSettingsLoad();
 }
 
@@ -83,7 +83,7 @@ function Game() {
  * Notifies the user of an error that happened while running the game.
  * @param {String} message The message to show.
  */
-Game.prototype.showError = function(message) {
+Game.prototype.showError = function (message) {
     alert(message);
 };
 
@@ -93,7 +93,7 @@ Game.prototype.showError = function(message) {
  */
 Game.prototype.requestSettingsLoad = function () {
     var request = new XMLHttpRequest();
-    request.open('GET', getXMLFolder()+"settings.xml?123", true);
+    request.open('GET', getXMLFolder() + "settings.xml?123", true);
     var self = this;
     request.onreadystatechange = function () {
         if (request.readyState === 4) {
@@ -111,9 +111,21 @@ Game.prototype.requestSettingsLoad = function () {
 /**
  * Adds a new screen to the list that can be set as current later.
  * @param {GameScreen} screen The new game screen to be added.
+ * @param {Boolean} [replace=false] Wether to replace the current page content with this
+ * screen's content.
  */
-Game.prototype.addScreen = function(screen) {
-    this._screens[screen.getName()]=screen;
+Game.prototype.addScreen = function (screen, replace) {
+    if (replace === true) {
+        for (var screenName in this._screens) {
+            this._screens[screenName].removeFromPage();
+        }
+    }
+    this._screens[screen.getName()] = screen;
+    if (replace === true) {
+        screen.replacePageWithScreen();
+    } else {
+        screen.addScreenToPage();
+    }
 };
 
 /**
@@ -121,7 +133,7 @@ Game.prototype.addScreen = function(screen) {
  * @param {String} screenName
  * @returns {GameScreen}
  */
-Game.prototype.getScreen = function(screenName) {
+Game.prototype.getScreen = function (screenName) {
     return this._screens[screenName];
 };
 
@@ -136,20 +148,20 @@ Game.prototype.getScreen = function(screenName) {
  * @param {Number} [backgroundOpacity] The opacity of the background in case the
  * screen is set superimposed. @see GameScreen#superimposeOnPage
  */
-Game.prototype.setCurrentScreen = function(screenName,superimpose,backgroundColor,backgroundOpacity) {
+Game.prototype.setCurrentScreen = function (screenName, superimpose, backgroundColor, backgroundOpacity) {
     var i;
-    if((superimpose!==true)&&(this._currentScreen!==null)) {
-        this._currentScreen.closePage();
-        for(i=0;i<this._coveredScreens.length;i++) {
-            this._coveredScreens[i].closePage();
+    if ((superimpose !== true) && (this._currentScreen !== null)) {
+        this._currentScreen.hide();
+        for (i = 0; i < this._coveredScreens.length; i++) {
+            this._coveredScreens[i].hide();
         }
     }
     var screen = this.getScreen(screenName);
-    if(superimpose===true) {
+    if (superimpose === true) {
         this._coveredScreens.push(this._currentScreen);
-        screen.superimposeOnPage(backgroundColor,backgroundOpacity);
+        screen.superimposeOnPage(backgroundColor, backgroundOpacity);
     } else {
-        screen.buildPage();
+        screen.show();
     }
     this._currentScreen = screen;
 };
@@ -157,15 +169,15 @@ Game.prototype.setCurrentScreen = function(screenName,superimpose,backgroundColo
 /**
  * Closes the topmost superimposed screen, revealing the one below.
  */
-Game.prototype.closeSuperimposedScreen = function() {
-    this._currentScreen.closeSuperimposedPage();
-    this._currentScreen=this._coveredScreens.pop();
+Game.prototype.closeSuperimposedScreen = function () {
+    this._currentScreen.hide();
+    this._currentScreen = this._coveredScreens.pop();
 };
 
 /**
  * Gets the object corresponding to the currently set game screen.
  * @returns {GameScreen}
  */
-Game.prototype.getCurrentScreen = function() {
+Game.prototype.getCurrentScreen = function () {
     return this._currentScreen;
 };

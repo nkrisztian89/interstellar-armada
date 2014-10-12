@@ -1,5 +1,5 @@
 /* the canvas element where the game (WebGL) scene is rendered */
-canvas#battleCanvas {
+canvas.battleCanvas {
     width: 90%;
     height: 70%;
     border: 1px solid #333333;
@@ -10,7 +10,7 @@ canvas#battleCanvas {
     margin-bottom: 5px; 
 }
 
-p#stats {
+p.battleScreenStats {
     font-size: 9pt;
     border:1px solid #333333;
     width: 90%;
@@ -18,7 +18,7 @@ p#stats {
     margin-right: auto; 
 }
 
-p#ui {
+p.battleUI {
     font-size: 9pt; color: #ffffff;
     text-shadow: #88FF88 0 0 0.2em;
     background-color: #00AA00;

@@ -712,7 +712,7 @@ FighterController.prototype.reset = function() {
 };
 
 FighterController.prototype.control = function() {
-        document.getElementById('ui').innerHTML="";
+        document.getElementById('battle_ui').innerHTML="";
     
 	this.fireKeyBinding.checkAndExecute();
 	
@@ -740,7 +740,7 @@ FighterController.prototype.control = function() {
         // compansating for drift in compensated flight mode by firing side
         // thrusters + correcting to reach intended speed
 	if(this.flightMode===this.FM_COMPENSATED) {
-                document.getElementById('ui').innerHTML+="COMPENSATED flight<br/>";
+                document.getElementById('battle_ui').innerHTML+="COMPENSATED flight<br/>";
                 // checking X relative velocity component for side drift
 		if(relativeVelocityMatrix[12]<-0.0001) {
 			this.controlledEntity.addThrusterBurnCapped("slideRight",0.5,this.controlledEntity.getNeededBurnForSpeedChange(-relativeVelocityMatrix[12]));
@@ -756,14 +756,14 @@ FighterController.prototype.control = function() {
                 // correcting to reach intended speed
 		if(relativeVelocityMatrix[13]<this.intendedSpeed-0.0001) {
 			this.controlledEntity.addThrusterBurnCapped("forward",0.5,this.controlledEntity.getNeededBurnForSpeedChange(this.intendedSpeed-relativeVelocityMatrix[13]));
-                        //document.getElementById('ui').innerHTML+="[forward] ";
+                        //document.getElementById('battle_ui').innerHTML+="[forward] ";
 		} else if(relativeVelocityMatrix[13]>this.intendedSpeed+0.0001) {
 			this.controlledEntity.addThrusterBurnCapped("reverse",0.5,this.controlledEntity.getNeededBurnForSpeedChange(relativeVelocityMatrix[13]-this.intendedSpeed));
-                        //document.getElementById('ui').innerHTML+="[reverse] ";
+                        //document.getElementById('battle_ui').innerHTML+="[reverse] ";
 		}
 	} else
         {
-            document.getElementById('ui').innerHTML+="FREE flight<br/>";
+            document.getElementById('battle_ui').innerHTML+="FREE flight<br/>";
         }
         
         // controlling yaw
@@ -864,7 +864,7 @@ FighterController.prototype.control = function() {
 					)*physicalModel.mass/2/this.controlledEntity.propulsion.class.angularThrust/10));
 	}
         
-        document.getElementById('ui').innerHTML+=
+        document.getElementById('battle_ui').innerHTML+=
                 "speed: "+vector3Length(getPositionVector(physicalModel.velocityMatrix)).toFixed(3)+" m/s"+
                 "<br/>"+
                 "forward speed: "+relativeVelocityMatrix[13].toFixed(3)+" m/s"+
