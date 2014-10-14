@@ -801,26 +801,28 @@ Shader.prototype.requestLoadFromFile = function() {
     if(this.isReadyToUse()===false) {
         var self = this;
         var requestV = new XMLHttpRequest();
-        requestV.open('GET', this._vertexShaderFileName+"?1.0", true);
-        requestV.onreadystatechange = function() {
-            if(requestV.readyState===4) {
-                self._vertexShaderSource = requestV.responseText;
-                if(self._fragmentShaderSource!==null) {
-                    self.setToReady();
-                }
+        requestV.onload = function() {
+            self._vertexShaderSource = requestV.responseText;
+            if(self._fragmentShaderSource!==null) {
+                self.setToReady();
             }
         };
+        // override the mime type to avoid error messages in Firefox developer
+        // consol when it tries to parse as XML
+        requestV.overrideMimeType('text/plain; charset=utf-8');
+        requestV.open('GET', this._vertexShaderFileName+"?1.0", true);
         requestV.send(null);
         var requestF = new XMLHttpRequest();
-        requestF.open('GET', this._fragmentShaderFileName+"?1.0", true);
-        requestF.onreadystatechange = function() {
-            if(requestF.readyState===4) {
-                self._fragmentShaderSource = requestF.responseText;
-                if(self._vertexShaderSource!==null) {
-                    self.setToReady();
-                }
+        requestF.onload = function() {
+            self._fragmentShaderSource = requestF.responseText;
+            if(self._vertexShaderSource!==null) {
+                self.setToReady();
             }
         };
+        // override the mime type to avoid error messages in Firefox developer
+        // consol when it tries to parse as XML
+        requestF.overrideMimeType('text/plain; charset=utf-8');
+        requestF.open('GET', this._fragmentShaderFileName+"?1.0", true);
         requestF.send(null);
     }
 };

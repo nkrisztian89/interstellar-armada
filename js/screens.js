@@ -485,8 +485,8 @@ function BattleScreen(name,source) {
     this._stats = this.registerSimpleComponent("stats");
     this._ui = this.registerSimpleComponent("ui");
     
-    this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html"));
-    this._infoBox = this.registerExternalComponent(new InfoBox(name+"_infoBox","infobox.html"));
+    this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html","loadingbox.css"));
+    this._infoBox = this.registerExternalComponent(new InfoBox(name+"_infoBox","infobox.html","infobox.css"));
     
     this._level = null;
     this._simulationLoop = null;
@@ -654,7 +654,7 @@ function DatabaseScreen(name,source) {
     this._backButton = this.registerSimpleComponent("backButton");
     this._prevButton = this.registerSimpleComponent("prevButton");
     this._nextButton = this.registerSimpleComponent("nextButton");
-    this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html"));
+    this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html","loadingbox.css"));
     
     this._scene = null;
     this._item = null;
@@ -975,9 +975,9 @@ function GraphicsScreen(name,source) {
     
     this._backButton = this.registerSimpleComponent("backButton");
     this._defaultsButton = this.registerSimpleComponent("defaultsButton");
-    this._antialiasingSelector = this.registerExternalComponent(new Selector(name+"_aaSelector","selector.html","Anti-aliasing:",["on","off"]),"settingsDiv");
-    this._filteringSelector = this.registerExternalComponent(new Selector(name+"_filteringSelector","selector.html","Texture filtering:",["bilinear","trilinear","anisotropic"]),"settingsDiv");
-    this._lodSelector = this.registerExternalComponent(new Selector(name+"_lodSelector","selector.html","Model details:",["very low","low","medium","high","very high"]),"settingsDiv");
+    this._antialiasingSelector = this.registerExternalComponent(new Selector(name+"_aaSelector","selector.html","selector.css","Anti-aliasing:",["on","off"]),"settingsDiv");
+    this._filteringSelector = this.registerExternalComponent(new Selector(name+"_filteringSelector","selector.html","selector.css","Texture filtering:",["bilinear","trilinear","anisotropic"]),"settingsDiv");
+    this._lodSelector = this.registerExternalComponent(new Selector(name+"_lodSelector","selector.html","selector.css","Model details:",["very low","low","medium","high","very high"]),"settingsDiv");
 };
 
 GraphicsScreen.prototype=new GameScreen();
@@ -996,10 +996,12 @@ GraphicsScreen.prototype._initializeComponents = function() {
         } else {
             game.setCurrentScreen('settings');
         }
+        return false;
     };
     this._defaultsButton.getElement().onclick = function(){
         game.graphicsContext.restoreDefaults();
         self.updateValues();
+        return false;
     };
     
     this.updateValues();
@@ -1178,11 +1180,13 @@ ControlsScreen.prototype._initializeComponents = function() {
         } else {
             game.setCurrentScreen('settings');
         }
+        return false;
     };
     this._defaultsButton.getElement().onclick = function(){
         self.stopKeySetting();
         game.controlContext.restoreDefaults();
         self.generateTable();
+        return false;
     };
     
     this.generateTable();

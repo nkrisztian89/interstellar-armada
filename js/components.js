@@ -1,6 +1,8 @@
 /**
- * @fileOverview This file defines the {@link ScreenComponent} class and its 
- * descendant classes.
+ * @fileOverview This file defines the {@link SimpleComponent}, 
+ * {@link ScreenComponent} and its descendant classes, which provide reusable
+ * UI functionality for the HTML5 parts of the UI, that can be added to {@link 
+ * GameScreen}s.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
  * @version 0.1-dev
  */
@@ -24,99 +26,227 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"use strict";
+
 /**
- * 
- * @param {String} name
+ * Creates a simple component object.
+ * @class A wrapper class around a regular HTML5 element, that makes it easier
+ * to integrate its functionality into a {@link GameScreen}. Provides several
+ * methods that are called automatically by the screen at certain points as well
+ * as some that can be called on-demand and only serve to make code more readable.
+ * @param {String} name The name of the component. The id attribute of the HTML5
+ * element must have the same value.
  * @returns {SimpleComponent}
  */
 function SimpleComponent(name) {
+    /**
+     * The name of the component. The id attribute of the HTML5 element must 
+     * have the same value.
+     * @name SimpleComponent#_name
+     * @type String
+     */
     this._name = name;
+    /**
+     * The DOM object of the wrapped HTML element.
+     * @name SimpleComponent#_element
+     * @type HTMLElement
+     */
     this._element = null;
+    /**
+     * The (initial) display CSS property of the HTML element.
+     * @name SimpleComponent#_displayStyle
+     * @type String
+     */
     this._displayStyle = null;
 };
 
+/**
+ * Returns the wrapped HTML element.
+ * @returns {HTMLElement}
+ */
 SimpleComponent.prototype.getElement = function() {
     return this._element;
 };
 
+/**
+ * Sets the inner HTML text content of the wrapped element.
+ * @param {String} newContent
+ */
 SimpleComponent.prototype.setContent = function(newContent) {
     this._element.innerHTML = newContent;
 };
 
+/**
+ * Grabs the element and the display style from the current HTML document. Needs
+ * to be called after the wrapped element has been appended to the document.
+ * (automatically called by {@link GameScreen})
+ */
 SimpleComponent.prototype.initComponent = function() {
     this._element = document.getElementById(this._name);
     this._displayStyle = this._element.style.display;
 };
 
+/**
+ * Nulls the element and the display style. Needs te be called if the element
+ * has been removed from the current document (automatically called by {@link
+ * GameScreen}).
+ */
 SimpleComponent.prototype.resetComponent = function() {
     this._element = null;
     this._displayStyle = null;
 };
 
+/**
+ * Hides the wrapped HTML element by setting its display CSS property.
+ */
 SimpleComponent.prototype.hide = function() {
     this._element.style.display = "none";
 };
 
+/**
+ * Shows (reveals) the wrapped HTML element by setting its display CSS property.
+ */
 SimpleComponent.prototype.show = function() {
     this._element.style.display = this._displayStyle;
 };
 
 /**
- * Defines a screen component object.
+ * Creates an external component object.
  * @class A reusable component that consist of HTML elements (a fragment of a 
- * HTML document) and can be appended to game screens. Various components have
- * to be the descendants of this class, and implement their own various methods.
+ * HTML document, stored in an external file, hence the name) and can be appended 
+ * to {@link GameScreen}s. Specific components can be the descendants of this 
+ * class, and implement their own various methods.
  * @extends Resource
- * @param {String} name The name of the component to be identified by.
- * @param {String} source The filename of the HTML document where the structure
+ * @param {String} name The name of the component to be identified by. Names
+ * must be unique within one {@link GameScreen}.
+ * @param {String} htmlFilename The filename of the HTML document where the structure
  * of the component should be defined. The component will be loaded as the first
  * element (and all its children) inside the body tag of this file.
- * @returns {ScreenComponent}
+ * @param {String} [cssFilename] The filename of the CSS document which contains
+ * styling rules for the HTML elements of this component.
+ * @returns {ExternalComponent}
  */
-function ScreenComponent(name,source) {
+function ExternalComponent(name,htmlFilename,cssFilename) {
     Resource.call(this);
-    
-    this._name=name;
-    this._source=source;
-    
+    /**
+     * The name of the component to be identified by.
+     * @name ExternalComponent#name
+     * @type String
+     */
+    this._name = name;
+    /**
+     * The filename of the HTML document where the structure of the component 
+     * should be defined.
+     * @name ExternalComponent#_source
+     * @type String
+     */
+    this._source = htmlFilename;
+    /**
+     * The DOM model of the structure of this element.
+     * @name ExternalComponent#_model
+     * @type HTMLDocument
+     */
     this._model=null;
-    
+    /**
+     * The root HTML element of the structure of this component.
+     * @name ExternalComponent#_rootElement
+     * @type HTMLElement
+     */
     this._rootElement = null;
+    /**
+     * The initial value of the CSS display property of the root element. Store 
+     * to enable us to restore it after hiding it with display: none.
+     * @name ExternalComponent#_rootElementDefaultDisplayMode
+     * @type String
+     */
     this._rootElementDefaultDisplayMode = null;
-    
-    // function to execute when the model is loaded
+    /**
+     * A flag that marks whether loading the correspoding CSS stylesheet has 
+     * finished.
+     * @name ExternalComponent#_cssLoaded
+     * @type Boolean
+     */
+    this._cssLoaded = null;
+    /**
+     * A function to be executed automatically when the model is loaded from the 
+     * external HTML file. Private, as this is automatically set to initialization
+     * in case that is attempted before model load. The component itself becomes
+     * usable after the initialization is completed as well, therefore the ready
+     * state is set to true at that point, and actions can be queued by external
+     * objects to be executed at that point, by executeWhenReady, since this
+     * class is a subclass of {@link Resource}.
+     * @name ExternalComponent#_onModelLoad
+     * @type Function
+     */ 
     this._onModelLoad = function() {};
-    
-    // source will be undefined when setting the prototypes for inheritance
-    if(source!==undefined) {
-        this.requestModelLoad();
+    /**
+     * The array of contained simple components. The components in this array
+     * are automatically managed (initialization and reset).
+     * @name ExternalComponent#_simpleComponents
+     * @type SimpleComponent[]
+     */
+    this._simpleComponents = new Array();
+    // Subclasses will call this constructor to set their prototype without any
+    // parameters, therefore make sure we don't attempt to load from "undefined"
+    // source.
+    if(htmlFilename !== undefined) {
+        this.requestModelLoad(cssFilename);
     }
 }
 
-ScreenComponent.prototype = new Resource();
-ScreenComponent.prototype.constructor = ScreenComponent;
+ExternalComponent.prototype = new Resource();
+ExternalComponent.prototype.constructor = ExternalComponent;
 
 /**
  * Initiates the asynchronous loading of the component's structure from the
- * external HTML file.
+ * external HTML file and potential styling from the external CSS style.
+ * @param {String} [cssFilename] The filename of the CSS document which contains
+ * styling rules for the HTML elements of this component.
  */
-ScreenComponent.prototype.requestModelLoad = function() {
-    // send an asynchronous request to grab the XML file containing the DOM of
-    // this component
-    var request = new XMLHttpRequest();
-    request.open('GET', location.pathname+getGameFolder("component")+this._source+"?123", true);
+ExternalComponent.prototype.requestModelLoad = function(cssFilename) {
     var self = this;
-    request.onreadystatechange = function() {
-            if(request.readyState===4) {
-                self._model = document.implementation.createHTMLDocument(self._name);
-                self._model.documentElement.innerHTML = this.responseText;
-                var namedElements = self._model.body.querySelectorAll("[id]");
-                for(var i = 0; i<namedElements.length; i++) {
-                    namedElements[i].setAttribute("id",self._name+"_"+namedElements[i].getAttribute("id"));
-                }
+    // If specified, add a <link> tag pointing to the CSS file containing the 
+    // styling of this component. Also check if the CSS file has already been 
+    // linked, and only add it if not.
+    if((cssFilename !== undefined) && (document.head.querySelectorAll("link[href='"+getGameFolder("css")+cssFilename+"?123']").length ===0)) {
+        this._cssLoaded = false;
+        var cssLink = document.createElement("link");
+        cssLink.setAttribute("rel","stylesheet");
+        cssLink.setAttribute("type","text/css");
+        cssLink.onload = function() {
+            self._cssLoaded = true;
+            if(self._model !== null) {
                 self._onModelLoad();
             }
         };
+        cssLink.href = getGameFolder("css")+cssFilename+"?123";
+        document.head.appendChild(cssLink);
+    } else {
+        this._cssLoaded = true;
+    }
+    // send an asynchronous request to grab the HTML file containing the DOM of
+    // this component
+    var request = new XMLHttpRequest();
+    request.onload = function() {
+        self._model = document.implementation.createHTMLDocument(self._name);
+        self._model.documentElement.innerHTML = this.responseText;
+        // All elements with an "id" attribute within this structure have to
+        // be renamed to make sure their id does not conflict with other elements
+        // in the main document (such as elements of another instance of the
+        // same external component), when they are appended. Therefore prefix
+        // their id with the name of this component. (which is unique within
+        // a game screen, and is prefixed with the name of the game screen,
+        // which is uniqe within the game, thus fulfilling the requirement of
+        // overall uniqueness)
+        var namedElements = self._model.body.querySelectorAll("[id]");
+        for(var i = 0; i<namedElements.length; i++) {
+            namedElements[i].setAttribute("id",self._name+"_"+namedElements[i].getAttribute("id"));
+        }
+        if(self._cssLoaded === true) {
+            self._onModelLoad();
+        }
+    };
+    request.open('GET', location.pathname+getGameFolder("component")+this._source+"?123", true);
     request.send(null);
 };
 
@@ -125,7 +255,7 @@ ScreenComponent.prototype.requestModelLoad = function() {
  * @param {Node} [parentNode=document.body] The component will be appended 
  * as child of this node.
  */
-ScreenComponent.prototype.appendToPage = function(parentNode) {
+ExternalComponent.prototype.appendToPage = function(parentNode) {
     var self = this;
     if(!parentNode) {
         parentNode = document.body;
@@ -148,25 +278,46 @@ ScreenComponent.prototype.appendToPage = function(parentNode) {
 
 /**
  * Setting the properties that will be used to easier access DOM elements later.
- * In descendants, this method should be overloaded, adding the additional
- * components of the screen after calling this parent method.
+ * In subclasses, this method should be overloaded if custom properties need
+ * to be initialized (registered simple components are already imitialized here
+ * automatically.
  */
-ScreenComponent.prototype._initializeComponents = function() {
+ExternalComponent.prototype._initializeComponents = function() {
+    for (var i = 0; i < this._simpleComponents.length; i++) {
+        this._simpleComponents[i].initComponent();
+    }
 };
 
 /**
- * When the page is closed, references to the DOM elements should be removed.
- * In descendants, this method should be overloaded, clearing the additional
+ * Adds a new simple component with the specified name (prefixed with the name
+ * of this component, as id attributes are also prefixed when the component is
+ * appended to the document), and also returns it.
+ * @param {SimpleComponent} simpleComponentName This name will be automatically
+ * prefixed with the external component's name when the simple component is created.
+ * @returns {SimpleComponent}
+ */
+ExternalComponent.prototype.registerSimpleComponent = function(simpleComponentName) {
+    var component = new SimpleComponent(this._name+"_"+simpleComponentName);
+    this._simpleComponents.push(component);
+    return component;
+};
+
+/**
+ * When the screen is destroyed, references to the DOM elements should be removed.
+ * In subclasses, this method should be overloaded, clearing the additional
  * properties.
  */
-ScreenComponent.prototype.resetComponent = function() {
+ExternalComponent.prototype.resetComponent = function() {
     this.resetResource();
+    for (var i = 0; i < this._simpleComponents.length; i++) {
+        this._simpleComponents[i].resetComponent();
+    }
 };
 
 /**
- * Sets the display property of the root element of the component to show it.
+ * Sets the display CSS property of the root element of the component to show it.
  */
-ScreenComponent.prototype.show = function() {
+ExternalComponent.prototype.show = function() {
     var self = this;
     this.executeWhenReady(function() {
         self._rootElement.style.display = self._rootElementDefaultDisplayMode;
@@ -174,9 +325,9 @@ ScreenComponent.prototype.show = function() {
 };
 
 /**
- * Sets the display property of the root element of the component to hide it.
+ * Sets the display CSS property of the root element of the component to hide it.
  */
-ScreenComponent.prototype.hide = function() {
+ExternalComponent.prototype.hide = function() {
     var self = this;
     this.executeWhenReady(function() {
         self._rootElement.style.display = "none";
@@ -184,57 +335,50 @@ ScreenComponent.prototype.hide = function() {
 };
 
 /**
- * Defines a loading box component object.
+ * Creates a loading box external component.
  * @class A loading box component, that has a title, a progress bar and a status
- * message and appears in the middle of the screen (the corresponding stylesheet 
- * needs to be statically referenced in the head of index.html as of now)
- * @extends ScreenComponent
- * @param {String} name Check ScreenComponent
- * @param {String} source Check ScreenComponent
+ * message.
+ * @extends ExternalComponent
+ * @param {String} name See ExternalComponent.
+ * @param {String} htmlFilename See ExternalComponent.
+ * @param {String} cssFilename See ExternalComponent.
  * @returns {LoadingBox}
  */
-function LoadingBox(name,source) {
-    ScreenComponent.call(this,name,source);
-    
-    this._progress = null;
-    this._status = null;
+function LoadingBox(name,htmlFilename,cssFilename) {
+    ExternalComponent.call(this,name,htmlFilename,cssFilename);
+    /**
+     * A wrapper for the HTML5 progress element contained in the loading box.
+     * @name LoadingBox#_progress
+     * @type SimpleComponent
+     */
+    this._progress = this.registerSimpleComponent("progress");
+    /**
+     * A wrapper for the HTML p element contained in the loading box.
+     * @name LoadingBox#_status
+     * @type SimpleComponent
+     */
+    this._status = this.registerSimpleComponent("status");;
 }
 
-LoadingBox.prototype = new ScreenComponent();
+LoadingBox.prototype = new ExternalComponent();
 LoadingBox.prototype.constructor = LoadingBox;
 
 /**
- * Sets the properties for easier access of the DOM elements.
+ * Initializes the contained simple components and hides the box.
  */
 LoadingBox.prototype._initializeComponents = function() {
-    ScreenComponent.prototype._initializeComponents.call(this);
-    
-    this._progress = this._rootElement.querySelector("progress.loadingBoxProgress");
-    this._status = this._rootElement.querySelector("p.loadingBoxStatus");
-    
+    ExternalComponent.prototype._initializeComponents.call(this);
     this.hide();
-};
-
-/**
- * When the page is closed, references to the DOM elements should be removed.
- * In descendants, this method should be overloaded, clearing the additional
- * properties.
- */
-LoadingBox.prototype.resetComponent = function() {
-    ScreenComponent.prototype.resetComponent.call(this);
-    
-    this._progress = null;
-    this._status = null;
 };
 
 /**
  * Updates the value of the progress bar shown on the loading box.
  * @param {Number} value The new value of the progress bar.
  */
-LoadingBox.prototype.updateProgress= function(value) {
+LoadingBox.prototype.updateProgress = function(value) {
     var self = this;
     this.executeWhenReady(function() {
-        self._progress.value = value;
+        self._progress.getElement().value = value;
     });
 };
 
@@ -242,10 +386,10 @@ LoadingBox.prototype.updateProgress= function(value) {
  * Updates the status message shown on the loading box.
  * @param {String} status The new status to show.
  */
-LoadingBox.prototype.updateStatus= function(status) {
+LoadingBox.prototype.updateStatus = function(status) {
     var self = this;
     this.executeWhenReady(function() {
-        self._status.innerHTML = status;
+        self._status.setContent(status);
     });
 };
 
@@ -254,43 +398,40 @@ LoadingBox.prototype.updateStatus= function(status) {
  * @class An info box component, that has a title, and a message to tell to the
  * user and appears in the middle of the screen (the corresponding stylesheet 
  * needs to be statically referenced in the head of index.html as of now)
- * @extends ScreenComponent
- * @param {String} name Check ScreenComponent
- * @param {String} source Check ScreenComponent
+ * @extends ExternalComponent
+ * @param {String} name See ExternalComponent.
+ * @param {String} htmlFilename See ExternalComponent.
+ * @param {String} cssFilename See ExternalComponent.
  * @returns {InfoBox}
  */
-function InfoBox(name,source) {
-    ScreenComponent.call(this,name,source);
-    
-    this._message = null;
+function InfoBox(name,htmlFilename,cssFilename) {
+    ExternalComponent.call(this,name,htmlFilename,cssFilename);
+    /**
+     * A wrapper for the HTML p element in the info box, that shows the message.
+     * @name InfoBox#_message
+     * @type SimpleComponent
+     */
+    this._message = this.registerSimpleComponent("message");
+    /**
+     * A wrapper for the a element in the info box that represents the OK button.
+     * @name InfoBox#_okButton
+     * @type SimpleComponent
+     */
+    this._okButton = this.registerSimpleComponent("okButton");
 }
 
-InfoBox.prototype = new ScreenComponent();
+InfoBox.prototype = new ExternalComponent();
 InfoBox.prototype.constructor = InfoBox;
 
 /**
- * Sets the properties for easier access of the DOM elements.
+ * Initializes the contained simple components, set the event handler for the
+ * button and hides the box.
  */
 InfoBox.prototype._initializeComponents = function() {
-    ScreenComponent.prototype._initializeComponents.call(this);
-    
+    ExternalComponent.prototype._initializeComponents.call(this); 
     var self = this;
-    
-    this._message = this._rootElement.querySelector("p.infoBoxMessage");
-    this._rootElement.querySelector("a.infoBoxOKButton").onclick=function(){self.hide();};
-    
+    this._okButton.getElement().onclick = function() { self.hide(); return false; };
     this.hide();
-};
-
-/**
- * When the page is closed, references to the DOM elements should be removed.
- * In descendants, this method should be overloaded, clearing the additional
- * properties.
- */
-InfoBox.prototype.resetComponent = function() {
-    ScreenComponent.prototype.resetComponent.call(this);
-    
-    this._message = null;
 };
 
 /**
@@ -300,154 +441,205 @@ InfoBox.prototype.resetComponent = function() {
 InfoBox.prototype.updateMessage= function(message) {
     var self = this;
     this.executeWhenReady(function() {
-        self._message.innerHTML = message;
+        self._message.setContent(message);
     });
 };
 
 /**
- * Defines a menu component object.
+ * Creates a menu component.
  * @class A component that consists of a container and a list of menu options
- * inside, which execute given functions when clicked on.
- * @extends ScreenComponent
- * @param {String} name Check {@link ScreenComponent}
- * @param {String} source Check {@link ScreenComponent}
+ * inside, which execute given functions when clicked on. As this component
+ * only contains a transparent container and links with a fixed button style
+ * (that is used elsewhere as well), no CSS file can be specified to style it.
+ * @extends ExternalComponent
+ * @param {String} name See ExternalComponent.
+ * @param {String} htmlFilename See ExternalComponent.
  * @param {Object[]} menuOptions An array of the available menu options, each
  * described by an object with a caption (String) and an action (Function) 
- * property
+ * property.
  * @returns {MenuComponent}
  */
-function MenuComponent(name,source,menuOptions) {
-    ScreenComponent.call(this,name,source);
-    
+function MenuComponent(name,htmlFilename,menuOptions) {
+    ExternalComponent.call(this,name,htmlFilename);
     /**
      * An array of the available menu options, each described by an object with 
-     * a caption (String) and an action (Function) property
+     * a caption (String) and an action (Function) property.
      * @name MenuComponent#_menuOptions
      * @type Object[]
      */
     this._menuOptions = menuOptions;
 }
 
-MenuComponent.prototype = new ScreenComponent();
+MenuComponent.prototype = new ExternalComponent();
 MenuComponent.prototype.constructor = MenuComponent;
 
 /**
- * Sets up the menu by appending the buttons to the container
+ * The return value of the click handler on a link decides whether the link path 
+ * should be followed or not. By making sure it is false, the links serving as 
+ * buttons in the menu will not bring the user back to the top of the page 
+ * (because href is #). This function returns a function that executes the action
+ * for the button of the given index, and then returns false to be used as a click
+ * event handler.
+ * @param {Number} index
+ * @returns {Function}
+ */
+MenuComponent.prototype.getMenuClickHandler = function(index) {
+    var self = this;
+    return function() {
+        self._menuOptions[index].action();
+        return false;
+    };
+};
+
+/**
+ * Sets up the menu by appending the buttons to the container.
  */
 MenuComponent.prototype._initializeComponents = function() {
-    ScreenComponent.prototype._initializeComponents.call(this);
+    ExternalComponent.prototype._initializeComponents.call(this);
     
     var i;
     var aElement;
     var liElement;
     
-    for(i=0;i<this._menuOptions.length;i++) {
-        aElement=document.createElement("a");
-        aElement.href="#";
-        aElement.className="menu button";
-        aElement.innerHTML=this._menuOptions[i].caption;
-        aElement.addEventListener("click",this._menuOptions[i].action);
-        liElement=document.createElement("li");
-        liElement.className="transparentContainer";
+    for (i = 0; i < this._menuOptions.length; i++) {
+        aElement = document.createElement("a");
+        aElement.href = "#";
+        aElement.className = "menu button";
+        aElement.innerHTML = this._menuOptions[i].caption;
+        // we need to generate an appropriate handler function here for each
+        // menu element (cannot directly create it here as they would all use
+        // the same index as i would be a closure)
+        aElement.onclick = this.getMenuClickHandler(i);
+        liElement = document.createElement("li");
+        liElement.className = "transparentContainer";
         liElement.appendChild(aElement);
         this._rootElement.appendChild(liElement);
     }
 };
 
 /**
- * When the page is closed, references to the DOM elements should be removed.
- * In descendants, this method should be overloaded, clearing the additional
- * properties.
- */
-MenuComponent.prototype.resetComponent = function() {
-    ScreenComponent.prototype.resetComponent.call(this);
-};
-
-/**
- * 
- * @param {String} name
- * @param {String} source
- * @param {String} propertyName
- * @param {String[]} valueList
+ * Creates a selector component.
+ * @class A component that consists of a label describing a property, and a
+ * button that can be clicked to select from a list of possible values for that
+ * property. (for smaller amount of possible values, as each click will show
+ * the next value, and when the last is reached, the cycle will begin again)
+ * @extends ExternalComponent
+ * @param {String} name See ExternalComponent.
+ * @param {String} htmlFilename See ExternalComponent.
+ * @param {String} cssFilename See ExternalComponent.
+ * @param {String} propertyName The name of the property that can be set using
+ * this selector.
+ * @param {String[]} valueList The list of possible values that can be selected
+ * for the property.
  * @returns {Selector}
  */
-function Selector(name,source,propertyName,valueList) {
-    ScreenComponent.call(this,name,source);
-    
+function Selector(name,htmlFilename,cssFilename,propertyName,valueList) {
+    ExternalComponent.call(this,name,htmlFilename,cssFilename);
+    /**
+     * The name of the property that can be set using this selector.
+     * @name Selector#_propertyName
+     * @type String
+     */
     this._propertyName = propertyName;
+    /**
+     * The list of possible values that can be selected with this selector.
+     * @name Selector#_valueList
+     * @type String[]
+     */
     this._valueList = valueList;
+    /**
+     * The index of the currently selected value.
+     * @name Selector#_valueIndex
+     * @type Number
+     */
     this._valueIndex = null;
-    
-    this._propertyLabel = null;
-    this._valueSelector = null;
+    /**
+     * A wrapper for the HTML element containing the label caption for the property
+     * this selector sets.
+     * @name Selector#_propertyLabel
+     * @type SimpleComponent
+     */
+    this._propertyLabel = this.registerSimpleComponent("property");
+    /**
+     * A wrapper for the HTML element which serves as the selector button to select
+     * from the available values.
+     * @name Selector#_valueSelector
+     * @type SimpleComponent
+     */
+    this._valueSelector = this.registerSimpleComponent("value");
 }
 
-Selector.prototype = new ScreenComponent();
+Selector.prototype = new ExternalComponent();
 Selector.prototype.constructor = Selector;
 
 /**
- * Sets the properties for easier access of the DOM elements.
+ * Initializes the components, sets their text and sets the handler for the click
+ * on the selector.
  */
 Selector.prototype._initializeComponents = function() {
-    ScreenComponent.prototype._initializeComponents.call(this);
+    ExternalComponent.prototype._initializeComponents.call(this);
     
-    this._propertyLabel = this._rootElement.querySelector("#"+this._name+"_property");
-    this._propertyLabel.innerHTML = this._propertyName;
-    this._valueSelector = this._rootElement.querySelector("#"+this._name+"_value");
-    this._valueSelector.innerHTML = this._valueList[0];
+    this._propertyLabel.setContent(this._propertyName);
+    this._valueSelector.setContent(this._valueList[0]);
     this._valueIndex = 0;
     
     var self = this;
-    this._valueSelector.onclick = function(){ self.selectNextValue(); };
+    this._valueSelector.getElement().onclick = function(){ self.selectNextValue(); return false; };
 };
 
 /**
- * When the page is closed, references to the DOM elements should be removed.
- * In descendants, this method should be overloaded, clearing the additional
- * properties.
- */
-Selector.prototype.resetComponent = function() {
-    ScreenComponent.prototype.resetComponent.call(this);
-    
-    this._propertyLabel = null;
-    this._valueSelector = null;
-};
-
-/**
- * 
+ * Selects the value given as parameter from the list of available values.
  * @param {String} value
  */
-Selector.prototype.selectValue = function(value) {
-    this.executeWhenReady(function() {
+Selector.prototype.selectValue = function (value) {
+    this.executeWhenReady(function () {
         var i = 0;
-        while((i<this._valueList.length)&&(this._valueList[i]!==value)) {
+        while ((i < this._valueList.length) && (this._valueList[i] !== value)) {
             i++;
         }
-        if(i<this._valueList.length) {
+        if (i < this._valueList.length) {
             this.selectValueWithIndex(i);
+        } else {
+            game.showError("Attempted to select value: '" + value + "' for '" + this._propertyName + "', which is not one of the available options.");
         }
     });
 };
 
 /**
- * 
+ * Selects the value with the passed index from the list.
  * @param {Number} index
  */
 Selector.prototype.selectValueWithIndex = function(index) {
     this.executeWhenReady(function() {
-        this._valueIndex = index;
-        this._valueSelector.innerHTML = this._valueList[this._valueIndex];
+        if(this._valueList.length > index) {
+            this._valueIndex = index;
+            this._valueSelector.setContent(this._valueList[this._valueIndex]);
+        } else {
+            game.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-"+(this._valueList.length-1));
+        }
     });
 };
 
+/**
+ * Returns the currently selected value.
+ * @returns {String}
+ */
 Selector.prototype.getSelectedValue = function() {
     return this._valueList[this._valueIndex];
 };
 
+/**
+ * Returns the index of the currently selected value.
+ * @returns {Number}
+ */
 Selector.prototype.getSelectedIndex = function() {
     return this._valueIndex;
 };
 
+/**
+ * Selects the next available value from the list. If the last value was selected,
+ * selects the first one.
+ */
 Selector.prototype.selectNextValue = function() {
     this.executeWhenReady(function() {
         this.selectValueWithIndex((this._valueIndex + 1)%this._valueList.length);

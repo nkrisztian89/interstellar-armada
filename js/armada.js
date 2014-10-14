@@ -87,6 +87,7 @@ function getGameFolder(fileType) {
     var folders = {
         javascript: "js/",
         component: "components/",
+        css: "css/",
         model: "models/",
         shader: "shaders/",
         texture: "textures/",
