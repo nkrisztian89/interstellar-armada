@@ -1686,11 +1686,11 @@ ResourceManager.prototype.requestModelLoadFromFile = function() {
  * the available cubemaps and shaders and their source files) from the XML file
  * of the passed name.
  * @param {String} filename The name of the XML file where the configuration
- * is stored (relative to the XML file folder)
+ * is stored (relative to the config file folder)
  */
 ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function(filename) {
     var request = new XMLHttpRequest();
-    request.open('GET', getXMLFolder()+filename+"?123", true);
+    request.open('GET', getGameFolder("config")+filename+"?123", true);
     var self = this;
     request.onreadystatechange = function() {
         if (request.readyState === 4) {

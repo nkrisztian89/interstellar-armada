@@ -25,36 +25,97 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"use strict";
+
 /**
- * Defines a skybox class.
+ * Creates a skybox class and loads its properties from the passed XML tag, if any.
  * @class A skybox represents the background picture rendered for the 
- * environment. Skybox classes can be defined with different properties (in
- * classes.xml) for different backgrounds, and then the right one can be
- * instantiated for each level (Skybox class).
- * @param {String} name The name of the skybox class.
- * @param {String} shaderName The name of the shader object to be used for
- * rendering this skybox. (as defined in shaders.xml)
- * @param {String} samplerName The name of the sampler variable in the shader
- * to be set.
- * @param {Cubemap} cubemap The cube map resource to be used.
+ * environment using a cubemap sampler and a full viewport quad. Skybox classes 
+ * can be defined with different properties (in classes.xml) for different 
+ * backgrounds, and then the right one can be instantiated for each level 
+ * ({l@link Skybox} class).
+ * @param {Element} [xmlTag] A reference to an XML tag from which the skybox
+ * class properties can be initialized.
  * @returns {SkyboxClass}
  */
-function SkyboxClass(name, shaderName, samplerName, cubemap) {
-	this.name=name;
-	this.shaderName=shaderName;
-	this.samplerName=samplerName;
-	this.cubemap=cubemap; 
-}
-
-function TextureDescriptor(xmlTag) {
-    this.filename = null;
-    this.useMipmap = null;
+function SkyboxClass(xmlTag) {
+    /**
+     * The name that identifies the skybox class (unique for each skybox class
+     * in the game.
+     * @name SkyboxClass#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The name of the shader object to be used for rendering this skybox. (as 
+     * defined in shaders.xml)
+     * @name SkyboxClass#shaderName
+     * @type String
+     */
+    this.shaderName = null;
+    /**
+     * The name of the uniform cube map sampler variable in the shader to be set.
+     * @name SkyboxClass#samplerName
+     * @type String
+     */
+    this.samplerName = null;
+    /**
+     * The cubemap resource to be used.
+     * @name SkyboxClass#cubemap
+     * @type String
+     */
+    this.cubemap = null;
+    // if an XML tag was specified, initialize the properties from there    
     if (xmlTag !== undefined) {
         this.loadFromXMLTag(xmlTag);
     }
 }
 
 /**
+ * Loads the values for the properties of this skybox class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+SkyboxClass.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
+    this.samplerName = xmlTag.getElementsByTagName("shader")[0].getAttribute("samplerName");
+    this.cubemap = xmlTag.getElementsByTagName("cubemap")[0].getAttribute("name");
+    Object.freeze(this);
+};
+
+/**
+ * Creates a TextureDescriptor object, and loads its properties from the passed
+ * XML tag, if any.
+ * @class A simple class capable of loading the descriptor of a texture resource
+ * from an XML tag.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {TextureDescriptor}
+ */
+function TextureDescriptor(xmlTag) {
+    /**
+     * The filename path of the texture file, relative to the site root.
+     * @name TextureDescriptor#filename
+     * @type String
+     */
+    this.filename = null;
+    /**
+     * Wether bitmaps should be created for this texture.
+     * @name TextureDescriptor#useMipmap
+     * @type Boolean
+     */
+    this.useMipmap = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the texture descriptor from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
  * @param {Element} xmlTag
  */
 TextureDescriptor.prototype.loadFromXMLTag = function(xmlTag) {
@@ -64,322 +125,898 @@ TextureDescriptor.prototype.loadFromXMLTag = function(xmlTag) {
     } else {
         this.useMipmap = true;
     }
+    Object.freeze(this);
 };
 
-TextureDescriptor.prototype.toString = function() {
-    return "[TextureDescriptor: "+this.filename+", use mipmapping: "+this.useMipmap+"]";
-};
 
 /**
- * Defines a background object class.
- * @class Environments (levels) in the game can have several background objects,
- * like stars or nebulae, which provide the lighting for the environment.
- * @param {String} name The name by which this class can be referred to.
- * @param {Number[3]} lightColor The color of the directional light this object
- * emits to light the scene.
- * @param {Object[]} layers The layers of the object which can be rendered upon
- * each other. The layers need to have the following properties: size, 
- * shaderName, textureDescriptor, color.
- * @returns {BackgroundObjectClass}
+ * Creates a ParticleDescriptor object, and loads its properties from the passed
+ * XML tag, if any.
+ * @class A simple class capable of loading the descriptor of a particle (a simple
+ * 2D billboard rendered with a suitable shader)
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {ParticleDescriptor}
  */
-function BackgroundObjectClass(name,lightColor,layers) {
-    this.name=name;
-    this.lightColor=lightColor;
-    this.layers=layers;
+function ParticleDescriptor(xmlTag) {
+    /**
+     * The size to scale the particle with when rendering.
+     * @name ParticleDescriptor#size
+     * @type Number
+     */
+    this.size = null;
+    /**
+     * The name of the shader to use when rendering this particle (as defined
+     * in shader.xml).
+     * @name ParticleDescriptor#shaderName
+     * @type String
+     */
+    this.shaderName = null;
+    /**
+     * The descriptor of the texture to use when rendering this particle.
+     * @name ParticleDescriptor#textureDescriptor
+     * @type TextureDescriptor
+     */
+    this.textureDescriptor = null;
+    /**
+     * The color that can be passed to the shader to modulate the texture with
+     * while rendering. [red,green,blue]
+     * @name ParticleDescriptor#color
+     * @type Number[3]
+     */
+    this.color = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
 /**
- * Defines a dust cloud class.
+ * Loads the values for the properties of the patricle descriptor from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+ParticleDescriptor.prototype.loadFromXMLTag = function(xmlTag) {
+    if(xmlTag.hasAttribute("size")) {
+        this.size = parseFloat(xmlTag.getAttribute("size"));
+    } else {
+        this.size = 1.0;
+    }
+    this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
+    this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
+    this.color = getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
+    Object.freeze(this);
+};
+
+/**
+ * Creates a background object class and loads its properties from the passed
+ * XML tag, if any.
+ * @class Environments (levels) in the game can have several background objects,
+ * like stars or nebulae, which provide the lighting for the environment.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {BackgroundObjectClass}
+ */
+function BackgroundObjectClass(xmlTag) {
+    /**
+     * The unique name of the background object.
+     * @name BackgroundObjectClass#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The color of the light this object emits. A directional light source with
+     * this color will be added to levels where this object it present, coming
+     * from the object's direction.
+     * @name BackgroundObjectClass#lightColor
+     * @type Number[3]
+     */
+    this.lightColor = null;
+    /**
+     * To draw the object on the background, the layers defined in this array
+     * will be rendered on top of each other in order.
+     * @name BackgroundObjectClass#layers
+     * @type ParticleDescriptor[]
+     */
+    this.layers = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the background object class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+BackgroundObjectClass.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    this.lightColor = getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
+    this.layers = new Array();
+    var layerTags = xmlTag.getElementsByTagName("layer");
+    for (var i = 0; i < layerTags.length; i++) {
+        this.layers.push(new ParticleDescriptor(layerTags[i]));
+    }
+    Object.freeze(this);
+};
+
+/**
+ * Creates a dust cloud class and loads its properties from the passed
+ * XML tag, if any.
  * @class Dust clouds represent a big group of tiny dust particles that are
  * rendered when the camera (the player) is moving around of space, to give a
  * visual clue about the velocity. Dust cloud classes can be defined (in 
  * classes.xml) for different environments (such as denser in an asteroid field 
  * or the rings of a planet, or having different color), and then the right one 
  * instantiated (with the DustCloud class) for the level.
- * @param {String} name The name to identify the class of dust cloud.
- * @param {String} shaderName The name of the shader used for rendering this 
- * dust cloud. (as defined in shaders.xml)
- * @param {Number} numberOfParticles The number of dust particles that should 
- * be created when such a dust class is instantiated.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {DustCloudClass}
  */
-function DustCloudClass(name, shaderName, numberOfParticles) {
-    this.name=name;
-    this.shaderName=shaderName;
-    this.numberOfParticles=numberOfParticles;
+function DustCloudClass(xmlTag) {
+    /**
+     * The name to identify the class of dust cloud.
+     * @name DustCloudClass#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The name of the shader used for rendering this dust cloud. (as defined in 
+     * shaders.xml)
+     * @name DustCloudClass#shaderName
+     * @type String
+     */
+    this.shaderName = null;
+    /**
+     * The number of dust particles that should be created when such a dust 
+     * class is instantiated.
+     * @name DustCloudClass#numberOfParticles
+     * @type Number
+     */
+    this.numberOfParticles = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
 /**
- * Defines a model reference, which holds a reference to a model file name and
- * the model's associated LOD (Level Of Detail)
- * @param {String} filename
- * @param {Number} lod
- * @returns {ModelReference}
+ * Loads the values for the properties of the class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
  */
-function ModelReference(filename,lod) {
-	this.filename=filename;
-	this.lod=lod;
-}
+DustCloudClass.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
+    this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"));
+    Object.freeze(this);
+};
 
 /**
- * Defines a projectile class.
- * @class Projectiles such as bullets, plasma bursts can belong to different
+ * Creates a projectile class and loads its properties from the passed XML tag, if any.
+ * @class Projectiles such as bullets or plasma bursts can belong to different
  * classes that can be described in classes.xml. This class represents such a 
  * projectile class, defining the common properties of the projectiles belonging
  * to the class.
- * @param {String} name The name by which the class goes by, for example to
- * refer to when describing what projectiles does a certain weapon class fire. 
- * @param {Number} size The size by which the model representing the projectile
- * (see projectileModel()) will be scaled.
- * @param {Number[]} intersections How many perpendicular planes should be part
- * of the projectile model, and where are they positioned. (the array of
- * positions)
- * @param {String} shaderName The name of the shader to be used with the
- * projectile. (as defined in shaders.xml)
- * @param {String} textureDescriptor The descriptor of the texture to be used on the
- * projectile model.
- * @param {Number} mass Mass of the projectile in kilograms. Determines how
- * fast will it fly when shot from weapons.
- * @param {Number} duration The length of life of the projectile in 
- * milliseconds, after which it will disappear.
- * @param {String} muzzleFlashShaderName The name for the shader to be used to
- * render the muzzle flash which is created when this projectile is shot from
- * a weapon.
- * @param {String} muzzleFlashTextureDescriptor The descriptor of the texture file to
- * be used for rendering the muzzle flash.
- * @param {Number[3]} muzzleFlashColor The rendered muzzle flash will be 
- * modulated with this color. (if defined so be the shader) [red,green,blue]
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {ProjectileClass}
  */
-function ProjectileClass(name,size,intersections,shaderName,textureDescriptor,mass,duration,muzzleFlashShaderName,muzzleFlashTextureDescriptor,muzzleFlashColor) {
-	this.name=name;
-	this.size=size;
-	this.intersections=intersections;
-	this.shaderName=shaderName;
-	this.textureDescriptor=textureDescriptor;
-	this.mass=mass;
-	this.duration=duration;
-	this.muzzleFlashShaderName=muzzleFlashShaderName;
-	this.muzzleFlashTextureDescriptor=muzzleFlashTextureDescriptor;
-	this.muzzleFlashColor=muzzleFlashColor;
+function ProjectileClass(xmlTag) {
+    /**
+     * The name by which the class goes by, for example to refer to when 
+     * describing what projectiles does a certain weapon class fire. 
+     * @name ProjectileClass#name
+     * @type String
+     */    
+    this.name = null;
+    /**
+     * The size by which the model representing the projectile will be scaled.
+     * @see projectileModel
+     * @name ProjectileClass#size
+     * @type Number
+     */
+    this.size = null;
+    /**
+     * How many perpendicular planes should be part of the projectile model, and 
+     * where are they positioned. (the array of positions)
+     * @name ProjectileClass#intersections
+     * @type Number[]
+     */
+    this.intersections = null;
+    /**
+     * The name of the shader to be used with the projectile. (as defined in 
+     * shaders.xml)
+     * @name ProjectileClass#shaderName
+     * @type String
+     */
+    this.shaderName = null;
+    /**
+     * The descriptor of the texture to be used on the projectile model.
+     * @name ProjectileClass#textureDescriptor
+     * @type TextureDescriptor
+     */
+    this.textureDescriptor = null;
+    /**
+     * Mass of the projectile in kilograms. Determines how fast will it fly when 
+     * shot from weapons.
+     * @name ProjectileClass#mass
+     * @type Number
+     */
+    this.mass = null;
+    /**
+     * The length of life of the projectile in milliseconds, after which it will 
+     * disappear.
+     * @name ProjectileClass#duration
+     * @type Number
+     */
+    this.duration = null;
+    /**
+     * A descriptor for the properties of the muzzle flash particle which is 
+     * created when this projectile is shot from a weapon. 
+     * @name ProjectileClass#muzzleFlash
+     * @type ParticleDescriptor
+     */
+    this.muzzleFlash = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
 /**
- * Defines a weapon class's barrel.
+ * Loads the values for the properties of the class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+ProjectileClass.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    this.size = parseFloat(xmlTag.getElementsByTagName("billboard")[0].getAttribute("size"));
+    this.intersections = new Array();
+    var intersectionTags = xmlTag.getElementsByTagName("intersection");
+    for (var i = 0; i < intersectionTags.length; i++) {
+        this.intersections.push(parseFloat(intersectionTags[i].getAttribute("position")));
+    }
+    this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
+    this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
+    this.mass = parseFloat(xmlTag.getElementsByTagName("physics")[0].getAttribute("mass"));
+    this.duration = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("duration"));
+    this.muzzleFlash = new ParticleDescriptor(xmlTag.getElementsByTagName("muzzleFlash")[0]);
+    Object.freeze(this);
+};
+
+/**
+ * Defines a model reference, which holds a reference to a model file name and
+ * the model's associated LOD (Level Of Detail), and loads its data from the passed
+ * XML tag, if any.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {ModelReference}
+ */
+function ModelReference(xmlTag) {
+    /**
+     * The name of the model file.
+     * @name ModelReference#name
+     * @type String
+     */
+    this.filename = null;
+    /**
+     * The level of detail. 0 is the lowest.
+     * @name ModelReference#lod
+     * @type Number
+     */
+    this.lod = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+ModelReference.prototype.loadFromXMLTag = function(xmlTag) {
+    this.filename = xmlTag.getAttribute("filename");
+    this.lod = parseInt(xmlTag.getAttribute("lod"));
+    Object.freeze(this);
+};
+
+/**
+ * Creates a weapon class's barrel and loads its data from the passed
+ * XML tag, if any.
  * @class Every weapon can have multiple barrels, each of which shoot one 
  * projectile. Barrels are defined for each weapon class.
- * @param {ProjectileClass} projectileClass The class of the projectile being
- * shot from this barrelt.
- * @param {Number} force The force with which the barrel shoots the projectile
- * (used for initial acceleration, resulting in the speed of the projectile)
- * The force is applied on the projectile for burst time (TIME_UNIT), and is
- * measured in newtons.
- * @param {Number} x X coordinate of the barrel's position relative to the 
- * weapon itself.
- * @param {Number} y Y coordinate of the barrel's position relative to the 
- * weapon itself.
- * @param {Number} z Z coordinate of the barrel's position relative to the 
- * weapon itself.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {Barrel}
  */
-function Barrel(projectileClass,force,x,y,z) {
-	this.projectileClass=projectileClass;
-	this.force=force;
-	this.positionVector=[x,y,z];
+function Barrel(xmlTag) {
+    /**
+     * The class of the projectile being shot from this barrel.
+     * @name Barrel#projectileClass
+     * @type ProjectileClass
+     */
+    this.projectileClass = null;
+    /**
+     * The force with which the barrel shoots the projectile (used for initial 
+     * acceleration, resulting in the speed of the projectile)
+     * The force is applied on the projectile for burst time (TIME_UNIT), and is
+     * measured in newtons.
+     * @name Barrel#force
+     * @type Number
+     */
+    this.force = null;
+    /**
+     * The coordinates of the barrel's position relative to the weapon itself.
+     * @name Barrel#positionVector
+     * @type Number[3]
+     */
+    this.positionVector = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
 /**
- * Defines a weapon class.
+ * Loads the values for the properties of the class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+Barrel.prototype.loadFromXMLTag = function(xmlTag) {
+    this.projectileClass = game.logicContext.getProjectileClass(xmlTag.getAttribute("projectile"));
+    this.force = parseFloat(xmlTag.getAttribute("force"));
+    this.positionVector = getVector3FromXMLTag(xmlTag);
+    Object.freeze(this);
+};
+
+/**
+ * Creates a weapon class and loads its data from the passed XML tag, if any.
  * @class Each spacecraft can have weapons, all of which belong to a certain
  * weapon class. This class represent one of such classes, describing the 
  * general properties of all weapons in that class.
- * @param {String} name The name by which the weapon class can be referred to,
- * such as when describing what weapons are a certain ship equipped with.
- * @param {ModelReference[]} modelReferences The file names and associated LODs
- * (Levels Of Detail) for the models of this weapon. (will be rendered on the
- * ships)
- * @param {Number} cooldown The time the weapon needs between two shots to
- * "cool down", in milliseconds.
- * @param {Barrel[]} barrels The list of barrels of this weapon.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {WeaponClass}
  */
-function WeaponClass(name,modelReferences,cooldown,barrels) {
-	this.name=name;
-	this.modelReferences=modelReferences;
-        this.cooldown=cooldown;
-	this.barrels=barrels;
+function WeaponClass(xmlTag) {
+    /**
+     * The name by which the weapon class can be referred to, such as when 
+     * describing what weapons are a certain ship equipped with.
+     * @name WeaponClass#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The file names and associated LODs (Levels Of Detail) for the models of 
+     * this weapon. (will be rendered on the ships)
+     * @name WeaponClass#modelReferences
+     * @type ModelReference[]
+     */
+    this.modelReferences = null;
+    /**
+     * The time the weapon needs between two shots to "cool down", in milliseconds.
+     * @name WeaponClass#cooldown
+     * @type Number
+     */
+    this.cooldown = null;
+    /**
+     * The list of barrels of this weapon.
+     * @name WeaponClass#barrels
+     * @type Barrel[]
+     */
+    this.barrels = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
-WeaponClass.prototype.toString = function() {
-    return "[Weapon class | name: "+
-            this.name+", "+
-            this.barrels.length+((this.barrels.length===1)?" barrel, ":" barrels, ")+
-            "cooldown time: "+this.cooldown+" ms]";
+/**
+ * Loads the values for the properties of the class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+WeaponClass.prototype.loadFromXMLTag = function(xmlTag) {
+    var i;
+    this.name = xmlTag.getAttribute("name");
+    this.modelReferences = new Array();
+    var modelTags = xmlTag.getElementsByTagName("model");
+    for (i = 0; i < modelTags.length; i++) {
+        this.modelReferences.push(new ModelReference(modelTags[i]));
+    }
+    this.cooldown = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("cooldown"));
+    this.barrels = new Array();
+    var barrelTags = xmlTag.getElementsByTagName("barrel");
+    for(i = 0; i < barrelTags.length; i++) {
+        this.barrels.push(new Barrel(barrelTags[i]));
+    }
+    Object.freeze(this);
 };
 
 /**
- * Defines a propulsion class.
+ * Creates a propulsion class and loads its data from the passed XML tag, if any.
  * @class Each spacecraft can be equipped with a propulsion system. This class
  * represents one of the classes to which such a system can belong, describing
  * the properties of such a propulsion system.
- * @param {String} name When describing the equipped propulsion system, it's
- * class has to be referred to by this name.
- * @param {String} shaderName The shader that will be used for rendering the
- * particles shown when thrusters of the ship fire.
- * @param {String} textureDescriptor The descriptor to be used for the texture of
- * the thruster particles.
- * @param {Number[3]} color The color that can be used to modulate the color of
- * thruster particles, if defined so by the shader. [red,green,blue]
- * @param {Number} thrust The strength of the force applied to the ship when
- * the thrusters are fired in one direction, measured in newtons.
- * @param {Number} angularThrust The strength of the torque applied to the ship
- * when the thrusters are used to turn it.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {PropulsionClass}
  */
-function PropulsionClass(name,shaderName,textureDescriptor,color,thrust,angularThrust) {
-	this.name=name;
-	this.shaderName=shaderName;
-	this.textureDescriptor=textureDescriptor;
-	this.color=color;
-	this.thrust=thrust;
-	this.angularThrust=angularThrust;
+function PropulsionClass(xmlTag) {
+    /**
+     * When describing the equipped propulsion system, it's class has to be 
+     * referred to by this name.
+     * @name PropulsionClass#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * A descriptor for rendering the particles shown when thrusters of the ship 
+     * fire.
+     * @name PropulsionClass#thrusterBurnParticle
+     * @type ParticleDescriptor
+     */
+    this.thrusterBurnParticle = null;
+    /**
+     * The strength of the force applied to the ship when the thrusters are 
+     * fired in one direction, measured in newtons.
+     * @name PropulsionClass#thrust
+     * @type Number
+     */
+    this.thrust = null;
+    /**
+     * The strength of the torque applied to the ship when the thrusters are 
+     * used to turn it.
+     * @name PropulsionClass#angularThrust
+     * @type Number
+     */
+    this.angularThrust = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
 /**
- * Defines a weapon slot on a ship (class).
+ * Loads the values for the properties of the class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+PropulsionClass.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    this.thrusterBurnParticle = new ParticleDescriptor(xmlTag);
+    this.thrust = parseFloat(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust"));
+    this.angularThrust = parseFloat(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust"));
+    Object.freeze(this);
+};
+
+/**
+ * Creates a weapon slot and loads its data from the passed XML tag, if any.
  * @class Every ship (class) can have several slots where it's weapons can be
  * equipped. The weapons are rendered and shot from these slots. This class 
  * represents such a slot.
- * @param {Number[3]} positionVector The coordinates of the position of the slot 
- * relative to the ship.
- * @param {Float32Array} orientationMatrix The rotation matrix describing the 
- * orientation of the weapon slot relative to the ship.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {WeaponSlot}
  */
-function WeaponSlot(positionVector,orientationMatrix) {
-	this.positionMatrix=translationMatrixv(positionVector);
-	this.orientationMatrix=orientationMatrix;
+function WeaponSlot(xmlTag) {
+    /**
+     * The translation matrix for the position of the slot relative to the ship.
+     * @name WeaponSlot#positionMatrix
+     * @type Float32Array
+     */
+    this.positionMatrix = null;
+    /**
+     * The rotation matrix describing the orientation of the weapon slot 
+     * relative to the ship.
+     * @name WeaponSlot#orientationMatrix
+     * @type Float32Array
+     */
+    this.orientationMatrix = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
 }
 
 /**
- * Defines a thruster slot on a ship (class).
+ * Loads the values for the properties of the slot from the passed XML 
+ * tag, and then freezes the object to make sure properties of this slot cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+WeaponSlot.prototype.loadFromXMLTag = function(xmlTag) {
+    this.positionMatrix = getTranslationMatrixFromXMLTag(xmlTag);
+    this.orientationMatrix = getRotationMatrixFromXMLTags(xmlTag.getElementsByTagName("direction"));
+    Object.freeze(this);
+};
+
+/**
+ * Creates a thruster slot and loads its data from the passed XML tag, if any.
  * @class Every ship (class) has slots for its thrusters. The fire of the
  * thrusters is represented by showing particles at these thruster slots with
  * a size proportional to the thruster burn.
- * @param {Number[3]} positionVector The coordinates of the position of the slot 
- * relative to the ship.
- * @param {Number} size The thruster particle at this slot will be shown scaled
- * by this size.
- * @param {String} usesString The list of uses this thruster has. Possible uses
- * are: (direction:) forward,reverse,slideLeft,slideRight,raise,lower, (turn:)
- * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
- * @param {Number} group The index of the thruster group this slot belongs to.
- * Members of the same group should have the same uses list. The parts of the
- * ship model representing thrusters of a group should bear the same group 
- * index, allowing to manipulate their appearance using uniform arrays.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {ThrusterSlot}
  */
-function ThrusterSlot(positionVector,size,usesString,group) {
-	this.positionVector=positionVector;
-        this.positionVector.push(1.0);
-	this.size=size;
-	this.uses=usesString.split(',');
-        this.group=group;
-}
-
-function EquipmentProfile(xmlSource) {
-    this.name = "-";
-    this.weapons = null;
-    this.propulsion = null;
-    
-    if (xmlSource !== undefined) {
-        this.loadFromXMLTag(xmlSource);
+function ThrusterSlot(xmlTag) {
+    /**
+     * The coordinates of the position of the slot relative to the ship.
+     * @name ThrusterSlot#positionVector
+     * @type Number[4]
+     */
+    this.positionVector = null;
+    /**
+     * The thruster particle at this slot will be shown scaled to this size.
+     * @name ThrusterSlot#size
+     * @type Number
+     */
+    this.size = null;
+    /**
+     * The list of uses this thruster has. Possible uses are: 
+     * (direction:) 
+     * forward,reverse,slideLeft,slideRight,raise,lower;
+     * (turn:)
+     * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
+     * @name ThrusterSlot#uses
+     * @type String[]
+     */
+    this.uses = null;
+    /**
+     * The index of the thruster group this slot belongs to.
+     * Members of the same group should have the same uses list. The parts of the
+     * ship model representing thrusters of a group should bear the same group 
+     * index, allowing to manipulate their appearance using uniform arrays.
+     * @name ThrusterSlot#group
+     * @type Number
+     */
+    this.group = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
     }
 }
 
-EquipmentProfile.prototype.toString = function() {
-    return "[Equipment profile | name: "+
-            this.name+", "+
-            ((this.weapons===null)?"no":this.weapons.length)+" weapons, "+
-            ((this.propulsion===null)?"no":this.propulsion+" class")+" propulsion]";
-};
-
-EquipmentProfile.prototype.loadFromXMLTag = function(xmlTag) {
-    var i;
-    if(xmlTag.hasAttribute("name")) {
-        this.name = xmlTag.getAttribute("name");
-    }
-    this.weapons = new Array();
-    if (xmlTag.getElementsByTagName("weapons").length>0) {
-        var weaponTags = xmlTag.getElementsByTagName("weapons")[0].getElementsByTagName("weapon");
-        for(i=0;i<weaponTags.length;i++) {
-            this.weapons.push(weaponTags[i].getAttribute("class"));
-        }
-    }
-    this.propulsion = null;
-    if (xmlTag.getElementsByTagName("propulsion").length>0) {
-        this.propulsion = xmlTag.getElementsByTagName("propulsion")[0].getAttribute("class");
-    }
+/**
+ * Loads the values for the properties of the slot from the passed XML 
+ * tag, and then freezes the object to make sure properties of this slot cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+ThrusterSlot.prototype.loadFromXMLTag = function(xmlTag) {
+    this.positionVector = getVector3FromXMLTag(xmlTag);
+    this.positionVector.push(1.0);
+    this.size = parseFloat(xmlTag.getAttribute("size"));
+    this.uses = xmlTag.getAttribute("use").split(',');
+    this.group = xmlTag.hasAttribute("group")?parseInt(xmlTag.getAttribute("group")):0;
+    Object.freeze(this);
 };
 
 /**
- * Defines a spacecraft type.
- * @class A type of spacecraft. This a more general classification of 
- * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
- * space station or freighter.
- * @param {Element} [xmlSource] The XML tag which contains the description of
- * this spacecraft type.
- * @returns {SpacecraftType}
+ * Creates a weapon descriptor and loads its data from the passed XML tag, if any.
+ * @class A weapon descriptor can be used to equip a weapon on a spacecraft, by
+ * describing the parameters of the equipment. (such as ammunition, targeting
+ * mechanics)
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {WeaponDescriptor}
  */
-function SpacecraftType(xmlSource) {
+function WeaponDescriptor(xmlTag) {
     /**
-     * The name by which the type can be referred to.
-     * @name SpacecraftType#_name
+     * The name of the class of the weapon to be equipped.
+     * @name WeaponDescriptor#className
+     * @type String
+     */
+    this.className = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the descriptor from the passed XML 
+ * tag, and then freezes the object to make sure properties of this descriptor cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+WeaponDescriptor.prototype.loadFromXMLTag = function(xmlTag) {
+    this.className = xmlTag.getAttribute("class");
+    Object.freeze(this);
+};
+
+/**
+ * Creates a propulsion descriptor and loads its data from the passed XML tag, if any.
+ * @class A propulsion descriptor can be used to equip a propulsion system on a 
+ * spacecraft, by describing the parameters of the equipment. (such as fuel, 
+ * integrity)
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {WeaponDescriptor}
+ */
+function PropulsionDescriptor(xmlTag) {
+    /**
+     * The name of the class of the propulsion to be equipped.
+     * @name PropulsionDescriptor#className
+     * @type String
+     */
+    this.className = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the descriptor from the passed XML 
+ * tag, and then freezes the object to make sure properties of this descriptor cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+PropulsionDescriptor.prototype.loadFromXMLTag = function(xmlTag) {
+    this.className = xmlTag.getAttribute("class");
+    Object.freeze(this);
+};
+
+/**
+ * Creates an equipment profile and loads its data from the passed XML tag, if any.
+ * @class Every ship (class) can have several equipment profiles, each defining a 
+ * specific set of equipment. These can then be used to more easily equip the
+ * ships, by only referencing the profile to equip all the different pieces of
+ * equipment stored in it.
+ * @param {Element} [xmlTag] The XML tag to load the data from.
+ * @returns {EquipmentProfile}
+ */
+function EquipmentProfile(xmlTag) {
+    /**
+     * The name of the profile by which it can be referenced to when it is to be
+     * equipped. The names must be unique among the profiles of the same ship 
+     * class, but different classes can have profiles with the same name, each
+     * referring to the specific equipment for that specific ship.
+     * @name EquipmentProfile#_name
      * @type String
      */
     this._name = null;
     /**
-     * The full name of this type as displayed in the game.
-     * @name SpacecraftType#_fullName
-     * @type String
+     * The list of descriptors of the weapons in this profile to be equipped.
+     * @name EquipmentProfile#_weaponDescriptors
+     * @type WeaponDescriptor[]
      */
-    this._fullName = null;
-    
-    if (xmlSource !== undefined) {
-        this.loadFromXMLTag(xmlSource);
+    this._weaponDescriptors = null;
+    /**
+     * The descriptor of the propulsion system for this profile to be equipped.
+     * @name EquipmentProfile#_propulsionDescriptor
+     * @type PropulsionDescriptor
+     */
+    this._propulsionDescriptor = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
     }
 }
 
-SpacecraftType.prototype.getName = function() {
+/**
+ * Returns the name of this equipment profile.
+ * @returns {String}
+ */
+EquipmentProfile.prototype.getName = function() {
     return this._name;
 };
 
-SpacecraftType.prototype.getFullName = function() {
-    if(this._fullName!==null) {
-        return this._fullName;
-    } else {
-        return this._name;
-    }
+/**
+ * Sets a new name for the equipment profile.
+ * @param {String} newName
+ */
+EquipmentProfile.prototype.setName = function(newName) {
+    this._name = newName;
 };
 
-SpacecraftType.prototype.loadFromXMLTag = function(xmlTag) {
-    this._name = xmlTag.getAttribute("name");
-    if(xmlTag.getElementsByTagName("fullName").length>0) {
-        this._fullName = xmlTag.getElementsByTagName("fullName")[0].textContent;
+/**
+ * Returns the list of the descriptors for the weapons to be equipped with this
+ * profile.
+ * @returns {WeaponDescriptor[]}
+ */
+EquipmentProfile.prototype.getWeaponDescriptors = function() {
+    return this._weaponDescriptors;
+};
+
+/**
+ * Clears the list of weapon descriptors.
+ */
+EquipmentProfile.prototype.clearWeaponDescriptors = function() {
+    this._weaponDescriptors = new Array();
+};
+
+/**
+ * Adds a new weapon descriptor to the list of weapon descriptors describing
+ * what weapons and how should be equipped when applying this profile.
+ * @param {WeaponDescriptor} newWeaponDescriptor
+ */
+EquipmentProfile.prototype.addWeaponDescriptor = function(newWeaponDescriptor) {
+    this._weaponDescriptors.push(newWeaponDescriptor);
+};
+
+/**
+ * Returns the propulsion descriptor of this profile.
+ * @returns {PropulsionDescriptor}
+ */
+EquipmentProfile.prototype.getPropulsionDescriptor = function() {
+    return this._propulsionDescriptor;
+};
+
+/**
+ * Sets a new propulsion descriptor for this profile.
+ * @param {PropulsionDescriptor} newPropulsionDescriptor
+ */
+EquipmentProfile.prototype.setPropulsionDescriptor = function(newPropulsionDescriptor) {
+    this._propulsionDescriptor = newPropulsionDescriptor;
+};
+
+/**
+ * Loads the values for the properties of the profile from the passed XML tag.
+ * @param {Element} xmlTag
+ */
+EquipmentProfile.prototype.loadFromXMLTag = function(xmlTag) {
+    var i;
+    if (xmlTag.hasAttribute("name")) {
+        this.setName(xmlTag.getAttribute("name"));
+    } else {
+        this.setName("custom");
+    }
+    this.clearWeaponDescriptors();
+    if (xmlTag.getElementsByTagName("weapons").length > 0) {
+        var weaponTags = xmlTag.getElementsByTagName("weapons")[0].getElementsByTagName("weapon");
+        for (i = 0; i < weaponTags.length; i++) {
+            this.addWeaponDescriptor(new WeaponDescriptor(weaponTags[i]));
+        }
+    }
+    if (xmlTag.getElementsByTagName("propulsion").length > 0) {
+        this.setPropulsionDescriptor(new PropulsionDescriptor(xmlTag.getElementsByTagName("propulsion")[0]));
     }
 };
 
 /**
- * Defines a spacecraft class.
+ * Creates an spacecraft type and loads its data from the passed XML tag, if any.
+ * @class A type of spacecraft. This a more general classification of 
+ * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
+ * space station or freighter.
+ * @param {Element} [xmlTag] The XML tag which contains the description of
+ * this spacecraft type.
+ * @returns {SpacecraftType}
+ */
+function SpacecraftType(xmlTag) {
+    /**
+     * The name by which the type can be referred to.
+     * @name SpacecraftType#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The full name of this type as displayed in the game.
+     * @name SpacecraftType#fullName
+     * @type String
+     */
+    this.fullName = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the spacecraft type from the passed XML 
+ * tag, and then freezes the object to make sure properties of this type cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+SpacecraftType.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    if(xmlTag.getElementsByTagName("fullName").length>0) {
+        this.fullName = xmlTag.getElementsByTagName("fullName")[0].textContent;
+    } else {
+        this.fullName = this.name;
+    }
+    Object.freeze(this);
+};
+
+/**
+ * Creates a new object view object and loads its data from the passed XML tag, 
+ * if any.
+ * @class Describes the parameters of a certain view of an object, based on which
+ * a camera can be created if that object is deployed in a scene.
+ * @param {Element} [xmlTag] The XML tag which contains the description of
+ * this object view.
+ */
+function ObjectView(xmlTag) {
+    /**
+     * A desciptive name for the view, e.g. "cockpit"
+     * @name ObjectView#name
+     * @type String
+     */
+    this.name = null;
+    /**
+     * The Field Of View of the view in degrees.
+     * @name ObjectView#fov
+     * @type Number
+     */
+    this.fov = null;
+    /**
+     * Whether the position of the view is changeable by the player.
+     * @name ObjectView#controllablePosition
+     * @type Boolean
+     */
+    this.controllablePosition = null;
+    /**
+     * Whether the direction of the view is changeable by the player.
+     * @name ObjectView#controllableDirection
+     * @type Boolean
+     */
+    this.controllableDirection = null;
+    /**
+     * The translation matrix describing the relative position to the object.
+     * @name ObjectView#followPositionMatrix
+     * @type Float32Array
+     */
+    this.followPositionMatrix = null;
+    /**
+     * The rotation matrix describing the relative orientation to the object. 
+     * @name ObjectView#followOrientationMatrix
+     * @type Float32Array
+     */
+    this.followOrientationMatrix = null;
+    /**
+     * Whether the rotation of the camera has to be executed around the followed object.
+     * @name ObjectView#rotationCenterIsObject
+     * @type Boolean
+     */
+    this.rotationCenterIsObject = null;
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
+    }
+}
+
+/**
+ * Loads the values for the properties of the view from the passed XML 
+ * tag, and then freezes the object to make sure properties of this view cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
+ObjectView.prototype.loadFromXMLTag = function(xmlTag) {
+    this.name = xmlTag.getAttribute("name");
+    this.fov = parseFloat(xmlTag.getAttribute("fov"));
+    this.controllablePosition = (xmlTag.getAttribute("movable") === "true");
+    this.controllableDirection = (xmlTag.getAttribute("turnable") === "true");
+    this.followPositionMatrix = getTranslationMatrixFromXMLTag(xmlTag);
+    this.followOrientationMatrix = getRotationMatrixFromXMLTags(xmlTag.getElementsByTagName("turn"));
+    this.rotationCenterIsObject = (xmlTag.getAttribute("rotationCenterIsObject") === "true");
+    Object.freeze(this);
+};
+
+/**
+ * Creates a virtual camera following the given object according to the view's
+ * parameters.
+ * @param {Number} aspect The X/Y aspect ratio of the camera.
+ * @param {VisualObject} followedObject The object relative to which the camera 
+ * position and direction has to be interpreted.
+ * @returns {Camera} The created camera.
+ */
+ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
+    return new Camera(aspect,this.fov,this.controllablePosition,this.controllableDirection,followedObject,this.followPositionMatrix,this.followOrientationMatrix,this.rotationCenterIsObject);
+};
+
+/**
+ * Creates a spacecraft class and loads its data from the passed XML tag, if any.
  * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
  * ship or a space station all belong to a certain class that determines their
  * general properties such as appearance, mass and so on. This class represent
  * such a spacecraft class.
- * @param {Element} [xmlSource] The XML tag which contains the description of
+ * @param {Element} [xmlTag] The XML tag which contains the description of
  * this spacecraft class.
  * @returns {SpacecraftClass}
  */
-function SpacecraftClass(xmlSource) {
+function SpacecraftClass(xmlTag) {
     /**
      * The name by which the class can be referred to.
      * @name SpacecraftClass#name
@@ -388,22 +1025,22 @@ function SpacecraftClass(xmlSource) {
     this.name = null;
     /**
      * The type of spacecraft this class belongs to.
-     * @name SpacecraftClass#_spacecraftType
+     * @name SpacecraftClass#spacecraftType
      * @type SpacecraftType
      */
-    this._spacecraftType = null;
+    this.spacecraftType = null;
     /**
      * The full name of this class as displayed in the game.
-     * @name SpacecraftClass#_fullName
+     * @name SpacecraftClass#fullName
      * @type String
      */
-    this._fullName = null;
+    this.fullName = null;
     /**
      * The description of this class as can be viewed in the game.
-     * @name SpacecraftClass#_description
+     * @name SpacecraftClass#description
      * @type String
      */
-    this._description = null;
+    this.description = null;
     /**
      * The file names and their associated LODs (Levels Of Detail) of the model 
      * files of this class.
@@ -470,118 +1107,98 @@ function SpacecraftClass(xmlSource) {
      * @type Object
      */
     this.equipmentProfiles = null;
-
-    if (xmlSource !== undefined) {
-        this.loadFromXMLTag(xmlSource);
+    // if an XML tag was specified, initialize the properties from there    
+    if (xmlTag !== undefined) {
+        this.loadFromXMLTag(xmlTag);
     }
 }
 
-SpacecraftClass.prototype.getSpacecraftType = function() {
-    return this._spacecraftType;
-};
-
-SpacecraftClass.prototype.getFullName = function() {
-    if(this._fullName!==null) {
-        return this._fullName;
-    } else {
-        return this.name;
-    }
-};
-
-SpacecraftClass.prototype.getDescription = function() {
-    if(this._description!==null) {
-        return this._description;
-    } else {
-        return "Description not available.";
-    }
-};
-
-SpacecraftClass.prototype.getEquipmentProfile = function(name) {
-    return this.equipmentProfiles[name];
-};
-
+/**
+ * Loads the values for the properties of the spacecraft class from the passed XML 
+ * tag, and then freezes the object to make sure properties of this class cannot
+ * be accidentally altered.
+ * @param {Element} xmlTag
+ */
 SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
     var i;
+    
     this.name = xmlTag.getAttribute("name");
-    this._spacecraftType = game.logicContext.getSpacecraftType(xmlTag.getAttribute("type"));
+    this.spacecraftType = game.logicContext.getSpacecraftType(xmlTag.getAttribute("type"));
+    
+    // initializing informational properties
     if(xmlTag.getElementsByTagName("information").length>0) {
         var infoTag = xmlTag.getElementsByTagName("information")[0];
         if(infoTag.getElementsByTagName("fullName").length>0) {
-            this._fullName = infoTag.getElementsByTagName("fullName")[0].textContent;
+            this.fullName = infoTag.getElementsByTagName("fullName")[0].textContent;
         }
         if(infoTag.getElementsByTagName("description").length>0) {
-            this._description = infoTag.getElementsByTagName("description")[0].textContent;
+            this.description = infoTag.getElementsByTagName("description")[0].textContent;
         }
     }
+    if(this.fullName === null) {
+        this.fullName = this.name;
+    }
+    if(this.description === null) {
+        this.description = "Description not available.";
+    }
+    
+    // initializing model geometry information
+    var modelsTag = xmlTag.getElementsByTagName("models")[0];
     this.modelReferences = new Array();
-    var modelTags=xmlTag.getElementsByTagName("model");
-    for(i=0;i<modelTags.length;i++) {
-        this.modelReferences.push(new ModelReference(
-            modelTags[i].getAttribute("filename"),
-            parseInt(modelTags[i].getAttribute("lod")))
-        );
-        if(modelTags[i].hasAttribute("size")) {
-            this.modelSize = parseFloat(modelTags[i].getAttribute("size"));
-        }
+    var modelTags = modelsTag.getElementsByTagName("model");
+    for (i = 0; i < modelTags.length; i++) {
+        this.modelReferences.push(new ModelReference(modelTags[i]));
     }
-    // reading the textures into an object, where the texture type are the
-    // name of the properties
+    this.modelSize = parseFloat(modelsTag.getAttribute("size"));
+    
+    // reading the textures into an object, where the texture types are the
+    // names of the properties
     this.textureDescriptors = new Object();
-    var textureTags=xmlTag.getElementsByTagName("texture");
-    for(var i=0;i<textureTags.length;i++) {
+    var textureTags = xmlTag.getElementsByTagName("texture");
+    for (i = 0; i < textureTags.length; i++) {
         this.textureDescriptors[textureTags[i].getAttribute("type")] = new TextureDescriptor(textureTags[i]);
     }
     this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
+    
+    // initializing physics properties
     this.mass = xmlTag.getElementsByTagName("physics")[0].getAttribute("mass");
     this.bodies = new Array();
     var bodyTags = xmlTag.getElementsByTagName("body");
-    for(i=0;i<bodyTags.length;i++) {
+    for (i = 0; i < bodyTags.length; i++) {
         this.bodies.push(new Body(
-            translationMatrixv(scalarVector3Product(this.modelSize,getVector3FromXMLTag(bodyTags[i]))),
-            getRotationMatrixFromXMLTags(bodyTags[i].getElementsByTagName("turn")),
-            scalarVector3Product(this.modelSize,getDimensionsFromXMLTag(bodyTags[i]))
-        ));
+                translationMatrixv(scalarVector3Product(this.modelSize, getVector3FromXMLTag(bodyTags[i]))),
+                getRotationMatrixFromXMLTags(bodyTags[i].getElementsByTagName("turn")),
+                scalarVector3Product(this.modelSize, getDimensionsFromXMLTag(bodyTags[i]))
+                ));
     }
+    
+    // initializing equipment properties
     this.weaponSlots = new Array();
-    if (xmlTag.getElementsByTagName("weaponSlots").length>0) {
+    if (xmlTag.getElementsByTagName("weaponSlots").length > 0) {
         var weaponSlotTags = xmlTag.getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
-        for(i=0;i<weaponSlotTags.length;i++) {
-            this.weaponSlots.push(new WeaponSlot(
-                getVector3FromXMLTag(weaponSlotTags[i]),
-                getRotationMatrixFromXMLTags(weaponSlotTags[i].getElementsByTagName("direction"))
-            ));
+        for (i = 0; i < weaponSlotTags.length; i++) {
+            this.weaponSlots.push(new WeaponSlot(weaponSlotTags[i]));
         }
     }
     this.thrusterSlots = new Array();
-    if (xmlTag.getElementsByTagName("thrusterSlots").length>0) {
+    if (xmlTag.getElementsByTagName("thrusterSlots").length > 0) {
         var thrusterSlotTags = xmlTag.getElementsByTagName("thrusterSlots")[0].getElementsByTagName("slot");
-        for(i=0;i<thrusterSlotTags.length;i++) {
-            this.thrusterSlots.push(new ThrusterSlot(
-                getVector3FromXMLTag(thrusterSlotTags[i]),
-                parseFloat(thrusterSlotTags[i].getAttribute("size")),
-		thrusterSlotTags[i].getAttribute("use"),
-                (thrusterSlotTags[i].hasAttribute("group")?thrusterSlotTags[i].getAttribute("group"):0)
-            ));
+        for (i = 0; i < thrusterSlotTags.length; i++) {
+            this.thrusterSlots.push(new ThrusterSlot(thrusterSlotTags[i]));
         }
-    }
-    this.views = new Array();
-    if (xmlTag.getElementsByTagName("views").length>0) {
-        var viewTags = xmlTag.getElementsByTagName("views")[0].getElementsByTagName("view");
-        for(i=0;i<viewTags.length;i++) {
-            this.views.push(new ObjectView(
-                viewTags[i].getAttribute("name"),
-                parseFloat(viewTags[i].getAttribute("fov")),
-                viewTags[i].getAttribute("movable")==="true",
-                viewTags[i].getAttribute("turnable")==="true",
-                getTranslationMatrixFromXMLTag(viewTags[i]),
-                getRotationMatrixFromXMLTags(viewTags[i].getElementsByTagName("turn")),
-                viewTags[i].getAttribute("rotationCenterIsObject")==="true"
-            ));
-        }  
     }
     this.equipmentProfiles = new Object();
     var equipmentProfileTags = xmlTag.getElementsByTagName("equipmentProfile");
-    for(i=0;i<equipmentProfileTags.length;i++) {
+    for (i = 0; i < equipmentProfileTags.length; i++) {
         this.equipmentProfiles[equipmentProfileTags[i].getAttribute("name")] = new EquipmentProfile(equipmentProfileTags[i]);
+    }
+    
+    // initializing views
+    this.views = new Array();
+    if (xmlTag.getElementsByTagName("views").length > 0) {
+        var viewTags = xmlTag.getElementsByTagName("views")[0].getElementsByTagName("view");
+        for (i = 0; i < viewTags.length; i++) {
+            this.views.push(new ObjectView(viewTags[i]));
+        }
     }
 };

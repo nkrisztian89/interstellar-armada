@@ -898,8 +898,8 @@ DatabaseScreen.prototype.loadShip = function() {
         // display the data that can be displayed right away, and show loading
         // for the rest
         var shipClass = game.logicContext.getSpacecraftClasses()[self._itemIndex];
-        self._itemName.setContent(shipClass.getFullName());
-        self._itemType.setContent(shipClass.getSpacecraftType().getFullName());
+        self._itemName.setContent(shipClass.fullName);
+        self._itemType.setContent(shipClass.spacecraftType.fullName);
         self._itemDescription.setContent("Loading...");
 
         // create a ship that can be used to add the models (ship with default weapons
@@ -938,7 +938,7 @@ DatabaseScreen.prototype.loadShip = function() {
             self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
             self._itemFront = self._item.visualModel.modelsWithLOD[0].model.getMaxY();
             self._itemDescription.setContent( 
-                shipClass.getDescription()+"<br/>"+
+                shipClass.description+"<br/>"+
                 "<br/>"+
                 "Length: "+(((self._itemLength*0.2)<100)?(self._itemLength*0.2).toPrecision(3):Math.round(self._itemLength*0.2))+" m<br/>"+
                 "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+

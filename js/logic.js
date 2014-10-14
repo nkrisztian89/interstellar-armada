@@ -212,9 +212,9 @@ function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzl
 		);
 	var muzzleFlash = new DynamicParticle(
 		game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
-		game.graphicsContext.resourceManager.getShader(projectileClass.muzzleFlashShaderName),
-		game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(projectileClass.muzzleFlashTextureDescriptor),
-		projectileClass.muzzleFlashColor,
+		game.graphicsContext.resourceManager.getShader(projectileClass.muzzleFlash.shaderName),
+		game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
+		projectileClass.muzzleFlash.color,
 		projectileClass.size,
 		muzzleFlashPositionMatrix,
 		500
@@ -464,7 +464,7 @@ function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,contr
     this.propulsion=null;
         
     if(equipmentProfileName!==undefined) {
-        this.equipProfile(this.class.getEquipmentProfile(equipmentProfileName));
+        this.equipProfile(this.class.equipmentProfiles[equipmentProfileName]);
     }
         
     this.toBeDeleted = false;
@@ -602,9 +602,9 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
 
             var thrusterParticle = new StaticParticle(
                 game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
-                game.graphicsContext.resourceManager.getShader(this.propulsion.class.shaderName),
-                game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.propulsion.class.textureDescriptor),
-                this.propulsion.class.color,
+                game.graphicsContext.resourceManager.getShader(this.propulsion.class.thrusterBurnParticle.shaderName),
+                game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.propulsion.class.thrusterBurnParticle.textureDescriptor),
+                this.propulsion.class.thrusterBurnParticle.color,
                 slot.size,
                 translationMatrixv(slot.positionVector),
                 20
@@ -638,11 +638,11 @@ Spacecraft.prototype.addPropulsion = function(propulsionClass) {
  */
 Spacecraft.prototype.equipProfile = function(equipmentProfile) {
     var i;
-    for(i=0;i<equipmentProfile.weapons.length;i++) {
-        this.addWeapon(game.logicContext.getWeaponClass(equipmentProfile.weapons[i]));
+    for(i=0;i<equipmentProfile.getWeaponDescriptors().length;i++) {
+        this.addWeapon(game.logicContext.getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
     }
-    if(equipmentProfile.propulsion!==null) {
-        this.addPropulsion(game.logicContext.getPropulsionClass(equipmentProfile.propulsion));
+    if(equipmentProfile.propulsionDescriptor!==null) {
+        this.addPropulsion(game.logicContext.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
     }
 };
 
@@ -745,40 +745,6 @@ Spacecraft.prototype.simulate = function(dt) {
 };
 
 /**
- * Creates a new model view object.
- * @class Describes the parameters of a certain view of an object, based on which
- * a camera can be created if that object is deployed in a scene.
- * @param {string} name A desciptive name for the view, e.g. "cockpit"
- * @param {number} fov The Field Of View of the view in degrees.
- * @param {boolean} controllablePosition Whether the position of the view is changeable by the player.
- * @param {boolean} controllableDirection Whether the direction of the view is changeable by the player.
- * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the object.
- * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the object. 
- * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed object.
- */
-function ObjectView(name,fov,controllablePosition,controllableDirection,followPositionMatrix,followOrientationMatrix,rotationCenterIsObject) {
-        this.name=name;
-	this.fov=fov;
-        this.controllablePosition=controllablePosition;
-        this.controllableDirection=controllableDirection;
-        this.followPositionMatrix=followPositionMatrix;
-        this.followOrientationMatrix=followOrientationMatrix;
-        this.rotationCenterIsObject=rotationCenterIsObject;
-    
-}
-
-/**
- * Creates a virtual camera following the given object according to the view's
- * parameters.
- * @param {number} aspect The X/Y aspect ratio of the camera.
- * @param {VisualObject} followedObject The object to which the camera position and direction has to be interpredet.
- * @returns {Camera} The created camera.
- */
-ObjectView.prototype.createCameraForObject = function(aspect,followedObject) {
-    return new Camera(aspect,this.fov,this.controllablePosition,this.controllableDirection,followedObject,this.followPositionMatrix,this.followOrientationMatrix,this.rotationCenterIsObject);
-};
-
-/**
  * Defines a level.
  * @class The domain specific part of the model of what happens in the game, 
  * with spaceships, projectiles and so.
@@ -842,7 +808,7 @@ Level.prototype.addPlayer = function(player) {
 
 Level.prototype.requestLoadFromFile = function(filename) {
     var request = new XMLHttpRequest();
-    request.open('GET', getXMLFolder()+filename+"?123", true);
+    request.open('GET', getGameFolder("level")+filename+"?123", true);
     var self = this;
     request.onreadystatechange = function () {
         if (request.readyState === 4) {
@@ -915,7 +881,7 @@ Level.prototype.loadFromXML= function(levelSource) {
             // if a profile is referenced in the equipment tag, look up that profile 
             // and equip according to that
             if(equipmentTag.hasAttribute("profile")) {
-                spacecraft.equipProfile(spacecraft.class.getEquipmentProfile(equipmentTag.getAttribute("profile")));
+                spacecraft.equipProfile(spacecraft.class.equipmentProfiles[equipmentTag.getAttribute("profile")]);
             // if no profile is referenced, simply create a custom profile from the tags inside
             // the equipment tag, and equip that
             } else {
@@ -923,8 +889,8 @@ Level.prototype.loadFromXML= function(levelSource) {
                 spacecraft.equipProfile(equipmentProfile);
             }
         // if there is no equipment tag, attempt to load the profile named "default"    
-        } else if(spacecraft.class.getEquipmentProfile("default")!==undefined) {
-            spacecraft.equipProfile(spacecraft.class.getEquipmentProfile("default"));
+        } else if(spacecraft.class.equipmentProfiles["default"]!==undefined) {
+            spacecraft.equipProfile(spacecraft.class.equipmentProfiles["default"]);
         }
         this._spacecrafts.push(spacecraft);
     }
@@ -985,8 +951,8 @@ Level.prototype.buildScene = function(scene) {
     for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName);
         game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor);
-        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName);
-        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlashTextureDescriptor);
+        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlash.shaderName);
+        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlash.textureDescriptor);
         game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections));
     }
     game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel());
@@ -996,8 +962,8 @@ Level.prototype.addProjectileResourcesToContext = function(context) {
     for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
         game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName).addToContext(context);
         game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor).addToContext(context);
-        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlashShaderName).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlashTextureDescriptor).addToContext(context);
+        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlash.shaderName).addToContext(context);
+        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlash.textureDescriptor).addToContext(context);
         game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections)).addToContext(context,false);
     }
     game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()).addToContext(context);
@@ -1052,11 +1018,7 @@ LogicContext.prototype.loadSkyboxClasses = function(classesXML) {
 	
 	var classTags = classesXML.getElementsByTagName("SkyboxClass");
 	for(var i=0;i<classTags.length;i++) {
-		result.push(new SkyboxClass(
-			classTags[i].getAttribute("name"),
-			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			classTags[i].getElementsByTagName("shader")[0].getAttribute("samplerName"),
-			classTags[i].getElementsByTagName("cubemap")[0].getAttribute("name")));		
+		result.push(new SkyboxClass(classTags[i]));
 	}
 	
 	this.skyboxClasses=result;
@@ -1065,26 +1027,10 @@ LogicContext.prototype.loadSkyboxClasses = function(classesXML) {
 
 LogicContext.prototype.loadBackgroundObjectClasses = function(classesXML) {
 	var result=new Array();
-        var layers;
-        var layerTags;
-        var i,j;
-	
+        
 	var classTags = classesXML.getElementsByTagName("BackgroundObjectClass");
-	for(i=0;i<classTags.length;i++) {
-                layers = new Array();
-                layerTags = classTags[i].getElementsByTagName("layer");
-                for(j=0;j<layerTags.length;j++) {
-                    layers.push({
-                        size: layerTags[j].getAttribute("size"),
-                        shaderName: layerTags[j].getElementsByTagName("shader")[0].getAttribute("name"),
-                        textureDescriptor: new TextureDescriptor(layerTags[j].getElementsByTagName("texture")[0]),
-                        color: getRGBColorFromXMLTag(layerTags[j].getElementsByTagName("color")[0])
-                    });
-                }
-		result.push(new BackgroundObjectClass(
-			classTags[i].getAttribute("name"),
-                        getRGBColorFromXMLTag(classTags[i].getElementsByTagName("light")[0].getElementsByTagName("color")[0]),
-			layers));
+	for(var i=0;i<classTags.length;i++) {
+            result.push(new BackgroundObjectClass(classTags[i]));
 	}
 	this.backgroundObjectClasses=result;
 	return result;
@@ -1100,11 +1046,7 @@ LogicContext.prototype.loadDustCloudClasses = function(classesXML) {
 	
 	var classTags = classesXML.getElementsByTagName("DustCloudClass");
 	for(var i=0;i<classTags.length;i++) {
-		result.push(new DustCloudClass(
-			classTags[i].getAttribute("name"),
-			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			classTags[i].getAttribute("numberOfParticles")
-                        ));		
+		result.push(new DustCloudClass(classTags[i]));
 	}
 	
 	this.dustCloudClasses=result;
@@ -1116,26 +1058,7 @@ LogicContext.prototype.loadProjectileClasses = function(classesXML) {
 	
 	var classTags = classesXML.getElementsByTagName("ProjectileClass");
 	for(var i=0;i<classTags.length;i++) {
-		var intersections=[];
-		var intersectionTags = classTags[i].getElementsByTagName("intersection");
-		for(var j=0;j<intersectionTags.length;j++) {
-			intersections.push(parseFloat(intersectionTags[j].getAttribute("position")));
-		}
-		result.push(new ProjectileClass(
-			classTags[i].getAttribute("name"),
-			classTags[i].getElementsByTagName("billboard")[0].getAttribute("size"),
-			intersections,
-			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			new TextureDescriptor(classTags[i].getElementsByTagName("texture")[0]),
-			classTags[i].getElementsByTagName("physics")[0].getAttribute("mass"),
-			classTags[i].getElementsByTagName("logic")[0].getAttribute("duration"),
-			classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("shader")[0].getAttribute("name"),
-			new TextureDescriptor(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("texture")[0]),
-			[
-				parseFloat(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("color")[0].getAttribute("r")),
-				parseFloat(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("color")[0].getAttribute("g")),
-				parseFloat(classTags[i].getElementsByTagName("muzzleFlash")[0].getElementsByTagName("color")[0].getAttribute("b"))
-			]));
+		result.push(new ProjectileClass(classTags[i]));
 	}
 	
 	this.projectileClasses=result;
@@ -1147,29 +1070,7 @@ LogicContext.prototype.loadWeaponClasses = function(classesXML) {
 	
 	var classTags = classesXML.getElementsByTagName("WeaponClass");
 	for(var i=0;i<classTags.length;i++) {
-		var modelTags=classTags[i].getElementsByTagName("model");
-		var modelReferences = new Array();
-		for(var j=0;j<modelTags.length;j++) {
-			modelReferences.push(new ModelReference(
-				modelTags[j].getAttribute("filename"),
-				modelTags[j].getAttribute("lod")));
-		}
-                var cooldown=classTags[i].getElementsByTagName("logic")[0].getAttribute("cooldown");
-		var barrelTags=classTags[i].getElementsByTagName("barrel");
-		var barrels = new Array();
-		for(var j=0;j<barrelTags.length;j++) {
-			barrels.push(new Barrel(
-				this.getProjectileClass(barrelTags[j].getAttribute("projectile")),
-				barrelTags[j].getAttribute("force"),
-				barrelTags[j].getAttribute("x"),
-				barrelTags[j].getAttribute("y"),
-				barrelTags[j].getAttribute("z")));
-		}
-		result.push(new WeaponClass(
-			classTags[i].getAttribute("name"),
-			modelReferences,
-                        cooldown,
-			barrels));
+		result.push(new WeaponClass(classTags[i]));
 	}
 	
 	this.weaponClasses=result;
@@ -1181,18 +1082,7 @@ LogicContext.prototype.loadPropulsionClasses = function(classesXML) {
 	
 	var classTags = classesXML.getElementsByTagName("PropulsionClass");
 	for(var i=0;i<classTags.length;i++) {
-		result.push(new PropulsionClass(
-			classTags[i].getAttribute("name"),
-			classTags[i].getElementsByTagName("shader")[0].getAttribute("name"),
-			new TextureDescriptor(classTags[i].getElementsByTagName("texture")[0]),
-			[
-				parseFloat(classTags[i].getElementsByTagName("color")[0].getAttribute("r")),
-				parseFloat(classTags[i].getElementsByTagName("color")[0].getAttribute("g")),
-				parseFloat(classTags[i].getElementsByTagName("color")[0].getAttribute("b"))
-			],
-			classTags[i].getElementsByTagName("power")[0].getAttribute("thrust"),
-			classTags[i].getElementsByTagName("power")[0].getAttribute("angularThrust")
-			));
+		result.push(new PropulsionClass(classTags[i]));
 	}
 	
 	this.propulsionClasses=result;
@@ -1205,7 +1095,7 @@ LogicContext.prototype.loadSpacecraftTypes = function(classesXML) {
 	var typeTags = classesXML.getElementsByTagName("SpacecraftType");
 	for(var i=0;i<typeTags.length;i++) {
             var spacecraftType = new SpacecraftType(typeTags[i]);
-            result[spacecraftType.getName()] = spacecraftType;
+            result[spacecraftType.name] = spacecraftType;
 	}
 	
 	this._spacecraftTypes = result;
@@ -1238,7 +1128,7 @@ LogicContext.prototype.loadClassesFromXML = function(xmlSource) {
 
 LogicContext.prototype.requestClassesLoad = function() {
     var request = new XMLHttpRequest();
-    request.open('GET', getXMLFolder()+this._classesSourceFileName+"?123", true);
+    request.open('GET', getGameFolder("config")+this._classesSourceFileName+"?123", true);
     var self = this;
     request.onreadystatechange = function () {
         if (request.readyState === 4) {

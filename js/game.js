@@ -93,7 +93,7 @@ Game.prototype.showError = function (message) {
  */
 Game.prototype.requestSettingsLoad = function () {
     var request = new XMLHttpRequest();
-    request.open('GET', getXMLFolder() + "settings.xml?123", true);
+    request.open('GET', getGameFolder("config") + "settings.xml?123", true);
     var self = this;
     request.onreadystatechange = function () {
         if (request.readyState === 4) {

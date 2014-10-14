@@ -3,10 +3,13 @@
  * to be referenced by index.html. It defines the folders where the resource
  * files can be found, loads all the other sources and initializes the game
  * by creating the global {@link game} object.<br/>
- * This is the only file that should contain global variables and functions.
+ * This is the only file that should contain a global variable. (except for
+ * some global utility functions)
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
  * @version 0.1-dev
  */
+
+"use strict";
 
 /**********************************************************************
     Copyright 2014 Krisztián Nagy
@@ -75,56 +78,27 @@ function getSourceFiles() {
 }
 
 /**
- * All the JavaScript (.js) source files (returned by getSourceFiles()) have to 
- * be placed in this folder.
+ * Returns the path of the folder where the files of the passed type are stored,
+ * relative to the site root.
+ * @param {String} fileType
  * @returns {String}
  */
-function getJavaScriptFolder() {
-    return "js/";
-}
-
-/**
- * All the components' (ScreenComponent class) HTML source files have to be 
- * placed in this folder.
- * @returns {String}
- */
-function getComponentFolder() {
-    return "components/";
-}
-
-/**
- * All the 3D model files (.egm) have to be placed in this folder.
- * @returns {String}
- */
-function getModelFolder() {
-    return "models/";
-}
-
-/**
- * All the GLSL shader source files (.vert, .frag) have to be placed in this 
- * folder.
- * @returns {String}
- */
-function getShaderFolder() {
-    return "shaders/";
-}
-
-/**
- * All the texture files have to be placed in this folder.
- * @returns {String}
- */
-function getTextureFolder() {
-    return "textures/";
-}
-
-/**
- * Folder to place the XML files to (settings, descriptions of in-game classes,
- * levels, etc)
- * @returns {String}
- */
-function getXMLFolder() {
-    return "xml/";
-}
+function getGameFolder(fileType) {
+    var folders = {
+        javascript: "js/",
+        component: "components/",
+        model: "models/",
+        shader: "shaders/",
+        texture: "textures/",
+        config: "xml/",
+        level: "xml/"
+    };
+    if(folders[fileType] !== undefined) {
+        return folders[fileType];
+    } else {
+        game.showError("Asked for folder for file type '"+fileType+"', and folder for such files is not registered!");
+    }
+};
 
 /** 
  * Function to load additional JavaScript code from a list of source files.
@@ -167,7 +141,7 @@ function loadScripts(folder, filenames, bypassCaching, callback) {
  * that sets up the global Game object.
  */
 function initialize() {
-    loadScripts(getJavaScriptFolder(),getSourceFiles(),true,function(){ 
+    loadScripts(getGameFolder("javascript"),getSourceFiles(),true,function(){ 
         game = new Game(); 
         game.addScreen(new MenuScreen("mainMenu","index.html",
             [
@@ -226,9 +200,7 @@ function initialize() {
                 },
                 {
                     caption: "Quit to main menu",
-                    action: function () { 
-                        game.setCurrentScreen("mainMenu"); 
-                    }
+                    action: function () {  game.setCurrentScreen("mainMenu"); }
                 }
             ],"menuContainer"));
         game.setCurrentScreen("mainMenu");
