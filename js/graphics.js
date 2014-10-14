@@ -24,6 +24,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Creates a new LOD context object.
  * @class Holds a certain LOD configuration to be used for making LOD decisions while rendering.

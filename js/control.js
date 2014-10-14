@@ -26,6 +26,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * The global variable used for manual spacecraft control (for test purposes).
  * @type FighterController

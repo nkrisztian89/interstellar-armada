@@ -24,6 +24,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Creates a new Texture object.
  * @class Represents a 2D texture resource.

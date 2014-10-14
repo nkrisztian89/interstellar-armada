@@ -24,6 +24,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * The length of impulse-like events in milliseconds (such as thruster bursts or 
  * weapon shots)
@@ -236,9 +238,8 @@ Projectile.prototype.simulate = function(dt,hitObjects) {
 	if(this.timeLeft<=0) {
 		this.toBeDeleted = true;
 		this.visualModel.toBeDeleted=true;
-		delete this.visualModel;
-		delete this.physicalModel;
-		delete this;
+		this.visualModel = null;
+		this.physicalModel = null;
 	} else {
 		this.physicalModel.simulate(dt);
 		this.visualModel.positionMatrix=this.physicalModel.positionMatrix;
@@ -972,7 +973,7 @@ Level.prototype.addProjectileResourcesToContext = function(context) {
 Level.prototype.tick = function(dt) {
 	for (var i=0;i<this._spacecrafts.length;i++) {
 		if ((this._spacecrafts[i]===undefined)||(this._spacecrafts[i].toBeDeleted)) {
-			delete this._spacecrafts[i];
+			this._spacecrafts[i] = null;
 			this._spacecrafts.splice(i,1);
 		} else {
 			this._spacecrafts[i].simulate(dt);
@@ -980,7 +981,7 @@ Level.prototype.tick = function(dt) {
 	}
 	for (var i=0;i<this.projectiles.length;i++) {
 		if ((this.projectiles[i]===undefined)||(this.projectiles[i].toBeDeleted)) {
-			delete this.projectiles[i];
+			this.projectiles[i] = null;
 			this.projectiles.splice(i,1);
 		} else {
 			this.projectiles[i].simulate(dt,this._spacecrafts);

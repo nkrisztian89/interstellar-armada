@@ -25,6 +25,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Creates a new line object for an EgomModel.
  * @class Represents a line connecting two vertices in a model.

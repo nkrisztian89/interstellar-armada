@@ -23,6 +23,8 @@
  along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Defines a Game object.
  * @class Holds the general properties of the game (the current context for the

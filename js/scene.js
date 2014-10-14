@@ -24,6 +24,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Creates a new VisualObject.
  * @class The parent class of all objects to be rendered in the scene graph such
@@ -111,7 +113,7 @@ VisualObject.prototype.cascadeCleanUp = function() {
     for(var i=0;i<this.subnodes.length;i++) {
         this.subnodes[i].cascadeCleanUp();
         while ((i<this.subnodes.length)&&((this.subnodes[i]===undefined)||(this.subnodes[i].toBeDeleted))) {
-            delete this.subnodes[i];
+            this.subnodes[i] = null;
             this.subnodes.splice(i,1);
 	}
     }
@@ -1349,7 +1351,7 @@ Scene.prototype.cleanUp = function() {
     for(var i=0;i<this.objects.length;i++) {
         this.objects[i].cascadeCleanUp();
         while ((i<this.objects.length)&&((this.objects[i]===undefined)||(this.objects[i].toBeDeleted))) {
-            delete this.objects[i];
+            this.objects[i] = null;
             this.objects.splice(i,1);
 	}
     }

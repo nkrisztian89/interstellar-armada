@@ -25,6 +25,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Defines a GameScreen object.
  * @class Holds the logical model of a screen of the game. The different

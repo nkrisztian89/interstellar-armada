@@ -24,6 +24,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Defines a force class.
  * @class Represents a force affecting a physical object, causing it to 

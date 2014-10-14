@@ -17,6 +17,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Returns a 3x3 identity matrix.
  * @returns {Float32Array}

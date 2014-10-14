@@ -23,6 +23,8 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+"uses strict";
+
 /**
  * Defines a resource object.
  * @class Ancestor class for all classes representing resources that need to be 
