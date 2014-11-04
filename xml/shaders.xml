@@ -1,239 +1,241 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Shaders>
-	<Cubemap name="deepspace">
-		<image url="textures/cube/cm_1c2.jpg" direction="pos_x" />
-		<image url="textures/cube/cm_1c2.jpg" direction="neg_x" />
-		<image url="textures/cube/cm_1c2.jpg" direction="pos_y" />
-		<image url="textures/cube/cm_1c2.jpg" direction="neg_y" />
-		<image url="textures/cube/cm_1c2.jpg" direction="pos_z" />
-		<image url="textures/cube/cm_1c2.jpg" direction="neg_z" />
-	</Cubemap>
+    <Cubemap name="deepspace">
+        <image url="textures/cube/cm_1c2.jpg" direction="pos_x" />
+        <image url="textures/cube/cm_1c2.jpg" direction="neg_x" />
+        <image url="textures/cube/cm_1c2.jpg" direction="pos_y" />
+        <image url="textures/cube/cm_1c2.jpg" direction="neg_y" />
+        <image url="textures/cube/cm_1c2.jpg" direction="pos_z" />
+        <image url="textures/cube/cm_1c2.jpg" direction="neg_z" />
+    </Cubemap>
 	
-	<Shader name="simple">
-		<vertex filename="shaders/simple.vert" />
-		<fragment filename="shaders/simple.frag" />
-		<state>
-			<blendType value="mix" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-			<attribute name="a_normal" size="3" role="normal" />
-			<attribute name="a_color" size="4" role="color" />
-			<attribute name="a_luminosity" size="1" role="luminosity" />
-			<attribute name="a_shininess" size="1" role="shininess" />	
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_normalMatrix" type="mat3" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-                        <uniform name="u_specularTexture" type="sampler2D" />
-			<uniform name="u_numLights" type="int" />
-                        <uniform name="u_lights" type="struct" arraySize="12" />
-                        <uniform name="color" memberOf="u_lights" type="vec3" />
-                        <uniform name="direction" memberOf="u_lights" type="vec3" />
-			<uniform name="u_eyePos" type="vec3" />
-		</uniforms>
-	</Shader>
+    <Shader name="simple">
+        <vertex filename="simple.vert" />
+        <fragment filename="simple.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_normal" size="3" role="normal" />
+            <attribute name="a_color" size="4" role="color" />
+            <attribute name="a_luminosity" size="1" role="luminosity" />
+            <attribute name="a_shininess" size="1" role="shininess" />	
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_normalMatrix" type="mat3" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_specularTexture" type="sampler2D" />
+            <uniform name="u_numLights" type="int" />
+            <uniform name="u_lights" type="struct" arraySize="12" />
+            <uniform name="color" memberOf="u_lights" type="vec3" />
+            <uniform name="direction" memberOf="u_lights" type="vec3" />
+            <uniform name="u_eyePos" type="vec3" />
+        </uniforms>
+    </Shader>
         
-        <Shader name="simpleReveal">
-		<vertex filename="shaders/simpleWithModelPos.vert" />
-		<fragment filename="shaders/simpleReveal.frag" />
-		<state>
-			<blendType value="mix" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-			<attribute name="a_normal" size="3" role="normal" />
-			<attribute name="a_color" size="4" role="color" />
-			<attribute name="a_luminosity" size="1" role="luminosity" />
-			<attribute name="a_shininess" size="1" role="shininess" />	
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_normalMatrix" type="mat3" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-                        <uniform name="u_specularTexture" type="sampler2D" />
-			<uniform name="u_numLights" type="int" />
-                        <uniform name="u_lights" type="struct" arraySize="12" />
-                        <uniform name="color" memberOf="u_lights" type="vec3" />
-                        <uniform name="direction" memberOf="u_lights" type="vec3" />
-			<uniform name="u_eyePos" type="vec3" />
-                        <uniform name="u_revealStart" type="float" />
-                        <uniform name="u_revealTransitionLength" type="float" />
-                        <uniform name="u_revealFront" type="bool" />
-		</uniforms>
-	</Shader>
+    <Shader name="simpleReveal">
+        <vertex filename="simpleWithModelPos.vert" />
+        <fragment filename="simpleReveal.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_normal" size="3" role="normal" />
+            <attribute name="a_color" size="4" role="color" />
+            <attribute name="a_luminosity" size="1" role="luminosity" />
+            <attribute name="a_shininess" size="1" role="shininess" />	
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_normalMatrix" type="mat3" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_specularTexture" type="sampler2D" />
+            <uniform name="u_numLights" type="int" />
+            <uniform name="u_lights" type="struct" arraySize="12" />
+            <uniform name="color" memberOf="u_lights" type="vec3" />
+            <uniform name="direction" memberOf="u_lights" type="vec3" />
+            <uniform name="u_eyePos" type="vec3" />
+            <uniform name="u_revealStart" type="float" />
+            <uniform name="u_revealTransitionLength" type="float" />
+            <uniform name="u_revealFront" type="bool" />
+        </uniforms>
+    </Shader>
         
-        <Shader name="oneColorReveal">
-		<vertex filename="shaders/simpleWithModelPos.vert" />
-		<fragment filename="shaders/oneColorReveal.frag" />
-		<state>
-			<blendType value="mix" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_color" type="vec4" />
-                        <uniform name="u_revealStart" type="float" />
-                        <uniform name="u_revealTransitionLength" type="float" />
-                        <uniform name="u_revealFront" type="bool" />
-		</uniforms>
-	</Shader>
+    <Shader name="oneColorReveal">
+        <vertex filename="simpleWithModelPos.vert" />
+        <fragment filename="oneColorReveal.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_color" type="vec4" />
+            <uniform name="u_revealStart" type="float" />
+            <uniform name="u_revealTransitionLength" type="float" />
+            <uniform name="u_revealFront" type="bool" />
+        </uniforms>
+    </Shader>
         
-        <Shader name="ship">
-		<vertex filename="shaders/ship.vert" />
-		<fragment filename="shaders/ship.frag" />
-		<state>
-			<blendType value="mix" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-			<attribute name="a_normal" size="3" role="normal" />
-			<attribute name="a_color" size="4" role="color" />
-			<attribute name="a_luminosity" size="1" role="luminosity" />
-			<attribute name="a_shininess" size="1" role="shininess" />
-                        <attribute name="a_groupIndex" size="1" role="groupIndex" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_normalMatrix" type="mat3" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-                        <uniform name="u_specularTexture" type="sampler2D" />
-                        <uniform name="u_luminosityTexture" type="sampler2D" />
-			<uniform name="u_numLights" type="int" />
-                        <uniform name="u_lights" type="struct" arraySize="12" />
-                        <uniform name="color" memberOf="u_lights" type="vec3" />
-                        <uniform name="direction" memberOf="u_lights" type="vec3" />
-			<uniform name="u_eyePos" type="vec3" />
-                        <uniform name="u_luminosityFactors" type="float" arraySize="20" />
-		</uniforms>
-	</Shader>
+    <Shader name="ship">
+        <vertex filename="ship.vert" />
+        <fragment filename="ship.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_normal" size="3" role="normal" />
+            <attribute name="a_color" size="4" role="color" />
+            <attribute name="a_luminosity" size="1" role="luminosity" />
+            <attribute name="a_shininess" size="1" role="shininess" />
+            <attribute name="a_groupIndex" size="1" role="groupIndex" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_normalMatrix" type="mat3" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_specularTexture" type="sampler2D" />
+            <uniform name="u_luminosityTexture" type="sampler2D" />
+            <uniform name="u_numLights" type="int" />
+            <uniform name="u_lights" type="struct" arraySize="12" />
+            <uniform name="color" memberOf="u_lights" type="vec3" />
+            <uniform name="direction" memberOf="u_lights" type="vec3" />
+            <uniform name="u_eyePos" type="vec3" />
+            <uniform name="u_luminosityFactors" type="float" arraySize="20" />
+        </uniforms>
+    </Shader>
 	
-	<Shader name="skybox">
-		<vertex filename="shaders/skybox.vert" />
-		<fragment filename="shaders/skybox.frag" />
-		<state>
-			<blendType value="none" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_viewDirectionProjectionInverse" type="mat4" />
-			<uniform name="u_skybox" type="samplerCube" />
-		</uniforms>
-	</Shader>
+    <Shader name="skybox">
+        <vertex filename="skybox.vert" />
+        <fragment filename="skybox.frag" />
+        <state>
+            <blendType value="none" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_viewDirectionProjectionInverse" type="mat4" />
+            <uniform name="u_skybox" type="samplerCube" />
+        </uniforms>
+    </Shader>
 	
-	<Shader name="billboard">
-		<vertex filename="shaders/billboard.vert" />
-		<fragment filename="shaders/billboard.frag" />
-		<state>
-			<blendType value="add" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-			<uniform name="u_eyePos" type="vec3" />
-		</uniforms>
-	</Shader>
+    <Shader name="billboard">
+        <vertex filename="billboard.vert" />
+        <fragment filename="billboard.frag" />
+        <state>
+            <blendType value="add" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_eyePos" type="vec3" />
+        </uniforms>
+    </Shader>
 	
-	<Shader name="particle">
-		<vertex filename="shaders/particle.vert" />
-		<fragment filename="shaders/particle.frag" />
-		<state>
-			<blendType value="add" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_billboardSize" type = "float" />
-			<uniform name="u_relAge" type="float" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-			<uniform name="u_color" type="vec3" />
-		</uniforms>
-	</Shader>
+    <Shader name="particle">
+        <vertex filename="particle.vert" />
+        <fragment filename="particle.frag" />
+        <state>
+            <blendType value="add" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_billboardSize" type = "float" />
+            <uniform name="u_relAge" type="float" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_color" type="vec3" />
+        </uniforms>
+    </Shader>
 	
-	<Shader name="permanentParticle">
-		<vertex filename="shaders/linearSizeParticle.vert" />
-		<fragment filename="shaders/particle.frag" />
-		<state>
-			<blendType value="add" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_billboardSize" type = "float" />
-			<uniform name="u_relAge" type="float" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-			<uniform name="u_color" type="vec3" />
-		</uniforms>
-	</Shader>
+    <Shader name="permanentParticle">
+        <vertex filename="linearSizeParticle.vert" />
+        <fragment filename="particle.frag" />
+        <state>
+            <blendType value="add" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_billboardSize" type = "float" />
+            <uniform name="u_relAge" type="float" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_color" type="vec3" />
+        </uniforms>
+    </Shader>
         
-        <Shader name="backgroundBillboard">
-		<vertex filename="shaders/backgroundBillboard.vert" />
-		<fragment filename="shaders/particle.frag" />
-		<state>
-			<blendType value="add" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-			<attribute name="a_texCoord" size="2" role="texCoord" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-                        <uniform name="u_cameraOrientationMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_billboardSize" type = "float" />
-			<uniform name="u_relAge" type="float" />
-			<uniform name="u_colorTexture" type="sampler2D" />
-			<uniform name="u_color" type="vec3" />
-		</uniforms>
-	</Shader>
+    <Shader name="backgroundBillboard">
+        <vertex filename="backgroundBillboard.vert" />
+        <fragment filename="particle.frag" />
+        <state>
+            <blendType value="add" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraOrientationMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_billboardSize" type = "float" />
+            <uniform name="u_relAge" type="float" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_color" type="vec3" />
+        </uniforms>
+    </Shader>
         
-        <Shader name="dust">
-		<vertex filename="shaders/dust.vert" />
-		<fragment filename="shaders/color.frag" />
-		<state>
-			<blendType value="none" />
-		</state>
-		<attributes>
-			<attribute name="a_position" size="3" role="position" />
-		</attributes>
-		<uniforms>
-			<uniform name="u_modelMatrix" type="mat4" />
-			<uniform name="u_cameraMatrix" type="mat4" />
-			<uniform name="u_projMatrix" type="mat4" />
-			<uniform name="u_color" type="vec3" />
-                        <uniform name="u_shift" type="vec3" />
-		</uniforms>
-	</Shader>
+    <Shader name="dust">
+        <vertex filename="dust.vert" />
+        <fragment filename="dust.frag" />
+        <state>
+            <blendType value="none" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_color" type="vec3" />
+            <uniform name="u_shift" type="vec3" />
+            <uniform name="u_length" type="float" />
+            <uniform name="u_farthestZ" type="float" />
+        </uniforms>
+    </Shader>
 </Shaders>

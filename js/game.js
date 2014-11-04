@@ -1,7 +1,9 @@
+"use strict";
+
 /**
  * @fileOverview This file contains the {@link Game} class.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * @version 0.1.0-dev
  */
 
 /**********************************************************************
@@ -23,8 +25,6 @@
  along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-"uses strict";
-
 /**
  * Defines a Game object.
  * @class Holds the general properties of the game (the current context for the
@@ -32,6 +32,7 @@
  * @returns {Game}
  */
 function Game() {
+    Armada.log("Creating new game object...",1);
     /**
      * The game's available screens stored in an associative array, with the 
      * keys being the names of the screens.
@@ -76,38 +77,25 @@ function Game() {
      * @name Game#controlContext
      * @type ControlContext
      */
-    this.controlContext = new KeyboardControlContext();
-
+    this.controlContext = new ControlContext();
     this.requestSettingsLoad();
+    Armada.log("Game object created.",1);
 }
-
-/**
- * Notifies the user of an error that happened while running the game.
- * @param {String} message The message to show.
- */
-Game.prototype.showError = function (message) {
-    alert(message);
-};
 
 /**
  * Sends an asynchronous request to get the XML file describing the game
  * settings and sets the callback function to set them.
  */
 Game.prototype.requestSettingsLoad = function () {
-    var request = new XMLHttpRequest();
-    request.open('GET', getGameFolder("config") + "settings.xml?123", true);
     var self = this;
-    request.onreadystatechange = function () {
-        if (request.readyState === 4) {
-            var settingsXML = this.responseXML;
-            self.graphicsContext.loadFromXML(settingsXML.getElementsByTagName("graphics")[0]);
-            self.graphicsContext.loadFromLocalStorage();
-            self.logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
-            self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
-            self.controlContext.loadFromLocalStorage();
-        }
-    };
-    request.send(null);
+    Armada.requestXMLFile("config","settings.xml",function(settingsXML) {
+        Armada.log("Loading game settings...",1);
+        self.graphicsContext.loadFromXML(settingsXML.getElementsByTagName("graphics")[0]);
+        self.graphicsContext.loadFromLocalStorage();
+        self.logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
+        self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
+        self.controlContext.loadFromLocalStorage();
+    });
 };
 
 /**
@@ -123,6 +111,7 @@ Game.prototype.addScreen = function (screen, replace) {
         }
     }
     this._screens[screen.getName()] = screen;
+    screen.setGame(this);
     if (replace === true) {
         screen.replacePageWithScreen();
     } else {

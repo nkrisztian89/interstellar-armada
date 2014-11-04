@@ -1,30 +1,73 @@
 /* the canvas element where the game (WebGL) scene is rendered */
 canvas.battleCanvas {
-    width: 90%;
-    height: 70%;
-    border: 1px solid #333333;
+    width: 100%;
+    height: 100%;
+    border: none;//1px solid #333333;
     display: block;
     margin-left: auto; 
     margin-right: auto; 
-    margin-top: 5px; 
-    margin-bottom: 5px; 
+    margin-top: auto; 
+    margin-bottom: auto; 
 }
 
 p.battleScreenStats {
     font-size: 9pt;
-    border:1px solid #333333;
     width: 90%;
-    margin-left: auto; 
-    margin-right: auto; 
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
 }
 
 p.battleUI {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    left: auto;
+    text-align: right;
     font-size: 9pt; color: #ffffff;
     text-shadow: #88FF88 0 0 0.2em;
-    background-color: #00AA00;
+    background-color: rgba(0,170,0,0.5);
     box-shadow: 0em 0em 0.5em #00AA00;
-    width: 300px;
+    padding: 0.5em;
+}
+
+p.smallBattleHeader {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
     margin-left: auto; 
     margin-right: auto; 
-    padding: 0.5em;
+    margin-top: 1em;
+    font-size: 8pt; color: #dddddd;
+    text-align: center;
+}
+
+p.bigBattleHeader {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    margin-left: auto; 
+    margin-right: auto; 
+    margin-top: 2em;
+    font-size: 18pt; color: #dddddd;
+    text-align: center;
+}
+
+p.debugLabel {
+    font-size: 9pt;
+    width: 90%;
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    left: auto;
+    text-align: right;
+}
+
+.crosshair {
+    border-width: 2px;
+    border-style: solid;
+    border-color: rgba(192,192,192,0.5);
+    border-radius: 6px;
+    width: 12px;
+    height: 12px;
 }

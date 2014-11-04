@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file defines the GameScreen class and its descendant
  * classes, which load and manipulate the DOM of the HTML pages and control
@@ -25,12 +27,11 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-"uses strict";
-
 /**
  * Defines a GameScreen object.
  * @class Holds the logical model of a screen of the game. The different
  * screens should be defined as descendants of this class.
+ * @extends Resource
  * @param {String} name The name by which this screen can be identified.
  * @param {String} source The name of the HTML file where the structure of this
  * screen is defined.
@@ -44,6 +45,8 @@ function GameScreen(name,source) {
     this._model=null;
     this._background = null;
     this._container = null;
+    
+    this._game = null;
     
     this._simpleComponents = new Array();
     this._externalComponents = new Array();
@@ -60,6 +63,10 @@ function GameScreen(name,source) {
 GameScreen.prototype = new Resource();
 GameScreen.prototype.constructor = GameScreen;
 
+GameScreen.prototype.setGame = function(game) {
+    this._game = game;
+};
+
 /**
  * Initiates the asynchronous loading of the screen's structure from the
  * external HTML file.
@@ -67,18 +74,13 @@ GameScreen.prototype.constructor = GameScreen;
 GameScreen.prototype.requestModelLoad = function() {
     // send an asynchronous request to grab the HTML file containing the DOM of
     // this screen
-    var request = new XMLHttpRequest();
-    request.open('GET', location.pathname+this._source+"?123", true);
     var self = this;
-    request.onreadystatechange = function() {
-        if (request.readyState === 4) {
-            self._model = document.implementation.createHTMLDocument(self._name);
-            self._model.documentElement.innerHTML = this.responseText;
-            self._onModelLoad();
-            self.setToReady();
-        }
-    };
-    request.send(null);
+    Armada.requestTextFile("screen",this._source,function(responseText) {
+        self._model = document.implementation.createHTMLDocument(self._name);
+        self._model.documentElement.innerHTML = responseText;
+        self._onModelLoad();
+        self.setToReady();
+    });
 };
 
 /**
@@ -174,8 +176,8 @@ GameScreen.prototype.removeFromPage = function() {
     for(var i=0;i<this._externalComponents.length;i++) {
         this._externalComponents[i].component.resetComponent();
     }
-    document.dody.removeChild(this._background);
-    document.dody.removeChild(this._container);
+    document.body.removeChild(this._background);
+    document.body.removeChild(this._container);
     this._background = null;
     this._container = null;
 };
@@ -278,7 +280,7 @@ ScreenCanvas.prototype.isResizeable = function() {
  */
 ScreenCanvas.prototype.getManagedContext = function() {
     if(this._context === null) {
-        this._context = new ManagedGLContext(this._canvas.getAttribute("id"),this._canvas,game.graphicsContext.getAntialiasing(),game.graphicsContext.getFiltering());
+        this._context = new ManagedGLContext(this._canvas.getAttribute("id"),this._canvas,Armada.graphics().getAntialiasing(),Armada.graphics().getFiltering());
     }
     return this._context;
 };
@@ -325,7 +327,7 @@ GameScreenWithCanvases.prototype.removeFromPage = function() {
         
     this._sceneCanvasBindings = new Array();
     
-    game.graphicsContext.resourceManager.clearResourceContextBindings();
+    Armada.resources().clearResourceContextBindings();
 };
 
 GameScreenWithCanvases.prototype.hide = function() {
@@ -486,23 +488,84 @@ function BattleScreen(name,source) {
         
     this._stats = this.registerSimpleComponent("stats");
     this._ui = this.registerSimpleComponent("ui");
+    this._smallHeader = this.registerSimpleComponent("smallHeader");
+    this._bigHeader = this.registerSimpleComponent("bigHeader");
+    
+    this._debugLabel = this.registerSimpleComponent("debugLabel");
+   
+    this._crosshair = this.registerSimpleComponent("crosshair");
+    
+    var self = this;
     
     this._loadingBox = this.registerExternalComponent(new LoadingBox(name+"_loadingBox","loadingbox.html","loadingbox.css"));
-    this._infoBox = this.registerExternalComponent(new InfoBox(name+"_infoBox","infobox.html","infobox.css"));
+    this._infoBox = this.registerExternalComponent(new InfoBox(name+"_infoBox","infobox.html","infobox.css",function() { self.pauseBattle(); },function() { self.resumeBattle(); }));
     
+    /**
+     * @name BattleScreen#_level
+     * @type Level
+     */
     this._level = null;
+    /**
+     * @name BattleScreen#_battleScene
+     * @type Scene
+     */
+    this._battleScene = null;
+    this._simulationLoop = null;
+    this._battleCursor = null;
+};
+
+BattleScreen.prototype = new GameScreenWithCanvases();
+BattleScreen.prototype.constructor = BattleScreen;
+
+BattleScreen.prototype.pauseBattle = function () {
+    Armada.control().stopListening();
+    this._battleCursor = document.body.style.cursor;
+    document.body.style.cursor='default';
+    clearInterval(this._simulationLoop);
     this._simulationLoop = null;
 };
 
-BattleScreen.prototype=new GameScreenWithCanvases();
-BattleScreen.prototype.constructor=BattleScreen;
+BattleScreen.prototype.resumeBattle = function () {
+    document.body.style.cursor=this._battleCursor || 'default';
+    if(this._simulationLoop === null) {
+        var prevDate = new Date();
+        var freq = 60;
+        var self = this;
 
-BattleScreen.prototype.hide = function() {
+        this._simulationLoop = setInterval(function ()
+        {
+            var curDate = new Date();
+            Armada.control().control();
+            self._level.tick(curDate - prevDate);
+            prevDate = curDate;
+        }, 1000 / freq);
+        Armada.control().startListening();
+    } else {
+        Armada.showError("Trying to resume simulation while it is already going on!","minor",
+            "No action was taken, to avoid double-running the simulation.");
+    }
+        
+};
+
+BattleScreen.prototype.hide = function () {
     GameScreenWithCanvases.prototype.hide.call(this);
-    clearInterval(this._simulationLoop);
-    this._simulationLoop = null;
+    this.pauseBattle();
     this._level = null;
-    game.graphicsContext.scene = null;
+    this._battleScene = null;
+};
+
+/**
+ * Initializes the components of the parent class, then the additional ones for
+ * this class (the canvases).
+ */
+BattleScreen.prototype._initializeComponents = function() {
+    GameScreenWithCanvases.prototype._initializeComponents.call(this);
+    var canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
+    this._resizeEventListener2 = function () {
+        Armada.control().setScreenCenter(canvas.width / 2, canvas.height / 2);
+    };
+    window.addEventListener("resize", this._resizeEventListener2);
+    this._resizeEventListener2();
 };
 
 /**
@@ -537,6 +600,10 @@ BattleScreen.prototype.updateStatus = function(newStatus,newProgress) {
     }
 };
 
+BattleScreen.prototype.setDebugLabel = function (message) {
+    this._debugLabel.setContent(message);
+};
+
 /**
  * Hides the stats (FPS, draw stats) component.
  */
@@ -552,10 +619,48 @@ BattleScreen.prototype.hideUI = function() {
 };
 
 /**
+ * Shows the headers in the top center of the screen.
+ */
+BattleScreen.prototype.showHeaders = function() {
+    this._bigHeader.show();
+    this._smallHeader.show();
+};
+
+/**
+ * Hides the headers.
+ */
+BattleScreen.prototype.hideHeaders = function() {
+    this._bigHeader.hide();
+    this._smallHeader.hide();
+};
+
+/**
  * Shows the stats (FPS, draw stats) component.
  */
 BattleScreen.prototype.showStats = function() {
     this._stats.show();
+};
+
+BattleScreen.prototype.showCrosshair = function() {
+    this._crosshair.show();
+};
+
+BattleScreen.prototype.hideCrosshair = function() {
+    this._crosshair.hide();
+};
+
+/**
+ * Toggles the visibility of the texts (headers and statistics) on the screen.
+ * @returns {undefined}
+ */
+BattleScreen.prototype.toggleTextVisibility = function() {
+    if(this._bigHeader.isVisible()) {
+        this.hideHeaders();
+        this.hideStats();
+    } else {
+        this.showHeaders();
+        this.showStats();
+    }
 };
 
 /**
@@ -574,21 +679,36 @@ BattleScreen.prototype.showMessage = function(message) {
     this._infoBox.show();
 };
 
+/**
+ * Updates the big header's content on the screen.
+ * @param {String} content
+ */
+BattleScreen.prototype.setHeaderContent = function(content) {
+    this._bigHeader.setContent(content);
+};
+
 BattleScreen.prototype.render = function() {
     GameScreenWithCanvases.prototype.render.call(this);
-    this._stats.setContent(this.getFPS()+"<br/>"+this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
+    this._stats.setContent(this.getFPS()+"<br/>"+this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());    
+    var craft = this._level.getPilotedSpacecraft();
+    this._ui.setContent(
+            craft.getFlightMode()+" flight mode<br/>"+
+            "speed: "+craft.getRelativeVelocityMatrix()[13].toFixed()+
+            ((craft.getFlightMode()==="compensated")?(" / "+craft._maneuveringComputer._speedTarget.toFixed()):""));
 };
 
 BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
     document.body.style.cursor='wait';
     this.hideStats();
     this.hideUI();
+    this.hideCrosshair();
     this._loadingBox.show();
-    this._infoBox.hide();
     this.resizeCanvases(); 
+    Armada.control().setScreenCenter(
+            this.getScreenCanvas("battleCanvas").getCanvasElement().width / 2, 
+            this.getScreenCanvas("battleCanvas").getCanvasElement().height / 2);
     
     this._level = new Level();
-    game.logicContext.level = this._level;
     
     var self = this;
     
@@ -598,39 +718,32 @@ BattleScreen.prototype.startNewBattle = function(levelSourceFilename) {
         
         self.updateStatus("building scene...",10);
         var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
-        game.graphicsContext.scene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,game.graphicsContext.getLODContext());
-        self._level.buildScene(game.graphicsContext.scene);
+        self._battleScene = new Scene(0,0,canvas.width,canvas.height,true,[true,true,true,true],[0,0,0,1],true,Armada.graphics().getLODContext());
+        self._level.buildScene(self._battleScene);
+
+        Armada.control().getController("general").setLevel(self._level);
+        Armada.control().getController("camera").setControlledCamera(self._battleScene.activeCamera);
 
         self.updateStatus("loading graphical resources...",15);
-        game.graphicsContext.resourceManager.onResourceLoad = function(resourceName,totalResources,loadedResources) {
+        Armada.resources().onResourceLoad = function(resourceName,totalResources,loadedResources) {
             self.updateStatus("loaded "+resourceName+", total progress: "+loadedResources+"/"+totalResources,20+(loadedResources/totalResources)*60);
         };
         var freq = 60;
-        game.graphicsContext.resourceManager.executeWhenReady(function() { 
+        Armada.resources().executeWhenReady(function() { 
             self.updateStatus("initializing WebGL...",75);
-            self.bindSceneToCanvas(game.graphicsContext.scene,self.getScreenCanvas("battleCanvas"));
+            self.bindSceneToCanvas(self._battleScene,self.getScreenCanvas("battleCanvas"));
             self._level.addProjectileResourcesToContext(self.getScreenCanvas("battleCanvas").getManagedContext());
             self.updateStatus("",100);
+            self._smallHeader.setContent("running an early test of Interstellar Armada, version: "+Armada.getVersion());
+            Armada.control().switchToSpectatorMode();
+            self._battleCursor = document.body.style.cursor;
             self.showMessage("Ready!");
             self.getLoadingBox().hide();
             self.showStats();
             self.startRenderLoop(1000/freq);
-            document.body.style.cursor='default';
         });
         
-        game.graphicsContext.resourceManager.requestResourceLoad();
-
-        game.controlContext.activate();
-
-        var prevDate = new Date();
-        
-        self._simulationLoop = setInterval(function ()
-        {
-            var curDate = new Date();
-            self._level.tick(curDate - prevDate);
-            prevDate = curDate;
-            control(game.graphicsContext.scene, self._level, game.controlContext.globalActions);
-        }, 1000 / freq);
+        Armada.resources().requestResourceLoad();
     };
     
     self.updateStatus("loading level information...",0);
@@ -707,9 +820,9 @@ DatabaseScreen.prototype._initializeComponents = function() {
         self.stopRevealLoop();
         self.stopRotationLoop();
         if(self.isSuperimposed()) {
-            game.closeSuperimposedScreen();
+            self._game.closeSuperimposedScreen();
         } else {
-            game.setCurrentScreen('mainMenu');
+            self._game.setCurrentScreen('mainMenu');
         }
     };
     this._prevButton.getElement().onclick = function(){
@@ -761,10 +874,10 @@ DatabaseScreen.prototype.startRevealLoop = function() {
 
 DatabaseScreen.prototype.startRotationLoop = function() {
     // turn the ship to start the rotation facing the camera
-    this._solidModel.setOrientationMatrix(identityMatrix4());
+    this._solidModel.setOrientationMatrix(Mat.identity4());
     this._solidModel.rotate([0.0,0.0,1.0],Math.PI);
     this._solidModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
-    this._wireframeModel.setOrientationMatrix(identityMatrix4());
+    this._wireframeModel.setOrientationMatrix(Mat.identity4());
     this._wireframeModel.rotate([0.0,0.0,1.0],Math.PI);
     this._wireframeModel.rotate([1.0,0.0,0.0],60/180*Math.PI);
     var prevDate = new Date();
@@ -813,13 +926,13 @@ DatabaseScreen.prototype.initializeCanvas = function() {
     var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
     // create a new scene and add a directional light source which will not change
     // while different objects are shown
-    this._scene = new Scene(0,0,canvas.clientWidth,canvas.clientHeight,true,[true,true,true,true],[0,0,0,0],true,game.graphicsContext.getLODContext());
+    this._scene = new Scene(0,0,canvas.clientWidth,canvas.clientHeight,true,[true,true,true,true],[0,0,0,0],true,Armada.graphics().getLODContext());
     this._scene.addLightSource(new LightSource([1.0,1.0,1.0],[-1.0,0.0,1.0]));
 
-    game.graphicsContext.resourceManager.onResourceLoad = function(resourceName,totalResources,loadedResources) {
+    Armada.resources().onResourceLoad = function(resourceName,totalResources,loadedResources) {
         self.updateStatus("loaded "+resourceName+", total progress: "+loadedResources+"/"+totalResources,20+(loadedResources/totalResources)*60);
     };
-    game.graphicsContext.resourceManager.executeWhenReady(function() { 
+    Armada.resources().executeWhenReady(function() { 
         self.updateStatus("",100);
         self._loadingBox.hide();
     });
@@ -846,11 +959,15 @@ DatabaseScreen.prototype.initializeCanvas = function() {
         };
         // once the user releases the mouse button, the event handlers should be cancelled
         // and the automatic rotation started again
-        document.body.onmouseup = function() {
+        document.body.onmouseup = function(e) {
             document.body.onmousemove = null;
             document.body.onmouseup = null;
             self.startRotationLoop();
+            e.preventDefault();
+            return false;
         };
+        e.preventDefault();
+        return false;
     };
 };
 
@@ -862,7 +979,7 @@ DatabaseScreen.prototype.selectPreviousShip = function() {
     // using % operator does not work with -1, reverted to "if"
     this._itemIndex -= 1;
     if(this._itemIndex===-1) {
-        this._itemIndex = game.logicContext.getSpacecraftClasses().length-1;
+        this._itemIndex = Armada.logic().getSpacecraftClasses().length-1;
     }
     this.loadShip();
 };
@@ -872,7 +989,7 @@ DatabaseScreen.prototype.selectPreviousShip = function() {
  * screen. Loops around.
  */
 DatabaseScreen.prototype.selectNextShip = function() {
-    this._itemIndex = (this._itemIndex+1)%game.logicContext.getSpacecraftClasses().length;
+    this._itemIndex = (this._itemIndex+1)%Armada.logic().getSpacecraftClasses().length;
     this.loadShip();
 };
 
@@ -896,10 +1013,10 @@ DatabaseScreen.prototype.loadShip = function() {
     this.render();
     
     var self = this;
-    game.logicContext.executeWhenReady(function() {
+    Armada.logic().executeWhenReady(function() {
         // display the data that can be displayed right away, and show loading
         // for the rest
-        var shipClass = game.logicContext.getSpacecraftClasses()[self._itemIndex];
+        var shipClass = Armada.logic().getSpacecraftClasses()[self._itemIndex];
         self._itemName.setContent(shipClass.fullName);
         self._itemType.setContent(shipClass.spacecraftType.fullName);
         self._itemDescription.setContent("Loading...");
@@ -909,23 +1026,23 @@ DatabaseScreen.prototype.loadShip = function() {
         self._item = new Spacecraft(
             shipClass,
             "",
-            identityMatrix4(),
-            identityMatrix4(),
-            "ai",
+            Mat.identity4(),
+            Mat.identity4(),
+            null,
             "default"
             );
         // add the ship to the scene in triangle drawing mode
-        self._solidModel = self._item.addToScene(self._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,false);
+        self._solidModel = self._item.addToScene(self._scene,Armada.graphics().getMaxLoadedLOD(),false,true,false,false);
         // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-        self._solidModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("simpleReveal"));
+        self._solidModel.cascadeSetShader(Armada.resources().getShader("simpleReveal"));
         // set the necessary uniform functions for the reveal shader
         self._solidModel.setUniformValueFunction("u_revealFront",function() { return true; });
         self._solidModel.setUniformValueFunction("u_revealStart",function() { return self._itemFront-((self._revealState-1.0)*self._itemLength*1.1); });
         self._solidModel.setUniformValueFunction("u_revealTransitionLength",function() { return self._itemLength/10; });
         // add the ship to the scene in line drawing mode as well
-        self._wireframeModel = self._item.addToScene(self._scene,game.graphicsContext.getMaxLoadedLOD(),false,true,false,true);
+        self._wireframeModel = self._item.addToScene(self._scene,Armada.graphics().getMaxLoadedLOD(),false,true,false,true);
         // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-        self._wireframeModel.cascadeSetShader(game.graphicsContext.resourceManager.getShader("oneColorReveal"));
+        self._wireframeModel.cascadeSetShader(Armada.resources().getShader("oneColorReveal"));
         // set the necessary uniform functions for the one colored reveal shader
         self._wireframeModel.setUniformValueFunction("u_color",function() { return [0.0,1.0,0.0,1.0]; });
         self._wireframeModel.setUniformValueFunction("u_revealFront",function() { return (self._revealState<=1.0); });
@@ -934,7 +1051,7 @@ DatabaseScreen.prototype.loadShip = function() {
 
         // set the callback for when the potentially needed additional file resources have 
         // been loaded
-        game.graphicsContext.resourceManager.executeWhenReady(function() {
+        Armada.resources().executeWhenReady(function() {
             // get the length of the ship based on the length of its model (1 unit in
             // model space equals to 20 cm)
             self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
@@ -949,7 +1066,7 @@ DatabaseScreen.prototype.loadShip = function() {
             // data if it already exists
             self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
             // set the camera position so that the whole ship nicely fits into the picture
-            self._scene.activeCamera.setPositionMatrix(translationMatrix(0,0,-self._item.visualModel.getScaledSize()));
+            self._scene.activeCamera.setPositionMatrix(Mat.translation4(0,0,-self._item.visualModel.getScaledSize()));
 
             self._revealState = 0.0;
 
@@ -960,7 +1077,7 @@ DatabaseScreen.prototype.loadShip = function() {
         });
 
         // initiate the loading of additional file resources if they are needed
-        game.graphicsContext.resourceManager.requestResourceLoad();
+        Armada.resources().requestResourceLoad();
     });
 };
 
@@ -990,18 +1107,18 @@ GraphicsScreen.prototype._initializeComponents = function() {
     
     var self = this;
     this._backButton.getElement().onclick = function(){
-        game.graphicsContext.setAntialiasing((self._antialiasingSelector.getSelectedValue()==="on"));
-        game.graphicsContext.setFiltering(self._filteringSelector.getSelectedValue());
-        game.graphicsContext.setMaxLOD(self._lodSelector.getSelectedIndex());
+        Armada.graphics().setAntialiasing((self._antialiasingSelector.getSelectedValue()==="on"));
+        Armada.graphics().setFiltering(self._filteringSelector.getSelectedValue());
+        Armada.graphics().setMaxLOD(self._lodSelector.getSelectedIndex());
         if(self.isSuperimposed()) {
-            game.closeSuperimposedScreen();
+            self._game.closeSuperimposedScreen();
         } else {
-            game.setCurrentScreen('settings');
+            self._game.setCurrentScreen('settings');
         }
         return false;
     };
     this._defaultsButton.getElement().onclick = function(){
-        game.graphicsContext.restoreDefaults();
+        Armada.graphics().restoreDefaults();
         self.updateValues();
         return false;
     };
@@ -1010,9 +1127,12 @@ GraphicsScreen.prototype._initializeComponents = function() {
 };
 
 GraphicsScreen.prototype.updateValues = function() {
-    this._antialiasingSelector.selectValue((game.graphicsContext.getAntialiasing()===true)?"on":"off");
-    this._filteringSelector.selectValue(game.graphicsContext.getFiltering());
-    this._lodSelector.selectValueWithIndex(game.graphicsContext.getMaxLoadedLOD());
+    var self = this;
+    Armada.graphics().executeWhenReady(function() {
+        self._antialiasingSelector.selectValue((Armada.graphics().getAntialiasing()===true)?"on":"off");
+        self._filteringSelector.selectValue(Armada.graphics().getFiltering());
+        self._lodSelector.selectValueWithIndex(Armada.graphics().getMaxLoadedLOD());
+    });
 };
 
 /**
@@ -1067,7 +1187,7 @@ ControlsScreen.prototype.constructor=ControlsScreen;
  * @param {String} actionName
  */
 ControlsScreen.prototype.refreshKeyForAction = function(actionName) {
-    document.getElementById(actionName).innerHTML = game.controlContext.getKeyStringForAction(actionName);
+    document.getElementById(actionName).innerHTML = Armada.control().getInterpreter("keyboard").getControlStringForAction(actionName);
     document.getElementById(actionName).className = "clickable";
 };
 
@@ -1111,13 +1231,14 @@ ControlsScreen.prototype.handleKeyUpWhileSetting = function(event) {
     } else {
     // if it was any other key, respect the shift, ctrl, alt states and set the
     // new key for the action
-        game.controlContext.setAndStoreKeyBinding(new game.controlContext.KeyBinding(
-            this._actionUnderSetting,
-            KeyboardControlContext.prototype.getKeyOfCode(event.keyCode),
-            this._settingShiftState,
-            this._settingCtrlState,
-            this._settingAltState
-        ));
+        var interpreter = Armada.control().getInterpreter("keyboard");
+        interpreter.setAndStoreKeyBinding(new KeyBinding(
+                this._actionUnderSetting,
+                KeyboardInputInterpreter.prototype.getKeyOfCode(event.keyCode),
+                this._settingShiftState,
+                this._settingCtrlState,
+                this._settingAltState
+                ));
         this.stopKeySetting();
     }
 };
@@ -1177,21 +1298,21 @@ ControlsScreen.prototype._initializeComponents = function() {
     var self = this;
     this._backButton.getElement().onclick = function(){
         self.stopKeySetting();
-        if(game.getCurrentScreen().isSuperimposed()) {
-            game.closeSuperimposedScreen();
+        if(self._game.getCurrentScreen().isSuperimposed()) {
+            self._game.closeSuperimposedScreen();
         } else {
-            game.setCurrentScreen('settings');
+            self._game.setCurrentScreen('settings');
         }
         return false;
     };
     this._defaultsButton.getElement().onclick = function(){
         self.stopKeySetting();
-        game.controlContext.restoreDefaults();
-        self.generateTable();
+        Armada.control().restoreDefaults();
+        self.generateTables();
         return false;
     };
     
-    this.generateTable();
+    this.generateTables();
 };
 
 /**
@@ -1199,26 +1320,47 @@ ControlsScreen.prototype._initializeComponents = function() {
  * sets up a click handler for the cells showing the keys to initiate a change
  * of that key binding.
  */
-ControlsScreen.prototype.generateTable = function() {
+ControlsScreen.prototype.generateTables = function() {
     var self = this;
-    var keyBindingsTable = document.getElementById(this._name+"_keyBindingsTable");
-    keyBindingsTable.innerHTML = "";
-    var keyBindings = game.controlContext.getActionExplanationsAndKeys();
-    var trElement = null;
-    var td1Element = null;
-    var td2Element = null;
-    for(var i=0;i<keyBindings.length;i++) {
-        trElement = document.createElement("tr");
-        td1Element = document.createElement("td");
-        td1Element.setAttribute("id",keyBindings[i].name);
-        td1Element.className = "clickable";
-        td1Element.onclick = function() { self.startKeySetting(this); };
-        td1Element.innerHTML = keyBindings[i].key;
-        td2Element = document.createElement("td");
-        td2Element.innerHTML = keyBindings[i].description;
-        trElement.appendChild(td1Element);
-        trElement.appendChild(td2Element);
-        keyBindingsTable.appendChild(trElement);
+    
+    var tablesContainer = document.getElementById(this._name+"_tablesContainer");
+    tablesContainer.innerHTML = "";
+    var gameControllers = Armada.control().getControllers();
+    for(var i = 0; i < gameControllers.length; i++) {
+        var h2Element = document.createElement("h2");
+        h2Element.innerHTML = gameControllers[i].getType()+" controls";
+        tablesContainer.appendChild(h2Element);
+        var tableElement = document.createElement("table");
+        tableElement.className = "horizontallyCentered outerContainer";
+        var theadElement = document.createElement("thead");
+        for(var j=0, n=Armada.control().getInputInterpreters().length;j<n;j++) {
+            var thElement = document.createElement("th");
+            thElement.innerHTML = Armada.control().getInputInterpreters()[j].getDeviceName();
+            theadElement.appendChild(thElement);
+        }
+        theadElement.innerHTML += "<th>Action</th>";
+        var tbodyElement = document.createElement("tbody");
+        var actions = gameControllers[i].getActions();
+        for(j=0;j<actions.length;j++) {
+            var trElement = document.createElement("tr");
+            for(var k=0, n=Armada.control().getInputInterpreters().length;k<n;k++) {
+                var td1Element = document.createElement("td");
+                if(Armada.control().getInputInterpreters()[k].getDeviceName()==="Keyboard") {
+                    td1Element.setAttribute("id",actions[j].getName());
+                    td1Element.className = "clickable";
+                    td1Element.onclick = function() { self.startKeySetting(this); };
+                }
+                td1Element.innerHTML = Armada.control().getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
+                trElement.appendChild(td1Element);
+            }
+            var td2Element = document.createElement("td");
+            td2Element.innerHTML = actions[j].getDescription();
+            trElement.appendChild(td2Element);
+            tbodyElement.appendChild(trElement);
+        }
+        tableElement.appendChild(theadElement);
+        tableElement.appendChild(tbodyElement);
+        tablesContainer.appendChild(tableElement);
     }
 };
 
@@ -1226,8 +1368,8 @@ ControlsScreen.prototype.generateTable = function() {
  * Defines a menu screen object.
  * @class A game screen with a {@link MenuComponent}.
  * @extends GameScreen
- * @param {String} name @see {@link GameScreen}
- * @param {String} source @see {@link GameScreen}
+ * @param {String} name See {@link GameScreen}
+ * @param {String} source See {@link GameScreen}
  * @param {Object[]} menuOptions The menuOptions for creating the {@link MenuComponent}
  * @param {String} [menuContainerID] The ID of the HTML element inside of which
  * the menu should be added (if omitted, it will be appended to body)
@@ -1259,3 +1401,42 @@ function MenuScreen(name,source,menuOptions,menuContainerID) {
 
 MenuScreen.prototype=new GameScreen();
 MenuScreen.prototype.constructor=MenuScreen;
+
+/**
+ * Creates an about screen object.
+ * @class A class to represent the "About" screen in the game. Describes the
+ * dynamic behaviour on that screen.
+ * @param {String} name See {@link GameScreen}
+ * @param {String} source See {@link GameScreen}
+ * @returns {AboutScreen}
+ */
+function AboutScreen(name,source) {
+    GameScreen.call(this,name,source);
+    
+    this._backButton = this.registerSimpleComponent("backButton");
+    /**
+     * @name AboutScreen#_versionParagraph
+     * @type SimpleComponent
+     */
+    this._versionParagraph = this.registerSimpleComponent("versionParagraph");
+}
+
+AboutScreen.prototype = new GameScreen();
+AboutScreen.prototype.constructor = AboutScreen;
+
+AboutScreen.prototype._initializeComponents = function() {
+    GameScreen.prototype._initializeComponents.call(this);
+    
+    this._versionParagraph.setContent("Application version: "+Armada.getVersion());
+    
+    var self = this;
+    this._backButton.getElement().onclick = function(){
+        if(self._game.getCurrentScreen().isSuperimposed()) {
+            self._game.closeSuperimposedScreen();
+        } else {
+            self._game.setCurrentScreen('mainMenu');
+        }
+        return false;
+    };
+};
+    

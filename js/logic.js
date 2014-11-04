@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file implements the game logic of the Interstellar 
  * Armada program.
@@ -24,8 +26,6 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-"uses strict";
-
 /**
  * The length of impulse-like events in milliseconds (such as thruster bursts or 
  * weapon shots)
@@ -50,7 +50,7 @@ function getVector3FromXMLTag(tag) {
 }
 
 function getTranslationMatrixFromXMLTag(tag) {
-    return translationMatrixv(getVector3FromXMLTag(tag));
+    return Mat.translation4v(getVector3FromXMLTag(tag));
 }
 
 function getDimensionsFromXMLTag(tag) {
@@ -68,7 +68,7 @@ function getDimensionsFromXMLTag(tag) {
  * @returns {Float32Array} The costructed rotation matrix.
  */
 function getRotationMatrixFromXMLTags(tags) {
-    var result = identityMatrix4();
+    var result = Mat.identity4();
     for(var i=0;i<tags.length;i++) {
         var axis=[0,0,0];
         if (tags[i].getAttribute("axis")==="x") {
@@ -81,9 +81,9 @@ function getRotationMatrixFromXMLTags(tags) {
                 axis=[0,0,1];
         }
         result=
-                mul(
+                Mat.mul4(
                         result,
-                        rotationMatrix4(
+                        Mat.rotation4(
                                 axis,
                                 parseFloat(tags[i].getAttribute("degree"))/180*3.1415
                                 )
@@ -98,10 +98,10 @@ function Skybox(skyboxClass) {
 
 Skybox.prototype.addToScene = function(scene) {
     scene.addBackgroundObject(new FVQ(
-        game.graphicsContext.resourceManager.getOrAddModelByName("fvqModel",fvqModel()),
-        game.graphicsContext.resourceManager.getShader(this.class.shaderName),
+        Armada.resources().getOrAddModelByName("fvqModel",fvqModel()),
+        Armada.resources().getShader(this.class.shaderName),
         this.class.samplerName,
-        game.graphicsContext.resourceManager.getCubemappedTexture(this.class.cubemap),
+        Armada.resources().getCubemappedTexture(this.class.cubemap),
         scene.activeCamera
     ));
 };
@@ -121,12 +121,12 @@ BackgroundObject.prototype.addToScene = function(scene) {
     scene.addLightSource(new LightSource(this.class.lightColor,this.position));
     for(i=0;i<this.class.layers.length;i++) {  
         layerParticle =new StaticParticle(
-            game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
-            game.graphicsContext.resourceManager.getShader(this.class.layers[i].shaderName),
-            game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.class.layers[i].textureDescriptor),
+            Armada.resources().getOrAddModelByName("squareModel",squareModel()),
+            Armada.resources().getShader(this.class.layers[i].shaderName),
+            Armada.resources().getOrAddTextureFromDescriptor(this.class.layers[i].textureDescriptor),
             this.class.layers[i].color,
             this.class.layers[i].size,
-            translationMatrixv(scalarVector3Product(4500,this.position))
+            Mat.translation4v(Vec.scaled3(this.position,4500))
         );
         layerParticle.setRelSize(1.0);
         scene.addBackgroundObject(layerParticle);
@@ -136,9 +136,9 @@ BackgroundObject.prototype.addToScene = function(scene) {
 
 function DustParticle(scene,shader,positionMatrix) {
     this.visualModel = new PointParticle(
-        game.graphicsContext.resourceManager.getOrAddModelByName("dust",dustModel([0.5,0.5,0.5])),
+        Armada.resources().getOrAddModelByName("dust",dustModel([0.6,0.6,0.6])),
         shader,
-        [0.5,0.5,0.5],
+        [0.6,0.6,0.6],
         positionMatrix
         );
     scene.addObject(this.visualModel);
@@ -146,8 +146,12 @@ function DustParticle(scene,shader,positionMatrix) {
     this.toBeDeleted = false;
 }
 
+/**
+ * 
+ * @param {SceneCamera} camera
+ */
 DustParticle.prototype.simulate = function(camera) {
-    this.visualModel.shift=[-camera.velocityVector[0],-camera.velocityVector[1],-camera.velocityVector[2]];
+    this.visualModel.shift=[-camera.velocityVector[0]/2,-camera.velocityVector[1]/2,-camera.velocityVector[2]/2];
     if(this.visualModel.positionMatrix[12]>-camera.getPositionMatrix()[12]+25.0) {
         this.visualModel.positionMatrix[12]-=50.0;
     } else if(this.visualModel.positionMatrix[12]<-camera.getPositionMatrix()[12]-25.0) {
@@ -188,8 +192,8 @@ DustCloud.prototype.addToScene = function(scene) {
         this._particles.push(
             new DustParticle(
                 scene,
-                game.graphicsContext.resourceManager.getShader(this.class.shaderName),
-                translationMatrix(Math.random()*50-25.0,Math.random()*50-25.0,Math.random()*50-25.0)
+                Armada.resources().getShader(this.class.shaderName),
+                Mat.translation4(Math.random()*50-25.0,Math.random()*50-25.0,Math.random()*50-25.0)
             )
         );
     }
@@ -205,23 +209,24 @@ DustCloud.prototype.simulate = function(camera) {
 function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzleFlashPositionMatrix,spacecraft,weapon) {
 	this.class=projectileClass;
 	this.visualModel = new Billboard(
-		game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+this.class.name,projectileModel(this.class.intersections)),
-		game.graphicsContext.resourceManager.getShader(projectileClass.shaderName),
-		game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(projectileClass.textureDescriptor),
+		Armada.resources().getOrAddModelByName("projectileModel-"+this.class.name,projectileModel(this.class.intersections)),
+		Armada.resources().getShader(projectileClass.shaderName),
+		Armada.resources().getOrAddTextureFromDescriptor(projectileClass.textureDescriptor),
 		projectileClass.size,
 		positionMatrix,
 		orientationMatrix
 		);
 	var muzzleFlash = new DynamicParticle(
-		game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
-		game.graphicsContext.resourceManager.getShader(projectileClass.muzzleFlash.shaderName),
-		game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
+		Armada.resources().getOrAddModelByName("squareModel",squareModel()),
+		Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
+		Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
 		projectileClass.muzzleFlash.color,
 		projectileClass.size,
 		muzzleFlashPositionMatrix,
 		500
 		);
-	this.physicalModel=new PhysicalObject(projectileClass.mass,projectileClass.size,positionMatrix,orientationMatrix,spacecraft.physicalModel.velocityMatrix,[]);
+        var scalingMatrix = Mat.scaling4(projectileClass.size);
+	this.physicalModel=new PhysicalObject(projectileClass.mass,positionMatrix,orientationMatrix,scalingMatrix,spacecraft.physicalModel.velocityMatrix,[]);
 	
 	this.timeLeft=projectileClass.duration;
 	
@@ -244,7 +249,7 @@ Projectile.prototype.simulate = function(dt,hitObjects) {
 		this.physicalModel.simulate(dt);
 		this.visualModel.positionMatrix=this.physicalModel.positionMatrix;
 		this.visualModel.orientationMatrix=this.physicalModel.orientationMatrix;
-		var positionVector=getPositionVector4(this.physicalModel.positionMatrix);
+		var positionVector=Mat.translationVector4(this.physicalModel.positionMatrix);
 		for(var i=0;i<hitObjects.length;i++) {
 			if ((hitObjects[i]!==this.origin)&&(hitObjects[i].physicalModel.checkHit(positionVector,[],0))) {
 				this.timeLeft=0;
@@ -266,16 +271,16 @@ Weapon.prototype.fire = function(scene,projectiles,positionMatrix,orientationMat
         var curTime = new Date();
         if ((curTime-this.lastFireTime)>this.class.cooldown) {
             this.lastFireTime=curTime;
-            var weaponSlotPosVector = vector4Matrix4Product(getPositionVector4(this.slot.positionMatrix),mul(scalingMatrix,orientationMatrix));
-            var projectilePosMatrix = mul(positionMatrix,translationMatrixv(weaponSlotPosVector));
-            var projectileOriMatrix = mul(this.slot.orientationMatrix,orientationMatrix);
+            var weaponSlotPosVector = Vec.mulVec4Mat4(Mat.translationVector4(this.slot.positionMatrix),Mat.mul4(scalingMatrix,orientationMatrix));
+            var projectilePosMatrix = Mat.mul4(positionMatrix,Mat.translation4v(weaponSlotPosVector));
+            var projectileOriMatrix = Mat.mul4(this.slot.orientationMatrix,orientationMatrix);
             for(var i=0;i<this.class.barrels.length;i++) {
-                    var barrelPosVector = vector3Matrix3Product(this.class.barrels[i].positionVector,matrix3from4(mul(this.slot.orientationMatrix,mul(scalingMatrix,orientationMatrix))));
-                    var muzzleFlashPosMatrix = translationMatrixv(this.class.barrels[i].positionVector);
+                    var barrelPosVector = Vec.mulVec3Mat3(this.class.barrels[i].positionVector,Mat.matrix3from4(Mat.mul4(this.slot.orientationMatrix,Mat.mul4(scalingMatrix,orientationMatrix))));
+                    var muzzleFlashPosMatrix = Mat.translation4v(this.class.barrels[i].positionVector);
                     var p = new Projectile(
                             scene,
                             this.class.barrels[i].projectileClass,
-                            mul(projectilePosMatrix,translationMatrixv(barrelPosVector)),
+                            Mat.mul4(projectilePosMatrix,Mat.translation4v(barrelPosVector)),
                             projectileOriMatrix,
                             muzzleFlashPosMatrix,
                             this.spacecraft,
@@ -310,6 +315,7 @@ function Propulsion(propulsionClass,drivenPhysicalObject) {
 		"rollLeft":  0,
 		"rollRight": 0
 	};
+        this.minimalBurn = 0.001;
 }
 
 Propulsion.prototype.simulate = function(dt) {
@@ -317,40 +323,40 @@ Propulsion.prototype.simulate = function(dt) {
 	var yawAxis = [this.drivenPhysicalObject.orientationMatrix[8],this.drivenPhysicalObject.orientationMatrix[9],this.drivenPhysicalObject.orientationMatrix[10]];
 	var pitchAxis = [this.drivenPhysicalObject.orientationMatrix[0],this.drivenPhysicalObject.orientationMatrix[1],this.drivenPhysicalObject.orientationMatrix[2]];
         
-	if(this.thrusterBurn["forward"]>0.001) {
+	if(this.thrusterBurn["forward"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewForce("forwardThrust",2*this.class.thrust*this.thrusterBurn["forward"],directionVector,TIME_UNIT);
 	}
-	if(this.thrusterBurn["reverse"]>0.001) {
+	if(this.thrusterBurn["reverse"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewForce("reverseThrust",-2*this.class.thrust*this.thrusterBurn["reverse"],directionVector,TIME_UNIT);
 	}
-	if(this.thrusterBurn["slideRight"]>0.001) {
+	if(this.thrusterBurn["slideRight"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewForce("slideRightThrust",2*this.class.thrust*this.thrusterBurn["slideRight"],pitchAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["slideLeft"]>0.001) {
+	if(this.thrusterBurn["slideLeft"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewForce("slideLeftThrust",-2*this.class.thrust*this.thrusterBurn["slideLeft"],pitchAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["raise"]>0.001) {
+	if(this.thrusterBurn["raise"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewForce("raiseThrust",2*this.class.thrust*this.thrusterBurn["raise"],yawAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["lower"]>0.001) {
+	if(this.thrusterBurn["lower"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewForce("lowerThrust",-2*this.class.thrust*this.thrusterBurn["lower"],yawAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["yawRight"]>0.001) {
+	if(this.thrusterBurn["yawRight"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewTorque("yawRightThrust",2*this.class.angularThrust*this.thrusterBurn["yawRight"],yawAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["yawLeft"]>0.001) {
+	if(this.thrusterBurn["yawLeft"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewTorque("yawLeftThrust",-2*this.class.angularThrust*this.thrusterBurn["yawLeft"],yawAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["pitchUp"]>0.001) {
+	if(this.thrusterBurn["pitchUp"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewTorque("pitchUpThrust",-2*this.class.angularThrust*this.thrusterBurn["pitchUp"],pitchAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["pitchDown"]>0.001) {
+	if(this.thrusterBurn["pitchDown"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewTorque("pitchDownThrust",2*this.class.angularThrust*this.thrusterBurn["pitchDown"],pitchAxis,TIME_UNIT);
 	}
-	if(this.thrusterBurn["rollRight"]>0.001) {
+	if(this.thrusterBurn["rollRight"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewTorque("rollRightThrust",-2*this.class.angularThrust*this.thrusterBurn["rollRight"],directionVector,TIME_UNIT);
 	}
-	if(this.thrusterBurn["rollLeft"]>0.001) {
+	if(this.thrusterBurn["rollLeft"]>this.minimalBurn) {
 		this.drivenPhysicalObject.addOrRenewTorque("rollLeftThrust",2*this.class.angularThrust*this.thrusterBurn["rollLeft"],directionVector,TIME_UNIT);
 	}
 };
@@ -399,6 +405,291 @@ ControllableEntity.prototype.setController = function(newController) {
     }
 };
 
+function ManeuveringComputer(spacecraft) {
+    /**
+     * @name ManeuveringComputer#_spacecraft
+     * @type Spacecraft
+     */
+    this._spacecraft = spacecraft;
+    /**
+     * @name ManeuveringComputer#_compensated
+     * @type Boolean
+     */
+    this._compensated = null;
+    /**
+     * @name ManeuveringComputer#_yawTarget
+     * @type Number
+     */
+    this._yawTarget = null;
+    /**
+     * @name ManeuveringComputer#_pitchTarget
+     * @type Number
+     */
+    this._pitchTarget = null;
+    /**
+     * @name ManeuveringComputer#_rollTarget
+     * @type Number
+     */
+    this._rollTarget = null;
+    /**
+     * @name ManeuveringComputer#_speedTarget
+     * @type Number
+     */
+    this._speedTarget = null;
+    /**
+     * @name ManeuveringComputer#_strafeTarget
+     * @type Number
+     */
+    this._strafeTarget = null;
+    /**
+     * @name ManeuveringComputer#_liftTarget
+     * @type Number
+     */
+    this._liftTarget = null;
+    
+    this.SPEED_INCREMENT = 1;
+    this.TURNING_LIMIT = this._spacecraft.propulsion ?
+        this._spacecraft.propulsion.class.angularThrust/this._spacecraft.physicalModel.mass*200 :
+        null;
+}
+
+ManeuveringComputer.prototype.update = function () {
+    this.TURNING_LIMIT = this._spacecraft.propulsion.class.angularThrust/this._spacecraft.physicalModel.mass*200;
+};
+
+ManeuveringComputer.prototype.getFlightMode = function () {
+    return this._compensated ?
+        "compensated" : "free";
+};
+
+ManeuveringComputer.prototype.changeFlightMode = function () {
+    this._compensated = !this._compensated;
+    if(this._compensated) {
+        this._speedTarget = Mat.translationLength(this._spacecraft.physicalModel.velocityMatrix);
+    }
+};
+
+ManeuveringComputer.prototype.forward = function(intensity) {
+    this._compensated ?
+        this._speedTarget += (intensity || this.SPEED_INCREMENT) :
+        this._speedTarget = Number.MAX_VALUE;
+};
+
+ManeuveringComputer.prototype.stopForward = function() {
+    if(!this._compensated) {
+        var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
+        (this._speedTarget>speed) && (this._speedTarget = speed);
+    }
+};
+
+ManeuveringComputer.prototype.reverse = function(intensity) {
+    this._compensated ?
+        this._speedTarget -= (intensity || this.SPEED_INCREMENT) :
+        this._speedTarget = -Number.MAX_VALUE;
+};
+
+ManeuveringComputer.prototype.stopReverse= function() {
+    if(!this._compensated) {
+        var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
+        (this._speedTarget<speed) && (this._speedTarget = speed);
+    }
+};
+
+ManeuveringComputer.prototype.slideLeft = function(intensity) {
+    intensity ?
+        this._strafeTarget = -intensity :
+        this._strafeTarget = -Number.MAX_VALUE;
+};
+
+ManeuveringComputer.prototype.stopLeftSlide = function() {
+    if(!this._compensated) {
+        var strafe = this._spacecraft.getRelativeVelocityMatrix()[12];
+        (this._strafeTarget<strafe) && (this._strafeTarget = strafe);
+    }
+};
+
+ManeuveringComputer.prototype.slideRight = function(intensity) {
+    intensity ?
+        this._strafeTarget = intensity :
+        this._strafeTarget = Number.MAX_VALUE;
+};
+
+ManeuveringComputer.prototype.stopRightSlide = function() {
+    if(!this._compensated) {
+        var strafe = this._spacecraft.getRelativeVelocityMatrix()[12];
+        (this._strafeTarget>strafe) && (this._strafeTarget = strafe);
+    }
+};
+
+ManeuveringComputer.prototype.resetSpeed = function() {
+    this._compensated && (this._speedTarget = 0);
+};
+
+ManeuveringComputer.prototype.yawLeft = function(intensity) {
+    // if no intensity was given for the turn, turn with maximum power (mouse or
+    // joystick control can have fine intensity control, while with keyboard,
+    // when the key is pressed, we just call this without parameter)
+    if((intensity === null) || (intensity === undefined)) {
+        this._yawTarget = -this.TURNING_LIMIT;
+    // if a specific intensity was set, set the target to it, capping it out at
+    // the maximum allowed turning speed
+    } else if (intensity > 0) {
+        this._yawTarget = -Math.min(intensity,this.TURNING_LIMIT);
+    } else if (this._yawTarget < 0) {
+        this._yawTarget = 0;
+    }
+};
+
+ManeuveringComputer.prototype.yawRight = function(intensity) {
+    // if no intensity was given for the turn, turn with maximum power (mouse or
+    // joystick control can have fine intensity control, while with keyboard,
+    // when the key is pressed, we just call this without parameter)
+    if((intensity === null) || (intensity === undefined)) {
+        this._yawTarget = this.TURNING_LIMIT;
+    // if a specific intensity was set, set the target to it, capping it out at
+    // the maximum allowed turning speed
+    } else if (intensity > 0) {
+        this._yawTarget = Math.min(intensity,this.TURNING_LIMIT);
+    } else if (this._yawTarget > 0) {
+        this._yawTarget = 0;
+    }
+};
+
+ManeuveringComputer.prototype.pitchDown = function(intensity) {
+    // if no intensity was given for the turn, turn with maximum power (mouse or
+    // joystick control can have fine intensity control, while with keyboard,
+    // when the key is pressed, we just call this without parameter)
+    if((intensity === null) || (intensity === undefined)) {
+        this._pitchTarget = -this.TURNING_LIMIT;
+    // if a specific intensity was set, set the target to it, capping it out at
+    // the maximum allowed turning speed
+    } else if (intensity > 0) {
+        this._pitchTarget = -Math.min(intensity,this.TURNING_LIMIT);
+    } else if (this._pitchTarget < 0) {
+        this._pitchTarget = 0;
+    }
+};
+
+ManeuveringComputer.prototype.pitchUp = function(intensity) {
+    // if no intensity was given for the turn, turn with maximum power (mouse or
+    // joystick control can have fine intensity control, while with keyboard,
+    // when the key is pressed, we just call this without parameter)
+    if((intensity === null) || (intensity === undefined)) {
+        this._pitchTarget = this.TURNING_LIMIT;
+    // if a specific intensity was set, set the target to it, capping it out at
+    // the maximum allowed turning speed
+    } else if (intensity > 0) {
+        this._pitchTarget = Math.min(intensity,this.TURNING_LIMIT);
+    } else if (this._pitchTarget > 0) {
+        this._pitchTarget = 0;
+    }
+};
+
+ManeuveringComputer.prototype.rollLeft = function(intensity) {
+    // if no intensity was given for the turn, turn with maximum power (mouse or
+    // joystick control can have fine intensity control, while with keyboard,
+    // when the key is pressed, we just call this without parameter)
+    if((intensity === null) || (intensity === undefined)) {
+        this._rollTarget = -this.TURNING_LIMIT;
+    // if a specific intensity was set, set the target to it, capping it out at
+    // the maximum allowed turning speed
+    } else if (intensity > 0) {
+        this._rollTarget = -Math.min(intensity,this.TURNING_LIMIT);
+    } else if (this._rollTarget < 0) {
+        this._rollTarget = 0;
+    }
+};
+
+ManeuveringComputer.prototype.rollRight = function(intensity) {
+    // if no intensity was given for the turn, turn with maximum power (mouse or
+    // joystick control can have fine intensity control, while with keyboard,
+    // when the key is pressed, we just call this without parameter)
+    if((intensity === null) || (intensity === undefined)) {
+        this._rollTarget = this.TURNING_LIMIT;
+    // if a specific intensity was set, set the target to it, capping it out at
+    // the maximum allowed turning speed
+    } else if (intensity > 0) {
+        this._rollTarget = Math.min(intensity,this.TURNING_LIMIT);
+    } else if (this._rollTarget > 0) {
+        this._rollTarget = 0;
+    }
+};
+
+ManeuveringComputer.prototype.controlThrusters = function() {
+    this._spacecraft.resetThrusterBurn();
+    
+    var turningMatrix = this._spacecraft.getTurningMatrix();
+    var turnThreshold = 0.00002;
+    var speedThreshold = 0.01;
+
+    // controlling yaw
+    var yawAngle = Math.sign(turningMatrix[4]) * Vec.angle2u([0, 1], Vec.normal2([turningMatrix[4], turningMatrix[5]]));
+    if ((this._yawTarget - yawAngle) > turnThreshold) {
+        this._spacecraft.addThrusterBurn("yawRight",
+                Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._yawTarget - yawAngle)));
+    } else if ((this._yawTarget - yawAngle) < -turnThreshold) {
+        this._spacecraft.addThrusterBurn("yawLeft",
+                Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - this._yawTarget)));
+    }
+    // controlling pitch
+    var pitchAngle = Math.sign(turningMatrix[6]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[5], turningMatrix[6]]));
+    if ((this._pitchTarget - pitchAngle) > turnThreshold) {
+        this._spacecraft.addThrusterBurn("pitchUp",
+                Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._pitchTarget - pitchAngle)));
+    } else if ((this._pitchTarget - pitchAngle) < -turnThreshold) {
+        this._spacecraft.addThrusterBurn("pitchDown",
+                Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - this._pitchTarget)));
+    }
+    // controlling roll
+    var rollAngle = Math.sign(-turningMatrix[2]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[0], turningMatrix[2]]));
+    if ((this._rollTarget - rollAngle) > turnThreshold) {
+        this._spacecraft.addThrusterBurn("rollRight",
+                Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
+    } else if ((this._rollTarget - rollAngle) < -turnThreshold) {
+        this._spacecraft.addThrusterBurn("rollLeft",
+                Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
+    }
+    
+    // controlling forward/reverse
+    var relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
+    var speed = relativeVelocityMatrix[13];
+    if ((this._speedTarget - speed) > speedThreshold) {
+        this._spacecraft.addThrusterBurn("forward",
+                Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
+    } else if ((this._speedTarget - speed) < -speedThreshold) {
+        this._spacecraft.addThrusterBurn("reverse",
+                Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget)));
+    }
+    // controlling horizontal drift
+    if(this._compensated || (this._strafeTarget !== 0)) {
+        speed = relativeVelocityMatrix[12];
+        if ((this._strafeTarget - speed) > speedThreshold) {
+            this._spacecraft.addThrusterBurn("slideRight",
+                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
+        } else if ((this._strafeTarget - speed) < -speedThreshold) {
+            this._spacecraft.addThrusterBurn("slideLeft",
+                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
+        }
+    }
+    // controlling vertical drift
+    if(this._compensated || (this._liftTarget !== 0)) {
+        speed = relativeVelocityMatrix[14];
+        if ((this._liftTarget - speed) > speedThreshold) {
+            this._spacecraft.addThrusterBurn("raise",
+                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed)));
+        } else if ((this._liftTarget - speed) < -speedThreshold) {
+            this._spacecraft.addThrusterBurn("lower",
+                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
+        }
+    }    
+    
+    this._yawTarget = 0;
+    this._pitchTarget = 0;
+    this._rollTarget = 0;
+    this._strafeTarget = 0;
+    this._liftTarget = 0;
+};
+
 /**
  * Creates and initializes a Spacecraft object. Loads all necessary models into
  * the resource center of graphicsContext, taking into account the maximum
@@ -407,11 +698,11 @@ ControllableEntity.prototype.setController = function(newController) {
  * @param {String} owner
  * @param {Float32Array} positionMatrix
  * @param {Float32Array} orientationMatrix
- * @param {String} controller
+ * @param {Projectile[]} [projectileArray=null]
  * @param {String} [equipmentProfileName]
  * @returns {Spacecraft}
  */
-function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,controller,equipmentProfileName) {
+function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,projectileArray,equipmentProfileName) {
     ControllableEntity.call(this,null);
     
     this.class = spacecraftClass;
@@ -422,27 +713,18 @@ function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,contr
      * @type VisualObject
      */
     this.visualModel = null;
+    this._scene = null;
     /**
      * @name Spacecraft#physicalModel
      * @type PhysicalObject
      */
     this.physicalModel=new PhysicalObject(
         this.class.mass,
-        this.class.modelSize,
         positionMatrix,
         orientationMatrix,
-        identityMatrix4(),
+        Mat.scaling4(this.class.modelSize),
+        Mat.identity4(),
         this.class.bodies);
-        
-    // creating the appropriate controller object based on the supplied string
-    // and assigning it using the parent's constructor
-    if (controller==="ai") {
-        this.controller = new AIController(this,game.graphicsContext,game.logicContext,game.controlContext);
-    } else if (controller==="keyboard") {
-        this.controller = new FighterController(this,game.graphicsContext,game.logicContext,game.controlContext);
-    } else {
-        game.showError("Cannot recognize controller type: '"+controller+"' for "+this.class.name+" class spacecraft!");
-    }
 	
     this.weapons=new Array();
 	
@@ -463,9 +745,17 @@ function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,contr
     };
 	
     this.propulsion=null;
+    
+    this._maneuveringComputer = new ManeuveringComputer(this);
         
-    if(equipmentProfileName!==undefined) {
+    if(equipmentProfileName !== undefined) {
         this.equipProfile(this.class.equipmentProfiles[equipmentProfileName]);
+    }
+    
+    this._hitbox = null;
+    this._projectileArray = null;
+    if(projectileArray !== undefined) {
+        this._projectileArray = projectileArray;
     }
         
     this.toBeDeleted = false;
@@ -474,17 +764,102 @@ function Spacecraft(spacecraftClass,owner,positionMatrix,orientationMatrix,contr
 Spacecraft.prototype = new ControllableEntity();
 Spacecraft.prototype.constructor = Spacecraft;
 
+Spacecraft.prototype.getFlightMode = function () {
+    return this._maneuveringComputer.getFlightMode();
+};
+
+Spacecraft.prototype.changeFlightMode = function() {
+    this._maneuveringComputer.changeFlightMode();
+};
+
+Spacecraft.prototype.forward = function(intensity) {
+    this._maneuveringComputer.forward(intensity);
+};
+
+Spacecraft.prototype.stopForward = function() {
+    this._maneuveringComputer.stopForward();
+};
+
+Spacecraft.prototype.reverse = function(intensity) {
+    this._maneuveringComputer.reverse(intensity);
+};
+
+Spacecraft.prototype.stopReverse = function() {
+    this._maneuveringComputer.stopReverse();
+};
+
+Spacecraft.prototype.slideLeft = function(intensity) {
+    this._maneuveringComputer.slideLeft(intensity);
+};
+
+Spacecraft.prototype.stopLeftSlide = function() {
+    this._maneuveringComputer.stopLeftSlide();
+};
+
+Spacecraft.prototype.slideRight = function(intensity) {
+    this._maneuveringComputer.slideRight(intensity);
+};
+
+Spacecraft.prototype.stopRightSlide = function() {
+    this._maneuveringComputer.stopRightSlide();
+};
+
+Spacecraft.prototype.resetSpeed = function() {
+    this._maneuveringComputer.resetSpeed();
+};
+
+Spacecraft.prototype.yawLeft = function(intensity) {
+    this._maneuveringComputer.yawLeft(intensity);
+};
+
+Spacecraft.prototype.yawRight = function(intensity) {
+    this._maneuveringComputer.yawRight(intensity);
+};
+
+Spacecraft.prototype.pitchUp = function(intensity) {
+    this._maneuveringComputer.pitchUp(intensity);
+};
+
+Spacecraft.prototype.pitchDown = function(intensity) {
+    this._maneuveringComputer.pitchDown(intensity);
+};
+
+Spacecraft.prototype.rollLeft = function(intensity) {
+    this._maneuveringComputer.rollLeft(intensity);
+};
+
+Spacecraft.prototype.rollRight = function(intensity) {
+    this._maneuveringComputer.rollRight(intensity);
+};
+
+Spacecraft.prototype.getRelativeVelocityMatrix = function() {
+    return Mat.mul4(
+        this.physicalModel.velocityMatrix,
+        Mat.matrix4from3(Mat.matrix3from4(this.physicalModel.rotationMatrixInverse))
+    );
+};
+
+Spacecraft.prototype.getTurningMatrix = function() {
+    return Mat.mul4(
+        Mat.mul4(
+            this.physicalModel.orientationMatrix,
+            this.physicalModel.angularVelocityMatrix
+        ),
+        Mat.matrix4from3(Mat.matrix3from4(this.physicalModel.rotationMatrixInverse))
+    );
+};
+
 /**
  * 
  * @param {Scene} scene
  * @param {Number} [lod]
- * @param {Boolean} [addHitBoxes=true]
+ * @param {Boolean} [addHitboxes=true]
  * @param {Boolean} [addWeapons=true]
  * @param {Boolean} [addThrusterParticles=true]
  * @param {Boolean} [wireframe=false]
  * @returns {ShipMesh}
  */
-Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addThrusterParticles,wireframe) {
+Spacecraft.prototype.addToScene = function(scene,lod,addHitboxes,addWeapons,addThrusterParticles,wireframe) {
     var i,j;
     var modelsWithLOD;
     // loading or setting models
@@ -492,38 +867,39 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
     // if no specific level of detail is given, load all that are within the global LOD load limit
     // if a specific LOD is given only load that one
     for(i=0;i<this.class.modelReferences.length;i++) {
-        if(((lod===undefined)&&(game.graphicsContext.getMaxLoadedLOD()>=this.class.modelReferences[i].lod)) ||
+        if(((lod===undefined)&&(Armada.graphics().getMaxLoadedLOD()>=this.class.modelReferences[i].lod)) ||
            ((lod!==undefined)&&(this.class.modelReferences[i].lod===lod))){
             modelsWithLOD.push(new ModelWithLOD(
-                game.graphicsContext.resourceManager.getOrAddModelFromFile(this.class.modelReferences[i].filename),
+                Armada.resources().getOrAddModelFromFile(this.class.modelReferences[i].filename),
                 this.class.modelReferences[i].lod
             ));
         }
     }
     var textures=new Object();
     for(var textureType in this.class.textureDescriptors) {
-        textures[textureType] = game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.class.textureDescriptors[textureType]);
+        textures[textureType] = Armada.resources().getOrAddTextureFromDescriptor(this.class.textureDescriptors[textureType]);
     }
     this.visualModel = new ShipMesh(
         modelsWithLOD,
-        game.graphicsContext.resourceManager.getShader(this.class.shaderName),
+        Armada.resources().getShader(this.class.shaderName),
         textures,
         this.physicalModel.positionMatrix,
         this.physicalModel.orientationMatrix,
-        scalingMatrix(this.class.modelSize,this.class.modelSize,this.class.modelSize),
+        Mat.scaling4(this.class.modelSize),
         (wireframe===true));
     scene.objects.push(this.visualModel);
     
     // visualize physical model
-    if((addHitBoxes===undefined)||(addHitBoxes===true)) {
+    if((addHitboxes===undefined)||(addHitboxes===true)) {
+        this._hitbox = new VisualObject(Armada.resources().getShader(this.class.shaderName),false,false);
         for(i=0;i<this.class.bodies.length;i++) {
             var phyModelWithLOD = new ModelWithLOD(
-                game.graphicsContext.resourceManager.getOrAddModelByName(
+                Armada.resources().getOrAddModelByName(
                     this.class.name+"-body"+i,
                     cuboidModel(
-                        this.class.bodies[i].width/this.class.modelSize,
-                        this.class.bodies[i].height/this.class.modelSize,
-                        this.class.bodies[i].depth/this.class.modelSize,
+                        this.class.bodies[i].width,
+                        this.class.bodies[i].height,
+                        this.class.bodies[i].depth,
                         [0.0,1.0,1.0,0.5]
                     )
                 ),
@@ -531,20 +907,21 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             );
             var hitZoneMesh = new Mesh(
                 [phyModelWithLOD],
-                game.graphicsContext.resourceManager.getShader(this.class.shaderName),
+                Armada.resources().getShader(this.class.shaderName),
                 {
-                    color: game.graphicsContext.resourceManager.getOrAddTexture("textures/white.png"),
-                    specular: game.graphicsContext.resourceManager.getOrAddTexture("textures/white.png"),
-                    luminosity: game.graphicsContext.resourceManager.getOrAddTexture("textures/white.png")
+                    color: Armada.resources().getOrAddTexture("textures/white.png"),
+                    specular: Armada.resources().getOrAddTexture("textures/white.png"),
+                    luminosity: Armada.resources().getOrAddTexture("textures/white.png")
                 },
-                translationMatrixv(scalarVector3Product(1/this.class.modelSize,getPositionVector(this.class.bodies[i].positionMatrix))),
+                Mat.translation4v(Mat.translationVector3(this.class.bodies[i].positionMatrix)),
                 this.class.bodies[i].orientationMatrix,
-                identityMatrix4(),
+                Mat.identity4(),
                 false
             );
-            hitZoneMesh.visible=false;
-            this.visualModel.addSubnode(hitZoneMesh);
+            this._hitbox.addSubnode(hitZoneMesh);
         }
+        this._hitbox.hide();
+        this.visualModel.addSubnode(this._hitbox);
     }
     
     if((addWeapons===undefined)||(addWeapons===true)) {
@@ -554,10 +931,10 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             // loading or setting models
             modelsWithLOD=new Array();
             for(j=0;j<this.weapons[i].class.modelReferences.length;j++) {
-                if(((lod===undefined)&&(game.graphicsContext.getMaxLoadedLOD()>=this.weapons[i].class.modelReferences[j].lod)) ||
+                if(((lod===undefined)&&(Armada.graphics().getMaxLoadedLOD()>=this.weapons[i].class.modelReferences[j].lod)) ||
                    ((lod!==undefined)&&(this.weapons[i].class.modelReferences[j].lod===lod))){
                     modelsWithLOD.push(new ModelWithLOD(
-                        game.graphicsContext.resourceManager.getOrAddModelFromFile(this.weapons[i].class.modelReferences[j].filename),
+                        Armada.resources().getOrAddModelFromFile(this.weapons[i].class.modelReferences[j].filename),
                         this.weapons[i].class.modelReferences[j].lod
                     ));
                 }
@@ -577,7 +954,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
                 for(j=0;j<this.weapons[i].class.modelReferences.length;j++) {
                     if(this.weapons[i].class.modelReferences[j].lod===closestLOD) {
                         modelsWithLOD.push(new ModelWithLOD(
-                            game.graphicsContext.resourceManager.getOrAddModelFromFile(this.weapons[i].class.modelReferences[j].filename),
+                            Armada.resources().getOrAddModelFromFile(this.weapons[i].class.modelReferences[j].filename),
                             this.weapons[i].class.modelReferences[j].lod
                         ));
                     }
@@ -585,11 +962,11 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             }
             var weaponMesh = new Mesh(
                 modelsWithLOD,
-                game.graphicsContext.resourceManager.getShader(this.class.shaderName),
+                Armada.resources().getShader(this.class.shaderName),
                 textures,
                 this.class.weaponSlots[i].positionMatrix,
                 this.class.weaponSlots[i].orientationMatrix,
-                identityMatrix4(),
+                Mat.identity4(),
                 (wireframe===true)
             );
             this.visualModel.addSubnode(weaponMesh);
@@ -602,12 +979,12 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             var slot = this.class.thrusterSlots[i];
 
             var thrusterParticle = new StaticParticle(
-                game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()),
-                game.graphicsContext.resourceManager.getShader(this.propulsion.class.thrusterBurnParticle.shaderName),
-                game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(this.propulsion.class.thrusterBurnParticle.textureDescriptor),
+                Armada.resources().getOrAddModelByName("squareModel",squareModel()),
+                Armada.resources().getShader(this.propulsion.class.thrusterBurnParticle.shaderName),
+                Armada.resources().getOrAddTextureFromDescriptor(this.propulsion.class.thrusterBurnParticle.textureDescriptor),
                 this.propulsion.class.thrusterBurnParticle.color,
                 slot.size,
-                translationMatrixv(slot.positionVector),
+                Mat.translation4v(slot.positionVector),
                 20
             );
             this.visualModel.addSubnode(thrusterParticle);
@@ -617,6 +994,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitBoxes,addWeapons,addT
             }
         }
     }
+    this._scene = scene;
     return this.visualModel;
 };
 
@@ -630,6 +1008,7 @@ Spacecraft.prototype.addWeapon = function(weaponClass) {
 
 Spacecraft.prototype.addPropulsion = function(propulsionClass) {
     this.propulsion=new Propulsion(propulsionClass,this.physicalModel);
+    this._maneuveringComputer.update();
 };
 
 /**
@@ -640,26 +1019,28 @@ Spacecraft.prototype.addPropulsion = function(propulsionClass) {
 Spacecraft.prototype.equipProfile = function(equipmentProfile) {
     var i;
     for(i=0;i<equipmentProfile.getWeaponDescriptors().length;i++) {
-        this.addWeapon(game.logicContext.getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
+        this.addWeapon(Armada.logic().getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
     }
     if(equipmentProfile.propulsionDescriptor!==null) {
-        this.addPropulsion(game.logicContext.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+        this.addPropulsion(Armada.logic().getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
     }
 };
 
-Spacecraft.prototype.fire = function(scene,projectiles) {
+Spacecraft.prototype.fire = function() {
     for(var i=0;i<this.weapons.length;i++) {
-        this.weapons[i].fire(scene,projectiles,this.visualModel.getPositionMatrix(),this.visualModel.getOrientationMatrix(),this.visualModel.getScalingMatrix(),this);
+        this.weapons[i].fire(this._scene,this._projectileArray,this.visualModel.getPositionMatrix(),this.visualModel.getOrientationMatrix(),this.visualModel.getScalingMatrix(),this);
     }
 };
 
 Spacecraft.prototype.setThrusterBurn = function(use,value) {
-    this.propulsion.thrusterBurn[use]=value;
-    for(var i=0;i<this.thrusters[use].length;i++) {
-        // set the size of the particle that shows the burn
-        this.thrusters[use][i].visualModel.setRelSize(value);
-        // set the strength of which the luminosity texture is lighted
-        this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+    if((value===0)||(value>this.propulsion.minimalBurn)) {
+        this.propulsion.thrusterBurn[use]=value;
+        for(var i=0;i<this.thrusters[use].length;i++) {
+            // set the size of the particle that shows the burn
+            this.thrusters[use][i].visualModel.setRelSize(value);
+            // set the strength of which the luminosity texture is lighted
+            this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+        }
     }
 };
 
@@ -679,22 +1060,26 @@ Spacecraft.prototype.resetThrusterBurn = function() {
 };
 
 Spacecraft.prototype.addThrusterBurn = function(use,value) {
-    this.propulsion.thrusterBurn[use]+=value;
-    for(var i=0;i<this.thrusters[use].length;i++) {
-        // set the size of the particle that shows the burn
-        this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+value);
-        // set the strength of which the luminosity texture is lighted
-        this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+    if((value===0)||(value>this.propulsion.minimalBurn)) {
+        this.propulsion.thrusterBurn[use]+=value;
+        for(var i=0;i<this.thrusters[use].length;i++) {
+            // set the size of the particle that shows the burn
+            this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+value);
+            // set the strength of which the luminosity texture is lighted
+            this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+        }
     }
 };
 
 Spacecraft.prototype.addThrusterBurnCapped = function(use,value,max) {
-    this.propulsion.thrusterBurn[use]+=value>max?max:value;
-    for(var i=0;i<this.thrusters[use].length;i++) {
-        // set the size of the particle that shows the burn
-        this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+(value>max?max:value));
-        // set the strength of which the luminosity texture is lighted
-        this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+    if((value===0)||(value>this.propulsion.minimalBurn)) {
+        this.propulsion.thrusterBurn[use]+=value>max?max:value;
+        for(var i=0;i<this.thrusters[use].length;i++) {
+            // set the size of the particle that shows the burn
+            this.thrusters[use][i].visualModel.setRelSize(this.thrusters[use][i].visualModel.getRelSize()+(value>max?max:value));
+            // set the strength of which the luminosity texture is lighted
+            this.visualModel.luminosityFactors[this.thrusters[use][i].slot.group]=Math.min(1.0,this.propulsion.thrusterBurn[use]*2);
+        }
     }
 };
 
@@ -705,7 +1090,7 @@ Spacecraft.prototype.addDirectionalThrusterBurn = function(directionVector,value
 		directionVector[1]=-directionVector[1];
 		directionVector[2]=-directionVector[2];
 	}
-	var relativeDirection = vector3Matrix3Product(directionVector,matrix3from4(this.physicalModel.modelMatrixInverse));
+	var relativeDirection = Vec.mulVec3Mat3(directionVector,Mat.matrix3from4(this.physicalModel.modelMatrixInverse));
 	if(relativeDirection[0]>0.0001) {
 		this.addThrusterBurn("slideRight",relativeDirection[0]*value);
 	}
@@ -727,18 +1112,24 @@ Spacecraft.prototype.addDirectionalThrusterBurn = function(directionVector,value
 };
 
 Spacecraft.prototype.getNeededBurnForSpeedChange = function(speedDifference) {
-	return speedDifference*this.physicalModel.mass/this.propulsion.class.thrust/2/(TIME_UNIT/1000);
+    return speedDifference*this.physicalModel.mass/this.propulsion.class.thrust/2/(TIME_UNIT/1000);
 };
 
 Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function(angularVelocityDifference) {
-        // note: the division by 10 in the end if on purpose: matrix represents 5 ms change, torque lasts for 50 ms
-	return angularVelocityDifference*this.physicalModel.mass/this.propulsion.class.angularThrust/2/10;
+    // note: the division by 2 in the end is on purpose: 0.5 of thruster burn produces full angular thrust (1.0 is firing both for turning and movement)
+    return angularVelocityDifference*this.physicalModel.mass/this.propulsion.class.angularThrust/2/(TIME_UNIT/5);
+};
+
+Spacecraft.prototype.toggleHitboxVisibility = function () {
+    this._hitbox.toggleVisibility();
+};
+
+Spacecraft.prototype.resetViews = function () {
+    this.visualModel.resetViews();
 };
 
 Spacecraft.prototype.simulate = function(dt) {
-	if (this.controller!==null) {
-            this.controller.control();
-        }
+        this._maneuveringComputer.controlThrusters();
 	this.propulsion.simulate(dt);
 	this.physicalModel.simulate(dt);
 	this.visualModel.setPositionMatrix(this.physicalModel.positionMatrix);
@@ -791,7 +1182,17 @@ function Level() {
      * @type Spacecraft[]
      */
     this._spacecrafts = null;
-	this.projectiles=new Array();
+    /**
+     * @name Level#_projectiles
+     * @type Projectile[]
+     */
+    this._projectiles = null;
+    /**
+     * The index of the spacecraft that is piloted by the player.
+     * @name Level#_pilotedCraftIndex
+     * @type Number
+     */
+    this._pilotedCraftIndex = null;
 	
         this.camera = null;
         this.cameraController= null;
@@ -807,20 +1208,22 @@ Level.prototype.addPlayer = function(player) {
     this._players[player.name] = player;
 };
 
+Level.prototype.getPilotedSpacecraft = function() {
+    if(this._pilotedCraftIndex !== null) {
+        return this._spacecrafts[this._pilotedCraftIndex];
+    } else {
+        return null;
+    }
+};
+
 Level.prototype.requestLoadFromFile = function(filename) {
-    var request = new XMLHttpRequest();
-    request.open('GET', getGameFolder("level")+filename+"?123", true);
     var self = this;
-    request.onreadystatechange = function () {
-        if (request.readyState === 4) {
-            var levelSource = this.responseXML;
-            self.loadFromXML(levelSource);
-            if(self.onLoad!==null) {
-                self.onLoad();
-            }
+    Armada.requestXMLFile("level",filename,function(levelSource) {
+        self.loadFromXML(levelSource);
+        if(self.onLoad!==null) {
+            self.onLoad();
         }
-    };
-    request.send(null);
+    });
 };
 
 Level.prototype.loadFromXML= function(levelSource) {
@@ -835,14 +1238,14 @@ Level.prototype.loadFromXML= function(levelSource) {
     this._skyboxes = new Array();
     var skyboxTags = levelSource.getElementsByTagName("Skybox");
     for(i=0;i<skyboxTags.length;i++) {
-        this._skyboxes.push(new Skybox(game.logicContext.getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
+        this._skyboxes.push(new Skybox(Armada.logic().getSkyboxClass(skyboxTags[i].getAttribute("class"))));		
     }
     
     this._backgroundObjects = new Array();
     var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
     for(i=0;i<backgroundObjectTags.length;i++) {
         this._backgroundObjects.push(new BackgroundObject(
-            game.logicContext.getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+            Armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
             backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
             backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
         ));		
@@ -851,30 +1254,34 @@ Level.prototype.loadFromXML= function(levelSource) {
     this._dustClouds = new Array();
     var dustCloudTags = levelSource.getElementsByTagName("DustCloud");
     for(i=0;i<dustCloudTags.length;i++) {
-        this._dustClouds.push(new DustCloud(game.logicContext.getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
+        this._dustClouds.push(new DustCloud(Armada.logic().getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
     }
 	
     this._cameraStartPosition = new Object();
     var cameraTags = levelSource.getElementsByTagName("Camera");
     if(cameraTags.length>0) {
         if(cameraTags[0].getElementsByTagName("position").length>0) {
-            this._cameraStartPosition.positionMatrix=translationMatrixv(scalarVector3Product(-1,getVector3FromXMLTag(cameraTags[0].getElementsByTagName("position")[0])));
+            this._cameraStartPosition.positionMatrix=Mat.translation4v(Vec.scaled3(getVector3FromXMLTag(cameraTags[0].getElementsByTagName("position")[0]),-1));
         }        
         if(cameraTags[0].getElementsByTagName("orientation").length>0) {
             this._cameraStartPosition.orientationMatrix=getRotationMatrixFromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
         }
     }
 	
+    this._projectiles = new Array();
     this._spacecrafts = new Array();
     var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
     for(i=0;i<spacecraftTags.length;i++) {
         var spacecraft = new Spacecraft(
-            game.logicContext.getSpacecraftClass(spacecraftTags[i].getAttribute("class")),
+            Armada.logic().getSpacecraftClass(spacecraftTags[i].getAttribute("class")),
             this.getPlayer(spacecraftTags[i].getAttribute("owner")),
             getTranslationMatrixFromXMLTag(spacecraftTags[i].getElementsByTagName("position")[0]),
             getRotationMatrixFromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
-            "ai"
+            this._projectiles
         );
+        if(spacecraftTags[i].getAttribute("piloted") === "true") {
+            this._pilotedCraftIndex = i;
+        }
         // equipping the created spacecraft
         // if there is an quipment tag...
         if(spacecraftTags[i].getElementsByTagName("equipment").length>0) {
@@ -902,11 +1309,11 @@ Level.prototype.addRandomShips = function(owner,shipNumbersPerClass,mapSize) {
         for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
             this._spacecrafts.push(
                 new Spacecraft(
-                    game.logicContext.getSpacecraftClass(shipClass),
+                    Armada.logic().getSpacecraftClass(shipClass),
                     this.getPlayer(owner),
-                    translationMatrix(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
-                    identityMatrix4(),
-                    "ai",
+                    Mat.translation4(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
+                    Mat.identity4(),
+                    this._projectiles,
                     "default"
                 )
             );
@@ -914,6 +1321,10 @@ Level.prototype.addRandomShips = function(owner,shipNumbersPerClass,mapSize) {
     }
 };
 
+/**
+ * 
+ * @param {Scene} scene
+ */
 Level.prototype.buildScene = function(scene) {
     var i,j;
     
@@ -945,51 +1356,57 @@ Level.prototype.buildScene = function(scene) {
         }
     }
     
-    this.cameraController = new CameraController(scene.activeCamera,game.graphicsContext,game.logicContext,game.controlContext);
     
     // adding the projectile resources to make sure they will be requested for
     // loading, as they are not added to the scene in the beginning
-    for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
-        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName);
-        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor);
-        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlash.shaderName);
-        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlash.textureDescriptor);
-        game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections));
+    for(var i=0;i<Armada.logic().projectileClasses.length;i++) {
+        Armada.resources().getShader(Armada.logic().projectileClasses[i].shaderName);
+        Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].textureDescriptor);
+        Armada.resources().getShader(Armada.logic().projectileClasses[i].muzzleFlash.shaderName);
+        Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].muzzleFlash.textureDescriptor);
+        Armada.resources().getOrAddModelByName("projectileModel-"+Armada.logic().projectileClasses[i].name,projectileModel(Armada.logic().projectileClasses[i].intersections));
     }
-    game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel());
+    Armada.resources().getOrAddModelByName("squareModel",squareModel());
 };
 
 Level.prototype.addProjectileResourcesToContext = function(context) {
-    for(var i=0;i<game.logicContext.projectileClasses.length;i++) {
-        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].shaderName).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].textureDescriptor).addToContext(context);
-        game.graphicsContext.resourceManager.getShader(game.logicContext.projectileClasses[i].muzzleFlash.shaderName).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddTextureFromDescriptor(game.logicContext.projectileClasses[i].muzzleFlash.textureDescriptor).addToContext(context);
-        game.graphicsContext.resourceManager.getOrAddModelByName("projectileModel-"+game.logicContext.projectileClasses[i].name,projectileModel(game.logicContext.projectileClasses[i].intersections)).addToContext(context,false);
+    for(var i=0;i<Armada.logic().projectileClasses.length;i++) {
+        Armada.resources().getShader(Armada.logic().projectileClasses[i].shaderName).addToContext(context);
+        Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].textureDescriptor).addToContext(context);
+        Armada.resources().getShader(Armada.logic().projectileClasses[i].muzzleFlash.shaderName).addToContext(context);
+        Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].muzzleFlash.textureDescriptor).addToContext(context);
+        Armada.resources().getOrAddModelByName("projectileModel-"+Armada.logic().projectileClasses[i].name,projectileModel(Armada.logic().projectileClasses[i].intersections)).addToContext(context,false);
     }
-    game.graphicsContext.resourceManager.getOrAddModelByName("squareModel",squareModel()).addToContext(context);
+    Armada.resources().getOrAddModelByName("squareModel",squareModel()).addToContext(context);
 };
 
-Level.prototype.tick = function(dt) {
-	for (var i=0;i<this._spacecrafts.length;i++) {
-		if ((this._spacecrafts[i]===undefined)||(this._spacecrafts[i].toBeDeleted)) {
-			this._spacecrafts[i] = null;
-			this._spacecrafts.splice(i,1);
-		} else {
-			this._spacecrafts[i].simulate(dt);
-		}
-	}
-	for (var i=0;i<this.projectiles.length;i++) {
-		if ((this.projectiles[i]===undefined)||(this.projectiles[i].toBeDeleted)) {
-			this.projectiles[i] = null;
-			this.projectiles.splice(i,1);
-		} else {
-			this.projectiles[i].simulate(dt,this._spacecrafts);
-		}
-	}
-        for (var i=0;i<this._dustClouds.length;i++) {
-		this._dustClouds[i].simulate(this.camera);
-	}
+Level.prototype.toggleHitboxVisibility = function () {
+    for(var i=0;i<this._spacecrafts.length;i++) {
+        this._spacecrafts[i].toggleHitboxVisibility();
+    }
+};
+
+Level.prototype.tick = function (dt) {
+    for (var i = 0; i < this._spacecrafts.length; i++) {
+        if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].toBeDeleted)) {
+            this._spacecrafts[i] = null;
+            this._spacecrafts.splice(i, 1);
+        } else {
+            this._spacecrafts[i].simulate(dt);
+        }
+    }
+    for (var i = 0; i < this._projectiles.length; i++) {
+        if ((this._projectiles[i] === undefined) || (this._projectiles[i].toBeDeleted)) {
+            this._projectiles[i] = null;
+            this._projectiles.splice(i, 1);
+        } else {
+            this._projectiles[i].simulate(dt, this._spacecrafts);
+        }
+    }
+    for (var i = 0; i < this._dustClouds.length; i++) {
+        this._dustClouds[i].simulate(this.camera);
+    }
+    this.camera.update();
 };
 
 function Player(name) {
@@ -1128,17 +1545,11 @@ LogicContext.prototype.loadClassesFromXML = function(xmlSource) {
 };
 
 LogicContext.prototype.requestClassesLoad = function() {
-    var request = new XMLHttpRequest();
-    request.open('GET', getGameFolder("config")+this._classesSourceFileName+"?123", true);
     var self = this;
-    request.onreadystatechange = function () {
-        if (request.readyState === 4) {
-            var classesXML = this.responseXML;
-            self.loadClassesFromXML(classesXML);
-            self.setToReady();
-        }
-    };
-    request.send(null);
+    Armada.requestXMLFile("config",this._classesSourceFileName,function(classesXML) {
+        self.loadClassesFromXML(classesXML);
+        self.setToReady();
+    });
 };
 
 

@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file contains the declatations of all classes of in-game
  * entities. These classes are used via composition (as members of the instances 
@@ -24,8 +26,6 @@
     You should have received a copy of the GNU General Public License
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-"use strict";
 
 /**
  * Creates a skybox class and loads its properties from the passed XML tag, if any.
@@ -467,7 +467,7 @@ function Barrel(xmlTag) {
  * @param {Element} xmlTag
  */
 Barrel.prototype.loadFromXMLTag = function(xmlTag) {
-    this.projectileClass = game.logicContext.getProjectileClass(xmlTag.getAttribute("projectile"));
+    this.projectileClass = Armada.logic().getProjectileClass(xmlTag.getAttribute("projectile"));
     this.force = parseFloat(xmlTag.getAttribute("force"));
     this.positionVector = getVector3FromXMLTag(xmlTag);
     Object.freeze(this);
@@ -1123,7 +1123,7 @@ SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
     var i;
     
     this.name = xmlTag.getAttribute("name");
-    this.spacecraftType = game.logicContext.getSpacecraftType(xmlTag.getAttribute("type"));
+    this.spacecraftType = Armada.logic().getSpacecraftType(xmlTag.getAttribute("type"));
     
     // initializing informational properties
     if(xmlTag.getElementsByTagName("information").length>0) {
@@ -1166,9 +1166,9 @@ SpacecraftClass.prototype.loadFromXMLTag = function(xmlTag) {
     var bodyTags = xmlTag.getElementsByTagName("body");
     for (i = 0; i < bodyTags.length; i++) {
         this.bodies.push(new Body(
-                translationMatrixv(scalarVector3Product(this.modelSize, getVector3FromXMLTag(bodyTags[i]))),
+                getTranslationMatrixFromXMLTag(bodyTags[i]),
                 getRotationMatrixFromXMLTags(bodyTags[i].getElementsByTagName("turn")),
-                scalarVector3Product(this.modelSize, getDimensionsFromXMLTag(bodyTags[i]))
+                getDimensionsFromXMLTag(bodyTags[i])
                 ));
     }
     

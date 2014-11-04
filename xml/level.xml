@@ -24,7 +24,7 @@
         </orientation>
     </Camera>
 	
-    <Spacecraft class="falcon" owner="human">
+    <Spacecraft class="falcon" owner="human" piloted="true">
         <position x="0.0" y="0.0" z="-60.0" />
         <equipment profile="full" />
     </Spacecraft>

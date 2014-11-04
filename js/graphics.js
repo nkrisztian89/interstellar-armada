@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file contains the classes to load graphics configuration
  * and set up an according graphics context to use in the game.
@@ -24,8 +26,6 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-"uses strict";
-
 /**
  * Creates a new LOD context object.
  * @class Holds a certain LOD configuration to be used for making LOD decisions while rendering.
@@ -43,8 +43,10 @@ function LODContext(maxEnabledLOD,thresholds) {
  * @class A graphics context for other modules, to be used to pass the 
  * important properties of the current graphics environment to functions that
  * can manipulate it.
+ * @extends Resource
  */
 function GraphicsContext() {
+    Resource.call(this);
     this.resourceManager=new ResourceManager();
     
     this._xmlSource = null;
@@ -55,6 +57,9 @@ function GraphicsContext() {
     this._maxLoadedLOD = null;
     this._lodContext = null;
 }
+
+GraphicsContext.prototype = new Resource();
+GraphicsContext.prototype.constructor = GraphicsContext;
 
 /**
  * 
@@ -113,6 +118,7 @@ GraphicsContext.prototype.loadFromLocalStorage = function() {
     if(localStorage.interstellarArmada_graphics_maxLOD!==undefined) {
         this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD));
     }
+    this.setToReady();
 };
 
 GraphicsContext.prototype.restoreDefaults = function() {

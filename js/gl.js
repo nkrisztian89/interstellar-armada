@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file contains wrapper classes for accessing WebGL 
  * functionality and manage the corresponding resources.
@@ -23,8 +25,6 @@
     You should have received a copy of the GNU General Public License
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-"uses strict";
 
 /**
  * Creates a new Texture object.
@@ -429,7 +429,7 @@ ShaderUniform.prototype.addMember = function(member) {
     if(this._type===this.VariableTypes.struct) {
         this._members.push(member);
     } else {
-        game.showError("Attempting to add a member to uniform "+this._name+", which is not of struct type!");
+        Armada.showError("Attempting to add a member to uniform "+this._name+", which is not of struct type!");
     }
 };
 
@@ -675,7 +675,7 @@ VertexBuffer.prototype.bindToAttribute = function(context,shader) {
             context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
             context.gl.enableVertexAttribArray(this._location);
         } else if (this._location!==location) {
-            game.showError("Attempting to bind vertex buffer ("+this._name+") to 2 different locations!");
+            Armada.showError("Attempting to bind vertex buffer ("+this._name+") to 2 different locations!");
         }
     }
 };
@@ -802,30 +802,22 @@ Shader.prototype.getAttributes = function() {
 Shader.prototype.requestLoadFromFile = function() {
     if(this.isReadyToUse()===false) {
         var self = this;
-        var requestV = new XMLHttpRequest();
-        requestV.onload = function() {
-            self._vertexShaderSource = requestV.responseText;
+        Armada.requestTextFile("shader",this._vertexShaderFileName,function(responseText) {
+            self._vertexShaderSource = responseText;
             if(self._fragmentShaderSource!==null) {
                 self.setToReady();
             }
-        };
         // override the mime type to avoid error messages in Firefox developer
         // consol when it tries to parse as XML
-        requestV.overrideMimeType('text/plain; charset=utf-8');
-        requestV.open('GET', this._vertexShaderFileName+"?1.0", true);
-        requestV.send(null);
-        var requestF = new XMLHttpRequest();
-        requestF.onload = function() {
-            self._fragmentShaderSource = requestF.responseText;
+        },'text/plain; charset=utf-8');
+        Armada.requestTextFile("shader",this._fragmentShaderFileName, function(responseText) {
+            self._fragmentShaderSource = responseText;
             if(self._vertexShaderSource!==null) {
                 self.setToReady();
             }
-        };
         // override the mime type to avoid error messages in Firefox developer
-        // consol when it tries to parse as XML
-        requestF.overrideMimeType('text/plain; charset=utf-8');
-        requestF.open('GET', this._fragmentShaderFileName+"?1.0", true);
-        requestF.send(null);
+        // consol when it tries to parse as XML    
+        },'text/plain; charset=utf-8');
     }
 };
 
@@ -1024,7 +1016,13 @@ function ManagedGLContext(name,canvas,antialiasing,filtering) {
     catch(e) {}
     
     if(!this.gl) {
-        game.showError("Unable to initialize WebGL. Your browser might not support it.");
+        Armada.showError("Unable to initialize WebGL.","critical",
+                "It looks like your device, browser or graphics drivers do not "+
+                "support web 3D graphics. Make sure your browser and graphics "+
+                "drivers are updated to the latest version, and you are using "+
+                "a modern web browser (Firefox or Chrome are recommended).\n"+
+                "Please note that some phones or handheld devices do not have 3D "+
+                "web capabilities, even if you use the latest software.");
     }
     
     // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
@@ -1543,7 +1541,7 @@ ResourceManager.prototype.addCubemappedTexture = function(cubemappedTexture) {
  */
 ResourceManager.prototype.getCubemappedTexture = function(name) {
     if(this._cubemappedTextures[name]===undefined) {
-        game.showError("Asked for a cube mapped texture named '"+name+"', which does not exist.");
+        Armada.showError("Asked for a cube mapped texture named '"+name+"', which does not exist.");
         return null;
     } else {
         if(this._requestedCubemappedTextures[name]===undefined) {
@@ -1581,7 +1579,7 @@ ResourceManager.prototype.addShader = function(shader) {
  */
 ResourceManager.prototype.getShader = function(name) {
     if(this._shaders[name]===undefined) {
-        game.showError("Asked for a shader named '"+name+"', which does not exist.");
+        Armada.showError("Asked for a shader named '"+name+"', which does not exist.");
         return null;
     } else {
         if(this._requestedShaders[name]===undefined) {
@@ -1693,15 +1691,10 @@ ResourceManager.prototype.requestModelLoadFromFile = function() {
  * is stored (relative to the config file folder)
  */
 ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function(filename) {
-    var request = new XMLHttpRequest();
-    request.open('GET', getGameFolder("config")+filename+"?123", true);
     var self = this;
-    request.onreadystatechange = function() {
-        if (request.readyState === 4) {
-            self.loadShaderAndCubemapObjectsFromXML(request.responseXML);
-        }
-    };
-    request.send(null);
+    Armada.requestXMLFile("config",filename,function(responseXML) {
+        self.loadShaderAndCubemapObjectsFromXML(responseXML);
+    });
 };
 
 /**

@@ -22,75 +22,99 @@
         <classes source="classes.xml" />
     </logic>
     <control>
-        <descriptions>
-            <action name="quit" description="Quit to menu." />
-            <action name="pause" description="Pause the game." />
-            <action name="cameraMoveLeft" description="Move the camera to the left (free camera mode)." />
-            <action name="cameraMoveRight" description="Move the camera to the right (free camera mode)." />
-            <action name="cameraMoveUp" description="Move the camera upwards (free camera mode)." />
-            <action name="cameraMoveDown" description="Move the camera downwards (free camera mode)." />
-            <action name="cameraMoveForward" description="Move the camera forward (free camera mode)." />
-            <action name="cameraMoveBackward" description="Move the camera backward (free camera mode)." />
-            <action name="cameraTurnLeft" description="Turn the camera to the left." />
-            <action name="cameraTurnRight" description="Turn the camera to the right." />
-            <action name="cameraTurnUp" description="Turn the camera upwards." />
-            <action name="cameraTurnDown" description="Turn the camera downwards." />
-            <action name="followNext" description="Follow next spacecraft." />
-            <action name="followPrevious" description="Follow previous spacecraft." />
-            <action name="changeView" description="Change view of currently followed spacecraft." />
-            <action name="setManualControl" description="Switch the control of the currently followed spacecraft to manual." />
-            <action name="changeFlightMode" description="Toggle the controlled spacecraft between free and compensated flight modes." />
-            <action name="fire" description="Fire the weapons of the manually controlled spacecraft." />
-            <action name="forward" description="Forward thrust (free mode) or increase speed (compensated mode)." />
-            <action name="reverse" description="Reverse thrust (free mode) or decrease speed (compensated mode)." />
-            <action name="resetSpeed" description="Reset speed to zero (compensated mode)." />
-            <action name="yawLeft" description="Turn spacecraft to the left." />
-            <action name="yawRight" description="Turn spacecraft to the right." />
-            <action name="pitchUp" description="Turn spacecraft upwards." />
-            <action name="pitchDown" description="Turn spacecraft downwards." />
-            <action name="rollLeft" description="Roll spacecraft to the left." />
-            <action name="rollRight" description="Roll spacecraft to the right." />
-            <action name="setAIControl" description="Switch the control of the currently followed spacecraft to AI." />
-            <action name="stopAIShips" description="Delete the goals of AI controlled spacecrafts and make all of them stop." />
-            <action name="toggleHitboxVisibility" description="Toggle the visibility of hitboxes." />
-            <action name="cameraDecreaseFOV" description="Zoom in. (decrease field of view of current camera)" />
-            <action name="cameraIncreaseFOV" description="Zoom out. (increase field of view of current camera)" />
-        </descriptions>
-        <keyboard>
-            <action name="fire" key="space" />
-            <action name="changeFlightMode" key="o" />
-            <action name="forward" key="w" />
-            <action name="reverse" key="s" />
-            <action name="resetSpeed" key="backspace" />
-            <action name="yawLeft" key="left" />
-            <action name="yawRight" key="right" />
-            <action name="pitchDown" key="up" />
-            <action name="pitchUp" key="down" />
-            <action name="rollRight" key="page down" />
-            <action name="rollLeft" key="page up" />
+        <controllers>
+            <controller type="general">
+                <action name="quit" description="Quit to menu." />
+                <action name="pause" description="Pause the game." />
+                <action name="switchToPilotMode" description="Switch to pilot mode." />
+                <action name="switchToSpectatorMode" description="Switch to spectator mode." />
+                <action name="toggleHitboxVisibility" description="Toggle the visibility of hitboxes." />
+                <action name="toggleTextVisibility" description="Toggle the visibility of the texts on screen." />
+            </controller>
+            <controller type="fighter">
+                <action name="changeFlightMode" description="Toggle between free and compensated flight modes." />
+                <action name="fire" continuous="true" description="Fire primary weapons." />
+                <action name="forward" continuous="true" description="Forward thrust (free mode) or increase speed (compensated mode)." />
+                <action name="reverse" continuous="true" description="Reverse thrust (free mode) or decrease speed (compensated mode)." />
+                <action name="slideLeft" continuous="true" description="Strafe left." />
+                <action name="slideRight" continuous="true" description="Strafe right" />
+                <action name="resetSpeed" description="Reset speed to zero (compensated mode)." />
+                <action name="yawLeft" continuous="true" description="Turn to the left." />
+                <action name="yawRight" continuous="true" description="Turn to the right." />
+                <action name="pitchUp" continuous="true" description="Turn upwards." />
+                <action name="pitchDown" continuous="true" description="Turn downwards." />
+                <action name="rollLeft" continuous="true" description="Roll to the left." />
+                <action name="rollRight" continuous="true" description="Roll to the right." />
+            </controller>
+            <controller type="camera">
+                <action name="cameraMoveLeft" continuous="true" description="Move the camera to the left (free camera mode)." />
+                <action name="cameraMoveRight" continuous="true" description="Move the camera to the right (free camera mode)." />
+                <action name="cameraMoveUp" continuous="true" description="Move the camera upwards (free camera mode)." />
+                <action name="cameraMoveDown" continuous="true" description="Move the camera downwards (free camera mode)." />
+                <action name="cameraMoveForward" continuous="true" description="Move the camera forward (free camera mode)." />
+                <action name="cameraMoveBackward" continuous="true" description="Move the camera backward (free camera mode)." />
+                <action name="cameraTurnLeft" continuous="true" description="Turn the camera to the left." />
+                <action name="cameraTurnRight" continuous="true" description="Turn the camera to the right." />
+                <action name="cameraTurnUp" continuous="true" description="Turn the camera upwards." />
+                <action name="cameraTurnDown" continuous="true" description="Turn the camera downwards." />
+                <action name="cameraDecreaseFOV" continuous="true" description="Zoom in." />
+                <action name="cameraIncreaseFOV" continuous="true" description="Zoom out." />
+                <action name="followNext" description="Follow next spacecraft. (in spectator mode)" />
+                <action name="followPrevious" description="Follow previous spacecraft. (in spectator mode)" />
+                <action name="changeView" description="Change view of currently followed spacecraft." />
+            </controller>
+        </controllers>
+        <input>
+            <inputDevice type="keyboard">
+                <binding action="fire" key="space" />
+                <binding action="changeFlightMode" key="o" />
+                <binding action="forward" key="w" />
+                <binding action="reverse" key="s" />
+                <binding action="slideLeft" key="a" />
+                <binding action="slideRight" key="d" />
+                <binding action="resetSpeed" key="backspace" />
+                <binding action="yawLeft" key="left" />
+                <binding action="yawRight" key="right" />
+                <binding action="pitchDown" key="up" />
+                <binding action="pitchUp" key="down" />
+                <binding action="rollRight" key="page down" />
+                <binding action="rollLeft" key="page up" />
             
-            <action name="cameraTurnLeft" key="left" ctrl="true" />
-            <action name="cameraTurnRight" key="right" ctrl="true" />
-            <action name="cameraTurnUp" key="up" ctrl="true" />
-            <action name="cameraTurnDown" key="down" ctrl="true" />
-            <action name="cameraMoveLeft" key="left" />
-            <action name="cameraMoveRight" key="right" />
-            <action name="cameraMoveUp" key="page up" />
-            <action name="cameraMoveDown" key="page down" />
-            <action name="cameraMoveForward" key="up" />
-            <action name="cameraMoveBackward" key="down" />
-            <action name="cameraDecreaseFOV" key="z" />
-            <action name="cameraIncreaseFOV" key="u" />
+                <binding action="cameraTurnLeft" key="left" ctrl="true" />
+                <binding action="cameraTurnRight" key="right" ctrl="true" />
+                <binding action="cameraTurnUp" key="up" ctrl="true" />
+                <binding action="cameraTurnDown" key="down" ctrl="true" />
+                <binding action="cameraMoveLeft" key="left" />
+                <binding action="cameraMoveRight" key="right" />
+                <binding action="cameraMoveUp" key="page up" />
+                <binding action="cameraMoveDown" key="page down" />
+                <binding action="cameraMoveForward" key="up" />
+                <binding action="cameraMoveBackward" key="down" />
+                <binding action="cameraDecreaseFOV" key="z" />
+                <binding action="cameraIncreaseFOV" key="u" />
+                <binding action="changeView" key="v" />
+                <binding action="followNext" key="c" />
+                <binding action="followPrevious" key="x" />
             
-            <action name="pause" key="p" />
-            <action name="changeView" key="v" />
-            <action name="followNext" key="c" />
-            <action name="followPrevious" key="x" />
-            <action name="setManualControl" key="m" />
-            <action name="setAIControl" key="n" />
-            <action name="stopAIShips" key="0" />
-            <action name="toggleHitboxVisibility" key="h" />
-            <action name="quit" key="escape" />
-        </keyboard>
+                <binding action="pause" key="p" />
+                <binding action="switchToPilotMode" key="m" />
+                <binding action="switchToSpectatorMode" key="n" />
+                <binding action="toggleHitboxVisibility" key="h" />
+                <binding action="quit" key="escape" />
+                <binding action="toggleTextVisibility" key="t" />
+            </inputDevice>
+            <inputDevice type="mouse">
+                <sensitivityProfile moveSensitivity="0.005" displacementSensitivity="0.00002" displacementDeadzone="6" />
+                <binding action="cameraTurnLeft" move="left" />
+                <binding action="cameraTurnRight" move="right" />
+                <binding action="cameraTurnUp" move="up" />
+                <binding action="cameraTurnDown" move="down" />
+                <binding action="fire" button="left" />
+                <binding action="yawLeft" move="left" fromCenter="true" />
+                <binding action="yawRight" move="right" fromCenter="true" />
+                <binding action="pitchDown" move="down" fromCenter="true" />
+                <binding action="pitchUp" move="up" fromCenter="true" />
+            </inputDevice>
+        </input>
     </control>
 </settings>

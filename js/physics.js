@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file implements the simple newtonian physics engine of the
  * Interstellar Armada program.
@@ -23,8 +25,6 @@
     You should have received a copy of the GNU General Public License
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-"uses strict";
 
 /**
  * Defines a force class.
@@ -55,7 +55,7 @@ function Torque(id,strength,axis,duration) {
 function Body(positionMatrix,orientationMatrix,dimensions) {
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
-	this.modelMatrixInverse=mul(inverseTranslationMatrix(this.positionMatrix),inverseRotationMatrix(this.orientationMatrix));
+	this.modelMatrixInverse=Mat.mul4(Mat.inverseOfTranslation4(this.positionMatrix),Mat.inverseOfRotation4(this.orientationMatrix));
 	this.width=dimensions[0];
 	this.height=dimensions[1];
 	this.depth=dimensions[2];
@@ -69,24 +69,25 @@ function Body(positionMatrix,orientationMatrix,dimensions) {
  * @class The basic entity for all physical simulations. Can have physical
  * properties and interact with other objects.
  * @param {Number} mass
- * @param {Number} size
  * @param {Float32Array} positionMatrix
  * @param {Float32Array} orientationMatrix
+ * @param {Float32Array} scalingMatrix
  * @param {Float32Array} initialVelocityMatrix
  * @param {Body[]} bodies
  * @returns {PhysicalObject}
  */
-function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVelocityMatrix,bodies) {
+function PhysicalObject(mass,positionMatrix,orientationMatrix,scalingMatrix,initialVelocityMatrix,bodies) {
 	this.mass=mass;
-	this.size=size;
-	this.sizeSquared=size*size;
 	this.positionMatrix=positionMatrix;
 	this.orientationMatrix=orientationMatrix;
-	this.modelMatrixInverse=mul(inverseTranslationMatrix(this.positionMatrix),inverseRotationMatrix(this.orientationMatrix));
+        this.scalingMatrix = scalingMatrix;
+        this.rotationMatrixInverse = null;
+	this.modelMatrixInverse = null;
+        this.updateInverseMatrix();
 	this.timeSinceLastMatrixCorrection=0;
 	
 	this.velocityMatrix=initialVelocityMatrix;
-	this.angularVelocityMatrix=identityMatrix4();
+	this.angularVelocityMatrix=Mat.identity4();
 	
 	this.forces=new Array();
 	this.torques=new Array();
@@ -94,6 +95,17 @@ function PhysicalObject(mass,size,positionMatrix,orientationMatrix,initialVeloci
 	this.bodySize=-1;
 	this.calculateBodySize();
 }
+
+PhysicalObject.prototype.updateInverseMatrix = function () {
+    this.rotationMatrixInverse = Mat.inverseOfRotation4(this.orientationMatrix);
+    this.modelMatrixInverse = Mat.mul4(
+        Mat.mul4(
+            Mat.inverseOfTranslation4(this.positionMatrix),
+            this.rotationMatrixInverse
+        ),
+        Mat.inverseOfScaling4(this.scalingMatrix)
+    );
+};
 
 /**
  * Checks the forces for one with the given ID, if it exists, renews its
@@ -151,41 +163,46 @@ PhysicalObject.prototype.calculateBodySize = function() {
 	this.bodySize=0;
         var bodyPos;
 	for(var i=0;i<this.bodies.length;i++) {
-		bodyPos = getPositionVector(this.bodies[i].positionMatrix);
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,-this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[this.bodies[i].halfWidth,-this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[-this.bodies[i].halfWidth,this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[-this.bodies[i].halfWidth,this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[-this.bodies[i].halfWidth,-this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
-		this.bodySize=Math.max(this.bodySize,vector3Length(vectorAdd3(bodyPos,[-this.bodies[i].halfWidth,-this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
+		bodyPos = Mat.translationVector3(this.bodies[i].positionMatrix);
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[this.bodies[i].halfWidth,this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[this.bodies[i].halfWidth,-this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[this.bodies[i].halfWidth,-this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[-this.bodies[i].halfWidth,this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[-this.bodies[i].halfWidth,this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[-this.bodies[i].halfWidth,-this.bodies[i].halfHeight,this.bodies[i].halfDepth])));
+		this.bodySize=Math.max(this.bodySize,Vec.length3(Vec.add3(bodyPos,[-this.bodies[i].halfWidth,-this.bodies[i].halfHeight,-this.bodies[i].halfDepth])));
 	}
-	this.bodySize*=1/this.size;
 };
 
+/**
+ * 
+ * @param {Number[4]} positionVector
+ * @param {Number[3]} direction
+ * @param {Number} range
+ * @returns {Boolean}
+ */
 PhysicalObject.prototype.checkHit = function(positionVector,direction,range) {
-	if ((Math.abs(positionVector[0]-this.positionMatrix[12])<this.bodySize)&&
-		(Math.abs(positionVector[1]-this.positionMatrix[13])<this.bodySize)&&
-		(Math.abs(positionVector[2]-this.positionMatrix[14])<this.bodySize)) {
-			
-		var relativePos = vector4Matrix4Product(positionVector,this.modelMatrixInverse);
-		var result=false;
-                var posRelativeToBody;
-		for(var i=0;(result===false)&&(i<this.bodies.length);i++) {
-			posRelativeToBody = vector4Matrix4Product(relativePos,this.bodies[i].modelMatrixInverse);
-			result = 
-				(posRelativeToBody[0]>=-this.bodies[i].halfWidth)&&(posRelativeToBody[0]<=this.bodies[i].halfWidth)&&
-				(posRelativeToBody[1]>=-this.bodies[i].halfHeight)&&(posRelativeToBody[1]<=this.bodies[i].halfHeight)&&
-				(posRelativeToBody[2]>=-this.bodies[i].halfDepth)&&(posRelativeToBody[2]<=this.bodies[i].halfDepth);
-		}
-	}
-	return result;
+    var result = false;
+    // first, preliminary check based on position relative to the whole object
+    var relativePos = Vec.mulVec4Mat4(positionVector,this.modelMatrixInverse);
+    if((Math.abs(relativePos[0])<this.bodySize)&&(Math.abs(relativePos[1])<this.bodySize)&&(Math.abs(relativePos[2])<this.bodySize)) {			
+        // if it is close enough to be hitting one of the bodies, check them
+        var posRelativeToBody;
+        for(var i=0;(result===false)&&(i<this.bodies.length);i++) {
+            posRelativeToBody = Vec.mulVec4Mat4(relativePos,this.bodies[i].modelMatrixInverse);
+            result = 
+                (posRelativeToBody[0]>=-this.bodies[i].halfWidth)&&(posRelativeToBody[0]<=this.bodies[i].halfWidth)&&
+                (posRelativeToBody[1]>=-this.bodies[i].halfHeight)&&(posRelativeToBody[1]<=this.bodies[i].halfHeight)&&
+                (posRelativeToBody[2]>=-this.bodies[i].halfDepth)&&(posRelativeToBody[2]<=this.bodies[i].halfDepth);
+        }
+    }
+    return result;
 };
 
 PhysicalObject.prototype.correctMatrices = function() {
-        this.orientationMatrix = correctOrthogonalMatrix(this.orientationMatrix);
-        this.angularVelocityMatrix = correctOrthogonalMatrix(this.angularVelocityMatrix);	
+        this.orientationMatrix = Mat.correctedOrthogonal4(this.orientationMatrix);
+        this.angularVelocityMatrix = Mat.correctedOrthogonal4(this.angularVelocityMatrix);	
 	this.timeSinceLastMatrixCorrection=0;
 };	
 
@@ -201,72 +218,70 @@ PhysicalObject.prototype.simulate = function(dt) {
 	// first calculate the movement that happened in the past dt
         // milliseconds as a result of the velocity sampled in the previous step
         // the velocity matrix is in m/s
-        this.positionMatrix=mul(this.positionMatrix,translationMatrixv(scalarVector3Product(dt/1000,getPositionVector(this.velocityMatrix))));
+        this.positionMatrix=Mat.mul4(this.positionMatrix,Mat.translation4v(Vec.scaled3(Mat.translationVector3(this.velocityMatrix),dt/1000)));
     
         // calculate the movement that happened as a result of the acceleration
         // the affecting forces caused since the previous step
         // (s=1/2*a*t^2)
-        var accelerationMatrix=identityMatrix4();
-        for(i=0;(i<this.forces.length)&&(this.forces[i].duration>0);i++) {
-            a = this.forces[i].strength/this.mass;
-            t = Math.min(dt,this.forces[i].duration)/1000; // t is in seconds
-            this.positionMatrix=mul(this.positionMatrix,translationMatrixv(scalarVector3Product(1/2*a*t*t,this.forces[i].direction)));
-            // calculate the acceleration caused to update the velocity matrix
-            accelerationMatrix = mul(
-			accelerationMatrix,
-			translationMatrix(
-				a*t*this.forces[i].direction[0],
-				a*t*this.forces[i].direction[1],
-				a*t*this.forces[i].direction[2])
-			);
-            // register that the force's effect has been considered for dt ms
-            this.forces[i].duration=Math.max(this.forces[i].duration-dt,0.0);			
-	}
+        var accelerationMatrix = Mat.identity4();
+        for (i = 0; i < this.forces.length; i++) {
+            if (this.forces[i].duration > 0.1) {
+                a = this.forces[i].strength / this.mass;
+                t = Math.min(dt, this.forces[i].duration) / 1000; // t is in seconds
+                this.positionMatrix = Mat.mul4(this.positionMatrix, Mat.translation4v(Vec.scaled3(this.forces[i].direction, 1 / 2 * a * t * t)));
+                // calculate the caused acceleration to update the velocity matrix
+                accelerationMatrix = Mat.mul4(
+                        accelerationMatrix,
+                        Mat.translation4(
+                                a * t * this.forces[i].direction[0],
+                                a * t * this.forces[i].direction[1],
+                                a * t * this.forces[i].direction[2])
+                        );
+                // register that the force's effect has been considered for dt ms
+                this.forces[i].duration = Math.max(this.forces[i].duration - dt, 0);
+            }
+        }
         // update velocity matrix
-        this.velocityMatrix=mul(this.velocityMatrix,accelerationMatrix);
-	// remove past forces
-	while((this.forces.length>0)&&(this.forces[0].duration<=0)) {
-		this.forces.shift();
-	}
+        this.velocityMatrix=Mat.mul4(this.velocityMatrix,accelerationMatrix);
         
         // the same process with rotation and torques
         // the angular velocity matrix represents the rotation that happens
         // during the course of 5 milliseconds (since rotation cannot be
         // interpolated easily, for that quaternions should be used)
         for(i=0;i+2<dt;i+=5) {
-            this.orientationMatrix=mul(this.orientationMatrix,this.angularVelocityMatrix);
+            this.orientationMatrix=Mat.mul4(this.orientationMatrix,this.angularVelocityMatrix);
         }
 	
         // calculate the rotation that happened as a result of the angular
         // acceleration the affecting torques caused since the previous step
-	var angularAccMatrix=identityMatrix4();
-	for(i=0;(i<this.torques.length)&&(this.torques[i].duration>0);i++) {
-            // in reality, the shape of the object should be taken into account,
-            // for simplicity, the mass is taken as the only coefficient
-            a = this.torques[i].strength/this.mass; 
-            t = Math.min(dt,this.torques[i].duration)/1000; // t is in seconds
-            this.orientationMatrix=mul(this.orientationMatrix,rotationMatrix4(this.torques[i].axis,1/2*a*t*t));
-            // calculate the acceleration caused to update the ang. acc. matrix
-            angularAccMatrix = mul(
-			angularAccMatrix,
-			rotationMatrix4(this.torques[i].axis,a*t*200));
-                        // multiplied by 200 since we need the amount or rotation
-                        // caused per 5 ms, not per 1 s represented in the 
-                        // matrix (see above)
-            // register that the torque's effect has been considered for dt ms
-            this.torques[i].duration=Math.max(this.torques[i].duration-dt,0.0);
-	}
+	var angularAccMatrix=Mat.identity4();
+	for (i = 0; i < this.torques.length; i++) {
+            if (this.torques[i].duration > 0.1) {
+                // in reality, the shape of the object should be taken into account,
+                // for simplicity, the mass is taken as the only coefficient
+                a = this.torques[i].strength / this.mass;
+                t = Math.min(dt, this.torques[i].duration) / 1000; // t is in seconds
+                this.orientationMatrix = Mat.mul4(this.orientationMatrix, Mat.rotation4(this.torques[i].axis, 1 / 2 * a * t * t));
+                // calculate the acceleration caused to update the ang. acc. matrix
+                angularAccMatrix = Mat.mul4(
+                        angularAccMatrix,
+                        Mat.rotation4(this.torques[i].axis, a * t * 200));
+                // multiplied by 200 since we need the amount or rotation
+                // caused per 5 ms, not per 1 s represented in the 
+                // matrix (see above)
+                // register that the torque's effect has been considered for dt ms
+                this.torques[i].duration = Math.max(this.torques[i].duration - dt, 0.0);
+            }
+        }
         // update angular velocity matrix
-        this.angularVelocityMatrix=mul(this.angularVelocityMatrix,angularAccMatrix);
-	// remove past torques
-	while((this.torques.length>0)&&(this.torques[0].duration<=0)) {
-		this.torques.shift();
-	}
+        this.angularVelocityMatrix=Mat.mul4(this.angularVelocityMatrix,angularAccMatrix);
 	
 	// save the inverse of the model matrix so it's only calculated once
         // every simulation step
-	this.modelMatrixInverse=inverse4(mul(this.orientationMatrix,this.positionMatrix));
+	this.updateInverseMatrix();
 	
+        this.velocityMatrix = Mat.straightened(this.velocityMatrix,0.0001);
+        this.angularVelocityMatrix = Mat.straightened(this.angularVelocityMatrix,0.00002);
         // correcting the matrices every 10 seconds, as due to small floating
         // point calculation inaccuracies, they slowly lose orthogonality
 	this.timeSinceLastMatrixCorrection+=dt;

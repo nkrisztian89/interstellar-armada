@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file contains the declaration of the {@link Resource} class.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
@@ -22,8 +24,6 @@
     You should have received a copy of the GNU General Public License
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-"uses strict";
 
 /**
  * Defines a resource object.

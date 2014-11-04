@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @fileOverview This file defines the {@link SimpleComponent}, 
  * {@link ScreenComponent} and its descendant classes, which provide reusable
@@ -25,8 +27,6 @@
     You should have received a copy of the GNU General Public License
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-"use strict";
 
 /**
  * Creates a simple component object.
@@ -83,7 +83,12 @@ SimpleComponent.prototype.setContent = function(newContent) {
  */
 SimpleComponent.prototype.initComponent = function() {
     this._element = document.getElementById(this._name);
-    this._displayStyle = this._element.style.display;
+    if(!this._element) {
+        Armada.showError("Cannot initialize component: '"+this._name+"'!","severe",
+                "No element can be found on the page with a corresponding ID!");
+    } else {
+        this._displayStyle = this._element.style.display;
+    }
 };
 
 /**
@@ -94,6 +99,14 @@ SimpleComponent.prototype.initComponent = function() {
 SimpleComponent.prototype.resetComponent = function() {
     this._element = null;
     this._displayStyle = null;
+};
+
+/**
+ * Returns whether the component is currently visible.
+ * @returns {Boolean}
+ */
+SimpleComponent.prototype.isVisible = function() {
+    return (this._element.style.display !== "none");
 };
 
 /**
@@ -208,7 +221,7 @@ ExternalComponent.prototype.requestModelLoad = function(cssFilename) {
     // If specified, add a <link> tag pointing to the CSS file containing the 
     // styling of this component. Also check if the CSS file has already been 
     // linked, and only add it if not.
-    if((cssFilename !== undefined) && (document.head.querySelectorAll("link[href='"+getGameFolder("css")+cssFilename+"?123']").length ===0)) {
+    if((cssFilename !== undefined) && (document.head.querySelectorAll("link[href='"+Armada.getFileURL("css",cssFilename)+"']").length ===0)) {
         this._cssLoaded = false;
         var cssLink = document.createElement("link");
         cssLink.setAttribute("rel","stylesheet");
@@ -219,17 +232,16 @@ ExternalComponent.prototype.requestModelLoad = function(cssFilename) {
                 self._onModelLoad();
             }
         };
-        cssLink.href = getGameFolder("css")+cssFilename+"?123";
+        cssLink.href = Armada.getFileURL("css",cssFilename);
         document.head.appendChild(cssLink);
     } else {
         this._cssLoaded = true;
     }
     // send an asynchronous request to grab the HTML file containing the DOM of
     // this component
-    var request = new XMLHttpRequest();
-    request.onload = function() {
+    Armada.requestTextFile("component",this._source,function(responseText) {
         self._model = document.implementation.createHTMLDocument(self._name);
-        self._model.documentElement.innerHTML = this.responseText;
+        self._model.documentElement.innerHTML = responseText;
         // All elements with an "id" attribute within this structure have to
         // be renamed to make sure their id does not conflict with other elements
         // in the main document (such as elements of another instance of the
@@ -245,9 +257,7 @@ ExternalComponent.prototype.requestModelLoad = function(cssFilename) {
         if(self._cssLoaded === true) {
             self._onModelLoad();
         }
-    };
-    request.open('GET', location.pathname+getGameFolder("component")+this._source+"?123", true);
-    request.send(null);
+    });
 };
 
 /**
@@ -402,9 +412,11 @@ LoadingBox.prototype.updateStatus = function(status) {
  * @param {String} name See ExternalComponent.
  * @param {String} htmlFilename See ExternalComponent.
  * @param {String} cssFilename See ExternalComponent.
+ * @param {Function} [onShow] The function to execute every time the box is shown.
+ * @param {Function} [onHide] The function to execute every time the box is hidden.
  * @returns {InfoBox}
  */
-function InfoBox(name,htmlFilename,cssFilename) {
+function InfoBox(name,htmlFilename,cssFilename,onShow,onHide) {
     ExternalComponent.call(this,name,htmlFilename,cssFilename);
     /**
      * A wrapper for the HTML p element in the info box, that shows the message.
@@ -418,6 +430,33 @@ function InfoBox(name,htmlFilename,cssFilename) {
      * @type SimpleComponent
      */
     this._okButton = this.registerSimpleComponent("okButton");
+    /**
+     * A function that will be run every time box is shown.
+     * @name InfoBox#_onShow
+     * @type Function
+     */
+    this._onShow = (onShow !== undefined) ? onShow : null;
+    /**
+     * A function that will be run every time box is hidden.
+     * @name InfoBox#_onHide
+     * @type Function
+     */
+    this._onHide = (onHide !== undefined) ? onHide : null;
+    var self = this;
+    /**
+     * A keyboard event handler that can be added to the document when the box is
+     * shown to allow closing it by pressing enter, not just clicking on the button.
+     * This needs to be a privileged method so that it can always access the 
+     * original info box object through 'self', no matter where is it called from.
+     * @name InfoBox#_handleKeyUp
+     * @type Function
+     * @param {KeyboardEvent} event
+     */
+    this._handleKeyUp = function(event) {
+        if(event.keyCode === 13) {
+            self.hide();
+        }
+    };
 }
 
 InfoBox.prototype = new ExternalComponent();
@@ -431,7 +470,31 @@ InfoBox.prototype._initializeComponents = function() {
     ExternalComponent.prototype._initializeComponents.call(this); 
     var self = this;
     this._okButton.getElement().onclick = function() { self.hide(); return false; };
-    this.hide();
+    // at initialization, do not yet run the onHide function, since the box has
+    // not been shown yet
+    ExternalComponent.prototype.hide.call(this);
+};
+
+/**
+ * Shows the info box and executes the _onShow function. (if set)
+ */
+InfoBox.prototype.show = function() {
+    ExternalComponent.prototype.show.call(this);
+    document.addEventListener("keyup",this._handleKeyUp);
+    if(this._onShow !== null) {
+        this._onShow();
+    }
+};
+
+/**
+ * Hides the info box and executes the _onHide function. (if set)
+ */
+InfoBox.prototype.hide = function() {
+    ExternalComponent.prototype.hide.call(this);
+    document.removeEventListener("keyup",this._handleKeyUp);
+    if(this._onHide !== null) {
+        this._onHide();
+    }
 };
 
 /**
@@ -600,7 +663,7 @@ Selector.prototype.selectValue = function (value) {
         if (i < this._valueList.length) {
             this.selectValueWithIndex(i);
         } else {
-            game.showError("Attempted to select value: '" + value + "' for '" + this._propertyName + "', which is not one of the available options.");
+            Armada.showError("Attempted to select value: '" + value + "' for '" + this._propertyName + "', which is not one of the available options.","minor");
         }
     });
 };
@@ -615,7 +678,7 @@ Selector.prototype.selectValueWithIndex = function(index) {
             this._valueIndex = index;
             this._valueSelector.setContent(this._valueList[this._valueIndex]);
         } else {
-            game.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-"+(this._valueList.length-1));
+            Armada.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-"+(this._valueList.length-1),"minor");
         }
     });
 };
