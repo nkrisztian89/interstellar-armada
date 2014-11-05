@@ -562,8 +562,8 @@ Mesh.prototype.addToContext = function(context) {
     var i;
     for(i=0;i<this.modelsWithLOD.length;i++) {
         this.modelsWithLOD[i].model.addToContext(context,this.lineMode);
-        if(this.modelsWithLOD[i].model.size>this.modelSize) {
-            this.modelSize=this.modelsWithLOD[i].model.size;
+        if(this.modelsWithLOD[i].model.getSize()>this.modelSize) {
+            this.modelSize=this.modelsWithLOD[i].model.getSize();
         }
     }
     for(var role in this.textures) {
@@ -696,10 +696,10 @@ Mesh.prototype.needsToBeRendered = function(screenWidth,screenHeight,lodContext,
             return true;
     } else {
             if(depthMask===true) {
-                if(this.model.nOpaqueTriangles>0) {
+                if(this.model.getNumOpaqueTriangles()>0) {
                     return true;
                 }
-            } else if ((depthMask===false)&&(this.model.nTransparentTriangles>0)) {
+            } else if ((depthMask===false)&&(this.model.getNumTransparentTriangles()>0)) {
                 return true;
             }
     }
@@ -718,18 +718,18 @@ Mesh.prototype.render = function(context,depthMask) {
         i++;
     }
     if (this.lineMode===true) {
-        context.gl.drawArrays(context.gl.LINES, this.model.getBufferStartForContext(context,"lines"), 2*this.model.lines.length);
+        context.gl.drawArrays(context.gl.LINES, this.model.getBufferStartForContext(context,"lines"), 2*this.model._lines.length);
     } else {
         if(depthMask===true) {
-            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context), 3*this.model.nOpaqueTriangles);
+            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context), 3*this.model.getNumOpaqueTriangles());
         } else {
-            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context,"transparent"), 3*this.model.nTransparentTriangles);
+            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context,"transparent"), 3*this.model.getNumTransparentTriangles());
         }
     }
 };
 
 Mesh.prototype.getNumberOfDrawnTriangles = function() {
-    return this.model.triangles.length;
+    return this.model._triangles.length;
 };
 
 function ShipMesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,scalingMatrix,lineMode,smallestParentSizeWhenDrawn) {

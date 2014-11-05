@@ -39,7 +39,7 @@ var Armada = Armada || (function () {
      * @name Armada#_version
      * @type String
      */
-    var _version = "0.1.0:75";
+    var _version = "0.1.0:76";
     /**
      * The associative array storing the names of the game folders, indexed by
      * the types of files they contain.
@@ -105,8 +105,8 @@ var Armada = Armada || (function () {
      * @name Armada_#bypassFileCaching
      * @type Boolean
      */
-    var _bypassFileCaching = false;
-    
+    var _bypassFileCaching = true;
+
     // -------------------------------------------------------------------------
     // Private methods
     /** 
@@ -161,7 +161,7 @@ var Armada = Armada || (function () {
             if (_folders[fileType] !== undefined) {
                 return _folders[fileType];
             } else {
-                this.showError("Asked for folder for file type '" + fileType + "', and folder for such files is not registered!","severe");
+                this.showError("Asked for folder for file type '" + fileType + "', and folder for such files is not registered!", "severe");
             }
         },
         /**
@@ -172,8 +172,8 @@ var Armada = Armada || (function () {
          * @param {String} filename The name of the file.
          * @returns {String}
          */
-        getFileURL: function (filetype,filename) {
-            return this.getFolder(filetype) + (_bypassFileCaching ? filename+"?123" : filename);
+        getFileURL: function (filetype, filename) {
+            return this.getFolder(filetype) + (_bypassFileCaching ? filename + "?123" : filename);
         },
         /**
          * Notifies the user of an error that happened while running the game.
@@ -183,26 +183,26 @@ var Armada = Armada || (function () {
          * @param {String} [details] Additional details to show about the error,
          * with possible explanations or tips how to correct this error.
          */
-        showError: function (message,severity,details) {
-            var errorString = "Error: "+message+(details ? "\n\n"+details+"\n\n" : "\n\n");
-            switch(severity) {
+        showError: function (message, severity, details) {
+            var errorString = "Error: " + message + (details ? "\n\n" + details + "\n\n" : "\n\n");
+            switch (severity) {
                 case "critical":
-                    errorString += "Unfortunately this is a critical error.\n"+
+                    errorString += "Unfortunately this is a critical error.\n" +
                             "The game is not playable until this error is resolved.";
                     break;
                 case "severe":
-                    errorString += "This is a severe error.\n"+
-                            "The game might produce unexpected behaviour from this point on. "+
+                    errorString += "This is a severe error.\n" +
+                            "The game might produce unexpected behaviour from this point on. " +
                             "It is recommended that you restart the game by refreshing the page in your browser.";
                     break;
                 case "minor":
-                    errorString += "This is a minor error.\n"+
-                            "The game might be fully playable, but you might need to readjust some settings or take "+
+                    errorString += "This is a minor error.\n" +
+                            "The game might be fully playable, but you might need to readjust some settings or take " +
                             "some other actions depending on the explanation of the error.";
                     break;
                 default:
-                    errorString += "The severity of this error cannot be determined.\n"+
-                            "The game might produce unexpected behaviour from this point on. "+
+                    errorString += "The severity of this error cannot be determined.\n" +
+                            "The game might produce unexpected behaviour from this point on. " +
                             "It is recommended that you restart the game by refreshing the page in your browser.";
                     break;
             }
@@ -214,7 +214,7 @@ var Armada = Armada || (function () {
          * @param {Number} verbosity The verbosity level of the message. It will only
          * be logged, if the currently set verbosity level is greater or equal than this.
          */
-        log: function (message,verbosity) {
+        log: function (message, verbosity) {
             if (!verbosity || (verbosity <= _logVerbosity)) {
                 console.log(message);
             }
@@ -235,7 +235,7 @@ var Armada = Armada || (function () {
          * will be overriden by the string given here. The standard type is XML,
          * this needs to be specified if other files are to be loaded.
          */
-        requestFile: function(filetype,filename,onload,customMimeType) {
+        requestFile: function (filetype, filename, onload, customMimeType) {
             this.log("Requesting file: '" + filename + "' from " + (this.getFolder(filetype) !== ""
                     ?
                     "folder: '" + this.getFolder(filetype) :
@@ -243,20 +243,20 @@ var Armada = Armada || (function () {
                     + "'...", 2);
             var self = this;
             var request = new XMLHttpRequest();
-            request.onload = function() { 
-                self.log("File: '"+filename+"' successfully loaded.",2);
-                onload(request); 
+            request.onload = function () {
+                self.log("File: '" + filename + "' successfully loaded.", 2);
+                onload(request);
             };
-            request.onerror = function() { 
-                self.showError("An error occured while trying to load file: '"+filename+"'.","severe","The status of the request was: '"+request.statusText+"' when the error happened."); 
+            request.onerror = function () {
+                self.showError("An error occured while trying to load file: '" + filename + "'.", "severe", "The status of the request was: '" + request.statusText + "' when the error happened.");
             };
-            request.ontimeout = function() { 
-                self.showError("Request to load the file: '"+filename+"' timed out.","severe"); 
+            request.ontimeout = function () {
+                self.showError("Request to load the file: '" + filename + "' timed out.", "severe");
             };
-            if(customMimeType) {
+            if (customMimeType) {
                 request.overrideMimeType(customMimeType);
             }
-            request.open("GET", this.getFileURL(filetype,filename), true);
+            request.open("GET", this.getFileURL(filetype, filename), true);
             request.send(null);
         },
         /**
@@ -272,8 +272,10 @@ var Armada = Armada || (function () {
          * loaded. It gets the text contents (a String) of the file as parameter.
          * @param {String} mimeType The MIME type of the file.
          */
-        requestTextFile: function(filetype,filename,onload,mimeType) {
-            this.requestFile(filetype,filename,function(request) { onload(request.responseText); },mimeType);
+        requestTextFile: function (filetype, filename, onload, mimeType) {
+            this.requestFile(filetype, filename, function (request) {
+                onload(request.responseText);
+            }, mimeType);
         },
         /**
          * Issues an asynchronous request to get a XML file and executes a callback
@@ -287,20 +289,36 @@ var Armada = Armada || (function () {
          * @param {Function} onload The function to execute when the file has been
          * loaded. It gets the XML contents of the file as parameter.
          */
-        requestXMLFile: function(filetype,filename,onload) {
-            this.requestFile(filetype,filename,function(request) { onload(request.responseXML); });
+        requestXMLFile: function (filetype, filename, onload) {
+            var self = this;
+            this.requestFile(filetype, filename, function (request) {
+                var responseXML = (request.responseXML === null) ?
+                        new DOMParser().parseFromString(request.responseText, "application/xml") :
+                        request.responseXML;
+                if (responseXML.documentElement.nodeName !== "parsererror") {
+                    onload(responseXML);
+                } else {
+                    self.showError("Could not parse XML file: '" + filename + "'.",
+                            "severe", "The file could be loaded, but for some reason the parsing of it has failed. \n" +
+                            "The status of the request was: '" + request.statusText + "' when the error happened.\n" +
+                            "The text content of the file:\n" +
+                            (request.responseText.length > 120 ?
+                                    request.responseText.slice(0, 120) + "..." :
+                                    request.responseText));
+                }
+            }, "application/xml");
         },
         /** 
          * Downloads the newest version of all source files from the server and after 
          * that sets up the global Game object.
          */
         initialize: function () {
-            if(location.protocol === "file:") {
+            if (location.protocol === "file:") {
                 this.showError("Trying to run the game from the local filesystem!", "critical",
-                        "This application can only be run through a web server. "+
-                        "If you wish to run it from your own computer, you have to install, set up "+
-                        "and start a web server first. You have to put the folder containing the files of this game "+
-                        "(assume it is called 'armada') to the HTML serving folder of the web server, then "+
+                        "This application can only be run through a web server. " +
+                        "If you wish to run it from your own computer, you have to install, set up " +
+                        "and start a web server first. You have to put the folder containing the files of this game " +
+                        "(assume it is called 'armada') to the HTML serving folder of the web server, then " +
                         "you can start the game by entering 'localhost/armada' in your browser's address bar.");
                 return;
             }
@@ -374,28 +392,28 @@ var Armada = Armada || (function () {
          * A shortcut to the graphics context of the game.
          * @returns {GraphicsContext}
          */
-        graphics: function() {
+        graphics: function () {
             return _game.graphicsContext;
         },
         /**
          * A shortcut to the graphics resource manager of the game.
          * @returns {ResourceManager}
          */
-        resources: function() {
+        resources: function () {
             return _game.graphicsContext.resourceManager;
         },
         /**
          * A shortcut to the control context of the game.
          * @returns {ControlContext}
          */
-        control: function() {
+        control: function () {
             return _game.controlContext;
         },
         /**
          * A shortcut to the logic context of the game.
          * @returns {LogicContext}
          */
-        logic: function() {
+        logic: function () {
             return _game.logicContext;
         },
         // globally available functions
@@ -405,10 +423,10 @@ var Armada = Armada || (function () {
          * screen having this name. If omitted the function returns the current screen.
          * @returns {GameScreen}
          */
-        getScreen: function(screenName) {
-            return screenName ? 
-                _game.getScreen(screenName) :
-                _game.getCurrentScreen();
+        getScreen: function (screenName) {
+            return screenName ?
+                    _game.getScreen(screenName) :
+                    _game.getCurrentScreen();
         },
         /**
          * Switches to the given screen.
@@ -422,8 +440,8 @@ var Armada = Armada || (function () {
          * will be used for the background. A real number, 0.0 is completely
          * transparent, 1.0 is completely opaque.
          */
-        setScreen: function(screenName,superimpose,backgroundColor,backgroundOpacity) {
-            _game.setCurrentScreen(screenName,superimpose,backgroundColor,backgroundOpacity);
+        setScreen: function (screenName, superimpose, backgroundColor, backgroundOpacity) {
+            _game.setCurrentScreen(screenName, superimpose, backgroundColor, backgroundOpacity);
         }
     };
 })();

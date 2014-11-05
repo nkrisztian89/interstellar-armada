@@ -9,479 +9,918 @@
  */
 
 /**********************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+ Copyright 2014 Krisztián Nagy
+ 
+ This file is part of Interstellar Armada.
+ 
+ Interstellar Armada is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ Interstellar Armada is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 /**
- * Creates a new line object for an EgomModel.
- * @class Represents a line connecting two vertices in a model.
- * @param a The index of the starting vertex of the line.
- * @param b The index of the end vertex of the line.
- * @param red The red component of the line's color.
- * @param green The green component of the line's color.
- * @param blue The blue component of the line's color.
- * @param luminosity The luminosity of the line.
- * @param nx The X coordinate of the normal vector associated with the line.
- * @param ny The Y coordinate of the normal vector associated with the line.
- * @param nz The Z coordinate of the normal vector associated with the line.
+ * Creates a new vertex object.
+ * @class Represents a vertex in 3D space.
+ * @param {Number[3]} position Position vector.
+ * @param {Number[2]} texCoords Texture coordinates.
+ * @returns {Vertex}
  */
-function Line(a,b,red,green,blue,luminosity,nx,ny,nz) {
-	this.a=a;
-	this.b=b;
-	this.red=red;
-	this.green=green;
-	this.blue=blue;
-	this.luminosity=luminosity;
-	this.nx=nx;
-	this.ny=ny;
-	this.nz=nz;
+function Vertex(position, texCoords) {
+    this._position = position;
+    this.x = this._position[0];
+    this.y = this._position[1];
+    this.z = this._position[2];
+    this._texCoords = texCoords || [this.x, this.y];
+    this.u = this._texCoords[0];
+    this.v = this._texCoords[1];
 }
 
-function Triangle(a,b,c,red,green,blue,alpha,luminosity,shininess,tax,tay,tbx,tby,tcx,tcy,nax,nay,naz,nbx,nby,nbz,ncx,ncy,ncz,group) {
-	this.a=a;
-	this.b=b;
-	this.c=c;
-	this.red=red;
-	this.green=green;
-	this.blue=blue;
-	this.alpha=alpha;
-	this.luminosity=luminosity;
-	this.shininess=shininess;
-	this.tax=tax;
-	this.tay=tay;
-	this.tbx=tbx;
-	this.tby=tby;
-	this.tcx=tcx;
-	this.tcy=tcy;
-	this.nax=nax;
-	this.nay=nay;
-	this.naz=naz;
-	this.nbx=nbx;
-	this.nby=nby;
-	this.nbz=nbz;
-	this.ncx=ncx;
-	this.ncy=ncy;
-	this.ncz=ncz;
-        this.group=group;
+/**
+ * Returns the texture coordinates associated with this vertex.
+ * @returns {Number[2]}
+ */
+Vertex.prototype.getTexCoords = function () {
+    return this._texCoords;
+};
+
+/**
+ * Sets the X coordinate of the vertex.
+ * @param {Number} x
+ */
+Vertex.prototype.setX = function (x) {
+    this._position[0] = x;
+    this.x = x;
+};
+
+/**
+ * Sets the Y coordinate of the vertex.
+ * @param {Number} y
+ */
+Vertex.prototype.setY = function (y) {
+    this._position[1] = y;
+    this.y = y;
+};
+
+/**
+ * Sets the Z coordinate of the vertex.
+ * @param {Number} z
+ */
+Vertex.prototype.setZ = function (z) {
+    this._position[2] = z;
+    this.z = z;
+};
+
+/**
+ * Creates a new line object.
+ * @class Represents a line connecting two vertices in a model.
+ * @param {Number} a The index of the starting vertex of the line.
+ * @param {Number} b The index of the end vertex of the line.
+ * @param {Number[3]} color The color of the line. ([red, green, blue])
+ * @param {Number} luminosity The luminosity of the line.
+ * @param {Number[3]} normal The normal vector associated with the line.
+ */
+function Line(a, b, color, luminosity, normal) {
+    this.a = a;
+    this.b = b;
+    this.color = color;
+    this.luminosity = luminosity;
+    this.normal = normal;
 }
+
+/**
+ * @param {EgomModel} model The model to which this triangle is added.
+ * @param {Number} a The index of the first vertex.
+ * @param {Number} b The index of the second vertex.
+ * @param {Number} c The index of the third vertex.
+ * @param {Number[4]} color The color of the triangle. ([red, green, blue, alpha])
+ * @param {Number} luminosity The luminosity of the triangle.
+ * @param {Number} shininess The shininess of the triangle.
+ * @param {Number[3][2]} texCoords The texture coordinates of the triangle's 
+ * vertices. Format: [[a.u,a.v],[b.u,b.v],[c.u,c.v]]
+ * @param {Number[][3]} [normals] The normal vectors of the triangle's vertices.
+ * If the three vertives are the same, it is enough to pass an array with only
+ * one element.
+ * @param {Number} [groupIndex]
+ * @returns {Triangle}
+ */
+function Triangle(model, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex) {
+    this._model = model;
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.color = color;
+    this.luminosity = luminosity;
+    this.shininess = shininess;
+    this.texCoords = texCoords;
+    this._normals = normals || Vec.normal3(Vec.cross3(this._model.getVector(a, b), this._model.getVector(a, c)));
+    this.groupIndex = groupIndex || 0;
+}
+
+/**
+ * Returns the normal vector belonging to one of the vertices of this triangle.
+ * @param {Number} index The index of the vertex (within the triangle: 0,1 or 2)
+ * @returns {Number[3]}
+ */
+Triangle.prototype.getNormal = function (index) {
+    return (this._normals[index] ?
+            this._normals[index] :
+            this._normals[0]);
+};
 
 /**
  * Creates a new 3D model object, and if a file name was given, loads the data
  * from the file. Only Egom XML format is supported.
- * @class Represents a 3D polygonal model. The Egom data stucture is optimized
- * for generating and editing models from the program code.
- * @param {string} filename The name of the file to load the model from. (optional)
+ * @class Represents a 3D polygonal model.
+ * @extends Resource
+ * @param {String} filename The name of the file to load the model from. (optional)
  */
 function EgomModel(filename) {
-        Resource.call(this);
-        // properties for file resource management
-	this.vertices = new Array();
-	this.lines = new Array();
-	this.triangles = new Array();
-	this.size = 0;
-        this._maxX = 0;
-        this._minX = 0;
-        this._maxY = 0;
-        this._minY = 0;
-        this._maxZ = 0;
-        this._minZ = 0;
-        
-        this.nOpaqueTriangles = 0;
-        this.nTransparentTriangles = 0;
-        
-        this.filename=filename;
-        this.loadRequestSent = false;
-        if (filename===undefined) {
-            this.setToReady();
-        }
-	
-        // properties for WebGL resource management
-	this._bufferStart = new Object();
-        this._bufferStartTransparent = new Object();
-	this._bufferStartLines = new Object();
+    Resource.call(this);
+    /**
+     * The array of vertices of the model. These can be referenced by index
+     * when defining lines or triangles.
+     * @name EgomModel#_vertices
+     * @type Vertex[]
+     */
+    this._vertices = new Array();
+    /**
+     * The array of lines of the model for wireframe rendering.
+     * @name EgomModel#_lines
+     * @type Line[]
+     */
+    this._lines = new Array();
+    /**
+     * The array of triangles of the model for solid rendering.
+     * @name EgomModel#_triangles
+     * @type Triangle[]
+     */
+    this._triangles = new Array();
+    /**
+     * The size of the model. It is the double of the (absolute) largest coordinate
+     * found among the vertices.
+     * @name EgomModel#_size
+     * @type Number
+     */
+    this._size = 0;
+    /**
+     * The largest positive X coordinate found among the vertices.
+     * @name EgomModel#_maxX
+     * @type Number
+     */
+    this._maxX = 0;
+    /**
+     * The largest negative X coordinate found among the vertices.
+     * @name EgomModel#_minX
+     * @type Number
+     */
+    this._minX = 0;
+    /**
+     * The largest positive Y coordinate found among the vertices.
+     * @name EgomModel#_maxY
+     * @type Number
+     */
+    this._maxY = 0;
+    /**
+     * The largest negative Y coordinate found among the vertices.
+     * @name EgomModel#_minY
+     * @type Number
+     */
+    this._minY = 0;
+    /**
+     * The largest positive Z coordinate found among the vertices.
+     * @name EgomModel#_maxZ
+     * @type Number
+     */
+    this._maxZ = 0;
+    /**
+     * The largest negative Z coordinate found among the vertices.
+     * @name EgomModel#_minZ
+     * @type Number
+     */
+    this._minZ = 0;
+    /**
+     * The number of opaque triangles this model contains.
+     * @name EgomModel#_nOpaqueTriangles
+     * @type Number
+     */
+    this._nOpaqueTriangles = 0;
+    /**
+     * The number of transparent triangles this model contains.
+     * @name EgomModel#_nTransparentTriangles
+     * @type Number
+     */
+    this._nTransparentTriangles = 0;
+    /**
+     * A designation of this model.
+     * @name EgomModel#_name
+     * @type String
+     */
+    this._name = null;
+    /**
+     * The name of the file that holds this model.
+     * @name EgomModel#_filename
+     * @type String
+     */
+    this._filename = filename;
+    /**
+     * The version string identifying the exact format of the model file.
+     * @name EgomModel#_version
+     * @type String
+     */
+    this._version = null;
+    // if no filename was specified, the model is set up to be edited from code
+    // and can be used any time from now
+    if (filename === undefined) {
+        this.setToReady();
+    }
+    /**
+     * The associative array of the indices marking where the data belonging to 
+     * the triangles of this model starts in the vertex buffer objects of managed 
+     * WebGL contexts. The keys are the names of the managed contexts.
+     * @name EgomModel#_bufferStart
+     * @type Object
+     */
+    this._bufferStart = new Object();
+    /**
+     * The associative array of the indices marking where the data belonging to 
+     * the transparent triangles of this model starts in the vertex buffer objects 
+     * of managed WebGL contexts. The keys are the names of the managed contexts.
+     * @name EgomModel#_bufferStartTransparent
+     * @type Object
+     */
+    this._bufferStartTransparent = new Object();
+    /**
+     * The associative array of the indices marking where the data belonging to 
+     * the lines of this model starts in the vertex buffer objects of managed 
+     * WebGL contexts. The keys are the names of the managed contexts.
+     * @name EgomModel#_bufferStartTransparent
+     * @type Object
+     */
+    this._bufferStartLines = new Object();
+    /**
+     * The default luminosity value for newly added lines and triangles.
+     * @name EgomModel#_luminosity
+     * @type Number
+     */
+    this._luminosity = 0;
+    /**
+     * The default shininess value for newly added lines and triangles.
+     * @name EgomModel#_shininess
+     * @type Number
+     */
+    this._shininess = 0;
+    /**
+     * The default texture coordinates for newly added triangles and quads.
+     * @name EgomModel#_texCoords
+     * @type Number[4][2]
+     */
+    this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
+    /**
+     * The default group index for newly added triangles and lines.
+     * @name EgomModel#_currentGroupIndex
+     * @type Number
+     */
+    this._currentGroupIndex = 0;
 }
 
 EgomModel.prototype = new Resource();
 EgomModel.prototype.constructor = EgomModel;
 
-EgomModel.prototype.setVertex = function (index,vertex) {
-    if (this.vertices.length < index) {
-        for (var i = this.vertices.length; i < index; i++) {
-            this.vertices[i] = [0.0, 0.0, 0.0];
+/**
+ * Returns the name of the model. (not the same as the filename - a name can be
+ * set directly, or read from the model file)
+ * @returns {String}
+ */
+EgomModel.prototype.getName = function () {
+    return this._name;
+};
+
+/**
+ * Sets a name for the model.
+ * @param {String} name
+ */
+EgomModel.prototype.setName = function (name) {
+    this._name = name;
+};
+
+/**
+ * Returns the associated model file name.
+ * @returns {String}
+ */
+EgomModel.prototype.getFilename = function () {
+    return this._filename;
+};
+
+/**
+ * Returns the number of completely opaque triangles this model contains.
+ * @returns {Number}
+ */
+EgomModel.prototype.getNumOpaqueTriangles = function () {
+    return this._nOpaqueTriangles;
+};
+
+/**
+ * Returns the number of transparent (not completely opaque) triangles this 
+ * model contains.
+ * @returns {Number}
+ */
+EgomModel.prototype.getNumTransparentTriangles = function () {
+    return this._nTransparentTriangles;
+};
+
+/**
+ * Sets the vertex data belonging to the passed index.
+ * @param {Number} index
+ * @param {Number[3]} position
+ * @param {Number[2]} [texCoords]
+ */
+EgomModel.prototype.setVertex = function (index, position, texCoords) {
+    // if we are setting a vertex with a higher index than the currently stored
+    // ones, create new vertices in between
+    if (this._vertices.length < index) {
+        for (var i = this._vertices.length; i < index; i++) {
+            this._vertices[i] = new Vertex([0.0, 0.0, 0.0]);
         }
     }
-    this.vertices[index] = vertex;
-    if (Math.abs(this.vertices[index][0] * 2) > this.size) {
-        this.size = Math.abs(this.vertices[index][0] * 2);
+    // set the vertex
+    this._vertices[index] = new Vertex(position, texCoords);
+    // update the size related data
+    if (Math.abs(this._vertices[index].x * 2) > this._size) {
+        this._size = Math.abs(this._vertices[index].x * 2);
     }
-    if (Math.abs(this.vertices[index][1] * 2) > this.size) {
-        this.size = Math.abs(this.vertices[index][1] * 2);
+    if (Math.abs(this._vertices[index].y * 2) > this._size) {
+        this._size = Math.abs(this._vertices[index].y * 2);
     }
-    if (Math.abs(this.vertices[index][2] * 2) > this.size) {
-        this.size = Math.abs(this.vertices[index][2] * 2);
+    if (Math.abs(this._vertices[index].z * 2) > this._size) {
+        this._size = Math.abs(this._vertices[index].z * 2);
     }
-    if (this.vertices[index][0] > this._maxX) {
-        this._maxX = this.vertices[index][0];
+    if (this._vertices[index].x > this._maxX) {
+        this._maxX = this._vertices[index].x;
     }
-    if (this.vertices[index][0] < this._minX) {
-        this._minX = this.vertices[index][0];
+    if (this._vertices[index].x < this._minX) {
+        this._minX = this._vertices[index].x;
     }
-    if (this.vertices[index][1] > this._maxY) {
-        this._maxY = this.vertices[index][1];
+    if (this._vertices[index].y > this._maxY) {
+        this._maxY = this._vertices[index].y;
     }
-    if (this.vertices[index][1] < this._minY) {
-        this._minY = this.vertices[index][1];
+    if (this._vertices[index].y < this._minY) {
+        this._minY = this._vertices[index].y;
     }
-    if (this.vertices[index][2] > this._maxZ) {
-        this._maxZ = this.vertices[index][2];
+    if (this._vertices[index].z > this._maxZ) {
+        this._maxZ = this._vertices[index].z;
     }
-    if (this.vertices[index][2] < this._minZ) {
-        this._minZ = this.vertices[index][2];
-    }
-};
-
-EgomModel.prototype.appendVertex = function (vertex) {
-    this.setVertex(this.vertices.length,vertex);
-};
-
-EgomModel.prototype.addTriangle = function (triangle) {
-    this.triangles.push(triangle);
-    if(triangle.alpha<1.0) {
-        this.nTransparentTriangles++;
-    } else {
-        this.nOpaqueTriangles++;
+    if (this._vertices[index].z < this._minZ) {
+        this._minZ = this._vertices[index].z;
     }
 };
 
-EgomModel.prototype.getBufferStartForContext = function(context,buffer) {
-    if((buffer===undefined) || (buffer==="base")) {
+/**
+ * Adds a new vertex to the first available index.
+ * @param {Number[3]} position
+ * @param {Number[2]} [texCoords]
+ */
+EgomModel.prototype.appendVertex = function (position, texCoords) {
+    this.setVertex(this._vertices.length, position, texCoords);
+};
+
+/**
+ * Returns a vector pointing from one vertex to the other.
+ * @param {Vertex} vertex1Index The index of the vertex that is at the origin of
+ * the vector.
+ * @param {Vertex} vertex2Index The index of the vertex that is at the descitation
+ * of the vector.
+ * @returns {Number[3]}
+ */
+EgomModel.prototype.getVector = function (vertex1Index, vertex2Index) {
+    return [
+        this._vertices[vertex2Index].x - this._vertices[vertex1Index].x,
+        this._vertices[vertex2Index].y - this._vertices[vertex1Index].y,
+        this._vertices[vertex2Index].z - this._vertices[vertex1Index].z];
+};
+
+/**
+ * Sets the default properties for newly added lines and triangles.
+ * @param {Number} luminosity
+ * @param {Number} shininess
+ */
+EgomModel.prototype.setProperties = function (luminosity, shininess) {
+    this._luminosity = luminosity;
+    this._shininess = shininess;
+};
+
+/**
+ * Adds a new triangle to the model.
+ * @param {Number} a The index of the first vertex of the triangle.
+ * @param {Number} b The index of the second vertex of the triangle.
+ * @param {Number} c The index of the third vertex of the triangle.
+ * @param {Object} params The parameters of the triangle. Can have the following
+ * properties:
+ * color (Number[4]): The color of the triangle
+ * luminosity (Number): The luminosity of the triangle
+ * shininess (Number): The shininess of the triangle
+ * useVertexTexCoords (Boolean): Whether to take the texture coordinates from the
+ * vertices of the model (if not, the default ones set for the model or the
+ * custom ones given here will be used)
+ * texCoords (Number[3][2]): The texture coordinates of the vertices of the 
+ * triangle
+ * normals (Number[][3]): The normal vector(s) for the triangle. If one vector
+ * is given, it will be used for all three vertices, if 3 are given, they will
+ * be used separately. If none are given, the normal of th surface of the 
+ * triangles will be generated and used.
+ * groupIndex (Number): The index of the groups to which to add the triangle.
+ */
+EgomModel.prototype.addTriangle = function (a, b, c, params) {
+    var color = params.color || [1.0, 1.0, 1.0, 1.0];
+    var luminosity = params.luminosity || this._luminosity;
+    var shininess = params.shininess || this._shininess;
+    var texCoords = params.useVertexTexCoords ?
+            [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+            (params.texCoords ?
+                    params.texCoords :
+                    [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+    var normals = params.normals;
+    var groupIndex = params.groupIndex || this._currentGroupIndex;
+    this._triangles.push(new Triangle(this, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex));
+    if (!params.withoutLines) {
+        this._lines.push(new Line(a, b, color, luminosity, normals ? normals[0] : null));
+        this._lines.push(new Line(b, c, color, luminosity, normals ? normals[0] : null));
+        this._lines.push(new Line(c, a, color, luminosity, normals ? normals[0] : null));
+    }
+    (color[3] < 1.0) ?
+            this._nTransparentTriangles++ :
+            this._nOpaqueTriangles++;
+};
+
+/**
+ * Adds two triangles forming a quadrilateral between 4 vertices.
+ * @param {Number} a The index of the first vertex of the quad.
+ * @param {Number} b The index of the second vertex of the quad.
+ * @param {Number} c The index of the third vertex of the quad.
+ * @param {Number} d The index of the fourth vertex of the quad.
+ * @param {Object} params The parameters of the quad in the same format as with
+ * the single triangles.
+ */
+EgomModel.prototype.addQuad = function (a, b, c, d, params) {
+    params = params || {};
+    // adding the first triangle
+    // first, create the approrpiate parameters for the triangle based on the
+    // parameters given for the quad
+    var triangle1Params = Object.create(params);
+    // no lines should be added, as we will add the 4 lines for the whole quad
+    // in the end
+    triangle1Params.withoutLines = true;
+    // for texture coordinates and normals, the first 3 values need to be used
+    triangle1Params.texCoords = params.useVertexTexCoords ?
+            [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+            (params.texCoords ?
+                    [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
+                    [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+    triangle1Params.normals = params.normals ?
+            (params.normals.length === 4 ?
+                    [params.normals[0], params.normals[1], params.normals[2]] :
+                    params.normals) :
+            null;
+    this.addTriangle(a, b, c, triangle1Params);
+    // adding the first triangle
+    var triangle2Params = Object.create(params);
+    triangle2Params.texCoords = params.useVertexTexCoords ?
+            [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
+            (params.texCoords ?
+                    [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
+                    [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
+    triangle2Params.normals = params.normals ?
+            (params.normals.length === 4 ?
+                    [params.normals[2], params.normals[3], params.normals[0]] :
+                    params.normals) :
+            null;
+    this.addTriangle(c, d, a, triangle2Params);
+    // adding the 4 lines around the quad
+    if (!params.withoutLines) {
+        var color = params.color || [1.0, 1.0, 1.0, 1.0];
+        var luminosity = params.luminosity || this._luminosity;
+        var normals = params.normals ? params.normals[0] : null;
+        this._lines.push(new Line(a, b, color, luminosity, normals));
+        this._lines.push(new Line(b, c, color, luminosity, normals));
+        this._lines.push(new Line(c, d, color, luminosity, normals));
+        this._lines.push(new Line(d, a, color, luminosity, normals));
+    }
+};
+
+EgomModel.prototype.getBufferStartForContext = function (context, buffer) {
+    if ((buffer === undefined) || (buffer === "base")) {
         return this._bufferStart[context.getName()];
     }
-    if(buffer==="transparent") {
+    if (buffer === "transparent") {
         return this._bufferStartTransparent[context.getName()];
     }
-    if(buffer==="lines") {
+    if (buffer === "lines") {
         return this._bufferStartLines[context.getName()];
     }
 };
 
-EgomModel.prototype.setBufferStartForContext = function(context,buffer,value) {
-    if((buffer===undefined) || (buffer==="base")) {
+EgomModel.prototype.setBufferStartForContext = function (context, buffer, value) {
+    if ((buffer === undefined) || (buffer === "base")) {
         this._bufferStart[context.getName()] = value;
     }
-    if(buffer==="transparent") {
+    if (buffer === "transparent") {
         this._bufferStartTransparent[context.getName()] = value;
     }
-    if(buffer==="lines") {
+    if (buffer === "lines") {
         this._bufferStartLines[context.getName()] = value;
     }
 };
 
-EgomModel.prototype.requestLoadFromFile = function() {
-    if((this.isReadyToUse()===false)&&(this.loadRequestSent===false)) {
-        this.loadRequestSent = true;
+EgomModel.prototype.requestLoadFromFile = function () {
+    if (!this.isReadyToUse()) {
         var self = this;
-        Armada.requestXMLFile("model",this.filename,function(responseXML) {
+        Armada.requestXMLFile("model", this._filename, function (responseXML) {
             self.loadFromXML(responseXML);
             self.setToReady();
         });
     }
 };
 
-EgomModel.prototype.loadFromXML = function(sourceXML) {
-    Armada.log("Loading EgomModel from file: "+this.filename+" ...",2);
-	var nVertices = parseInt(sourceXML.getElementsByTagName("vertices")[0].getAttribute("count"));
-	this.vertices = new Array();
-	var vertexTags = sourceXML.getElementsByTagName("vertex");
-        this._maxX = 0;
-        this._minX = 0;
-        this._maxY = 0;
-        this._minY = 0;
-        this._maxZ = 0;
-        this._minZ = 0;
-	for(var i=0; i<nVertices; i++) {
-		var index=vertexTags[i].getAttribute("i");
-		this.setVertex(index,[
-                    vertexTags[i].getAttribute("x")/10000.0,
-                    vertexTags[i].getAttribute("y")/-10000.0,
-                    vertexTags[i].getAttribute("z")/-10000.0
-                ]);
-	}
-        Armada.log("Loaded "+nVertices+" vertices.",3);
-	
-	var nLines = parseInt(sourceXML.getElementsByTagName("lines")[0].getAttribute("count"));
-	this.lines = new Array(nLines);
-	var lineTags = sourceXML.getElementsByTagName("line");
-	for(var i=0; i<nLines; i++) {
-		this.lines[i]=new Line(
-			lineTags[i].getAttribute("a"),
-			lineTags[i].getAttribute("b"),
-			lineTags[i].getAttribute("red")/255.0,
-			lineTags[i].getAttribute("green")/255.0,
-			lineTags[i].getAttribute("blue")/255.0,
-			lineTags[i].getAttribute("luminosity")/255.0,
-			lineTags[i].getAttribute("nx"),
-			-lineTags[i].getAttribute("ny"),
-			-lineTags[i].getAttribute("nz")
-			);
-	}
-        Armada.log("Loaded "+nLines+" lines.",3);
-	
-	this.triangles = new Array();
-	var triangleTags = sourceXML.getElementsByTagName("triangle");
-	for(var i=0; i<triangleTags.length; i++) {
-		this.addTriangle(new Triangle(
-			triangleTags[i].getAttribute("a"),
-			triangleTags[i].getAttribute("b"),
-			triangleTags[i].getAttribute("c"),
-			triangleTags[i].getAttribute("red")/255.0,
-			triangleTags[i].getAttribute("green")/255.0,
-			triangleTags[i].getAttribute("blue")/255.0,
-			(255-triangleTags[i].getAttribute("alpha"))/255.0,
-			triangleTags[i].getAttribute("luminosity")/255.0,
-			triangleTags[i].getAttribute("shininess"),
-			triangleTags[i].getAttribute("tax"),
-			triangleTags[i].getAttribute("tay"),
-			triangleTags[i].getAttribute("tbx"),
-			triangleTags[i].getAttribute("tby"),
-			triangleTags[i].getAttribute("tcx"),
-			triangleTags[i].getAttribute("tcy"),
-			triangleTags[i].getAttribute("nax"),
-			-triangleTags[i].getAttribute("nay"),
-			-triangleTags[i].getAttribute("naz"),
-			triangleTags[i].getAttribute("nbx"),
-			-triangleTags[i].getAttribute("nby"),
-			-triangleTags[i].getAttribute("nbz"),
-			triangleTags[i].getAttribute("ncx"),
-			-triangleTags[i].getAttribute("ncy"),
-			-triangleTags[i].getAttribute("ncz"),
-                        (triangleTags[i].hasAttribute("group")?triangleTags[i].getAttribute("group"):0)
-			));
-	}
-        Armada.log("Loaded "+triangleTags.length+" triangles.",3);
-    Armada.log("Model loaded.",2);
+/**
+ * 
+ * @param {Document} xmlDoc
+ */
+EgomModel.prototype.loadFromXML = function (xmlDoc) {
+    var i;
+    Armada.log("Loading EgomModel from file: " + this._filename + " ...", 2);
+    if (xmlDoc.documentElement.nodeName !== "EgomModel") {
+        Armada.showError("'" + this._filename + "' does not appear to be an EgomModel file.",
+                "severe", "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
+                "'" + xmlDoc.documentElement.nodeName + "' instead.");
+        return false;
+    }
+    this._version = xmlDoc.documentElement.getAttribute("version");
+    if (xmlDoc.getElementsByTagName("info").length > 0) {
+        var propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
+        for (var i = 0; i < propertyTags.length; i++) {
+            if (propertyTags[i].getAttribute("name") === "name") {
+                this._name = propertyTags[i].getAttribute("value");
+            }
+        }
+    }
+    var nVertices = parseInt(xmlDoc.getElementsByTagName("vertices")[0].getAttribute("count"));
+    this._vertices = new Array();
+    // EgomModel 2.0 syntax
+    var vertexTags = xmlDoc.getElementsByTagName("vertex");
+    // EgomModel 2.1 syntax
+    if (vertexTags.length === 0) {
+        vertexTags = xmlDoc.getElementsByTagName("v");
+    }
+    this._maxX = 0;
+    this._minX = 0;
+    this._maxY = 0;
+    this._minY = 0;
+    this._maxZ = 0;
+    this._minZ = 0;
+    for (i = 0; i < nVertices; i++) {
+        var index = parseInt(vertexTags[i].getAttribute("i"));
+        this.setVertex(index, (this._version === "2.0" ?
+                [
+                    parseFloat(vertexTags[i].getAttribute("x")) / 10000,
+                    parseFloat(vertexTags[i].getAttribute("y")) / -10000,
+                    parseFloat(vertexTags[i].getAttribute("z")) / -10000
+                ] :
+                [
+                    parseFloat(vertexTags[i].getAttribute("x")),
+                    parseFloat(vertexTags[i].getAttribute("y")),
+                    parseFloat(vertexTags[i].getAttribute("z"))
+                ]));
+    }
+    Armada.log("Loaded " + nVertices + " vertices.", 3);
+
+    var nLines = parseInt(xmlDoc.getElementsByTagName("lines")[0].getAttribute("count"));
+    this._lines = new Array(nLines);
+    var lineTags = xmlDoc.getElementsByTagName("line");
+    if (lineTags.length === 0) {
+        lineTags = xmlDoc.getElementsByTagName("l");
+    }
+    for (var i = 0; i < nLines; i++) {
+        this._lines[i] = new Line(
+                parseInt(lineTags[i].getAttribute("a")),
+                parseInt(lineTags[i].getAttribute("b")),
+                (lineTags[i].hasAttribute("color") ?
+                        lineTags[i].getAttribute("color").split(",").map(parseFloat) :
+                        [
+                            lineTags[i].getAttribute("red") / 255,
+                            lineTags[i].getAttribute("green") / 255,
+                            lineTags[i].getAttribute("blue") / 255]),
+                (lineTags[i].hasAttribute("luminosity") ?
+                        (lineTags[i].getAttribute("luminosity") / 255) :
+                        (lineTags[i].hasAttribute("lum") ?
+                                lineTags[i].getAttribute("lum") :
+                                null)),
+                (lineTags[i].hasAttribute("n") ?
+                        lineTags[i].getAttribute("n").split(",").map(parseFloat) :
+                        [
+                            parseFloat(lineTags[i].getAttribute("nx")),
+                            -parseFloat(lineTags[i].getAttribute("ny")),
+                            -parseFloat(lineTags[i].getAttribute("nz"))])
+                );
+    }
+    Armada.log("Loaded " + nLines + " lines.", 3);
+
+    this._triangles = new Array();
+    var triangleTags = xmlDoc.getElementsByTagName("triangle");
+    if (triangleTags.length === 0) {
+        triangleTags = xmlDoc.getElementsByTagName("t");
+    }
+    var params = {};
+    for (var i = 0; i < triangleTags.length; i++) {
+        params.color = triangleTags[i].hasAttribute("color") ?
+                triangleTags[i].getAttribute("color").split(",").map(parseFloat) :
+                (triangleTags[i].hasAttribute("red") ?
+                        [
+                            triangleTags[i].getAttribute("red") / 255,
+                            triangleTags[i].getAttribute("green") / 255,
+                            triangleTags[i].getAttribute("blue") / 255,
+                            (255 - triangleTags[i].getAttribute("alpha")) / 255] :
+                        null);
+        params.luminosity = triangleTags[i].hasAttribute("luminosity") ?
+                triangleTags[i].getAttribute("luminosity") / 255 :
+                (triangleTags[i].hasAttribute("lum") ?
+                        triangleTags[i].getAttribute("lum") :
+                        null);
+        params.shininess = triangleTags[i].hasAttribute("shininess") ?
+                triangleTags[i].getAttribute("shininess") :
+                (triangleTags[i].hasAttribute("shi") ?
+                        triangleTags[i].getAttribute("shi") :
+                        null);
+        params.texCoords = triangleTags[i].hasAttribute("ta") ?
+                [
+                    triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
+                    triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
+                    triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
+                ] :
+                (triangleTags[i].hasAttribute("tax") ?
+                        [
+                            [
+                                triangleTags[i].getAttribute("tax"),
+                                triangleTags[i].getAttribute("tay")],
+                            [
+                                triangleTags[i].getAttribute("tbx"),
+                                triangleTags[i].getAttribute("tby")],
+                            [
+                                triangleTags[i].getAttribute("tcx"),
+                                triangleTags[i].getAttribute("tcy")]]
+                        : null);
+        params.normals = triangleTags[i].hasAttribute("n") ?
+                [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
+                (triangleTags[i].hasAttribute("na") ?
+                        [
+                            triangleTags[i].getAttribute("na").split(",").map(parseFloat),
+                            triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
+                            triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
+                        ] :
+                        (triangleTags[i].hasAttribute("nax") ?
+                                [
+                                    [
+                                        triangleTags[i].getAttribute("nax"),
+                                        -triangleTags[i].getAttribute("nay"),
+                                        -triangleTags[i].getAttribute("naz")],
+                                    [
+                                        triangleTags[i].getAttribute("nbx"),
+                                        -triangleTags[i].getAttribute("nby"),
+                                        -triangleTags[i].getAttribute("nbz")],
+                                    [
+                                        triangleTags[i].getAttribute("ncx"),
+                                        -triangleTags[i].getAttribute("ncy"),
+                                        -triangleTags[i].getAttribute("ncz")]] :
+                                null));
+        params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
+        params.withoutLines = true;
+        this.addTriangle(
+                triangleTags[i].getAttribute("a"),
+                triangleTags[i].getAttribute("b"),
+                triangleTags[i].getAttribute("c"),
+                params);
+    }
+    Armada.log("Loaded " + triangleTags.length + " triangles.", 3);
+    Armada.log("Model loaded.", 2);
 };
 
-EgomModel.prototype.getMaxX = function() {
+EgomModel.prototype.getSize = function () {
+    return this._size;
+};
+
+EgomModel.prototype.getMaxX = function () {
     return this._maxX;
 };
 
-EgomModel.prototype.getMinX = function() {
+EgomModel.prototype.getMinX = function () {
     return this._minX;
 };
 
-EgomModel.prototype.getMaxY = function() {
+EgomModel.prototype.getMaxY = function () {
     return this._maxY;
 };
 
-EgomModel.prototype.getMinY = function() {
+EgomModel.prototype.getMinY = function () {
     return this._minY;
 };
 
-EgomModel.prototype.getMaxZ = function() {
+EgomModel.prototype.getMaxZ = function () {
     return this._maxZ;
 };
 
-EgomModel.prototype.getMinZ = function() {
+EgomModel.prototype.getMinZ = function () {
     return this._minZ;
 };
 
-EgomModel.prototype.getWidth = function() {
-    return this._maxX-this._minX;
+EgomModel.prototype.getWidth = function () {
+    return this._maxX - this._minX;
 };
 
-EgomModel.prototype.getHeight = function() {
-    return this._maxY-this._minY;
+EgomModel.prototype.getHeight = function () {
+    return this._maxY - this._minY;
 };
 
-EgomModel.prototype.getDepth = function() {
-    return this._maxZ-this._minZ;
+EgomModel.prototype.getDepth = function () {
+    return this._maxZ - this._minZ;
 };
 
 /**
  * @param {ManagedGLContext} context
  * @param {Boolean} wireframe
  */
-EgomModel.prototype.addToContext = function(context,wireframe) {
-    context.addModel(this,wireframe);
+EgomModel.prototype.addToContext = function (context, wireframe) {
+    context.addModel(this, wireframe);
 };
 
 /**
  * Clears all previous bindings to managed WebGL contexts.
  */
-EgomModel.prototype.clearContextBindings = function() {
-    for(var contextName in this._bufferStart) {
+EgomModel.prototype.clearContextBindings = function () {
+    for (var contextName in this._bufferStart) {
         this._bufferStart[contextName] = null;
     }
-    for(var contextName in this._bufferStartLines) {
+    for (var contextName in this._bufferStartLines) {
         this._bufferStartLines[contextName] = null;
     }
-    for(var contextName in this._bufferStartTransparent) {
+    for (var contextName in this._bufferStartTransparent) {
         this._bufferStartTransparent[contextName] = null;
     }
 };
 
-EgomModel.prototype.getBufferData = function(lineMode) {
-	if(lineMode===true) {
-		var vertexData = new Float32Array(this.lines.length*6);
-		for(var i=0;i<this.lines.length;i++) {
-			vertexData[i*6]=this.vertices[this.lines[i].a][0];
-			vertexData[i*6+1]=this.vertices[this.lines[i].a][1];
-			vertexData[i*6+2]=this.vertices[this.lines[i].a][2];
-			vertexData[i*6+3]=this.vertices[this.lines[i].b][0];
-			vertexData[i*6+4]=this.vertices[this.lines[i].b][1];
-			vertexData[i*6+5]=this.vertices[this.lines[i].b][2];
-		}
-		var texCoordData = new Float32Array(this.lines.length*4);
-		for(var i=0;i<this.lines.length;i++) {
-			texCoordData[i*4]=0.0;
-			texCoordData[i*4+1]=1.0;
-			texCoordData[i*4+2]=1.0;
-			texCoordData[i*4+3]=1.0;
-		}
-		var normalData = new Float32Array(this.lines.length*6);
-		for(var i=0;i<this.lines.length;i++) {
-			normalData[i*6]=this.lines[i].nx;
-			normalData[i*6+1]=this.lines[i].ny;
-			normalData[i*6+2]=this.lines[i].nz;
-			normalData[i*6+3]=this.lines[i].nx;
-			normalData[i*6+4]=this.lines[i].ny;
-			normalData[i*6+5]=this.lines[i].nz;
-		}
-		var colorData = new Float32Array(this.lines.length*8);
-		for(var i=0;i<this.lines.length;i++) {
-			colorData[i*8]=this.lines[i].red;
-			colorData[i*8+1]=this.lines[i].green;
-			colorData[i*8+2]=this.lines[i].blue;
-			colorData[i*8+3]=1.0;
-			colorData[i*8+4]=this.lines[i].red;
-			colorData[i*8+5]=this.lines[i].green;
-			colorData[i*8+6]=this.lines[i].blue;
-			colorData[i*8+7]=1.0;
-		}
-		var luminosityData = new Float32Array(this.lines.length*2);
-		for(var i=0;i<this.lines.length;i++) {
-			luminosityData[i*2]=this.lines[i].luminosity;
-			luminosityData[i*2+1]=this.lines[i].luminosity;
-		}
-		var shininessData = new Float32Array(this.lines.length*2);
-		for(var i=0;i<this.lines.length;i++) {
-			shininessData[i*2]=0;
-			shininessData[i*2+1]=0;
-		}
-                var groupIndexData = new Float32Array(this.lines.length*2);
-		for(var i=0;i<this.lines.length;i++) {
-			groupIndexData[i*2]=0;
-			groupIndexData[i*2+1]=0;
-		}
-	} else {
-		var vertexData = new Float32Array(this.triangles.length*9);
-		for(var i=0;i<this.triangles.length;i++) {
-			vertexData[i*9]=this.vertices[this.triangles[i].a][0];
-			vertexData[i*9+1]=this.vertices[this.triangles[i].a][1];
-			vertexData[i*9+2]=this.vertices[this.triangles[i].a][2];
-			vertexData[i*9+3]=this.vertices[this.triangles[i].b][0];
-			vertexData[i*9+4]=this.vertices[this.triangles[i].b][1];
-			vertexData[i*9+5]=this.vertices[this.triangles[i].b][2];
-			vertexData[i*9+6]=this.vertices[this.triangles[i].c][0];
-			vertexData[i*9+7]=this.vertices[this.triangles[i].c][1];
-			vertexData[i*9+8]=this.vertices[this.triangles[i].c][2];
-		}
-		var texCoordData = new Float32Array(this.triangles.length*6);
-		for(var i=0;i<this.triangles.length;i++) {
-			texCoordData[i*6]=this.triangles[i].tax;
-			texCoordData[i*6+1]=this.triangles[i].tay;
-			texCoordData[i*6+2]=this.triangles[i].tbx;
-			texCoordData[i*6+3]=this.triangles[i].tby;
-			texCoordData[i*6+4]=this.triangles[i].tcx;
-			texCoordData[i*6+5]=this.triangles[i].tcy;
-		}
-		var normalData = new Float32Array(this.triangles.length*9);
-		for(var i=0;i<this.triangles.length;i++) {
-			normalData[i*9]=this.triangles[i].nax;
-			normalData[i*9+1]=this.triangles[i].nay;
-			normalData[i*9+2]=this.triangles[i].naz;
-			normalData[i*9+3]=this.triangles[i].nbx;
-			normalData[i*9+4]=this.triangles[i].nby;
-			normalData[i*9+5]=this.triangles[i].nbz;
-			normalData[i*9+6]=this.triangles[i].ncx;
-			normalData[i*9+7]=this.triangles[i].ncy;
-			normalData[i*9+8]=this.triangles[i].ncz;
-		}
-		var colorData = new Float32Array(this.triangles.length*12);
-		for(var i=0;i<this.triangles.length;i++) {
-			colorData[i*12]=this.triangles[i].red;
-			colorData[i*12+1]=this.triangles[i].green;
-			colorData[i*12+2]=this.triangles[i].blue;
-			colorData[i*12+3]=this.triangles[i].alpha;
-			colorData[i*12+4]=this.triangles[i].red;
-			colorData[i*12+5]=this.triangles[i].green;
-			colorData[i*12+6]=this.triangles[i].blue;
-			colorData[i*12+7]=this.triangles[i].alpha;
-			colorData[i*12+8]=this.triangles[i].red;
-			colorData[i*12+9]=this.triangles[i].green;
-			colorData[i*12+10]=this.triangles[i].blue;
-			colorData[i*12+11]=this.triangles[i].alpha;
-		}
-		var luminosityData = new Float32Array(this.triangles.length*3);
-		for(var i=0;i<this.triangles.length;i++) {
-			luminosityData[i*3]=this.triangles[i].luminosity;
-			luminosityData[i*3+1]=this.triangles[i].luminosity;
-			luminosityData[i*3+2]=this.triangles[i].luminosity;
-		}
-		var shininessData = new Float32Array(this.triangles.length*3);
-		for(var i=0;i<this.triangles.length;i++) {
-			shininessData[i*3]=this.triangles[i].shininess;
-			shininessData[i*3+1]=this.triangles[i].shininess;
-			shininessData[i*3+2]=this.triangles[i].shininess;
-		}
-                var groupIndexData = new Float32Array(this.triangles.length*3);
-		for(var i=0;i<this.triangles.length;i++) {
-			groupIndexData[i*3]=this.triangles[i].group;
-			groupIndexData[i*3+1]=this.triangles[i].group;
-			groupIndexData[i*3+2]=this.triangles[i].group;
-		}
-	}
-	
-	return {
-		"position": vertexData,
-		"texCoord": texCoordData,
-		"normal": normalData,
-		"color": colorData,
-		"luminosity": luminosityData,
-		"shininess": shininessData,
-                "groupIndex": groupIndexData,
-                "dataSize": (lineMode?this.lines.length*2:this.triangles.length*3)
-		};
+EgomModel.prototype.getBufferData = function (lineMode) {
+    if (lineMode === true) {
+        var vertexData = new Float32Array(this._lines.length * 6);
+        for (var i = 0; i < this._lines.length; i++) {
+            vertexData[i * 6 + 0] = this._vertices[this._lines[i].a].x;
+            vertexData[i * 6 + 1] = this._vertices[this._lines[i].a].y;
+            vertexData[i * 6 + 2] = this._vertices[this._lines[i].a].z;
+            vertexData[i * 6 + 3] = this._vertices[this._lines[i].b].x;
+            vertexData[i * 6 + 4] = this._vertices[this._lines[i].b].y;
+            vertexData[i * 6 + 5] = this._vertices[this._lines[i].b].z;
+        }
+        var texCoordData = new Float32Array(this._lines.length * 4);
+        for (var i = 0; i < this._lines.length; i++) {
+            texCoordData[i * 4 + 0] = 0.0;
+            texCoordData[i * 4 + 1] = 1.0;
+            texCoordData[i * 4 + 2] = 1.0;
+            texCoordData[i * 4 + 3] = 1.0;
+        }
+        var normalData = new Float32Array(this._lines.length * 6);
+        for (var i = 0; i < this._lines.length; i++) {
+            normalData[i * 6 + 0] = this._lines[i].normal[0];
+            normalData[i * 6 + 1] = this._lines[i].normal[1];
+            normalData[i * 6 + 2] = this._lines[i].normal[2];
+            normalData[i * 6 + 3] = this._lines[i].normal[0];
+            normalData[i * 6 + 4] = this._lines[i].normal[1];
+            normalData[i * 6 + 5] = this._lines[i].normal[2];
+        }
+        var colorData = new Float32Array(this._lines.length * 8);
+        for (var i = 0; i < this._lines.length; i++) {
+            colorData[i * 8 + 0] = this._lines[i].color[0];
+            colorData[i * 8 + 1] = this._lines[i].color[1];
+            colorData[i * 8 + 2] = this._lines[i].color[2];
+            colorData[i * 8 + 3] = 1.0;
+            colorData[i * 8 + 4] = this._lines[i].color[0];
+            colorData[i * 8 + 5] = this._lines[i].color[1];
+            colorData[i * 8 + 6] = this._lines[i].color[2];
+            colorData[i * 8 + 7] = 1.0;
+        }
+        var luminosityData = new Float32Array(this._lines.length * 2);
+        for (var i = 0; i < this._lines.length; i++) {
+            luminosityData[i * 2] = this._lines[i].luminosity;
+            luminosityData[i * 2 + 1] = this._lines[i].luminosity;
+        }
+        var shininessData = new Float32Array(this._lines.length * 2);
+        for (var i = 0; i < this._lines.length; i++) {
+            shininessData[i * 2 + 0] = 0;
+            shininessData[i * 2 + 1] = 0;
+        }
+        var groupIndexData = new Float32Array(this._lines.length * 2);
+        for (var i = 0; i < this._lines.length; i++) {
+            groupIndexData[i * 2 + 0] = 0;
+            groupIndexData[i * 2 + 1] = 0;
+        }
+    } else {
+        var vertexData = new Float32Array(this._triangles.length * 9);
+        for (var i = 0; i < this._triangles.length; i++) {
+            vertexData[i * 9 + 0] = this._vertices[this._triangles[i].a].x;
+            vertexData[i * 9 + 1] = this._vertices[this._triangles[i].a].y;
+            vertexData[i * 9 + 2] = this._vertices[this._triangles[i].a].z;
+            vertexData[i * 9 + 3] = this._vertices[this._triangles[i].b].x;
+            vertexData[i * 9 + 4] = this._vertices[this._triangles[i].b].y;
+            vertexData[i * 9 + 5] = this._vertices[this._triangles[i].b].z;
+            vertexData[i * 9 + 6] = this._vertices[this._triangles[i].c].x;
+            vertexData[i * 9 + 7] = this._vertices[this._triangles[i].c].y;
+            vertexData[i * 9 + 8] = this._vertices[this._triangles[i].c].z;
+        }
+        var texCoordData = new Float32Array(this._triangles.length * 6);
+        for (var i = 0; i < this._triangles.length; i++) {
+            texCoordData[i * 6 + 0] = this._triangles[i].texCoords[0][0];
+            texCoordData[i * 6 + 1] = this._triangles[i].texCoords[0][1];
+            texCoordData[i * 6 + 2] = this._triangles[i].texCoords[1][0];
+            texCoordData[i * 6 + 3] = this._triangles[i].texCoords[1][1];
+            texCoordData[i * 6 + 4] = this._triangles[i].texCoords[2][0];
+            texCoordData[i * 6 + 5] = this._triangles[i].texCoords[2][1];
+        }
+        var normalData = new Float32Array(this._triangles.length * 9);
+        for (var i = 0; i < this._triangles.length; i++) {
+            normalData[i * 9 + 0] = this._triangles[i].getNormal(0)[0];
+            normalData[i * 9 + 1] = this._triangles[i].getNormal(0)[1];
+            normalData[i * 9 + 2] = this._triangles[i].getNormal(0)[2];
+            normalData[i * 9 + 3] = this._triangles[i].getNormal(1)[0];
+            normalData[i * 9 + 4] = this._triangles[i].getNormal(1)[1];
+            normalData[i * 9 + 5] = this._triangles[i].getNormal(1)[2];
+            normalData[i * 9 + 6] = this._triangles[i].getNormal(2)[0];
+            normalData[i * 9 + 7] = this._triangles[i].getNormal(2)[1];
+            normalData[i * 9 + 8] = this._triangles[i].getNormal(2)[2];
+        }
+        var colorData = new Float32Array(this._triangles.length * 12);
+        for (var i = 0; i < this._triangles.length; i++) {
+            colorData[i * 12 + 0] = this._triangles[i].color[0];
+            colorData[i * 12 + 1] = this._triangles[i].color[1];
+            colorData[i * 12 + 2] = this._triangles[i].color[2];
+            colorData[i * 12 + 3] = this._triangles[i].color[3];
+            colorData[i * 12 + 4] = this._triangles[i].color[0];
+            colorData[i * 12 + 5] = this._triangles[i].color[1];
+            colorData[i * 12 + 6] = this._triangles[i].color[2];
+            colorData[i * 12 + 7] = this._triangles[i].color[3];
+            colorData[i * 12 + 8] = this._triangles[i].color[0];
+            colorData[i * 12 + 9] = this._triangles[i].color[1];
+            colorData[i * 12 + 10] = this._triangles[i].color[2];
+            colorData[i * 12 + 11] = this._triangles[i].color[3];
+        }
+        var luminosityData = new Float32Array(this._triangles.length * 3);
+        for (var i = 0; i < this._triangles.length; i++) {
+            luminosityData[i * 3] = this._triangles[i].luminosity;
+            luminosityData[i * 3 + 1] = this._triangles[i].luminosity;
+            luminosityData[i * 3 + 2] = this._triangles[i].luminosity;
+        }
+        var shininessData = new Float32Array(this._triangles.length * 3);
+        for (var i = 0; i < this._triangles.length; i++) {
+            shininessData[i * 3] = this._triangles[i].shininess;
+            shininessData[i * 3 + 1] = this._triangles[i].shininess;
+            shininessData[i * 3 + 2] = this._triangles[i].shininess;
+        }
+        var groupIndexData = new Float32Array(this._triangles.length * 3);
+        for (var i = 0; i < this._triangles.length; i++) {
+            groupIndexData[i * 3] = this._triangles[i].groupIndex;
+            groupIndexData[i * 3 + 1] = this._triangles[i].groupIndex;
+            groupIndexData[i * 3 + 2] = this._triangles[i].groupIndex;
+        }
+    }
+
+    return {
+        "position": vertexData,
+        "texCoord": texCoordData,
+        "normal": normalData,
+        "color": colorData,
+        "luminosity": luminosityData,
+        "shininess": shininessData,
+        "groupIndex": groupIndexData,
+        "dataSize": (lineMode ? this._lines.length * 2 : this._triangles.length * 3)
+    };
 };
 
-EgomModel.prototype.render = function(context,lineMode) {
-    if (lineMode===true) {
-        context.gl.drawArrays(context.gl.LINES, this._bufferStartLines[context.getName()], 2*this.lines.length);
+EgomModel.prototype.render = function (context, lineMode) {
+    if (lineMode === true) {
+        context.gl.drawArrays(context.gl.LINES, this._bufferStartLines[context.getName()], 2 * this._lines.length);
     } else {
-        context.gl.drawArrays(context.gl.TRIANGLES, this._bufferStart[context.getName()], 3*this.triangles.length);
+        context.gl.drawArrays(context.gl.TRIANGLES, this._bufferStart[context.getName()], 3 * this._triangles.length);
     }
 };
 
 
 EgomModel.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
-    var i0 = +this.vertices.length;
-    
+    var i0 = +this._vertices.length;
+
     // front
     this.appendVertex([x - width / 2, y - height / 2, z + depth / 2]);
     this.appendVertex([x + width / 2, y - height / 2, z + depth / 2]);
@@ -514,22 +953,27 @@ EgomModel.prototype.addCuboid = function (x, y, z, width, height, depth, color, 
     this.appendVertex([x - width / 2, y + height / 2, z + depth / 2]);
 
     var normals = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]];
+    var params = {
+        color: color,
+        luminosity: luminosity,
+        texCoords: textureCoordinates
+    };
 
     for (var i = 0; i < 6; i++) {
-        this.addTriangle(new Triangle(i0 + (i * 4) + 0, i0 + (i * 4) + 1, i0 + (i * 4) + 2, color[0], color[1], color[2], color[3], luminosity, 0, textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[1][0], textureCoordinates[1][1], textureCoordinates[2][0], textureCoordinates[2][1], normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2]));
-        this.addTriangle(new Triangle(i0 + (i * 4) + 2, i0 + (i * 4) + 3, i0 + (i * 4) + 0, color[0], color[1], color[2], color[3], luminosity, 0, textureCoordinates[2][0], textureCoordinates[2][1], textureCoordinates[3][0], textureCoordinates[3][1], textureCoordinates[0][0], textureCoordinates[0][1], normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2]));
-        if (!(cullFace === true)) {
-            this.addTriangle(new Triangle(i0 + (i * 4) + 2, i0 + (i * 4) + 1, i0 + (i * 4) + 0, color[0], color[1], color[2], color[3], luminosity, 0, textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[1][0], textureCoordinates[1][1], textureCoordinates[2][0], textureCoordinates[2][1], -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2]));
-            this.addTriangle(new Triangle(i0 + (i * 4) + 0, i0 + (i * 4) + 3, i0 + (i * 4) + 2, color[0], color[1], color[2], color[3], luminosity, 0, textureCoordinates[2][0], textureCoordinates[2][1], textureCoordinates[3][0], textureCoordinates[3][1], textureCoordinates[0][0], textureCoordinates[0][1], -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2]));
+        params.normals = [normals[i]];
+        this.addQuad(i0 + (i * 4) + 0, i0 + (i * 4) + 1, i0 + (i * 4) + 2, i0 + (i * 4) + 3, params);
+        if (!cullFace) {
+            params.normals = [Vec.scaled3(normals[i], -1)];
+            this.addQuad(i0 + (i * 4) + 2, i0 + (i * 4) + 1, i0 + (i * 4) + 0, i0 + (i * 4) + 3, params);
         }
     }
 
 };
 
-function uvCoordsOnTexture(left,bottom,right,top,relativeX,relativeY) {
-    var result=[0,0];
-    result[0]=left+(right-left)*relativeX;
-    result[1]=bottom+(top-bottom)*relativeY;
+function uvCoordsOnTexture(left, bottom, right, top, relativeX, relativeY) {
+    var result = [0, 0];
+    result[0] = left + (right - left) * relativeX;
+    result[1] = bottom + (top - bottom) * relativeY;
     return result;
 }
 
@@ -546,93 +990,93 @@ function uvCoordsOnTexture(left,bottom,right,top,relativeX,relativeY) {
  * @param {number[][]} textureCoordinates The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise
  * @param {boolean} cullFace Whether to omit the triangles from the inside of the sphere.
  */
-EgomModel.prototype.addSphere = function(x,y,z,radius,angles,color,luminosity,shininess,textureCoordinates, cullFace) {    
+EgomModel.prototype.addSphere = function (x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace) {
     // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
-    for (var i=0;i<angles;i++) {
-        for (var j=0;j<angles;j++) {
-            this.appendVertex([x+radius*Math.sin(j*2*3.1415/angles)*Math.cos(i*2*3.1415/angles),y+radius*Math.cos(j*2*3.1415/angles),z+radius*Math.sin(i*2*3.1415/angles)*Math.sin(j*2*3.1415/angles)]);
+    for (var i = 0; i < angles; i++) {
+        for (var j = 0; j < angles; j++) {
+            this.appendVertex([x + radius * Math.sin(j * 2 * 3.1415 / angles) * Math.cos(i * 2 * 3.1415 / angles), y + radius * Math.cos(j * 2 * 3.1415 / angles), z + radius * Math.sin(i * 2 * 3.1415 / angles) * Math.sin(j * 2 * 3.1415 / angles)]);
         }
     }
-    
-    var i0 = this.vertices.length-angles*angles;
-    
-    if((angles%2)===1) {
-        this.vertices[i0+(angles+1)/2][0]=x;
-        this.vertices[i0+(angles+1)/2][2]=z;
+
+    var i0 = this._vertices.length - angles * angles;
+
+    if ((angles % 2) === 1) {
+        this._vertices[i0 + (angles + 1) / 2].setX(x);
+        this._vertices[i0 + (angles + 1) / 2].setZ(z);
     }
-    
-    for(var i=0;i<angles;i++) {
+
+    for (var i = 0; i < angles; i++) {
         // adding triangles connected to the top
         // the vertex indices:
-        var v = [i0+(i*angles),i0+(((i+1)%angles)*angles)+1,i0+(i*angles)+1];
+        var v = [i0 + (i * angles), i0 + (((i + 1) % angles) * angles) + 1, i0 + (i * angles) + 1];
         // the UV texture coordinates:
-        var uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],1/(2*angles)+(i/angles),1);
-        var uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2/angles);
-        var uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2/angles);
+        var uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], 1 / (2 * angles) + (i / angles), 1);
+        var uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 / angles);
+        var uv3 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 / angles);
         // the normal vectors:
-        var n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
-        var n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
-        var n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
-        this.addTriangle(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
-            uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
-            n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
-        if(cullFace!==true) {
-            this.addTriangle(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
-                uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
-                -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+        var n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
+        var n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
+        var n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
+        this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+            texCoords: [uv1, uv2, uv3],
+            normals: [n1, n2, n3]});
+        if (cullFace !== true) {
+            this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                texCoords: [uv1, uv3, uv2],
+                normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
         }
         // triangles connected to the bottom
-        if ((angles%2)===0) {
-            v = [i0+(i*angles)+angles/2,i0+(i*angles)+angles/2-1,i0+(((i+1)%angles)*angles)+angles/2-1];
+        if ((angles % 2) === 0) {
+            v = [i0 + (i * angles) + angles / 2, i0 + (i * angles) + angles / 2 - 1, i0 + (((i + 1) % angles) * angles) + angles / 2 - 1];
         } else {
-            v= [i0+(angles+1)/2,i0+(i*angles)+(angles-1)/2,i0+(((i+1)%angles)*angles)+(angles-1)/2];
+            v = [i0 + (angles + 1) / 2, i0 + (i * angles) + (angles - 1) / 2, i0 + (((i + 1) % angles) * angles) + (angles - 1) / 2];
         }
-        uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],1/(2*angles)+(i/angles),0);
-        uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,((angles%2)===0)?2/angles:1/angles);
-        uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,((angles%2)===0)?2/angles:1/angles);
-        n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
-        n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
-        n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
-        this.addTriangle(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
-            uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
-            n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
-        if(cullFace!==true) {
-            this.addTriangle(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
-                uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
-                -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+        uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], 1 / (2 * angles) + (i / angles), 0);
+        uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, ((angles % 2) === 0) ? 2 / angles : 1 / angles);
+        uv3 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, ((angles % 2) === 0) ? 2 / angles : 1 / angles);
+        n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
+        n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
+        n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
+        this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+            texCoords: [uv1, uv2, uv3],
+            normals: [n1, n2, n3]});
+        if (cullFace !== true) {
+            this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                texCoords: [uv1, uv3, uv2],
+                normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
         }
         // quads between the two subsequent circles
-        for (var j=1;j<angles/2-1;j++) {
-            v=[i0+(i*angles)+j,i0+(((i+1)%angles)*angles)+j+1,i0+(i*angles)+j+1];
-            uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2*j/angles);
-            uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2*(j+1)/angles);
-            uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2*(j+1)/angles);
-            n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
-            n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
-            n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
-            this.addTriangle(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
-                uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
-                n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
-            if(cullFace!==true) {
-                this.addTriangle(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
-                    uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
-                    -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
+        for (var j = 1; j < angles / 2 - 1; j++) {
+            v = [i0 + (i * angles) + j, i0 + (((i + 1) % angles) * angles) + j + 1, i0 + (i * angles) + j + 1];
+            uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 * j / angles);
+            uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 * (j + 1) / angles);
+            uv3 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 * (j + 1) / angles);
+            n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
+            n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
+            n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
+            this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+                texCoords: [uv1, uv2, uv3],
+                normals: [n1, n2, n3]});
+            if (cullFace !== true) {
+                this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                    texCoords: [uv1, uv3, uv2],
+                    normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
             }
-            v=[i0+(((i+1)%angles)*angles)+j+1,i0+(i*angles)+j,i0+(((i+1)%angles)*angles)+j];
-            uv1 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2*(j+1)/angles);
-            uv2 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],i/angles,1-2*j/angles);
-            uv3 = uvCoordsOnTexture(textureCoordinates[0][0],textureCoordinates[0][1],textureCoordinates[2][0],textureCoordinates[2][1],(i+1)/angles,1-2*j/angles);
-            n1 = [(this.vertices[v[0]][0]-x)/radius,(this.vertices[v[0]][1]-y)/radius,(this.vertices[v[0]][2]-z)/radius];
-            n2 = [(this.vertices[v[1]][0]-x)/radius,(this.vertices[v[1]][1]-y)/radius,(this.vertices[v[1]][2]-z)/radius];
-            n3 = [(this.vertices[v[2]][0]-x)/radius,(this.vertices[v[2]][1]-y)/radius,(this.vertices[v[2]][2]-z)/radius];
-            this.addTriangle(new Triangle(v[0],v[1],v[2],color[0],color[1],color[2],color[3],luminosity,shininess,
-                uv1[0],uv1[1],uv2[0],uv2[1],uv3[0],uv3[1],
-                n1[0],n1[1],n1[2],n2[0],n2[1],n2[2],n3[0],n3[1],n3[2]));
-            if(cullFace!==true) {
-                this.addTriangle(new Triangle(v[0],v[2],v[1],color[0],color[1],color[2],color[3],luminosity,shininess,
-                    uv1[0],uv1[1],uv3[0],uv3[1],uv2[0],uv2[1],
-                    -n1[0],-n1[1],-n1[2],-n3[0],-n3[1],-n3[2],-n2[0],-n2[1],-n2[2]));
-            }    
+            v = [i0 + (((i + 1) % angles) * angles) + j + 1, i0 + (i * angles) + j, i0 + (((i + 1) % angles) * angles) + j];
+            uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 * (j + 1) / angles);
+            uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 * j / angles);
+            uv3 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 * j / angles);
+            n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
+            n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
+            n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
+            this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+                texCoords: [uv1, uv2, uv3],
+                normals: [n1, n2, n3]});
+            if (cullFace !== true) {
+                this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                    texCoords: [uv1, uv3, uv2],
+                    normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
+            }
         }
     }
 };
@@ -643,16 +1087,15 @@ EgomModel.prototype.addSphere = function(x,y,z,radius,angles,color,luminosity,sh
  * @returns {EgomModel} An FVQ model.
  */
 function fvqModel() {
-	var result = new EgomModel();
-	result.appendVertex([-1,-1,1]);
-	result.appendVertex([1,-1,1]);
-	result.appendVertex([1,1,1]);
-	result.appendVertex([-1,1,1]);
-	
-	result.addTriangle(new Triangle(0,1,2,1.0,1.0,1.0,1.0,0,0, 0,1, 1,1, 1,0, 0,0,1, 0,0,1, 0,0,1)); 
-	result.addTriangle(new Triangle(2,3,0,1.0,1.0,1.0,1.0,0,0, 1,0, 0,0, 0,1, 0,0,1, 0,0,1, 0,0,1)); 
-		
-	return result;
+    var result = new EgomModel();
+    result.appendVertex([-1, -1, 1]);
+    result.appendVertex([1, -1, 1]);
+    result.appendVertex([1, 1, 1]);
+    result.appendVertex([-1, 1, 1]);
+
+    result.addQuad(0, 1, 2, 3);
+
+    return result;
 }
 
 /**
@@ -660,18 +1103,16 @@ function fvqModel() {
  * @returns {EgomModel} An XY square model.
  */
 function squareModel() {
-	var result = new EgomModel();
-	result.appendVertex([-1,-1,0]);
-	result.appendVertex([1,-1,0]);
-	result.appendVertex([1,1,0]);
-	result.appendVertex([-1,1,0]);
-	
-	result.addTriangle(new Triangle(0,1,2,1.0,1.0,1.0,1.0,0,0, 0,1, 1,1, 1,0, 0,0,1, 0,0,1, 0,0,1)); 
-	result.addTriangle(new Triangle(2,3,0,1.0,1.0,1.0,1.0,0,0, 1,0, 0,0, 0,1, 0,0,1, 0,0,1, 0,0,1)); 
-	result.addTriangle(new Triangle(2,1,0,1.0,1.0,1.0,1.0,0,0, 0,1, 1,1, 1,0, 0,0,-1, 0,0,-1, 0,0,-1)); 
-	result.addTriangle(new Triangle(0,3,2,1.0,1.0,1.0,1.0,0,0, 1,0, 0,0, 0,1, 0,0,-1, 0,0,-1, 0,0,-1)); 
-		
-	return result;
+    var result = new EgomModel();
+    result.appendVertex([-1, -1, 0]);
+    result.appendVertex([1, -1, 0]);
+    result.appendVertex([1, 1, 0]);
+    result.appendVertex([-1, 1, 0]);
+
+    result.addQuad(0, 1, 2, 3);
+    result.addQuad(2, 1, 0, 3, {texCoords: [[0, 1], [1, 1], [1, 0], [0, 0]]});
+
+    return result;
 }
 
 /**
@@ -685,28 +1126,25 @@ function squareModel() {
  * @returns {EgomModel} A projectile model of intersecting squares.
  */
 function projectileModel(intersections) {
-	var result = new EgomModel();
-	result.appendVertex([-1,-1,0]);
-	result.appendVertex([1,-1,0]);
-	result.appendVertex([1,1,0]);
-	result.appendVertex([-1,1,0]);
-	
-	result.addTriangle(new Triangle(0,1,2, 1.0,1.0,1.0,1.0, 0,0, 0.0,0.5, 1.0,0.5, 1.0,0.0, 0,0,1,  0,0,1,  0,0,1)); 
-	result.addTriangle(new Triangle(2,3,0, 1.0,1.0,1.0,1.0, 0,0, 1.0,0.0, 0.0,0.0, 0.0,0.5, 0,0,1,  0,0,1,  0,0,1)); 
-	
-	for(var i=0;i<intersections.length;i++) {
-		result.appendVertex([1,intersections[i],-1]);
-		result.appendVertex([-1,intersections[i],-1]);
-		result.appendVertex([-1,intersections[i],1]);
-		result.appendVertex([1,intersections[i],1]);
-		
-		result.addTriangle(new Triangle(((i+1)*4)+0,((i+1)*4)+1,((i+1)*4)+2,1.0,1.0,1.0,1.0,0,0, 0.0,1.0, 1.0,1.0, 1.0,0.5, 0,-1,0, 0,-1,0, 0,-1,0)); 
-		result.addTriangle(new Triangle(((i+1)*4)+2,((i+1)*4)+3,((i+1)*4)+0,1.0,1.0,1.0,1.0,0,0, 1.0,0.5, 0.0,0.5, 0.0,1.0, 0,-1,0, 0,-1,0, 0,-1,0)); 
-		result.addTriangle(new Triangle(((i+1)*4)+3,((i+1)*4)+2,((i+1)*4)+1,1.0,1.0,1.0,1.0,0,0, 0.0,1.0, 1.0,1.0, 1.0,0.5, 0,1,0,  0,1,0,  0,1,0)); 
-		result.addTriangle(new Triangle(((i+1)*4)+1,((i+1)*4)+0,((i+1)*4)+3,1.0,1.0,1.0,1.0,0,0, 1.0,0.5, 0.0,0.5, 0.0,1.0, 0,1,0,  0,1,0,  0,1,0)); 
-	}
-		
-	return result;
+    var result = new EgomModel();
+    result.appendVertex([-1, -1, 0]);
+    result.appendVertex([1, -1, 0]);
+    result.appendVertex([1, 1, 0]);
+    result.appendVertex([-1, 1, 0]);
+
+    result.addQuad(0, 1, 2, 3, {texCoords: [[0.0, 0.5], [1.0, 0.5], [1.0, 0.0], [0.0, 0.0]]});
+
+    for (var i = 0; i < intersections.length; i++) {
+        result.appendVertex([1, intersections[i], -1]);
+        result.appendVertex([-1, intersections[i], -1]);
+        result.appendVertex([-1, intersections[i], 1]);
+        result.appendVertex([1, intersections[i], 1]);
+
+        result.addQuad(((i + 1) * 4) + 0, ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+        result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4) + 0, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+    }
+
+    return result;
 }
 
 /**
@@ -721,46 +1159,7 @@ function projectileModel(intersections) {
  */
 function cuboidModel(width, height, depth, color) {
     var result = new EgomModel();
-    // front
-    result.appendVertex([-width / 2, -height / 2, depth / 2]);
-    result.appendVertex([width / 2, -height / 2, depth / 2]);
-    result.appendVertex([width / 2, height / 2, depth / 2]);
-    result.appendVertex([-width / 2, height / 2, depth / 2]);
-    // back
-    result.appendVertex([-width / 2, height / 2, -depth / 2]);
-    result.appendVertex([width / 2, height / 2, -depth / 2]);
-    result.appendVertex([width / 2, -height / 2, -depth / 2]);
-    result.appendVertex([-width / 2, -height / 2, -depth / 2]);
-    // top
-    result.appendVertex([width / 2, height / 2, -depth / 2]);
-    result.appendVertex([-width / 2, height / 2, -depth / 2]);
-    result.appendVertex([-width / 2, height / 2, depth / 2]);
-    result.appendVertex([width / 2, height / 2, depth / 2]);
-    // bottom
-    result.appendVertex([-width / 2, -height / 2, -depth / 2]);
-    result.appendVertex([width / 2, -height / 2, -depth / 2]);
-    result.appendVertex([width / 2, -height / 2, depth / 2]);
-    result.appendVertex([-width / 2, -height / 2, depth / 2]);
-    // right
-    result.appendVertex([width / 2, -height / 2, depth / 2]);
-    result.appendVertex([width / 2, -height / 2, -depth / 2]);
-    result.appendVertex([width / 2, height / 2, -depth / 2]);
-    result.appendVertex([width / 2, height / 2, depth / 2]);
-    // left
-    result.appendVertex([-width / 2, height / 2, depth / 2]);
-    result.appendVertex([-width / 2, height / 2, -depth / 2]);
-    result.appendVertex([-width / 2, -height / 2, -depth / 2]);
-    result.appendVertex([-width / 2, -height / 2, depth / 2]);
-
-    var normals = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]];
-
-    for (var i = 0; i < 6; i++) {
-        result.addTriangle(new Triangle((i * 4) + 0, (i * 4) + 1, (i * 4) + 2, color[0], color[1], color[2], color[3], 128, 0, 0, 1, 1, 1, 1, 0, normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2]));
-        result.addTriangle(new Triangle((i * 4) + 2, (i * 4) + 3, (i * 4) + 0, color[0], color[1], color[2], color[3], 128, 0, 1, 0, 0, 0, 0, 1, normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2], normals[i][0], normals[i][1], normals[i][2]));
-        result.addTriangle(new Triangle((i * 4) + 2, (i * 4) + 1, (i * 4) + 0, color[0], color[1], color[2], color[3], 128, 0, 0, 1, 1, 1, 1, 0, -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2]));
-        result.addTriangle(new Triangle((i * 4) + 0, (i * 4) + 3, (i * 4) + 2, color[0], color[1], color[2], color[3], 128, 0, 1, 0, 0, 0, 0, 1, -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2], -normals[i][0], -normals[i][1], -normals[i][2]));
-    }
-
+    result.addCuboid(0, 0, 0, width, height, depth, color, 128, [[0, 1], [1, 1], [1, 0], [0, 0]], false);
     return result;
 }
 
@@ -772,8 +1171,8 @@ function cuboidModel(width, height, depth, color) {
  */
 function dustModel(color) {
     var result = new EgomModel();
-    result.appendVertex([0.0,0.0,0.0]);
-    result.appendVertex([1.0,1.0,1.0]);
-    result.lines.push(new Line(0,1,color[0],color[1],color[2],1,0,0,1));
+    result.appendVertex([0.0, 0.0, 0.0]);
+    result.appendVertex([1.0, 1.0, 1.0]);
+    result._lines.push(new Line(0, 1, color, 1, [0, 0, 1]));
     return result;
 }

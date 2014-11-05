@@ -8,22 +8,22 @@
  */
 
 /**********************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+ Copyright 2014 Krisztián Nagy
+ 
+ This file is part of Interstellar Armada.
+ 
+ Interstellar Armada is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ Interstellar Armada is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 /**
@@ -35,7 +35,7 @@
  * @param {Boolean} [useMipmap=true] Whether mipmapping should be used with
  * this texture.
  */
-function Texture(filename,useMipmap) {
+function Texture(filename, useMipmap) {
     Resource.call(this);
     // properties for file resource management
     /**
@@ -50,7 +50,7 @@ function Texture(filename,useMipmap) {
      * @name Texture#_mipmap
      * @type Boolean
      */
-    this._mipmap = (useMipmap!==undefined)?useMipmap:true;
+    this._mipmap = (useMipmap !== undefined) ? useMipmap : true;
     /**
      * An Image object to manage the loading of the texture from file.
      * @name Texture#_image
@@ -77,7 +77,7 @@ Texture.prototype.constructor = Texture;
  * Getter for the _filename property.
  * @returns {String}
  */
-Texture.prototype.getFilename = function() {
+Texture.prototype.getFilename = function () {
     return this._filename;
 };
 
@@ -88,7 +88,7 @@ Texture.prototype.getFilename = function() {
  * @param {ManagedGLContext} context
  * @returns {WebGLTexture}
  */
-Texture.prototype.getIDForContext = function(context) {
+Texture.prototype.getIDForContext = function (context) {
     return this._ids[context.getName()];
 };
 
@@ -97,16 +97,16 @@ Texture.prototype.getIDForContext = function(context) {
  * loading finishes, the texture {@link Resource} is marked ready to use and 
  * the potentially queued actions are executed.
  */
-Texture.prototype.requestLoadFromFile = function() {
-    if(this.isReadyToUse()===false) {
+Texture.prototype.requestLoadFromFile = function () {
+    if (this.isReadyToUse() === false) {
         var self = this;
         // when loaded, set the resource to ready and execute queued functions
-        this._image.onload = function() {
+        this._image.onload = function () {
             self.setToReady();
         };
         // setting the src property will automatically result in an asynchronous
         // request to grab the texture file
-        this._image.src=this._filename;
+        this._image.src = this._filename;
     }
 };
 
@@ -118,9 +118,9 @@ Texture.prototype.requestLoadFromFile = function() {
  * drawn) The action is only executed when the texture has been loaded.
  * @param {ManagedGLContext} context
  */
-Texture.prototype.addToContext = function(context) {
-    this.executeWhenReady(function() {
-        if(this._ids[context.getName()]===undefined) {
+Texture.prototype.addToContext = function (context) {
+    this.executeWhenReady(function () {
+        if (this._ids[context.getName()] === undefined) {
             var gl = context.gl;
             this._ids[context.getName()] = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, this._ids[context.getName()]);
@@ -130,16 +130,16 @@ Texture.prototype.addToContext = function(context) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            if(this._mipmap===false) {
+            if (this._mipmap === false) {
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             } else {
-                if(context.getFiltering()==="bilinear") {
+                if (context.getFiltering() === "bilinear") {
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-                } else if(context.getFiltering()==="trilinear") {
+                } else if (context.getFiltering() === "trilinear") {
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-                } else if(context.getFiltering()==="anisotropic") {
+                } else if (context.getFiltering() === "anisotropic") {
                     gl.texParameterf(gl.TEXTURE_2D, context.getAnisotropicFilter().TEXTURE_MAX_ANISOTROPY_EXT, 4);
-                } 
+                }
                 gl.generateMipmap(gl.TEXTURE_2D);
             }
         }
@@ -149,7 +149,7 @@ Texture.prototype.addToContext = function(context) {
 /**
  * Clears all previous bindings to managed WebGL contexts.
  */
-Texture.prototype.clearContextBindings = function() {
+Texture.prototype.clearContextBindings = function () {
     this._ids = new Object();
 };
 
@@ -162,7 +162,7 @@ Texture.prototype.clearContextBindings = function() {
  * the cubemapped texture. The order of the pictures has to be X,Y,Z and within
  * that, always positive first.
  */
-function Cubemap(name,imageURLs) {
+function Cubemap(name, imageURLs) {
     Resource.call(this);
     // properties for file resource management
     /**
@@ -186,7 +186,7 @@ function Cubemap(name,imageURLs) {
      * @type Image[6]
      */
     this._images = new Array(6);
-    for(var i=0;i<6;i++) {
+    for (var i = 0; i < 6; i++) {
         this._images[i] = new Image();
     }
     // properties for WebGL resource management
@@ -209,7 +209,7 @@ Cubemap.prototype.constructor = Cubemap;
  * Getter for the property _name.
  * @returns {String}
  */
-Cubemap.prototype.getName = function() {
+Cubemap.prototype.getName = function () {
     return this._name;
 };
 
@@ -220,7 +220,7 @@ Cubemap.prototype.getName = function() {
  * @param {ManagedGLContext} context
  * @returns {WebGLTexture}
  */
-Cubemap.prototype.getIDForContext = function(context) {
+Cubemap.prototype.getIDForContext = function (context) {
     return this._ids[context.getName()];
 };
 
@@ -229,21 +229,21 @@ Cubemap.prototype.getIDForContext = function(context) {
  * files. When the loading finishes, the cubemap {@link Resource} is marked 
  * ready to use and the potentially queued actions are executed.
  */
-Cubemap.prototype.requestLoadFromFile = function() {
-    if(this.isReadyToUse()===false) {
+Cubemap.prototype.requestLoadFromFile = function () {
+    if (this.isReadyToUse() === false) {
         var facesLoaded = 0;
         var self = this;
-        for(var i=0;i<6;i++) {
+        for (var i = 0; i < 6; i++) {
             // when all faces loaded, set the resource to ready and execute queued functions
-            this._images[i].onload = function() {
-                facesLoaded+=1;
-                if(facesLoaded===6) {
+            this._images[i].onload = function () {
+                facesLoaded += 1;
+                if (facesLoaded === 6) {
                     self.setToReady();
                 }
             };
             // setting the src property will automatically result in an asynchronous
             // request to grab the texture file
-            this._images[i].src=this._imageURLs[i];
+            this._images[i].src = this._imageURLs[i];
         }
     }
 };
@@ -256,9 +256,9 @@ Cubemap.prototype.requestLoadFromFile = function() {
  * drawn) The action is only executed when the cubemap has been loaded.
  * @param {ManagedGLContext} context
  */
-Cubemap.prototype.addToContext = function(context) {
-    this.executeWhenReady( function() {
-        if(this._ids[context.getName()]===undefined) {
+Cubemap.prototype.addToContext = function (context) {
+    this.executeWhenReady(function () {
+        if (this._ids[context.getName()] === undefined) {
             var gl = context.gl;
             this._ids[context.getName()] = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, this._ids[context.getName()]);
@@ -281,7 +281,7 @@ Cubemap.prototype.addToContext = function(context) {
             ];
 
             // Upload the images into the texture.
-            for(var i=0;i<6;i++) {
+            for (var i = 0; i < 6; i++) {
                 gl.texImage2D(type[i], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._images[i]);
             }
         }
@@ -291,7 +291,7 @@ Cubemap.prototype.addToContext = function(context) {
 /**
  * Clears all previous bindings to managed WebGL contexts.
  */
-Cubemap.prototype.clearContextBindings = function() {
+Cubemap.prototype.clearContextBindings = function () {
     this._ids = new Object();
 };
 
@@ -309,10 +309,10 @@ Cubemap.prototype.clearContextBindings = function() {
  * supported roles are: position, texCoord, normal, color, luminosity, 
  * shininess, groupIndex.
  */
-function ShaderAttribute(name,size,role) {
-    this.name=name;
-    this.size=size;
-    this.role=role;
+function ShaderAttribute(name, size, role) {
+    this.name = name;
+    this.size = size;
+    this.role = role;
 }
 
 /**
@@ -325,7 +325,7 @@ function ShaderAttribute(name,size,role) {
  * @param {Number} arraySize If 0 or undefined, the uniform is not an array. If 
  * one or more, then gives the size of the uniform array.
  */
-function ShaderUniform(name,type,arraySize) {
+function ShaderUniform(name, type, arraySize) {
     // properties for file resource management
     /**
      * The name of the shader uniform, same as how declared in the shader source
@@ -348,8 +348,8 @@ function ShaderUniform(name,type,arraySize) {
      * @type Number
      */
     this._arraySize = 0;
-    if(arraySize!==undefined) {
-        this._arraySize=arraySize;
+    if (arraySize !== undefined) {
+        this._arraySize = arraySize;
     }
     /**
      * If the uniform is of struct type, other ShaderUniform instances represent
@@ -359,7 +359,7 @@ function ShaderUniform(name,type,arraySize) {
      * @type ShaderUniform[]
      */
     this._members = null;
-    if(this._type===this.VariableTypes.struct) {
+    if (this._type === this.VariableTypes.struct) {
         this._members = new Array();
     }
     // properties for WebGL resource management
@@ -370,7 +370,7 @@ function ShaderUniform(name,type,arraySize) {
      * @name ShaderUniform#_locations
      * @type Object
      */
-    this._locations=new Object();
+    this._locations = new Object();
 }
 
 /**
@@ -380,8 +380,8 @@ function ShaderUniform(name,type,arraySize) {
 ShaderUniform.prototype.VariableTypes = Object.freeze(
         {
             none: 0,
-            float: 1, 
-            mat4: 2, 
+            float: 1,
+            mat4: 2,
             mat3: 3,
             vec3: 4,
             vec4: 5,
@@ -390,7 +390,7 @@ ShaderUniform.prototype.VariableTypes = Object.freeze(
             int: 8,
             bool: 9
         });
- 
+
 /**
  * Determining the enumeration value of a shader variable type from the string
  * containing the name of the variable type so that a faster switch can be used
@@ -398,17 +398,27 @@ ShaderUniform.prototype.VariableTypes = Object.freeze(
  * the much slower string matching.
  * @param {String} type The name of the variable type 
  */
-ShaderUniform.prototype.getVariableTypeFromString = function(type) {
-    if (type==="float") return this.VariableTypes.float;
-    if (type==="mat4") return this.VariableTypes.mat4;
-    if (type==="mat3") return this.VariableTypes.mat3;
-    if (type==="vec3") return this.VariableTypes.vec3;
-    if (type==="vec4") return this.VariableTypes.vec4;
-    if (type==="sampler2D") return this.VariableTypes.sampler2D;
-    if (type==="samplerCube") return this.VariableTypes.samplerCube;
-    if (type==="int") return this.VariableTypes.int;
-    if (type==="struct") return this.VariableTypes.struct;
-    if (type==="bool") return this.VariableTypes.bool;
+ShaderUniform.prototype.getVariableTypeFromString = function (type) {
+    if (type === "float")
+        return this.VariableTypes.float;
+    if (type === "mat4")
+        return this.VariableTypes.mat4;
+    if (type === "mat3")
+        return this.VariableTypes.mat3;
+    if (type === "vec3")
+        return this.VariableTypes.vec3;
+    if (type === "vec4")
+        return this.VariableTypes.vec4;
+    if (type === "sampler2D")
+        return this.VariableTypes.sampler2D;
+    if (type === "samplerCube")
+        return this.VariableTypes.samplerCube;
+    if (type === "int")
+        return this.VariableTypes.int;
+    if (type === "struct")
+        return this.VariableTypes.struct;
+    if (type === "bool")
+        return this.VariableTypes.bool;
     return this.VariableTypes.none;
 };
 
@@ -416,7 +426,7 @@ ShaderUniform.prototype.getVariableTypeFromString = function(type) {
  * Getter for the property _name.
  * @returns {String}
  */
-ShaderUniform.prototype.getName = function() {
+ShaderUniform.prototype.getName = function () {
     return this._name;
 };
 
@@ -425,11 +435,11 @@ ShaderUniform.prototype.getName = function() {
  * struct type uniforms)
  * @param {ShaderUniform} member
  */
-ShaderUniform.prototype.addMember = function(member) {
-    if(this._type===this.VariableTypes.struct) {
+ShaderUniform.prototype.addMember = function (member) {
+    if (this._type === this.VariableTypes.struct) {
         this._members.push(member);
     } else {
-        Armada.showError("Attempting to add a member to uniform "+this._name+", which is not of struct type!");
+        Armada.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
     }
 };
 
@@ -439,8 +449,8 @@ ShaderUniform.prototype.addMember = function(member) {
  * @param {ManagedGLContext} context
  * @param {Shader} shader The shader which this uniform belongs to.
  */
-ShaderUniform.prototype.setLocation = function(context,shader) {
-    this._locations[context.getName()] = context.gl.getUniformLocation(shader.getIDForContext(context),this._name);
+ShaderUniform.prototype.setLocation = function (context, shader) {
+    this._locations[context.getName()] = context.gl.getUniformLocation(shader.getIDForContext(context), this._name);
 };
 
 /**
@@ -450,7 +460,7 @@ ShaderUniform.prototype.setLocation = function(context,shader) {
  * @param {ManagedGLContext} context
  * @returns {WebGLUniformLocation}
  */
-ShaderUniform.prototype.getLocation = function(context) {
+ShaderUniform.prototype.getLocation = function (context) {
     return this._locations[context.getName()];
 };
 
@@ -472,62 +482,74 @@ ShaderUniform.prototype.getLocation = function(context) {
  * "lights[3].color", the name would be "color" and so the prefix should be
  * "lights[3]"
  */
-ShaderUniform.prototype.setValue = function(context,shader,valueFunction,locationPrefix) {
+ShaderUniform.prototype.setValue = function (context, shader, valueFunction, locationPrefix) {
     var gl = context.gl;
     // calculate the value that needs to be assigned
     var value = valueFunction();
     var location;
     // get the location
-    if (locationPrefix!==undefined) {
+    if (locationPrefix !== undefined) {
         // If there is a prefix, the location needs to be grabbed right from GL.
         // The prefix might include array indices, since a single ShaderUniform
         // can represent a whole array of structs.
-        location = gl.getUniformLocation(shader.getIDForContext(context),locationPrefix+this._name);
+        location = gl.getUniformLocation(shader.getIDForContext(context), locationPrefix + this._name);
     } else {
         // if possible, just get the previously stored location
         location = this.getLocation(context);
     }
-    var i,j;
+    var i, j;
     // assignment for float and struct arrays
-    if(this._arraySize>0) {
-        switch(this._type) {
-            case this.VariableTypes.float: gl.uniform1fv(location,value);
+    if (this._arraySize > 0) {
+        switch (this._type) {
+            case this.VariableTypes.float:
+                gl.uniform1fv(location, value);
                 break;
             case this.VariableTypes.struct:
                 // for structs, launch recursive assignment of members
-                    for(i=0;i<value.length;i++) {
-                        for(j=0;j<this._members.length;j++) {
-                            if(value[i][this._members[j]._name]!==undefined) {
-                                var memberName = this._members[j]._name; 
-                                this._members[j].setValue(context,shader,function(){ return value[i][memberName]; },this._name+"["+i+"].");
-                            }
+                for (i = 0; i < value.length; i++) {
+                    for (j = 0; j < this._members.length; j++) {
+                        if (value[i][this._members[j]._name] !== undefined) {
+                            var memberName = this._members[j]._name;
+                            this._members[j].setValue(context, shader, function () {
+                                return value[i][memberName];
+                            }, this._name + "[" + i + "].");
                         }
                     }
+                }
                 break;
         }
-    // assignment of simple types    
+        // assignment of simple types    
     } else {
-        switch(this._type) {
-            case this.VariableTypes.float: gl.uniform1f(location,value);
+        switch (this._type) {
+            case this.VariableTypes.float:
+                gl.uniform1f(location, value);
                 break;
-            case this.VariableTypes.mat4: gl.uniformMatrix4fv(location,false,value);
+            case this.VariableTypes.mat4:
+                gl.uniformMatrix4fv(location, false, value);
                 break;
-            case this.VariableTypes.mat3: gl.uniformMatrix3fv(location,false,value);
+            case this.VariableTypes.mat3:
+                gl.uniformMatrix3fv(location, false, value);
                 break;
-            case this.VariableTypes.vec3: gl.uniform3fv(location,value);
+            case this.VariableTypes.vec3:
+                gl.uniform3fv(location, value);
                 break;
-            case this.VariableTypes.vec4: gl.uniform4fv(location,value);
+            case this.VariableTypes.vec4:
+                gl.uniform4fv(location, value);
                 break;
-            case this.VariableTypes.sampler2D: gl.uniform1i(location,value);
+            case this.VariableTypes.sampler2D:
+                gl.uniform1i(location, value);
                 break;
-            case this.VariableTypes.samplerCube: gl.uniform1i(location,value);
+            case this.VariableTypes.samplerCube:
+                gl.uniform1i(location, value);
                 break;
-            case this.VariableTypes.int: gl.uniform1i(location,value);
+            case this.VariableTypes.int:
+                gl.uniform1i(location, value);
                 break;
-            case this.VariableTypes.bool: gl.uniform1i(location,value?1:0);
-                break;    
+            case this.VariableTypes.bool:
+                gl.uniform1i(location, value ? 1 : 0);
+                break;
         }
-    }    
+    }
 };
 
 /**
@@ -539,7 +561,7 @@ ShaderUniform.prototype.setValue = function(context,shader,valueFunction,locatio
  * @param {Number} vectorSize The number of components in one element of te VBO.
  * @param {Number} numVectors Number of vectors in this buffer.
  */
-function VertexBuffer(name,role,vectorSize,numVectors) {
+function VertexBuffer(name, role, vectorSize, numVectors) {
     /**
      * The name by which this buffer can be referred to. The buffer will be
      * bound to vertex attributes having the same name.
@@ -567,7 +589,7 @@ function VertexBuffer(name,role,vectorSize,numVectors) {
      * @name VertexBuffer#_data
      * @type Float32Array
      */
-    this._data = new Float32Array(numVectors*this._vectorSize);
+    this._data = new Float32Array(numVectors * this._vectorSize);
     /**
      * The WebGL handle for this vertex buffer array.
      * @name VertexBuffer#_id
@@ -587,7 +609,7 @@ function VertexBuffer(name,role,vectorSize,numVectors) {
  * Getter for the _name property.
  * @returns {String}
  */
-VertexBuffer.prototype.getName = function() {
+VertexBuffer.prototype.getName = function () {
     return this._name;
 };
 
@@ -595,7 +617,7 @@ VertexBuffer.prototype.getName = function() {
  * Getter for the _role property.
  * @returns {String}
  */
-VertexBuffer.prototype.getRole = function() {
+VertexBuffer.prototype.getRole = function () {
     return this._role;
 };
 
@@ -607,15 +629,15 @@ VertexBuffer.prototype.getRole = function() {
  * from this, the data as long as the length of 'data' parameter will be 
  * overwritten.
  */
-VertexBuffer.prototype.setData = function(data,start) {
-    this._data.set(data,start*this._vectorSize);
+VertexBuffer.prototype.setData = function (data, start) {
+    this._data.set(data, start * this._vectorSize);
 };
 
 /**
  * Frees the data stored in the normal RAM (for use after it is already in GPU 
  * memory)
  */
-VertexBuffer.prototype.freeData = function() {
+VertexBuffer.prototype.freeData = function () {
     this._data = null;
 };
 
@@ -624,13 +646,13 @@ VertexBuffer.prototype.freeData = function() {
  * by setData) using it to the GPU, then erases the original data array.
  * @param {ManagedGLContext} context
  */
-VertexBuffer.prototype.loadToGPUMemory = function(context) {
+VertexBuffer.prototype.loadToGPUMemory = function (context) {
     this._id = context.gl.createBuffer();
     context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
     context.gl.bufferData(
-        context.gl.ARRAY_BUFFER, 
-        this._data,
-        context.gl.STATIC_DRAW);
+            context.gl.ARRAY_BUFFER,
+            this._data,
+            context.gl.STATIC_DRAW);
     this.freeData();
 };
 
@@ -639,7 +661,7 @@ VertexBuffer.prototype.loadToGPUMemory = function(context) {
  * GL context.
  * @param {ManagedGLContext} context
  */
-VertexBuffer.prototype.enable = function(context) {
+VertexBuffer.prototype.enable = function (context) {
     context.gl.enableVertexAttribArray(this._location);
 };
 
@@ -647,7 +669,7 @@ VertexBuffer.prototype.enable = function(context) {
  * Deletes the corresponding WebGL buffer object.
  * @param {ManagedGLContext} context
  */
-VertexBuffer.prototype.delete = function(context) {
+VertexBuffer.prototype.delete = function (context) {
     context.gl.deleteBuffer(this._id);
 };
 
@@ -664,18 +686,18 @@ VertexBuffer.prototype.delete = function(context) {
  * @param {Shader} shader The shader that will be searched for an appropriate
  * attribute.
  */
-VertexBuffer.prototype.bindToAttribute = function(context,shader) {
+VertexBuffer.prototype.bindToAttribute = function (context, shader) {
     // set the shader program so we can grab the attribute addresses
     context.gl.useProgram(shader.getIDForContext(context));
     var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
     // we only need to bind the buffer if a corresponding attribute exists
-    if(location !== -1) {
-        if(this._location===null) {
+    if (location !== -1) {
+        if (this._location === null) {
             this._location = location;
             context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
             context.gl.enableVertexAttribArray(this._location);
-        } else if (this._location!==location) {
-            Armada.showError("Attempting to bind vertex buffer ("+this._name+") to 2 different locations!");
+        } else if (this._location !== location) {
+            Armada.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!");
         }
     }
 };
@@ -696,7 +718,7 @@ VertexBuffer.prototype.bindToAttribute = function(context,shader) {
  * @param {ShaderUniform[]} uniforms The list of uniform variables this shader
  * contains.
  * */
-function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attributes,uniforms) {
+function Shader(name, vertexShaderFileName, fragmentShaderFileName, blendType, attributes, uniforms) {
     Resource.call(this);
     // properties for file resource management
     /**
@@ -743,7 +765,7 @@ function Shader(name,vertexShaderFileName,fragmentShaderFileName,blendType,attri
      * The source code of the vertex shader.
      * @name Shader#_vertexShaderSource
      * @type String
-     */    
+     */
     this._vertexShaderSource = null;
     /**
      * The source code of the fragment shader.
@@ -771,7 +793,7 @@ Shader.prototype.constructor = Shader;
  * Getter for the _name property.
  * @returns {String}
  */
-Shader.prototype.getName = function() {
+Shader.prototype.getName = function () {
     return this._name;
 };
 
@@ -782,7 +804,7 @@ Shader.prototype.getName = function() {
  * @param {ManagedGLContext} context
  * @returns {WebGLProgram}
  */
-Shader.prototype.getIDForContext = function(context) {
+Shader.prototype.getIDForContext = function (context) {
     return this._ids[context.getName()];
 };
 
@@ -790,7 +812,7 @@ Shader.prototype.getIDForContext = function(context) {
  * Returns the array of shader attributes of this shader.
  * @returns {ShaderAttribute[]}
  */
-Shader.prototype.getAttributes = function() {
+Shader.prototype.getAttributes = function () {
     return this._attributes;
 };
 
@@ -799,25 +821,25 @@ Shader.prototype.getAttributes = function() {
  * codes from files. When the loading finishes, the shader {@link Resource} 
  * is marked ready to use and the potentially queued actions are executed.
  */
-Shader.prototype.requestLoadFromFile = function() {
-    if(this.isReadyToUse()===false) {
+Shader.prototype.requestLoadFromFile = function () {
+    if (this.isReadyToUse() === false) {
         var self = this;
-        Armada.requestTextFile("shader",this._vertexShaderFileName,function(responseText) {
+        Armada.requestTextFile("shader", this._vertexShaderFileName, function (responseText) {
             self._vertexShaderSource = responseText;
-            if(self._fragmentShaderSource!==null) {
+            if (self._fragmentShaderSource !== null) {
                 self.setToReady();
             }
-        // override the mime type to avoid error messages in Firefox developer
-        // consol when it tries to parse as XML
-        },'text/plain; charset=utf-8');
-        Armada.requestTextFile("shader",this._fragmentShaderFileName, function(responseText) {
+            // override the mime type to avoid error messages in Firefox developer
+            // consol when it tries to parse as XML
+        }, 'text/plain; charset=utf-8');
+        Armada.requestTextFile("shader", this._fragmentShaderFileName, function (responseText) {
             self._fragmentShaderSource = responseText;
-            if(self._vertexShaderSource!==null) {
+            if (self._vertexShaderSource !== null) {
                 self.setToReady();
             }
-        // override the mime type to avoid error messages in Firefox developer
-        // consol when it tries to parse as XML    
-        },'text/plain; charset=utf-8');
+            // override the mime type to avoid error messages in Firefox developer
+            // consol when it tries to parse as XML    
+        }, 'text/plain; charset=utf-8');
     }
 };
 
@@ -829,9 +851,9 @@ Shader.prototype.requestLoadFromFile = function() {
  * drawn) The action is only executed when the shader has been loaded.
  * @param {ManagedGLContext} context
  */
-Shader.prototype.addToContext = function(context) {
-    this.executeWhenReady(function() {
-        if(this._ids[context.getName()]===undefined) {
+Shader.prototype.addToContext = function (context) {
+    this.executeWhenReady(function () {
+        if (this._ids[context.getName()] === undefined) {
             var gl = context.gl;
             var vertexShader = gl.createShader(gl.VERTEX_SHADER);
             gl.shaderSource(vertexShader, this._vertexShaderSource);
@@ -846,8 +868,8 @@ Shader.prototype.addToContext = function(context) {
             gl.attachShader(this._ids[context.getName()], fragmentShader);
             gl.linkProgram(this._ids[context.getName()]);
 
-            for(var i=0;i<this._uniforms.length;i++) {
-                this._uniforms[i].setLocation(context,this);
+            for (var i = 0; i < this._uniforms.length; i++) {
+                this._uniforms[i].setLocation(context, this);
             }
 
             context.addShader(this);
@@ -858,7 +880,7 @@ Shader.prototype.addToContext = function(context) {
 /**
  * Clears all previous bindings to managed WebGL contexts.
  */
-Shader.prototype.clearContextBindings = function() {
+Shader.prototype.clearContextBindings = function () {
     this._ids = new Object();
 };
 
@@ -867,10 +889,10 @@ Shader.prototype.clearContextBindings = function() {
  * blending type of this shader.
  * @param {ManagedGLContext} context
  */
-Shader.prototype.setBlending = function(context) {
-    if (this._blendType==="mix") {
+Shader.prototype.setBlending = function (context) {
+    if (this._blendType === "mix") {
         context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE_MINUS_SRC_ALPHA);
-    } else if (this._blendType==="add") {
+    } else if (this._blendType === "add") {
         context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE);
     }
 };
@@ -884,10 +906,10 @@ Shader.prototype.setBlending = function(context) {
  * functions to calculate the values of uniforms, with the names of the uniforms
  * as keys.
  */
-Shader.prototype.assignUniforms = function(context,uniformValueFunctions) {
-    for(var i=0;i<this._uniforms.length;i++) {
-        if(uniformValueFunctions[this._uniforms[i].getName()]!==undefined) {
-            this._uniforms[i].setValue(context,this,uniformValueFunctions[this._uniforms[i].getName()]);
+Shader.prototype.assignUniforms = function (context, uniformValueFunctions) {
+    for (var i = 0; i < this._uniforms.length; i++) {
+        if (uniformValueFunctions[this._uniforms[i].getName()] !== undefined) {
+            this._uniforms[i].setValue(context, this, uniformValueFunctions[this._uniforms[i].getName()]);
         }
     }
 };
@@ -897,8 +919,8 @@ Shader.prototype.assignUniforms = function(context,uniformValueFunctions) {
  * attributes that this shader has.
  * @param {ManagedGLContext} context
  */
-Shader.prototype.enableVertexBuffers = function(context) {
-    for(var i=0;i<this._attributes.length;i++) {
+Shader.prototype.enableVertexBuffers = function (context) {
+    for (var i = 0; i < this._attributes.length; i++) {
         context.getVertexBuffer(this._attributes[i].name).enable(context);
     }
 };
@@ -920,7 +942,7 @@ Shader.prototype.enableVertexBuffers = function(context) {
  * will be 4:1)
  * @returns {ManagedGLContext}
  */
-function ManagedGLContext(name,canvas,antialiasing,filtering) {
+function ManagedGLContext(name, canvas, antialiasing, filtering) {
     Resource.call(this);
     /**
      * The name of the context by which it can be referred to.
@@ -1006,39 +1028,40 @@ function ManagedGLContext(name,canvas,antialiasing,filtering) {
      * @type Texture[]
      */
     this._boundTextures = new Array();
-    
+
     // creating the contained WebGLRenderingContext
     try {
         var contextParameters = {alpha: true, antialias: antialiasing};
         // Try to grab the standard context. If it fails, fallback to experimental.
-        this.gl = canvas.getContext("webgl",contextParameters) || canvas.getContext("experimental-webgl",contextParameters);
+        this.gl = canvas.getContext("webgl", contextParameters) || canvas.getContext("experimental-webgl", contextParameters);
     }
-    catch(e) {}
-    
-    if(!this.gl) {
-        Armada.showError("Unable to initialize WebGL.","critical",
-                "It looks like your device, browser or graphics drivers do not "+
-                "support web 3D graphics. Make sure your browser and graphics "+
-                "drivers are updated to the latest version, and you are using "+
-                "a modern web browser (Firefox or Chrome are recommended).\n"+
-                "Please note that some phones or handheld devices do not have 3D "+
+    catch (e) {
+    }
+
+    if (!this.gl) {
+        Armada.showError("Unable to initialize WebGL.", "critical",
+                "It looks like your device, browser or graphics drivers do not " +
+                "support web 3D graphics. Make sure your browser and graphics " +
+                "drivers are updated to the latest version, and you are using " +
+                "a modern web browser (Firefox or Chrome are recommended).\n" +
+                "Please note that some phones or handheld devices do not have 3D " +
                 "web capabilities, even if you use the latest software.");
     }
-    
+
     // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
     // fall back to trilinear filtering.
-    if(this._filtering === "anisotropic") {
+    if (this._filtering === "anisotropic") {
         this._anisotropicFilter = this.gl.getExtension("EXT_texture_filter_anisotropic");
-        if(this._anisotropicFilter === null) {
+        if (this._anisotropicFilter === null) {
             this._filtering = "trilinear";
         }
     }
-    
+
     // some basic settings on the context state machine
     this.gl.clearDepth(1.0);
     this.gl.colorMask(true, true, true, true);
     this.gl.enable(this.gl.DEPTH_TEST);
-    this.gl.depthFunc(this.gl.LEQUAL); 
+    this.gl.depthFunc(this.gl.LEQUAL);
     this.gl.enable(this.gl.CULL_FACE);
     this.gl.cullFace(this.gl.BACK);
     this.gl.frontFace(this.gl.CCW);
@@ -1055,7 +1078,7 @@ ManagedGLContext.prototype.constructor = ManagedGLContext;
  * Getter for the _name property.
  * @returns {String}
  */
-ManagedGLContext.prototype.getName = function() {
+ManagedGLContext.prototype.getName = function () {
     return this._name;
 };
 
@@ -1063,7 +1086,7 @@ ManagedGLContext.prototype.getName = function() {
  * Getter for the _filtering property.
  * @returns {String}
  */
-ManagedGLContext.prototype.getFiltering = function() {
+ManagedGLContext.prototype.getFiltering = function () {
     return this._filtering;
 };
 
@@ -1071,7 +1094,7 @@ ManagedGLContext.prototype.getFiltering = function() {
  * Getter for the _anisotropicFilter property.
  * @returns {Object}
  */
-ManagedGLContext.prototype.getAnisotropicFilter = function() {
+ManagedGLContext.prototype.getAnisotropicFilter = function () {
     return this._anisotropicFilter;
 };
 
@@ -1083,7 +1106,7 @@ ManagedGLContext.prototype.getAnisotropicFilter = function() {
  * times, the shader's addToContext() method needs to be called instead!
  * @param {Shader} shader
  */
-ManagedGLContext.prototype.addShader = function(shader) {
+ManagedGLContext.prototype.addShader = function (shader) {
     this._shaders.push(shader);
     this.resetReadyState();
 };
@@ -1097,10 +1120,12 @@ ManagedGLContext.prototype.addShader = function(shader) {
  * @param {Boolean} wireframe Whether the model should be added for wireframe
  * drawing or for solid (filled) drawing.
  */
-ManagedGLContext.prototype.addModel = function(model,wireframe) {
+ManagedGLContext.prototype.addModel = function (model, wireframe) {
     // first check if the model is already in the list
     for (var i = 0; i < this._modelsWithParam.length; i++) {
-        if (this._modelsWithParam[i].model.filename === model.filename) {
+        if ((this._modelsWithParam[i].model.getFilename() ? this._modelsWithParam[i].model.getFilename() : this._modelsWithParam[i].model.getName())
+                ===
+                (model.getFilename() ? model.getFilename() : model.getName())) {
             if (wireframe === true) {
                 // if it was not added with wireframe drawing but now it is, add it
                 if (this._modelsWithParam[i].wireframe === false) {
@@ -1133,7 +1158,7 @@ ManagedGLContext.prototype.addModel = function(model,wireframe) {
  * @param {String} name
  * @returns {VertexBuffer}
  */
-ManagedGLContext.prototype.getVertexBuffer = function(name) {
+ManagedGLContext.prototype.getVertexBuffer = function (name) {
     return this._vertexBuffers[name];
 };
 
@@ -1141,8 +1166,8 @@ ManagedGLContext.prototype.getVertexBuffer = function(name) {
  * Adds the vertex buffer object given as parameter.
  * @param {VertexBuffer} vertexBuffer
  */
-ManagedGLContext.prototype.addVertexBuffer = function(vertexBuffer) {
-    if(this._vertexBuffers[vertexBuffer.getName()]===undefined) {
+ManagedGLContext.prototype.addVertexBuffer = function (vertexBuffer) {
+    if (this._vertexBuffers[vertexBuffer.getName()] === undefined) {
         this._vertexBuffers[vertexBuffer.getName()] = vertexBuffer;
     }
 };
@@ -1154,38 +1179,38 @@ ManagedGLContext.prototype.addVertexBuffer = function(vertexBuffer) {
  * attribute indices. After this method, the context is ready to render any
  * resources that have been added to it up to this point.
  */
-ManagedGLContext.prototype.setupVertexBuffers = function() {
-    if(this.isReadyToUse()===true) {
+ManagedGLContext.prototype.setupVertexBuffers = function () {
+    if (this.isReadyToUse() === true) {
         return;
-    }  
-    var i,j;
+    }
+    var i, j;
     var vbName;
-    
+
     // delete possibly previously created buffers
-    for(vbName in this._vertexBuffers) {
+    for (vbName in this._vertexBuffers) {
         this._vertexBuffers[vbName].delete(this);
     }
-    
+
     // counting the number of vertices we need to put into the vertex buffers
-    var sumVertices=0;
-    for(i=0;i<this._modelsWithParam.length;i++) {
-        sumVertices=sumVertices+
-            (this._modelsWithParam[i].wireframe?this._modelsWithParam[i].model.lines.length*2:0)+
-            (this._modelsWithParam[i].solid?this._modelsWithParam[i].model.triangles.length*3:0);
+    var sumVertices = 0;
+    for (i = 0; i < this._modelsWithParam.length; i++) {
+        sumVertices = sumVertices +
+                (this._modelsWithParam[i].wireframe ? this._modelsWithParam[i].model._lines.length * 2 : 0) +
+                (this._modelsWithParam[i].solid ? this._modelsWithParam[i].model._triangles.length * 3 : 0);
     }
-	
+
     // creating a Float32Array of the appropriate size for each needed buffer
     this._vertexBuffers = new Object();
-    for(i=0;i<this._shaders.length;i++) {
+    for (i = 0; i < this._shaders.length; i++) {
         var shaderAttributes = this._shaders[i].getAttributes();
-        for(j=0;j<shaderAttributes.length;j++) {
-            this.addVertexBuffer(new VertexBuffer(shaderAttributes[j].name,shaderAttributes[j].role,shaderAttributes[j].size,sumVertices));
+        for (j = 0; j < shaderAttributes.length; j++) {
+            this.addVertexBuffer(new VertexBuffer(shaderAttributes[j].name, shaderAttributes[j].role, shaderAttributes[j].size, sumVertices));
         }
     }
-	
+
     // filling the buffer data arrays from model data
-    var bufferSize=0;
-    var objectBufferData=null;
+    var bufferSize = 0;
+    var objectBufferData = null;
     for (i = 0; i < this._modelsWithParam.length; i++) {
         var linesToLoad = this._modelsWithParam[i].wireframe;
         var trianglesToLoad = this._modelsWithParam[i].solid;
@@ -1195,7 +1220,7 @@ ManagedGLContext.prototype.setupVertexBuffers = function() {
                 this._modelsWithParam[i].model.setBufferStartForContext(this, "lines", bufferSize);
             } else {
                 this._modelsWithParam[i].model.setBufferStartForContext(this, "base", bufferSize);
-                this._modelsWithParam[i].model.setBufferStartForContext(this, "transparent", bufferSize + this._modelsWithParam[i].model.nOpaqueTriangles * 3);
+                this._modelsWithParam[i].model.setBufferStartForContext(this, "transparent", bufferSize + this._modelsWithParam[i].model.getNumOpaqueTriangles() * 3);
             }
             for (var vbName in this._vertexBuffers) {
                 this._vertexBuffers[vbName].setData(objectBufferData[this._vertexBuffers[vbName].getRole()], bufferSize);
@@ -1206,13 +1231,13 @@ ManagedGLContext.prototype.setupVertexBuffers = function() {
                     (trianglesToLoad = false);
         }
     }
-	
+
     // load the data to GPU memory and bind the attributes of the shaders with 
     // the corresponding VBOs
-    for(vbName in this._vertexBuffers) {
+    for (vbName in this._vertexBuffers) {
         this._vertexBuffers[vbName].loadToGPUMemory(this);
-        for(i=0;i<this._shaders.length;i++) {
-            this._vertexBuffers[vbName].bindToAttribute(this,this._shaders[i]);
+        for (i = 0; i < this._shaders.length; i++) {
+            this._vertexBuffers[vbName].bindToAttribute(this, this._shaders[i]);
         }
     }
     this.setToReady();
@@ -1222,7 +1247,7 @@ ManagedGLContext.prototype.setupVertexBuffers = function() {
  * Getter for the _currentShader property.
  * @returns {Shader}
  */
-ManagedGLContext.prototype.getCurrentShader = function() {
+ManagedGLContext.prototype.getCurrentShader = function () {
     return this._currentShader;
 };
 
@@ -1232,13 +1257,13 @@ ManagedGLContext.prototype.getCurrentShader = function() {
  * @param {Shader} shader The shader to set as current.
  * @param {Scene} scene The scene to get the uniform values from.
  */
-ManagedGLContext.prototype.setCurrentShader = function(shader,scene) {
-    if(this._currentShader!==shader) {
+ManagedGLContext.prototype.setCurrentShader = function (shader, scene) {
+    if (this._currentShader !== shader) {
         this.gl.useProgram(shader.getIDForContext(this));
         shader.setBlending(this);
         shader.enableVertexBuffers(this);
-        scene.assignUniforms(this,shader);
-        this._currentShader=shader;
+        scene.assignUniforms(this, shader);
+        this._currentShader = shader;
     }
 };
 
@@ -1250,25 +1275,29 @@ ManagedGLContext.prototype.setCurrentShader = function(shader,scene) {
  * multi-texturing, starting with 0) So far set to support 4 textures max at a
  * time.
  */
-ManagedGLContext.prototype.bindTexture = function(texture,place) {
-    switch(place) {
-        case 0: this.gl.activeTexture(this.gl.TEXTURE0);
+ManagedGLContext.prototype.bindTexture = function (texture, place) {
+    switch (place) {
+        case 0:
+            this.gl.activeTexture(this.gl.TEXTURE0);
             break;
-        case 1: this.gl.activeTexture(this.gl.TEXTURE1);
+        case 1:
+            this.gl.activeTexture(this.gl.TEXTURE1);
             break;
-        case 2: this.gl.activeTexture(this.gl.TEXTURE2);
+        case 2:
+            this.gl.activeTexture(this.gl.TEXTURE2);
             break;
-        case 3: this.gl.activeTexture(this.gl.TEXTURE3);
+        case 3:
+            this.gl.activeTexture(this.gl.TEXTURE3);
             break;
     }
-    if(this._boundTextures[place]!==texture) {
+    if (this._boundTextures[place] !== texture) {
         if (texture instanceof Texture) {
             this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getIDForContext(this));
         } else
         if (texture instanceof Cubemap) {
             this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.getIDForContext(this));
         }
-        this._boundTextures[place]=texture;
+        this._boundTextures[place] = texture;
     }
 };
 
@@ -1317,7 +1346,8 @@ function ResourceManager() {
      * @name ResourceManager#onAllCubemappedTexturesLoad
      * @type Function
      */
-    this.onAllCubemappedTexturesLoad = function() {};
+    this.onAllCubemappedTexturesLoad = function () {
+    };
     /**
      * The associative array of shader programs. The keys are the names of the 
      * program. The values are instances of {@link Shader}.
@@ -1355,7 +1385,8 @@ function ResourceManager() {
      * @name ResourceManager#onAllShadersLoad
      * @type Function
      */
-    this.onAllShadersLoad = function() {};
+    this.onAllShadersLoad = function () {
+    };
     /**
      * The associative array of 2D textures. The keys are the filenames of the 
      * texture. The values are instances of {@link Texture}.
@@ -1381,7 +1412,8 @@ function ResourceManager() {
      * @name ResourceManager#onAllTexturesLoad
      * @type Function
      */
-    this.onAllTexturesLoad = function() {};
+    this.onAllTexturesLoad = function () {
+    };
     /**
      * The associative array of 3D geometry models. The keys are the names of 
      * the model. The values are instances of {@link EgomModel}.
@@ -1394,7 +1426,7 @@ function ResourceManager() {
      * @name ResourceManager#_numModels
      * @type Number
      */
-    this._numModels= 0;
+    this._numModels = 0;
     /**
      * Number of stored models that already have been loaded (from files) and 
      * are ready to use.
@@ -1407,7 +1439,8 @@ function ResourceManager() {
      * @name ResourceManager#onAllModelsLoad
      * @type Function
      */
-    this.onAllModelsLoad = function() {};
+    this.onAllModelsLoad = function () {
+    };
     /**
      * The function to be executed every time when a resource is loaded. The
      * following arguments will be passed to it: the name of the loaded 
@@ -1416,7 +1449,8 @@ function ResourceManager() {
      * @name ResourceManager#onResourceLoad
      * @type Function
      */
-    this.onResourceLoad = function() {};
+    this.onResourceLoad = function () {
+    };
 }
 
 // we set the Resource class as parent to add an execution queue to the resource
@@ -1428,52 +1462,52 @@ ResourceManager.prototype.constructor = ResourceManager;
  * Tells if all added cubemapped textures have been already loaded.
  * @returns {Boolean}
  */
-ResourceManager.prototype.allCubemappedTexturesLoaded = function() {
-    return (this._numRequestedCubemappedTextures===this._numCubemappedTexturesLoaded);
+ResourceManager.prototype.allCubemappedTexturesLoaded = function () {
+    return (this._numRequestedCubemappedTextures === this._numCubemappedTexturesLoaded);
 };
 
 /**
  * Tells if all requested shaders have been already loaded.
  * @returns {Boolean}
  */
-ResourceManager.prototype.allShadersLoaded = function() {
-    return (this._numRequestedShaders===this._numShadersLoaded);
+ResourceManager.prototype.allShadersLoaded = function () {
+    return (this._numRequestedShaders === this._numShadersLoaded);
 };
 
 /**
  * Tells if all added 2D textures have been already loaded.
  * @returns {Boolean}
  */
-ResourceManager.prototype.allTexturesLoaded = function() {
-    return (this._numTextures===this._numTexturesLoaded);
+ResourceManager.prototype.allTexturesLoaded = function () {
+    return (this._numTextures === this._numTexturesLoaded);
 };
 
 /**
  * Tells if all added models have been already loaded.
  * @returns {Boolean}
  */
-ResourceManager.prototype.allModelsLoaded = function() {
-    return (this._numModels===this._numModelsLoaded);
+ResourceManager.prototype.allModelsLoaded = function () {
+    return (this._numModels === this._numModelsLoaded);
 };
 
 /**
  * Tells if all added resources have been already loaded.
  * @returns {Boolean}
  */
-ResourceManager.prototype.allResourcesLoaded = function() {
+ResourceManager.prototype.allResourcesLoaded = function () {
     return (
             this.allCubemappedTexturesLoaded() &&
             this.allShadersLoaded() &&
             this.allTexturesLoaded() &&
             this.allModelsLoaded()
-    );
+            );
 };
 
 /**
  * Returns the total number of resources requested for loading.
  * @returns {Number}
  */
-ResourceManager.prototype.getNumberOfResources = function() {
+ResourceManager.prototype.getNumberOfResources = function () {
     return this._numRequestedCubemappedTextures + this._numRequestedShaders + this._numTextures + this._numModels;
 };
 
@@ -1482,7 +1516,7 @@ ResourceManager.prototype.getNumberOfResources = function() {
  * loaded and are ready to use.
  * @returns {Number}
  */
-ResourceManager.prototype.getNumberOfLoadedResources = function() {
+ResourceManager.prototype.getNumberOfLoadedResources = function () {
     return this._numCubemappedTexturesLoaded + this._numShadersLoaded + this._numTexturesLoaded + this._numModelsLoaded;
 };
 
@@ -1493,23 +1527,23 @@ ResourceManager.prototype.getNumberOfLoadedResources = function() {
  * @param {Boolean} [useMipmap=true]
  * @returns {Texture}
  */
-ResourceManager.prototype.getOrAddTexture = function(filename,useMipmap) {
+ResourceManager.prototype.getOrAddTexture = function (filename, useMipmap) {
     var textureName = filename;
-    if(useMipmap===false) {
+    if (useMipmap === false) {
         textureName += "_noMipmap";
     }
-    if(this._textures[textureName]===undefined) {
-        this._numTextures+=1;
+    if (this._textures[textureName] === undefined) {
+        this._numTextures += 1;
         this.resetReadyState();
-        this._textures[textureName] = new Texture(filename,useMipmap);
+        this._textures[textureName] = new Texture(filename, useMipmap);
         var self = this;
-        this._textures[textureName].executeWhenReady(function() {
-            self._numTexturesLoaded+=1;
-            self.onResourceLoad(filename,self.getNumberOfResources(),self.getNumberOfLoadedResources());
-            if(self.allTexturesLoaded()) {
+        this._textures[textureName].executeWhenReady(function () {
+            self._numTexturesLoaded += 1;
+            self.onResourceLoad(filename, self.getNumberOfResources(), self.getNumberOfLoadedResources());
+            if (self.allTexturesLoaded()) {
                 self.onAllTexturesLoad();
             }
-            if(self.allResourcesLoaded()) {
+            if (self.allResourcesLoaded()) {
                 self.setToReady();
             }
         });
@@ -1521,15 +1555,15 @@ ResourceManager.prototype.getOrAddTexture = function(filename,useMipmap) {
  * Performs a getOrAddTexture() using the properties of the texture descriptor.
  * @param {TextureDescriptor} descriptor
  */
-ResourceManager.prototype.getOrAddTextureFromDescriptor = function(descriptor) {
-    return this.getOrAddTexture(descriptor.filename,descriptor.useMipmap);
+ResourceManager.prototype.getOrAddTextureFromDescriptor = function (descriptor) {
+    return this.getOrAddTexture(descriptor.filename, descriptor.useMipmap);
 };
 
 /**
  * Adds the passed cubemapped texture to the stored resources.
  * @param {Cubemap} cubemappedTexture
  */
-ResourceManager.prototype.addCubemappedTexture = function(cubemappedTexture) {
+ResourceManager.prototype.addCubemappedTexture = function (cubemappedTexture) {
     this._cubemappedTextures[cubemappedTexture.getName()] = cubemappedTexture;
 };
 
@@ -1539,23 +1573,23 @@ ResourceManager.prototype.addCubemappedTexture = function(cubemappedTexture) {
  * @param {String} name
  * @returns {Cubemap}
  */
-ResourceManager.prototype.getCubemappedTexture = function(name) {
-    if(this._cubemappedTextures[name]===undefined) {
-        Armada.showError("Asked for a cube mapped texture named '"+name+"', which does not exist.");
+ResourceManager.prototype.getCubemappedTexture = function (name) {
+    if (this._cubemappedTextures[name] === undefined) {
+        Armada.showError("Asked for a cube mapped texture named '" + name + "', which does not exist.");
         return null;
     } else {
-        if(this._requestedCubemappedTextures[name]===undefined) {
-            this._numRequestedCubemappedTextures+=1;
+        if (this._requestedCubemappedTextures[name] === undefined) {
+            this._numRequestedCubemappedTextures += 1;
             this.resetReadyState();
             this._requestedCubemappedTextures[name] = this._cubemappedTextures[name];
             var self = this;
-            this._requestedCubemappedTextures[name].executeWhenReady(function() {
-                self._numCubemappedTexturesLoaded+=1;
-                self.onResourceLoad(name,self.getNumberOfResources(),self.getNumberOfLoadedResources());
-                if(self.allCubemappedTexturesLoaded()) {
+            this._requestedCubemappedTextures[name].executeWhenReady(function () {
+                self._numCubemappedTexturesLoaded += 1;
+                self.onResourceLoad(name, self.getNumberOfResources(), self.getNumberOfLoadedResources());
+                if (self.allCubemappedTexturesLoaded()) {
                     self.onAllCubemappedTexturesLoad();
                 }
-                if(self.allResourcesLoaded()) {
+                if (self.allResourcesLoaded()) {
                     self.setToReady();
                 }
             });
@@ -1568,7 +1602,7 @@ ResourceManager.prototype.getCubemappedTexture = function(name) {
  * Adds the passed shader to the stored resources.
  * @param {Shader} shader
  */
-ResourceManager.prototype.addShader = function(shader) {
+ResourceManager.prototype.addShader = function (shader) {
     this._shaders[shader.getName()] = shader;
 };
 
@@ -1577,23 +1611,23 @@ ResourceManager.prototype.addShader = function(shader) {
  * @param {String} name
  * @returns {Shader}
  */
-ResourceManager.prototype.getShader = function(name) {
-    if(this._shaders[name]===undefined) {
-        Armada.showError("Asked for a shader named '"+name+"', which does not exist.");
+ResourceManager.prototype.getShader = function (name) {
+    if (this._shaders[name] === undefined) {
+        Armada.showError("Asked for a shader named '" + name + "', which does not exist.");
         return null;
     } else {
-        if(this._requestedShaders[name]===undefined) {
+        if (this._requestedShaders[name] === undefined) {
             this._numRequestedShaders += 1;
             this.resetReadyState();
             this._requestedShaders[name] = this._shaders[name];
             var self = this;
-            this._requestedShaders[name].executeWhenReady(function() {
+            this._requestedShaders[name].executeWhenReady(function () {
                 self._numShadersLoaded += 1;
-                self.onResourceLoad(name,self.getNumberOfResources(),self.getNumberOfLoadedResources());
-                if(self.allShadersLoaded()) {
+                self.onResourceLoad(name, self.getNumberOfResources(), self.getNumberOfLoadedResources());
+                if (self.allShadersLoaded()) {
                     self.onAllShadersLoad();
                 }
-                if(self.allResourcesLoaded()) {
+                if (self.allResourcesLoaded()) {
                     self.setToReady();
                 }
             });
@@ -1608,19 +1642,19 @@ ResourceManager.prototype.getShader = function(name) {
  * @param {String} filename The name of the file of the model resource we are looking for.
  * @returns {EgomModel} The found or added model object in the resource manager.
  */
-ResourceManager.prototype.getOrAddModelFromFile = function(filename) {
-    if(this._models[filename]===undefined) {
+ResourceManager.prototype.getOrAddModelFromFile = function (filename) {
+    if (this._models[filename] === undefined) {
         this._numModels += 1;
         this.resetReadyState();
         this._models[filename] = new EgomModel(filename);
         var self = this;
-        this._models[filename].executeWhenReady(function() {
+        this._models[filename].executeWhenReady(function () {
             self._numModelsLoaded += 1;
-            self.onResourceLoad(filename,self.getNumberOfResources(),self.getNumberOfLoadedResources());
-            if(self.allModelsLoaded()) {
+            self.onResourceLoad(filename, self.getNumberOfResources(), self.getNumberOfLoadedResources());
+            if (self.allModelsLoaded()) {
                 self.onAllModelsLoad();
             }
-            if(self.allResourcesLoaded()) {
+            if (self.allResourcesLoaded()) {
                 self.setToReady();
             }
         });
@@ -1635,9 +1669,9 @@ ResourceManager.prototype.getOrAddModelFromFile = function(filename) {
  * @param {EgomModel} model The model resource we are looking for in the resource manager.
  * @returns {EgomModel} The found or added model object in the resource manager.
  */
-ResourceManager.prototype.getOrAddModelByName = function(name,model) {
-    model.filename = name;
-    if(this._models[name]===undefined) {
+ResourceManager.prototype.getOrAddModelByName = function (name, model) {
+    model.setName(name);
+    if (!this._models[name]) {
         this._models[name] = model;
     }
     return this._models[name];
@@ -1647,8 +1681,8 @@ ResourceManager.prototype.getOrAddModelByName = function(name,model) {
  * Initiates the requests to load all the stored 2D texture resources from their 
  * associated files.
  */
-ResourceManager.prototype.requestTextureLoadFromFile = function() {
-    for(var texture in this._textures) {
+ResourceManager.prototype.requestTextureLoadFromFile = function () {
+    for (var texture in this._textures) {
         this._textures[texture].requestLoadFromFile();
     }
 };
@@ -1657,8 +1691,8 @@ ResourceManager.prototype.requestTextureLoadFromFile = function() {
  * Initiates the requests to load all the stored cubemapped texture resources 
  * from their associated files.
  */
-ResourceManager.prototype.requestCubemappedTextureLoadFromFile = function() {
-    for(var texture in this._requestedCubemappedTextures) {
+ResourceManager.prototype.requestCubemappedTextureLoadFromFile = function () {
+    for (var texture in this._requestedCubemappedTextures) {
         this._requestedCubemappedTextures[texture].requestLoadFromFile();
     }
 };
@@ -1667,8 +1701,8 @@ ResourceManager.prototype.requestCubemappedTextureLoadFromFile = function() {
  * Initiates the requests to load all the shader resources that have been
  * requested for loading from their associated files.
  */
-ResourceManager.prototype.requestShaderLoadFromFile = function() {
-    for(var shader in this._requestedShaders) {
+ResourceManager.prototype.requestShaderLoadFromFile = function () {
+    for (var shader in this._requestedShaders) {
         this._requestedShaders[shader].requestLoadFromFile();
     }
 };
@@ -1677,8 +1711,8 @@ ResourceManager.prototype.requestShaderLoadFromFile = function() {
  * Initiates the requests to load all the stored model resources from their 
  * associated files.
  */
-ResourceManager.prototype.requestModelLoadFromFile = function() {
-    for(var model in this._models) {
+ResourceManager.prototype.requestModelLoadFromFile = function () {
+    for (var model in this._models) {
         this._models[model].requestLoadFromFile();
     }
 };
@@ -1690,9 +1724,9 @@ ResourceManager.prototype.requestModelLoadFromFile = function() {
  * @param {String} filename The name of the XML file where the configuration
  * is stored (relative to the config file folder)
  */
-ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function(filename) {
+ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function (filename) {
     var self = this;
-    Armada.requestXMLFile("config",filename,function(responseXML) {
+    Armada.requestXMLFile("config", filename, function (responseXML) {
         self.loadShaderAndCubemapObjectsFromXML(responseXML);
     });
 };
@@ -1702,80 +1736,86 @@ ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function(filename)
  * meta-data) from the passed XML document.
  * @param {XMLDocument} xmlSource
  */
-ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function(xmlSource) {	
-    var i,j,k;
+ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function (xmlSource) {
+    var i, j, k;
     var index;
-    
+
     this._numRequestedCubemappedTextures = 0;
     this._numCubemappedTexturesLoaded = 0;
     this._cubemappedTextures = new Object();
     this._requestedCubemappedTextures = new Object();
     var cubemapTags = xmlSource.getElementsByTagName("Cubemap");
-    for(i=0;i<cubemapTags.length;i++) {
+    for (i = 0; i < cubemapTags.length; i++) {
         var imageTags = cubemapTags[i].getElementsByTagName("image");
         var imageURLs = new Array(6);
-        for(j=0;j<imageTags.length;j++) {
-            index=-1;
-            switch(imageTags[j].getAttribute("direction")) {
-                case "pos_x": index = 0;
+        for (j = 0; j < imageTags.length; j++) {
+            index = -1;
+            switch (imageTags[j].getAttribute("direction")) {
+                case "pos_x":
+                    index = 0;
                     break;
-                case "neg_x": index = 1;
+                case "neg_x":
+                    index = 1;
                     break;
-                case "pos_y": index = 2;
+                case "pos_y":
+                    index = 2;
                     break;
-                case "neg_y": index = 3;
+                case "neg_y":
+                    index = 3;
                     break;
-                case "pos_z": index = 4;
+                case "pos_z":
+                    index = 4;
                     break;
-                case "neg_z": index = 5;
+                case "neg_z":
+                    index = 5;
                     break;
             }
-            imageURLs[index]=imageTags[j].getAttribute("url");
+            imageURLs[index] = imageTags[j].getAttribute("url");
         }
-        this.addCubemappedTexture(new Cubemap(cubemapTags[i].getAttribute("name"),imageURLs));
+        this.addCubemappedTexture(new Cubemap(cubemapTags[i].getAttribute("name"), imageURLs));
     }
-	
+
     this._numRequestedShaders = 0;
     this._numShadersLoaded = 0;
     this._shaders = new Object();
     this._requestedShaders = new Object();
     var shaderTags = xmlSource.getElementsByTagName("Shader");
-    for(i=0;i<shaderTags.length;i++) {    
+    for (i = 0; i < shaderTags.length; i++) {
         var attributes = new Array();
         var attributeTags = shaderTags[i].getElementsByTagName("attribute");
-        for(j=0;j<attributeTags.length;j++) {
+        for (j = 0; j < attributeTags.length; j++) {
             attributes.push(new ShaderAttribute(
-                attributeTags[j].getAttribute("name"),
-                parseInt(attributeTags[j].getAttribute("size")),
-                attributeTags[j].getAttribute("role"))
-            );
+                    attributeTags[j].getAttribute("name"),
+                    parseInt(attributeTags[j].getAttribute("size")),
+                    attributeTags[j].getAttribute("role"))
+                    );
         }
         var uniforms = new Array();
         var uniformTags = shaderTags[i].getElementsByTagName("uniform");
-        for(j=0;j<uniformTags.length;j++) {
+        for (j = 0; j < uniformTags.length; j++) {
             uniforms.push(new ShaderUniform(
-                uniformTags[j].getAttribute("name"),
-                uniformTags[j].getAttribute("type"),
-                uniformTags[j].hasAttribute("arraySize")?uniformTags[j].getAttribute("arraySize"):0)
-            );
-            if(uniformTags[j].hasAttribute("memberOf")) {
+                    uniformTags[j].getAttribute("name"),
+                    uniformTags[j].getAttribute("type"),
+                    uniformTags[j].hasAttribute("arraySize") ? uniformTags[j].getAttribute("arraySize") : 0)
+                    );
+            if (uniformTags[j].hasAttribute("memberOf")) {
                 var parent = uniformTags[j].getAttribute("memberOf");
-                for(k=0;k<uniforms.length;k++) {
-                    if(uniforms[k].getName()===parent) {
-                        uniforms[k].addMember(uniforms[uniforms.length-1]);
+                for (k = 0; k < uniforms.length; k++) {
+                    if (uniforms[k].getName() === parent) {
+                        uniforms[k].addMember(uniforms[uniforms.length - 1]);
                     }
                 }
             }
         }
         this.addShader(new Shader(
-            shaderTags[i].getAttribute("name"),
-            shaderTags[i].getElementsByTagName("vertex")[0].getAttribute("filename"),
-            shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
-            shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
-            attributes,
-            uniforms
-        ));
-    }	
+                shaderTags[i].getAttribute("name"),
+                shaderTags[i].getElementsByTagName("vertex")[0].getAttribute("filename"),
+                shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
+                shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
+                attributes,
+                uniforms
+                ));
+    }
 };
 
 /**
@@ -1783,8 +1823,8 @@ ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function(xmlSourc
  * associated files. If there are no resources needed to load, just executes
  * the action queue set for when all resources get loaded.
  */
-ResourceManager.prototype.requestResourceLoad = function() {
-    if(this.allResourcesLoaded()===true) {
+ResourceManager.prototype.requestResourceLoad = function () {
+    if (this.allResourcesLoaded() === true) {
         this.executeOnReadyQueue();
     } else {
         this.requestTextureLoadFromFile();
@@ -1799,17 +1839,17 @@ ResourceManager.prototype.requestResourceLoad = function() {
  * the contexts have been destroyed, new context might have the same ID, thus
  * the resources will think they are already set up while they are not)
  */
-ResourceManager.prototype.clearResourceContextBindings = function() {
-    for(var texture in this._textures) {
+ResourceManager.prototype.clearResourceContextBindings = function () {
+    for (var texture in this._textures) {
         this._textures[texture].clearContextBindings();
     }
-    for(var cubemap in this._cubemappedTextures) {
+    for (var cubemap in this._cubemappedTextures) {
         this._cubemappedTextures[cubemap].clearContextBindings();
     }
-    for(var shader in this._shaders) {
+    for (var shader in this._shaders) {
         this._shaders[shader].clearContextBindings();
     }
-    for(var model in this._models) {
+    for (var model in this._models) {
         this._models[model].clearContextBindings();
     }
 };
