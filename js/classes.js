@@ -390,6 +390,8 @@ ProjectileClass.prototype.loadFromXMLTag = function(xmlTag) {
  * Defines a model reference, which holds a reference to a model file name and
  * the model's associated LOD (Level Of Detail), and loads its data from the passed
  * XML tag, if any.
+ * @class Represents a reference to a particular model file with some additional
+ * associated information (right now, only Level Of Detail)
  * @param {Element} [xmlTag] The XML tag to load the data from.
  * @returns {ModelReference}
  */

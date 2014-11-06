@@ -28,6 +28,15 @@
     along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+// This file is created from the remnants of old code, is non-functional and 
+// will be rewritten. It is only held here in case some parts of it can be
+// reused during the rewrite.
+
+/**
+ * @class A goal of an AI. At the moment, irrelevant.
+ * @param {type} positionMatrix
+ * @returns {Goal}
+ */
 function Goal(positionMatrix) {
 	this.positionMatrix = positionMatrix;
 }

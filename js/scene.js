@@ -1675,7 +1675,7 @@ SceneCamera.prototype.getFollowedSpacecraft = function(logicContext) {
 };
 
 /**
- * 
+ * @class Represents a light source that can be taken into account when rendering.
  * @param {Number[3]} color
  * @param {Number[3]} direction
  * @returns {LightSource}

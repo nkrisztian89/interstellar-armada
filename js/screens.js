@@ -243,8 +243,8 @@ GameScreen.prototype.updateStatus = function(newStatus) {
 };
 
 /**
- * An enhanced canvas element (a wrapper around a regular HTML canvas), that
- * can create and hold a reference to a managed WebGL context for the canvas.
+ * @class An enhanced canvas element (a wrapper around a regular HTML canvas), 
+ * that can create and hold a reference to a managed WebGL context for the canvas.
  * @param {HTMLCanvasElement} canvas The canvas around which this object should
  * be created.
  * @returns {ScreenCanvas}
@@ -1151,28 +1151,28 @@ function ControlsScreen(name,source) {
     /**
      * The name of the action currently being set (to get triggered by a new 
      * key). If null, the user is not setting any actions.
-     * @name ControlScreen#_actionUnderSetting
+     * @name ControlsScreen#_actionUnderSetting
      * @type String
      */
     this._actionUnderSetting = null;
     /**
      * While the user sets a new key, this property tells if shift is pressed
      * down.
-     * @name ControlScreen#_settingShiftState
+     * @name ControlsScreen#_settingShiftState
      * @type Boolean
      */
     this._settingShiftState = null;
     /**
      * While the user sets a new key, this property tells if control is pressed
      * down.
-     * @name ControlScreen#_settingCtrlState
+     * @name ControlsScreen#_settingCtrlState
      * @type Boolean
      */
     this._settingCtrlState = null;
     /**
      * While the user sets a new key, this property tells if alt is pressed
      * down.
-     * @name ControlScreen#_settingAltState
+     * @name ControlsScreen#_settingAltState
      * @type Boolean
      */
     this._settingAltState = null;

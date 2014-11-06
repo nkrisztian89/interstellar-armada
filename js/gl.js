@@ -1646,7 +1646,7 @@ ResourceManager.prototype.getOrAddModelFromFile = function (filename) {
     if (this._models[filename] === undefined) {
         this._numModels += 1;
         this.resetReadyState();
-        this._models[filename] = new EgomModel(filename);
+        this._models[filename] = new Egom.Model(filename);
         var self = this;
         this._models[filename].executeWhenReady(function () {
             self._numModelsLoaded += 1;

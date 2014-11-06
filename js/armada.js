@@ -39,7 +39,7 @@ var Armada = Armada || (function () {
      * @name Armada#_version
      * @type String
      */
-    var _version = "0.1.0:76";
+    var _version = "0.1.0:77";
     /**
      * The associative array storing the names of the game folders, indexed by
      * the types of files they contain.
@@ -102,7 +102,7 @@ var Armada = Armada || (function () {
      * files always take effect when refreshing the game page. It causes all
      * files to be grabbed every time even if no changes occured, so it is 
      * important to set it to false for releases.
-     * @name Armada_#bypassFileCaching
+     * @name Armada#_bypassFileCaching
      * @type Boolean
      */
     var _bypassFileCaching = true;
@@ -445,6 +445,11 @@ var Armada = Armada || (function () {
         }
     };
 })();
+
+// Expose general application functionality for modules that can be used with
+// other programs as well, and so refer to the application namepace as 
+// Application
+var Application = Armada;
 
 // This function initializes the game by downloading all needed source files
 // and setting up the game functions. The only function called directly from

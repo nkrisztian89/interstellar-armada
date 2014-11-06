@@ -514,7 +514,7 @@ KeyboardInputInterpreter.prototype.getTriggeredActions = function() {
 function MouseBinding(xmlTag) {
     /**
      * Name of the in-game action the mouse action is bound to.
-     * @name KeyBinding#_actionName
+     * @name MouseBinding#_actionName
      * @type String
      */
     this._actionName = null;
@@ -1059,9 +1059,9 @@ MouseInputInterpreter.prototype.getTriggeredActions = function() {
 };
 
 /**
- * Represents an in-game action that can be triggered by the user and a controller
- * can execute certain functions on methods on their controlled entities based
- * on whether or not the action is currently triggered.
+ * @class Represents an in-game action that can be triggered by the user and a 
+ * controller can execute certain functions on methods on their controlled 
+ * entities based on whether or not the action is currently triggered.
  * @param {Element} [xmlTag] If given, the properties will be initialized from
  * the data stored in this XML tag.
  * @returns {Action}

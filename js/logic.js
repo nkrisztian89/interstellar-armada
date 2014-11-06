@@ -98,7 +98,7 @@ function Skybox(skyboxClass) {
 
 Skybox.prototype.addToScene = function(scene) {
     scene.addBackgroundObject(new FVQ(
-        Armada.resources().getOrAddModelByName("fvqModel",fvqModel()),
+        Armada.resources().getOrAddModelByName("fvqModel",Egom.fvqModel()),
         Armada.resources().getShader(this.class.shaderName),
         this.class.samplerName,
         Armada.resources().getCubemappedTexture(this.class.cubemap),
@@ -121,7 +121,7 @@ BackgroundObject.prototype.addToScene = function(scene) {
     scene.addLightSource(new LightSource(this.class.lightColor,this.position));
     for(i=0;i<this.class.layers.length;i++) {  
         layerParticle =new StaticParticle(
-            Armada.resources().getOrAddModelByName("squareModel",squareModel()),
+            Armada.resources().getOrAddModelByName("squareModel",Egom.squareModel()),
             Armada.resources().getShader(this.class.layers[i].shaderName),
             Armada.resources().getOrAddTextureFromDescriptor(this.class.layers[i].textureDescriptor),
             this.class.layers[i].color,
@@ -133,10 +133,17 @@ BackgroundObject.prototype.addToScene = function(scene) {
     }
 };
 
-
+/**
+ * @class A tiny piece of dust that is rendered as passing line to indicate the
+ * direction and speed of movement to the player.
+ * @param {Scene} scene
+ * @param {Shader} shader
+ * @param {Float32Array} positionMatrix
+ * @returns {DustParticle}
+ */
 function DustParticle(scene,shader,positionMatrix) {
     this.visualModel = new PointParticle(
-        Armada.resources().getOrAddModelByName("dust",dustModel([0.6,0.6,0.6])),
+        Armada.resources().getOrAddModelByName("dust",Egom.dustModel([0.6,0.6,0.6])),
         shader,
         [0.6,0.6,0.6],
         positionMatrix
@@ -209,7 +216,7 @@ DustCloud.prototype.simulate = function(camera) {
 function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzleFlashPositionMatrix,spacecraft,weapon) {
 	this.class=projectileClass;
 	this.visualModel = new Billboard(
-		Armada.resources().getOrAddModelByName("projectileModel-"+this.class.name,projectileModel(this.class.intersections)),
+		Armada.resources().getOrAddModelByName("projectileModel-"+this.class.name,Egom.projectileModel(this.class.intersections)),
 		Armada.resources().getShader(projectileClass.shaderName),
 		Armada.resources().getOrAddTextureFromDescriptor(projectileClass.textureDescriptor),
 		projectileClass.size,
@@ -217,7 +224,7 @@ function Projectile(scene,projectileClass,positionMatrix,orientationMatrix,muzzl
 		orientationMatrix
 		);
 	var muzzleFlash = new DynamicParticle(
-		Armada.resources().getOrAddModelByName("squareModel",squareModel()),
+		Armada.resources().getOrAddModelByName("squareModel",Egom.squareModel()),
 		Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
 		Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
 		projectileClass.muzzleFlash.color,
@@ -405,6 +412,12 @@ ControllableEntity.prototype.setController = function(newController) {
     }
 };
 
+/**
+ * @class A class that can translate higher level maneuvering commands given to
+ * a spacecraft (by user input or an AI) to low level thruster commands.
+ * @param {Spacecraft} spacecraft
+ * @returns {ManeuveringComputer}
+ */
 function ManeuveringComputer(spacecraft) {
     /**
      * @name ManeuveringComputer#_spacecraft
@@ -694,6 +707,8 @@ ManeuveringComputer.prototype.controlThrusters = function() {
  * Creates and initializes a Spacecraft object. Loads all necessary models into
  * the resource center of graphicsContext, taking into account the maximum
  * enabled LOD defined in the scene of graphicsContext.
+ * @class Represents a specific spacecraft (fighter, warship, freighter, space
+ * station etc.) in the game.
  * @param {SpacecraftClass} spacecraftClass
  * @param {String} owner
  * @param {Float32Array} positionMatrix
@@ -896,7 +911,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitboxes,addWeapons,addT
             var phyModelWithLOD = new ModelWithLOD(
                 Armada.resources().getOrAddModelByName(
                     this.class.name+"-body"+i,
-                    cuboidModel(
+                    Egom.cuboidModel(
                         this.class.bodies[i].width,
                         this.class.bodies[i].height,
                         this.class.bodies[i].depth,
@@ -979,7 +994,7 @@ Spacecraft.prototype.addToScene = function(scene,lod,addHitboxes,addWeapons,addT
             var slot = this.class.thrusterSlots[i];
 
             var thrusterParticle = new StaticParticle(
-                Armada.resources().getOrAddModelByName("squareModel",squareModel()),
+                Armada.resources().getOrAddModelByName("squareModel",Egom.squareModel()),
                 Armada.resources().getShader(this.propulsion.class.thrusterBurnParticle.shaderName),
                 Armada.resources().getOrAddTextureFromDescriptor(this.propulsion.class.thrusterBurnParticle.textureDescriptor),
                 this.propulsion.class.thrusterBurnParticle.color,
@@ -1364,9 +1379,9 @@ Level.prototype.buildScene = function(scene) {
         Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].textureDescriptor);
         Armada.resources().getShader(Armada.logic().projectileClasses[i].muzzleFlash.shaderName);
         Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].muzzleFlash.textureDescriptor);
-        Armada.resources().getOrAddModelByName("projectileModel-"+Armada.logic().projectileClasses[i].name,projectileModel(Armada.logic().projectileClasses[i].intersections));
+        Armada.resources().getOrAddModelByName("projectileModel-"+Armada.logic().projectileClasses[i].name,Egom.projectileModel(Armada.logic().projectileClasses[i].intersections));
     }
-    Armada.resources().getOrAddModelByName("squareModel",squareModel());
+    Armada.resources().getOrAddModelByName("squareModel",Egom.squareModel());
 };
 
 Level.prototype.addProjectileResourcesToContext = function(context) {
@@ -1375,9 +1390,9 @@ Level.prototype.addProjectileResourcesToContext = function(context) {
         Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].textureDescriptor).addToContext(context);
         Armada.resources().getShader(Armada.logic().projectileClasses[i].muzzleFlash.shaderName).addToContext(context);
         Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].muzzleFlash.textureDescriptor).addToContext(context);
-        Armada.resources().getOrAddModelByName("projectileModel-"+Armada.logic().projectileClasses[i].name,projectileModel(Armada.logic().projectileClasses[i].intersections)).addToContext(context,false);
+        Armada.resources().getOrAddModelByName("projectileModel-"+Armada.logic().projectileClasses[i].name,Egom.projectileModel(Armada.logic().projectileClasses[i].intersections)).addToContext(context,false);
     }
-    Armada.resources().getOrAddModelByName("squareModel",squareModel()).addToContext(context);
+    Armada.resources().getOrAddModelByName("squareModel",Egom.squareModel()).addToContext(context);
 };
 
 Level.prototype.toggleHitboxVisibility = function () {
@@ -1413,6 +1428,11 @@ function Player(name) {
 	this.name=name;
 }
 
+/**
+ * @class A class responsible for loading and storing game logic related settings
+ * and data as well and provide an interface to access them.
+ * @returns {LogicContext}
+ */
 function LogicContext() {
     Resource.call(this);
     
