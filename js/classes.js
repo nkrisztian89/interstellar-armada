@@ -312,7 +312,7 @@ function ProjectileClass(xmlTag) {
     this.name = null;
     /**
      * The size by which the model representing the projectile will be scaled.
-     * @see projectileModel
+     * @see turningBillboardModel
      * @name ProjectileClass#size
      * @type Number
      */

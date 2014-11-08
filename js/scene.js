@@ -528,7 +528,10 @@ function Mesh(modelsWithLOD,shader,textures,positionMatrix,orientationMatrix,sca
 	this.orientationMatrix=orientationMatrix;
 	this.scalingMatrix=scalingMatrix;
 	this.lineMode=lineMode;
-        
+        /**
+         * @name Mesh#model
+         * @type Egom.Model
+         */
         this.model=null;
 	
 	this.modelSize = 0;
@@ -717,15 +720,7 @@ Mesh.prototype.render = function(context,depthMask) {
         context.bindTexture(this.textures[textureType],i);
         i++;
     }
-    if (this.lineMode===true) {
-        context.gl.drawArrays(context.gl.LINES, this.model.getBufferStartForContext(context,"lines"), 2*this.model._lines.length);
-    } else {
-        if(depthMask===true) {
-            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context), 3*this.model.getNumOpaqueTriangles());
-        } else {
-            context.gl.drawArrays(context.gl.TRIANGLES, this.model.getBufferStartForContext(context,"transparent"), 3*this.model.getNumTransparentTriangles());
-        }
-    }
+    this.model.render(context,this.lineMode,depthMask);
 };
 
 Mesh.prototype.getNumberOfDrawnTriangles = function() {
@@ -939,7 +934,7 @@ StaticParticle.prototype.render = function(context) {
  * moving. Used to represent dust particles that give a visual clue about the
  * motion of the camera.
  * @extends VisualObject
- * @param {EgomModel} model A model of 2 vertices has to be passed (see dustModel()).
+ * @param {EgomModel} model A model of 2 vertices has to be passed (see lineModel()).
  * @param {Shader} shader The shader that should be active while rendering this object.
  * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
  * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.

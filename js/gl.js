@@ -439,7 +439,7 @@ ShaderUniform.prototype.addMember = function (member) {
     if (this._type === this.VariableTypes.struct) {
         this._members.push(member);
     } else {
-        Armada.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
+        Application.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
     }
 };
 
@@ -697,7 +697,7 @@ VertexBuffer.prototype.bindToAttribute = function (context, shader) {
             context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
             context.gl.enableVertexAttribArray(this._location);
         } else if (this._location !== location) {
-            Armada.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!");
+            Application.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!");
         }
     }
 };
@@ -824,7 +824,7 @@ Shader.prototype.getAttributes = function () {
 Shader.prototype.requestLoadFromFile = function () {
     if (this.isReadyToUse() === false) {
         var self = this;
-        Armada.requestTextFile("shader", this._vertexShaderFileName, function (responseText) {
+        Application.requestTextFile("shader", this._vertexShaderFileName, function (responseText) {
             self._vertexShaderSource = responseText;
             if (self._fragmentShaderSource !== null) {
                 self.setToReady();
@@ -832,7 +832,7 @@ Shader.prototype.requestLoadFromFile = function () {
             // override the mime type to avoid error messages in Firefox developer
             // consol when it tries to parse as XML
         }, 'text/plain; charset=utf-8');
-        Armada.requestTextFile("shader", this._fragmentShaderFileName, function (responseText) {
+        Application.requestTextFile("shader", this._fragmentShaderFileName, function (responseText) {
             self._fragmentShaderSource = responseText;
             if (self._vertexShaderSource !== null) {
                 self.setToReady();
@@ -993,18 +993,15 @@ function ManagedGLContext(name, canvas, antialiasing, filtering) {
      */
     this._shaders = new Array();
     /**
-     * The list of associated models and their drawing parameters. This needs to 
-     * be stored in order to fill the vertex buffer objects with data from these 
-     * models when the buffers are created. One entry in the list has the
-     * following properties: model ({@link EgomModel}): the model reference; 
-     * wireframe (Boolean): whether this should be added for wireframe drawing;
-     * solid (Boolean): whether this should be added for solid (filled) drawing
+     * The list of associated models. This needs to be stored in order to fill 
+     * the vertex buffer objects with data from these models when the buffers 
+     * are created. <br/>
      * The model objects are created and managed using a {@link ResourceManager}, 
      * and this context only references them.
      * @name ManagedGLContext#_models
-     * @type Object
+     * @type Model[]
      */
-    this._modelsWithParam = new Array();
+    this._models = new Array();
     /**
      * The associative array of vertex buffer objects, stored by their names 
      * (which equal the names of their corresponding attributes) as the keys.
@@ -1039,7 +1036,7 @@ function ManagedGLContext(name, canvas, antialiasing, filtering) {
     }
 
     if (!this.gl) {
-        Armada.showError("Unable to initialize WebGL.", "critical",
+        Application.showError("Unable to initialize WebGL.", "critical",
                 "It looks like your device, browser or graphics drivers do not " +
                 "support web 3D graphics. Make sure your browser and graphics " +
                 "drivers are updated to the latest version, and you are using " +
@@ -1113,42 +1110,11 @@ ManagedGLContext.prototype.addShader = function (shader) {
 
 /**
  * Adds the model reference to the list of models to be used when the vertex
- * buffer objects are created and filled with data. It only makes the addition
- * if the model is not yet added with the specified drawing mode (wireframe
- * or not). 
- * @param {EgomModel} model
- * @param {Boolean} wireframe Whether the model should be added for wireframe
- * drawing or for solid (filled) drawing.
+ * buffer objects are created and filled with data. 
+ * @param {Model} model
  */
-ManagedGLContext.prototype.addModel = function (model, wireframe) {
-    // first check if the model is already in the list
-    for (var i = 0; i < this._modelsWithParam.length; i++) {
-        if ((this._modelsWithParam[i].model.getFilename() ? this._modelsWithParam[i].model.getFilename() : this._modelsWithParam[i].model.getName())
-                ===
-                (model.getFilename() ? model.getFilename() : model.getName())) {
-            if (wireframe === true) {
-                // if it was not added with wireframe drawing but now it is, add it
-                if (this._modelsWithParam[i].wireframe === false) {
-                    this._modelsWithParam[i].wireframe = true;
-                    this.resetReadyState();
-                }
-                return;
-            } else {
-                // if it was not added with solid drawing but now it is, add it    
-                if (this._modelsWithParam[i].solid === false) {
-                    this._modelsWithParam[i].solid = true;
-                    this.resetReadyState();
-                }
-                return;
-            }
-        }
-    }
-    // if the model was not added at all yet, add it with the appropriate mode
-    this._modelsWithParam.push({
-        model: model,
-        wireframe: (wireframe === true),
-        solid: (wireframe === false)
-    });
+ManagedGLContext.prototype.addModel = function (model) {
+    this._models.push(model);
     this.resetReadyState();
 };
 
@@ -1173,6 +1139,22 @@ ManagedGLContext.prototype.addVertexBuffer = function (vertexBuffer) {
 };
 
 /**
+ * Passes the data to the stored vertex buffer objects.
+ * @param {Object} data The data to store in the vertex buffers. It has to be
+ * an associative array storing the Float32Arrays of the data organized by the
+ * role (String) of the vertex buffer they are to be stored in as the key.
+ * @param {Number} startIndex The starting index in the buffers from where to
+ * set the data.
+ */
+ManagedGLContext.prototype.setVertexBufferData = function (data, startIndex) {
+    for (var vbName in this._vertexBuffers) {
+        if(data[this._vertexBuffers[vbName].getRole()] !== undefined) {
+            this._vertexBuffers[vbName].setData(data[this._vertexBuffers[vbName].getRole()], startIndex);
+        }
+    }
+};
+
+/**
  * Based on the stored shader references, creates a vertex buffer object to each 
  * attribute with a unique name, fills them with data using the stored model
  * references and then binds the vertex buffer objects to the corresponding
@@ -1193,10 +1175,8 @@ ManagedGLContext.prototype.setupVertexBuffers = function () {
 
     // counting the number of vertices we need to put into the vertex buffers
     var sumVertices = 0;
-    for (i = 0; i < this._modelsWithParam.length; i++) {
-        sumVertices = sumVertices +
-                (this._modelsWithParam[i].wireframe ? this._modelsWithParam[i].model._lines.length * 2 : 0) +
-                (this._modelsWithParam[i].solid ? this._modelsWithParam[i].model._triangles.length * 3 : 0);
+    for (i = 0; i < this._models.length; i++) {
+        sumVertices = sumVertices + this._models[i].getBufferSize(this);
     }
 
     // creating a Float32Array of the appropriate size for each needed buffer
@@ -1210,26 +1190,8 @@ ManagedGLContext.prototype.setupVertexBuffers = function () {
 
     // filling the buffer data arrays from model data
     var bufferSize = 0;
-    var objectBufferData = null;
-    for (i = 0; i < this._modelsWithParam.length; i++) {
-        var linesToLoad = this._modelsWithParam[i].wireframe;
-        var trianglesToLoad = this._modelsWithParam[i].solid;
-        while (linesToLoad || trianglesToLoad) {
-            objectBufferData = this._modelsWithParam[i].model.getBufferData(linesToLoad);
-            if (linesToLoad) {
-                this._modelsWithParam[i].model.setBufferStartForContext(this, "lines", bufferSize);
-            } else {
-                this._modelsWithParam[i].model.setBufferStartForContext(this, "base", bufferSize);
-                this._modelsWithParam[i].model.setBufferStartForContext(this, "transparent", bufferSize + this._modelsWithParam[i].model.getNumOpaqueTriangles() * 3);
-            }
-            for (var vbName in this._vertexBuffers) {
-                this._vertexBuffers[vbName].setData(objectBufferData[this._vertexBuffers[vbName].getRole()], bufferSize);
-            }
-            bufferSize += objectBufferData.dataSize;
-            linesToLoad ?
-                    (linesToLoad = false) :
-                    (trianglesToLoad = false);
-        }
+    for (i = 0; i < this._models.length; i++) {
+        bufferSize += this._models[i].loadToVertexBuffers(this, bufferSize);
     }
 
     // load the data to GPU memory and bind the attributes of the shaders with 
@@ -1575,7 +1537,7 @@ ResourceManager.prototype.addCubemappedTexture = function (cubemappedTexture) {
  */
 ResourceManager.prototype.getCubemappedTexture = function (name) {
     if (this._cubemappedTextures[name] === undefined) {
-        Armada.showError("Asked for a cube mapped texture named '" + name + "', which does not exist.");
+        Application.showError("Asked for a cube mapped texture named '" + name + "', which does not exist.");
         return null;
     } else {
         if (this._requestedCubemappedTextures[name] === undefined) {
@@ -1613,7 +1575,7 @@ ResourceManager.prototype.addShader = function (shader) {
  */
 ResourceManager.prototype.getShader = function (name) {
     if (this._shaders[name] === undefined) {
-        Armada.showError("Asked for a shader named '" + name + "', which does not exist.");
+        Application.showError("Asked for a shader named '" + name + "', which does not exist.");
         return null;
     } else {
         if (this._requestedShaders[name] === undefined) {
@@ -1663,18 +1625,21 @@ ResourceManager.prototype.getOrAddModelFromFile = function (filename) {
 };
 
 /**
- * Gets the model stored in the resource manager by the given name, or if it
- * does not exist yet, adds the passed model with the given name.
- * @param {String} name The name of the model resource we are looking for.
- * @param {EgomModel} model The model resource we are looking for in the resource manager.
- * @returns {EgomModel} The found or added model object in the resource manager.
+ * Gets the model stored in the resource manager, searching for it by its name, 
+ * or if it does not exist yet, adds it.
+ * @param {Egom.Model} model The model resource we are looking for in the 
+ * resource manager.
+ * @returns {Egom.Model} The found or added model object in the resource manager.
  */
-ResourceManager.prototype.getOrAddModelByName = function (name, model) {
-    model.setName(name);
-    if (!this._models[name]) {
-        this._models[name] = model;
+ResourceManager.prototype.getOrAddModelByName = function (model) {
+    if(!model.getName()) {
+        Application.showError("Trying to search for a model among the resources which does not have a name!");
+        return null;
     }
-    return this._models[name];
+    if (!this._models[model.getName()]) {
+        this._models[model.getName()] = model;
+    }
+    return this._models[model.getName()];
 };
 
 /**
@@ -1726,7 +1691,7 @@ ResourceManager.prototype.requestModelLoadFromFile = function () {
  */
 ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function (filename) {
     var self = this;
-    Armada.requestXMLFile("config", filename, function (responseXML) {
+    Application.requestXMLFile("config", filename, function (responseXML) {
         self.loadShaderAndCubemapObjectsFromXML(responseXML);
     });
 };

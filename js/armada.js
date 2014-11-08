@@ -39,7 +39,7 @@ var Armada = Armada || (function () {
      * @name Armada#_version
      * @type String
      */
-    var _version = "0.1.0:77";
+    var _version = "0.1.0:78";
     /**
      * The associative array storing the names of the game folders, indexed by
      * the types of files they contain.
@@ -324,7 +324,7 @@ var Armada = Armada || (function () {
             }
             _loadScripts(this.getFolder("javascript"), _sourceFiles, _bypassFileCaching, function () {
                 _game = new Game();
-                _game.addScreen(new MenuScreen("mainMenu", "index.html", [{
+                _game.addScreen(new MenuScreen("mainMenu", "menu.html", [{
                         caption: "New game",
                         action: function () {
                             _game.setCurrentScreen("battle");
@@ -345,10 +345,10 @@ var Armada = Armada || (function () {
                         action: function () {
                             _game.setCurrentScreen("about");
                         }
-                    }], "menuContainer"), true);
+                    }], "menuContainer"));
                 _game.addScreen(new BattleScreen("battle", "battle.html"));
                 _game.addScreen(new DatabaseScreen("database", "database.html"));
-                _game.addScreen(new MenuScreen("settings", "index.html", [{
+                _game.addScreen(new MenuScreen("settings", "menu.html", [{
                         caption: "Graphics settings",
                         action: function () {
                             _game.setCurrentScreen("graphics");
@@ -367,7 +367,7 @@ var Armada = Armada || (function () {
                 _game.addScreen(new GraphicsScreen("graphics", "graphics.html"));
                 _game.addScreen(new ControlsScreen("controls", "controls.html"));
                 _game.addScreen(new AboutScreen("about", "about.html"));
-                _game.addScreen(new MenuScreen("ingameMenu", "ingamemenu.html", [{
+                _game.addScreen(new MenuScreen("ingameMenu", "ingame-menu.html", [{
                         caption: "Resume game",
                         action: function () {
                             _game.closeSuperimposedScreen();
@@ -384,6 +384,8 @@ var Armada = Armada || (function () {
                             _game.setCurrentScreen("mainMenu");
                         }
                     }], "menuContainer"));
+                // hide the splash screen
+                document.body.firstElementChild.style.display = "none";
                 _game.setCurrentScreen("mainMenu");
             });
         },

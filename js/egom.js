@@ -33,6 +33,12 @@
  */
 var Egom = Egom || (function () {
     /**
+     * The list of EgomModel versions that can be loaded from file.
+     * @type String[]
+     */
+    var _supportedVersions = ["2.0", "2.1"];
+
+    /**
      * @name Vertex
      * @alias Egom.Vertex
      * @private
@@ -252,6 +258,47 @@ var Egom = Egom || (function () {
     };
 
     /**
+     * @class Stores the attributes that a model has associated with a managed
+     * WebGL context.
+     * @returns {ModelContextProperties}
+     */
+    function ModelContextProperties() {
+        /**
+         * Whether the wireframe model is used in the context.
+         * @name ModelContextProperties#wireframe
+         * @type Boolean
+         */
+        this.wireframe = null;
+        /**
+         * Whether the solid model is used in the context.
+         * @name ModelContextProperties#wireframe
+         * @type Boolean
+         */
+        this.solid = null;
+        /**
+         * The index marking where the data belonging to the lines of this 
+         * model starts in the vertex buffer objects.
+         * @name ModelContextProperties#bufferStartWireframe
+         * @type Number
+         */
+        this.bufferStartWireframe = null;
+        /**
+         * The index marking where the data belonging to the triangles of this 
+         * model starts in the vertex buffer objects.
+         * @name ModelContextProperties#bufferStartSolid
+         * @type Number
+         */
+        this.bufferStartSolid = null;
+        /**
+         * The index marking where the data belonging to the transparent 
+         * triangles of this model starts in the vertex buffer objects.
+         * @name ModelContextProperties#bufferStartTransparent
+         * @type Number
+         */
+        this.bufferStartTransparent = null;
+    }
+
+    /**
      * Creates a new 3D model object, and if a file name was given, loads the data
      * from the file. Only Egom XML format is supported.
      * @name Model
@@ -361,30 +408,6 @@ var Egom = Egom || (function () {
             this.setToReady();
         }
         /**
-         * The associative array of the indices marking where the data belonging to 
-         * the triangles of this model starts in the vertex buffer objects of managed 
-         * WebGL contexts. The keys are the names of the managed contexts.
-         * @name Model#_bufferStart
-         * @type Object
-         */
-        this._bufferStart = new Object();
-        /**
-         * The associative array of the indices marking where the data belonging to 
-         * the transparent triangles of this model starts in the vertex buffer objects 
-         * of managed WebGL contexts. The keys are the names of the managed contexts.
-         * @name Model#_bufferStartTransparent
-         * @type Object
-         */
-        this._bufferStartTransparent = new Object();
-        /**
-         * The associative array of the indices marking where the data belonging to 
-         * the lines of this model starts in the vertex buffer objects of managed 
-         * WebGL contexts. The keys are the names of the managed contexts.
-         * @name Model#_bufferStartLines
-         * @type Object
-         */
-        this._bufferStartLines = new Object();
-        /**
          * The default luminosity value for newly added lines and triangles.
          * @name Model#_luminosity
          * @type Number
@@ -408,6 +431,26 @@ var Egom = Egom || (function () {
          * @type Number
          */
         this._currentGroupIndex = 0;
+        /**
+         * The object storing the info (meta) properties of the model.
+         * @name Model#_infoProperties
+         * @type Object
+         */
+        this._infoProperties = new Object();
+        /**
+         * The length of one model-space unit in meters.
+         * @name Model#_scale
+         * @type Number
+         */
+        this._scale = 1;
+        /**
+         * An associative array storing ModelContextProperties objects for each
+         * context this model is associated with, organized by the names of the
+         * contexts.
+         * @name Model#_contextProperties
+         * @type Object
+         */
+        this._contextProperties = new Object();
     }
 
     Model.prototype = new Resource();
@@ -534,7 +577,7 @@ var Egom = Egom || (function () {
      * @param {Number} shininess The default shininess exponent value to use from
      * now on.
      */
-    Model.prototype.setProperties = function (luminosity, shininess) {
+    Model.prototype.setDefaultProperties = function (luminosity, shininess) {
         this._luminosity = luminosity;
         this._shininess = shininess;
     };
@@ -647,71 +690,117 @@ var Egom = Egom || (function () {
         }
     };
 
-    Model.prototype.getBufferStartForContext = function (context, buffer) {
-        if ((buffer === undefined) || (buffer === "base")) {
-            return this._bufferStart[context.getName()];
+    /**
+     * Issues an asynchronous request to grab the file containing the model data,
+     * and sets a callback to load the data once the file has been downloaded.
+     * @param {String} [filename] The name of the file to load the model from.
+     * @returns {Boolean} Whether the request was issued. (if no filename is
+     * specified for the model, or it has already been loaded from the same file,
+     * the request will not be issued)
+     */
+    Model.prototype.requestLoadFromFile = function (filename) {
+        // check if there is a new filename given
+        if (filename && (filename !== this._filename)) {
+            this._filename = filename;
+            this.resetReadyState();
         }
-        if (buffer === "transparent") {
-            return this._bufferStartTransparent[context.getName()];
-        }
-        if (buffer === "lines") {
-            return this._bufferStartLines[context.getName()];
-        }
-    };
-
-    Model.prototype.setBufferStartForContext = function (context, buffer, value) {
-        if ((buffer === undefined) || (buffer === "base")) {
-            this._bufferStart[context.getName()] = value;
-        }
-        if (buffer === "transparent") {
-            this._bufferStartTransparent[context.getName()] = value;
-        }
-        if (buffer === "lines") {
-            this._bufferStartLines[context.getName()] = value;
-        }
-    };
-
-    Model.prototype.requestLoadFromFile = function () {
+        // only issue the request if the model is not already loaded
         if (!this.isReadyToUse()) {
+            if (!this._filename) {
+                Application.showError(
+                        "Attempting to load a model from file, but no filename was specified.",
+                        null,
+                        this._name ? "Name of the model: " + this._name : "The model has no name either.");
+                return false;
+            }
             var self = this;
             Application.requestXMLFile("model", this._filename, function (responseXML) {
-                self.loadFromXML(responseXML);
+                self._loadFromXML(responseXML);
                 self.setToReady();
             });
+            return true;
         }
+        return false;
     };
 
     /**
-     * 
+     * Loads the model data from the passed XML document.
      * @param {Document} xmlDoc
+     * @returns {Boolean} Whether the loading has been successful.
      */
-    Model.prototype.loadFromXML = function (xmlDoc) {
+    Model.prototype._loadFromXML = function (xmlDoc) {
         var i;
         Application.log("Loading EgomModel from file: " + this._filename + " ...", 2);
+        // checking the passed XML document
+        if (!(xmlDoc instanceof Document)) {
+            Application.showError("'" + this._filename + "' does not appear to be an XML document.",
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
+            return false;
+        }
         if (xmlDoc.documentElement.nodeName !== "EgomModel") {
             Application.showError("'" + this._filename + "' does not appear to be an EgomModel file.",
-                    "severe", "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
                     "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
                     "'" + xmlDoc.documentElement.nodeName + "' instead.");
             return false;
         }
+        // checking EgomModel version
         this._version = xmlDoc.documentElement.getAttribute("version");
+        if (!this._version) {
+            Application.showError("Model from file: '" + this._filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            return false;
+        }
+        if (_supportedVersions.indexOf(this._version) < 0) {
+            Application.showError("Model from file: '" + this._filename + "' could not be loaded, because the version of the file (" + this._version + ") is not supported.",
+                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+            return false;
+        }
+        // loading info properties
+        this._name = null;
+        this._scale = 1;
+        this._infoProperties = new Object();
         if (xmlDoc.getElementsByTagName("info").length > 0) {
             var propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
             for (var i = 0; i < propertyTags.length; i++) {
-                if (propertyTags[i].getAttribute("name") === "name") {
-                    this._name = propertyTags[i].getAttribute("value");
+                var propName = propertyTags[i].getAttribute("name");
+                switch (propName) {
+                    case "name":
+                        this._name = propertyTags[i].getAttribute("value");
+                        break;
+                    case "scale":
+                        this._scale = propertyTags[i].getAttribute("value");
+                        break;
+                    default:
+                        this._infoProperties[propName] = propertyTags[i].getAttribute("value");
                 }
             }
         }
+        if (this._version === "2.0") {
+            this._scale = parseFloat(this._infoProperties["size of one unit in mm"]) * 10;
+        }
+        // setting up some variables for version-specific loading
+        var vertexTagName = null;
+        var lineTagName = null;
+        var triangleTagName = null;
+        switch (this._version) {
+            case "2.0":
+                vertexTagName = "vertex";
+                lineTagName = "line";
+                triangleTagName = "triangle";
+                break;
+            case "2.1":
+                vertexTagName = "v";
+                lineTagName = "l";
+                triangleTagName = "t";
+                break;
+        }
+        // loading vertices
         var nVertices = parseInt(xmlDoc.getElementsByTagName("vertices")[0].getAttribute("count"));
         this._vertices = new Array();
-        // EgomModel 2.0 syntax
-        var vertexTags = xmlDoc.getElementsByTagName("vertex");
-        // EgomModel 2.1 syntax
-        if (vertexTags.length === 0) {
-            vertexTags = xmlDoc.getElementsByTagName("v");
-        }
+        var vertexTags = xmlDoc.getElementsByTagName(vertexTagName);
         this._maxX = 0;
         this._minX = 0;
         this._maxY = 0;
@@ -720,118 +809,109 @@ var Egom = Egom || (function () {
         this._minZ = 0;
         for (i = 0; i < nVertices; i++) {
             var index = parseInt(vertexTags[i].getAttribute("i"));
-            this.setVertex(index, (this._version === "2.0" ?
-                    [
-                        parseFloat(vertexTags[i].getAttribute("x")) / 10000,
-                        parseFloat(vertexTags[i].getAttribute("y")) / -10000,
-                        parseFloat(vertexTags[i].getAttribute("z")) / -10000
-                    ] :
+            this.setVertex(index, (this._version === "2.1" ?
                     [
                         parseFloat(vertexTags[i].getAttribute("x")),
                         parseFloat(vertexTags[i].getAttribute("y")),
                         parseFloat(vertexTags[i].getAttribute("z"))
+                    ]
+                    // version 2.0
+                    : [
+                        parseFloat(vertexTags[i].getAttribute("x")) / 10000,
+                        parseFloat(vertexTags[i].getAttribute("y")) / -10000,
+                        parseFloat(vertexTags[i].getAttribute("z")) / -10000
                     ]));
         }
         Application.log("Loaded " + nVertices + " vertices.", 3);
-
+        // loading lines
         var nLines = parseInt(xmlDoc.getElementsByTagName("lines")[0].getAttribute("count"));
         this._lines = new Array(nLines);
-        var lineTags = xmlDoc.getElementsByTagName("line");
-        if (lineTags.length === 0) {
-            lineTags = xmlDoc.getElementsByTagName("l");
-        }
+        var lineTags = xmlDoc.getElementsByTagName(lineTagName);
         for (var i = 0; i < nLines; i++) {
             this._lines[i] = new Line(
                     parseInt(lineTags[i].getAttribute("a")),
                     parseInt(lineTags[i].getAttribute("b")),
-                    (lineTags[i].hasAttribute("color") ?
-                            lineTags[i].getAttribute("color").split(",").map(parseFloat) :
-                            [
-                                lineTags[i].getAttribute("red") / 255,
-                                lineTags[i].getAttribute("green") / 255,
-                                lineTags[i].getAttribute("blue") / 255]),
-                    (lineTags[i].hasAttribute("luminosity") ?
-                            (lineTags[i].getAttribute("luminosity") / 255) :
-                            (lineTags[i].hasAttribute("lum") ?
-                                    lineTags[i].getAttribute("lum") :
-                                    null)),
-                    (lineTags[i].hasAttribute("n") ?
-                            lineTags[i].getAttribute("n").split(",").map(parseFloat) :
-                            [
+                    (this._version === "2.1" ?
+                            lineTags[i].getAttribute("color").split(",").map(parseFloat)
+                            // version 2.0
+                            : [
+                                parseInt(lineTags[i].getAttribute("red")) / 255,
+                                parseInt(lineTags[i].getAttribute("green")) / 255,
+                                parseInt(lineTags[i].getAttribute("blue")) / 255]),
+                    (this._version === "2.1" ?
+                            parseFloat(lineTags[i].getAttribute("lum"))
+                            // version 2.0
+                            : parseInt(lineTags[i].getAttribute("luminosity")) / 255),
+                    (this._version === "2.1" ?
+                            lineTags[i].getAttribute("n").split(",").map(parseFloat)
+                            // version 2.0
+                            : [
                                 parseFloat(lineTags[i].getAttribute("nx")),
                                 -parseFloat(lineTags[i].getAttribute("ny")),
-                                -parseFloat(lineTags[i].getAttribute("nz"))])
-                    );
+                                -parseFloat(lineTags[i].getAttribute("nz"))]));
         }
         Application.log("Loaded " + nLines + " lines.", 3);
-
+        // loading triangles
+        var nTriangles = parseInt(xmlDoc.getElementsByTagName("triangles")[0].getAttribute("count"));
         this._triangles = new Array();
-        var triangleTags = xmlDoc.getElementsByTagName("triangle");
-        if (triangleTags.length === 0) {
-            triangleTags = xmlDoc.getElementsByTagName("t");
-        }
+        var triangleTags = xmlDoc.getElementsByTagName(triangleTagName);
         var params = {};
-        for (var i = 0; i < triangleTags.length; i++) {
-            params.color = triangleTags[i].hasAttribute("color") ?
-                    triangleTags[i].getAttribute("color").split(",").map(parseFloat) :
-                    (triangleTags[i].hasAttribute("red") ?
-                            [
-                                triangleTags[i].getAttribute("red") / 255,
-                                triangleTags[i].getAttribute("green") / 255,
-                                triangleTags[i].getAttribute("blue") / 255,
-                                (255 - triangleTags[i].getAttribute("alpha")) / 255] :
-                            null);
-            params.luminosity = triangleTags[i].hasAttribute("luminosity") ?
-                    triangleTags[i].getAttribute("luminosity") / 255 :
-                    (triangleTags[i].hasAttribute("lum") ?
-                            triangleTags[i].getAttribute("lum") :
-                            null);
-            params.shininess = triangleTags[i].hasAttribute("shininess") ?
-                    triangleTags[i].getAttribute("shininess") :
-                    (triangleTags[i].hasAttribute("shi") ?
-                            triangleTags[i].getAttribute("shi") :
-                            null);
-            params.texCoords = triangleTags[i].hasAttribute("ta") ?
+        for (var i = 0; i < nTriangles; i++) {
+            params.color = this._version === "2.1" ?
+                    triangleTags[i].getAttribute("color").split(",").map(parseFloat)
+                    // version 2.0
+                    : [
+                        parseInt(triangleTags[i].getAttribute("red")) / 255,
+                        parseInt(triangleTags[i].getAttribute("green")) / 255,
+                        parseInt(triangleTags[i].getAttribute("blue")) / 255,
+                        (255 - parseInt(triangleTags[i].getAttribute("alpha"))) / 255];
+            params.luminosity = this._version === "2.1" ?
+                    parseFloat(triangleTags[i].getAttribute("lum"))
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("luminosity")) / 255;
+            params.shininess = this._version === "2.1" ?
+                    parseInt(triangleTags[i].getAttribute("shi"))
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("shininess"));
+            params.texCoords = this._version === "2.1" ?
                     [
                         triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
                         triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
                         triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
-                    ] :
-                    (triangleTags[i].hasAttribute("tax") ?
-                            [
-                                [
-                                    triangleTags[i].getAttribute("tax"),
-                                    triangleTags[i].getAttribute("tay")],
-                                [
-                                    triangleTags[i].getAttribute("tbx"),
-                                    triangleTags[i].getAttribute("tby")],
-                                [
-                                    triangleTags[i].getAttribute("tcx"),
-                                    triangleTags[i].getAttribute("tcy")]]
-                            : null);
-            params.normals = triangleTags[i].hasAttribute("n") ?
-                    [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
-                    (triangleTags[i].hasAttribute("na") ?
+                    ]
+                    // version 2.0
+                    : [
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tax")),
+                            parseFloat(triangleTags[i].getAttribute("tay"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tbx")),
+                            parseFloat(triangleTags[i].getAttribute("tby"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tcx")),
+                            parseFloat(triangleTags[i].getAttribute("tcy"))]];
+            params.normals = this._version === "2.1" ?
+                    (triangleTags[i].hasAttribute("n") ?
+                            [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
                             [
                                 triangleTags[i].getAttribute("na").split(",").map(parseFloat),
                                 triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
                                 triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
-                            ] :
-                            (triangleTags[i].hasAttribute("nax") ?
-                                    [
-                                        [
-                                            triangleTags[i].getAttribute("nax"),
-                                            -triangleTags[i].getAttribute("nay"),
-                                            -triangleTags[i].getAttribute("naz")],
-                                        [
-                                            triangleTags[i].getAttribute("nbx"),
-                                            -triangleTags[i].getAttribute("nby"),
-                                            -triangleTags[i].getAttribute("nbz")],
-                                        [
-                                            triangleTags[i].getAttribute("ncx"),
-                                            -triangleTags[i].getAttribute("ncy"),
-                                            -triangleTags[i].getAttribute("ncz")]] :
-                                    null));
+                            ])
+                    // version 2.0
+                    : [
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nax")),
+                            -parseFloat(triangleTags[i].getAttribute("nay")),
+                            -parseFloat(triangleTags[i].getAttribute("naz"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nbx")),
+                            -parseFloat(triangleTags[i].getAttribute("nby")),
+                            -parseFloat(triangleTags[i].getAttribute("nbz"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("ncx")),
+                            -parseFloat(triangleTags[i].getAttribute("ncy")),
+                            -parseFloat(triangleTags[i].getAttribute("ncz"))]];
             params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
             params.withoutLines = true;
             this.addTriangle(
@@ -844,71 +924,175 @@ var Egom = Egom || (function () {
         Application.log("Model loaded.", 2);
     };
 
+    /**
+     * Returns the size of the model, which is calculated as the double of the
+     * farthest (X,Y or Z) vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getSize = function () {
         return this._size;
     };
 
+    /**
+     * Returns the greatest positive X vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getMaxX = function () {
         return this._maxX;
     };
 
+    /**
+     * Returns the greatest negative X vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getMinX = function () {
         return this._minX;
     };
 
+    /**
+     * Returns the greatest positive Y vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getMaxY = function () {
         return this._maxY;
     };
 
+    /**
+     * Returns the greatest negative Y vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getMinY = function () {
         return this._minY;
     };
 
+    /**
+     * Returns the greatest positive Z vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getMaxZ = function () {
         return this._maxZ;
     };
 
+    /**
+     * Returns the greatest negative Z vertex coordinate to be found in the model.
+     * @returns {Number}
+     */
     Model.prototype.getMinZ = function () {
         return this._minZ;
     };
 
+    /**
+     * Returns the width of the model, which is calculated as the difference
+     * between the smallest and greatest X coordinates found among the vertices.
+     * @returns {Number}
+     */
     Model.prototype.getWidth = function () {
         return this._maxX - this._minX;
     };
 
+    /**
+     * Returns the height of the model, which is calculated as the difference
+     * between the smallest and greatest Y coordinates found among the vertices.
+     * @returns {Number}
+     */
     Model.prototype.getHeight = function () {
         return this._maxY - this._minY;
     };
 
+    /**
+     * Returns the depth of the model, which is calculated as the difference
+     * between the smallest and greatest Z coordinates found among the vertices.
+     * @returns {Number}
+     */
     Model.prototype.getDepth = function () {
         return this._maxZ - this._minZ;
     };
 
     /**
-     * @param {ManagedGLContext} context
-     * @param {Boolean} wireframe
+     * Returns the width of the model in meters.
+     * @returns {Number}
      */
-    Model.prototype.addToContext = function (context, wireframe) {
-        context.addModel(this, wireframe);
+    Model.prototype.getWidthInMeters = function () {
+        return (this._maxX - this._minX) * this._scale;
     };
 
     /**
-     * Clears all previous bindings to managed WebGL contexts.
+     * Returns the height of the model in meters.
+     * @returns {Number}
+     */
+    Model.prototype.getHeightInMeters = function () {
+        return (this._maxY - this._minY) * this._scale;
+    };
+
+    /**
+     * Returns the depth of the model in meters.
+     * @returns {Number}
+     */
+    Model.prototype.getDepthInMeters = function () {
+        return (this._maxZ - this._minZ) * this._scale;
+    };
+
+    /**
+     * Adds this model to the passed ManagedGLContext in the specified drawing
+     * mode (wireframe or solid), so that later the vertex buffers of the context
+     * can be filled with its data.
+     * @param {ManagedGLContext} context The context to which the model should 
+     * be added.
+     * @param {Boolean} wireframe Whether to add the model for wireframe drawing.
+     * Both modes can be added after each other with two calls of this functions.
+     */
+    Model.prototype.addToContext = function (context, wireframe) {
+        // get the already stored properties for easier access
+        var props = this._contextProperties[context.getName()];
+        // If the model hasn't been added to this context at all yet, add it with
+        // the appropriate mode.
+        if (!props) {
+            props = new ModelContextProperties();
+            props.wireframe = wireframe;
+            props.solid = !wireframe;
+            context.addModel(this);
+            // If the model itself was added, check if it has been added with this
+            // mode, and if not, the context needs to be reset in order to trigger
+            // a new vertex buffer loading next time it is initialized, since new
+            // data will need to be loaded to the buffers.
+        } else {
+            if (!props.wireframe && wireframe) {
+                props.wireframe = true;
+                context.resetReadyState();
+            }
+            if (!props.solid && !wireframe) {
+                props.solid = true;
+                context.resetReadyState();
+            }
+        }
+        // update the stored parameters
+        this._contextProperties[context.getName()] = props;
+    };
+
+    /**
+     * Clears all previous bindings to managed WebGL contexts. After this, the
+     * model needs to be added again to contexts if it needs to be rendered in
+     * them.
      */
     Model.prototype.clearContextBindings = function () {
-        for (var contextName in this._bufferStart) {
-            this._bufferStart[contextName] = null;
-        }
-        for (var contextName in this._bufferStartLines) {
-            this._bufferStartLines[contextName] = null;
-        }
-        for (var contextName in this._bufferStartTransparent) {
-            this._bufferStartTransparent[contextName] = null;
+        for (var contextName in this._contextProperties) {
+            delete this._contextProperties[contextName];
         }
     };
 
-    Model.prototype.getBufferData = function (lineMode) {
-        if (lineMode === true) {
+    /**
+     * Returns the vertex buffer data for this model, organized in an associative
+     * array by the roles of the different data (e.g. position, texCoord)
+     * @param {Boolean} wireframe Whether the data for wireframe rendering (lines)
+     * needs to be returned.
+     * @returns {Object} An associative array, with all the buffer data for this
+     * model. (Float32Arrays)
+     * The names of the properties correspond to the roles of each of the arrays:
+     * position, texCoord, normal, color, luminosity, shininess, groupIndex.
+     * The dataSize property contains the number of vertices.
+     */
+    Model.prototype.getBufferData = function (wireframe) {
+        if (wireframe === true) {
             var vertexData = new Float32Array(this._lines.length * 6);
             for (var i = 0; i < this._lines.length; i++) {
                 vertexData[i * 6 + 0] = this._vertices[this._lines[i].a].x;
@@ -1037,19 +1221,102 @@ var Egom = Egom || (function () {
             "luminosity": luminosityData,
             "shininess": shininessData,
             "groupIndex": groupIndexData,
-            "dataSize": (lineMode ? this._lines.length * 2 : this._triangles.length * 3)
+            "dataSize": (wireframe ? this._lines.length * 2 : this._triangles.length * 3)
         };
     };
 
-    Model.prototype.render = function (context, lineMode) {
-        if (lineMode === true) {
-            context.gl.drawArrays(context.gl.LINES, this._bufferStartLines[context.getName()], 2 * this._lines.length);
+    /**
+     * Returns the size of the vertex buffer data (number of vertices) that this
+     * model has for the specified context.
+     * @param {ManagedGLContext} context
+     * @returns {Number}
+     */
+    Model.prototype.getBufferSize = function (context) {
+        var props = this._contextProperties[context.getName()];
+        return (props.wireframe ? this._lines.length * 2 : 0) + (props.solid ? this._triangles.length * 3 : 0);
+    };
+
+    /**
+     * Loads the model's vertex data into the vertex buffer objects of the specified
+     * context. Data for wireframe and solid rendering is added based on whether
+     * the model has been previously added to the context in the respective mode.
+     * @param {ManagedGLContext} context
+     * @param {Number} startIndex The data will be added starting from this 
+     * vertex index within the buffer objects.
+     * @returns {Number} The number of vertices for which data has been added.
+     */
+    Model.prototype.loadToVertexBuffers = function (context, startIndex) {
+        var bufferData = null;
+        var dataSize = 0;
+        var props = this._contextProperties[context.getName()];
+        if (props.wireframe) {
+            bufferData = this.getBufferData(true);
+            props.bufferStartWireframe = startIndex;
+            context.setVertexBufferData(bufferData, startIndex);
+            dataSize += bufferData.dataSize;
+            startIndex += bufferData.dataSize;
+        }
+        if (props.solid) {
+            bufferData = this.getBufferData(false);
+            props.bufferStartSolid = startIndex;
+            props.bufferStartTransparent = startIndex + this._nOpaqueTriangles * 3;
+            context.setVertexBufferData(bufferData, startIndex);
+            dataSize += bufferData.dataSize;
+            startIndex += bufferData.dataSize;
+        }
+        return dataSize;
+    };
+
+    /**
+     * Renders the model within the passed context, with the specified rendering
+     * mode (wireframe or solid).
+     * @param {ManagedGLContext} context The context into which the model is to
+     * be rendered. The model has to be added to this context previously in the
+     * same rendering mode, and the context needs to be set up afterwards for
+     * rendering.
+     * @param {Boolean} wireframe Whether the model should be rendered in 
+     * wireframe mode.
+     * @param {Boolean} opaque Whether only the opaque parts of the model should be
+     * rendered. False means only transparent parts, and undefined (omitted) means
+     * the whole model. Only effective in solid rendering mode.
+     */
+    Model.prototype.render = function (context, wireframe, opaque) {
+        var props = this._contextProperties[context.getName()];
+        if (wireframe === true) {
+            context.gl.drawArrays(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length);
         } else {
-            context.gl.drawArrays(context.gl.TRIANGLES, this._bufferStart[context.getName()], 3 * this._triangles.length);
+            switch (opaque) {
+                case true:
+                    context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles);
+                    break;
+                case false:
+                    context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles);
+                    break;
+                case undefined:
+                    context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length);
+                    break;
+            }
         }
     };
 
-
+    /**
+     * Adds a cuboid geometry to the object. (both vertices and faces)
+     * @param {Number} x The X coordinate of the center of the cuboid.
+     * @param {Number} y The Y coordinate of the center of the cuboid.
+     * @param {Number} z The Z coordinate of the center of the cuboid.
+     * @param {Number} width The width (X dimension) of the cuboid.
+     * @param {Number} height The height (Y dimension) of the cuboid.
+     * @param {Number} depth The depth (Z dimension) of the cuboid.
+     * @param {Number[4]} color The color of the faces of the cuboid 
+     * ([red,green,blue,alpha])
+     * @param {Number} luminosity The luminosity factor of the cuboid faces of 
+     * the cuboid (0.0-1.0)
+     * @param {Number[4][2]} textureCoordinates The texture coordinates for the 
+     * faces of the cuboid (the two coordinates for each of the 4 vertices of one
+     * face.
+     * @param {Boolean} cullFace Whether the faces facing the inside of the cuboid
+     * should be culled (omitted)
+     */
     Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
         var i0 = +this._vertices.length;
 
@@ -1102,6 +1369,19 @@ var Egom = Egom || (function () {
 
     };
 
+    /**
+     * Returns 2D coordinates of a point within a specified rectangular area 
+     * based on the relative position of the point within that rectangle.
+     * @param {Number} left The X coordinate of the left edge of the rectangle.
+     * @param {Number} bottom The Y coordinate of the bottom edge of the rectangle.
+     * @param {Number} right The X coordinate of the right edge of the rectangle.
+     * @param {Number} top The Y coordinate of the top edge of the rectangle.
+     * @param {Number} relativeX The relative X coordinate of the point within
+     * the rectangle (0.0-1.0)
+     * @param {Number} relativeY The relative Y coordinate of the point within
+     * the rectangle (0.0-1.0)
+     * @returns {Number[2]}
+     */
     function uvCoordsOnTexture(left, bottom, right, top, relativeX, relativeY) {
         var result = [0, 0];
         result[0] = left + (right - left) * relativeX;
@@ -1111,16 +1391,20 @@ var Egom = Egom || (function () {
 
     /**
      * Adds vertices and triangles that form a sphere (UV sphere).
-     * @param {number} x The X coordinate of the center.
-     * @param {number} y The Y coordinate of the center.
-     * @param {number} z The Z coordinate of the center.
-     * @param {number} radius The radius of the sphere.
-     * @param {number} angles The number of angles one circle should have within the sphere.
-     * @param {number[]} color The RGBA components of the desired color of the triangles.
-     * @param {number} luminosity The luminosity of the triangles.
-     * @param {number} shininess The shininess exponent of the triangles.
-     * @param {number[][]} textureCoordinates The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise
-     * @param {boolean} cullFace Whether to omit the triangles from the inside of the sphere.
+     * @param {Number} x The X coordinate of the center.
+     * @param {Number} y The Y coordinate of the center.
+     * @param {Number} z The Z coordinate of the center.
+     * @param {Number} radius The radius of the sphere.
+     * @param {Number} angles The number of angles one circle should have within 
+     * the sphere.
+     * @param {Number[4]} color The RGBA components of the desired color of the 
+     * triangles.
+     * @param {Number} luminosity The luminosity of the triangles.
+     * @param {Number} shininess The shininess exponent of the triangles.
+     * @param {Number[4][2]} textureCoordinates The coordinate pairs of the 
+     * texture to map to the sphere: from bottom left counter-clockwise
+     * @param {Boolean} cullFace Whether to omit the triangles from the inside 
+     * of the sphere.
      */
     Model.prototype.addSphere = function (x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace) {
         // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
@@ -1213,30 +1497,37 @@ var Egom = Egom || (function () {
         }
     };
 
+    // Public methods exposed outside of this library
     return {
         Model: Model,
         /**
-         * Sets up and returns a simple EgomModel that is suitable to be used for
+         * Sets up and returns a simple model that is suitable to be used for
          * rendering Full Viewport Quads. (FVQ)
-         * @returns {Model} An FVQ model.
+         * @param {String} [name] The name of the model to be created.
+         * @returns {Model}
          */
-        fvqModel: function () {
+        fvqModel: function (name) {
             var result = new Model();
-            result.appendVertex([-1, -1, 1]);
-            result.appendVertex([1, -1, 1]);
-            result.appendVertex([1, 1, 1]);
-            result.appendVertex([-1, 1, 1]);
+            name && result.setName(name);
+
+            result.appendVertex([-1, -1, 0]);
+            result.appendVertex([1, -1, 0]);
+            result.appendVertex([1, 1, 0]);
+            result.appendVertex([-1, 1, 0]);
 
             result.addQuad(0, 1, 2, 3);
 
             return result;
         },
         /**
-         * Sets up and returns a simple EgomModel that contains a two sided XY square.
-         * @returns {Model} An XY square model.
+         * Sets up and returns a simple model that contains a two sided XY square.
+         * @param {String} [name] The name of the model to be created.
+         * @returns {Model}
          */
-        squareModel: function () {
+        squareModel: function (name) {
             var result = new Model();
+            name && result.setName(name);
+
             result.appendVertex([-1, -1, 0]);
             result.appendVertex([1, -1, 0]);
             result.appendVertex([1, 1, 0]);
@@ -1248,17 +1539,24 @@ var Egom = Egom || (function () {
             return result;
         },
         /**
-         * Sets up and returns a simple EgomModel that is suitable for rendering
-         * energy projectiles by containing one square to serve as the side view and
-         * a set of intersecting squares that are perpendicular to the first one, to
-         * serve as the front view(s) of the projectile.
-         * @param {number[]} intersections A set of numbers between -1 and 1
-         * representing the points where the squares serving as the front view should 
-         * be created along the side view square.
-         * @returns {Model} A projectile model of intersecting squares.
+         * Sets up and returns a simple model that is suitable for rendering
+         * billboards that turn around one axis to face the camera. The model
+         * contains one square to serve as the turning side view (with texture
+         * coordinates corresponding to the upper half of the texture) and a set 
+         * of intersecting squares that are perpendicular to the first one
+         * (with texture coordinates corresponding to the lower half of the 
+         * texture), to serve as the front/back view(s) so that the billboard 
+         * does not look flat at sharp angles.
+         * @param {String} [name] The name of the model to be created.
+         * @param {Number[]} [intersections] A set of numbers between -1 and 1
+         * representing the points where the squares serving as the front view 
+         * should be created along the side view square.
+         * @returns {Model}
          */
-        projectileModel: function (intersections) {
+        turningBillboardModel: function (name, intersections) {
             var result = new Model();
+            name && result.setName(name);
+
             result.appendVertex([-1, -1, 0]);
             result.appendVertex([1, -1, 0]);
             result.appendVertex([1, 1, 0]);
@@ -1266,44 +1564,53 @@ var Egom = Egom || (function () {
 
             result.addQuad(0, 1, 2, 3, {texCoords: [[0.0, 0.5], [1.0, 0.5], [1.0, 0.0], [0.0, 0.0]]});
 
-            for (var i = 0; i < intersections.length; i++) {
-                result.appendVertex([1, intersections[i], -1]);
-                result.appendVertex([-1, intersections[i], -1]);
-                result.appendVertex([-1, intersections[i], 1]);
-                result.appendVertex([1, intersections[i], 1]);
+            if (intersections) {
+                for (var i = 0; i < intersections.length; i++) {
+                    result.appendVertex([1, intersections[i], -1]);
+                    result.appendVertex([-1, intersections[i], -1]);
+                    result.appendVertex([-1, intersections[i], 1]);
+                    result.appendVertex([1, intersections[i], 1]);
 
-                result.addQuad(((i + 1) * 4) + 0, ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
-                result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4) + 0, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+                    result.addQuad(((i + 1) * 4) + 0, ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+                    result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4) + 0, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+                }
             }
 
             return result;
         },
         /**
-         * Sets up and returns a simple EgomModel that contains a cuboid (XYZ-box) model 
+         * Sets up and returns a simple model that contains a cuboid (XYZ-box)  
          * with the given properties.
-         * @param {number} width Size of the box along the X axis.
-         * @param {number} height Size of the box along the Y axis.
-         * @param {number} depth Size of the box along the Z axis.
-         * @param {number[]} color A vector containing the RGBA components of the 
+         * @param {String} [name] The name of the model to be created.
+         * @param {Number} width Size of the box along the X axis.
+         * @param {Number} height Size of the box along the Y axis.
+         * @param {Number} depth Size of the box along the Z axis.
+         * @param {Number[4]} color A vector containing the RGBA components of the 
          * desired box color.
-         * @returns {Model} A cuboid model.
+         * @returns {Model}
          */
-        cuboidModel: function (width, height, depth, color) {
+        cuboidModel: function (name, width, height, depth, color) {
             var result = new Model();
+            name && result.setName(name);
             result.addCuboid(0, 0, 0, width, height, depth, color, 128, [[0, 1], [1, 1], [1, 0], [0, 0]], false);
             return result;
         },
         /**
-         * Sets up and returns a simple EgomModel that contains a two vertices connected
-         * with a line for drawing dust particles.
-         * @param {number[]} color The RGB components of the color to use for the line.
-         * @returns {Model} A dust particle model.
+         * Sets up and returns a simple model that contains a two vertices, the
+         * first of which is in the origo, connected by a line.
+         * @param {String} [name] The name of the model to be created.
+         * @param {Number[3]} vector The vector pointing from the origo towards 
+         * the second vertex.
+         * @param {Number[4]} color The RGB components of the color to use for 
+         * the line.
+         * @returns {Model}
          */
-        dustModel: function (color) {
+        lineModel: function (name,vector,color) {
             var result = new Model();
+            name && result.setName(name);
             result.appendVertex([0.0, 0.0, 0.0]);
-            result.appendVertex([1.0, 1.0, 1.0]);
-            result._lines.push(new Line(0, 1, color, 1, [0, 0, 1]));
+            result.appendVertex(vector);
+            result._lines.push(new Line(0, 1, color, 1, vector));
             return result;
         }
     };

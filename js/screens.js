@@ -793,6 +793,7 @@ DatabaseScreen.prototype.removeFromPage = function() {
     GameScreenWithCanvases.prototype.removeFromPage.call(this);
         
     this._itemLength = null;
+    this._itemLengthInMeters = null;
     this._itemFront = null;
     this._revealState = null;
     
@@ -1052,16 +1053,19 @@ DatabaseScreen.prototype.loadShip = function() {
         // set the callback for when the potentially needed additional file resources have 
         // been loaded
         Armada.resources().executeWhenReady(function() {
-            // get the length of the ship based on the length of its model (1 unit in
-            // model space equals to 20 cm)
+            // get the length of the ship based on the length of its model
             self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
+            self._itemLengthInMeters = self._item.visualModel.modelsWithLOD[0].model.getHeightInMeters();
             self._itemFront = self._item.visualModel.modelsWithLOD[0].model.getMaxY();
-            self._itemDescription.setContent( 
-                shipClass.description+"<br/>"+
-                "<br/>"+
-                "Length: "+(((self._itemLength*0.2)<100)?(self._itemLength*0.2).toPrecision(3):Math.round(self._itemLength*0.2))+" m<br/>"+
-                "Weapon slots: "+shipClass.weaponSlots.length+"<br/>"+
-                "Thrusters: "+shipClass.thrusterSlots.length);
+            self._itemDescription.setContent(
+                    shipClass.description + "<br/>" +
+                    "<br/>" +
+                    "Length: " + (((self._itemLengthInMeters) < 100) ?
+                            (self._itemLengthInMeters).toPrecision(3)
+                            : Math.round(self._itemLengthInMeters)) +
+                    " m<br/>" +
+                    "Weapon slots: " + shipClass.weaponSlots.length + "<br/>" +
+                    "Thrusters: " + shipClass.thrusterSlots.length);
             // this will create the GL context if needed or update it with the new
             // data if it already exists
             self.bindSceneToCanvas(self._scene,self.getScreenCanvas("databaseCanvas"));
