@@ -7,22 +7,22 @@
  */
 
 /**********************************************************************
-    Copyright 2014 Krisztián Nagy
-    
-    This file is part of Interstellar Armada.
-
-    Interstellar Armada is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Interstellar Armada is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
+ Copyright 2014 Krisztián Nagy
+ 
+ This file is part of Interstellar Armada.
+ 
+ Interstellar Armada is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ Interstellar Armada is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 /**
@@ -38,7 +38,7 @@ var Mat = Mat || {};
  * Returns a 3x3 identity matrix.
  * @returns {Float32Array}
  */
-Mat.identity3 = function() {
+Mat.identity3 = function () {
     return new Float32Array([
         1.0, 0.0, 0.0,
         0.0, 1.0, 0.0,
@@ -50,7 +50,7 @@ Mat.identity3 = function() {
  * Returns a 4x4 identity matrix.
  * @returns {Float32Array}
  */
-Mat.identity4 = function() {
+Mat.identity4 = function () {
     return new Float32Array([
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
@@ -91,7 +91,7 @@ Mat.null4 = function () {
  * @param {Number} z The z coordinate of the translation.
  * @returns {Float32Array}
  */
-Mat.translation4 = function (x,y,z) {
+Mat.translation4 = function (x, y, z) {
     return new Float32Array([
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
@@ -121,13 +121,13 @@ Mat.translation4v = function (v) {
  * rotation
  * @param {Number} angle The angle of rotation in radian
  */
-Mat.rotation4 = function (axis,angle) {
+Mat.rotation4 = function (axis, angle) {
     var cosAngle = Math.cos(angle);
     var sinAngle = Math.sin(angle);
     return new Float32Array([
-        cosAngle+(1-cosAngle)*axis[0]*axis[0], (1-cosAngle)*axis[0]*axis[1]-sinAngle*axis[2], (1-cosAngle)*axis[0]*axis[2]+sinAngle*axis[1], 0.0,
-        (1-cosAngle)*axis[0]*axis[1]+sinAngle*axis[2], cosAngle+(1-cosAngle)*axis[1]*axis[1], (1-cosAngle)*axis[1]*axis[2]-sinAngle*axis[0], 0.0,
-        (1-cosAngle)*axis[0]*axis[2]-sinAngle*axis[1], (1-cosAngle)*axis[1]*axis[2]+sinAngle*axis[0], cosAngle+(1-cosAngle)*axis[2]*axis[2], 0.0,
+        cosAngle + (1 - cosAngle) * axis[0] * axis[0], (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2], (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1], 0.0,
+        (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2], cosAngle + (1 - cosAngle) * axis[1] * axis[1], (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0], 0.0,
+        (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1], (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0], cosAngle + (1 - cosAngle) * axis[2] * axis[2], 0.0,
         0.0, 0.0, 0.0, 1.0
     ]);
 };
@@ -141,7 +141,7 @@ Mat.rotation4 = function (axis,angle) {
  * be used for all 3 axes.
  * @returns {Float32Array}
  */
-Mat.scaling4 = function (x,y,z) {
+Mat.scaling4 = function (x, y, z) {
     y = y || x;
     z = z || x;
     return new Float32Array([
@@ -149,7 +149,7 @@ Mat.scaling4 = function (x,y,z) {
         0.0, y, 0.0, 0.0,
         0.0, 0.0, z, 0.0,
         0.0, 0.0, 0.0, 1.0]
-    );
+            );
 };
 
 /**
@@ -160,13 +160,54 @@ Mat.scaling4 = function (x,y,z) {
  * @param {Number} far
  * @returns {Float32Array}
  */
-Mat.perspective4 = function (right,top,near,far) {
+Mat.perspective4 = function (right, top, near, far) {
     return new Float32Array([
-        near/right, 0.0,      0.0,                    0.0,
-        0.0,        near/top, 0.0,                    0.0,
-        0.0,        0.0,      (near+far)/(near-far), -1.0,
-        0.0,        0.0,      2*near*far/(near-far),  0.0]
-    );
+        near / right, 0.0, 0.0, 0.0,
+        0.0, near / top, 0.0, 0.0,
+        0.0, 0.0, (near + far) / (near - far), -1.0,
+        0.0, 0.0, 2 * near * far / (near - far), 0.0]
+            );
+};
+
+/**
+ * Returns a 4x4 translation matrix created based on the vector described by the
+ * attributes of the passed XML element.
+ * @param {Element} tag
+ * @returns {Float32Array} A 4x4 transformation matrix.
+ */
+Mat.translationFromXMLTag = function (tag) {
+    return Mat.translation4v(Vec.fromXMLTag3(tag));
+};
+
+/**
+ * Constructs and returns a 4x4 rotation matrix described by a series of rotations
+ * stored in the XML tags.
+ * @param {XMLElement[]} tags The tags describing rotations.
+ * @returns {Float32Array} The costructed rotation matrix.
+ */
+Mat.rotation4FromXMLTags = function (tags) {
+    var result = Mat.identity4();
+    for (var i = 0; i < tags.length; i++) {
+        var axis = [0, 0, 0];
+        if (tags[i].getAttribute("axis") === "x") {
+            axis = [1, 0, 0];
+        } else
+        if (tags[i].getAttribute("axis") === "y") {
+            axis = [0, 1, 0];
+        } else
+        if (tags[i].getAttribute("axis") === "z") {
+            axis = [0, 0, 1];
+        }
+        result =
+                Mat.mul4(
+                        result,
+                        Mat.rotation4(
+                                axis,
+                                parseFloat(tags[i].getAttribute("degree")) / 180 * 3.1415
+                                )
+                        );
+    }
+    return result;
 };
 
 // -----------------------------------------------------------------------------
@@ -179,9 +220,9 @@ Mat.perspective4 = function (right,top,near,far) {
  */
 Mat.determinant3 = function (m) {
     return (
-        m[0] * m[4] * m[8] + m[1] * m[5] * m[6] + m[2] * m[3] * m[7] -
-        m[2] * m[4] * m[6] - m[1] * m[3] * m[8] - m[0] * m[5] * m[7]
-    );
+            m[0] * m[4] * m[8] + m[1] * m[5] * m[6] + m[2] * m[3] * m[7] -
+            m[2] * m[4] * m[6] - m[1] * m[3] * m[8] - m[0] * m[5] * m[7]
+            );
 };
 
 /**
@@ -191,7 +232,7 @@ Mat.determinant3 = function (m) {
  * @returns {Number[3]}
  */
 Mat.translationVector3 = function (m) {
-    return [m[12],m[13],m[14]];
+    return [m[12], m[13], m[14]];
 };
 
 /**
@@ -201,7 +242,7 @@ Mat.translationVector3 = function (m) {
  * @returns {Number[4]}
  */
 Mat.translationVector4 = function (m) {
-    return [m[12],m[13],m[14],m[15]];
+    return [m[12], m[13], m[14], m[15]];
 };
 
 /**
@@ -211,7 +252,7 @@ Mat.translationVector4 = function (m) {
  * @returns {Number}
  */
 Mat.translationLength = function (m) {
-    return Vec.length3([m[12],m[13],m[14]]);
+    return Vec.length3([m[12], m[13], m[14]]);
 };
 
 /**
@@ -221,12 +262,12 @@ Mat.translationLength = function (m) {
  * matrix components.
  * @returns {String}
  */
-Mat.toString4 = function (m,d) {
+Mat.toString4 = function (m, d) {
     d = d || 2;
-    return m[0].toFixed(d)+" "+m[1].toFixed(d)+" "+m[2].toFixed(d)+" "+m[3].toFixed(d)+"\n"+
-        m[4].toFixed(d)+" "+m[5].toFixed(d)+" "+m[6].toFixed(d)+" "+m[7].toFixed(d)+"\n"+
-        m[8].toFixed(d)+" "+m[9].toFixed(d)+" "+m[10].toFixed(d)+" "+m[11].toFixed(d)+"\n"+
-        m[12].toFixed(d)+" "+m[13].toFixed(d)+" "+m[14].toFixed(d)+" "+m[15].toFixed(d);
+    return m[0].toFixed(d) + " " + m[1].toFixed(d) + " " + m[2].toFixed(d) + " " + m[3].toFixed(d) + "\n" +
+            m[4].toFixed(d) + " " + m[5].toFixed(d) + " " + m[6].toFixed(d) + " " + m[7].toFixed(d) + "\n" +
+            m[8].toFixed(d) + " " + m[9].toFixed(d) + " " + m[10].toFixed(d) + " " + m[11].toFixed(d) + "\n" +
+            m[12].toFixed(d) + " " + m[13].toFixed(d) + " " + m[14].toFixed(d) + " " + m[15].toFixed(d);
 };
 
 /**
@@ -237,12 +278,12 @@ Mat.toString4 = function (m,d) {
  * matrix components.
  * @returns {String}
  */
-Mat.toHTMLString4 = function (m,d) {
+Mat.toHTMLString4 = function (m, d) {
     d = d || 2;
-    return m[0].toFixed(d)+" "+m[1].toFixed(d)+" "+m[2].toFixed(d)+" "+m[3].toFixed(d)+"<br/>"+
-        m[4].toFixed(d)+" "+m[5].toFixed(d)+" "+m[6].toFixed(d)+" "+m[7].toFixed(d)+"<br/>"+
-        m[8].toFixed(d)+" "+m[9].toFixed(d)+" "+m[10].toFixed(d)+" "+m[11].toFixed(d)+"<br/>"+
-        m[12].toFixed(d)+" "+m[13].toFixed(d)+" "+m[14].toFixed(d)+" "+m[15].toFixed(d);
+    return m[0].toFixed(d) + " " + m[1].toFixed(d) + " " + m[2].toFixed(d) + " " + m[3].toFixed(d) + "<br/>" +
+            m[4].toFixed(d) + " " + m[5].toFixed(d) + " " + m[6].toFixed(d) + " " + m[7].toFixed(d) + "<br/>" +
+            m[8].toFixed(d) + " " + m[9].toFixed(d) + " " + m[10].toFixed(d) + " " + m[11].toFixed(d) + "<br/>" +
+            m[12].toFixed(d) + " " + m[13].toFixed(d) + " " + m[14].toFixed(d) + " " + m[15].toFixed(d);
 };
 
 // -----------------------------------------------------------------------------
@@ -255,9 +296,9 @@ Mat.toHTMLString4 = function (m,d) {
  */
 Mat.matrix3from4 = function (m) {
     return new Float32Array([
-        m[0],m[1],m[2],
-        m[4],m[5],m[6],
-        m[8],m[9],m[10]
+        m[0], m[1], m[2],
+        m[4], m[5], m[6],
+        m[8], m[9], m[10]
     ]);
 };
 
@@ -269,10 +310,10 @@ Mat.matrix3from4 = function (m) {
  */
 Mat.matrix4from3 = function (m) {
     return new Float32Array([
-        m[0],m[1],m[2], 0.0,
-        m[3],m[4],m[5], 0.0,
-        m[6],m[7],m[8], 0.0,
-        0.0, 0.0, 0.0,  1.0
+        m[0], m[1], m[2], 0.0,
+        m[3], m[4], m[5], 0.0,
+        m[6], m[7], m[8], 0.0,
+        0.0, 0.0, 0.0, 1.0
     ]);
 };
 
@@ -283,9 +324,9 @@ Mat.matrix4from3 = function (m) {
  */
 Mat.transposed3 = function (m) {
     return new Float32Array([
-        m[0],m[3],m[6],
-        m[1],m[4],m[7],
-        m[2],m[5],m[8]
+        m[0], m[3], m[6],
+        m[1], m[4], m[7],
+        m[2], m[5], m[8]
     ]);
 };
 
@@ -296,10 +337,10 @@ Mat.transposed3 = function (m) {
  */
 Mat.transposed4 = function (m) {
     return new Float32Array([
-        m[0],m[4],m[8],m[12],
-        m[1],m[5],m[9],m[13],
-        m[2],m[6],m[10],m[14],
-        m[3],m[7],m[11],m[15]
+        m[0], m[4], m[8], m[12],
+        m[1], m[5], m[9], m[13],
+        m[2], m[6], m[10], m[14],
+        m[3], m[7], m[11], m[15]
     ]);
 };
 
@@ -333,7 +374,7 @@ Mat.inverse3 = function (m) {
                     j++;
                 }
                 // when found it in row 'j' swap the 'i'th and 'j'th rows
-                for (k=0; k<3; k++) {
+                for (k = 0; k < 3; k++) {
                     swap = m2[i * 3 + k];
                     m2[i * 3 + k] = m2[j * 3 + k];
                     m2[j * 3 + k] = swap;
@@ -402,7 +443,7 @@ Mat.inverse4 = function (m) {
                 j++;
             }
             // when found it in row 'j' swap the 'i'th and 'j'th rows
-            for (k=0; k<4; k++) {
+            for (k = 0; k < 4; k++) {
                 swap = m2[i * 4 + k];
                 m2[i * 4 + k] = m2[j * 4 + k];
                 m2[j * 4 + k] = swap;
@@ -449,7 +490,7 @@ Mat.inverse4 = function (m) {
  * @returns {Float32Array} The calculated inverse 4x4 matrix.
  */
 Mat.inverseOfTranslation4 = function (m) {
-    return Mat.translation4(-m[12],-m[13],-m[14]);
+    return Mat.translation4(-m[12], -m[13], -m[14]);
 };
 
 /**
@@ -472,7 +513,7 @@ Mat.inverseOfRotation4 = function (m) {
  * @returns {Float32Array} The calculated inverse 4x4 matrix.
  */
 Mat.inverseOfScaling4 = function (m) {
-    return Mat.scaling4(1/m[0],1/m[5],1/m[10]);
+    return Mat.scaling4(1 / m[0], 1 / m[5], 1 / m[10]);
 };
 
 /**
@@ -481,11 +522,11 @@ Mat.inverseOfScaling4 = function (m) {
  * @param {Number} s A scalar.
  * @returns {Float32Array} m multiplied by s.
  */
-Mat.scaled3 = function (m,s) {
+Mat.scaled3 = function (m, s) {
     return new Float32Array([
-        m[0]*s,m[1]*s,m[2]*s,
-        m[3]*s,m[4]*s,m[5]*s,
-        m[6]*s,m[7]*s,m[8]*s
+        m[0] * s, m[1] * s, m[2] * s,
+        m[3] * s, m[4] * s, m[5] * s,
+        m[6] * s, m[7] * s, m[8] * s
     ]);
 };
 
@@ -495,12 +536,12 @@ Mat.scaled3 = function (m,s) {
  * @param {Number} s A scalar.
  * @returns {Float32Array} m multiplied by s.
  */
-Mat.scaled4 = function (m,s) {
+Mat.scaled4 = function (m, s) {
     return new Float32Array([
-        m[0]*s,m[1]*s,m[2]*s,m[3]*s,
-        m[4]*s,m[5]*s,m[6]*s,m[7]*s,
-        m[8]*s,m[9]*s,m[10]*s,m[11]*s,
-        m[12]*s,m[13]*s,m[14]*s,m[15]*s
+        m[0] * s, m[1] * s, m[2] * s, m[3] * s,
+        m[4] * s, m[5] * s, m[6] * s, m[7] * s,
+        m[8] * s, m[9] * s, m[10] * s, m[11] * s,
+        m[12] * s, m[13] * s, m[14] * s, m[15] * s
     ]);
 };
 
@@ -513,15 +554,15 @@ Mat.scaled4 = function (m,s) {
  * @returns {Float32Array} An orthogonal 4x4 matrix.
  */
 Mat.correctedOrthogonal4 = function (m) {
-    var vx=Vec.normal3([m[0],m[1],m[2]]);
-    var vy=Vec.normal3([m[4],m[5],m[6]]);
-    var vz=Vec.cross3(vx,vy);
-    vy=Vec.cross3(vz,vx);
+    var vx = Vec.normal3([m[0], m[1], m[2]]);
+    var vy = Vec.normal3([m[4], m[5], m[6]]);
+    var vz = Vec.cross3(vx, vy);
+    vy = Vec.cross3(vz, vx);
     return new Float32Array([
-        vx[0],vx[1],vx[2],0.0,
-        vy[0],vy[1],vy[2],0.0,
-        vz[0],vz[1],vz[2],0.0,
-        0.0,  0.0,  0.0,  1.0]);
+        vx[0], vx[1], vx[2], 0.0,
+        vy[0], vy[1], vy[2], 0.0,
+        vz[0], vz[1], vz[2], 0.0,
+        0.0, 0.0, 0.0, 1.0]);
 };
 
 /**
@@ -533,7 +574,7 @@ Mat.correctedOrthogonal4 = function (m) {
  * will be corrected.
  * @returns {Float32Array}
  */
-Mat.straightened = function (m,epsilon) {
+Mat.straightened = function (m, epsilon) {
     var result = new Float32Array(m);
     for (var i = 0; i < result.length; i++) {
         result[i] = (Math.abs(m[i]) < epsilon) ?
@@ -555,25 +596,25 @@ Mat.straightened = function (m,epsilon) {
  * @param {Float32Array} m2 The second 4x4 matrix.
  * @returns {Boolean}
  */
-Mat.equal4 = function (m1,m2) {
+Mat.equal4 = function (m1, m2) {
     return (
-        m1[0]===m2[0] &&
-        m1[1]===m2[1] &&
-        m1[2]===m2[2] &&
-        m1[3]===m2[3] &&
-        m1[4]===m2[4] &&
-        m1[5]===m2[5] &&
-        m1[6]===m2[6] &&
-        m1[7]===m2[7] &&
-        m1[8]===m2[8] &&
-        m1[9]===m2[9] &&
-        m1[10]===m2[10] &&
-        m1[11]===m2[11] &&
-        m1[12]===m2[12] &&
-        m1[13]===m2[13] &&
-        m1[14]===m2[14] &&
-        m1[15]===m2[15]
-    );
+            m1[0] === m2[0] &&
+            m1[1] === m2[1] &&
+            m1[2] === m2[2] &&
+            m1[3] === m2[3] &&
+            m1[4] === m2[4] &&
+            m1[5] === m2[5] &&
+            m1[6] === m2[6] &&
+            m1[7] === m2[7] &&
+            m1[8] === m2[8] &&
+            m1[9] === m2[9] &&
+            m1[10] === m2[10] &&
+            m1[11] === m2[11] &&
+            m1[12] === m2[12] &&
+            m1[13] === m2[13] &&
+            m1[14] === m2[14] &&
+            m1[15] === m2[15]
+            );
 };
 
 /**
@@ -582,12 +623,12 @@ Mat.equal4 = function (m1,m2) {
  * @param {Float32Array} m2 The second 4x4 matrix.
  * @returns {Float32Array} The result 4x4 matrix.
  */
-Mat.add4 = function (m1,m2) {
+Mat.add4 = function (m1, m2) {
     return new Float32Array([
-        m1[0]+m2[0],m1[1]+m2[1],m1[2]+m2[2],m1[3]+m2[3],
-        m1[4]+m2[4],m1[5]+m2[5],m1[6]+m2[6],m1[7]+m2[7],
-        m1[8]+m2[8],m1[9]+m2[9],m1[10]+m2[10],m1[11]+m2[11],
-        m1[12]+m2[12],m1[13]+m2[13],m1[14]+m2[14],m1[15]+m2[15]
+        m1[0] + m2[0], m1[1] + m2[1], m1[2] + m2[2], m1[3] + m2[3],
+        m1[4] + m2[4], m1[5] + m2[5], m1[6] + m2[6], m1[7] + m2[7],
+        m1[8] + m2[8], m1[9] + m2[9], m1[10] + m2[10], m1[11] + m2[11],
+        m1[12] + m2[12], m1[13] + m2[13], m1[14] + m2[14], m1[15] + m2[15]
     ]);
 };
 
@@ -597,17 +638,17 @@ Mat.add4 = function (m1,m2) {
  * @param {Float32Array} m2 The 3x3 matrix on the right of the multiplicaton.
  * @returns {Float32Array} The result 3x3 matrix.
  */
-Mat.mul3 = function (m1,m2) {
+Mat.mul3 = function (m1, m2) {
     return new Float32Array([
-        m1[0]*m2[0]+m1[1]*m2[3]+m1[2]*m2[6],
-        m1[0]*m2[1]+m1[1]*m2[4]+m1[2]*m2[7],
-        m1[0]*m2[2]+m1[1]*m2[5]+m1[2]*m2[8],
-        m1[3]*m2[0]+m1[4]*m2[3]+m1[5]*m2[6],
-        m1[3]*m2[1]+m1[4]*m2[4]+m1[5]*m2[7],
-        m1[3]*m2[2]+m1[4]*m2[5]+m1[5]*m2[8],
-        m1[6]*m2[0]+m1[7]*m2[3]+m1[8]*m2[6],
-        m1[6]*m2[1]+m1[7]*m2[4]+m1[8]*m2[7],
-        m1[6]*m2[2]+m1[7]*m2[5]+m1[8]*m2[8]
+        m1[0] * m2[0] + m1[1] * m2[3] + m1[2] * m2[6],
+        m1[0] * m2[1] + m1[1] * m2[4] + m1[2] * m2[7],
+        m1[0] * m2[2] + m1[1] * m2[5] + m1[2] * m2[8],
+        m1[3] * m2[0] + m1[4] * m2[3] + m1[5] * m2[6],
+        m1[3] * m2[1] + m1[4] * m2[4] + m1[5] * m2[7],
+        m1[3] * m2[2] + m1[4] * m2[5] + m1[5] * m2[8],
+        m1[6] * m2[0] + m1[7] * m2[3] + m1[8] * m2[6],
+        m1[6] * m2[1] + m1[7] * m2[4] + m1[8] * m2[7],
+        m1[6] * m2[2] + m1[7] * m2[5] + m1[8] * m2[8]
     ]);
 };
 
@@ -617,24 +658,24 @@ Mat.mul3 = function (m1,m2) {
  * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
  * @returns {Float32Array} The result 4x4 matrix.
  */
-Mat.mul4 = function (m1,m2) {
+Mat.mul4 = function (m1, m2) {
     return new Float32Array([
-        m1[0]*m2[0]+m1[1]*m2[4]+m1[2]*m2[8]+m1[3]*m2[12],
-        m1[0]*m2[1]+m1[1]*m2[5]+m1[2]*m2[9]+m1[3]*m2[13],
-        m1[0]*m2[2]+m1[1]*m2[6]+m1[2]*m2[10]+m1[3]*m2[14],
-        m1[0]*m2[3]+m1[1]*m2[7]+m1[2]*m2[11]+m1[3]*m2[15],
-        m1[4]*m2[0]+m1[5]*m2[4]+m1[6]*m2[8]+m1[7]*m2[12],
-        m1[4]*m2[1]+m1[5]*m2[5]+m1[6]*m2[9]+m1[7]*m2[13],
-        m1[4]*m2[2]+m1[5]*m2[6]+m1[6]*m2[10]+m1[7]*m2[14],
-        m1[4]*m2[3]+m1[5]*m2[7]+m1[6]*m2[11]+m1[7]*m2[15],
-        m1[8]*m2[0]+m1[9]*m2[4]+m1[10]*m2[8]+m1[11]*m2[12],
-        m1[8]*m2[1]+m1[9]*m2[5]+m1[10]*m2[9]+m1[11]*m2[13],
-        m1[8]*m2[2]+m1[9]*m2[6]+m1[10]*m2[10]+m1[11]*m2[14],
-        m1[8]*m2[3]+m1[9]*m2[7]+m1[10]*m2[11]+m1[11]*m2[15],
-        m1[12]*m2[0]+m1[13]*m2[4]+m1[14]*m2[8]+m1[15]*m2[12],
-        m1[12]*m2[1]+m1[13]*m2[5]+m1[14]*m2[9]+m1[15]*m2[13],
-        m1[12]*m2[2]+m1[13]*m2[6]+m1[14]*m2[10]+m1[15]*m2[14],
-        m1[12]*m2[3]+m1[13]*m2[7]+m1[14]*m2[11]+m1[15]*m2[15]
+        m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8] + m1[3] * m2[12],
+        m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9] + m1[3] * m2[13],
+        m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10] + m1[3] * m2[14],
+        m1[0] * m2[3] + m1[1] * m2[7] + m1[2] * m2[11] + m1[3] * m2[15],
+        m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8] + m1[7] * m2[12],
+        m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9] + m1[7] * m2[13],
+        m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10] + m1[7] * m2[14],
+        m1[4] * m2[3] + m1[5] * m2[7] + m1[6] * m2[11] + m1[7] * m2[15],
+        m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8] + m1[11] * m2[12],
+        m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9] + m1[11] * m2[13],
+        m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10] + m1[11] * m2[14],
+        m1[8] * m2[3] + m1[9] * m2[7] + m1[10] * m2[11] + m1[11] * m2[15],
+        m1[12] * m2[0] + m1[13] * m2[4] + m1[14] * m2[8] + m1[15] * m2[12],
+        m1[12] * m2[1] + m1[13] * m2[5] + m1[14] * m2[9] + m1[15] * m2[13],
+        m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m1[15] * m2[14],
+        m1[12] * m2[3] + m1[13] * m2[7] + m1[14] * m2[11] + m1[15] * m2[15]
     ]);
 };
 
@@ -646,12 +687,12 @@ Mat.mul4 = function (m1,m2) {
  * described in this matrix will be taken into account.
  * @returns {Float32Array}
  */
-Mat.translatedByM4 = function (m1,m2) {
+Mat.translatedByM4 = function (m1, m2) {
     return new Float32Array([
-        m1[0],m1[1],m1[2],m1[3],
-        m1[4],m1[5],m1[6],m1[7],
-        m1[8],m1[9],m1[10],m1[11],
-        m1[12]+m2[12],m1[13]+m2[13],m1[14]+m2[14],m1[15]
+        m1[0], m1[1], m1[2], m1[3],
+        m1[4], m1[5], m1[6], m1[7],
+        m1[8], m1[9], m1[10], m1[11],
+        m1[12] + m2[12], m1[13] + m2[13], m1[14] + m2[14], m1[15]
     ]);
 };
 
@@ -663,12 +704,12 @@ Mat.translatedByM4 = function (m1,m2) {
  * @param {Float32Array} m2 Another 4x4 transformation matrix.
  * @returns {Number}
  */
-Mat.distanceSquared = function (m1,m2) {
+Mat.distanceSquared = function (m1, m2) {
     return (
-        (m1[12]-m2[12])*(m1[12]-m2[12])+
-        (m1[13]-m2[13])*(m1[13]-m2[13])+
-        (m1[14]-m2[14])*(m1[14]-m2[14])
-    );
+            (m1[12] - m2[12]) * (m1[12] - m2[12]) +
+            (m1[13] - m2[13]) * (m1[13] - m2[13]) +
+            (m1[14] - m2[14]) * (m1[14] - m2[14])
+            );
 };
 
 /**
@@ -676,6 +717,22 @@ Mat.distanceSquared = function (m1,m2) {
  * interpreted as vectors.
  */
 var Vec = Vec || {};
+
+// -----------------------------------------------------------------------------
+// Functions that create a vector
+
+/**
+ * Returns a 3D vector created based on the attributes of the passed XML element.
+ * @param {Element} tag
+ * @returns {Number[3]}
+ */
+Vec.fromXMLTag3 = function (tag) {
+    return [
+        parseFloat(tag.getAttribute("x")),
+        parseFloat(tag.getAttribute("y")),
+        parseFloat(tag.getAttribute("z"))
+    ];
+};
 
 // -----------------------------------------------------------------------------
 // Functions of a single vector
@@ -686,7 +743,7 @@ var Vec = Vec || {};
  * @returns {Number} Length of v.
  */
 Vec.length3 = function (v) {
-    return Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+    return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 };
 
 /**
@@ -695,7 +752,7 @@ Vec.length3 = function (v) {
  * @returns {Number} The squared of the length of v.
  */
 Vec.length3Squared = function (v) {
-    return v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
 };
 
 /**
@@ -705,9 +762,9 @@ Vec.length3Squared = function (v) {
  * components.
  * @returns {String}
  */
-Vec.toString3 = function (v,decimals) {
+Vec.toString3 = function (v, decimals) {
     decimals = decimals || 2;
-    return v[0].toFixed(decimals)+" "+v[1].toFixed(decimals)+" "+v[2].toFixed(decimals);
+    return v[0].toFixed(decimals) + " " + v[1].toFixed(decimals) + " " + v[2].toFixed(decimals);
 };
 
 /**
@@ -717,9 +774,9 @@ Vec.toString3 = function (v,decimals) {
  * components.
  * @returns {String}
  */
-Vec.toString4 = function (v,decimals) {
+Vec.toString4 = function (v, decimals) {
     decimals = decimals || 2;
-    return v[0].toFixed(decimals)+" "+v[1].toFixed(decimals)+" "+v[2].toFixed(decimals)+" "+v[3].toFixed(decimals);
+    return v[0].toFixed(decimals) + " " + v[1].toFixed(decimals) + " " + v[2].toFixed(decimals) + " " + v[3].toFixed(decimals);
 };
 
 // -----------------------------------------------------------------------------
@@ -731,8 +788,8 @@ Vec.toString4 = function (v,decimals) {
  * @param {Number} w The W component to be added.
  * @returns {Number[4]} A 4D vector with the components of v, with w appended.
  */
-Vec.vector4From3 = function (v,w) {
-    return [v[0],v[1],v[2],w];
+Vec.vector4From3 = function (v, w) {
+    return [v[0], v[1], v[2], w];
 };
 
 /**
@@ -741,9 +798,9 @@ Vec.vector4From3 = function (v,w) {
  * @returns {Number[2]} The normalized 3D vector.
  */
 Vec.normal2 = function (v) {
-    var divisor = Math.sqrt(v[0]*v[0]+v[1]*v[1]);
-    var factor = (divisor===0)?1.0:1.0/divisor;
-    return [v[0]*factor,v[1]*factor];
+    var divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+    var factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+    return [v[0] * factor, v[1] * factor];
 };
 
 /**
@@ -752,9 +809,9 @@ Vec.normal2 = function (v) {
  * @returns {Number[3]} The normalized 3D vector.
  */
 Vec.normal3 = function (v) {
-    var divisor = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
-    var factor = (divisor===0)?1.0:1.0/divisor;
-    return [v[0]*factor,v[1]*factor,v[2]*factor];
+    var divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    var factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+    return [v[0] * factor, v[1] * factor, v[2] * factor];
 };
 
 /**
@@ -763,9 +820,9 @@ Vec.normal3 = function (v) {
  * @param {Number} s A scalar.
  * @returns {Number[3]} v multiplied by s.
  */
-Vec.scaled3 = function (v,s) {
+Vec.scaled3 = function (v, s) {
     return [
-        v[0]*s,v[1]*s,v[2]*s
+        v[0] * s, v[1] * s, v[2] * s
     ];
 };
 
@@ -775,9 +832,9 @@ Vec.scaled3 = function (v,s) {
  * @param {Number} s A scalar.
  * @returns {Number[4]} v multiplied by s.
  */
-Vec.scaled4 = function (v,s) {
+Vec.scaled4 = function (v, s) {
     return [
-        v[0]*s,v[1]*s,v[2]*s,v[3]*s
+        v[0] * s, v[1] * s, v[2] * s, v[3] * s
     ];
 };
 
@@ -790,8 +847,8 @@ Vec.scaled4 = function (v,s) {
  * @param {Number[3]} v2 The second 3D vector.
  * @returns {Number[3]} The sum of v1 and v2.
  */
-Vec.add3 = function (v1,v2) {
-    return [v1[0]+v2[0],v1[1]+v2[1],v1[2]+v2[2]];
+Vec.add3 = function (v1, v2) {
+    return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
 };
 
 /**
@@ -800,8 +857,8 @@ Vec.add3 = function (v1,v2) {
  * @param {Number[3]} v2 A 3D vector.
  * @returns {Number} The dot product.
  */
-Vec.dot3 = function (v1,v2) {
-    return v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
+Vec.dot3 = function (v1, v2) {
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 };
 
 /**
@@ -810,11 +867,11 @@ Vec.dot3 = function (v1,v2) {
  * @param {Number[3]} v2 A 3D vector.
  * @returns {Number[3]} The cross product.
  */
-Vec.cross3 = function (v1,v2) {
+Vec.cross3 = function (v1, v2) {
     return [
-        v1[1]*v2[2]-v1[2]*v2[1],
-        v1[2]*v2[0]-v1[0]*v2[2],
-        v1[0]*v2[1]-v1[1]*v2[0]
+        v1[1] * v2[2] - v1[2] * v2[1],
+        v1[2] * v2[0] - v1[0] * v2[2],
+        v1[0] * v2[1] - v1[1] * v2[0]
     ];
 };
 
@@ -824,10 +881,10 @@ Vec.cross3 = function (v1,v2) {
  * @param {Number[2]} v2 The second 2D vector.
  * @returns {Number} The angle in radian.
  */
-Vec.angle2u = function (v1,v2) {
+Vec.angle2u = function (v1, v2) {
     return (
-        Math.acos(v1[0]*v2[0]+v1[1]*v2[1])
-    );
+            Math.acos(v1[0] * v2[0] + v1[1] * v2[1])
+            );
 };
 
 /**
@@ -836,10 +893,10 @@ Vec.angle2u = function (v1,v2) {
  * @param {Number[3]} v2 A 3D unit vector.
  * @returns {Number} The angle in radian.
  */
-Vec.angle3u = function (v1,v2) {
+Vec.angle3u = function (v1, v2) {
     return (
-        Math.acos(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
-    );
+            Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
+            );
 };
 
 // -----------------------------------------------------------------------------
@@ -851,11 +908,11 @@ Vec.angle3u = function (v1,v2) {
  * @param {Float32Array} m A 3x3 matrix.
  * @returns {Float32Array} v*m
  */
-Vec.mulVec3Mat3 = function (v,m) {
+Vec.mulVec3Mat3 = function (v, m) {
     return new Float32Array([
-        m[0]*v[0]+m[3]*v[1]+m[6]*v[2],
-        m[1]*v[0]+m[4]*v[1]+m[7]*v[2],
-        m[2]*v[0]+m[5]*v[1]+m[8]*v[2]
+        m[0] * v[0] + m[3] * v[1] + m[6] * v[2],
+        m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
+        m[2] * v[0] + m[5] * v[1] + m[8] * v[2]
     ]);
 };
 
@@ -865,11 +922,11 @@ Vec.mulVec3Mat3 = function (v,m) {
  * @param {Number[3]} v A 3D vector.
  * @returns {Float32Array} m*v
  */
-Vec.mulMat3Vec3 = function (m,v) {
+Vec.mulMat3Vec3 = function (m, v) {
     return new Float32Array([
-        m[0]*v[0]+m[1]*v[1]+m[2]*v[2],
-        m[3]*v[0]+m[4]*v[1]+m[5]*v[2],
-        m[6]*v[0]+m[7]*v[1]+m[8]*v[2]
+        m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+        m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
+        m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
     ]);
 };
 
@@ -880,11 +937,11 @@ Vec.mulMat3Vec3 = function (m,v) {
  * @param {Float32Array} m A 4x4 matrix.
  * @returns {Float32Array} v*m'
  */
-Vec.mulVec3Mat4 = function (v,m) {
+Vec.mulVec3Mat4 = function (v, m) {
     return new Float32Array([
-        m[0]*v[0]+m[4]*v[1]+m[8]*v[2],
-        m[1]*v[0]+m[5]*v[1]+m[9]*v[2],
-        m[2]*v[0]+m[6]*v[1]+m[10]*v[2]
+        m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
+        m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
+        m[2] * v[0] + m[6] * v[1] + m[10] * v[2]
     ]);
 };
 
@@ -894,12 +951,12 @@ Vec.mulVec3Mat4 = function (v,m) {
  * @param {Number[4]} v A 4D vector.
  * @returns {Float32Array} m*v
  */
-Vec.mulMat4Vec4 = function (m,v) {
+Vec.mulMat4Vec4 = function (m, v) {
     return new Float32Array([
-        m[0]* v[0] + m[1]* v[1] + m[2]* v[2] + m[3]* v[3],
-        m[4]* v[0] + m[5]* v[1] + m[6]* v[2] + m[7]* v[3],
-        m[8]* v[0] + m[9]* v[1] + m[10]*v[2] + m[11]*v[3],
-        m[12]*v[0] + m[13]*v[1] + m[14]*v[2] + m[15]*v[3]
+        m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
+        m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
+        m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
+        m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
     ]);
 };
 
@@ -909,11 +966,11 @@ Vec.mulMat4Vec4 = function (m,v) {
  * @param {Float32Array} m A 4x4 matrix.
  * @returns {Float32Array} v*m
  */
-Vec.mulVec4Mat4 = function (v,m) {
+Vec.mulVec4Mat4 = function (v, m) {
     return new Float32Array([
-        m[0]*v[0] + m[4]*v[1] + m[8]* v[2] + m[12]*v[3],
-        m[1]*v[0] + m[5]*v[1] + m[9]* v[2] + m[13]*v[3],
-        m[2]*v[0] + m[6]*v[1] + m[10]*v[2] + m[14]*v[3],
-        m[3]*v[0] + m[7]*v[1] + m[11]*v[2] + m[15]*v[3]
+        m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3],
+        m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3],
+        m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3],
+        m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3]
     ]);
 };

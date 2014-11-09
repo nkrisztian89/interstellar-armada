@@ -31,7 +31,12 @@
  * @namespace A namespace the provides a model class and several functions for
  * returning 3D models with simple structures.
  */
-var Egom = Egom || (function () {
+Application.createModule({name: "Egom",
+    dependencies: [
+        {module: "Resource", from: "resource.js"}]}, function () {
+    // create a reference to the used modules in the local scope for cleaner and
+    // faster access
+    var Resource = Application.Resource.Resource;
     /**
      * The list of EgomModel versions that can be loaded from file.
      * @type String[]
@@ -1497,7 +1502,8 @@ var Egom = Egom || (function () {
         }
     };
 
-    // Public methods exposed outside of this library
+    // -------------------------------------------------------------------------
+    // The public interface of the module
     return {
         Model: Model,
         /**
@@ -1605,7 +1611,7 @@ var Egom = Egom || (function () {
          * the line.
          * @returns {Model}
          */
-        lineModel: function (name,vector,color) {
+        lineModel: function (name, vector, color) {
             var result = new Model();
             name && result.setName(name);
             result.appendVertex([0.0, 0.0, 0.0]);
@@ -1614,4 +1620,4 @@ var Egom = Egom || (function () {
             return result;
         }
     };
-})();
+});

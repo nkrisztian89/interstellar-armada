@@ -39,9 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <!-- Adding the ?123 bypasses caching, to make sure the newest version
              of the source file is loaded -->
-        <script src="js/armada.js?123"></script>
+        <script src="js/application.js?123"></script>
     </head>
-    <body>
+    <body onload="Application.initialize('js/armada.js');">
         <div class="horizontallyCentered contentWide outerContainer pageContainer">
             <img src="pictures/thumb.png" alt="Interstellar Armada" />
             <h3>
