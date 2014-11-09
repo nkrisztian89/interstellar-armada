@@ -409,9 +409,9 @@
             <fullName>Aries</fullName>
             <description>
                 The most common patrol ship of the Empire. Equipped with two rapid
-                fire precision turrets, it does a very good job at taking out enemy
-                fighters and light bombers. Its only protection against larger ships
-                is its good maneuverability.
+                fire precision turrets, it is very efficient at taking out enemy
+                fighters and light bombers. It is only lightly armored, which leaves
+                good maneuverability its main protection against larger ships. 
             </description>
         </information>
         <models size ="0.2">
@@ -499,7 +499,8 @@
             <description>
                 A small warship fully dedicated to armor and firepower. Its main job
                 is to take on the larger, more powerful ships of the enemy fleet and
-                keep them under fire.
+                keep them under constant fire, drawing their attention from smaller
+                and more vulnerable units.
             </description>
         </information>
         <models size ="0.2">
@@ -636,11 +637,11 @@
             <fullName>Libra</fullName>
             <description>
                 The main capital ship of the imperial armada. This class is equipped
-                with protection against various threats, sporting heavy armor, both
+                with protection against various threats. It sports heavy armor, both
                 large caliber and small, precision turrets, two battle hangars that
                 can house up to 48 fighters to battle off more maneuverable enemies
-                if needed, or bombers to support the already significant firepower of
-                the cruiser, and state-of-the-art countermeasure and jammer systems.
+                if needed or bombers to support the already significant firepower of
+                the cruiser, as well as state-of-the-art countermeasure and jammer systems.
             </description>
         </information>
         <models size ="0.2">

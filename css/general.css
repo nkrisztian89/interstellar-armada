@@ -192,10 +192,13 @@ a.menu {
     margin: 0.2em;
 }
 
+div.horizontalMenu {
+    border-spacing: 0.4em;
+}
+
 a.horizontalMenu {
-    display: inline-table;
-    margin-top: 0.4em;
-    margin-bottom: 0.4em;
+    display: table-cell;
+    margin: 0.4em;
 }
 
 a.button {
