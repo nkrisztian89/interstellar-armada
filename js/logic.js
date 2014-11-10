@@ -92,19 +92,18 @@ Application.createModule({name: "Logic",
     /**
      * @class A tiny piece of dust that is rendered as passing line to indicate the
      * direction and speed of movement to the player.
-     * @param {Scene} scene
+     * @param {DustCloud} cloud
      * @param {Shader} shader
      * @param {Float32Array} positionMatrix
      * @returns {DustParticle}
      */
-    function DustParticle(scene, shader, positionMatrix) {
+    function DustParticle(cloud, shader, positionMatrix) {
         this.visualModel = new Scene.PointParticle(
-                Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], [0.6, 0.6, 0.6])),
+                Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], [1.0, 1.0, 1.0])),
                 shader,
-                [0.6, 0.6, 0.6],
                 positionMatrix
                 );
-        scene.addObject(this.visualModel);
+        cloud._visualModel.addSubnode(this.visualModel);
 
         this.toBeDeleted = false;
     }
@@ -114,7 +113,6 @@ Application.createModule({name: "Logic",
      * @param {SceneCamera} camera
      */
     DustParticle.prototype.simulate = function (camera) {
-        this.visualModel.shift = [-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2];
         if (this.visualModel.positionMatrix[12] > -camera.getPositionMatrix()[12] + 25.0) {
             this.visualModel.positionMatrix[12] -= 50.0;
         } else if (this.visualModel.positionMatrix[12] < -camera.getPositionMatrix()[12] - 25.0) {
@@ -146,15 +144,20 @@ Application.createModule({name: "Logic",
          * @type DustParticle[]
          */
         this._particles = null;
+        this._visualModel = null;
     }
 
     DustCloud.prototype.addToScene = function (scene) {
         var i;
+        this._visualModel = new Scene.PointCloud(
+                Armada.resources().getShader(this.class.shaderName),
+                [0.6, 0.6, 0.6]);
+        scene.addObject(this._visualModel);
         this._particles = new Array();
         for (i = 0; i < this.class.numberOfParticles; i++) {
             this._particles.push(
                     new DustParticle(
-                            scene,
+                            this,
                             Armada.resources().getShader(this.class.shaderName),
                             Mat.translation4(Math.random() * 50 - 25.0, Math.random() * 50 - 25.0, Math.random() * 50 - 25.0)
                             )
@@ -164,6 +167,7 @@ Application.createModule({name: "Logic",
 
 
     DustCloud.prototype.simulate = function (camera) {
+        this._visualModel.shift = [-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2];
         for (var i = 0; i < this.class.numberOfParticles; i++) {
             this._particles[i].simulate(camera);
         }

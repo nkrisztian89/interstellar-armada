@@ -964,31 +964,20 @@ Application.createModule({name: "Scene",
             this.model.render(context, false);
         }
     };
-
+    
     /**
-     * Creates a dust particle type visual object.
-     * @class Visual object that renders a point like object as a line as it is
-     * moving. Used to represent dust particles that give a visual clue about the
-     * motion of the camera.
-     * @extends VisualObject
-     * @param {EgomModel} model A model of 2 vertices has to be passed (see lineModel()).
-     * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * 
+     * @param {Shader} shader
+     * @param {Number[]} color The RGBA components of the color of the points.
+     * @returns {PointCloud}
      */
-    function PointParticle(model, shader, color, positionMatrix) {
+    function PointCloud(shader, color) {
         VisualObject.call(this, shader, false, true);
         this.color = color;
-        this.positionMatrix = positionMatrix;
         this.shift = [0.0, 0.0, 0.0];
-
-        this.model = model;
 
         var self = this;
 
-        this.uniformValueFunctions["u_modelMatrix"] = function () {
-            return self.getCascadeModelMatrix();
-        };
         this.uniformValueFunctions["u_color"] = function () {
             return self.color;
         };
@@ -1000,6 +989,47 @@ Application.createModule({name: "Scene",
         };
         this.uniformValueFunctions["u_farthestZ"] = function () {
             return 25.0;
+        };
+    }
+    
+    PointCloud.prototype = new VisualObject();
+    PointCloud.prototype.constructor = PointCloud;
+    
+    /**
+     * We always need to render the dust cloud.
+     * @returns {Boolean} Always true.
+     */
+    PointCloud.prototype.isInsideViewFrustum = function () {
+        return true;
+    };
+
+    /**
+     * Doesn't do anything, the cloud is rendered through rendering its particles.
+     * This object only exists to set the uniforms common to all particles.
+     */
+    PointCloud.prototype.render = function () {
+    };
+
+    /**
+     * Creates a dust particle type visual object.
+     * @class Visual object that renders a point like object as a line as it is
+     * moving. Used to represent dust particles that give a visual clue about the
+     * motion of the camera.
+     * @extends VisualObject
+     * @param {Egom.Model} model A model of 2 vertices has to be passed (see lineModel()).
+     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     */
+    function PointParticle(model, shader, positionMatrix) {
+        VisualObject.call(this, shader, false, true);
+        this.positionMatrix = positionMatrix;
+
+        this.model = model;
+
+        var self = this;
+
+        this.uniformValueFunctions["u_modelMatrix"] = function () {
+            return self.getCascadeModelMatrix();
         };
     }
 
@@ -2024,6 +2054,7 @@ Application.createModule({name: "Scene",
         Billboard: Billboard,
         StaticParticle: StaticParticle,
         DynamicParticle: DynamicParticle,
+        PointCloud: PointCloud,
         PointParticle: PointParticle
     };
 });

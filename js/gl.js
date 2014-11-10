@@ -77,8 +77,8 @@ Application.createModule({name: "GL",
         this._ids = new Object();
     }
 
-// as it is an asynchronously loaded resource, we set the Resource as parent
-// class to make handling easier
+    // as it is an asynchronously loaded resource, we set the Resource as parent
+    // class to make handling easier
     Texture.prototype = new Resource();
     Texture.prototype.constructor = Texture;
 
@@ -209,8 +209,8 @@ Application.createModule({name: "GL",
         this._ids = new Object();
     }
 
-// as it is an asynchronously loaded resource, we set the Resource as parent
-// class to make handling easier
+    // as it is an asynchronously loaded resource, we set the Resource as parent
+    // class to make handling easier
     Cubemap.prototype = new Resource();
     Cubemap.prototype.constructor = Cubemap;
 
@@ -356,10 +356,7 @@ Application.createModule({name: "GL",
          * @name ShaderUniform#_arraySize
          * @type Number
          */
-        this._arraySize = 0;
-        if (arraySize !== undefined) {
-            this._arraySize = arraySize;
-        }
+        this._arraySize = arraySize || 0;
         /**
          * If the uniform is of struct type, other ShaderUniform instances represent
          * its members (and setting it will set the members instead). The members
@@ -367,10 +364,7 @@ Application.createModule({name: "GL",
          * @name ShaderUniform#_members
          * @type ShaderUniform[]
          */
-        this._members = null;
-        if (this._type === this.VariableTypes.struct) {
-            this._members = new Array();
-        }
+        this._members = (this._type === this.VariableTypes.struct) ? new Array() : null;
         // properties for WebGL resource management
         /**
          * The associative array containing the locations of this uniform variable
@@ -402,33 +396,36 @@ Application.createModule({name: "GL",
 
     /**
      * Determining the enumeration value of a shader variable type from the string
-     * containing the name of the variable type so that a faster switch can be used
-     * when selecting the proper assignment function based on the type, instead of
-     * the much slower string matching.
+     * containing the name of the variable type so that a faster hash table switch 
+     * can be used when selecting the proper assignment function based on the type, 
+     * instead of the slower string matching.
      * @param {String} type The name of the variable type 
      */
     ShaderUniform.prototype.getVariableTypeFromString = function (type) {
-        if (type === "float")
-            return this.VariableTypes.float;
-        if (type === "mat4")
-            return this.VariableTypes.mat4;
-        if (type === "mat3")
-            return this.VariableTypes.mat3;
-        if (type === "vec3")
-            return this.VariableTypes.vec3;
-        if (type === "vec4")
-            return this.VariableTypes.vec4;
-        if (type === "sampler2D")
-            return this.VariableTypes.sampler2D;
-        if (type === "samplerCube")
-            return this.VariableTypes.samplerCube;
-        if (type === "int")
-            return this.VariableTypes.int;
-        if (type === "struct")
-            return this.VariableTypes.struct;
-        if (type === "bool")
-            return this.VariableTypes.bool;
-        return this.VariableTypes.none;
+        switch (type) {
+            case "float":
+                return this.VariableTypes.float;
+            case "mat4":
+                return this.VariableTypes.mat4;
+            case "mat3":
+                return this.VariableTypes.mat3;
+            case "vec3":
+                return this.VariableTypes.vec3;
+            case "vec4":
+                return this.VariableTypes.vec4;
+            case "sampler2D":
+                return this.VariableTypes.sampler2D;
+            case"samplerCube":
+                return this.VariableTypes.samplerCube;
+            case "int":
+                return this.VariableTypes.int;
+            case "struct":
+                return this.VariableTypes.struct;
+            case "bool":
+                return this.VariableTypes.bool;
+            default:
+                return this.VariableTypes.none;
+        }
     };
 
     /**
@@ -864,23 +861,47 @@ Application.createModule({name: "GL",
         this.executeWhenReady(function () {
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
+                // create and compile vertex shader
                 var vertexShader = gl.createShader(gl.VERTEX_SHADER);
                 gl.shaderSource(vertexShader, this._vertexShaderSource);
                 gl.compileShader(vertexShader);
-
+                // detect and display compilation errors
+                if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                    var infoLog = gl.getShaderInfoLog(vertexShader);
+                    Application.showError("Compiling GLSL vertex shader '"+this._vertexShaderFileName+"' failed.","severe","More details:\n"+infoLog);
+                    this._ids[context.getName()] = null;
+                    return;
+                }
+                // create and compile fragment shader
                 var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
                 gl.shaderSource(fragmentShader, this._fragmentShaderSource);
                 gl.compileShader(fragmentShader);
-
+                // detect and display compilation errors
+                if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                    var infoLog = gl.getShaderInfoLog(fragmentShader);
+                    Application.showError("Compiling GLSL fragment shader '"+this._fragmentShaderFileName+"' failed.","severe","More details:\n"+infoLog);
+                    this._ids[context.getName()] = null;
+                    return;
+                }
+                // create and link shader program
                 this._ids[context.getName()] = gl.createProgram();
-                gl.attachShader(this._ids[context.getName()], vertexShader);
-                gl.attachShader(this._ids[context.getName()], fragmentShader);
-                gl.linkProgram(this._ids[context.getName()]);
-
+                var prog = this._ids[context.getName()];
+                gl.attachShader(prog, vertexShader);
+                gl.attachShader(prog, fragmentShader);
+                gl.linkProgram(prog);
+                // detect and display linking errors
+                if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                    var infoLog = gl.getProgramInfoLog(prog);
+                    Application.showError("Linking GLSL shader '"+this._name+"' failed.","severe","More details: "+infoLog);
+                    gl.deleteProgram(prog);
+                    this._ids[context.getName()] = null;
+                    return;
+                }
+                // cache uniform locations
                 for (var i = 0; i < this._uniforms.length; i++) {
                     this._uniforms[i].setLocation(context, this);
                 }
-
+                // add the created shader to the context's managed resources list
                 context.addShader(this);
             }
         });
@@ -1039,7 +1060,8 @@ Application.createModule({name: "GL",
         try {
             var contextParameters = {alpha: true, antialias: antialiasing};
             // Try to grab the standard context. If it fails, fallback to experimental.
-            this.gl = canvas.getContext("webgl", contextParameters) || canvas.getContext("experimental-webgl", contextParameters);
+            this.gl = canvas.getContext("webgl", contextParameters) || 
+                    canvas.getContext("experimental-webgl", contextParameters);
         }
         catch (e) {
         }
@@ -1260,6 +1282,8 @@ Application.createModule({name: "GL",
             case 3:
                 this.gl.activeTexture(this.gl.TEXTURE3);
                 break;
+            default:
+                this.gl.activeTexture(this.gl["TEXTURE"+place]);
         }
         if (this._boundTextures[place] !== texture) {
             if (texture instanceof Texture) {

@@ -288,7 +288,7 @@ Application.createModule({name: "Physics",
             // correcting the matrices every 10 seconds, as due to small floating
             // point calculation inaccuracies, they slowly lose orthogonality
             this.timeSinceLastMatrixCorrection += dt;
-            if (this.timeSinceLastMatrixCorrection >= 10000) {
+            if (this.timeSinceLastMatrixCorrection >= 5000) {
                 this.correctMatrices();
             }
         }

@@ -100,7 +100,7 @@ Application.createModule({name: "Game",
         var self = this;
         Application.requestXMLFile("config", "settings.xml", function (settingsXML) {
             Application.log("Loading game settings...", 1);
-            self.graphicsContext.loadFromXML(settingsXML.getElementsByTagName("graphics")[0]);
+            self.graphicsContext.loadFromXMLTag(settingsXML.getElementsByTagName("graphics")[0]);
             self.graphicsContext.loadFromLocalStorage();
             self.logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
             self.controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
