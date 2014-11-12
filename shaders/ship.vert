@@ -1,5 +1,7 @@
 // shader used for spaceships
 
+precision mediump float;
+
 // uniforms set for the whole model
 uniform mat4 u_modelMatrix;
 uniform mat4 u_cameraMatrix;
@@ -16,6 +18,7 @@ attribute float a_luminosity;
 attribute float a_shininess;
 attribute float a_groupIndex;
 	
+varying vec3 v_position;
 varying vec2 v_texCoord;
 varying vec3 v_normal;
 varying vec4 v_color;
@@ -29,6 +32,7 @@ varying vec4 v_worldPos;
 void main() {
 	gl_Position = u_projMatrix * u_cameraMatrix * u_modelMatrix * vec4(a_position,1.0);
 	
+        v_position = a_position;
 	v_texCoord = a_texCoord;
 	v_normal = normalize(u_normalMatrix * a_normal);
 	v_color = a_color;

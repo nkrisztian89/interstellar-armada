@@ -28,7 +28,11 @@
 
 Application.createModule({name: "Scene",
     dependencies: [
-        {script: "matrices.js"}]}, function () {
+        {script: "matrices.js"},
+        {module: "GL", from: "gl.js"}]}, function () {
+    // create a reference to the used modules in the local scope for cleaner and
+    // faster access
+    var GL = Application.GL;
     /**
      * Creates a new VisualObject.
      * @class The parent class of all objects to be rendered in the scene graph such
@@ -366,6 +370,9 @@ Application.createModule({name: "Scene",
     VisualObject.prototype.render = function () {
     };
 
+    VisualObject.prototype.renderShadowMap = function () {
+    };
+
     /**
      * Renders the object and all its subnodes.
      * @param {ManagedGLContext} managedGLContext
@@ -409,6 +416,17 @@ Application.createModule({name: "Scene",
                 for (var i = 0; i < this.subnodes.length; i++) {
                     this.subnodes[i].cascadeRender(managedGLContext, scene, screenWidth, screenHeight, depthMaskPhase);
                 }
+            }
+        }
+    };
+
+    VisualObject.prototype.cascadeRenderShadowMap = function (managedGLContext, scene, screenWidth, screenHeight) {
+        // the visible property determines visibility of all subnodes as well
+        if (this.visible) {
+            this.renderShadowMap(managedGLContext, scene, screenWidth, screenHeight);
+            // recursive rendering of all subnodes
+            for (var i = 0; i < this.subnodes.length; i++) {
+                this.subnodes[i].cascadeRenderShadowMap(managedGLContext, scene, screenWidth, screenHeight);
             }
         }
     };
@@ -740,6 +758,14 @@ Application.createModule({name: "Scene",
         this.model.render(context, this.lineMode, depthMask);
     };
 
+    Mesh.prototype.renderShadowMap = function (context, scene, screenWidth, screenHeight) {
+        if (this.isInsideViewFrustum(scene.activeCamera)
+                && this.needsToBeRendered(screenWidth, screenHeight, scene.lodContext, true)) {
+            context.getCurrentShader().assignUniforms(context, this.uniformValueFunctions);
+            this.model.render(context, this.lineMode);
+        }
+    };
+
     Mesh.prototype.getNumberOfDrawnTriangles = function () {
         return this.model._triangles.length;
     };
@@ -964,7 +990,7 @@ Application.createModule({name: "Scene",
             this.model.render(context, false);
         }
     };
-    
+
     /**
      * 
      * @param {Shader} shader
@@ -991,10 +1017,10 @@ Application.createModule({name: "Scene",
             return 25.0;
         };
     }
-    
+
     PointCloud.prototype = new VisualObject();
     PointCloud.prototype.constructor = PointCloud;
-    
+
     /**
      * We always need to render the dust cloud.
      * @returns {Boolean} Always true.
@@ -1755,7 +1781,53 @@ Application.createModule({name: "Scene",
     function LightSource(color, direction) {
         this.color = color;
         this.direction = Vec.normal3(direction);
+        this.castsShadows = true;
+        this._orientationMatrix = Mat.identity4();
+        this.matrix = null;
+        this._index = null;
+        var vx, vy, vz, axis;
+        vz = this.direction;
+        axis = [Math.abs(vz[0]), Math.abs(vz[1]), Math.abs(vz[2])];
+        axis = (axis[0] >= Math.max(axis[1], axis[2])) ? [1, 0, 0] :
+                ((axis[1] >= Math.max(axis[0], axis[2])) ? [0, 1, 0] : [0, 0, 1]);
+        vx = Vec.mulVec3Mat4(vz, Mat.rotation4(axis, -Math.PI / 2));
+        vy = Vec.cross3(vx, vz);
+        this._orientationMatrix = Mat.fromVectorsTo4(vx, vy, vz);
+        this.matrix = this._orientationMatrix;
     }
+
+    /**
+     * 
+     * @param {ManagedGLContext} context
+     * @param {Number} index 
+     * @param {Number} shadowMapTextureSize
+     */
+    LightSource.prototype.addToContext = function (context, index, shadowMapTextureSize) {
+        this._index = index;
+        if (this.castsShadows) {
+            context.addFrameBuffer(new GL.FrameBuffer("shadow-map-buffer-" + this._index, shadowMapTextureSize, shadowMapTextureSize));
+        }
+    };
+
+    /**
+     * 
+     * @param {ManagedGLContext} context
+     * @param {SceneCamera} camera
+     */
+    LightSource.prototype.startShadowMap = function (context, camera, shadowMapRange) {
+        context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index);
+
+        var self = this;
+        context.getCurrentShader().assignUniforms(context, {
+            "u_lightMatrix": function () {
+                self.matrix = Mat.mul4(camera.getPositionMatrix(), self._orientationMatrix);
+                return self.matrix;
+            },
+            "u_projMatrix": function () {
+                return Mat.orthographic4(shadowMapRange, shadowMapRange, -shadowMapRange, shadowMapRange);
+            }
+        });
+    };
 
     /**
      * Creates a new scene graph object.
@@ -1770,8 +1842,9 @@ Application.createModule({name: "Scene",
      * @param {boolean} clearDepthOnRender Whether to clear the depth buffer every time at the beginning of rendering the scene.
      * @param {LODContext} lodContext The LOD threshold and configuration to be used
      * for rendering object with the appropriate level of detail.
+     * @param {Shader} [shadowMappingShader]
      */
-    function Scene(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext) {
+    function Scene(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext, shadowMappingShader) {
         this.left = left;
         this.top = top;
         this.width = width;
@@ -1790,6 +1863,10 @@ Application.createModule({name: "Scene",
         this.setActiveCamera(new SceneCamera(width / height, 60, 1000));
 
         this.lodContext = lodContext;
+
+        this._shadowMappingShader = shadowMappingShader || null;
+        this._shadowMapTextureSize = 2048;
+        this._shadowMapRange = 1000;
 
         this.uniformValueFunctions = new Object();
 
@@ -1819,6 +1896,14 @@ Application.createModule({name: "Scene",
         this.uniformValueFunctions['u_eyePos'] = function () {
             return new Float32Array(Vec.scaled3(self.activeCamera.getPositionVector(), -1));
         };
+        this.uniformValueFunctions["u_shadows"] = function () {
+            return !!self._shadowMappingShader;
+        };
+        if (this._shadowMappingShader) {
+            this.uniformValueFunctions["u_shadowMapRange"] = function () {
+                return self._shadowMapRange;
+            };
+        }
     }
 
     Scene.prototype.setActiveCamera = function (sceneCamera) {
@@ -1962,11 +2047,44 @@ Application.createModule({name: "Scene",
      */
     Scene.prototype.addToContext = function (context) {
         var i;
+        if (this._shadowMappingShader) {
+            this._shadowMappingShader.addToContext(context);
+            this.uniformValueFunctions['u_shadowMaps'] = function () {
+                return new Int32Array([3, 4, 5, 6]);
+            };
+        }
+        for (i = 0; i < this.lights.length; i++) {
+            this.lights[i].addToContext(context, i, this._shadowMapTextureSize);
+        }
         for (i = 0; i < this._backgroundObjects.length; i++) {
             this._backgroundObjects[i].cascadeAddToContext(context);
         }
         for (i = 0; i < this.objects.length; i++) {
             this.objects[i].cascadeAddToContext(context);
+        }
+    };
+
+    Scene.prototype.renderShadowMap = function (context) {
+        var gl = context.gl;
+
+        gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
+        gl.scissor(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.colorMask(true, true, true, true);
+        gl.disable(gl.BLEND);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthMask(true);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // ensuring that transformation matrices are only calculated once for 
+        // each object in each render
+        for (var i = 0; i < this.objects.length; i++) {
+            this.objects[i].cascadeResetModelMatrixCalculated();
+        }
+
+        for (var i = 0; i < this.objects.length; i++) {
+            this.objects[i].cascadeRenderShadowMap(context, this, this.width, this.height);
         }
     };
 
@@ -1979,6 +2097,22 @@ Application.createModule({name: "Scene",
         this._drawnTriangles = 0;
 
         var gl = context.gl;
+
+        if (this._shadowMappingShader) {
+            context.setCurrentShader(this._shadowMappingShader, this);
+            for (var i = 0; i < this.lights.length; i++) {
+                if (this.lights[i].castsShadows) {
+                    this.lights[i].startShadowMap(context, this.activeCamera, this._shadowMapRange);
+                    this.renderShadowMap(context);
+                }
+            }
+            for (var i = 0; i < this.lights.length; i++) {
+                if (this.lights[i].castsShadows) {
+                    context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i), i + 3);
+                }
+            }
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
         gl.viewport(this.left, this.top, this.width, this.height);
         gl.scissor(this.left, this.top, this.width, this.height);

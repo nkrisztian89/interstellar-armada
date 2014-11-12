@@ -165,8 +165,25 @@ Mat.perspective4 = function (right, top, near, far) {
         near / right, 0.0, 0.0, 0.0,
         0.0, near / top, 0.0, 0.0,
         0.0, 0.0, (near + far) / (near - far), -1.0,
-        0.0, 0.0, 2 * near * far / (near - far), 0.0]
-            );
+        0.0, 0.0, 2 * near * far / (near - far), 0.0
+    ]);
+};
+
+/**
+ * Returns a 4x4 transformation matrix describing an orthographic projection.
+ * @param {Number} right
+ * @param {Number} top
+ * @param {Number} near
+ * @param {Number} far
+ * @returns {Float32Array}
+ */
+Mat.orthographic4 = function (right, top, near, far) {
+    return new Float32Array([
+        1 / right, 0.0, 0.0, 0.0,
+        0.0, 1 / top, 0.0, 0.0,
+        0.0, 0.0, -2 / (far - near), 0.0,
+        0.0, 0.0, (far + near) / (far - near), 1.0
+    ]);
 };
 
 /**
@@ -208,6 +225,41 @@ Mat.rotation4FromXMLTags = function (tags) {
                         );
     }
     return result;
+};
+
+/**
+ * Returns a 3x3 vector the rows of which are made up of the vx,vy,vz vectors.
+ * @param {Number[]} vx A 3D or 4D vector.
+ * @param {Number[]} vy A 3D or 4D vector.
+ * @param {Number[]} vz A 3D or 4D vector.
+ * @returns {Float32Array}
+ */
+Mat.fromVectorsTo3 = function (vx,vy,vz) {
+    return new Float32Array([
+        vx[0], vx[1], vx[2],
+        vy[0], vy[1], vy[2],
+        vz[0], vz[1], vz[2]
+    ]);
+};
+
+/**
+ * Returns a 4x4 vector the rows of which are made up of the vx,vy,vz and if
+ * given, vw (otherwise 0,0,0,1) vectors. The 4th elements are substituted by a
+ * zero if the vectors are three dimensional.
+ * @param {Number[]} vx A 3D or 4D vector.
+ * @param {Number[]} vy A 3D or 4D vector.
+ * @param {Number[]} vz A 3D or 4D vector.
+ * @param {Number[]} vw A 3D or 4D vector.
+ * @returns {Float32Array}
+ */
+Mat.fromVectorsTo4 = function (vx,vy,vz,vw) {
+    vw = vw || [0.0,0.0,0.0,1.0];
+    return new Float32Array([
+        vx[0], vx[1], vx[2], vx.length>3 ? vx[3] : 0.0,
+        vy[0], vy[1], vy[2], vy.length>3 ? vy[3] : 0.0,
+        vz[0], vz[1], vz[2], vz.length>3 ? vz[3] : 0.0,
+        vw[0], vw[1], vw[2], vw[3]
+    ]);
 };
 
 // -----------------------------------------------------------------------------

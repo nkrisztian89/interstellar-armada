@@ -113,10 +113,14 @@
             <uniform name="u_colorTexture" type="sampler2D" />
             <uniform name="u_specularTexture" type="sampler2D" />
             <uniform name="u_luminosityTexture" type="sampler2D" />
+            <uniform name="u_shadowMaps" type="sampler2D" arraySize="4" />
             <uniform name="u_numLights" type="int" />
             <uniform name="u_lights" type="struct" arraySize="12" />
+            <uniform name="u_shadowMapRange" type="float" />
+            <uniform name="u_shadows" type="bool" />
             <uniform name="color" memberOf="u_lights" type="vec3" />
             <uniform name="direction" memberOf="u_lights" type="vec3" />
+            <uniform name="matrix" memberOf="u_lights" type="mat4" />
             <uniform name="u_eyePos" type="vec3" />
             <uniform name="u_luminosityFactors" type="float" arraySize="20" />
         </uniforms>
@@ -236,6 +240,23 @@
             <uniform name="u_shift" type="vec3" />
             <uniform name="u_length" type="float" />
             <uniform name="u_farthestZ" type="float" />
+        </uniforms>
+    </Shader>
+    
+    <Shader name="shadowMapping">
+        <vertex filename="shadow-mapping.vert" />
+        <fragment filename="shadow-mapping.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_lightMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_shadowMapRange" type="float" />
         </uniforms>
     </Shader>
 </Shaders>

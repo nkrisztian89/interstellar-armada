@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <graphics>
-        <context antialiasing="true" filtering="trilinear" />
+        <context antialiasing="true" filtering="trilinear" shadowMapping="true" />
         <shaders source="shaders.xml" />
         <levelOfDetailSettings>
             <lodLoadProfile maxLevel="4" autoLimitByScreenWidth="true">

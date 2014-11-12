@@ -101,6 +101,7 @@ Application.createModule({name: "Graphics",
          * @type LODContext
          */
         this._lodContext = null;
+        this._shadowMapping = null;
     }
 
     GraphicsContext.prototype = new Resource();
@@ -132,6 +133,7 @@ Application.createModule({name: "Graphics",
         // set the default settings
         this._antialiasing = false;
         this._filtering = "bilinear";
+        this._shadowMapping = false;
         // overwrite with the settings from the XML tag, if present
         var contextTag = xmlTag.getElementsByTagName("context")[0];
         if (contextTag !== null) {
@@ -140,6 +142,9 @@ Application.createModule({name: "Graphics",
             }
             if (contextTag.hasAttribute("filtering")) {
                 this._filtering = contextTag.getAttribute("filtering");
+            }
+            if (contextTag.hasAttribute("shadowMapping")) {
+                this._shadowMapping = (contextTag.getAttribute("shadowMapping") === "true");
             }
         }
         // load the LOD load settings (maximum loaded LOD)
@@ -181,6 +186,9 @@ Application.createModule({name: "Graphics",
         if (localStorage.interstellarArmada_graphics_maxLOD !== undefined) {
             this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD));
         }
+        if (localStorage.interstellarArmada_graphics_shadowMapping !== undefined) {
+            this._shadowMapping = (localStorage.interstellarArmada_graphics_shadowMapping === "true");
+        }
         this.setToReady();
     };
 
@@ -193,6 +201,7 @@ Application.createModule({name: "Graphics",
         localStorage.removeItem("interstellarArmada_graphics_antialiasing");
         localStorage.removeItem("interstellarArmada_graphics_filtering");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");
+        localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
     };
 
     /**
@@ -249,7 +258,7 @@ Application.createModule({name: "Graphics",
     };
 
     /**
-     * Returns the LOD context object storin the currently active LOD settings.
+     * Returns the LOD context object storing the currently active LOD settings.
      * @returns {LODContext}
      */
     GraphicsContext.prototype.getLODContext = function () {
@@ -264,6 +273,23 @@ Application.createModule({name: "Graphics",
         this._maxLoadedLOD = value;
         this._lodContext.maxEnabledLOD = value;
         localStorage.interstellarArmada_graphics_maxLOD = this._maxLoadedLOD;
+    };
+    
+    /**
+     * Returns whether shadow mapping is enabled.
+     * @returns {Boolean}
+     */
+    GraphicsContext.prototype.getShadowMapping = function () {
+        return this._shadowMapping;
+    };
+
+    /**
+     * Sets whether shadow mapping should be enabled.
+     * @param {Boolean} value
+     */
+    GraphicsContext.prototype.setShadowMapping = function (value) {
+        this._shadowMapping = value;
+        localStorage.interstellarArmada_graphics_shadowMapping = this._shadowMapping;
     };
 
     // -------------------------------------------------------------------------

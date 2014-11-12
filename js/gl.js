@@ -510,6 +510,9 @@ Application.createModule({name: "GL",
                 case this.VariableTypes.float:
                     gl.uniform1fv(location, value);
                     break;
+                case this.VariableTypes.sampler2D:
+                    gl.uniform1iv(location, value);
+                    break;
                 case this.VariableTypes.struct:
                     // for structs, launch recursive assignment of members
                     for (i = 0; i < value.length; i++) {
@@ -597,7 +600,7 @@ Application.createModule({name: "GL",
          */
         this._data = new Float32Array(numVectors * this._vectorSize);
         /**
-         * The WebGL handle for this vertex buffer array.
+         * The WebGL handle for this vertex buffer object.
          * @name VertexBuffer#_id
          * @type WebGLBuffer
          */
@@ -706,6 +709,63 @@ Application.createModule({name: "GL",
                 Application.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!");
             }
         }
+    };
+
+    function FrameBuffer(name, width, height) {
+        /**
+         * The name by which this buffer can be referred to.
+         * @name FrameBuffer#_name
+         * @type String
+         */
+        this._name = name;
+        /**
+         * The WebGL handle for this frame buffer object.
+         * @name FrameBuffer#_id
+         * @type WebGLBuffer
+         */
+        this._id = null;
+        this._width = width;
+        this._height = height;
+        this._textureID = null;
+        this._renderBufferID = null;
+    }
+    
+    /**
+     * Getter for the _name property.
+     * @returns {String}
+     */
+    FrameBuffer.prototype.getName = function () {
+        return this._name;
+    };
+    
+    /**
+     * Getter for the _textureID property.
+     * @returns {String}
+     */
+    FrameBuffer.prototype.getTextureID = function () {
+        return this._textureID;
+    };
+
+    FrameBuffer.prototype.setup = function (context) {
+        this._id = context.gl.createFramebuffer();
+        context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
+
+        this._textureID = context.gl.createTexture();
+        context.gl.bindTexture(context.gl.TEXTURE_2D, this._textureID);
+        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.LINEAR);
+        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.LINEAR);
+        context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
+
+        this._renderBufferID = context.gl.createRenderbuffer();
+        context.gl.bindRenderbuffer(context.gl.RENDERBUFFER, this._renderBufferID);
+        context.gl.renderbufferStorage(context.gl.RENDERBUFFER, context.gl.DEPTH_COMPONENT16, this._width, this._height);
+
+        context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.COLOR_ATTACHMENT0, context.gl.TEXTURE_2D, this._textureID, 0);
+        context.gl.framebufferRenderbuffer(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.RENDERBUFFER, this._renderBufferID);
+    };
+
+    FrameBuffer.prototype.bind = function (context) {
+        context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
     };
 
     /**
@@ -868,7 +928,7 @@ Application.createModule({name: "GL",
                 // detect and display compilation errors
                 if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                     var infoLog = gl.getShaderInfoLog(vertexShader);
-                    Application.showError("Compiling GLSL vertex shader '"+this._vertexShaderFileName+"' failed.","severe","More details:\n"+infoLog);
+                    Application.showError("Compiling GLSL vertex shader '" + this._vertexShaderFileName + "' failed.", "severe", "More details:\n" + infoLog);
                     this._ids[context.getName()] = null;
                     return;
                 }
@@ -879,7 +939,7 @@ Application.createModule({name: "GL",
                 // detect and display compilation errors
                 if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                     var infoLog = gl.getShaderInfoLog(fragmentShader);
-                    Application.showError("Compiling GLSL fragment shader '"+this._fragmentShaderFileName+"' failed.","severe","More details:\n"+infoLog);
+                    Application.showError("Compiling GLSL fragment shader '" + this._fragmentShaderFileName + "' failed.", "severe", "More details:\n" + infoLog);
                     this._ids[context.getName()] = null;
                     return;
                 }
@@ -892,7 +952,7 @@ Application.createModule({name: "GL",
                 // detect and display linking errors
                 if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
                     var infoLog = gl.getProgramInfoLog(prog);
-                    Application.showError("Linking GLSL shader '"+this._name+"' failed.","severe","More details: "+infoLog);
+                    Application.showError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog);
                     gl.deleteProgram(prog);
                     this._ids[context.getName()] = null;
                     return;
@@ -1039,6 +1099,7 @@ Application.createModule({name: "GL",
          * @type Object
          */
         this._vertexBuffers = null;
+        this._frameBuffers = new Object();
         /**
          * A reference to the currently used shader in order to quickly dismiss 
          * calls that aim to set the same again.
@@ -1060,7 +1121,7 @@ Application.createModule({name: "GL",
         try {
             var contextParameters = {alpha: true, antialias: antialiasing};
             // Try to grab the standard context. If it fails, fallback to experimental.
-            this.gl = canvas.getContext("webgl", contextParameters) || 
+            this.gl = canvas.getContext("webgl", contextParameters) ||
                     canvas.getContext("experimental-webgl", contextParameters);
         }
         catch (e) {
@@ -1233,7 +1294,37 @@ Application.createModule({name: "GL",
                 this._vertexBuffers[vbName].bindToAttribute(this, this._shaders[i]);
             }
         }
+    };
+
+    /**
+     * Returns the frame buffer with the given name, if such exists. Otherwise
+     * returns undefined.
+     * @param {String} name
+     * @returns {FrameBuffer}
+     */
+    ManagedGLContext.prototype.getFrameBuffer = function (name) {
+        return this._frameBuffers[name];
+    };
+
+    /**
+     * Adds the frame buffer object given as parameter.
+     * @param {FrameBuffer} frameBuffer
+     */
+    ManagedGLContext.prototype.addFrameBuffer = function (frameBuffer) {
+        if (this._frameBuffers[frameBuffer.getName()] === undefined) {
+            this._frameBuffers[frameBuffer.getName()] = frameBuffer;
+        }
+    };
+
+    ManagedGLContext.prototype.setupFrameBuffers = function () {
+        for (var fbName in this._frameBuffers) {
+            this._frameBuffers[fbName].setup(this);
+        }
         this.setToReady();
+    };
+
+    ManagedGLContext.prototype.setCurrentFrameBuffer = function (name) {
+        this._frameBuffers[name].bind(this);
     };
 
     /**
@@ -1283,7 +1374,7 @@ Application.createModule({name: "GL",
                 this.gl.activeTexture(this.gl.TEXTURE3);
                 break;
             default:
-                this.gl.activeTexture(this.gl["TEXTURE"+place]);
+                this.gl.activeTexture(this.gl["TEXTURE" + place]);
         }
         if (this._boundTextures[place] !== texture) {
             if (texture instanceof Texture) {
@@ -1291,6 +1382,9 @@ Application.createModule({name: "GL",
             } else
             if (texture instanceof Cubemap) {
                 this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.getIDForContext(this));
+            } else
+            if (texture instanceof FrameBuffer) {
+                this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getTextureID());
             }
             this._boundTextures[place] = texture;
         }
@@ -1854,6 +1948,7 @@ Application.createModule({name: "GL",
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        FrameBuffer: FrameBuffer,
         ManagedGLContext: ManagedGLContext,
         ResourceManager: ResourceManager
     };

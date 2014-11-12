@@ -408,6 +408,7 @@ Application.createModule({name: "Screens",
         scene.addToContext(canvas.getManagedContext());
         if (this._renderLoop !== null) {
             canvas.getManagedContext().setupVertexBuffers();
+            canvas.getManagedContext().setupFrameBuffers();
         }
     };
 
@@ -438,6 +439,7 @@ Application.createModule({name: "Screens",
         var i;
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             this._sceneCanvasBindings[i].canvas.getManagedContext().setupVertexBuffers();
+            this._sceneCanvasBindings[i].canvas.getManagedContext().setupFrameBuffers();
         }
         var self = this;
         this._renderTimes = [new Date()];
@@ -747,7 +749,12 @@ Application.createModule({name: "Screens",
 
             self.updateStatus("building scene...", 10);
             var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
-            self._battleScene = new Scene.Scene(0, 0, canvas.width, canvas.height, true, [true, true, true, true], [0, 0, 0, 1], true, Armada.graphics().getLODContext());
+            self._battleScene = new Scene.Scene(
+                    0, 0, canvas.width, canvas.height,
+                    true, [true, true, true, true],
+                    [0, 0, 0, 1], true,
+                    Armada.graphics().getLODContext(),
+                    Armada.graphics().getShadowMapping() ? Armada.resources().getShader("shadowMapping") : null);
             self._level.buildScene(self._battleScene);
 
             Armada.control().getController("general").setLevel(self._level);
@@ -957,7 +964,12 @@ Application.createModule({name: "Screens",
         var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
         // create a new scene and add a directional light source which will not change
         // while different objects are shown
-        this._scene = new Scene.Scene(0, 0, canvas.clientWidth, canvas.clientHeight, true, [true, true, true, true], [0, 0, 0, 0], true, Armada.graphics().getLODContext());
+        this._scene = new Scene.Scene(
+                0, 0, canvas.clientWidth, canvas.clientHeight,
+                true, [true, true, true, true],
+                [0, 0, 0, 0], true,
+                Armada.graphics().getLODContext(),
+                Armada.graphics().getShadowMapping() ? Armada.resources().getShader("shadowMapping") : null);
         this._scene.addLightSource(new Scene.LightSource([1.0, 1.0, 1.0], [-1.0, 0.0, 1.0]));
 
         Armada.resources().onResourceLoad = function (resourceName, totalResources, loadedResources) {
@@ -1145,6 +1157,7 @@ Application.createModule({name: "Screens",
         this._antialiasingSelector = this.registerExternalComponent(new Components.Selector(name + "_aaSelector", "selector.html", "selector.css", "Anti-aliasing:", ["on", "off"]), "settingsDiv");
         this._filteringSelector = this.registerExternalComponent(new Components.Selector(name + "_filteringSelector", "selector.html", "selector.css", "Texture filtering:", ["bilinear", "trilinear", "anisotropic"]), "settingsDiv");
         this._lodSelector = this.registerExternalComponent(new Components.Selector(name + "_lodSelector", "selector.html", "selector.css", "Model details:", ["very low", "low", "medium", "high", "very high"]), "settingsDiv");
+        this._shadowMappingSelector = this.registerExternalComponent(new Components.Selector(name + "_shadowMappingSelector", "selector.html", "selector.css", "Shadows:", ["on", "off"]), "settingsDiv");
     }
     ;
 
@@ -1159,6 +1172,7 @@ Application.createModule({name: "Screens",
             Armada.graphics().setAntialiasing((self._antialiasingSelector.getSelectedValue() === "on"));
             Armada.graphics().setFiltering(self._filteringSelector.getSelectedValue());
             Armada.graphics().setMaxLOD(self._lodSelector.getSelectedIndex());
+            Armada.graphics().setShadowMapping((self._shadowMappingSelector.getSelectedValue() === "on"));
             if (self.isSuperimposed()) {
                 self._game.closeSuperimposedScreen();
             } else {
@@ -1181,6 +1195,7 @@ Application.createModule({name: "Screens",
             self._antialiasingSelector.selectValue((Armada.graphics().getAntialiasing() === true) ? "on" : "off");
             self._filteringSelector.selectValue(Armada.graphics().getFiltering());
             self._lodSelector.selectValueWithIndex(Armada.graphics().getMaxLoadedLOD());
+            self._shadowMappingSelector.selectValue((Armada.graphics().getShadowMapping() === true) ? "on" : "off");
         });
     };
 
