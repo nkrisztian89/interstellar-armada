@@ -14,12 +14,13 @@ uniform mat4 u_modelMatrix;
 uniform sampler2D u_colorTexture;
 uniform sampler2D u_specularTexture;
 uniform sampler2D u_luminosityTexture;
-uniform sampler2D u_shadowMaps[4];
+uniform sampler2D u_shadowMaps[12];
 uniform vec3 u_eyePos;
-uniform Light u_lights[12];
+uniform Light u_lights[3];
 uniform int u_numLights;
 uniform bool u_shadows;
-uniform float u_shadowMapRange;
+uniform float u_shadowMapRanges[4];
+uniform int u_numRanges;
 	
 varying vec3 v_position;
 varying vec2 v_texCoord;
@@ -31,6 +32,7 @@ varying float v_luminosityFactor;
 
 varying vec4 v_worldPos;
 
+varying vec4 v_index;
 	
 void main() {
     // interpolated normals can have different then unit length
@@ -52,30 +54,43 @@ void main() {
     float diffuseFactor;
     float specularFactor;
     vec4 shadowMapPosition;
-    bool lighted;
+    float lighted;
+    vec4 shadowMapTexel;
 
-    for(int i=0;i<12;i++) {
-        if(i<u_numLights) {
+    for (int i=0; i<3; i++) {
+        if (i < u_numLights) {
             diffuseFactor = max(0.0,dot(+u_lights[i].direction,normal));
 
-            lighted = false;
+            lighted = 0.0;
 
-            if(diffuseFactor>0.0) {
-                lighted = true;
-                if(u_shadows) {
+            if (diffuseFactor > 0.0) {
+                lighted = 1.0;
+                if (u_shadows) {
                     shadowMapPosition = u_lights[i].matrix * u_modelMatrix * vec4(v_position,1.0);
-                    shadowMapPosition.xyz /= 2.0*u_shadowMapRange;
-                    shadowMapPosition.xyz += vec3(0.5,0.5,0.5);
+                    for (int range = 0; range < 4; range++) {
+                        if (range < u_numRanges) {
+                            if(length(shadowMapPosition.xyz)<u_shadowMapRanges[range]) {
+                                shadowMapPosition.xyz /= u_shadowMapRanges[range];
+                                float dist = clamp((length(shadowMapPosition.xyz)-0.8)*5.0,0.0,1.0);
+                                shadowMapPosition.xyz += vec3(1.0,1.0,1.0);
+                                shadowMapPosition.xyz /= 2.0;
+                                shadowMapPosition.xyz = clamp(shadowMapPosition.xyz,0.0,1.0);
 
-                    if(shadowMapPosition.z < texture2D(u_shadowMaps[i],shadowMapPosition.xy).r-1.0/u_shadowMapRange) {
-                        lighted = false;
+                                shadowMapTexel = texture2D(u_shadowMaps[i*4+range],shadowMapPosition.xy);
+
+                                if((shadowMapTexel.w>shadowMapPosition.z+0.5/255.0) && (length(v_index.xyz-shadowMapTexel.rgb)>0.5/255.0)) {
+                                    lighted = min(lighted,(range == (u_numRanges-1)) ? dist : 0.0);
+                                }
+                                //break;
+                            }
+                        }
                     }
                 }
 
-                if(lighted) {
+                if (lighted > 0.0) {
                     specularFactor = v_shininess>0.0?pow(max(dot(reflDir,u_lights[i].direction),0.0), v_shininess):0.0;
 
-                    gl_FragColor.rgb += 
+                    gl_FragColor.rgb += lighted *
                         vec3(
                             // the RGB components
                                 clamp(

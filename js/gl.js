@@ -670,8 +670,14 @@ Application.createModule({name: "GL",
      * GL context.
      * @param {ManagedGLContext} context
      */
-    VertexBuffer.prototype.enable = function (context) {
-        context.gl.enableVertexAttribArray(this._location);
+    VertexBuffer.prototype.enable = function (context,shader) {
+        var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
+        if ((location !== -1) && (location !== this._location)) {
+            this._location = location;
+            context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
+            context.gl.enableVertexAttribArray(this._location);
+            context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
+        }
     };
 
     /**
@@ -701,13 +707,14 @@ Application.createModule({name: "GL",
         var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
         // we only need to bind the buffer if a corresponding attribute exists
         if (location !== -1) {
-            if (this._location === null) {
+            //if (this._location === null) {
                 this._location = location;
                 context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
                 context.gl.enableVertexAttribArray(this._location);
-            } else if (this._location !== location) {
-                Application.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!");
-            }
+            //} else if (this._location !== location) {
+            //    Application.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!",
+            //    undefined,"First attempt at location "+this._location+", second at location "+location+". The shader that caused the error: "+shader.getName()+".");
+            //}
         }
     };
 
@@ -1011,7 +1018,7 @@ Application.createModule({name: "GL",
      */
     Shader.prototype.enableVertexBuffers = function (context) {
         for (var i = 0; i < this._attributes.length; i++) {
-            context.getVertexBuffer(this._attributes[i].name).enable(context);
+            context.getVertexBuffer(this._attributes[i].name).enable(context,this);
         }
     };
 

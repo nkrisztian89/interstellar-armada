@@ -17,6 +17,7 @@ attribute vec4 a_color;
 attribute float a_luminosity;
 attribute float a_shininess;
 attribute float a_groupIndex;
+attribute vec4 a_index;
 	
 varying vec3 v_position;
 varying vec2 v_texCoord;
@@ -27,6 +28,8 @@ varying float v_shininess;
 varying float v_luminosityFactor;
 
 varying vec4 v_worldPos;
+
+varying vec4 v_index;
 
 
 void main() {
@@ -41,4 +44,5 @@ void main() {
         v_luminosityFactor = u_luminosityFactors[int(a_groupIndex)];
 	
 	v_worldPos = u_modelMatrix * vec4(a_position,1.0);
+        v_index = a_index;
 }

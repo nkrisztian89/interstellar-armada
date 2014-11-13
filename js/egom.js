@@ -1090,15 +1090,22 @@ Application.createModule({name: "Egom",
      * array by the roles of the different data (e.g. position, texCoord)
      * @param {Boolean} wireframe Whether the data for wireframe rendering (lines)
      * needs to be returned.
+     * @param {Number} [startIndex=0] The starting index where the buffer data
+     * will be used (inside a bigger buffer with data from multiple models).
+     * Triangles can be indexed uniquely across all models by requesting the
+     * model data with the right start index for each.
      * @returns {Object} An associative array, with all the buffer data for this
      * model. (Float32Arrays)
      * The names of the properties correspond to the roles of each of the arrays:
      * position, texCoord, normal, color, luminosity, shininess, groupIndex.
      * The dataSize property contains the number of vertices.
      */
-    Model.prototype.getBufferData = function (wireframe) {
+    Model.prototype.getBufferData = function (wireframe, startIndex) {
+        var vertexData, texCoordData, normalData, colorData, luminosityData,
+                shininessData, groupIndexData, triangleIndexData;
+        startIndex = startIndex || 0;
         if (wireframe === true) {
-            var vertexData = new Float32Array(this._lines.length * 6);
+            vertexData = new Float32Array(this._lines.length * 6);
             for (var i = 0; i < this._lines.length; i++) {
                 vertexData[i * 6 + 0] = this._vertices[this._lines[i].a].x;
                 vertexData[i * 6 + 1] = this._vertices[this._lines[i].a].y;
@@ -1107,14 +1114,14 @@ Application.createModule({name: "Egom",
                 vertexData[i * 6 + 4] = this._vertices[this._lines[i].b].y;
                 vertexData[i * 6 + 5] = this._vertices[this._lines[i].b].z;
             }
-            var texCoordData = new Float32Array(this._lines.length * 4);
+            texCoordData = new Float32Array(this._lines.length * 4);
             for (var i = 0; i < this._lines.length; i++) {
                 texCoordData[i * 4 + 0] = 0.0;
                 texCoordData[i * 4 + 1] = 1.0;
                 texCoordData[i * 4 + 2] = 1.0;
                 texCoordData[i * 4 + 3] = 1.0;
             }
-            var normalData = new Float32Array(this._lines.length * 6);
+            normalData = new Float32Array(this._lines.length * 6);
             for (var i = 0; i < this._lines.length; i++) {
                 normalData[i * 6 + 0] = this._lines[i].normal[0];
                 normalData[i * 6 + 1] = this._lines[i].normal[1];
@@ -1123,7 +1130,7 @@ Application.createModule({name: "Egom",
                 normalData[i * 6 + 4] = this._lines[i].normal[1];
                 normalData[i * 6 + 5] = this._lines[i].normal[2];
             }
-            var colorData = new Float32Array(this._lines.length * 8);
+            colorData = new Float32Array(this._lines.length * 8);
             for (var i = 0; i < this._lines.length; i++) {
                 colorData[i * 8 + 0] = this._lines[i].color[0];
                 colorData[i * 8 + 1] = this._lines[i].color[1];
@@ -1134,23 +1141,38 @@ Application.createModule({name: "Egom",
                 colorData[i * 8 + 6] = this._lines[i].color[2];
                 colorData[i * 8 + 7] = 1.0;
             }
-            var luminosityData = new Float32Array(this._lines.length * 2);
+            luminosityData = new Float32Array(this._lines.length * 2);
             for (var i = 0; i < this._lines.length; i++) {
                 luminosityData[i * 2] = this._lines[i].luminosity;
                 luminosityData[i * 2 + 1] = this._lines[i].luminosity;
             }
-            var shininessData = new Float32Array(this._lines.length * 2);
+            shininessData = new Float32Array(this._lines.length * 2);
             for (var i = 0; i < this._lines.length; i++) {
                 shininessData[i * 2 + 0] = 0;
                 shininessData[i * 2 + 1] = 0;
             }
-            var groupIndexData = new Float32Array(this._lines.length * 2);
+            groupIndexData = new Float32Array(this._lines.length * 2);
             for (var i = 0; i < this._lines.length; i++) {
                 groupIndexData[i * 2 + 0] = 0;
                 groupIndexData[i * 2 + 1] = 0;
             }
+            triangleIndexData = new Float32Array(this._triangles.length * 3);
+            for (var i = 0; i < this._triangles.length; i++) {
+                triangleIndexData[i * 12 + 0] = 0;
+                triangleIndexData[i * 12 + 1] = 0;
+                triangleIndexData[i * 12 + 2] = 0;
+                triangleIndexData[i * 12 + 3] = 0;
+                triangleIndexData[i * 12 + 4] = 0;
+                triangleIndexData[i * 12 + 5] = 0;
+                triangleIndexData[i * 12 + 6] = 0;
+                triangleIndexData[i * 12 + 7] = 0;
+                triangleIndexData[i * 12 + 8] = 0;
+                triangleIndexData[i * 12 + 9] = 0;
+                triangleIndexData[i * 12 + 10] = 0;
+                triangleIndexData[i * 12 + 11] = 0;
+            }
         } else {
-            var vertexData = new Float32Array(this._triangles.length * 9);
+            vertexData = new Float32Array(this._triangles.length * 9);
             for (var i = 0; i < this._triangles.length; i++) {
                 vertexData[i * 9 + 0] = this._vertices[this._triangles[i].a].x;
                 vertexData[i * 9 + 1] = this._vertices[this._triangles[i].a].y;
@@ -1162,7 +1184,7 @@ Application.createModule({name: "Egom",
                 vertexData[i * 9 + 7] = this._vertices[this._triangles[i].c].y;
                 vertexData[i * 9 + 8] = this._vertices[this._triangles[i].c].z;
             }
-            var texCoordData = new Float32Array(this._triangles.length * 6);
+            texCoordData = new Float32Array(this._triangles.length * 6);
             for (var i = 0; i < this._triangles.length; i++) {
                 texCoordData[i * 6 + 0] = this._triangles[i].texCoords[0][0];
                 texCoordData[i * 6 + 1] = this._triangles[i].texCoords[0][1];
@@ -1171,7 +1193,7 @@ Application.createModule({name: "Egom",
                 texCoordData[i * 6 + 4] = this._triangles[i].texCoords[2][0];
                 texCoordData[i * 6 + 5] = this._triangles[i].texCoords[2][1];
             }
-            var normalData = new Float32Array(this._triangles.length * 9);
+            normalData = new Float32Array(this._triangles.length * 9);
             for (var i = 0; i < this._triangles.length; i++) {
                 normalData[i * 9 + 0] = this._triangles[i].getNormal(0)[0];
                 normalData[i * 9 + 1] = this._triangles[i].getNormal(0)[1];
@@ -1183,7 +1205,7 @@ Application.createModule({name: "Egom",
                 normalData[i * 9 + 7] = this._triangles[i].getNormal(2)[1];
                 normalData[i * 9 + 8] = this._triangles[i].getNormal(2)[2];
             }
-            var colorData = new Float32Array(this._triangles.length * 12);
+            colorData = new Float32Array(this._triangles.length * 12);
             for (var i = 0; i < this._triangles.length; i++) {
                 colorData[i * 12 + 0] = this._triangles[i].color[0];
                 colorData[i * 12 + 1] = this._triangles[i].color[1];
@@ -1198,23 +1220,44 @@ Application.createModule({name: "Egom",
                 colorData[i * 12 + 10] = this._triangles[i].color[2];
                 colorData[i * 12 + 11] = this._triangles[i].color[3];
             }
-            var luminosityData = new Float32Array(this._triangles.length * 3);
+            luminosityData = new Float32Array(this._triangles.length * 3);
             for (var i = 0; i < this._triangles.length; i++) {
                 luminosityData[i * 3] = this._triangles[i].luminosity;
                 luminosityData[i * 3 + 1] = this._triangles[i].luminosity;
                 luminosityData[i * 3 + 2] = this._triangles[i].luminosity;
             }
-            var shininessData = new Float32Array(this._triangles.length * 3);
+            shininessData = new Float32Array(this._triangles.length * 3);
             for (var i = 0; i < this._triangles.length; i++) {
                 shininessData[i * 3] = this._triangles[i].shininess;
                 shininessData[i * 3 + 1] = this._triangles[i].shininess;
                 shininessData[i * 3 + 2] = this._triangles[i].shininess;
             }
-            var groupIndexData = new Float32Array(this._triangles.length * 3);
+            groupIndexData = new Float32Array(this._triangles.length * 3);
             for (var i = 0; i < this._triangles.length; i++) {
                 groupIndexData[i * 3] = this._triangles[i].groupIndex;
                 groupIndexData[i * 3 + 1] = this._triangles[i].groupIndex;
                 groupIndexData[i * 3 + 2] = this._triangles[i].groupIndex;
+            }
+            triangleIndexData = new Float32Array(this._triangles.length * 12);
+            for (var i = 0; i < this._triangles.length; i++) {
+                var ix = startIndex + i;
+                var index = new Array();
+                for(var j=0; j<4; j++) {
+                    index[j] = (ix % 256) / 255.0;
+                    ix = Math.floor(ix / 256.0);
+                }
+                triangleIndexData[i * 12 + 0] = index[0];
+                triangleIndexData[i * 12 + 1] = index[1];
+                triangleIndexData[i * 12 + 2] = index[2];
+                triangleIndexData[i * 12 + 3] = index[3];
+                triangleIndexData[i * 12 + 4] = index[0];
+                triangleIndexData[i * 12 + 5] = index[1];
+                triangleIndexData[i * 12 + 6] = index[2];
+                triangleIndexData[i * 12 + 7] = index[3];
+                triangleIndexData[i * 12 + 8] = index[0];
+                triangleIndexData[i * 12 + 9] = index[1];
+                triangleIndexData[i * 12 + 10] = index[2];
+                triangleIndexData[i * 12 + 11] = index[3];
             }
         }
 
@@ -1226,6 +1269,7 @@ Application.createModule({name: "Egom",
             "luminosity": luminosityData,
             "shininess": shininessData,
             "groupIndex": groupIndexData,
+            "triangleIndex": triangleIndexData,
             "dataSize": (wireframe ? this._lines.length * 2 : this._triangles.length * 3)
         };
     };
@@ -1255,14 +1299,14 @@ Application.createModule({name: "Egom",
         var dataSize = 0;
         var props = this._contextProperties[context.getName()];
         if (props.wireframe) {
-            bufferData = this.getBufferData(true);
+            bufferData = this.getBufferData(true, startIndex);
             props.bufferStartWireframe = startIndex;
             context.setVertexBufferData(bufferData, startIndex);
             dataSize += bufferData.dataSize;
             startIndex += bufferData.dataSize;
         }
         if (props.solid) {
-            bufferData = this.getBufferData(false);
+            bufferData = this.getBufferData(false, startIndex);
             props.bufferStartSolid = startIndex;
             props.bufferStartTransparent = startIndex + this._nOpaqueTriangles * 3;
             context.setVertexBufferData(bufferData, startIndex);

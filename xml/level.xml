@@ -8,7 +8,7 @@
     <Skybox class="deepspace" />
         
     <BackgroundObject class="standardSun">
-        <position angleAlpha="90" angleBeta="40" />
+        <position angleAlpha="90" angleBeta="20" />
     </BackgroundObject>
         
     <BackgroundObject class="smallBlueStar">
