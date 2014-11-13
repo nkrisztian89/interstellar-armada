@@ -1785,18 +1785,12 @@ Application.createModule({name: "Scene",
         this._orientationMatrix = Mat.identity4();
         this.matrix = null;
         this._index = null;
-        var vx, vy, vz, axis;
+        var vx, vy, vz;
         vz = this.direction;
-        axis = [Math.abs(vz[0]), Math.abs(vz[1]), Math.abs(vz[2])];
-        axis = (axis[0] >= Math.max(axis[1], axis[2])) ? [1, 0, 0] :
-                ((axis[1] >= Math.max(axis[0], axis[2])) ? [0, 1, 0] : [0, 0, 1]);
-        vx = Vec.normal3(Vec.mulVec3Mat4(vz, Mat.rotation4(axis, Math.PI / 2)));
-        vy = Vec.scaled3(Vec.normal3(Vec.cross3(vx, vz)), -1);
-        vx = Vec.normal3(Vec.cross3(vy, vz));
+        vx = ((vz[2] !== 0.0) ? [-1, 0, 0] : [0, 0, 1]);
         vy = Vec.normal3(Vec.cross3(vz, vx));
-        this._orientationMatrix = Mat.fromVectorsTo4(vx, vy, vz);
+        this._orientationMatrix = Mat.correctedOrthogonal4(Mat.fromVectorsTo4(vx, vy, vz));
         this.matrix = this._orientationMatrix;
-        console.log(Vec.toString3(direction) + "\n" + Mat.toString4(this._orientationMatrix));
     }
 
     /**
@@ -1822,7 +1816,7 @@ Application.createModule({name: "Scene",
      * @param {Number} rangeIndex
      * @param {Number} range
      */
-    LightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range) {
+    LightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
 
         var self = this;
@@ -1831,11 +1825,11 @@ Application.createModule({name: "Scene",
                 self.matrix = Mat.mul4(camera.getPositionMatrix(), self._orientationMatrix);
                 return self.matrix;
             },
-            "u_shadowMapRange": function () {
-                return range;
+            "u_shadowMapDepth": function () {
+                return depth;
             },
             "u_projMatrix": function () {
-                return Mat.orthographic4(range, range, -range, range);
+                return Mat.orthographic4(range, range, -depth, depth);
             }
         });
     };
@@ -1876,8 +1870,14 @@ Application.createModule({name: "Scene",
         this.lodContext = lodContext;
 
         this._shadowMappingShader = shadowMappingShader || null;
-        this._shadowMapTextureSize = 2048;
-        this._shadowMapRanges = [100,300,600,1200];
+        this._shadowMapTextureSize = Armada.graphics().getShadowQuality();
+        this._shadowMapRanges = new Array();
+        var ranges = [5, 50, 150, 300, 600, 1200];
+        for (var i = 0; i <= Armada.graphics().getShadowDistance(); i++) {
+            this._shadowMapRanges.push(ranges[i]);
+        }
+        this._shadowMapDepthRatio = 1.5;
+        this._maxMapRanges = 6;
 
         this.uniformValueFunctions = new Object();
 
@@ -1916,6 +1916,9 @@ Application.createModule({name: "Scene",
             };
             this.uniformValueFunctions["u_shadowMapRanges"] = function () {
                 return new Float32Array(self._shadowMapRanges);
+            };
+            this.uniformValueFunctions["u_shadowMapDepthRatio"] = function () {
+                return self._shadowMapDepthRatio;
             };
         }
     }
@@ -2064,7 +2067,7 @@ Application.createModule({name: "Scene",
         if (this._shadowMappingShader) {
             this._shadowMappingShader.addToContext(context);
             this.uniformValueFunctions['u_shadowMaps'] = function () {
-                return new Int32Array([3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,13, 14]);
+                return new Int32Array([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
             };
         }
         for (i = 0; i < this.lights.length; i++) {
@@ -2105,7 +2108,7 @@ Application.createModule({name: "Scene",
         this._drawnTriangles = 0;
 
         var gl = context.gl;
-        
+
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
         for (var i = 0; i < this.objects.length; i++) {
@@ -2117,7 +2120,7 @@ Application.createModule({name: "Scene",
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     for (var j = 0; j < this._shadowMapRanges.length; j++) {
-                        this.lights[i].startShadowMap(context, this.activeCamera, j, this._shadowMapRanges[j]);
+                        this.lights[i].startShadowMap(context, this.activeCamera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
                         this.renderShadowMap(context);
                     }
                 }
@@ -2125,7 +2128,7 @@ Application.createModule({name: "Scene",
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     for (var j = 0; j < this._shadowMapRanges.length; j++) {
-                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), 3 + i * 4 + j);
+                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), 3 + i * this._maxMapRanges + j);
                     }
                 }
             }

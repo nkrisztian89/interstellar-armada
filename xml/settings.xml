@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <graphics>
-        <context antialiasing="true" filtering="trilinear" shadowMapping="true" />
+        <context antialiasing="true" filtering="trilinear" shadowMapping="true">
+            <shadows quality="2048" distance="3" />
+        </context>
         <shaders source="shaders.xml" />
         <levelOfDetailSettings>
             <lodLoadProfile maxLevel="4" autoLimitByScreenWidth="true">

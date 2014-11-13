@@ -101,7 +101,21 @@ Application.createModule({name: "Graphics",
          * @type LODContext
          */
         this._lodContext = null;
+        /**
+         * @name GraphicsContext#_shadowMapping
+         * @type Boolean
+         */
         this._shadowMapping = null;
+        /**
+         * @name GraphicsContext#_shadowQuality
+         * @type Number
+         */
+        this._shadowQuality = null;
+        /**
+         * @name GraphicsContext#_shadowDistance
+         * @type Number
+         */
+        this._shadowDistance = null;
     }
 
     GraphicsContext.prototype = new Resource();
@@ -134,6 +148,8 @@ Application.createModule({name: "Graphics",
         this._antialiasing = false;
         this._filtering = "bilinear";
         this._shadowMapping = false;
+        this._shadowQuality = 2048;
+        this._shadowDistance = 3;
         // overwrite with the settings from the XML tag, if present
         var contextTag = xmlTag.getElementsByTagName("context")[0];
         if (contextTag !== null) {
@@ -145,6 +161,11 @@ Application.createModule({name: "Graphics",
             }
             if (contextTag.hasAttribute("shadowMapping")) {
                 this._shadowMapping = (contextTag.getAttribute("shadowMapping") === "true");
+                var shadowTag = contextTag.getElementsByTagName("shadows")[0];
+                if(shadowTag !== null) {
+                    this._shadowQuality = (parseInt(shadowTag.getAttribute("quality")));
+                    this._shadowDistance = (parseInt(shadowTag.getAttribute("distance")));
+                }
             }
         }
         // load the LOD load settings (maximum loaded LOD)
@@ -189,6 +210,12 @@ Application.createModule({name: "Graphics",
         if (localStorage.interstellarArmada_graphics_shadowMapping !== undefined) {
             this._shadowMapping = (localStorage.interstellarArmada_graphics_shadowMapping === "true");
         }
+        if (localStorage.interstellarArmada_graphics_shadowQuality !== undefined) {
+            this._shadowQuality = (parseInt(localStorage.interstellarArmada_graphics_shadowQuality));
+        }
+        if (localStorage.interstellarArmada_graphics_shadowDistance !== undefined) {
+            this._shadowDistance = (parseInt(localStorage.interstellarArmada_graphics_shadowDistance));
+        }
         this.setToReady();
     };
 
@@ -202,6 +229,8 @@ Application.createModule({name: "Graphics",
         localStorage.removeItem("interstellarArmada_graphics_filtering");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
+        localStorage.removeItem("interstellarArmada_graphics_shadowQuality");
+        localStorage.removeItem("interstellarArmada_graphics_shadowDistance");
     };
 
     /**
@@ -290,6 +319,42 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.setShadowMapping = function (value) {
         this._shadowMapping = value;
         localStorage.interstellarArmada_graphics_shadowMapping = this._shadowMapping;
+    };
+    
+    /**
+     * Returns the quality of shadows. (texture size for shadow mapping)
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getShadowQuality = function () {
+        return this._shadowQuality;
+    };
+
+    /**
+     * Sets the quality of shadows. (texture size for shadow mapping)
+     * @param {Number} value
+     */
+    GraphicsContext.prototype.setShadowQuality = function (value) {
+        this._shadowQuality = value;
+        localStorage.interstellarArmada_graphics_shadowQuality = this._shadowQuality;
+    };
+    
+    /**
+     * Returns the rendering distance level of shadows. (number of passes for
+     * shadow mapping)
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getShadowDistance = function () {
+        return this._shadowDistance;
+    };
+
+    /**
+     * Sets the rendering distance level of shadows. (number of passes for
+     * shadow mapping)
+     * @param {Number} value
+     */
+    GraphicsContext.prototype.setShadowDistance = function (value) {
+        this._shadowDistance = value;
+        localStorage.interstellarArmada_graphics_shadowDistance = this._shadowDistance;
     };
 
     // -------------------------------------------------------------------------

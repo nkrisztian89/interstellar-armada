@@ -1158,6 +1158,8 @@ Application.createModule({name: "Screens",
         this._filteringSelector = this.registerExternalComponent(new Components.Selector(name + "_filteringSelector", "selector.html", "selector.css", "Texture filtering:", ["bilinear", "trilinear", "anisotropic"]), "settingsDiv");
         this._lodSelector = this.registerExternalComponent(new Components.Selector(name + "_lodSelector", "selector.html", "selector.css", "Model details:", ["very low", "low", "medium", "high", "very high"]), "settingsDiv");
         this._shadowMappingSelector = this.registerExternalComponent(new Components.Selector(name + "_shadowMappingSelector", "selector.html", "selector.css", "Shadows:", ["on", "off"]), "settingsDiv");
+        this._shadowQualitySelector = this.registerExternalComponent(new Components.Selector(name + "_shadowQualitySelector", "selector.html", "selector.css", "Shadow quality:", ["low", "medium", "high"]), "settingsDiv");
+        this._shadowDistanceSelector = this.registerExternalComponent(new Components.Selector(name + "_shadowDistanceSelector", "selector.html", "selector.css", "Shadow distance:", ["very close", "close", "medium", "far", "very far"]), "settingsDiv");
     }
     ;
 
@@ -1173,6 +1175,24 @@ Application.createModule({name: "Screens",
             Armada.graphics().setFiltering(self._filteringSelector.getSelectedValue());
             Armada.graphics().setMaxLOD(self._lodSelector.getSelectedIndex());
             Armada.graphics().setShadowMapping((self._shadowMappingSelector.getSelectedValue() === "on"));
+            Armada.graphics().setShadowQuality((function (v) {
+                var mapping = {
+                    "low": 1024,
+                    "medium": 2048,
+                    "high": 4096
+                };
+                return mapping[v];
+            }(self._shadowQualitySelector.getSelectedValue())));
+            Armada.graphics().setShadowDistance((function (v) {
+                var mapping = {
+                    "very close": 1,
+                    "close": 2,
+                    "medium": 3,
+                    "far": 4,
+                    "very far": 5
+                };
+                return mapping[v];
+            }(self._shadowDistanceSelector.getSelectedValue())));
             if (self.isSuperimposed()) {
                 self._game.closeSuperimposedScreen();
             } else {
@@ -1196,6 +1216,24 @@ Application.createModule({name: "Screens",
             self._filteringSelector.selectValue(Armada.graphics().getFiltering());
             self._lodSelector.selectValueWithIndex(Armada.graphics().getMaxLoadedLOD());
             self._shadowMappingSelector.selectValue((Armada.graphics().getShadowMapping() === true) ? "on" : "off");
+            self._shadowQualitySelector.selectValue(function (v) {
+                switch (v) {
+                    case 1024: return "low";
+                    case 2048: return "medium";
+                    case 4096: return "high";
+                    default: return "medium";
+                }
+            }((Armada.graphics().getShadowQuality())));
+            self._shadowDistanceSelector.selectValue(function (v) {
+                switch (v) {
+                    case 1: return "very close";
+                    case 2: return "close";
+                    case 3: return "medium";
+                    case 4: return "far";
+                    case 5: return "very far";
+                    default: return "medium";
+                }
+            }((Armada.graphics().getShadowDistance())));
         });
     };
 
