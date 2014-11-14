@@ -132,7 +132,7 @@ Application.createModule({name: "GL",
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
                 this._ids[context.getName()] = gl.createTexture();
-                gl.bindTexture(gl.TEXTURE_2D, this._ids[context.getName()]);
+                context.bindTexture(this,0);
                 // Upload the image into the texture.
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
                 // Set the parameters so we can render any size image.
@@ -270,7 +270,7 @@ Application.createModule({name: "GL",
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
                 this._ids[context.getName()] = gl.createTexture();
-                gl.bindTexture(gl.TEXTURE_CUBE_MAP, this._ids[context.getName()]);
+                context.bindTexture(this,0);
 
                 // Set the parameters so we can render any size image.
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -670,7 +670,7 @@ Application.createModule({name: "GL",
      * GL context.
      * @param {ManagedGLContext} context
      */
-    VertexBuffer.prototype.enable = function (context,shader) {
+    VertexBuffer.prototype.enable = function (context, shader) {
         var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
         if ((location !== -1) && (location !== this._location)) {
             this._location = location;
@@ -686,36 +686,6 @@ Application.createModule({name: "GL",
      */
     VertexBuffer.prototype.delete = function (context) {
         context.gl.deleteBuffer(this._id);
-    };
-
-    /**
-     * If the passed shader has an attribute with the same name as this buffer,
-     * binds the buffer to that attribute. If the buffer has already been bound
-     * to the attribute from another shader that has a different index, shows a
-     * notification instead as this will break the functionality. Attributes with 
-     * the same names in different shaders need to have the same index to avoid
-     * this. (a different vertex buffer is created for each differently named 
-     * attribute)
-     * @param {ManagedGLContext} context The WebGL context within which the binding
-     * takes place.
-     * @param {Shader} shader The shader that will be searched for an appropriate
-     * attribute.
-     */
-    VertexBuffer.prototype.bindToAttribute = function (context, shader) {
-        // set the shader program so we can grab the attribute addresses
-        context.gl.useProgram(shader.getIDForContext(context));
-        var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
-        // we only need to bind the buffer if a corresponding attribute exists
-        if (location !== -1) {
-            //if (this._location === null) {
-                this._location = location;
-                context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
-                context.gl.enableVertexAttribArray(this._location);
-            //} else if (this._location !== location) {
-            //    Application.showError("Attempting to bind vertex buffer (" + this._name + ") to 2 different locations!",
-            //    undefined,"First attempt at location "+this._location+", second at location "+location+". The shader that caused the error: "+shader.getName()+".");
-            //}
-        }
     };
 
     function FrameBuffer(name, width, height) {
@@ -736,7 +706,7 @@ Application.createModule({name: "GL",
         this._textureID = null;
         this._renderBufferID = null;
     }
-    
+
     /**
      * Getter for the _name property.
      * @returns {String}
@@ -744,7 +714,7 @@ Application.createModule({name: "GL",
     FrameBuffer.prototype.getName = function () {
         return this._name;
     };
-    
+
     /**
      * Getter for the _textureID property.
      * @returns {String}
@@ -754,6 +724,9 @@ Application.createModule({name: "GL",
     };
 
     FrameBuffer.prototype.setup = function (context) {
+        if (this._id !== null) {
+            return;
+        }
         this._id = context.gl.createFramebuffer();
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
 
@@ -1004,6 +977,7 @@ Application.createModule({name: "GL",
      * as keys.
      */
     Shader.prototype.assignUniforms = function (context, uniformValueFunctions) {
+        context.setCurrentShader(this);
         for (var i = 0; i < this._uniforms.length; i++) {
             if (uniformValueFunctions[this._uniforms[i].getName()] !== undefined) {
                 this._uniforms[i].setValue(context, this, uniformValueFunctions[this._uniforms[i].getName()]);
@@ -1018,7 +992,7 @@ Application.createModule({name: "GL",
      */
     Shader.prototype.enableVertexBuffers = function (context) {
         for (var i = 0; i < this._attributes.length; i++) {
-            context.getVertexBuffer(this._attributes[i].name).enable(context,this);
+            context.getVertexBuffer(this._attributes[i].name).enable(context, this);
         }
     };
 
@@ -1297,9 +1271,10 @@ Application.createModule({name: "GL",
         // the corresponding VBOs
         for (vbName in this._vertexBuffers) {
             this._vertexBuffers[vbName].loadToGPUMemory(this);
-            for (i = 0; i < this._shaders.length; i++) {
-                this._vertexBuffers[vbName].bindToAttribute(this, this._shaders[i]);
-            }
+        }
+        this._currentShader = null;
+        for (i = 0; i < this._shaders.length; i++) {
+                this.setCurrentShader(this._shaders[i]);
         }
     };
 
@@ -1343,17 +1318,14 @@ Application.createModule({name: "GL",
     };
 
     /**
-     * Sets up the provided shader for usage within the provided scene, also 
-     * assigning the scene uniforms.
+     * Sets up the provided shader for usage within the provided scene.
      * @param {Shader} shader The shader to set as current.
-     * @param {Scene} scene The scene to get the uniform values from.
      */
-    ManagedGLContext.prototype.setCurrentShader = function (shader, scene) {
+    ManagedGLContext.prototype.setCurrentShader = function (shader) {
         if (this._currentShader !== shader) {
             this.gl.useProgram(shader.getIDForContext(this));
             shader.setBlending(this);
             shader.enableVertexBuffers(this);
-            scene.assignUniforms(this, shader);
             this._currentShader = shader;
         }
     };

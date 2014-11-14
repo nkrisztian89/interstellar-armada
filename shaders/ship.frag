@@ -1,4 +1,4 @@
-// shader used for spaceships
+// shader used for spaceships: phong shading + luminosity mapping + shadow mapping
 
 precision mediump float;
 	
@@ -9,15 +9,19 @@ struct Light
         mat4 matrix;
     };
 
-uniform mat4 u_modelMatrix;
-
+// phong shading
 uniform sampler2D u_colorTexture;
 uniform sampler2D u_specularTexture;
-uniform sampler2D u_luminosityTexture;
-uniform sampler2D u_shadowMaps[12];
 uniform vec3 u_eyePos;
 uniform Light u_lights[2];
 uniform int u_numLights;
+
+// luminosity mapping
+uniform sampler2D u_luminosityTexture;
+
+// shadow mapping
+uniform mat4 u_modelMatrix;
+uniform sampler2D u_shadowMaps[12];
 uniform bool u_shadows;
 uniform float u_shadowMapRanges[6];
 uniform int u_numRanges;
@@ -30,10 +34,9 @@ varying vec4 v_color;
 varying float v_luminosity;
 varying float v_shininess;
 varying float v_luminosityFactor;
+varying vec4 v_index;
 
 varying vec4 v_worldPos;
-
-varying vec4 v_index;
 	
 void main() {
     // interpolated normals can have different then unit length
@@ -54,43 +57,85 @@ void main() {
 
     float diffuseFactor;
     float specularFactor;
+
     vec4 shadowMapPosition;
     float lighted;
     vec4 shadowMapTexel;
     float indexDifference;
 
-    for (int i=0; i<2; i++) {
+    // going through each static, directional light source
+    // start and end indices need to be constant
+    for (int i = 0; i < 2; i++) {
+        // only go through actual light sources
         if (i < u_numLights) {
-            diffuseFactor = max(0.0,dot(+u_lights[i].direction,normal));
-
+            // how much is the fragment lighted based on angle
+            diffuseFactor = max(0.0, dot(+u_lights[i].direction, normal));
+            // how much is the fragment lighted based on shadows
             lighted = 0.0;
-
+            // any calculations only need to be done if the fragment gets lit somewhat in the first place
             if (diffuseFactor > 0.0) {
+                // start from not being obscured
                 lighted = 1.0;
+                // shadow map calculations only occur if we turned them on
                 if (u_shadows) {
+                    // applying the same transformation that was applied when creating the shadow maps for light i
                     shadowMapPosition = u_lights[i].matrix * u_modelMatrix * vec4(v_position,1.0);
-                    for (int range = 0; range < 6; range++) {
-                        if (range < u_numRanges) {
-                            if(length(shadowMapPosition.xy)<u_shadowMapRanges[range]) {
-                                vec3 posInRange = shadowMapPosition.xyz / u_shadowMapRanges[range];
-                                float depth = 0.5+shadowMapPosition.z/(2.0*u_shadowMapRanges[range]*u_shadowMapDepthRatio);
-                                float shade = (range == (u_numRanges-1)) ? 1.0 - clamp((length(posInRange.xyz)-0.8)*5.0,0.0,1.0) : 1.0;
-                                posInRange.xyz += vec3(1.0,1.0,1.0);
-                                posInRange.xyz /= 2.0;
-                                if(posInRange.xy == clamp(posInRange.xy,0.0,1.0)) {
-                                    shadowMapTexel = texture2D(u_shadowMaps[i*6+range],posInRange.xy);
+                    // save the distance of the projection of current fragment 
+                    // on the plane of the shadow maps from the center (in world coordinates)
+                    float dist = length(shadowMapPosition.xy);
+                    // At each step, we only need to check for objects obscuring the current fragment
+                    // that lie outside of the scope of the previous check.
+                    // minimum depth of obscuring objects to check that are above the previously checked area
+                    float minDepthAbove = 0.0; 
+                    // maximum depth of obscuring objects to check that are below the previously checked area
+                    float maxDepthBelow = 1.0;
+                    // the ratio of the sizes of the current and previous ranges
+                    float ratio = 1.0;
+                    // going through each shadow map (start and end indices need to be constant)
+                    for (int j = 0; j < 6; j++) {
+                        // only go through existing shadow maps
+                        if (j < u_numRanges) {
+                            // the range of the current shadow map (length of the area covered from center
+                            // to the sides of the map in world coordinates)
+                            float range = u_shadowMapRanges[j];
+                            // only check if the current fragment is (could be) covered by the current shadow map
+                            if (dist < range) {
+                                // calculate texture coordinates on the current shadow map
+                                vec2 shMapTexCoords = shadowMapPosition.xy / range;
+                                shMapTexCoords += vec2(1.0, 1.0);
+                                shMapTexCoords /= 2.0;
+                                float depth = 0.5 + shadowMapPosition.z / (2.0 * range * u_shadowMapDepthRatio);
+                                // the factor for how much the fragment needs to be shaded by the shadows
+                                // for the largest shadow map, add a fade out factor towards the end of the range
+                                float shade = (j == (u_numRanges - 1)) ? 1.0 - clamp((length(vec3(shMapTexCoords.xy,depth / u_shadowMapDepthRatio)) - 0.8) * 5.0, 0.0, 1.0) : 1.0;
+                                // only check the texture if we have valid coordinates for it
+                                if (shMapTexCoords == clamp(shMapTexCoords, 0.0, 1.0)) {
+                                    // read the value of the texel from th shadow map
+                                    shadowMapTexel = texture2D(u_shadowMaps[i * 6 + j], shMapTexCoords);
+                                    // the depth value is stored in the second two components of the texel
                                     float texelDepth = shadowMapTexel.w + (shadowMapTexel.z / 256.0);
-                                    if(texelDepth>0.0) {
+                                    // check if there is depth content on the texel, which is in a range not checked before
+                                    // (by depth or by coordinates)
+                                    if((texelDepth > 0.0) && ((texelDepth > minDepthAbove) || (texelDepth < maxDepthBelow) || (dist > range * ratio))) {
+                                        // the triangle index value is stored in the first two components of the texel
                                         indexDifference = length(v_index.xy - shadowMapTexel.rg);
-                                        if((texelDepth>depth+0.5/255.0) && (indexDifference>0.5/255.0)) {
-                                            float transition = clamp((texelDepth-(depth+0.5/255.0))*u_shadowMapRanges[range]*u_shadowMapDepthRatio*5.0,0.0,1.0);
+                                        // depth check is performed with a tolerance for small errors
+                                        float errorTolerance = 0.55 / 255.0;
+                                        // check if the fragment is obscured by a triangle with a different index
+                                        if((texelDepth > depth + errorTolerance) && (indexDifference > 0.5 / 255.0)) {
+                                            // for very small shadows (that would appear very pixelated), add a fade out factor
+                                            float transition = clamp((texelDepth - (depth + errorTolerance)) * range * u_shadowMapDepthRatio * 5.0, 0.0, 1.0);
                                             shade *= transition;
-                                            lighted = max(0.0,lighted - shade);
+                                            lighted = max(0.0, lighted - shade);
+                                            break;
                                         }
-                                        break;
                                     }
                                 }
                             }
+                            // set the varialbes to exclude the already checked region in the next step
+                            ratio = range / ((j == (u_numRanges-1) ? 1.0 : u_shadowMapRanges[j + 1]));
+                            minDepthAbove = 0.5 + ratio * 0.5;
+                            maxDepthBelow = 0.5 - ratio * 0.5;
                         }
                     }
                 }

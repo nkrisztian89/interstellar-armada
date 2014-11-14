@@ -42,7 +42,7 @@ void main() {
 	v_luminosity = a_luminosity;
 	v_shininess = a_shininess;
         v_luminosityFactor = u_luminosityFactors[int(a_groupIndex)];
+        v_index = a_index;
 	
 	v_worldPos = u_modelMatrix * vec4(a_position,1.0);
-        v_index = a_index;
 }

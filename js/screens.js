@@ -970,7 +970,7 @@ Application.createModule({name: "Screens",
                 [0, 0, 0, 0], true,
                 Armada.graphics().getLODContext(),
                 Armada.graphics().getShadowMapping() ? Armada.resources().getShader("shadowMapping") : null);
-        this._scene.addLightSource(new Scene.LightSource([1.0, 1.0, 1.0], [-1.0, 0.0, 1.0]));
+        this._scene.addLightSource(new Scene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
         Armada.resources().onResourceLoad = function (resourceName, totalResources, loadedResources) {
             self.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
@@ -1077,7 +1077,9 @@ Application.createModule({name: "Screens",
             // add the ship to the scene in triangle drawing mode
             self._solidModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), false, true, false, false);
             // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-            self._solidModel.cascadeSetShader(Armada.resources().getShader("simpleReveal"));
+            self._solidModel.cascadeSetShader(Armada.graphics().getShadowMapping() ?
+                    Armada.resources().getShader("shadowMapReveal")
+                    : Armada.resources().getShader("simpleReveal"));
             // set the necessary uniform functions for the reveal shader
             self._solidModel.setUniformValueFunction("u_revealFront", function () {
                 return true;
@@ -1218,20 +1220,30 @@ Application.createModule({name: "Screens",
             self._shadowMappingSelector.selectValue((Armada.graphics().getShadowMapping() === true) ? "on" : "off");
             self._shadowQualitySelector.selectValue(function (v) {
                 switch (v) {
-                    case 1024: return "low";
-                    case 2048: return "medium";
-                    case 4096: return "high";
-                    default: return "medium";
+                    case 1024:
+                        return "low";
+                    case 2048:
+                        return "medium";
+                    case 4096:
+                        return "high";
+                    default:
+                        return "medium";
                 }
             }((Armada.graphics().getShadowQuality())));
             self._shadowDistanceSelector.selectValue(function (v) {
                 switch (v) {
-                    case 1: return "very close";
-                    case 2: return "close";
-                    case 3: return "medium";
-                    case 4: return "far";
-                    case 5: return "very far";
-                    default: return "medium";
+                    case 1:
+                        return "very close";
+                    case 2:
+                        return "close";
+                    case 3:
+                        return "medium";
+                    case 4:
+                        return "far";
+                    case 5:
+                        return "very far";
+                    default:
+                        return "medium";
                 }
             }((Armada.graphics().getShadowDistance())));
         });

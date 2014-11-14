@@ -405,7 +405,8 @@ Application.createModule({name: "Scene",
                             && (this.isInsideViewFrustum(scene.activeCamera))
                             ) || (this.lastInsideFrustumState === true)) {
                         if (this.needsToBeRendered(screenWidth, screenHeight, scene.lodContext, depthMaskPhase)) {
-                            managedGLContext.setCurrentShader(this.shader, scene);
+                            managedGLContext.setCurrentShader(this.shader);
+                            scene.assignUniforms(managedGLContext,this.shader);
                             this.assignUniforms(managedGLContext);
                             this.render(managedGLContext, depthMaskPhase);
                             this._wasRendered = true;
@@ -1815,6 +1816,7 @@ Application.createModule({name: "Scene",
      * @param {SceneCamera} camera
      * @param {Number} rangeIndex
      * @param {Number} range
+     * @param {Number} depth
      */
     LightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
@@ -1872,7 +1874,7 @@ Application.createModule({name: "Scene",
         this._shadowMappingShader = shadowMappingShader || null;
         this._shadowMapTextureSize = Armada.graphics().getShadowQuality();
         this._shadowMapRanges = new Array();
-        var ranges = [5, 50, 150, 300, 600, 1200];
+        var ranges = [50, 150, 300, 600, 1200, 2400];
         for (var i = 0; i <= Armada.graphics().getShadowDistance(); i++) {
             this._shadowMapRanges.push(ranges[i]);
         }
@@ -2116,7 +2118,8 @@ Application.createModule({name: "Scene",
         }
 
         if (this._shadowMappingShader) {
-            context.setCurrentShader(this._shadowMappingShader, this);
+            context.setCurrentShader(this._shadowMappingShader);
+            this.assignUniforms(context,this._shadowMappingShader);
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     for (var j = 0; j < this._shadowMapRanges.length; j++) {

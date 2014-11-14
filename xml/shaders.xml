@@ -128,6 +128,45 @@
             <uniform name="u_luminosityFactors" type="float" arraySize="20" />
         </uniforms>
     </Shader>
+    
+    <Shader name="shadowMapReveal">
+        <vertex filename="simpleWithModelPos.vert" />
+        <fragment filename="shadowMapReveal.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_normal" size="3" role="normal" />
+            <attribute name="a_color" size="4" role="color" />
+            <attribute name="a_luminosity" size="1" role="luminosity" />
+            <attribute name="a_shininess" size="1" role="shininess" />
+            <attribute name="a_index" size="4" role="triangleIndex" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_normalMatrix" type="mat3" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_specularTexture" type="sampler2D" />
+            <uniform name="u_shadowMaps" type="sampler2D" arraySize="12" />
+            <uniform name="u_numLights" type="int" />
+            <uniform name="u_lights" type="struct" arraySize="2" />
+            <uniform name="u_shadowMapRanges" type="float" arraySize="6" />
+            <uniform name="u_numRanges" type="int" />
+            <uniform name="u_shadowMapDepthRatio" type="float" />
+            <uniform name="u_shadows" type="bool" />
+            <uniform name="color" memberOf="u_lights" type="vec3" />
+            <uniform name="direction" memberOf="u_lights" type="vec3" />
+            <uniform name="matrix" memberOf="u_lights" type="mat4" />
+            <uniform name="u_eyePos" type="vec3" />
+            <uniform name="u_revealStart" type="float" />
+            <uniform name="u_revealTransitionLength" type="float" />
+            <uniform name="u_revealFront" type="bool" />
+        </uniforms>
+    </Shader>
 	
     <Shader name="skybox">
         <vertex filename="skybox.vert" />
