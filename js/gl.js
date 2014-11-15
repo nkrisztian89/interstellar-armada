@@ -611,7 +611,7 @@ Application.createModule({name: "GL",
          * @name VertexBuffer#_location
          * @type Number
          */
-        this._location = null;
+        this._locations = new Object();
     }
 
     /**
@@ -669,15 +669,17 @@ Application.createModule({name: "GL",
      * Enables the vertex attribute array belonging to this buffer in the supplied
      * GL context.
      * @param {ManagedGLContext} context
+     * @param {Shader} shader
      */
     VertexBuffer.prototype.enable = function (context, shader) {
         var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
-        if ((location !== -1) && (location !== this._location)) {
-            this._location = location;
+        if ((location !== -1) && (location !== this._locations[shader.getName()])) {
+            this._locations[shader.getName()] = location;
+            Application.log("Binding vertex buffer '"+this._name+"' to attribute location "+this._locations[shader.getName()]+" in shader '"+shader.getName()+"'.",3);
             context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
-            context.gl.enableVertexAttribArray(this._location);
-            context.gl.vertexAttribPointer(this._location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
+            context.gl.vertexAttribPointer(this._locations[shader.getName()], this._vectorSize, context.gl.FLOAT, false, 0, 0);
         }
+        context.gl.enableVertexAttribArray(this._locations[shader.getName()]);
     };
 
     /**
@@ -723,6 +725,10 @@ Application.createModule({name: "GL",
         return this._textureID;
     };
 
+    /**
+     * 
+     * @param {ManagedGLContext} context
+     */
     FrameBuffer.prototype.setup = function (context) {
         if (this._id !== null) {
             return;
@@ -731,7 +737,7 @@ Application.createModule({name: "GL",
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
 
         this._textureID = context.gl.createTexture();
-        context.gl.bindTexture(context.gl.TEXTURE_2D, this._textureID);
+        context.bindTexture(this,0);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.LINEAR);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.LINEAR);
         context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
@@ -1339,6 +1345,7 @@ Application.createModule({name: "GL",
      * time.
      */
     ManagedGLContext.prototype.bindTexture = function (texture, place) {
+        place = place || 0;
         switch (place) {
             case 0:
                 this.gl.activeTexture(this.gl.TEXTURE0);
@@ -1357,13 +1364,18 @@ Application.createModule({name: "GL",
         }
         if (this._boundTextures[place] !== texture) {
             if (texture instanceof Texture) {
+                Application.log("Binding texture: '"+texture.getFilename()+"' to place "+place+".",3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getIDForContext(this));
             } else
             if (texture instanceof Cubemap) {
+                Application.log("Binding cubemap texture: '"+texture.getName()+"' to place "+place+".",3);
                 this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.getIDForContext(this));
             } else
             if (texture instanceof FrameBuffer) {
+                Application.log("Binding framebuffer texture: '"+texture.getName()+"' to place "+place+".",3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getTextureID());
+            } else {
+                Application.showError("Cannot set object: '"+texture.toString()+"' as current texture, because it is not of an appropriate type.");
             }
             this._boundTextures[place] = texture;
         }
