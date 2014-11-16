@@ -124,7 +124,7 @@ void main() {
                                         // and the line below always samplers the first texture in the array
                                         //shadowMapTexel = texture2D(u_shadowMaps[i * 6 + j], shMapTexCoords);
                                         // the following conditional list works
-                                        int shMapIndex = i * 6 + j;
+                                        int shMapIndex = i * u_numRanges + j;
                                         if (shMapIndex == 0) {
                                             shadowMapTexel = texture2D(u_shadowMaps[0], shMapTexCoords);
                                         } else 
@@ -163,13 +163,13 @@ void main() {
                                         }
                                         // the depth value is stored in the second two components of the texel
                                         float texelDepth = shadowMapTexel.w + (shadowMapTexel.z / 256.0);
+                                        // depth check is performed with a tolerance for small errors
+                                        float errorTolerance = 0.55 / 255.0;
                                         // check if there is depth content on the texel, which is in a range not checked before
                                         // (by depth or by coordinates)
-                                        if((texelDepth > 0.0) && ((texelDepth > minDepthAbove) || (texelDepth < maxDepthBelow) || (dist > range * ratio))) {
+                                        if((texelDepth > 0.0) && ((texelDepth >= minDepthAbove - errorTolerance) || (texelDepth <= maxDepthBelow + errorTolerance) || (dist >= (range * ratio) - errorTolerance))) {
                                             // the triangle index value is stored in the first two components of the texel
                                             indexDifference = length(v_index.xy - shadowMapTexel.rg);
-                                            // depth check is performed with a tolerance for small errors
-                                            float errorTolerance = 0.55 / 255.0;
                                             // check if the fragment is obscured by a triangle with a different index
                                             if((texelDepth > depth + errorTolerance) && (indexDifference > 0.5 / 255.0)) {
                                                 // for very small shadows (that would appear very pixelated), add a fade out factor
@@ -181,7 +181,7 @@ void main() {
                                         }
                                     }
                                 }
-                                // set the varialbes to exclude the already checked region in the next step
+                                // set the variables to exclude the already checked region in the next step
                                 ratio = range / ((j == (u_numRanges-1) ? 1.0 : u_shadowMapRanges[j + 1]));
                                 minDepthAbove = 0.5 + ratio * 0.5;
                                 maxDepthBelow = 0.5 - ratio * 0.5;

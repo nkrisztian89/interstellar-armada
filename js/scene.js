@@ -132,6 +132,9 @@ Application.createModule({name: "Scene",
             this.subnodes[i].setShader(shader);
         }
     };
+    
+    VisualObject.prototype.bindTextures = function () {
+    };
 
     /**
      * Adds a subnode to the rendering tree.
@@ -407,6 +410,7 @@ Application.createModule({name: "Scene",
                         if (this.needsToBeRendered(screenWidth, screenHeight, scene.lodContext, depthMaskPhase)) {
                             managedGLContext.setCurrentShader(this.shader);
                             scene.assignUniforms(managedGLContext, this.shader);
+                            this.bindTextures(managedGLContext);
                             this.assignUniforms(managedGLContext);
                             this.render(managedGLContext, depthMaskPhase);
                             this._wasRendered = true;
@@ -499,11 +503,14 @@ Application.createModule({name: "Scene",
 
     /**
      * Always returns true as the FVQ always has to be rendered.
-     * @param {Camera} camera Irrelevant in this case, FVQ is visible in all directions.
      * @returns {boolean} Always true.
      */
-    FVQ.prototype.isInsideViewFrustum = function (camera) {
+    FVQ.prototype.isInsideViewFrustum = function () {
         return true;
+    };
+    
+    FVQ.prototype.bindTextures = function (context) {
+        context.bindTexture(this.cubemap);
     };
 
     /**
@@ -511,8 +518,6 @@ Application.createModule({name: "Scene",
      * @param {ManagedGLContext} context
      */
     FVQ.prototype.render = function (context) {
-        context.bindTexture(this.cubemap, 0);
-
         this.model.render(context, false);
     };
 
@@ -574,27 +579,17 @@ Application.createModule({name: "Scene",
         this.uniformValueFunctions["u_normalMatrix"] = function () {
             return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(self.getCascadeModelMatrix())));
         };
-        for (var textureType in textures) {
-            if (textureType === "color") {
-                this.uniformValueFunctions["u_colorTexture"] = function () {
-                    return 0;
-                };
-            } else
-            if (textureType === "specular") {
-                this.uniformValueFunctions["u_specularTexture"] = function () {
-                    return 1;
-                };
-            } else
-            if (textureType === "luminosity") {
-                this.uniformValueFunctions["u_luminosityTexture"] = function () {
-                    return 2;
-                };
-            }
-        }
     }
 
     Mesh.prototype = new VisualObject();
     Mesh.prototype.constructor = Mesh;
+
+    Mesh.prototype.createTextureLocationGetter = function (role, context) {
+        var self = this;
+        return function () {
+            return self.textures[role].getTextureBindLocation(context);
+        };
+    };
 
     Mesh.prototype.addToContext = function (context) {
         VisualObject.prototype.addToContext.call(this, context);
@@ -607,6 +602,7 @@ Application.createModule({name: "Scene",
         }
         for (var role in this.textures) {
             this.textures[role].addToContext(context);
+            this.uniformValueFunctions["u_" + role + "Texture"] = this.createTextureLocationGetter(role, context);
         }
     };
 
@@ -744,6 +740,12 @@ Application.createModule({name: "Scene",
         }
         return false;
     };
+    
+    Mesh.prototype.bindTextures = function (context) {
+        for (var textureType in this.textures) {
+            context.bindTexture(this.textures[textureType]);
+        }
+    };
 
     /**
      * Renders the appropriate model of the mesh.
@@ -751,11 +753,6 @@ Application.createModule({name: "Scene",
      * @param {boolean} depthMask Tells whether the depth mask is turned on during this render pass.
      */
     Mesh.prototype.render = function (context, depthMask) {
-        var i = 0;
-        for (var textureType in this.textures) {
-            context.bindTexture(this.textures[textureType], i);
-            i++;
-        }
         this.model.render(context, this.lineMode, depthMask);
     };
 
@@ -814,9 +811,6 @@ Application.createModule({name: "Scene",
         this.uniformValueFunctions["u_modelMatrix"] = function () {
             return Mat.mul4(Mat.mul4(self.scalingMatrix, self.orientationMatrix), self.positionMatrix);
         };
-        this.uniformValueFunctions["u_colorTexture"] = function () {
-            return 0;
-        };
     }
 
     Billboard.prototype = new VisualObject();
@@ -831,11 +825,18 @@ Application.createModule({name: "Scene",
     /**
      * Always returns true as is it faster to skip the check because anyway we are
      * only rendering 2 triangles here.
-     * @param {Camera} camera Irrelevant in this case.
      * @returns {boolean} Always true.
      */
-    Billboard.prototype.isInsideViewFrustum = function (camera) {
+    Billboard.prototype.isInsideViewFrustum = function () {
         return true;
+    };
+    
+    Billboard.prototype.bindTextures = function (context) {
+        var self = this;
+        this.uniformValueFunctions["u_colorTexture"] = function () {
+            return self.texture.getTextureBindLocation(context);
+        };
+        context.bindTexture(this.texture);
     };
 
     /**
@@ -843,8 +844,6 @@ Application.createModule({name: "Scene",
      * @param {Managed3DContext} context
      */
     Billboard.prototype.render = function (context) {
-        context.bindTexture(this.texture, 0);
-
         this.model.render(context, false);
     };
 
@@ -892,9 +891,6 @@ Application.createModule({name: "Scene",
         this.uniformValueFunctions["u_color"] = function () {
             return self.color;
         };
-        this.uniformValueFunctions["u_colorTexture"] = function () {
-            return 0;
-        };
     }
 
     DynamicParticle.prototype = new VisualObject();
@@ -913,11 +909,18 @@ Application.createModule({name: "Scene",
     /**
      * Always returns true as is it faster to skip the check because anyway we are
      * only rendering 2 triangles here.
-     * @param {Camera} camera Irrelevant in this case.
      * @returns {boolean} Always true.
      */
-    DynamicParticle.prototype.isInsideViewFrustum = function (camera) {
+    DynamicParticle.prototype.isInsideViewFrustum = function () {
         return (this.renderParent === null ? true : this.renderParent.lastInsideFrustumState);
+    };
+    
+    DynamicParticle.prototype.bindTextures = function (context) {
+        var self = this;
+        this.uniformValueFunctions["u_colorTexture"] = function () {
+            return self.texture.getTextureBindLocation(context);
+        };
+        context.bindTexture(this.texture);
     };
 
     /**
@@ -925,7 +928,6 @@ Application.createModule({name: "Scene",
      * @param {Managed3DContext} context
      */
     DynamicParticle.prototype.render = function (context) {
-        context.bindTexture(this.texture, 0);
         if (new Date().getTime() >= this.creationTime + this.duration) {
             this.toBeDeleted = true;
         } else {
@@ -956,9 +958,6 @@ Application.createModule({name: "Scene",
         this.uniformValueFunctions["u_relAge"] = function () {
             return 1.0 - self._relSize;
         };
-        this.uniformValueFunctions["u_colorTexture"] = function () {
-            return 0;
-        };
     }
 
     StaticParticle.prototype = new DynamicParticle();
@@ -986,7 +985,6 @@ Application.createModule({name: "Scene",
      * @param {Managed3DContext} context
      */
     StaticParticle.prototype.render = function (context) {
-        context.bindTexture(this.texture, 0);
         if (this._relSize > 0) {
             this.model.render(context, false);
         }
@@ -1879,7 +1877,6 @@ Application.createModule({name: "Scene",
             this._shadowMapRanges.push(ranges[i]);
         }
         this._shadowMapDepthRatio = 1.5;
-        this._maxMapRanges = 6;
 
         this.uniformValueFunctions = new Object();
 
@@ -2068,8 +2065,15 @@ Application.createModule({name: "Scene",
         var i;
         if (this._shadowMappingShader) {
             this._shadowMappingShader.addToContext(context);
+            var self = this;
             this.uniformValueFunctions['u_shadowMaps'] = function () {
-                return new Int32Array([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+                var shadowMaps = new Array();
+                for (i = 0; i < self.lights.length; i++) {
+                    for (var j = 0; j < self._shadowMapRanges.length; j++) {
+                        shadowMaps.push(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j).getTextureBindLocation(context));
+                    }
+                }
+                return new Int32Array(shadowMaps);
             };
         }
         for (i = 0; i < this.lights.length; i++) {
@@ -2107,6 +2111,7 @@ Application.createModule({name: "Scene",
      * @param {ManagedGLContext} context
      */
     Scene.prototype.render = function (context) {
+        Application.log("Rendering scene...",3);
         this._drawnTriangles = 0;
 
         var gl = context.gl;
@@ -2131,7 +2136,7 @@ Application.createModule({name: "Scene",
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     for (var j = 0; j < this._shadowMapRanges.length; j++) {
-                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), 3 + i * this._maxMapRanges + j);
+                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j),true);
                     }
                 }
             }

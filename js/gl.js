@@ -1,5 +1,4 @@
 "use strict";
-
 /**
  * @fileOverview This file contains wrapper classes for accessing WebGL 
  * functionality and manage the corresponding resources.
@@ -34,7 +33,6 @@ Application.createModule({name: "GL",
     // faster access
     var Resource = Application.Resource.Resource;
     var Egom = Application.Egom;
-
     /**
      * Creates a new Texture object.
      * @class Represents a 2D texture resource.
@@ -75,13 +73,21 @@ Application.createModule({name: "GL",
          * @type Object
          */
         this._ids = new Object();
+        /**
+         * The associative array of bound WebGL texture locations (texture unit indices)
+         * belonding to managed contexts which this texture has been associated with. 
+         * The keys are the names of the managed contexts, and values are the location
+         * indices.
+         * @name Texture#_locations
+         * @type Object
+         */
+        this._locations = new Object();
     }
 
     // as it is an asynchronously loaded resource, we set the Resource as parent
     // class to make handling easier
     Texture.prototype = new Resource();
     Texture.prototype.constructor = Texture;
-
     /**
      * Getter for the _filename property.
      * @returns {String}
@@ -89,7 +95,6 @@ Application.createModule({name: "GL",
     Texture.prototype.getFilename = function () {
         return this._filename;
     };
-
     /**
      * Returns the WebGL ID of this texture valid in the supplied managed context.
      * Error checking is not performed - if there is no valid ID for this context,
@@ -100,7 +105,24 @@ Application.createModule({name: "GL",
     Texture.prototype.getIDForContext = function (context) {
         return this._ids[context.getName()];
     };
-
+    /**
+     * Returns the texture unit index where this texture has been last bound to
+     * within the passed context.
+     * @param {ManagedGLContext} context
+     * @returns {Number}
+     */
+    Texture.prototype.getTextureBindLocation = function (context) {
+        return this._locations[context.getName()];
+    };
+    /**
+     * Sets the texture unit index where this texture should be bound to
+     * within the passed context.
+     * @param {ManagedGLContext} context
+     * @param {Number} location
+     */
+    Texture.prototype.setTextureBindLocation = function (context, location) {
+        this._locations[context.getName()] = location;
+    };
     /**
      * Initiates an asynchronous request to load the texture from file. When the
      * loading finishes, the texture {@link Resource} is marked ready to use and 
@@ -118,7 +140,6 @@ Application.createModule({name: "GL",
             this._image.src = this._filename;
         }
     };
-
     /**
      * Adds the texture resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as typically this
@@ -132,7 +153,7 @@ Application.createModule({name: "GL",
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
                 this._ids[context.getName()] = gl.createTexture();
-                context.bindTexture(this, 0);
+                this._locations[context.getName()] = context.bindTexture(this);
                 // Upload the image into the texture.
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
                 // Set the parameters so we can render any size image.
@@ -154,14 +175,13 @@ Application.createModule({name: "GL",
             }
         });
     };
-
     /**
      * Clears all previous bindings to managed WebGL contexts.
      */
     Texture.prototype.clearContextBindings = function () {
         this._ids = new Object();
+        this._locations = new Object();
     };
-
     /**
      * Creates a new Cubemap object.
      * @class Represents a cube mapped texture resource.
@@ -207,13 +227,21 @@ Application.createModule({name: "GL",
          * @type Object
          */
         this._ids = new Object();
+        /**
+         * The associative array of bound WebGL texture locations (texture unit indices)
+         * belonding to managed contexts which this cubemap has been associated with. 
+         * The keys are the names of the managed contexts, and values are the location
+         * indices.
+         * @name Cubemap#_locations
+         * @type Object
+         */
+        this._locations = new Object();
     }
 
     // as it is an asynchronously loaded resource, we set the Resource as parent
     // class to make handling easier
     Cubemap.prototype = new Resource();
     Cubemap.prototype.constructor = Cubemap;
-
     /**
      * Getter for the property _name.
      * @returns {String}
@@ -221,7 +249,6 @@ Application.createModule({name: "GL",
     Cubemap.prototype.getName = function () {
         return this._name;
     };
-
     /**
      * Returns the WebGL ID of this cubemap valid in the supplied managed context.
      * Error checking is not performed - if there is no valid ID for this context,
@@ -232,7 +259,24 @@ Application.createModule({name: "GL",
     Cubemap.prototype.getIDForContext = function (context) {
         return this._ids[context.getName()];
     };
-
+    /**
+     * Returns the texture unit index where this cubemap has been last bound to
+     * within the passed context.
+     * @param {ManagedGLContext} context
+     * @returns {Number}
+     */
+    Cubemap.prototype.getTextureBindLocation = function (context) {
+        return this._locations[context.getName()];
+    };
+    /**
+     * Sets the texture unit index where this cubemap should be bound to
+     * within the passed context.
+     * @param {ManagedGLContext} context
+     * @param {Number} location
+     */
+    Cubemap.prototype.setTextureBindLocation = function (context, location) {
+        this._locations[context.getName()] = location;
+    };
     /**
      * Initiates asynchronous requests to load the face textures from their source
      * files. When the loading finishes, the cubemap {@link Resource} is marked 
@@ -256,7 +300,6 @@ Application.createModule({name: "GL",
             }
         }
     };
-
     /**
      * Adds the cubemap resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as this might be called 
@@ -270,16 +313,13 @@ Application.createModule({name: "GL",
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
                 this._ids[context.getName()] = gl.createTexture();
-                context.bindTexture(this, 0);
-
+                this._locations[context.getName()] = context.bindTexture(this);
                 // Set the parameters so we can render any size image.
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
                 var type = [
                     gl.TEXTURE_CUBE_MAP_POSITIVE_X,
                     gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -288,7 +328,6 @@ Application.createModule({name: "GL",
                     gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
                     gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
                 ];
-
                 // Upload the images into the texture.
                 for (var i = 0; i < 6; i++) {
                     gl.texImage2D(type[i], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._images[i]);
@@ -296,14 +335,13 @@ Application.createModule({name: "GL",
             }
         });
     };
-
     /**
      * Clears all previous bindings to managed WebGL contexts.
      */
     Cubemap.prototype.clearContextBindings = function () {
         this._ids = new Object();
+        this._locations = new Object();
     };
-
     /**
      * Creates a new ShaderAttribute.
      * @class A wrapper class for storing the attributes used in a given shader 
@@ -393,7 +431,6 @@ Application.createModule({name: "GL",
                 int: 8,
                 bool: 9
             });
-
     /**
      * Determining the enumeration value of a shader variable type from the string
      * containing the name of the variable type so that a faster hash table switch 
@@ -427,7 +464,6 @@ Application.createModule({name: "GL",
                 return this.VariableTypes.none;
         }
     };
-
     /**
      * Getter for the property _name.
      * @returns {String}
@@ -435,7 +471,6 @@ Application.createModule({name: "GL",
     ShaderUniform.prototype.getName = function () {
         return this._name;
     };
-
     /**
      * Adds the given shader uniform to the list of members this uniforms has (for
      * struct type uniforms)
@@ -448,7 +483,6 @@ Application.createModule({name: "GL",
             Application.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
         }
     };
-
     /**
      * Gets the location of the uniform in the supplied context and stores it in a
      * member for faster reference with getLocation later.
@@ -458,7 +492,6 @@ Application.createModule({name: "GL",
     ShaderUniform.prototype.setLocation = function (context, shader) {
         this._locations[context.getName()] = context.gl.getUniformLocation(shader.getIDForContext(context), this._name);
     };
-
     /**
      * Gets the location of this uniform valid in the supplied context. The location
      * has to be grabbed from the context with a setLocation prior to the usage of
@@ -469,7 +502,6 @@ Application.createModule({name: "GL",
     ShaderUniform.prototype.getLocation = function (context) {
         return this._locations[context.getName()];
     };
-
     /**
      * Sets the value of the shader in the specified GL context to the return value
      * of the passed value function. Passing a function makes sure whatever 
@@ -560,7 +592,6 @@ Application.createModule({name: "GL",
             }
         }
     };
-
     /**
      * Creates a new vertex buffer object.
      * @class A wrapper object that represents a WebGL vertex buffer object.
@@ -621,7 +652,6 @@ Application.createModule({name: "GL",
     VertexBuffer.prototype.getName = function () {
         return this._name;
     };
-
     /**
      * Getter for the _role property.
      * @returns {String}
@@ -629,7 +659,6 @@ Application.createModule({name: "GL",
     VertexBuffer.prototype.getRole = function () {
         return this._role;
     };
-
     /**
      * Sets (overwrites) a part of the data array of this buffer (before sending it 
      * to the GPU memory)
@@ -641,7 +670,6 @@ Application.createModule({name: "GL",
     VertexBuffer.prototype.setData = function (data, start) {
         this._data.set(data, start * this._vectorSize);
     };
-
     /**
      * Frees the data stored in the normal RAM (for use after it is already in GPU 
      * memory)
@@ -649,7 +677,6 @@ Application.createModule({name: "GL",
     VertexBuffer.prototype.freeData = function () {
         this._data = null;
     };
-
     /**
      * Creates the needed VBO in the supplied context and sends over the data (set
      * by setData) using it to the GPU, then erases the original data array.
@@ -664,24 +691,25 @@ Application.createModule({name: "GL",
                 context.gl.STATIC_DRAW);
         this.freeData();
     };
-
     /**
      * Enables the vertex attribute array belonging to this buffer in the supplied
      * GL context.
      * @param {ManagedGLContext} context
      * @param {Shader} shader
      */
-    VertexBuffer.prototype.enable = function (context, shader) {
-        var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
-        if ((location !== -1) && (location !== this._locations[shader.getName()])) {
-            this._locations[shader.getName()] = location;
-            Application.log("Binding vertex buffer '" + this._name + "' to attribute location " + this._locations[shader.getName()] + " in shader '" + shader.getName() + "'.", 3);
-            context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
-            context.gl.vertexAttribPointer(this._locations[shader.getName()], this._vectorSize, context.gl.FLOAT, false, 0, 0);
+    VertexBuffer.prototype.bind = function (context, shader) {
+        if (this._locations[shader.getName()] === undefined) {
+            this._locations[shader.getName()] = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
         }
-        context.gl.enableVertexAttribArray(this._locations[shader.getName()]);
+        var location = this._locations[shader.getName()];
+        if (context.getBoundVertexBuffer(location) !== this) {
+            Application.log("Binding vertex buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
+            context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
+            context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
+            context.setBoundVertexBuffer(location,this);
+        }
+        context.gl.enableVertexAttribArray(location);
     };
-
     /**
      * Deletes the corresponding WebGL buffer object.
      * @param {ManagedGLContext} context
@@ -689,7 +717,6 @@ Application.createModule({name: "GL",
     VertexBuffer.prototype.delete = function (context) {
         context.gl.deleteBuffer(this._id);
     };
-
     function FrameBuffer(name, width, height) {
         /**
          * The name by which this buffer can be referred to.
@@ -706,6 +733,7 @@ Application.createModule({name: "GL",
         this._width = width;
         this._height = height;
         this._textureID = null;
+        this._textureLocation = null;
         this._renderBufferID = null;
     }
 
@@ -716,7 +744,6 @@ Application.createModule({name: "GL",
     FrameBuffer.prototype.getName = function () {
         return this._name;
     };
-
     /**
      * Getter for the _textureID property.
      * @returns {String}
@@ -724,7 +751,22 @@ Application.createModule({name: "GL",
     FrameBuffer.prototype.getTextureID = function () {
         return this._textureID;
     };
-
+    /**
+     * Returns the texture unit index where the texture associated with this 
+     * framebuffer has been last bound to.
+     * @returns {Number}
+     */
+    FrameBuffer.prototype.getTextureBindLocation = function () {
+        return this._textureLocation;
+    };
+    /**
+     * Sets the texture unit index where the texture associated with this framebuffer
+     * should be bound to.
+     * @param {Number} location
+     */
+    FrameBuffer.prototype.setTextureBindLocation = function (location) {
+        this._textureLocation = location;
+    };
     /**
      * 
      * @param {ManagedGLContext} context
@@ -735,25 +777,20 @@ Application.createModule({name: "GL",
         }
         this._id = context.gl.createFramebuffer();
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
-
         this._textureID = context.gl.createTexture();
-        context.bindTexture(this, 0);
+        this._textureLocation = context.bindTexture(this);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.LINEAR);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.LINEAR);
         context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
-
         this._renderBufferID = context.gl.createRenderbuffer();
         context.gl.bindRenderbuffer(context.gl.RENDERBUFFER, this._renderBufferID);
         context.gl.renderbufferStorage(context.gl.RENDERBUFFER, context.gl.DEPTH_COMPONENT16, this._width, this._height);
-
         context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.COLOR_ATTACHMENT0, context.gl.TEXTURE_2D, this._textureID, 0);
         context.gl.framebufferRenderbuffer(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.RENDERBUFFER, this._renderBufferID);
     };
-
     FrameBuffer.prototype.bind = function (context) {
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
     };
-
     /**
      * Creates a new Shader object.
      * @class A wrapper class representing a WebGL shader program.
@@ -840,7 +877,6 @@ Application.createModule({name: "GL",
 // class to make handling easier
     Shader.prototype = new Resource();
     Shader.prototype.constructor = Shader;
-
     /**
      * Getter for the _name property.
      * @returns {String}
@@ -848,7 +884,6 @@ Application.createModule({name: "GL",
     Shader.prototype.getName = function () {
         return this._name;
     };
-
     /**
      * Returns the WebGL ID of this program valid in the supplied managed context.
      * Error checking is not performed - if there is no valid ID for this context,
@@ -859,7 +894,6 @@ Application.createModule({name: "GL",
     Shader.prototype.getIDForContext = function (context) {
         return this._ids[context.getName()];
     };
-
     /**
      * Returns the array of shader attributes of this shader.
      * @returns {ShaderAttribute[]}
@@ -867,7 +901,6 @@ Application.createModule({name: "GL",
     Shader.prototype.getAttributes = function () {
         return this._attributes;
     };
-
     /**
      * Initiates asynchronous requests to load the vertex and fragment shader source
      * codes from files. When the loading finishes, the shader {@link Resource} 
@@ -894,7 +927,6 @@ Application.createModule({name: "GL",
             }, 'text/plain; charset=utf-8');
         }
     };
-
     /**
      * Adds the shader resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as typically this
@@ -952,14 +984,12 @@ Application.createModule({name: "GL",
             }
         });
     };
-
     /**
      * Clears all previous bindings to managed WebGL contexts.
      */
     Shader.prototype.clearContextBindings = function () {
         this._ids = new Object();
     };
-
     /**
      * Sets the blending function in the supplied managed context according to the
      * blending type of this shader.
@@ -972,7 +1002,6 @@ Application.createModule({name: "GL",
             context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE);
         }
     };
-
     /**
      * Assigns the uniforms that have an associated value function in 
      * uniformValueFunctions, by calculating the value using those functions.
@@ -990,18 +1019,16 @@ Application.createModule({name: "GL",
             }
         }
     };
-
     /**
      * Enables the vertex buffers associated with the indices of the vertex 
      * attributes that this shader has.
      * @param {ManagedGLContext} context
      */
-    Shader.prototype.enableVertexBuffers = function (context) {
+    Shader.prototype.bindVertexBuffers = function (context) {
         for (var i = 0; i < this._attributes.length; i++) {
-            context.getVertexBuffer(this._attributes[i].name).enable(context, this);
+            context.getVertexBuffer(this._attributes[i].name).bind(context, this);
         }
     };
-
     /**
      * Creates a managed WebGL context for the given HTML5 canvas element.
      * @class Adds higher level management functions to the WebGLRenderingContext
@@ -1086,6 +1113,7 @@ Application.createModule({name: "GL",
          * @type Object
          */
         this._vertexBuffers = null;
+        this._boundVertexBuffers = new Array();
         this._frameBuffers = new Object();
         /**
          * A reference to the currently used shader in order to quickly dismiss 
@@ -1103,7 +1131,20 @@ Application.createModule({name: "GL",
          * @type Texture[]
          */
         this._boundTextures = new Array();
-
+        /**
+         * The maximum number of simultaneously bound textures
+         * @name ManagedGLContext#_maxBoundTextures
+         * @type Number
+         */
+        this._maxBoundTextures = null;
+        /**
+         * When all texture unit places has been taken, new textures will be bound
+         * to this rotating index so that subsequent binds will not replace each other
+         * on the same unit.
+         * @name ManagedGLContext#_nextTextureBindLocation
+         * @type Number
+         */
+        this._nextTextureBindLocation = 0;
         // creating the contained WebGLRenderingContext
         try {
             var contextParameters = {alpha: true, antialias: antialiasing};
@@ -1140,6 +1181,7 @@ Application.createModule({name: "GL",
                     "error will have no consequences.", this.gl);
         }
 
+        this._maxBoundTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
         // fall back to trilinear filtering.
         if (this._filtering === "anisotropic") {
@@ -1165,7 +1207,6 @@ Application.createModule({name: "GL",
 
     ManagedGLContext.prototype = new Resource();
     ManagedGLContext.prototype.constructor = ManagedGLContext;
-
     /**
      * Getter for the _name property.
      * @returns {String}
@@ -1173,7 +1214,6 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getName = function () {
         return this._name;
     };
-
     /**
      * Getter for the _filtering property.
      * @returns {String}
@@ -1181,7 +1221,6 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getFiltering = function () {
         return this._filtering;
     };
-
     /**
      * Getter for the _anisotropicFilter property.
      * @returns {Object}
@@ -1189,7 +1228,6 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getAnisotropicFilter = function () {
         return this._anisotropicFilter;
     };
-
     /**
      * Adds the shader reference to the list of shaders to be used when the vertex
      * buffer objects are created and bound to shader attributes. This method only
@@ -1202,7 +1240,6 @@ Application.createModule({name: "GL",
         this._shaders.push(shader);
         this.resetReadyState();
     };
-
     /**
      * Adds the model reference to the list of models to be used when the vertex
      * buffer objects are created and filled with data. 
@@ -1212,7 +1249,6 @@ Application.createModule({name: "GL",
         this._models.push(model);
         this.resetReadyState();
     };
-
     /**
      * Returns the vertex buffer with the given name, if such exists. Otherwise
      * returns undefined.
@@ -1222,7 +1258,6 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getVertexBuffer = function (name) {
         return this._vertexBuffers[name];
     };
-
     /**
      * Adds the vertex buffer object given as parameter.
      * @param {VertexBuffer} vertexBuffer
@@ -1232,7 +1267,12 @@ Application.createModule({name: "GL",
             this._vertexBuffers[vertexBuffer.getName()] = vertexBuffer;
         }
     };
-
+    ManagedGLContext.prototype.getBoundVertexBuffer = function (attributeLocation) {
+        return this._boundVertexBuffers[attributeLocation];
+    };
+    ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation,vertexBuffer) {
+        this._boundVertexBuffers[attributeLocation] = vertexBuffer;
+    };
     /**
      * Passes the data to the stored vertex buffer objects.
      * @param {Object} data The data to store in the vertex buffers. It has to be
@@ -1248,7 +1288,6 @@ Application.createModule({name: "GL",
             }
         }
     };
-
     /**
      * Based on the stored shader references, creates a vertex buffer object to each 
      * attribute with a unique name, fills them with data using the stored model
@@ -1262,7 +1301,6 @@ Application.createModule({name: "GL",
         }
         var i, j;
         var vbName;
-
         // delete possibly previously created buffers
         for (vbName in this._vertexBuffers) {
             this._vertexBuffers[vbName].delete(this);
@@ -1299,7 +1337,6 @@ Application.createModule({name: "GL",
             this.setCurrentShader(this._shaders[i]);
         }
     };
-
     /**
      * Returns the frame buffer with the given name, if such exists. Otherwise
      * returns undefined.
@@ -1309,7 +1346,6 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getFrameBuffer = function (name) {
         return this._frameBuffers[name];
     };
-
     /**
      * Adds the frame buffer object given as parameter.
      * @param {FrameBuffer} frameBuffer
@@ -1319,18 +1355,15 @@ Application.createModule({name: "GL",
             this._frameBuffers[frameBuffer.getName()] = frameBuffer;
         }
     };
-
     ManagedGLContext.prototype.setupFrameBuffers = function () {
         for (var fbName in this._frameBuffers) {
             this._frameBuffers[fbName].setup(this);
         }
         this.setToReady();
     };
-
     ManagedGLContext.prototype.setCurrentFrameBuffer = function (name) {
         this._frameBuffers[name].bind(this);
     };
-
     /**
      * Getter for the _currentShader property.
      * @returns {Shader}
@@ -1338,56 +1371,89 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getCurrentShader = function () {
         return this._currentShader;
     };
-
     /**
      * Sets up the provided shader for usage within the provided scene.
      * @param {Shader} shader The shader to set as current.
      */
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
         if (this._currentShader !== shader) {
+            Application.log("Switching to shader: "+shader.getName(),3);
             this.gl.useProgram(shader.getIDForContext(this));
             shader.setBlending(this);
-            shader.enableVertexBuffers(this);
+            shader.bindVertexBuffers(this);
             this._currentShader = shader;
         }
     };
-
     /**
-     * Binds the given {@link Texture} or {@link Cubemap} resource to the given
-     * texture place.
-     * @param {Texture|Cubemap} texture The resource to bind for rendering.
-     * @param {Number} place To which activeTexture place does it need to bind (for 
-     * multi-texturing, starting with 0) So far set to support 4 textures max at a
-     * time.
+     * Binds the given {@link Texture} or {@link Cubemap} resource or the texture
+     * associated to the given {@link FrameBuffer} resource to the given texture unit index.
+     * @param {Texture|Cubemap|FrameBuffer} texture The resource to bind for rendering.
+     * @param {Number|Boolean} place To which activeTexture place is the texture to be bound.
+     * If omitted, the texture will be bound to any free unit if one is available, and 
+     * to a unit with a rotating index, if no free units are available. If a specific
+     * index is given, that index will be reserved for this texture, and will not be
+     * automatically assigned during later binds. If the boolean value "true" is given,
+     * an automatic index will be bound as if no index was specified, but that index will
+     * be reserved for the texture.
+     * @return {Number} The texture unit index the texture was bound to.
      */
     ManagedGLContext.prototype.bindTexture = function (texture, place) {
-        if (place === undefined) {
-            place = 0;
-            while ((place < this._boundTextures.length) && (this._boundTextures[place] !== undefined)) {
-                place++;
+        // if a specific place or "true" was given for the bind, reserve that 
+        // (or the automatically found) place for this texture
+        var reserved = (place !== undefined);
+        // if no specific index or "true"  was specified for the bind, determine 
+        // the bind locaton automatically
+        if ((place === undefined) || (place === true)) {
+            // find out if there is a preferred bind location
+            place = texture.getTextureBindLocation(this);
+            // if there is no preferred location or another texture is bound to the preferred location,
+            // find the first free place, and bind the texture there
+            if ((place === undefined) || (place === null) || (this._boundTextures[place].texture !== texture)) {
+                place = 0;
+                while ((place < this._maxBoundTextures) && (place < this._boundTextures.length) && (this._boundTextures[place] !== undefined)) {
+                    place++;
+                }
+                // if there is no free space left, bind to a rotating location, excluding the reserved
+                // locations
+                if (place === this._maxBoundTextures) {
+                    while (this._boundTextures[this._nextTextureBindLocation].reserved) {
+                        this._nextTextureBindLocation = (this._nextTextureBindLocation + 1) % this._maxBoundTextures;
+                    }
+                    place = this._nextTextureBindLocation;
+                    this._nextTextureBindLocation = (this._nextTextureBindLocation + 1) % this._maxBoundTextures;
+                }
             }
         }
-        this.gl.activeTexture(this.gl.TEXTURE0 + place);
-        if (this._boundTextures[place] !== texture) {
+        // only bound to it the given texture if currenty it is unbound or a different texture is bound to it
+        if (!this._boundTextures[place] || (this._boundTextures[place].texture !== texture)) {
+            // make the selected texture unit active
+            this.gl.activeTexture(this.gl.TEXTURE0 + place);
             if (texture instanceof Texture) {
-                Application.log("Binding texture: '" + texture.getFilename() + "' to place " + place + ".", 3);
+                Application.log("Binding texture: '" + texture.getFilename() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getIDForContext(this));
+                texture.setTextureBindLocation(this, place);
             } else
             if (texture instanceof Cubemap) {
-                Application.log("Binding cubemap texture: '" + texture.getName() + "' to place " + place + ".", 3);
+                Application.log("Binding cubemap texture: '" + texture.getName() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
                 this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.getIDForContext(this));
+                texture.setTextureBindLocation(this, place);
             } else
             if (texture instanceof FrameBuffer) {
-                Application.log("Binding framebuffer texture: '" + texture.getName() + "' to place " + place + ".", 3);
+                Application.log("Binding framebuffer texture: '" + texture.getName() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getTextureID());
+                texture.setTextureBindLocation(place);
             } else {
                 Application.showError("Cannot set object: '" + texture.toString() + "' as current texture, because it is not of an appropriate type.");
             }
-            this._boundTextures[place] = texture;
+            this._boundTextures[place] = {texture: texture, reserved: reserved};
+        }
+        // make sure the reserve state is updated even if no bind happened
+        if (this._boundTextures[place].reserved !== reserved) {
+            this._boundTextures[place].reserved = reserved;
+            Application.log((reserved ? "Reserved" : "Freed") + " texture unit index " + place + ".", 3);
         }
         return place;
     };
-
     /**
      * Creates a new Resource Manager object.
      * @class This class holds and manages all the various resources and their 
@@ -1544,7 +1610,6 @@ Application.createModule({name: "GL",
 // manage for when all resources have been loaded
     ResourceManager.prototype = new Resource();
     ResourceManager.prototype.constructor = ResourceManager;
-
     /**
      * Tells if all added cubemapped textures have been already loaded.
      * @returns {Boolean}
@@ -1552,7 +1617,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.allCubemappedTexturesLoaded = function () {
         return (this._numRequestedCubemappedTextures === this._numCubemappedTexturesLoaded);
     };
-
     /**
      * Tells if all requested shaders have been already loaded.
      * @returns {Boolean}
@@ -1560,7 +1624,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.allShadersLoaded = function () {
         return (this._numRequestedShaders === this._numShadersLoaded);
     };
-
     /**
      * Tells if all added 2D textures have been already loaded.
      * @returns {Boolean}
@@ -1568,7 +1631,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.allTexturesLoaded = function () {
         return (this._numTextures === this._numTexturesLoaded);
     };
-
     /**
      * Tells if all added models have been already loaded.
      * @returns {Boolean}
@@ -1576,7 +1638,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.allModelsLoaded = function () {
         return (this._numModels === this._numModelsLoaded);
     };
-
     /**
      * Tells if all added resources have been already loaded.
      * @returns {Boolean}
@@ -1589,7 +1650,6 @@ Application.createModule({name: "GL",
                 this.allModelsLoaded()
                 );
     };
-
     /**
      * Returns the total number of resources requested for loading.
      * @returns {Number}
@@ -1597,7 +1657,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.getNumberOfResources = function () {
         return this._numRequestedCubemappedTextures + this._numRequestedShaders + this._numTextures + this._numModels;
     };
-
     /**
      * Returns the number of resources stored by the manager that already have been
      * loaded and are ready to use.
@@ -1606,7 +1665,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.getNumberOfLoadedResources = function () {
         return this._numCubemappedTexturesLoaded + this._numShadersLoaded + this._numTexturesLoaded + this._numModelsLoaded;
     };
-
     /**
      * If a texture with the given filename is stored by the manager, returns a
      * reference to it, otherwise adds a new texture with this filename.
@@ -1637,7 +1695,6 @@ Application.createModule({name: "GL",
         }
         return this._textures[textureName];
     };
-
     /**
      * Performs a getOrAddTexture() using the properties of the texture descriptor.
      * @param {TextureDescriptor} descriptor
@@ -1645,7 +1702,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.getOrAddTextureFromDescriptor = function (descriptor) {
         return this.getOrAddTexture(descriptor.filename, descriptor.useMipmap);
     };
-
     /**
      * Adds the passed cubemapped texture to the stored resources.
      * @param {Cubemap} cubemappedTexture
@@ -1653,7 +1709,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.addCubemappedTexture = function (cubemappedTexture) {
         this._cubemappedTextures[cubemappedTexture.getName()] = cubemappedTexture;
     };
-
     /**
      * Returns the stored cubemapped texture that has the given name, if such 
      * exists.
@@ -1684,7 +1739,6 @@ Application.createModule({name: "GL",
             return this._cubemappedTextures[name];
         }
     };
-
     /**
      * Adds the passed shader to the stored resources.
      * @param {Shader} shader
@@ -1692,7 +1746,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.addShader = function (shader) {
         this._shaders[shader.getName()] = shader;
     };
-
     /**
      * Returns the stored shader that has the given name, if such exists.
      * @param {String} name
@@ -1722,7 +1775,6 @@ Application.createModule({name: "GL",
             return this._requestedShaders[name];
         }
     };
-
     /**
      * Looks for a model with the given filename in the resource manager, if not
      * present yet, adds it, then returns it.
@@ -1748,7 +1800,6 @@ Application.createModule({name: "GL",
         }
         return this._models[filename];
     };
-
     /**
      * Gets the model stored in the resource manager, searching for it by its name, 
      * or if it does not exist yet, adds it.
@@ -1766,7 +1817,6 @@ Application.createModule({name: "GL",
         }
         return this._models[model.getName()];
     };
-
     /**
      * Initiates the requests to load all the stored 2D texture resources from their 
      * associated files.
@@ -1776,7 +1826,6 @@ Application.createModule({name: "GL",
             this._textures[texture].requestLoadFromFile();
         }
     };
-
     /**
      * Initiates the requests to load all the stored cubemapped texture resources 
      * from their associated files.
@@ -1786,7 +1835,6 @@ Application.createModule({name: "GL",
             this._requestedCubemappedTextures[texture].requestLoadFromFile();
         }
     };
-
     /**
      * Initiates the requests to load all the shader resources that have been
      * requested for loading from their associated files.
@@ -1796,7 +1844,6 @@ Application.createModule({name: "GL",
             this._requestedShaders[shader].requestLoadFromFile();
         }
     };
-
     /**
      * Initiates the requests to load all the stored model resources from their 
      * associated files.
@@ -1806,7 +1853,6 @@ Application.createModule({name: "GL",
             this._models[model].requestLoadFromFile();
         }
     };
-
     /**
      * Initiates the request to load the shader and cubemap configuration (what are
      * the available cubemaps and shaders and their source files) from the XML file
@@ -1820,7 +1866,6 @@ Application.createModule({name: "GL",
             self.loadShaderAndCubemapObjectsFromXML(responseXML);
         });
     };
-
     /**
      * Loads the cubemap and shader configuration (not the resources, just their
      * meta-data) from the passed XML document.
@@ -1829,7 +1874,6 @@ Application.createModule({name: "GL",
     ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function (xmlSource) {
         var i, j, k;
         var index;
-
         this._numRequestedCubemappedTextures = 0;
         this._numCubemappedTexturesLoaded = 0;
         this._cubemappedTextures = new Object();
@@ -1907,7 +1951,6 @@ Application.createModule({name: "GL",
                     ));
         }
     };
-
     /**
      * Initiates all requests needed to load all the stored resources from their 
      * associated files. If there are no resources needed to load, just executes
@@ -1923,7 +1966,6 @@ Application.createModule({name: "GL",
             this.requestModelLoadFromFile();
         }
     };
-
     /**
      * Resets the binding of all stored resource to any managed GL context. (after
      * the contexts have been destroyed, new context might have the same ID, thus
