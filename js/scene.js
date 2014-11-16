@@ -1874,7 +1874,7 @@ Application.createModule({name: "Scene",
         this._shadowMappingShader = shadowMappingShader || null;
         this._shadowMapTextureSize = Armada.graphics().getShadowQuality();
         this._shadowMapRanges = new Array();
-        var ranges = [50, 150, 300, 600, 1200, 2400];
+        var ranges = [40, 125, 250, 500, 1000, 2000];
         for (var i = 0; i <= Armada.graphics().getShadowDistance(); i++) {
             this._shadowMapRanges.push(ranges[i]);
         }

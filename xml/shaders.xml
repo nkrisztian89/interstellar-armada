@@ -130,7 +130,7 @@
     </Shader>
     
     <Shader name="shadowMapReveal">
-        <vertex filename="simpleWithModelPos.vert" />
+        <vertex filename="modelPosShadowMapping.vert" />
         <fragment filename="shadowMapReveal.frag" />
         <state>
             <blendType value="mix" />

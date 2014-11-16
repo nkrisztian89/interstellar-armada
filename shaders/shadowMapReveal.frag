@@ -1,6 +1,7 @@
 // phong, shadow mapping + reveal functionality
 
 precision mediump float;
+precision mediump int;
 
 struct Light
     {
@@ -41,6 +42,8 @@ varying vec4 v_index;
 varying vec4 v_worldPos;
 // the coordinates of this fragment in model space
 varying vec4 v_modelPos;
+
+varying vec4 v_shadowMapPosition[2];
 	
 void main() {
     // discard fragments that are not revealed yet
@@ -66,7 +69,6 @@ void main() {
         float diffuseFactor;
         float specularFactor;
 
-        vec4 shadowMapPosition;
         float lighted;
         vec4 shadowMapTexel;
         float indexDifference;
@@ -86,11 +88,9 @@ void main() {
                     lighted = 1.0;
                     // shadow map calculations only occur if we turned them on
                     if (u_shadows) {
-                        // applying the same transformation that was applied when creating the shadow maps for light i
-                        shadowMapPosition = u_lights[i].matrix * u_modelMatrix * vec4(v_position,1.0);
                         // save the distance of the projection of current fragment 
                         // on the plane of the shadow maps from the center (in world coordinates)
-                        float dist = length(shadowMapPosition.xy);
+                        float dist = length(v_shadowMapPosition[i].xy);
                         // At each step, we only need to check for objects obscuring the current fragment
                         // that lie outside of the scope of the previous check.
                         // minimum depth of obscuring objects to check that are above the previously checked area
@@ -109,13 +109,13 @@ void main() {
                                 // only check if the current fragment is (could be) covered by the current shadow map
                                 if (dist < range) {
                                     // calculate texture coordinates on the current shadow map
-                                    vec2 shMapTexCoords = shadowMapPosition.xy / range;
-                                    float depth = shadowMapPosition.z / (range * u_shadowMapDepthRatio);
+                                    vec2 shMapTexCoords = v_shadowMapPosition[i].xy / range;
+                                    float depth = v_shadowMapPosition[i].z / (range * u_shadowMapDepthRatio);
                                     // the factor for how much the fragment needs to be shaded by the shadows
                                     // for the largest shadow map, add a fade out factor towards the end of the range
                                     float shade = (j == (u_numRanges - 1)) ? 1.0 - clamp((length(vec3(shMapTexCoords.xy,depth)) - 0.8) * 5.0, 0.0, 1.0) : 1.0;
                                     // convert from -1.0;1.0 range to 0.0;1.0
-                                    shMapTexCoords = vec2(1.0, 1.0) + shMapTexCoords / 2.0;
+                                    shMapTexCoords = vec2(0.5, 0.5) + shMapTexCoords / 2.0;
                                     depth = 0.5 + depth / 2.0;
                                     // only check the texture if we have valid coordinates for it
                                     if (shMapTexCoords == clamp(shMapTexCoords, 0.0, 1.0)) {
