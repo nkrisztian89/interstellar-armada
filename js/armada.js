@@ -75,6 +75,30 @@ var Armada = Armada || (function (app) {
     app.getVersion = function () {
         return _version;
     };
+    /**
+     * Displays information about an error that has occured in relation with WebGL,
+     * adding some basic WebGL support info for easier troubleshooting.
+     * @param {String} message A brief error message to show.
+     * @param {String} [severity] The severity level of the error. Possible
+     * values: "critical", "severe", "minor".
+     * @param {String} [details] Additional details to show about the error,
+     * with possible explanations or tips how to correct this error.
+     * @param {WebGLRenderingContext} gl The WebGL context the error happened in
+     * relation with.
+     */
+    app.showGraphicsError = function (message, severity, details, gl) {
+        if (!gl) {
+            app.showError(message, severity, details + "\n\nThis is a graphics related error. There is " +
+                    "no information available about your graphics support.");
+        } else {
+            app.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
+                    "Information about your graphics support:\n" +
+                    "WebGL version: " + gl.getParameter(gl.VERSION) + "\n" +
+                    "Shading language version: " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION) + "\n" +
+                    "WebGL vendor: " + gl.getParameter(gl.VENDOR) + "\n" +
+                    "WebGL renderer: " + gl.getParameter(gl.RENDERER));
+        }
+    };
     /** 
      * Initializes the game: builds up the screens, loads settings and displays
      * the main menu.
@@ -205,7 +229,8 @@ var Armada = Armada || (function (app) {
      */
     app.setScreen = function (screenName, superimpose, backgroundColor, backgroundOpacity) {
         _game.setCurrentScreen(screenName, superimpose, backgroundColor, backgroundOpacity);
-    };
+    }
+    ;
     return app;
 })(Application);
 

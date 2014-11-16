@@ -110,16 +110,57 @@ void main() {
                                 if (dist < range) {
                                     // calculate texture coordinates on the current shadow map
                                     vec2 shMapTexCoords = shadowMapPosition.xy / range;
-                                    shMapTexCoords += vec2(1.0, 1.0);
-                                    shMapTexCoords /= 2.0;
-                                    float depth = 0.5 + shadowMapPosition.z / (2.0 * range * u_shadowMapDepthRatio);
+                                    float depth = shadowMapPosition.z / (range * u_shadowMapDepthRatio);
                                     // the factor for how much the fragment needs to be shaded by the shadows
                                     // for the largest shadow map, add a fade out factor towards the end of the range
-                                    float shade = (j == (u_numRanges - 1)) ? 1.0 - clamp((length(vec3(shMapTexCoords.xy,depth / u_shadowMapDepthRatio)) - 0.8) * 5.0, 0.0, 1.0) : 1.0;
+                                    float shade = (j == (u_numRanges - 1)) ? 1.0 - clamp((length(vec3(shMapTexCoords.xy,depth)) - 0.8) * 5.0, 0.0, 1.0) : 1.0;
+                                    // convert from -1.0;1.0 range to 0.0;1.0
+                                    shMapTexCoords = vec2(1.0, 1.0) + shMapTexCoords / 2.0;
+                                    depth = 0.5 + depth / 2.0;
                                     // only check the texture if we have valid coordinates for it
                                     if (shMapTexCoords == clamp(shMapTexCoords, 0.0, 1.0)) {
-                                        // read the value of the texel from th shadow map
-                                        shadowMapTexel = texture2D(u_shadowMaps[i * 6 + j], shMapTexCoords);
+                                        // read the value of the texel from the shadow map
+                                        // on my laptop with intel integrated graphics, sampler indexing does not work at all
+                                        // and the line below always samplers the first texture in the array
+                                        //shadowMapTexel = texture2D(u_shadowMaps[i * 6 + j], shMapTexCoords);
+                                        // the following conditional list works
+                                        int shMapIndex = i * 6 + j;
+                                        if (shMapIndex == 0) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[0], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 1) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[1], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 2) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[2], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 3) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[3], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 4) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[4], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 5) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[5], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 6) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[6], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 7) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[7], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 8) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[8], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 9) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[9], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 10) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[10], shMapTexCoords);
+                                        } else 
+                                        if (shMapIndex == 11) {
+                                            shadowMapTexel = texture2D(u_shadowMaps[11], shMapTexCoords);
+                                        }
                                         // the depth value is stored in the second two components of the texel
                                         float texelDepth = shadowMapTexel.w + (shadowMapTexel.z / 256.0);
                                         // check if there is depth content on the texel, which is in a range not checked before

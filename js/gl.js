@@ -132,7 +132,7 @@ Application.createModule({name: "GL",
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
                 this._ids[context.getName()] = gl.createTexture();
-                context.bindTexture(this,0);
+                context.bindTexture(this, 0);
                 // Upload the image into the texture.
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
                 // Set the parameters so we can render any size image.
@@ -270,7 +270,7 @@ Application.createModule({name: "GL",
             if (this._ids[context.getName()] === undefined) {
                 var gl = context.gl;
                 this._ids[context.getName()] = gl.createTexture();
-                context.bindTexture(this,0);
+                context.bindTexture(this, 0);
 
                 // Set the parameters so we can render any size image.
                 gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -675,7 +675,7 @@ Application.createModule({name: "GL",
         var location = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
         if ((location !== -1) && (location !== this._locations[shader.getName()])) {
             this._locations[shader.getName()] = location;
-            Application.log("Binding vertex buffer '"+this._name+"' to attribute location "+this._locations[shader.getName()]+" in shader '"+shader.getName()+"'.",3);
+            Application.log("Binding vertex buffer '" + this._name + "' to attribute location " + this._locations[shader.getName()] + " in shader '" + shader.getName() + "'.", 3);
             context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
             context.gl.vertexAttribPointer(this._locations[shader.getName()], this._vectorSize, context.gl.FLOAT, false, 0, 0);
         }
@@ -737,7 +737,7 @@ Application.createModule({name: "GL",
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
 
         this._textureID = context.gl.createTexture();
-        context.bindTexture(this,0);
+        context.bindTexture(this, 0);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.LINEAR);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.LINEAR);
         context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
@@ -914,7 +914,7 @@ Application.createModule({name: "GL",
                 // detect and display compilation errors
                 if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                     var infoLog = gl.getShaderInfoLog(vertexShader);
-                    Application.showError("Compiling GLSL vertex shader '" + this._vertexShaderFileName + "' failed.", "severe", "More details:\n" + infoLog);
+                    Application.showGraphicsError("Compiling GLSL vertex shader '" + this._vertexShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
                     this._ids[context.getName()] = null;
                     return;
                 }
@@ -925,7 +925,7 @@ Application.createModule({name: "GL",
                 // detect and display compilation errors
                 if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                     var infoLog = gl.getShaderInfoLog(fragmentShader);
-                    Application.showError("Compiling GLSL fragment shader '" + this._fragmentShaderFileName + "' failed.", "severe", "More details:\n" + infoLog);
+                    Application.showGraphicsError("Compiling GLSL fragment shader '" + this._fragmentShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
                     this._ids[context.getName()] = null;
                     return;
                 }
@@ -938,7 +938,7 @@ Application.createModule({name: "GL",
                 // detect and display linking errors
                 if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
                     var infoLog = gl.getProgramInfoLog(prog);
-                    Application.showError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog);
+                    Application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog, gl);
                     gl.deleteProgram(prog);
                     this._ids[context.getName()] = null;
                     return;
@@ -1108,8 +1108,16 @@ Application.createModule({name: "GL",
         try {
             var contextParameters = {alpha: true, antialias: antialiasing};
             // Try to grab the standard context. If it fails, fallback to experimental.
-            this.gl = canvas.getContext("webgl", contextParameters) ||
-                    canvas.getContext("experimental-webgl", contextParameters);
+            this.gl = canvas.getContext("webgl", contextParameters);
+            if (!this.gl) {
+                canvas.getContext("experimental-webgl", contextParameters);
+                if (this.gl) {
+                    Application.showError("Your device appears to only have experimental WebGL (web based 3D) support.",
+                            undefined, "This application relies on 3D web features, and without full support, " +
+                            "the graphics of the application might be displayed with glitches or not at all. " +
+                            "If you experience problems, it is recommended to use lower graphics quality settings.");
+                }
+            }
         }
         catch (e) {
         }
@@ -1122,6 +1130,14 @@ Application.createModule({name: "GL",
                     "a modern web browser (Firefox or Chrome are recommended).\n" +
                     "Please note that some phones or handheld devices do not have 3D " +
                     "web capabilities, even if you use the latest software.");
+        }
+
+        if (Armada.graphics().getAntialiasing() && !this.gl.getContextAttributes().antialias) {
+            Application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
+                    "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
+                    "this error message showing up again, disable antialiasing in the graphics settings or try " +
+                    "running the application in a different browser. Antialiasing will not work, but otherwise this " +
+                    "error will have no consequences.", this.gl);
         }
 
         // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
@@ -1280,7 +1296,7 @@ Application.createModule({name: "GL",
         }
         this._currentShader = null;
         for (i = 0; i < this._shaders.length; i++) {
-                this.setCurrentShader(this._shaders[i]);
+            this.setCurrentShader(this._shaders[i]);
         }
     };
 
@@ -1345,40 +1361,31 @@ Application.createModule({name: "GL",
      * time.
      */
     ManagedGLContext.prototype.bindTexture = function (texture, place) {
-        place = place || 0;
-        switch (place) {
-            case 0:
-                this.gl.activeTexture(this.gl.TEXTURE0);
-                break;
-            case 1:
-                this.gl.activeTexture(this.gl.TEXTURE1);
-                break;
-            case 2:
-                this.gl.activeTexture(this.gl.TEXTURE2);
-                break;
-            case 3:
-                this.gl.activeTexture(this.gl.TEXTURE3);
-                break;
-            default:
-                this.gl.activeTexture(this.gl["TEXTURE" + place]);
+        if (place === undefined) {
+            place = 0;
+            while ((place < this._boundTextures.length) && (this._boundTextures[place] !== undefined)) {
+                place++;
+            }
         }
+        this.gl.activeTexture(this.gl.TEXTURE0 + place);
         if (this._boundTextures[place] !== texture) {
             if (texture instanceof Texture) {
-                Application.log("Binding texture: '"+texture.getFilename()+"' to place "+place+".",3);
+                Application.log("Binding texture: '" + texture.getFilename() + "' to place " + place + ".", 3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getIDForContext(this));
             } else
             if (texture instanceof Cubemap) {
-                Application.log("Binding cubemap texture: '"+texture.getName()+"' to place "+place+".",3);
+                Application.log("Binding cubemap texture: '" + texture.getName() + "' to place " + place + ".", 3);
                 this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.getIDForContext(this));
             } else
             if (texture instanceof FrameBuffer) {
-                Application.log("Binding framebuffer texture: '"+texture.getName()+"' to place "+place+".",3);
+                Application.log("Binding framebuffer texture: '" + texture.getName() + "' to place " + place + ".", 3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getTextureID());
             } else {
-                Application.showError("Cannot set object: '"+texture.toString()+"' as current texture, because it is not of an appropriate type.");
+                Application.showError("Cannot set object: '" + texture.toString() + "' as current texture, because it is not of an appropriate type.");
             }
             this._boundTextures[place] = texture;
         }
+        return place;
     };
 
     /**
@@ -1751,7 +1758,7 @@ Application.createModule({name: "GL",
      */
     ResourceManager.prototype.getOrAddModelByName = function (model) {
         if (!model.getName()) {
-            Application.showError("Trying to search for a model among the resources which does not have a name!");
+            Application.showError("Trying to search for a model without a name among the resources!");
             return null;
         }
         if (!this._models[model.getName()]) {

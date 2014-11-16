@@ -406,7 +406,7 @@ Application.createModule({name: "Scene",
                             ) || (this.lastInsideFrustumState === true)) {
                         if (this.needsToBeRendered(screenWidth, screenHeight, scene.lodContext, depthMaskPhase)) {
                             managedGLContext.setCurrentShader(this.shader);
-                            scene.assignUniforms(managedGLContext,this.shader);
+                            scene.assignUniforms(managedGLContext, this.shader);
                             this.assignUniforms(managedGLContext);
                             this.render(managedGLContext, depthMaskPhase);
                             this._wasRendered = true;
@@ -2119,7 +2119,7 @@ Application.createModule({name: "Scene",
 
         if (this._shadowMappingShader) {
             context.setCurrentShader(this._shadowMappingShader);
-            this.assignUniforms(context,this._shadowMappingShader);
+            this.assignUniforms(context, this._shadowMappingShader);
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     for (var j = 0; j < this._shadowMapRanges.length; j++) {
