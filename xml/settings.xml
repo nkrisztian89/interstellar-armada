@@ -2,7 +2,7 @@
 <settings>
     <graphics>
         <context antialiasing="true" filtering="trilinear" shadowMapping="true">
-            <shadows quality="2048" distance="3" />
+            <shadows quality="2048" ranges="40,125,250,500,1000,2000" numRanges="3" depthRatio="1.5" />
         </context>
         <shaders source="shaders.xml" />
         <levelOfDetailSettings>

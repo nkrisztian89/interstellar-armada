@@ -111,11 +111,13 @@ Application.createModule({name: "Graphics",
          * @type Number
          */
         this._shadowQuality = null;
+        this._shadowRanges = null;
         /**
          * @name GraphicsContext#_shadowDistance
          * @type Number
          */
         this._shadowDistance = null;
+        this._shadowDepthRatio = null;
     }
 
     GraphicsContext.prototype = new Resource();
@@ -149,7 +151,9 @@ Application.createModule({name: "Graphics",
         this._filtering = "bilinear";
         this._shadowMapping = false;
         this._shadowQuality = 2048;
+        this._shadowRanges = [40, 125, 250, 500, 1000, 2000];
         this._shadowDistance = 3;
+        this._shadowDepthRatio = 1.5;
         // overwrite with the settings from the XML tag, if present
         var contextTag = xmlTag.getElementsByTagName("context")[0];
         if (contextTag !== null) {
@@ -162,9 +166,11 @@ Application.createModule({name: "Graphics",
             if (contextTag.hasAttribute("shadowMapping")) {
                 this._shadowMapping = (contextTag.getAttribute("shadowMapping") === "true");
                 var shadowTag = contextTag.getElementsByTagName("shadows")[0];
-                if(shadowTag !== null) {
+                if (shadowTag !== null) {
                     this._shadowQuality = (parseInt(shadowTag.getAttribute("quality")));
-                    this._shadowDistance = (parseInt(shadowTag.getAttribute("distance")));
+                    this._shadowRanges = shadowTag.getAttribute("ranges").split(",").map(parseFloat);
+                    this._shadowDistance = (parseInt(shadowTag.getAttribute("numRanges")));
+                    this._shadowDepthRatio = parseFloat(shadowTag.getAttribute("depthRatio"));
                 }
             }
         }
@@ -303,7 +309,7 @@ Application.createModule({name: "Graphics",
         this._lodContext.maxEnabledLOD = value;
         localStorage.interstellarArmada_graphics_maxLOD = this._maxLoadedLOD;
     };
-    
+
     /**
      * Returns whether shadow mapping is enabled.
      * @returns {Boolean}
@@ -320,7 +326,7 @@ Application.createModule({name: "Graphics",
         this._shadowMapping = value;
         localStorage.interstellarArmada_graphics_shadowMapping = this._shadowMapping;
     };
-    
+
     /**
      * Returns the quality of shadows. (texture size for shadow mapping)
      * @returns {Number}
@@ -339,6 +345,18 @@ Application.createModule({name: "Graphics",
     };
     
     /**
+     * Returns the array of ranges for the active number of shadow maps.
+     * @returns {Number[]}
+     */
+    GraphicsContext.prototype.getShadowRanges = function () {
+        var result = new Array();
+        for (var i = 0; i <= this._shadowDistance; i++) {
+            result.push(this._shadowRanges[i]);
+        }
+        return result;
+    };
+
+    /**
      * Returns the rendering distance level of shadows. (number of passes for
      * shadow mapping)
      * @returns {Number}
@@ -348,13 +366,21 @@ Application.createModule({name: "Graphics",
     };
 
     /**
-     * Sets the rendering distance level of shadows. (number of passes for
+     * Sets the rendering distance level of shadows. (number of ranges for
      * shadow mapping)
      * @param {Number} value
      */
     GraphicsContext.prototype.setShadowDistance = function (value) {
         this._shadowDistance = value;
         localStorage.interstellarArmada_graphics_shadowDistance = this._shadowDistance;
+    };
+    
+    /**
+     * Returns the depth ratio for shadow mapping.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getShadowDepthRatio = function () {
+        return this._shadowDepthRatio;
     };
 
     // -------------------------------------------------------------------------

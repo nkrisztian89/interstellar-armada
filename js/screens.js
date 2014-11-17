@@ -754,7 +754,13 @@ Application.createModule({name: "Screens",
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
                     Armada.graphics().getLODContext(),
-                    Armada.graphics().getShadowMapping() ? Armada.resources().getShader("shadowMapping") : null);
+                    {
+                        enable: Armada.graphics().getShadowMapping(),
+                        shader: Armada.resources().getShader("shadowMapping"),
+                        textureSize: Armada.graphics().getShadowQuality(),
+                        ranges: Armada.graphics().getShadowRanges(),
+                        depthRatio: Armada.graphics().getShadowDepthRatio()
+                    });
             self._level.buildScene(self._battleScene);
 
             Armada.control().getController("general").setLevel(self._level);
@@ -969,7 +975,13 @@ Application.createModule({name: "Screens",
                 true, [true, true, true, true],
                 [0, 0, 0, 0], true,
                 Armada.graphics().getLODContext(),
-                Armada.graphics().getShadowMapping() ? Armada.resources().getShader("shadowMapping") : null);
+                {
+                    enable: Armada.graphics().getShadowMapping(),
+                    shader: Armada.resources().getShader("shadowMapping"),
+                    textureSize: Armada.graphics().getShadowQuality(),
+                    ranges: [],
+                    depthRatio: Armada.graphics().getShadowDepthRatio()
+                });
         this._scene.addLightSource(new Scene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
         Armada.resources().onResourceLoad = function (resourceName, totalResources, loadedResources) {
@@ -1129,6 +1141,15 @@ Application.createModule({name: "Screens",
                 self.bindSceneToCanvas(self._scene, self.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
                 self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.visualModel.getScaledSize()));
+                if(Armada.graphics().getShadowMapping()) {
+                    self._scene.setShadowMapRanges([
+                        self._item.visualModel.getScaledSize(),
+                        2 * self._item.visualModel.getScaledSize()
+                    ]);
+                    self._scene.enableShadowMapping();
+                } else {
+                    self._scene.disableShadowMapping();
+                }
 
                 self._revealState = 0.0;
 
