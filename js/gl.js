@@ -706,7 +706,7 @@ Application.createModule({name: "GL",
             Application.log("Binding vertex buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
             context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
             context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
-            context.setBoundVertexBuffer(location,this);
+            context.setBoundVertexBuffer(location, this);
         }
         context.gl.enableVertexAttribArray(location);
     };
@@ -1145,32 +1145,38 @@ Application.createModule({name: "GL",
          * @type Number
          */
         this._nextTextureBindLocation = 0;
-        // creating the contained WebGLRenderingContext
+        // creating the WebGLRenderingContext
+        var contextParameters = {alpha: true, antialias: antialiasing};
+        // some implementations throw an exception, others don't, but all return null
+        // if the creation fails, so handle that case
         try {
-            var contextParameters = {alpha: true, antialias: antialiasing};
-            // Try to grab the standard context. If it fails, fallback to experimental.
+            // Try to grab the standard context.
             this.gl = canvas.getContext("webgl", contextParameters);
-            if (!this.gl) {
-                canvas.getContext("experimental-webgl", contextParameters);
-                if (this.gl) {
-                    Application.showError("Your device appears to only have experimental WebGL (web based 3D) support.",
-                            undefined, "This application relies on 3D web features, and without full support, " +
-                            "the graphics of the application might be displayed with glitches or not at all. " +
-                            "If you experience problems, it is recommended to use lower graphics quality settings.");
-                }
-            }
         }
         catch (e) {
         }
-
+        // if creating a normal context fails, fall back to experimental, but notify the user
         if (!this.gl) {
-            Application.showError("Unable to initialize WebGL.", "critical",
-                    "It looks like your device, browser or graphics drivers do not " +
-                    "support web 3D graphics. Make sure your browser and graphics " +
-                    "drivers are updated to the latest version, and you are using " +
-                    "a modern web browser (Firefox or Chrome are recommended).\n" +
-                    "Please note that some phones or handheld devices do not have 3D " +
-                    "web capabilities, even if you use the latest software.");
+            try {
+                canvas.getContext("experimental-webgl", contextParameters);
+            }
+            catch (e) {
+            }
+            if (!this.gl) {
+                Application.showError("Unable to initialize WebGL.", "critical",
+                        "It looks like your device, browser or graphics drivers do not " +
+                        "support web 3D graphics. Make sure your browser and graphics " +
+                        "drivers are updated to the latest version, and you are using " +
+                        "a modern web browser (Firefox or Chrome are recommended).\n" +
+                        "Please note that some phones or handheld devices do not have 3D " +
+                        "web capabilities, even if you use the latest software.");
+                return;
+            } else {
+                Application.showError("Your device appears to only have experimental WebGL (web based 3D) support.",
+                        undefined, "This application relies on 3D web features, and without full support, " +
+                        "the graphics of the application might be displayed with glitches or not at all. " +
+                        "If you experience problems, it is recommended to use lower graphics quality settings.");
+            }
         }
 
         if (Armada.graphics().getAntialiasing() && !this.gl.getContextAttributes().antialias) {
@@ -1270,7 +1276,7 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.getBoundVertexBuffer = function (attributeLocation) {
         return this._boundVertexBuffers[attributeLocation];
     };
-    ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation,vertexBuffer) {
+    ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation, vertexBuffer) {
         this._boundVertexBuffers[attributeLocation] = vertexBuffer;
     };
     /**
@@ -1377,7 +1383,7 @@ Application.createModule({name: "GL",
      */
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
         if (this._currentShader !== shader) {
-            Application.log("Switching to shader: "+shader.getName(),3);
+            Application.log("Switching to shader: " + shader.getName(), 3);
             this.gl.useProgram(shader.getIDForContext(this));
             shader.setBlending(this);
             shader.bindVertexBuffers(this);

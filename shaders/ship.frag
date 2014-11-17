@@ -167,7 +167,9 @@ void main() {
                                             float transition = clamp((texelDepth - (depth + errorTolerance)) * range * u_shadowMapDepthRatio * 5.0, 0.0, 1.0);
                                             shade *= transition;
                                             lighted = max(0.0, lighted - shade);
-                                            break;
+                                            if (lighted == 0.0) {
+                                                break;
+                                            }
                                         }
                                     }
                                 }
