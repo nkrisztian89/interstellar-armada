@@ -285,12 +285,9 @@ Application.createModule({name: "Physics",
 
             this.velocityMatrix = Mat.straightened(this.velocityMatrix, 0.0001);
             this.angularVelocityMatrix = Mat.straightened(this.angularVelocityMatrix, 0.00002);
-            // correcting the matrices every 10 seconds, as due to small floating
+            // correcting the matrices, as due to small floating
             // point calculation inaccuracies, they slowly lose orthogonality
-            this.timeSinceLastMatrixCorrection += dt;
-            if (this.timeSinceLastMatrixCorrection >= 5000) {
-                this.correctMatrices();
-            }
+            this.correctMatrices();
         }
     };
     // -------------------------------------------------------------------------

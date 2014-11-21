@@ -1143,8 +1143,8 @@ Application.createModule({name: "Screens",
                 self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.visualModel.getScaledSize()));
                 if(Armada.graphics().getShadowMapping()) {
                     self._scene.setShadowMapRanges([
-                        self._item.visualModel.getScaledSize(),
-                        2 * self._item.visualModel.getScaledSize()
+                        0.5 * self._item.visualModel.getScaledSize(),
+                        self._item.visualModel.getScaledSize()
                     ]);
                     self._scene.enableShadowMapping();
                 } else {
@@ -1208,11 +1208,11 @@ Application.createModule({name: "Screens",
             }(self._shadowQualitySelector.getSelectedValue())));
             Armada.graphics().setShadowDistance((function (v) {
                 var mapping = {
-                    "very close": 1,
-                    "close": 2,
-                    "medium": 3,
-                    "far": 4,
-                    "very far": 5
+                    "very close": 2,
+                    "close": 3,
+                    "medium": 4,
+                    "far": 5,
+                    "very far": 6
                 };
                 return mapping[v];
             }(self._shadowDistanceSelector.getSelectedValue())));
@@ -1253,15 +1253,15 @@ Application.createModule({name: "Screens",
             }((Armada.graphics().getShadowQuality())));
             self._shadowDistanceSelector.selectValue(function (v) {
                 switch (v) {
-                    case 1:
-                        return "very close";
                     case 2:
-                        return "close";
+                        return "very close";
                     case 3:
-                        return "medium";
+                        return "close";
                     case 4:
-                        return "far";
+                        return "medium";
                     case 5:
+                        return "far";
+                    case 6:
                         return "very far";
                     default:
                         return "medium";

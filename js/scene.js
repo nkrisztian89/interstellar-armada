@@ -1790,6 +1790,7 @@ Application.createModule({name: "Scene",
         vy = Vec.normal3(Vec.cross3(vz, vx));
         this._orientationMatrix = Mat.correctedOrthogonal4(Mat.fromVectorsTo4(vx, vy, vz));
         this.matrix = this._orientationMatrix;
+        this.translationVector = new Float32Array(Vec.mulVec3Mat4([0, 0, 1], this._orientationMatrix));
     }
 
     /**
@@ -1807,23 +1808,30 @@ Application.createModule({name: "Scene",
             }
         }
     };
+    
+    LightSource.prototype.reset = function() {
+        this.matrix = null;
+        this.translationVector = null;
+    };
 
     /**
      * 
      * @param {ManagedGLContext} context
      * @param {SceneCamera} camera
+     * @param {Number[3]} cameraZ
      * @param {Number} rangeIndex
      * @param {Number} range
      * @param {Number} depth
      */
-    LightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
+    LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
 
-        var self = this;
+        var matrix = Mat.mul4(Mat.mul4(camera.getPositionMatrix(),Mat.translation4v(Vec.scaled3(cameraZ,range))), this._orientationMatrix);
+        this.matrix = this.matrix || Mat.mul4(camera.getPositionMatrix(), this._orientationMatrix);
+        this.translationVector = this.translationVector || new Float32Array(Vec.normal3(Vec.add3(Mat.translationVector3(matrix),Vec.scaled3(Mat.translationVector3(this.matrix),-1))));
         context.getCurrentShader().assignUniforms(context, {
             "u_lightMatrix": function () {
-                self.matrix = Mat.mul4(camera.getPositionMatrix(), self._orientationMatrix);
-                return self.matrix;
+                return matrix;
             },
             "u_shadowMapDepth": function () {
                 return depth;
@@ -2161,10 +2169,13 @@ Application.createModule({name: "Scene",
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
+            var camOri = Mat.inverseOfRotation4(this.activeCamera.getOrientationMatrix());
+            var cameraZ = [camOri[8], camOri[9], camOri[10]];
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
+                    this.lights[i].reset();
                     for (var j = 0; j < this._shadowMapRanges.length; j++) {
-                        this.lights[i].startShadowMap(context, this.activeCamera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
+                        this.lights[i].startShadowMap(context, this.activeCamera, cameraZ, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
                         this.renderShadowMap(context);
                     }
                 }

@@ -388,37 +388,37 @@ Application.createModule({name: "Logic",
          * @name ManeuveringComputer#_compensated
          * @type Boolean
          */
-        this._compensated = null;
+        this._compensated = true;
         /**
          * @name ManeuveringComputer#_yawTarget
          * @type Number
          */
-        this._yawTarget = null;
+        this._yawTarget = 0;
         /**
          * @name ManeuveringComputer#_pitchTarget
          * @type Number
          */
-        this._pitchTarget = null;
+        this._pitchTarget = 0;
         /**
          * @name ManeuveringComputer#_rollTarget
          * @type Number
          */
-        this._rollTarget = null;
+        this._rollTarget = 0;
         /**
          * @name ManeuveringComputer#_speedTarget
          * @type Number
          */
-        this._speedTarget = null;
+        this._speedTarget = 0;
         /**
          * @name ManeuveringComputer#_strafeTarget
          * @type Number
          */
-        this._strafeTarget = null;
+        this._strafeTarget = 0;
         /**
          * @name ManeuveringComputer#_liftTarget
          * @type Number
          */
-        this._liftTarget = null;
+        this._liftTarget = 0;
 
         this.SPEED_INCREMENT = 1;
         this.TURNING_LIMIT = this._spacecraft.propulsion ?

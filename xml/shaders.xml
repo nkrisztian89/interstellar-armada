@@ -124,6 +124,7 @@
             <uniform name="color" memberOf="u_lights" type="vec3" />
             <uniform name="direction" memberOf="u_lights" type="vec3" />
             <uniform name="matrix" memberOf="u_lights" type="mat4" />
+            <uniform name="translationVector" memberOf="u_lights" type="vec3" />
             <uniform name="u_eyePos" type="vec3" />
             <uniform name="u_luminosityFactors" type="float" arraySize="20" />
         </uniforms>
@@ -161,6 +162,7 @@
             <uniform name="color" memberOf="u_lights" type="vec3" />
             <uniform name="direction" memberOf="u_lights" type="vec3" />
             <uniform name="matrix" memberOf="u_lights" type="mat4" />
+            <uniform name="translationVector" memberOf="u_lights" type="vec3" />
             <uniform name="u_eyePos" type="vec3" />
             <uniform name="u_revealStart" type="float" />
             <uniform name="u_revealTransitionLength" type="float" />

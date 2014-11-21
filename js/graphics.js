@@ -350,7 +350,7 @@ Application.createModule({name: "Graphics",
      */
     GraphicsContext.prototype.getShadowRanges = function () {
         var result = new Array();
-        for (var i = 0; i <= this._shadowDistance; i++) {
+        for (var i = 0; i < this._shadowDistance; i++) {
             result.push(this._shadowRanges[i]);
         }
         return result;

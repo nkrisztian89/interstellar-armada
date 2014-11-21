@@ -8,6 +8,7 @@ struct Light
         vec3 color;
         vec3 direction;
         mat4 matrix;
+        vec3 translationVector;
     };
 	
 // phong shading
@@ -72,6 +73,9 @@ void main() {
         float lighted;
         vec4 shadowMapTexel;
         float indexDifference;
+        bool covered;
+        vec3 shadowMapPosition;
+        float dist;
 
         // going through each static, directional light source
         // start and end indices need to be constant
@@ -88,17 +92,15 @@ void main() {
                     lighted = 1.0;
                     // shadow map calculations only occur if we turned them on
                     if (u_shadows) {
-                        // save the distance of the projection of current fragment 
-                        // on the plane of the shadow maps from the center (in world coordinates)
-                        float dist = length(v_shadowMapPosition[i].xy);
                         // At each step, we only need to check for objects obscuring the current fragment
                         // that lie outside of the scope of the previous check.
                         // minimum depth of obscuring objects to check that are above the previously checked area
                         float minDepthAbove = 0.0; 
                         // maximum depth of obscuring objects to check that are below the previously checked area
                         float maxDepthBelow = 1.0;
-                        // the ratio of the sizes of the current and previous ranges
-                        float ratio = 1.0;
+                        // whether the projection of this fragment to the shadow map planes has already
+                        // fallen into the covered area
+                        covered = false;
                         // going through each shadow map (start and end indices need to be constant)
                         for (int j = 0; j < 6; j++) {
                             // only go through existing shadow maps
@@ -106,11 +108,16 @@ void main() {
                                 // the range of the current shadow map (length of the area covered from center
                                 // to the sides of the map in world coordinates)
                                 float range = u_shadowMapRanges[j];
+                                // the coordinates in shadow mapping space translated to have the current map center in the origo
+                                shadowMapPosition = v_shadowMapPosition[i].xyz + (u_lights[i].translationVector * range);
+                                // save the distance of the projection of current fragment 
+                                // on the plane of the shadow maps from the center (in world coordinates)
+                                dist = length(shadowMapPosition.xy);
                                 // only check if the current fragment is (could be) covered by the current shadow map
                                 if (dist < range) {
                                     // calculate texture coordinates on the current shadow map
-                                    vec2 shMapTexCoords = v_shadowMapPosition[i].xy / range;
-                                    float depth = v_shadowMapPosition[i].z / (range * u_shadowMapDepthRatio);
+                                    vec2 shMapTexCoords = shadowMapPosition.xy / range;
+                                    float depth = shadowMapPosition.z / (range * u_shadowMapDepthRatio);
                                     // the factor for how much the fragment needs to be shaded by the shadows
                                     // for the largest shadow map, add a fade out factor towards the end of the range
                                     float shade = (j == (u_numRanges - 1)) ? 1.0 - clamp((length(vec3(shMapTexCoords.xy,depth)) - 0.8) * 5.0, 0.0, 1.0) : 1.0;
@@ -120,10 +127,8 @@ void main() {
                                     // only check the texture if we have valid coordinates for it
                                     if (shMapTexCoords == clamp(shMapTexCoords, 0.0, 1.0)) {
                                         // read the value of the texel from the shadow map
-                                        // on my laptop with intel integrated graphics, sampler indexing does not work at all
-                                        // and the line below always samplers the first texture in the array
+                                        // indexing samplers with loop variables is not supported by specification
                                         //shadowMapTexel = texture2D(u_shadowMaps[i * 6 + j], shMapTexCoords);
-                                        // the following conditional list works
                                         int shMapIndex = i * u_numRanges + j;
                                         if (shMapIndex == 0) {
                                             shadowMapTexel = texture2D(u_shadowMaps[0], shMapTexCoords);
@@ -163,11 +168,13 @@ void main() {
                                         }
                                         // the depth value is stored in the second two components of the texel
                                         float texelDepth = shadowMapTexel.w + (shadowMapTexel.z / 256.0);
+                                        float absDepth = ((texelDepth - 0.5) * 2.0 * range * u_shadowMapDepthRatio) - shadowMapPosition.z;
                                         // depth check is performed with a tolerance for small errors
                                         float errorTolerance = 0.55 / 255.0;
+                                        float absErrorTolerance = 1.0 / 255.0 * range * u_shadowMapDepthRatio;
                                         // check if there is depth content on the texel, which is in a range not checked before
                                         // (by depth or by coordinates)
-                                        if((texelDepth > 0.0) && ((texelDepth >= minDepthAbove - errorTolerance) || (texelDepth <= maxDepthBelow + errorTolerance) || (dist >= (range * ratio) - errorTolerance))) {
+                                        if((texelDepth > 0.0) && ((absDepth >= minDepthAbove - absErrorTolerance) || (absDepth <= maxDepthBelow + absErrorTolerance) || (!covered))) {
                                             // the triangle index value is stored in the first two components of the texel
                                             indexDifference = length(v_index.xy - shadowMapTexel.rg);
                                             // check if the fragment is obscured by a triangle with a different index
@@ -181,12 +188,14 @@ void main() {
                                                 }
                                             }
                                         }
+                                        // save the state that the XY position of this fragment has already been inside the
+                                        // area covered by a shadow map - but only after the previous state has been checked
+                                        covered = true;
                                     }
                                 }
-                                // set the variables to exclude the already checked region in the next step
-                                ratio = range / ((j == (u_numRanges-1) ? 1.0 : u_shadowMapRanges[j + 1]));
-                                minDepthAbove = 0.5 + ratio * 0.5;
-                                maxDepthBelow = 0.5 - ratio * 0.5;
+                                // set the variables to exclude the already checked depth region in the next step
+                                minDepthAbove = -shadowMapPosition.z + (range * u_shadowMapDepthRatio);
+                                maxDepthBelow = -shadowMapPosition.z - (range * u_shadowMapDepthRatio);
                             }
                         }
                     }
