@@ -1786,9 +1786,11 @@ Application.createModule({name: "Scene",
         this._index = null;
         var vx, vy, vz;
         vz = this.direction;
-        vx = ((vz[2] !== 0.0) ? [-1, 0, 0] : [0, 0, 1]);
+        vy = (vz[1] < -0.995) ? [1,0,0] : ((vz[1] > 0.995) ? [1,0,0] : [0,1,0]);
+        vx = Vec.normal3(Vec.cross3(vy, vz));
         vy = Vec.normal3(Vec.cross3(vz, vx));
         this._orientationMatrix = Mat.correctedOrthogonal4(Mat.fromVectorsTo4(vx, vy, vz));
+        this._orientationMatrix = Mat.inverseOfRotation4(this._orientationMatrix);
         this.matrix = this._orientationMatrix;
         this.translationVector = new Float32Array(Vec.mulVec3Mat4([0, 0, 1], this._orientationMatrix));
     }
