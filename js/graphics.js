@@ -102,27 +102,44 @@ Application.createModule({name: "Graphics",
          */
         this._lodContext = null;
         /**
+         * Whether shadow mapping is currently enabled.
          * @name GraphicsContext#_shadowMapping
          * @type Boolean
          */
         this._shadowMapping = null;
         /**
+         * The resolution of the shadow map textures (both width and height, in
+         * texels)
          * @name GraphicsContext#_shadowQuality
          * @type Number
          */
         this._shadowQuality = null;
+        /**
+         * The list of ranges (distance from center to the sides, in game world
+         * space coordinates) that the shadow maps generated for one light source
+         * should cover. Must be in ascending order.
+         * @name GraphicsContext#_shadowRanges
+         * @type Number[]
+         * 
+         */
         this._shadowRanges = null;
         /**
+         * How far the shadow maps should be rendered: the number of ranges that
+         * should be used from the _shadowRanges list.
          * @name GraphicsContext#_shadowDistance
          * @type Number
          */
         this._shadowDistance = null;
+        /**
+         * The depth coverage of each shadow map should equal twice the range of the
+         * shadow map multiplied by this factor.
+         * @name GraphicsContext#_shadowDepthRatio
+         * @type Number
+         */
         this._shadowDepthRatio = null;
     }
-
     GraphicsContext.prototype = new Resource();
     GraphicsContext.prototype.constructor = GraphicsContext;
-
     /**
      * Returns the resource manager managing the graphical resources of the game.
      * @returns {GL.ResourceManager}
@@ -130,7 +147,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getResourceManager = function () {
         return this._resourceManager;
     };
-
     /**
      * Loads the graphics setting from the data stored in the passed XML document.
      * @param {Document} xmlTag The XML tag storing the game settings.
@@ -199,7 +215,6 @@ Application.createModule({name: "Graphics",
         }
         this._lodContext = new LODContext(parseInt(lodDisplayProfileTag.getAttribute("maxLevel")), lodDisplayLimits);
     };
-
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
      */
@@ -224,7 +239,6 @@ Application.createModule({name: "Graphics",
         }
         this.setToReady();
     };
-
     /**
      * Restores the default settings that were loaded from XML, and erases the
      * custom changes that are stored in HTML5 local storage.
@@ -238,7 +252,6 @@ Application.createModule({name: "Graphics",
         localStorage.removeItem("interstellarArmada_graphics_shadowQuality");
         localStorage.removeItem("interstellarArmada_graphics_shadowDistance");
     };
-
     /**
      * Returns the current antialiasing setting.
      * @returns {Boolean}
@@ -246,7 +259,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getAntialiasing = function () {
         return this._antialiasing;
     };
-
     /**
      * Sets a new antialiasing setting.
      * @param {Boolean} value
@@ -255,7 +267,6 @@ Application.createModule({name: "Graphics",
         this._antialiasing = value;
         localStorage.interstellarArmada_graphics_antialiasing = this._antialiasing;
     };
-
     /**
      * Returns the current texture filtering setting. (bilinear/trilinear/anisotropic)
      * @returns {String}
@@ -263,7 +274,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getFiltering = function () {
         return this._filtering;
     };
-
     /**
      * Sets a new texture filtering setting.
      * @param {String} value Possible values: bilinear, trilinear, anisotropic.
@@ -282,7 +292,6 @@ Application.createModule({name: "Graphics",
         }
         localStorage.interstellarArmada_graphics_filtering = this._filtering;
     };
-
     /**
      * Returns the maximum detail level for which the corresponding model files
      * are to be loaded.
@@ -291,7 +300,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getMaxLoadedLOD = function () {
         return this._maxLoadedLOD;
     };
-
     /**
      * Returns the LOD context object storing the currently active LOD settings.
      * @returns {LODContext}
@@ -299,7 +307,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getLODContext = function () {
         return this._lodContext;
     };
-
     /**
      * Sets a new maximum LOD level. (both for loading and displaying model files)
      * @param {Number} value
@@ -309,7 +316,6 @@ Application.createModule({name: "Graphics",
         this._lodContext.maxEnabledLOD = value;
         localStorage.interstellarArmada_graphics_maxLOD = this._maxLoadedLOD;
     };
-
     /**
      * Returns whether shadow mapping is enabled.
      * @returns {Boolean}
@@ -317,7 +323,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getShadowMapping = function () {
         return this._shadowMapping;
     };
-
     /**
      * Sets whether shadow mapping should be enabled.
      * @param {Boolean} value
@@ -326,7 +331,6 @@ Application.createModule({name: "Graphics",
         this._shadowMapping = value;
         localStorage.interstellarArmada_graphics_shadowMapping = this._shadowMapping;
     };
-
     /**
      * Returns the quality of shadows. (texture size for shadow mapping)
      * @returns {Number}
@@ -334,7 +338,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getShadowQuality = function () {
         return this._shadowQuality;
     };
-
     /**
      * Sets the quality of shadows. (texture size for shadow mapping)
      * @param {Number} value
@@ -343,7 +346,6 @@ Application.createModule({name: "Graphics",
         this._shadowQuality = value;
         localStorage.interstellarArmada_graphics_shadowQuality = this._shadowQuality;
     };
-    
     /**
      * Returns the array of ranges for the active number of shadow maps.
      * @returns {Number[]}
@@ -355,7 +357,6 @@ Application.createModule({name: "Graphics",
         }
         return result;
     };
-
     /**
      * Returns the rendering distance level of shadows. (number of passes for
      * shadow mapping)
@@ -364,7 +365,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getShadowDistance = function () {
         return this._shadowDistance;
     };
-
     /**
      * Sets the rendering distance level of shadows. (number of ranges for
      * shadow mapping)
@@ -374,7 +374,6 @@ Application.createModule({name: "Graphics",
         this._shadowDistance = value;
         localStorage.interstellarArmada_graphics_shadowDistance = this._shadowDistance;
     };
-    
     /**
      * Returns the depth ratio for shadow mapping.
      * @returns {Number}
@@ -382,7 +381,6 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.getShadowDepthRatio = function () {
         return this._shadowDepthRatio;
     };
-
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

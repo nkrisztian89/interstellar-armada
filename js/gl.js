@@ -75,7 +75,7 @@ Application.createModule({name: "GL",
         this._ids = new Object();
         /**
          * The associative array of bound WebGL texture locations (texture unit indices)
-         * belonding to managed contexts which this texture has been associated with. 
+         * belonging to managed contexts which this texture has been associated with. 
          * The keys are the names of the managed contexts, and values are the location
          * indices.
          * @name Texture#_locations
@@ -83,7 +83,6 @@ Application.createModule({name: "GL",
          */
         this._locations = new Object();
     }
-
     // as it is an asynchronously loaded resource, we set the Resource as parent
     // class to make handling easier
     Texture.prototype = new Resource();
@@ -229,7 +228,7 @@ Application.createModule({name: "GL",
         this._ids = new Object();
         /**
          * The associative array of bound WebGL texture locations (texture unit indices)
-         * belonding to managed contexts which this cubemap has been associated with. 
+         * belonging to managed contexts which this cubemap has been associated with. 
          * The keys are the names of the managed contexts, and values are the location
          * indices.
          * @name Cubemap#_locations
@@ -237,7 +236,6 @@ Application.createModule({name: "GL",
          */
         this._locations = new Object();
     }
-
     // as it is an asynchronously loaded resource, we set the Resource as parent
     // class to make handling easier
     Cubemap.prototype = new Resource();
@@ -593,8 +591,7 @@ Application.createModule({name: "GL",
         }
     };
     /**
-     * Creates a new vertex buffer object.
-     * @class A wrapper object that represents a WebGL vertex buffer object.
+     * @class A wrapper class that represents a WebGL vertex buffer object.
      * @param {String} name The name by which this buffer can be referred to.
      * @param {String} role The role of the data in this buffer (e.g. position, 
      * normal, color)
@@ -637,23 +634,27 @@ Application.createModule({name: "GL",
          */
         this._id = null;
         /**
-         * The location (index) of this vertex buffer, based on the index of the
-         * attribute array it is bound to.
+         * The associative array of the locations (vertex attribute indices) of 
+         * this vertex buffer associated with different shaders. The keys are the
+         * names of the shaders, and the values are the indices of the vertex
+         * attribute that is associated with the data in this vertex buffer in that
+         * shader.
          * @name VertexBuffer#_location
-         * @type Number
+         * @type Object
          */
         this._locations = new Object();
     }
 
     /**
-     * Getter for the _name property.
+     * Returns the name of this vertex buffer.
      * @returns {String}
      */
     VertexBuffer.prototype.getName = function () {
         return this._name;
     };
     /**
-     * Getter for the _role property.
+     * Returns the role that the data in this buffer fulfills. (e.g. location
+     * or color)
      * @returns {String}
      */
     VertexBuffer.prototype.getRole = function () {
@@ -692,8 +693,10 @@ Application.createModule({name: "GL",
         this.freeData();
     };
     /**
-     * Enables the vertex attribute array belonging to this buffer in the supplied
-     * GL context.
+     * Binds the vertex buffer to the vertex attribute that has the same name as
+     * this buffer (but only if needed because it is bound to a different index at 
+     * the moment) within the passed shader and context and also enables the
+     * corresponding vertex attribute array.
      * @param {ManagedGLContext} context
      * @param {Shader} shader
      */
@@ -707,8 +710,8 @@ Application.createModule({name: "GL",
             context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
             context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
             context.setBoundVertexBuffer(location, this);
+            context.gl.enableVertexAttribArray(location);
         }
-        context.gl.enableVertexAttribArray(location);
     };
     /**
      * Deletes the corresponding WebGL buffer object.
@@ -717,6 +720,14 @@ Application.createModule({name: "GL",
     VertexBuffer.prototype.delete = function (context) {
         context.gl.deleteBuffer(this._id);
     };
+    /**
+     * @class A wrapper class around a WebGL Frame Buffer Object (FBO) for managed
+     * functionality.
+     * @param {String} name The name of the buffer to be created and later be referred to.
+     * @param {Number} width The width of the frame buffer. (pixels/texels)
+     * @param {Number} height The height of the frame buffer. (pixels/texels)
+     * @returns {FrameBuffer}
+     */
     function FrameBuffer(name, width, height) {
         /**
          * The name by which this buffer can be referred to.
@@ -730,22 +741,50 @@ Application.createModule({name: "GL",
          * @type WebGLBuffer
          */
         this._id = null;
+        /**
+         * The width in pixels/texels.
+         * @name FrameBuffer#_width
+         * @type Number
+         */
         this._width = width;
+        /**
+         * The height in pixels/texels.
+         * @name FrameBuffer#_height
+         * @type Number
+         */
         this._height = height;
+        /**
+         * The WebGL handle for the texture object created for this buffer's color
+         * attachment.
+         * @name FrameBuffer#_textureID
+         * @type WebGLTexture
+         */
         this._textureID = null;
+        /**
+         * The index of the texture unit the texture of this buffer's color attachment
+         * was / should be bound to.
+         * @name FrameBuffer#_textureLocation
+         * @type Number
+         */
         this._textureLocation = null;
+        /**
+         * The WebGL handle for the render buffer object created for this buffer's
+         * depth attachment.
+         * @name FrameBuffer#_renderBufferID
+         * @type WebGLRenderBuffer
+         */
         this._renderBufferID = null;
     }
-
     /**
-     * Getter for the _name property.
+     * Returns the name of this buffer.
      * @returns {String}
      */
     FrameBuffer.prototype.getName = function () {
         return this._name;
     };
     /**
-     * Getter for the _textureID property.
+     * Returns the WebGL handle for the texture object holding this buffer's color
+     * attachment.
      * @returns {String}
      */
     FrameBuffer.prototype.getTextureID = function () {
@@ -768,10 +807,14 @@ Application.createModule({name: "GL",
         this._textureLocation = location;
     };
     /**
-     * 
+     * Creates the WebGL frame buffer object for this buffer, then creates and 
+     * sets up a texture for holding the color attachment and a render buffer 
+     * for holding the depth attachment and attaches them to this frame buffer.
      * @param {ManagedGLContext} context
      */
     FrameBuffer.prototype.setup = function (context) {
+        // calling setup on a frame buffer that has already been set up has no
+        // effect
         if (this._id !== null) {
             return;
         }
@@ -788,8 +831,24 @@ Application.createModule({name: "GL",
         context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.COLOR_ATTACHMENT0, context.gl.TEXTURE_2D, this._textureID, 0);
         context.gl.framebufferRenderbuffer(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.RENDERBUFFER, this._renderBufferID);
     };
+    /**
+     * Binds the frame buffer to the given context. Subsequent rendering will
+     * use this frame buffer.
+     * @param {ManagedGLContext} context
+     */
     FrameBuffer.prototype.bind = function (context) {
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
+    };
+    /**
+     * Deletes the corresponding WebGL frame buffer object and the objects
+     * associated with its attachments.
+     * @param {ManagedGLContext} context
+     */
+    FrameBuffer.prototype.delete = function (context) {
+        context.gl.deleteTexture(this._textureID);
+        context.gl.deleteRenderbuffer(this._renderBufferID);
+        context.gl.deleteFramebuffer(this._id);
+        this._id = null;
     };
     /**
      * Creates a new Shader object.
@@ -1020,7 +1079,7 @@ Application.createModule({name: "GL",
         }
     };
     /**
-     * Enables the vertex buffers associated with the indices of the vertex 
+     * Binds the appropriate vertex buffers to the indices of the vertex 
      * attributes that this shader has.
      * @param {ManagedGLContext} context
      */
@@ -1113,7 +1172,20 @@ Application.createModule({name: "GL",
          * @type Object
          */
         this._vertexBuffers = null;
+        /**
+         * The list of the vertex buffer objects bound to each vertex attribute
+         * array index. (the index in the array corresponds to the vertex attribute
+         * array index)
+         * @name ManagedGLContext#_boundVertexBuffers
+         * @type VertexBuffer[]
+         */
         this._boundVertexBuffers = new Array();
+        /**
+         * The associative array of frame buffer objects, stored by their names 
+         * (which equal the names of their corresponding attributes) as the keys.
+         * @name ManagedGLContext#_frameBuffers
+         * @type Object
+         */
         this._frameBuffers = new Object();
         /**
          * A reference to the currently used shader in order to quickly dismiss 
@@ -1125,14 +1197,15 @@ Application.createModule({name: "GL",
         /**
          * The list of references to the currently bound textures in order to 
          * quickly dismiss calls that aim to bind the same texture to the same place
-         * again. The indices mark which activeTexture place the texture is bound 
+         * again. The indices mark which texture unit index the texture is bound 
          * to.
          * @name ManagedGLContext#_boundTextures
          * @type Texture[]
          */
         this._boundTextures = new Array();
         /**
-         * The maximum number of simultaneously bound textures
+         * The maximum number of simultaneously bound textures supported by the
+         * WebGL implementation.
          * @name ManagedGLContext#_maxBoundTextures
          * @type Number
          */
@@ -1186,7 +1259,7 @@ Application.createModule({name: "GL",
                     "running the application in a different browser. Antialiasing will not work, but otherwise this " +
                     "error will have no consequences.", this.gl);
         }
-
+        // save the number of maximum bound textures
         this._maxBoundTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
         // fall back to trilinear filtering.
@@ -1210,25 +1283,24 @@ Application.createModule({name: "GL",
         this.gl.enable(this.gl.SCISSOR_TEST);
         this.gl.activeTexture(this.gl.TEXTURE0);
     }
-
     ManagedGLContext.prototype = new Resource();
     ManagedGLContext.prototype.constructor = ManagedGLContext;
     /**
-     * Getter for the _name property.
+     * Returns the name of this managed context.
      * @returns {String}
      */
     ManagedGLContext.prototype.getName = function () {
         return this._name;
     };
     /**
-     * Getter for the _filtering property.
+     * Returns the type of currently set texture filtering.
      * @returns {String}
      */
     ManagedGLContext.prototype.getFiltering = function () {
         return this._filtering;
     };
     /**
-     * Getter for the _anisotropicFilter property.
+     * Returns the extension object for anisotropic texture filtering.
      * @returns {Object}
      */
     ManagedGLContext.prototype.getAnisotropicFilter = function () {
@@ -1273,9 +1345,21 @@ Application.createModule({name: "GL",
             this._vertexBuffers[vertexBuffer.getName()] = vertexBuffer;
         }
     };
+    /**
+     * Returns the vertex buffer which is currently bound to the passed vertex
+     * attribute index.
+     * @param {Number} attributeLocation
+     * @returns {VertexBuffer}
+     */
     ManagedGLContext.prototype.getBoundVertexBuffer = function (attributeLocation) {
         return this._boundVertexBuffers[attributeLocation];
     };
+    /**
+     * Sets the vertex buffer as the currently bound buffer for the passed vertex
+     * attribute index. (does not actually bind the buffer!)
+     * @param {Number} attributeLocation
+     * @param {VertexBuffer} vertexBuffer
+     */
     ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation, vertexBuffer) {
         this._boundVertexBuffers[attributeLocation] = vertexBuffer;
     };
@@ -1298,8 +1382,7 @@ Application.createModule({name: "GL",
      * Based on the stored shader references, creates a vertex buffer object to each 
      * attribute with a unique name, fills them with data using the stored model
      * references and then binds the vertex buffer objects to the corresponding
-     * attribute indices. After this method, the context is ready to render any
-     * resources that have been added to it up to this point.
+     * attribute indices.
      */
     ManagedGLContext.prototype.setupVertexBuffers = function () {
         if (this.isReadyToUse() === true) {
@@ -1311,13 +1394,11 @@ Application.createModule({name: "GL",
         for (vbName in this._vertexBuffers) {
             this._vertexBuffers[vbName].delete(this);
         }
-
         // counting the number of vertices we need to put into the vertex buffers
         var sumVertices = 0;
         for (i = 0; i < this._models.length; i++) {
             sumVertices = sumVertices + this._models[i].getBufferSize(this);
         }
-
         // creating a Float32Array of the appropriate size for each needed buffer
         this._vertexBuffers = new Object();
         for (i = 0; i < this._shaders.length; i++) {
@@ -1326,18 +1407,18 @@ Application.createModule({name: "GL",
                 this.addVertexBuffer(new VertexBuffer(shaderAttributes[j].name, shaderAttributes[j].role, shaderAttributes[j].size, sumVertices));
             }
         }
-
         // filling the buffer data arrays from model data
         var bufferSize = 0;
         for (i = 0; i < this._models.length; i++) {
             bufferSize += this._models[i].loadToVertexBuffers(this, bufferSize);
         }
-
         // load the data to GPU memory and bind the attributes of the shaders with 
         // the corresponding VBOs
         for (vbName in this._vertexBuffers) {
             this._vertexBuffers[vbName].loadToGPUMemory(this);
         }
+        // bind the vertex buffers to the vertex attribute indices in each shader
+        // and save this bindings for later use when a shader is selected
         this._currentShader = null;
         for (i = 0; i < this._shaders.length; i++) {
             this.setCurrentShader(this._shaders[i]);
@@ -1361,17 +1442,49 @@ Application.createModule({name: "GL",
             this._frameBuffers[frameBuffer.getName()] = frameBuffer;
         }
     };
+    /**
+     * Sets up all the previously added frame buffers.
+     */
     ManagedGLContext.prototype.setupFrameBuffers = function () {
         for (var fbName in this._frameBuffers) {
             this._frameBuffers[fbName].setup(this);
         }
-        this.setToReady();
-    };
-    ManagedGLContext.prototype.setCurrentFrameBuffer = function (name) {
-        this._frameBuffers[name].bind(this);
     };
     /**
-     * Getter for the _currentShader property.
+     * Deletes all the previously added frame buffers.
+     */
+    ManagedGLContext.prototype.clearFrameBuffers = function () {
+        for (var fbName in this._frameBuffers) {
+            this._frameBuffers[fbName].delete(this);
+        }
+        this._frameBuffers = new Object();
+    };
+    /**
+     * Does all preparations for the previously added resources (shader, models,
+     * frame buffers...) that are needed to be able to start rendering. After 
+     * this method, the context is ready to render any resources that have been 
+     * added to it up to this point.
+     */
+    ManagedGLContext.prototype.setup = function () {
+        this.setupVertexBuffers();
+        this.setupFrameBuffers();
+        this.setToReady();
+    };
+    /**
+     * Sets the stored framebuffer with the passed name as the current framebuffer
+     * to render to. If no name (or any falsy value) is given, sets the screen 
+     * as the current rendering target.
+     * @param {String} [name]
+     */
+    ManagedGLContext.prototype.setCurrentFrameBuffer = function (name) {
+        if (name) {
+            this._frameBuffers[name].bind(this);
+        } else {
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        }
+    };
+    /**
+     * Returns the currently set shader.
      * @returns {Shader}
      */
     ManagedGLContext.prototype.getCurrentShader = function () {
@@ -1611,9 +1724,8 @@ Application.createModule({name: "GL",
         this.onResourceLoad = function () {
         };
     }
-
-// we set the Resource class as parent to add an execution queue to the resource
-// manage for when all resources have been loaded
+    // we set the Resource class as parent to add an execution queue to the resource
+    // manage for when all resources have been loaded
     ResourceManager.prototype = new Resource();
     ResourceManager.prototype.constructor = ResourceManager;
     /**

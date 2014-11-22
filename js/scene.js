@@ -2190,7 +2190,7 @@ Application.createModule({name: "Scene",
                 }
             }
         }
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        context.setCurrentFrameBuffer(null);
 
         gl.viewport(this.left, this.top, this.width, this.height);
         gl.scissor(this.left, this.top, this.width, this.height);

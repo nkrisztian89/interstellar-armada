@@ -407,8 +407,7 @@ Application.createModule({name: "Screens",
         }
         scene.addToContext(canvas.getManagedContext());
         if (this._renderLoop !== null) {
-            canvas.getManagedContext().setupVertexBuffers();
-            canvas.getManagedContext().setupFrameBuffers();
+            canvas.getManagedContext().setup();
         }
     };
 
@@ -438,8 +437,7 @@ Application.createModule({name: "Screens",
     GameScreenWithCanvases.prototype.startRenderLoop = function (interval) {
         var i;
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
-            this._sceneCanvasBindings[i].canvas.getManagedContext().setupVertexBuffers();
-            this._sceneCanvasBindings[i].canvas.getManagedContext().setupFrameBuffers();
+            this._sceneCanvasBindings[i].canvas.getManagedContext().setup();
         }
         var self = this;
         this._renderTimes = [new Date()];
@@ -1141,7 +1139,7 @@ Application.createModule({name: "Screens",
                 self.bindSceneToCanvas(self._scene, self.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
                 self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.visualModel.getScaledSize()));
-                if(Armada.graphics().getShadowMapping()) {
+                if (Armada.graphics().getShadowMapping()) {
                     self._scene.setShadowMapRanges([
                         0.5 * self._item.visualModel.getScaledSize(),
                         self._item.visualModel.getScaledSize()
@@ -1458,48 +1456,49 @@ Application.createModule({name: "Screens",
      */
     ControlsScreen.prototype.generateTables = function () {
         var self = this;
-
-        var tablesContainer = document.getElementById(this._name + "_tablesContainer");
-        tablesContainer.innerHTML = "";
-        var gameControllers = Armada.control().getControllers();
-        for (var i = 0; i < gameControllers.length; i++) {
-            var h2Element = document.createElement("h2");
-            h2Element.innerHTML = gameControllers[i].getType() + " controls";
-            tablesContainer.appendChild(h2Element);
-            var tableElement = document.createElement("table");
-            tableElement.className = "horizontallyCentered outerContainer";
-            var theadElement = document.createElement("thead");
-            for (var j = 0, n = Armada.control().getInputInterpreters().length; j < n; j++) {
-                var thElement = document.createElement("th");
-                thElement.innerHTML = Armada.control().getInputInterpreters()[j].getDeviceName();
-                theadElement.appendChild(thElement);
-            }
-            theadElement.innerHTML += "<th>Action</th>";
-            var tbodyElement = document.createElement("tbody");
-            var actions = gameControllers[i].getActions();
-            for (j = 0; j < actions.length; j++) {
-                var trElement = document.createElement("tr");
-                for (var k = 0, n = Armada.control().getInputInterpreters().length; k < n; k++) {
-                    var td1Element = document.createElement("td");
-                    if (Armada.control().getInputInterpreters()[k].getDeviceName() === "Keyboard") {
-                        td1Element.setAttribute("id", actions[j].getName());
-                        td1Element.className = "clickable";
-                        td1Element.onclick = function () {
-                            self.startKeySetting(this);
-                        };
-                    }
-                    td1Element.innerHTML = Armada.control().getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
-                    trElement.appendChild(td1Element);
+        Armada.control().executeWhenReady(function () {
+            var tablesContainer = document.getElementById(self._name + "_tablesContainer");
+            tablesContainer.innerHTML = "";
+            var gameControllers = Armada.control().getControllers();
+            for (var i = 0; i < gameControllers.length; i++) {
+                var h2Element = document.createElement("h2");
+                h2Element.innerHTML = gameControllers[i].getType() + " controls";
+                tablesContainer.appendChild(h2Element);
+                var tableElement = document.createElement("table");
+                tableElement.className = "horizontallyCentered outerContainer";
+                var theadElement = document.createElement("thead");
+                for (var j = 0, n = Armada.control().getInputInterpreters().length; j < n; j++) {
+                    var thElement = document.createElement("th");
+                    thElement.innerHTML = Armada.control().getInputInterpreters()[j].getDeviceName();
+                    theadElement.appendChild(thElement);
                 }
-                var td2Element = document.createElement("td");
-                td2Element.innerHTML = actions[j].getDescription();
-                trElement.appendChild(td2Element);
-                tbodyElement.appendChild(trElement);
+                theadElement.innerHTML += "<th>Action</th>";
+                var tbodyElement = document.createElement("tbody");
+                var actions = gameControllers[i].getActions();
+                for (j = 0; j < actions.length; j++) {
+                    var trElement = document.createElement("tr");
+                    for (var k = 0, n = Armada.control().getInputInterpreters().length; k < n; k++) {
+                        var td1Element = document.createElement("td");
+                        if (Armada.control().getInputInterpreters()[k].getDeviceName() === "Keyboard") {
+                            td1Element.setAttribute("id", actions[j].getName());
+                            td1Element.className = "clickable";
+                            td1Element.onclick = function () {
+                                self.startKeySetting(this);
+                            };
+                        }
+                        td1Element.innerHTML = Armada.control().getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
+                        trElement.appendChild(td1Element);
+                    }
+                    var td2Element = document.createElement("td");
+                    td2Element.innerHTML = actions[j].getDescription();
+                    trElement.appendChild(td2Element);
+                    tbodyElement.appendChild(trElement);
+                }
+                tableElement.appendChild(theadElement);
+                tableElement.appendChild(tbodyElement);
+                tablesContainer.appendChild(tableElement);
             }
-            tableElement.appendChild(theadElement);
-            tableElement.appendChild(tbodyElement);
-            tablesContainer.appendChild(tableElement);
-        }
+        });
     };
 
     /**
@@ -1515,7 +1514,6 @@ Application.createModule({name: "Screens",
      */
     function MenuScreen(name, source, menuOptions, menuContainerID) {
         GameScreen.call(this, name, source);
-
         /**
          * @see MenuComponent
          * @name MenuScreen#_menuOptions 

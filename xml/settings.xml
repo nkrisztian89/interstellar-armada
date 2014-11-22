@@ -79,8 +79,8 @@
                 <binding action="yawRight" key="right" />
                 <binding action="pitchDown" key="up" />
                 <binding action="pitchUp" key="down" />
-                <binding action="rollRight" key="page down" />
-                <binding action="rollLeft" key="page up" />
+                <binding action="rollRight" key="e" />
+                <binding action="rollLeft" key="q" />
             
                 <binding action="cameraTurnLeft" key="left" ctrl="true" />
                 <binding action="cameraTurnRight" key="right" ctrl="true" />
