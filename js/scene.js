@@ -994,11 +994,13 @@ Application.createModule({name: "Scene",
      * 
      * @param {Shader} shader
      * @param {Number[]} color The RGBA components of the color of the points.
+     * @param {Number} range
      * @returns {PointCloud}
      */
-    function PointCloud(shader, color) {
+    function PointCloud(shader, color, range) {
         VisualObject.call(this, shader, false, true);
         this.color = color;
+        this.range = range;
         this.shift = [0.0, 0.0, 0.0];
 
         var self = this;
@@ -1013,7 +1015,7 @@ Application.createModule({name: "Scene",
             return Vec.length3(self.shift);
         };
         this.uniformValueFunctions["u_farthestZ"] = function () {
-            return 25.0;
+            return self.range;
         };
     }
 

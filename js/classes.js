@@ -74,7 +74,7 @@ Application.createModule({name: "Classes",
      * ({l@link Skybox} class).
      * @param {Element} [xmlTag] A reference to an XML tag from which the skybox
      * class properties can be initialized.
-     * @returns {SkyboxClass}
+     * @returns {Classes.SkyboxClass}
      */
     function SkyboxClass(xmlTag) {
         /**
@@ -312,6 +312,19 @@ Application.createModule({name: "Classes",
          * @type Number
          */
         this.numberOfParticles = null;
+        /**
+         * The color of the particles in the dust clouds of this class.
+         * @name DustCloudClass#color
+         * @type Number[3]
+         */
+        this.color = null;
+        /**
+         * The maximum distance of the particles in the dust clouds of this class
+         * from the camera along any axis.
+         * @name DustCloudClass#range
+         * @type Number
+         */
+        this.range = null;
         // if an XML tag was specified, initialize the properties from there    
         if (xmlTag !== undefined) {
             this.loadFromXMLTag(xmlTag);
@@ -328,6 +341,8 @@ Application.createModule({name: "Classes",
         this.name = xmlTag.getAttribute("name");
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
         this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"));
+        this.color = getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
+        this.range = parseFloat(xmlTag.getAttribute("range"));
         Object.freeze(this);
     };
 

@@ -37,8 +37,9 @@
         </layer>
     </BackgroundObjectClass>
         
-    <DustCloudClass name="standard" numberOfParticles="300">
+    <DustCloudClass name="standard" numberOfParticles="300" range="25">
         <shader name="dust" />
+        <color r="0.6" g="0.6" b="0.6" />
     </DustCloudClass>
 	
     <ProjectileClass name="plasma">

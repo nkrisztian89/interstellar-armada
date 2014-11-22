@@ -47,132 +47,224 @@ Application.createModule({name: "Logic",
      * @type Number
      */
     var TIME_UNIT = 50;
-
+    /**
+     * @class Represents a skybox that can be added to a scene to render the
+     * background using a cube mapped texture defined by the passed class of the
+     * skybox.
+     * @param {SkyboxClass} skyboxClass
+     * @returns {Skybox}
+     */
     function Skybox(skyboxClass) {
-        this.class = skyboxClass;
+        /**
+         * The class storing the general characteristics of this object.
+         * @name Skybox#_class
+         * @type SkyboxClass
+         */
+        this._class = skyboxClass;
     }
-
+    /**
+     * Adds a background FVQ object to the passed scene and sets it up according
+     * the properties of this skybox.
+     * @param {Scene} scene
+     */
     Skybox.prototype.addToScene = function (scene) {
         scene.addBackgroundObject(new Scene.FVQ(
                 Armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
-                Armada.resources().getShader(this.class.shaderName),
-                this.class.samplerName,
-                Armada.resources().getCubemappedTexture(this.class.cubemap),
+                Armada.resources().getShader(this._class.shaderName),
+                this._class.samplerName,
+                Armada.resources().getCubemappedTexture(this._class.cubemap),
                 scene.activeCamera
                 ));
     };
-
-    function BackgroundObject(backgroundObjectClass, angleAlpha, angleBeta) {
-        this.class = backgroundObjectClass;
-        this.position = [
-            Math.cos(angleAlpha / 180 * Math.PI) * Math.cos(angleBeta / 180 * Math.PI),
-            Math.sin(angleAlpha / 180 * Math.PI) * Math.cos(angleBeta / 180 * Math.PI),
-            Math.sin(angleBeta / 180 * Math.PI)
+    /**
+     * Represents an "infinitely far away" object in space (typically a star)
+     * that serves as a light source as well as is rendered as a set of 2D texture
+     * layers on the background.
+     * @param {BackgroundObjectClass} backgroundObjectClass
+     * @param {Number} degreesAlpha The angle between the positive X axis and the
+     * direction in which this object is positioned on the XZ plane in degrees.
+     * @param {Number} degreesBeta The angle between the XZ plane and the
+     * direction in which this object is positioned.
+     * @returns {BackgroundObject}
+     */
+    function BackgroundObject(backgroundObjectClass, degreesAlpha, degreesBeta) {
+        /**
+         * The class storing the general characteristics of this object.
+         * @name BackgroundObject#_class
+         * @type BackgroundObjectClass
+         */
+        this._class = backgroundObjectClass;
+        /**
+         * A unit length vector pointing in the direction of this object.
+         * @name BackgroundObject#_position
+         * @type Number[3]
+         */
+        this._position = [
+            Math.cos(degreesAlpha / 180 * Math.PI) * Math.cos(degreesBeta / 180 * Math.PI),
+            Math.sin(degreesAlpha / 180 * Math.PI) * Math.cos(degreesBeta / 180 * Math.PI),
+            Math.sin(degreesBeta / 180 * Math.PI)
         ];
     }
-
+    /**
+     * Adds the layered texture object and the light source belonging to this
+     * object to the passed scene.
+     * @param {Scene} scene
+     */
     BackgroundObject.prototype.addToScene = function (scene) {
         var i;
         var layerParticle;
-        scene.addLightSource(new Scene.LightSource(this.class.lightColor, this.position));
-        for (i = 0; i < this.class.layers.length; i++) {
+        scene.addLightSource(new Scene.LightSource(this._class.lightColor, this._position));
+        for (i = 0; i < this._class.layers.length; i++) {
             layerParticle = new Scene.StaticParticle(
                     Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-                    Armada.resources().getShader(this.class.layers[i].shaderName),
-                    Armada.resources().getOrAddTextureFromDescriptor(this.class.layers[i].textureDescriptor),
-                    this.class.layers[i].color,
-                    this.class.layers[i].size,
-                    Mat.translation4v(Vec.scaled3(this.position, 4500))
+                    Armada.resources().getShader(this._class.layers[i].shaderName),
+                    Armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
+                    this._class.layers[i].color,
+                    this._class.layers[i].size,
+                    Mat.translation4v(Vec.scaled3(this._position, 4500))
                     );
             layerParticle.setRelSize(1.0);
             scene.addBackgroundObject(layerParticle);
         }
     };
-
     /**
+     * Creates a dust particle object and adds it to the scene it's cloud it part
+     * of right away.
      * @class A tiny piece of dust that is rendered as passing line to indicate the
      * direction and speed of movement to the player.
-     * @param {DustCloud} cloud
+     * @param {DustCloud} cloud The cloud to which this dust particle belongs.
      * @param {Shader} shader
      * @param {Float32Array} positionMatrix
      * @returns {DustParticle}
      */
     function DustParticle(cloud, shader, positionMatrix) {
-        this.visualModel = new Scene.PointParticle(
-                Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], [1.0, 1.0, 1.0])),
+        /**
+         * The renderable object representing this particle in the scene.
+         * @name DustParticle#_visualModel
+         * @type PointParticle
+         */
+        this._visualModel = new Scene.PointParticle(
+                Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], cloud.getColor())),
                 shader,
-                positionMatrix
-                );
-        cloud._visualModel.addSubnode(this.visualModel);
-
-        this.toBeDeleted = false;
+                positionMatrix);
+        /**
+         * The distance up to how far away this particle can be from the camera.
+         * @name DustParticle#_range
+         * @type Number
+         */
+        this._range = cloud.getRange();
+        // adding the renderable object to the scene
+        cloud._visualModel.addSubnode(this._visualModel);
     }
-
     /**
-     * 
-     * @param {SceneCamera} camera
+     * Updates the position of the particle to be acound the camera within proper
+     * range.
+     * @param {Camera} camera The camera relative to which to position the
+     * particles.
      */
     DustParticle.prototype.simulate = function (camera) {
-        if (this.visualModel.positionMatrix[12] > -camera.getPositionMatrix()[12] + 25.0) {
-            this.visualModel.positionMatrix[12] -= 50.0;
-        } else if (this.visualModel.positionMatrix[12] < -camera.getPositionMatrix()[12] - 25.0) {
-            this.visualModel.positionMatrix[12] += 50.0;
+        var modelPos = this._visualModel.positionMatrix;
+        var cameraPos = camera.getPositionMatrix();
+        for (var i = 12; i < 15; i++) {
+            if (modelPos[i] > -cameraPos[i] + this._range) {
+                this._visualModel.positionMatrix[i] -= this._range * 2;
+            } else if (modelPos[i] < -cameraPos[i] - this._range) {
+                this._visualModel.positionMatrix[i] += this._range * 2;
+            }
         }
-        if (this.visualModel.positionMatrix[13] > -camera.getPositionMatrix()[13] + 25.0) {
-            this.visualModel.positionMatrix[13] -= 50.0;
-        } else if (this.visualModel.positionMatrix[13] < -camera.getPositionMatrix()[13] - 25.0) {
-            this.visualModel.positionMatrix[13] += 50.0;
-        }
-        if (this.visualModel.positionMatrix[14] > -camera.getPositionMatrix()[14] + 25.0) {
-            this.visualModel.positionMatrix[14] -= 50.0;
-        } else if (this.visualModel.positionMatrix[14] < -camera.getPositionMatrix()[14] - 25.0) {
-            this.visualModel.positionMatrix[14] += 50.0;
-        }
-        this.visualModel.matrix = this.visualModel.positionMatrix;
+        this._visualModel.matrix = this._visualModel.positionMatrix;
     };
-
     /**
-     * Defines a dust cloud.
-     * @class Represents a dust cloud instantiated for a certain level.
-     * @param {DustCloudClass} dustCloudClass
+     * @class Represents a dust cloud containing dust particles that can indicate
+     * direction and speed of movement of the camera for the player.
+     * @param {DustCloudClass} dustCloudClass The class of this cloud, storing
+     * it's general properties.
      * @returns {DustCloud}
      */
     function DustCloud(dustCloudClass) {
-        this.class = dustCloudClass;
         /**
+         * The class storing the general characteristics of this object.
+         * @name DustCloud#_class
+         * @type DustCloudClass
+         */
+        this._class = dustCloudClass;
+        /**
+         * The array of particles this cloud consists of.
          * @name DustCloud#_particles
          * @type DustParticle[]
          */
         this._particles = null;
+        /**
+         * The renderable object representing this cloud in the scene.
+         * @name DustCloud#_visualModel
+         * @type PointCloud
+         */
         this._visualModel = null;
     }
-
+    /**
+     * Return the color of particles of this cloud. 
+     * @returns {Number[4]}
+     */
+    DustCloud.prototype.getColor = function () {
+        return this._class.color.concat(1.0);
+    };
+    /**
+     * Returns the range this cloud spans. (the maximum distance of particles
+     * from the camera in world space coordinates on any angle)
+     * @returns {Number}
+     */
+    DustCloud.prototype.getRange = function () {
+        return this._class.range;
+    };
+    /**
+     * Adds the needed objects to the scene to render this dust cloud.
+     * @param {Scene} scene
+     */
     DustCloud.prototype.addToScene = function (scene) {
         var i;
         this._visualModel = new Scene.PointCloud(
-                Armada.resources().getShader(this.class.shaderName),
-                [0.6, 0.6, 0.6]);
+                Armada.resources().getShader(this._class.shaderName),
+                this._class.color,
+                this._class.range);
         scene.addObject(this._visualModel);
         this._particles = new Array();
-        for (i = 0; i < this.class.numberOfParticles; i++) {
+        for (i = 0; i < this._class.numberOfParticles; i++) {
             this._particles.push(
                     new DustParticle(
                             this,
-                            Armada.resources().getShader(this.class.shaderName),
-                            Mat.translation4(Math.random() * 50 - 25.0, Math.random() * 50 - 25.0, Math.random() * 50 - 25.0)
-                            )
-                    );
+                            Armada.resources().getShader(this._class.shaderName),
+                            Mat.translation4(
+                                    (Math.random() - 0.5) * 2 * this._class.range,
+                                    (Math.random() - 0.5) * 2 * this._class.range,
+                                    (Math.random() - 0.5) * 2 * this._class.range)));
         }
     };
-
-
+    /**
+     * Updates the position of the particles in the cloud.
+     * @param {Camera} camera The camera around which the cloud should be rendered.
+     */
     DustCloud.prototype.simulate = function (camera) {
         this._visualModel.shift = [-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2];
-        for (var i = 0; i < this.class.numberOfParticles; i++) {
+        for (var i = 0; i < this._class.numberOfParticles; i++) {
             this._particles[i].simulate(camera);
         }
     };
-
+    /**
+     * @class Represents a projectile fired from a weapon.
+     * @param {Scene} scene The scene to which to add the renderable object
+     * presenting the projectile.
+     * @param {ProjectileClass} projectileClass The class of the projectile
+     * defining its general properties.
+     * @param {Float32Array} positionMatrix The transformation matrix describing
+     * the initial position of the projectile.
+     * @param {Float32Array} orientationMatrix The transformation matrix describing
+     * the initial oriantation of the projectile.
+     * @param {Float32Array} muzzleFlashPositionMatrix The transformation matrix
+     * describing the position of the particle displaying the flash at the muzzle.
+     * @param {Spacecraft} spacecraft The spacecraft which fired the projectile.
+     * @param {Weapon} weapon The weapon from which the projectile was fired.
+     * @returns {Projectile}
+     */
     function Projectile(scene, projectileClass, positionMatrix, orientationMatrix, muzzleFlashPositionMatrix, spacecraft, weapon) {
         this.class = projectileClass;
         this.visualModel = new Scene.Billboard(
