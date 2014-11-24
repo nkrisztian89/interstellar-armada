@@ -8,6 +8,7 @@ struct Light
         vec3 color;
         vec3 direction;
         mat4 matrix;
+        vec3 translationVector;
     };
 
 // uniforms set for the whole model
