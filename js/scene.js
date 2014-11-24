@@ -1788,7 +1788,7 @@ Application.createModule({name: "Scene",
         this._index = null;
         var vx, vy, vz;
         vz = this.direction;
-        vy = (vz[1] < -0.995) ? [1,0,0] : ((vz[1] > 0.995) ? [1,0,0] : [0,1,0]);
+        vy = (vz[1] < -0.995) ? [1, 0, 0] : ((vz[1] > 0.995) ? [1, 0, 0] : [0, 1, 0]);
         vx = Vec.normal3(Vec.cross3(vy, vz));
         vy = Vec.normal3(Vec.cross3(vz, vx));
         this._orientationMatrix = Mat.correctedOrthogonal4(Mat.fromVectorsTo4(vx, vy, vz));
@@ -1801,19 +1801,20 @@ Application.createModule({name: "Scene",
      * 
      * @param {ManagedGLContext} context
      * @param {Number} index 
+     * @param {Boolean} shadowMappingEnabled
      * @param {Number} nRanges
      * @param {Number} shadowMapTextureSize
      */
-    LightSource.prototype.addToContext = function (context, index, nRanges, shadowMapTextureSize) {
+    LightSource.prototype.addToContext = function (context, index, shadowMappingEnabled, nRanges, shadowMapTextureSize) {
         this._index = index;
-        if (this.castsShadows) {
+        if (shadowMappingEnabled && this.castsShadows) {
             for (var i = 0; i < nRanges; i++) {
                 context.addFrameBuffer(new GL.FrameBuffer("shadow-map-buffer-" + this._index + "-" + i, shadowMapTextureSize, shadowMapTextureSize));
             }
         }
     };
-    
-    LightSource.prototype.reset = function() {
+
+    LightSource.prototype.reset = function () {
         this.matrix = null;
         this.translationVector = null;
     };
@@ -1830,9 +1831,9 @@ Application.createModule({name: "Scene",
     LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
 
-        var matrix = Mat.mul4(Mat.mul4(camera.getPositionMatrix(),Mat.translation4v(Vec.scaled3(cameraZ,range))), this._orientationMatrix);
+        var matrix = Mat.mul4(Mat.mul4(camera.getPositionMatrix(), Mat.translation4v(Vec.scaled3(cameraZ, range))), this._orientationMatrix);
         this.matrix = this.matrix || Mat.mul4(camera.getPositionMatrix(), this._orientationMatrix);
-        this.translationVector = this.translationVector || new Float32Array(Vec.normal3(Vec.add3(Mat.translationVector3(matrix),Vec.scaled3(Mat.translationVector3(this.matrix),-1))));
+        this.translationVector = this.translationVector || new Float32Array(Vec.normal3(Vec.add3(Mat.translationVector3(matrix), Vec.scaled3(Mat.translationVector3(this.matrix), -1))));
         context.getCurrentShader().assignUniforms(context, {
             "u_lightMatrix": function () {
                 return matrix;
@@ -1945,7 +1946,7 @@ Application.createModule({name: "Scene",
         this._shadowMapRanges = ranges;
         for (var i = 0; i < this._contexts.length; i++) {
             for (var j = 0; j < this.lights.length; j++) {
-                this.lights[j].addToContext(this._contexts[i], j, this._shadowMapRanges.length, this._shadowMapTextureSize);
+                this.lights[j].addToContext(this._contexts[i], j, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
             }
         }
     };
@@ -2091,7 +2092,7 @@ Application.createModule({name: "Scene",
      */
     Scene.prototype.addToContext = function (context) {
         var i;
-        if (this._shadowMappingShader) {
+        if (this._shadowMappingEnabled) {
             this._shadowMappingShader.addToContext(context);
             var self = this;
             this.uniformValueFunctions['u_shadowMaps'] = function () {
@@ -2105,7 +2106,7 @@ Application.createModule({name: "Scene",
             };
         }
         for (i = 0; i < this.lights.length; i++) {
-            this.lights[i].addToContext(context, i, this._shadowMapRanges.length, this._shadowMapTextureSize);
+            this.lights[i].addToContext(context, i, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
         for (i = 0; i < this._backgroundObjects.length; i++) {
             this._backgroundObjects[i].cascadeAddToContext(context);
@@ -2119,6 +2120,25 @@ Application.createModule({name: "Scene",
     Scene.prototype.enableShadowMapping = function () {
         if (this._shadowMappingShader && this._shadowMapRanges.length > 0) {
             this._shadowMappingEnabled = true;
+            // at the moment, actually only one shadow-mapped context is supported
+            // because of how the uniform value functions work, but this code will
+            // make it easier to change this later
+            for (var i = 0; i < this._contexts.length; i++) {
+                this._shadowMappingShader.addToContext(this._contexts[i]);
+                var self = this;
+                this.uniformValueFunctions['u_shadowMaps'] = function () {
+                    var shadowMaps = new Array();
+                    for (var j = 0; j < self.lights.length; j++) {
+                        for (var k = 0; k < self._shadowMapRanges.length; k++) {
+                            shadowMaps.push(self._contexts[0].getFrameBuffer("shadow-map-buffer-" + j + "-" + k).getTextureBindLocation(self._contexts[0]));
+                        }
+                    }
+                    return new Int32Array(shadowMaps);
+                };
+                for (var j = 0; j < this.lights.length; j++) {
+                    this.lights[j].addToContext(this._contexts[i], j, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
+                }
+            }
         } else {
             Application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
         }
@@ -2139,7 +2159,6 @@ Application.createModule({name: "Scene",
         var gl = context.gl;
 
         gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
-        gl.scissor(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
 
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.colorMask(true, true, true, true);
@@ -2195,7 +2214,6 @@ Application.createModule({name: "Scene",
         context.setCurrentFrameBuffer(null);
 
         gl.viewport(this.left, this.top, this.width, this.height);
-        gl.scissor(this.left, this.top, this.width, this.height);
 
         if (this.clearColorOnRender) {
             gl.colorMask(this.colorMask[0], this.colorMask[1], this.colorMask[2], this.colorMask[3]);

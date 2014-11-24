@@ -28,6 +28,7 @@
 
 Application.createModule({name: "Logic",
     dependencies: [
+        {script: "polyfill.js"},
         {script: "matrices.js"},
         {module: "Resource", from: "resource.js"},
         {module: "Classes", from: "classes.js"},
@@ -1497,6 +1498,8 @@ Application.createModule({name: "Logic",
         this._spacecraftTypes = null;
         this.projectileClasses = new Array();
         this.propulsionClasses = new Array();
+        
+        this._databaseModelRotation = null;
     }
 
     LogicContext.prototype = new Resource();
@@ -1625,8 +1628,13 @@ Application.createModule({name: "Logic",
 
 
     LogicContext.prototype.loadFromXML = function (xmlSource) {
+        this._databaseModelRotation = (xmlSource.getElementsByTagName("database")[0].getAttribute("modelRotation") === "true");
         this._classesSourceFileName = xmlSource.getElementsByTagName("classes")[0].getAttribute("source");
         this.requestClassesLoad();
+    };
+    
+    LogicContext.prototype.getDatabaseModelRotation = function () {
+        return this._databaseModelRotation;
     };
 
     LogicContext.prototype.getSkyboxClass = function (name) {

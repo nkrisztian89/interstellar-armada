@@ -102,6 +102,13 @@ Application.createModule({name: "Graphics",
          */
         this._lodContext = null;
         /**
+         * The preferred complexity level of shader. "normal" uses the regular
+         * shaders, "simple" uses the fallback shaders.
+         * @name GraphicsContext#_shaderComplexity
+         * @type String
+         */
+        this._shaderComplexity = null;
+        /**
          * Whether shadow mapping is currently enabled.
          * @name GraphicsContext#_shadowMapping
          * @type Boolean
@@ -156,21 +163,27 @@ Application.createModule({name: "Graphics",
     GraphicsContext.prototype.loadFromXMLTag = function (xmlTag, onlyRestoreSettings) {
         var i;
         onlyRestoreSettings = onlyRestoreSettings || false;
+        var shadersTag = xmlTag.getElementsByTagName("shaders")[0];
         // if new settings are to be initialized, we need to load the shader and
         // cube map descriptions
         if (!onlyRestoreSettings) {
             this._xmlTag = xmlTag;
-            this._resourceManager.requestShaderAndCubemapObjectLoad(xmlTag.getElementsByTagName("shaders")[0].getAttribute("source"));
+            this._resourceManager.requestShaderAndCubemapObjectLoad(shadersTag.getAttribute("source"));
         }
         // set the default settings
         this._antialiasing = false;
         this._filtering = "bilinear";
+        this._shaderComplexity = "normal";
         this._shadowMapping = false;
         this._shadowQuality = 2048;
         this._shadowRanges = [40, 125, 250, 500, 1000, 2000];
         this._shadowDistance = 3;
         this._shadowDepthRatio = 1.5;
         // overwrite with the settings from the XML tag, if present
+        if (shadersTag.hasAttribute("complexity")) {
+            this._shaderComplexity = shadersTag.getAttribute("complexity");
+            this._resourceManager.useFallbackShaders(shadersTag.getAttribute("complexity") !== "normal");
+        }
         var contextTag = xmlTag.getElementsByTagName("context")[0];
         if (contextTag !== null) {
             if (contextTag.hasAttribute("antialiasing")) {
@@ -228,6 +241,9 @@ Application.createModule({name: "Graphics",
         if (localStorage.interstellarArmada_graphics_maxLOD !== undefined) {
             this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD));
         }
+        if (localStorage.interstellarArmada_graphics_shaderComplexity !== undefined) {
+            this.setShaderComplexity(localStorage.interstellarArmada_graphics_shaderComplexity);
+        }
         if (localStorage.interstellarArmada_graphics_shadowMapping !== undefined) {
             this._shadowMapping = (localStorage.interstellarArmada_graphics_shadowMapping === "true");
         }
@@ -248,6 +264,7 @@ Application.createModule({name: "Graphics",
         localStorage.removeItem("interstellarArmada_graphics_antialiasing");
         localStorage.removeItem("interstellarArmada_graphics_filtering");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");
+        localStorage.removeItem("interstellarArmada_graphics_shaderComplexity");
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
         localStorage.removeItem("interstellarArmada_graphics_shadowQuality");
         localStorage.removeItem("interstellarArmada_graphics_shadowDistance");
@@ -315,6 +332,31 @@ Application.createModule({name: "Graphics",
         this._maxLoadedLOD = value;
         this._lodContext.maxEnabledLOD = value;
         localStorage.interstellarArmada_graphics_maxLOD = this._maxLoadedLOD;
+    };
+    /**
+     * Returns the current shader complexity setting. (normal/simple)
+     * @returns {String}
+     */
+    GraphicsContext.prototype.getShaderComplexity = function () {
+        return this._shaderComplexity;
+    };
+    /**
+     * Sets a new shader complexity setting.
+     * @param {String} value Possible values: normal, simple.
+     */
+    GraphicsContext.prototype.setShaderComplexity = function (value) {
+        switch (value) {
+            case "normal":
+            case "simple":
+                this._shaderComplexity = value;
+                break;
+            default:
+                Application.showError("Attempting to set complexity to: '" + value + "', which is not a supported option.",
+                        "minor", "Shader complexity has been instead set to normal.");
+                this._shaderComplexity = "normal";
+        }
+        this._resourceManager.useFallbackShaders(this._shaderComplexity === "simple");
+        localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;
     };
     /**
      * Returns whether shadow mapping is enabled.

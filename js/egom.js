@@ -1242,7 +1242,7 @@ Application.createModule({name: "Egom",
             for (var i = 0; i < this._triangles.length; i++) {
                 var ix = startIndex + i;
                 var index = new Array();
-                for(var j=0; j<4; j++) {
+                for (var j = 0; j < 4; j++) {
                     index[j] = (ix % 256) / 255.0;
                     ix = Math.floor(ix / 256.0);
                 }
@@ -1333,16 +1333,20 @@ Application.createModule({name: "Egom",
         var props = this._contextProperties[context.getName()];
         if (wireframe === true) {
             context.gl.drawArrays(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length);
+            //context.gl.drawElements(context.gl.LINES, 2 * this._lines.length, context.gl.UNSIGNED_SHORT, props.bufferStartWireframe * 2);
         } else {
             switch (opaque) {
                 case true:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles);
+                    //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._nOpaqueTriangles, context.gl.UNSIGNED_SHORT, props.bufferStartSolid * 2);
                     break;
                 case false:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles);
+                    //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._nTransparentTriangles, context.gl.UNSIGNED_SHORT, props.bufferStartTransparent * 2);
                     break;
                 case undefined:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length);
+                    //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._triangles.length, context.gl.UNSIGNED_SHORT, props.bufferStartSolid * 2);
                     break;
             }
         }

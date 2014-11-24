@@ -642,6 +642,12 @@ Application.createModule({name: "Components",
          * @type SimpleComponent
          */
         this._valueSelector = this.registerSimpleComponent("value");
+        /**
+         * A function to execute when the selected value has been changed.
+         * @name Selector#onChange
+         * @type Function
+         */
+        this.onChange = null;
     }
 
     Selector.prototype = new ExternalComponent();
@@ -692,6 +698,9 @@ Application.createModule({name: "Components",
             if (this._valueList.length > index) {
                 this._valueIndex = index;
                 this._valueSelector.setContent(this._valueList[this._valueIndex]);
+                if (this.onChange) {
+                    this.onChange();
+                }
             } else {
                 Application.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1), "minor");
             }

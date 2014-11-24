@@ -998,27 +998,29 @@ Application.createModule({name: "Screens",
         // when the user presses the mouse on the canvas, he can start rotating the model
         // by moving the mouse
         canvas.onmousedown = function (e) {
-            self._mousePos = [e.screenX, e.screenY];
-            // automatic rotation should stop for the time of manual rotation
-            self.stopRotationLoop();
-            // the mouse might go out from over the canvas during rotation, so register the
-            // move event handler on the document body
-            document.body.onmousemove = function (e) {
-                self._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - self._mousePos[0]) / 180 * Math.PI);
-                self._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - self._mousePos[1]) / 180 * Math.PI);
-                self._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - self._mousePos[0]) / 180 * Math.PI);
-                self._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - self._mousePos[1]) / 180 * Math.PI);
+            if (Armada.logic().getDatabaseModelRotation()) {
                 self._mousePos = [e.screenX, e.screenY];
-            };
-            // once the user releases the mouse button, the event handlers should be cancelled
-            // and the automatic rotation started again
-            document.body.onmouseup = function (e) {
-                document.body.onmousemove = null;
-                document.body.onmouseup = null;
-                self.startRotationLoop();
-                e.preventDefault();
-                return false;
-            };
+                // automatic rotation should stop for the time of manual rotation
+                self.stopRotationLoop();
+                // the mouse might go out from over the canvas during rotation, so register the
+                // move event handler on the document body
+                document.body.onmousemove = function (e) {
+                    self._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - self._mousePos[0]) / 180 * Math.PI);
+                    self._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - self._mousePos[1]) / 180 * Math.PI);
+                    self._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - self._mousePos[0]) / 180 * Math.PI);
+                    self._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - self._mousePos[1]) / 180 * Math.PI);
+                    self._mousePos = [e.screenX, e.screenY];
+                };
+                // once the user releases the mouse button, the event handlers should be cancelled
+                // and the automatic rotation started again
+                document.body.onmouseup = function (e) {
+                    document.body.onmousemove = null;
+                    document.body.onmouseup = null;
+                    self.startRotationLoop();
+                    e.preventDefault();
+                    return false;
+                };
+            }
             e.preventDefault();
             return false;
         };
@@ -1151,9 +1153,22 @@ Application.createModule({name: "Screens",
 
                 self._revealState = 0.0;
 
-                self.startRenderLoop(1000 / 60);
-                self.startRevealLoop();
-                self.startRotationLoop();
+                var singleRender = true;
+                if (Armada.logic().getDatabaseModelRotation()) {
+                    self.startRotationLoop();
+                    singleRender = false;
+                }
+                if (Armada.graphics().getShaderComplexity() === "normal") {
+                    self.startRevealLoop();
+                    singleRender = false;
+                }
+                if (singleRender) {
+                    self._sceneCanvasBindings[0].canvas.getManagedContext().setup();
+                    self.render();
+                } else {
+                    self.startRenderLoop(1000 / 60);
+                }
+
                 document.body.style.cursor = 'default';
             });
 
@@ -1178,6 +1193,7 @@ Application.createModule({name: "Screens",
         this._antialiasingSelector = this.registerExternalComponent(new Components.Selector(name + "_aaSelector", "selector.html", "selector.css", "Anti-aliasing:", ["on", "off"]), "settingsDiv");
         this._filteringSelector = this.registerExternalComponent(new Components.Selector(name + "_filteringSelector", "selector.html", "selector.css", "Texture filtering:", ["bilinear", "trilinear", "anisotropic"]), "settingsDiv");
         this._lodSelector = this.registerExternalComponent(new Components.Selector(name + "_lodSelector", "selector.html", "selector.css", "Model details:", ["very low", "low", "medium", "high", "very high"]), "settingsDiv");
+        this._shaderComplexitySelector = this.registerExternalComponent(new Components.Selector(name + "_shaderComplexitySelector", "selector.html", "selector.css", "Shaders:", ["normal", "simple"]), "settingsDiv");
         this._shadowMappingSelector = this.registerExternalComponent(new Components.Selector(name + "_shadowMappingSelector", "selector.html", "selector.css", "Shadows:", ["on", "off"]), "settingsDiv");
         this._shadowQualitySelector = this.registerExternalComponent(new Components.Selector(name + "_shadowQualitySelector", "selector.html", "selector.css", "Shadow quality:", ["low", "medium", "high"]), "settingsDiv");
         this._shadowDistanceSelector = this.registerExternalComponent(new Components.Selector(name + "_shadowDistanceSelector", "selector.html", "selector.css", "Shadow distance:", ["very close", "close", "medium", "far", "very far"]), "settingsDiv");
@@ -1195,6 +1211,7 @@ Application.createModule({name: "Screens",
             Armada.graphics().setAntialiasing((self._antialiasingSelector.getSelectedValue() === "on"));
             Armada.graphics().setFiltering(self._filteringSelector.getSelectedValue());
             Armada.graphics().setMaxLOD(self._lodSelector.getSelectedIndex());
+            Armada.graphics().setShaderComplexity(self._shaderComplexitySelector.getSelectedValue());
             Armada.graphics().setShadowMapping((self._shadowMappingSelector.getSelectedValue() === "on"));
             Armada.graphics().setShadowQuality((function (v) {
                 var mapping = {
@@ -1226,6 +1243,27 @@ Application.createModule({name: "Screens",
             self.updateValues();
             return false;
         };
+        this._shaderComplexitySelector.onChange = function () {
+            if (self._shaderComplexitySelector.getSelectedValue() === "normal") {
+                self._shadowMappingSelector.show();
+                self._shadowMappingSelector.onChange();
+            } else {
+                self._shadowMappingSelector.hide();
+                self._shadowQualitySelector.hide();
+                self._shadowDistanceSelector.hide();
+            }
+        };
+        this._shadowMappingSelector.onChange = function () {
+            if (self._shadowMappingSelector.getSelectedValue() === "on") {
+                if (self._shaderComplexitySelector.getSelectedValue() === "normal") {
+                    self._shadowQualitySelector.show();
+                    self._shadowDistanceSelector.show();
+                }
+            } else {
+                self._shadowQualitySelector.hide();
+                self._shadowDistanceSelector.hide();
+            }
+        };
 
         this.updateValues();
     };
@@ -1236,6 +1274,7 @@ Application.createModule({name: "Screens",
             self._antialiasingSelector.selectValue((Armada.graphics().getAntialiasing() === true) ? "on" : "off");
             self._filteringSelector.selectValue(Armada.graphics().getFiltering());
             self._lodSelector.selectValueWithIndex(Armada.graphics().getMaxLoadedLOD());
+            self._shaderComplexitySelector.selectValue(Armada.graphics().getShaderComplexity());
             self._shadowMappingSelector.selectValue((Armada.graphics().getShadowMapping() === true) ? "on" : "off");
             self._shadowQualitySelector.selectValue(function (v) {
                 switch (v) {

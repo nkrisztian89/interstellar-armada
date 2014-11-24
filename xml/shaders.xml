@@ -8,10 +8,63 @@
         <image url="textures/cube/cm_1c2.jpg" direction="pos_z" />
         <image url="textures/cube/cm_1c2.jpg" direction="neg_z" />
     </Cubemap>
+    
+    <Shader name="oneColor">
+        <vertex filename="mesh/oneColor.vert" />
+        <fragment filename="mesh/oneColor.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_color" type="vec4" />
+        </uniforms>
+    </Shader>
+    
+    <Shader name="colored">
+        <vertex filename="mesh/colored.vert" />
+        <fragment filename="mesh/colored.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_color" size="4" role="color" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+        </uniforms>
+    </Shader>
+    
+    <Shader name="textured" fallback="colored">
+        <vertex filename="mesh/textured.vert" />
+        <fragment filename="mesh/textured.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_color" size="4" role="color" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+        </uniforms>
+    </Shader>
 	
-    <Shader name="simple">
-        <vertex filename="simple.vert" />
-        <fragment filename="simple.frag" />
+    <Shader name="simple" fallback="textured">
+        <vertex filename="mesh/simple.vert" />
+        <fragment filename="mesh/simple.frag" />
         <state>
             <blendType value="mix" />
         </state>
@@ -38,9 +91,9 @@
         </uniforms>
     </Shader>
         
-    <Shader name="simpleReveal">
-        <vertex filename="simpleWithModelPos.vert" />
-        <fragment filename="simpleReveal.frag" />
+    <Shader name="simpleReveal" fallback="textured">
+        <vertex filename="mesh/simpleWithModelPos.vert" />
+        <fragment filename="mesh/simpleReveal.frag" />
         <state>
             <blendType value="mix" />
         </state>
@@ -70,9 +123,9 @@
         </uniforms>
     </Shader>
         
-    <Shader name="oneColorReveal">
-        <vertex filename="simpleWithModelPos.vert" />
-        <fragment filename="oneColorReveal.frag" />
+    <Shader name="oneColorReveal" fallback="oneColor">
+        <vertex filename="mesh/simpleWithModelPos.vert" />
+        <fragment filename="mesh/oneColorReveal.frag" />
         <state>
             <blendType value="mix" />
         </state>
@@ -90,9 +143,9 @@
         </uniforms>
     </Shader>
         
-    <Shader name="ship">
-        <vertex filename="ship.vert" />
-        <fragment filename="ship.frag" />
+    <Shader name="ship" fallback="textured">
+        <vertex filename="mesh/ship.vert" />
+        <fragment filename="mesh/ship.frag" />
         <state>
             <blendType value="mix" />
         </state>
@@ -130,9 +183,9 @@
         </uniforms>
     </Shader>
     
-    <Shader name="shadowMapReveal">
-        <vertex filename="modelPosShadowMapping.vert" />
-        <fragment filename="shadowMapReveal.frag" />
+    <Shader name="shadowMapReveal" fallback="textured">
+        <vertex filename="mesh/modelPosShadowMapping.vert" />
+        <fragment filename="mesh/shadowMapReveal.frag" />
         <state>
             <blendType value="mix" />
         </state>
@@ -171,8 +224,8 @@
     </Shader>
 	
     <Shader name="skybox">
-        <vertex filename="skybox.vert" />
-        <fragment filename="skybox.frag" />
+        <vertex filename="billboard/skybox.vert" />
+        <fragment filename="billboard/skybox.frag" />
         <state>
             <blendType value="none" />
         </state>
@@ -186,8 +239,8 @@
     </Shader>
 	
     <Shader name="billboard">
-        <vertex filename="billboard.vert" />
-        <fragment filename="billboard.frag" />
+        <vertex filename="billboard/billboard.vert" />
+        <fragment filename="billboard/billboard.frag" />
         <state>
             <blendType value="add" />
         </state>
@@ -205,8 +258,8 @@
     </Shader>
 	
     <Shader name="particle">
-        <vertex filename="particle.vert" />
-        <fragment filename="particle.frag" />
+        <vertex filename="billboard/particle.vert" />
+        <fragment filename="billboard/particle.frag" />
         <state>
             <blendType value="add" />
         </state>
@@ -226,8 +279,8 @@
     </Shader>
 	
     <Shader name="permanentParticle">
-        <vertex filename="linearSizeParticle.vert" />
-        <fragment filename="particle.frag" />
+        <vertex filename="billboard/linearSizeParticle.vert" />
+        <fragment filename="billboard/particle.frag" />
         <state>
             <blendType value="add" />
         </state>
@@ -247,8 +300,8 @@
     </Shader>
         
     <Shader name="backgroundBillboard">
-        <vertex filename="backgroundBillboard.vert" />
-        <fragment filename="particle.frag" />
+        <vertex filename="billboard/backgroundBillboard.vert" />
+        <fragment filename="billboard/particle.frag" />
         <state>
             <blendType value="add" />
         </state>

@@ -4,7 +4,7 @@
         <context antialiasing="true" filtering="trilinear" shadowMapping="true">
             <shadows quality="2048" ranges="25,60,125,250,500,1000" numRanges="4" depthRatio="1.5" />
         </context>
-        <shaders source="shaders.xml" />
+        <shaders source="shaders.xml" complexity="normal" />
         <levelOfDetailSettings>
             <lodLoadProfile maxLevel="4" autoLimitByScreenWidth="true">
                 <limit screenSizeLessThan="60" level="0" />
@@ -22,6 +22,7 @@
     </graphics>
     <logic>
         <classes source="classes.xml" />
+        <database modelRotation="true" />
     </logic>
     <control>
         <controllers>

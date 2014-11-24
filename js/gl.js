@@ -865,8 +865,9 @@ Application.createModule({name: "GL",
      * has as an input.
      * @param {ShaderUniform[]} uniforms The list of uniform variables this shader
      * contains.
+     * @param {String} [fallback] Name of a fallback shader to use.
      * */
-    function Shader(name, vertexShaderFileName, fragmentShaderFileName, blendType, attributes, uniforms) {
+    function Shader(name, vertexShaderFileName, fragmentShaderFileName, blendType, attributes, uniforms, fallback) {
         Resource.call(this);
         // properties for file resource management
         /**
@@ -909,6 +910,13 @@ Application.createModule({name: "GL",
          * @type ShaderUniform[]
          */
         this._uniforms = uniforms;
+        /**
+         * The name of a fallback shader that can be used if this shader can not
+         * (e.g. its complexity exceeds the limitations of the current implementation)
+         * @name Shader#_fallback
+         * @type String
+         */
+        this._fallback = fallback || null;
         /**
          * The source code of the vertex shader.
          * @name Shader#_vertexShaderSource
@@ -959,6 +967,13 @@ Application.createModule({name: "GL",
      */
     Shader.prototype.getAttributes = function () {
         return this._attributes;
+    };
+    /**
+     * Returns the name of the optional fallback shader of this shader.
+     * @returns {String}
+     */
+    Shader.prototype.getFallbackShaderName = function () {
+        return this._fallback;
     };
     /**
      * Initiates asynchronous requests to load the vertex and fragment shader source
@@ -1277,6 +1292,7 @@ Application.createModule({name: "GL",
         // if creating a normal context fails, fall back to experimental, but notify the user
         if (!this.gl) {
             Application.log("Initializing a regular context failed, initializing experimental context...", 1);
+            contextParameters.alpha = false;
             try {
                 this.gl = canvas.getContext("experimental-webgl", contextParameters);
             }
@@ -1344,10 +1360,6 @@ Application.createModule({name: "GL",
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.BACK);
         gl.frontFace(gl.CCW);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.BLEND);
-        gl.enable(gl.SCISSOR_TEST);
-        gl.activeTexture(gl.TEXTURE0);
     }
     ManagedGLContext.prototype = new Resource();
     ManagedGLContext.prototype.constructor = ManagedGLContext;
@@ -1465,6 +1477,16 @@ Application.createModule({name: "GL",
         for (i = 0; i < this._models.length; i++) {
             sumVertices = sumVertices + this._models[i].getBufferSize(this);
         }
+        // creating and loading an index buffer (just with ascending numbers)
+        // so that drawElements can also be used for rendering
+        // this code can be useful later, when actual indexed rendering will be supported
+        /*var indexBufferData = new Array(sumVertices);
+        for (i = 0; i < sumVertices; i++) {
+            indexBufferData[i] = i;
+        }
+        var indexBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexBufferData), this.gl.STATIC_DRAW);*/
         // creating a Float32Array of the appropriate size for each needed buffer
         this._vertexBuffers = new Object();
         for (i = 0; i < this._shaders.length; i++) {
@@ -1506,6 +1528,9 @@ Application.createModule({name: "GL",
     ManagedGLContext.prototype.addFrameBuffer = function (frameBuffer) {
         if (this._frameBuffers[frameBuffer.getName()] === undefined) {
             this._frameBuffers[frameBuffer.getName()] = frameBuffer;
+            if (this.isReadyToUse()) {
+                this._frameBuffers[frameBuffer.getName()].setup(this);
+            }
         }
     };
     /**
@@ -1706,6 +1731,14 @@ Application.createModule({name: "GL",
          */
         this._requestedShaders = null;
         /**
+         * Whether to use the fallback shaders instead of the regular ones. When
+         * true, all getShader calls will mark the requested shader's fallback
+         * shader for loading instead.
+         * @name ResourceManager#_useFallbackShaders
+         * @type Boolean
+         */
+        this._useFallbackShaders = false;
+        /**
          * Number of shaders requested for loading.
          * @name ResourceManager#_numShaders
          * @type Number
@@ -1794,6 +1827,15 @@ Application.createModule({name: "GL",
     // manage for when all resources have been loaded
     ResourceManager.prototype = new Resource();
     ResourceManager.prototype.constructor = ResourceManager;
+    /**
+     * Sets whether to use the fallback shaders instead of the regular ones.
+     * After this is set to true, calling getShader will mark the fallback of
+     * the passed shader to be loaded.
+     * @param {Boolean} value
+     */
+    ResourceManager.prototype.useFallbackShaders = function (value) {
+        this._useFallbackShaders = value;
+    };
     /**
      * Tells if all added cubemapped textures have been already loaded.
      * @returns {Boolean}
@@ -1940,6 +1982,9 @@ Application.createModule({name: "GL",
             Application.showError("Asked for a shader named '" + name + "', which does not exist.");
             return null;
         } else {
+            if (this._useFallbackShaders && this._shaders[name].getFallbackShaderName()) {
+                name = this._shaders[name].getFallbackShaderName();
+            }
             if (this._requestedShaders[name] === undefined) {
                 this._numRequestedShaders += 1;
                 this.resetReadyState();
@@ -2131,7 +2176,8 @@ Application.createModule({name: "GL",
                     shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
                     shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
                     attributes,
-                    uniforms
+                    uniforms,
+                    (shaderTags[i].hasAttribute("fallback") ? shaderTags[i].getAttribute("fallback") : null)
                     ));
         }
     };
