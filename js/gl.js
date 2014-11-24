@@ -1218,6 +1218,52 @@ Application.createModule({name: "GL",
          * @type Number
          */
         this._nextTextureBindLocation = 0;
+        /**
+         * The maximum supported 2D texture size. Attempting to add a texture to
+         * the context that is bigger should fail.
+         * @name ManagedGLContext#_maxTextureSize
+         * @type Number
+         */
+        this._maxTextureSize = null;
+        /**
+         * The maximum supported cubemap texture size. Attempting to add a 
+         * cubemap texture to the context that is bigger should fail.
+         * @name ManagedGLContext#_maxCubemapSize
+         * @type Number
+         */
+        this._maxCubemapSize = null;
+        /**
+         * The maximum supported render buffer size. Attempting to create a 
+         * render buffer in the context that is bigger should fail.
+         * @name ManagedGLContext#_maxRenderbufferSize
+         * @type Number
+         */
+        this._maxRenderbufferSize = null;
+        /**
+         * The number of supported vertex attributes.
+         * @name ManagedGLContext#_maxVertexAttributes
+         * @type Number
+         */
+        this._maxVertexAttributes = null;
+        /**
+         * The number of supported uniform vectors in the vertex shader.
+         * @name ManagedGLContext#_maxVertexShaderUniforms
+         * @type Number
+         */
+        this._maxVertexShaderUniforms = null;
+        /**
+         * The number of supported uniform vectors in the fragment shader.
+         * @name ManagedGLContext#_maxFragmentShaderUniforms
+         * @type Number
+         */
+        this._maxFragmentShaderUniforms = null;
+        /**
+         * The number of supported varying vectors in shader programs.
+         * @name ManagedGLContext#_maxVaryings
+         * @type Number
+         */
+        this._maxVaryings = null;
+        Application.log("Initializing WebGL context...", 1);
         // creating the WebGLRenderingContext
         var contextParameters = {alpha: true, antialias: antialiasing};
         // some implementations throw an exception, others don't, but all return null
@@ -1230,8 +1276,9 @@ Application.createModule({name: "GL",
         }
         // if creating a normal context fails, fall back to experimental, but notify the user
         if (!this.gl) {
+            Application.log("Initializing a regular context failed, initializing experimental context...", 1);
             try {
-                canvas.getContext("experimental-webgl", contextParameters);
+                this.gl = canvas.getContext("experimental-webgl", contextParameters);
             }
             catch (e) {
             }
@@ -1251,37 +1298,56 @@ Application.createModule({name: "GL",
                         "If you experience problems, it is recommended to use lower graphics quality settings.");
             }
         }
-
-        if (Armada.graphics().getAntialiasing() && !this.gl.getContextAttributes().antialias) {
+        var gl = this.gl;
+        if (Armada.graphics().getAntialiasing() && !gl.getContextAttributes().antialias) {
             Application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
                     "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
                     "this error message showing up again, disable antialiasing in the graphics settings or try " +
                     "running the application in a different browser. Antialiasing will not work, but otherwise this " +
-                    "error will have no consequences.", this.gl);
+                    "error will have no consequences.", gl);
         }
-        // save the number of maximum bound textures
-        this._maxBoundTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
-        // is filtering is set to anisotropic, try to grap the needed extension. If that fails,
+        // save the information about WebGL limits
+        this._maxBoundTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+        this._maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        this._maxCubemapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+        this._maxRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+        this._maxVertexAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+        this._maxVertexShaderUniforms = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
+        this._maxFragmentShaderUniforms = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+        this._maxVaryings = gl.getParameter(gl.MAX_VARYING_VECTORS);
+        Application.log("WebGL context successfully created.\n" +
+                " Available texture units: " + this._maxBoundTextures + "\n" +
+                " Maximum texture size: " + this._maxTextureSize + "\n" +
+                " Maximum cubemap size: " + this._maxCubemapSize + "\n" +
+                " Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
+                " Available vertex attributes: " + this._maxVertexAttributes + "\n" +
+                " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
+                " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
+                " Available varying vectors: " + this._maxVaryings, 1);
+        // is filtering is set to anisotropic, try to grab the needed extension. If that fails,
         // fall back to trilinear filtering.
         if (this._filtering === "anisotropic") {
-            this._anisotropicFilter = this.gl.getExtension("EXT_texture_filter_anisotropic");
+            Application.log("Initializing anisotropic filter...", 1);
+            this._anisotropicFilter = gl.getExtension("EXT_texture_filter_anisotropic");
             if (this._anisotropicFilter === null) {
+                Application.log("Anisotropic filtering not available. Falling back to trilinear filtering.", 1);
                 this._filtering = "trilinear";
+            } else {
+                Application.log("Anisotropic filtering successfully initialized.", 1);
             }
         }
-
         // some basic settings on the context state machine
-        this.gl.clearDepth(1.0);
-        this.gl.colorMask(true, true, true, true);
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.depthFunc(this.gl.LEQUAL);
-        this.gl.enable(this.gl.CULL_FACE);
-        this.gl.cullFace(this.gl.BACK);
-        this.gl.frontFace(this.gl.CCW);
-        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
-        this.gl.enable(this.gl.BLEND);
-        this.gl.enable(this.gl.SCISSOR_TEST);
-        this.gl.activeTexture(this.gl.TEXTURE0);
+        gl.clearDepth(1.0);
+        gl.colorMask(true, true, true, true);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.BACK);
+        gl.frontFace(gl.CCW);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND);
+        gl.enable(gl.SCISSOR_TEST);
+        gl.activeTexture(gl.TEXTURE0);
     }
     ManagedGLContext.prototype = new Resource();
     ManagedGLContext.prototype.constructor = ManagedGLContext;
