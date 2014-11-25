@@ -61,8 +61,57 @@
             <uniform name="u_colorTexture" type="sampler2D" />
         </uniforms>
     </Shader>
+    
+    <Shader name="lambert" fallback="textured">
+        <vertex filename="mesh/lambert.vert" />
+        <fragment filename="mesh/lambert.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_normal" size="3" role="normal" />
+            <attribute name="a_color" size="4" role="color" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_normalMatrix" type="mat3" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_lights" type="struct" arraySize="1" />
+            <uniform name="color" memberOf="u_lights" type="vec3" />
+            <uniform name="direction" memberOf="u_lights" type="vec3" />
+        </uniforms>
+    </Shader>
+    
+    <Shader name="lambert-with-luminosity" fallback="lambert">
+        <vertex filename="mesh/lambert-with-luminosity.vert" />
+        <fragment filename="mesh/lambert-with-luminosity.frag" />
+        <state>
+            <blendType value="mix" />
+        </state>
+        <attributes>
+            <attribute name="a_position" size="3" role="position" />
+            <attribute name="a_texCoord" size="2" role="texCoord" />
+            <attribute name="a_normal" size="3" role="normal" />
+            <attribute name="a_color" size="4" role="color" />
+            <attribute name="a_luminosity" size="1" role="luminosity" />
+        </attributes>
+        <uniforms>
+            <uniform name="u_modelMatrix" type="mat4" />
+            <uniform name="u_cameraMatrix" type="mat4" />
+            <uniform name="u_projMatrix" type="mat4" />
+            <uniform name="u_normalMatrix" type="mat3" />
+            <uniform name="u_colorTexture" type="sampler2D" />
+            <uniform name="u_lights" type="struct" arraySize="1" />
+            <uniform name="color" memberOf="u_lights" type="vec3" />
+            <uniform name="direction" memberOf="u_lights" type="vec3" />
+        </uniforms>
+    </Shader>
 	
-    <Shader name="simple" fallback="textured">
+    <Shader name="simple" fallback="lambert-with-luminosity">
         <vertex filename="mesh/simple.vert" />
         <fragment filename="mesh/simple.frag" />
         <state>
@@ -91,7 +140,7 @@
         </uniforms>
     </Shader>
         
-    <Shader name="simpleReveal" fallback="textured">
+    <Shader name="simpleReveal" fallback="lambert-with-luminosity">
         <vertex filename="mesh/simpleWithModelPos.vert" />
         <fragment filename="mesh/simpleReveal.frag" />
         <state>
@@ -143,7 +192,7 @@
         </uniforms>
     </Shader>
         
-    <Shader name="ship" fallback="textured">
+    <Shader name="ship" fallback="lambert-with-luminosity">
         <vertex filename="mesh/ship.vert" />
         <fragment filename="mesh/ship.frag" />
         <state>
@@ -183,7 +232,7 @@
         </uniforms>
     </Shader>
     
-    <Shader name="shadowMapReveal" fallback="textured">
+    <Shader name="shadowMapReveal" fallback="lambert-with-luminosity">
         <vertex filename="mesh/modelPosShadowMapping.vert" />
         <fragment filename="mesh/shadowMapReveal.frag" />
         <state>

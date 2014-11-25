@@ -753,7 +753,7 @@ Application.createModule({name: "Screens",
                     [0, 0, 0, 1], true,
                     Armada.graphics().getLODContext(),
                     {
-                        enable: Armada.graphics().getShadowMapping(),
+                        enable: Armada.graphics().getShadowMapping() && (Armada.graphics().getShaderComplexity() === "normal"),
                         shader: Armada.resources().getShader("shadowMapping"),
                         textureSize: Armada.graphics().getShadowQuality(),
                         ranges: Armada.graphics().getShadowRanges(),
@@ -974,7 +974,7 @@ Application.createModule({name: "Screens",
                 [0, 0, 0, 0], true,
                 Armada.graphics().getLODContext(),
                 {
-                    enable: Armada.graphics().getShadowMapping(),
+                    enable: Armada.graphics().getShadowMapping() && (Armada.graphics().getShaderComplexity() === "normal"),
                     shader: Armada.resources().getShader("shadowMapping"),
                     textureSize: Armada.graphics().getShadowQuality(),
                     ranges: [],
@@ -1141,7 +1141,7 @@ Application.createModule({name: "Screens",
                 self.bindSceneToCanvas(self._scene, self.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
                 self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.visualModel.getScaledSize()));
-                if (Armada.graphics().getShadowMapping()) {
+                if (Armada.graphics().getShadowMapping() && (Armada.graphics().getShaderComplexity() === "normal")) {
                     self._scene.setShadowMapRanges([
                         0.5 * self._item.visualModel.getScaledSize(),
                         self._item.visualModel.getScaledSize()
