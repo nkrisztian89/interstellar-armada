@@ -35,10 +35,10 @@
                 <action name="toggleTextVisibility" description="Toggle the visibility of the texts on screen." />
             </controller>
             <controller type="fighter">
-                <action name="changeFlightMode" description="Toggle between free and compensated flight modes." />
+                <action name="changeFlightMode" description="Change flight mode." />
                 <action name="fire" continuous="true" description="Fire primary weapons." />
-                <action name="forward" continuous="true" description="Forward thrust (free mode) or increase speed (compensated mode)." />
-                <action name="reverse" continuous="true" description="Reverse thrust (free mode) or decrease speed (compensated mode)." />
+                <action name="forward" continuous="true" description="Forward thrust (free mode) or increase speed." />
+                <action name="reverse" continuous="true" description="Reverse thrust (free mode) or decrease speed." />
                 <action name="slideLeft" continuous="true" description="Strafe left." />
                 <action name="slideRight" continuous="true" description="Strafe right" />
                 <action name="resetSpeed" description="Reset speed to zero (compensated mode)." />

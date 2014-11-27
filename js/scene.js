@@ -1640,18 +1640,6 @@ Application.createModule({name: "Scene",
                 Application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
     };
 
-    /**
-     * A temporary function needed as controllers have to set their controlled
-     * entity at initialization, and they expect a controllable entity that has
-     * this function, however ControllableEntity is defined in logic.js. The
-     * scene camera has a controller so it needs this function (to be cleaned up
-     * later)
-     * @param {Controller} newController
-     */
-    SceneCamera.prototype.setControllerWithoutChecks = function (newController) {
-        this.controller = newController;
-    };
-
     SceneCamera.prototype.changeToNextView = function () {
         if ((this.followedCamera) && (this.followedCamera.nextView)) {
             this.followCamera(this.followedCamera.nextView, 500);

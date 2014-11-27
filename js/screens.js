@@ -723,7 +723,7 @@ Application.createModule({name: "Screens",
         this._ui.setContent(
                 craft.getFlightMode() + " flight mode<br/>" +
                 "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
-                ((craft.getFlightMode() === "compensated") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+                ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
     };
 
     BattleScreen.prototype.startNewBattle = function (levelSourceFilename) {

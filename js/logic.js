@@ -715,292 +715,369 @@ Application.createModule({name: "Logic",
             this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.angularThrust * this._thrusterUses["rollLeft"].burn, directionVector, timeBurstLength);
         }
     };
-
-    /**
-     * Creates a new ControllableEntity object.
-     * @class This is the parent class for all entities that can be controlled in 
-     * the game by a controller object. (such as a keyboard or an AI controller)
-     * @param {Controller} controller The object to be assigned as the controller
-     * of the entity.
-     */
-    function ControllableEntity(controller) {
-        this.controller = controller;
-        if ((this.controller !== undefined) && (this.controller !== null)) {
-            this.controller.setControlledEntity(this);
-        }
-    }
-    ;
-
-    ControllableEntity.prototype.getController = function () {
-        return this.controller;
-    };
-
-    /**
-     * Assigns the controller property without checking if the set controller's
-     * controlled entity is also set properly to this one.
-     * @param {Controller} newController The new value of controller.
-     */
-    ControllableEntity.prototype.setControllerWithoutChecks = function (newController) {
-        this.controller = newController;
-    };
-
-    /**
-     * Assigns the controller property and makes sure that the controller's 
-     * controlled entity is updated as well to this one.
-     * @param {Controller} newController The new value of controller.
-     */
-    ControllableEntity.prototype.setController = function (newController) {
-        if ((this.controller !== newController) && (newController !== undefined)) {
-            if ((newController !== null) && (newController.getControlledEntity() !== this)) {
-                newController.setControlledEntityWithoutChecks(this);
-            }
-            if ((this.controller !== null) && (this.controller !== undefined) && (this.controller.getControlledEntity() === this)) {
-                this.controller.setControlledEntityWithoutChecks(null);
-            }
-            this.controller = newController;
-        }
-    };
-
     /**
      * @class A class that can translate higher level maneuvering commands given to
      * a spacecraft (by user input or an AI) to low level thruster commands.
-     * @param {Spacecraft} spacecraft
+     * @param {Spacecraft} spacecraft The spacecraft the thrusters of which this
+     * computer controls.
      * @returns {ManeuveringComputer}
      */
     function ManeuveringComputer(spacecraft) {
         /**
+         * The spacecraft the thrusters of which this computer controls.
          * @name ManeuveringComputer#_spacecraft
          * @type Spacecraft
          */
         this._spacecraft = spacecraft;
         /**
+         * Whether automatic inertia (drift) compensation is turned on.
          * @name ManeuveringComputer#_compensated
          * @type Boolean
          */
         this._compensated = true;
         /**
+         * Whether automatic turning restriction is turned on.
+         * @name ManeuveringComputer#_restricted
+         * @type Boolean
+         */
+        this._restricted = false;
+        /**
+         * The target angle in radian between the identity orientation and the
+         * relative angular velocity matrix on the yawing (XY) plane. The computer
+         * will use the yawing thursters to reach this angle.
+         * (representing rad/5ms turn)
          * @name ManeuveringComputer#_yawTarget
          * @type Number
          */
         this._yawTarget = 0;
         /**
+         * The target angle in radian between the identity orientation and the
+         * relative angular velocity matrix on the pitching (YZ) plane. The computer
+         * will use the pitching thursters to reach this angle.
+         * (representing rad/5ms turn)
          * @name ManeuveringComputer#_pitchTarget
          * @type Number
          */
         this._pitchTarget = 0;
         /**
+         * The target angle in radian between the identity orientation and the
+         * relative angular velocity matrix on the rolling (XZ) plane. The computer
+         * will use the rolling thursters to reach this angle. 
+         * (representing rad/5ms turn)
          * @name ManeuveringComputer#_rollTarget
          * @type Number
          */
         this._rollTarget = 0;
         /**
+         * The target speed along the Y axis (in model space). The computer will
+         * use forward and reverse thrusters to reach this speed if interia
+         * compensation is turned on. (in m/s)
          * @name ManeuveringComputer#_speedTarget
          * @type Number
          */
         this._speedTarget = 0;
         /**
+         * The target speed along the X axis (in model space). The computer will
+         * use left and right thrusters to reach this speed if interia
+         * compensation is turned on. (in m/s)
          * @name ManeuveringComputer#_strafeTarget
          * @type Number
          */
         this._strafeTarget = 0;
         /**
+         * The target speed along the Z axis (in model space). The computer will
+         * use dorsal and lateral thrusters to reach this speed if interia
+         * compensation is turned on. (in m/s)
          * @name ManeuveringComputer#_liftTarget
          * @type Number
          */
         this._liftTarget = 0;
-
-        this.SPEED_INCREMENT = 1;
-        this.TURNING_LIMIT = this._spacecraft.propulsion ?
-                this._spacecraft.propulsion._class.angularThrust / this._spacecraft.physicalModel.mass * 200 :
-                null;
+        /**
+         * How much speed should be added to the target when the pilot accelerates
+         * continuously for one second, in m/s.
+         * @name ManeuveringComputer#_speedIncrementPerSecond
+         * @type Number
+         */
+        this._speedIncrementPerSecond = 50;
+        /**
+         * How much speed should be added to the target in one control step when
+         * the pilot is using continuous acceleration. (in m/s)
+         * @name ManeuveringComputer#_speedIncrement
+         * @type Number
+         */
+        this._speedIncrement = 1;
+        /**
+         * The maximum angle between vectors of the relative angular acceleration 
+         * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
+         * (representing rad/5ms turn)
+         * @name ManeuveringComputer#_turningLimit
+         * @type Number
+         */
+        this._turningLimit = null;
+        this.updateTurningLimit();
     }
-
-    ManeuveringComputer.prototype.update = function () {
-        this.TURNING_LIMIT = this._spacecraft.propulsion._class.angularThrust / this._spacecraft.physicalModel.mass * 200;
+    /**
+     * Updates the calculated speed increment according to how much time has
+     * elapsed since the last control step.
+     * @param {Number} dt The elapsed time since the last control step.
+     */
+    ManeuveringComputer.prototype.updateSpeedIncrement = function (dt) {
+        this._speedIncrement = dt * this._speedIncrementPerSecond / 1000;
     };
-
+    /**
+     * Updates the turning limit to how much the ship can accelerate its
+     * turning to in one second with the current propulsion system.
+     */
+    ManeuveringComputer.prototype.updateTurningLimit = function () {
+        this._turningLimit = this._spacecraft.getAngularAccelerationPerSecond() / 200;
+    };
+    /**
+     * Returns a string representation of the current flight mode.
+     * (free / compensated / restricted)
+     * @returns {String}
+     */
     ManeuveringComputer.prototype.getFlightMode = function () {
         return this._compensated ?
-                "compensated" : "free";
+                (this._restricted ? "restricted" : "compensated") : "free";
     };
-
+    /**
+     * Switches to the next flight mode. (free / compensated / restricted)
+     */
     ManeuveringComputer.prototype.changeFlightMode = function () {
-        this._compensated = !this._compensated;
-        if (this._compensated) {
+        if (!this._compensated) {
+            this._compensated = true;
             this._speedTarget = Mat.translationLength(this._spacecraft.physicalModel.velocityMatrix);
+        } else if (!this._restricted) {
+            this._restricted = true;
+        } else {
+            this._compensated = false;
+            this._restricted = false;
         }
     };
-
+    /**
+     * Increases the target speed or sets it to maximum in free mode.
+     * @param {Number} [intensity] If given, the speed will be increased by this
+     * value instead of the regular continuous increment.
+     */
     ManeuveringComputer.prototype.forward = function (intensity) {
         this._compensated ?
-                this._speedTarget += (intensity || this.SPEED_INCREMENT) :
+                this._speedTarget += (intensity || this._speedIncrement) :
                 this._speedTarget = Number.MAX_VALUE;
     };
-
+    /**
+     * Sets the target speed to the current speed if it is bigger. Only works 
+     * in free flight mode.
+     */
     ManeuveringComputer.prototype.stopForward = function () {
         if (!this._compensated) {
             var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             (this._speedTarget > speed) && (this._speedTarget = speed);
         }
     };
-
+    /**
+     * Decreases the target speed or sets it to negative maximum in free mode.
+     * @param {Number} [intensity] If given, the speed will be decreased by this
+     * value instead of the regular continuous increment.
+     */
     ManeuveringComputer.prototype.reverse = function (intensity) {
         this._compensated ?
-                this._speedTarget -= (intensity || this.SPEED_INCREMENT) :
+                this._speedTarget -= (intensity || this._speedIncrement) :
                 this._speedTarget = -Number.MAX_VALUE;
     };
-
+    /**
+     * Sets the target speed to the current speed if it is smaller. Only works 
+     * in free flight mode.
+     */
     ManeuveringComputer.prototype.stopReverse = function () {
         if (!this._compensated) {
             var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             (this._speedTarget < speed) && (this._speedTarget = speed);
         }
     };
-
+    /**
+     * Sets the target speed for strafing to the left to intensity, or if not
+     * given, to maximum. This target is reset to zero in each control step after 
+     * the thrusters have been ignited accoringly.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.slideLeft = function (intensity) {
         intensity ?
                 this._strafeTarget = -intensity :
                 this._strafeTarget = -Number.MAX_VALUE;
     };
-
+    /**
+     * Sets the target speed for strafing to zero, if was set to a speed to the
+     * left.
+     */
     ManeuveringComputer.prototype.stopLeftSlide = function () {
-        if (!this._compensated) {
-            var strafe = this._spacecraft.getRelativeVelocityMatrix()[12];
-            (this._strafeTarget < strafe) && (this._strafeTarget = strafe);
-        }
+        (this._strafeTarget < 0) && (this._strafeTarget = 0);
     };
-
+    /**
+     * Sets the target speed for strafing to the right to intensity, or if not
+     * given, to maximum. This target is reset to zero in each control step after 
+     * the thrusters have been ignited accoringly.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.slideRight = function (intensity) {
         intensity ?
                 this._strafeTarget = intensity :
                 this._strafeTarget = Number.MAX_VALUE;
     };
-
+    /**
+     * Sets the target speed for strafing to zero, if was set to a speed to the
+     * right.
+     */
     ManeuveringComputer.prototype.stopRightSlide = function () {
-        if (!this._compensated) {
-            var strafe = this._spacecraft.getRelativeVelocityMatrix()[12];
-            (this._strafeTarget > strafe) && (this._strafeTarget = strafe);
-        }
+        (this._strafeTarget > 0) && (this._strafeTarget = 0);
     };
-
+    /**
+     * Resets the target (forward/reverse) speed to zero. (except in free flight 
+     * mode)
+     */
     ManeuveringComputer.prototype.resetSpeed = function () {
         this._compensated && (this._speedTarget = 0);
     };
-
+    /**
+     * Sets the target angular velocity to yaw to the left with intensity (maxed
+     * out at the turning limit), or if no intensity was given, with the turning
+     * limit.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.yawLeft = function (intensity) {
         // if no intensity was given for the turn, turn with maximum power (mouse or
         // joystick control can have fine intensity control, while with keyboard,
         // when the key is pressed, we just call this without parameter)
         if ((intensity === null) || (intensity === undefined)) {
-            this._yawTarget = -this.TURNING_LIMIT;
+            this._yawTarget = -this._turningLimit;
             // if a specific intensity was set, set the target to it, capping it out at
             // the maximum allowed turning speed
         } else if (intensity > 0) {
-            this._yawTarget = -Math.min(intensity, this.TURNING_LIMIT);
+            this._yawTarget = -Math.min(intensity, this._turningLimit);
+            // if a zero or negative intensity was given, set the target to zero,
+            // but only if it is set to turn to left
         } else if (this._yawTarget < 0) {
             this._yawTarget = 0;
         }
     };
-
+    /**
+     * Sets the target angular velocity to yaw to the right with intensity (maxed
+     * out at the turning limit), or if no intensity was given, with the turning
+     * limit.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.yawRight = function (intensity) {
-        // if no intensity was given for the turn, turn with maximum power (mouse or
-        // joystick control can have fine intensity control, while with keyboard,
-        // when the key is pressed, we just call this without parameter)
         if ((intensity === null) || (intensity === undefined)) {
-            this._yawTarget = this.TURNING_LIMIT;
-            // if a specific intensity was set, set the target to it, capping it out at
-            // the maximum allowed turning speed
+            this._yawTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._yawTarget = Math.min(intensity, this.TURNING_LIMIT);
+            this._yawTarget = Math.min(intensity, this._turningLimit);
         } else if (this._yawTarget > 0) {
             this._yawTarget = 0;
         }
     };
-
+    /**
+     * Sets the target angular velocity to pitch down with intensity (maxed
+     * out at the turning limit), or if no intensity was given, with the turning
+     * limit.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.pitchDown = function (intensity) {
-        // if no intensity was given for the turn, turn with maximum power (mouse or
-        // joystick control can have fine intensity control, while with keyboard,
-        // when the key is pressed, we just call this without parameter)
         if ((intensity === null) || (intensity === undefined)) {
-            this._pitchTarget = -this.TURNING_LIMIT;
-            // if a specific intensity was set, set the target to it, capping it out at
-            // the maximum allowed turning speed
+            this._pitchTarget = -this._turningLimit;
         } else if (intensity > 0) {
-            this._pitchTarget = -Math.min(intensity, this.TURNING_LIMIT);
+            this._pitchTarget = -Math.min(intensity, this._turningLimit);
         } else if (this._pitchTarget < 0) {
             this._pitchTarget = 0;
         }
     };
-
+    /**
+     * Sets the target angular velocity to pitch up with intensity (maxed
+     * out at the turning limit), or if no intensity was given, with the turning
+     * limit.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.pitchUp = function (intensity) {
-        // if no intensity was given for the turn, turn with maximum power (mouse or
-        // joystick control can have fine intensity control, while with keyboard,
-        // when the key is pressed, we just call this without parameter)
         if ((intensity === null) || (intensity === undefined)) {
-            this._pitchTarget = this.TURNING_LIMIT;
-            // if a specific intensity was set, set the target to it, capping it out at
-            // the maximum allowed turning speed
+            this._pitchTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._pitchTarget = Math.min(intensity, this.TURNING_LIMIT);
+            this._pitchTarget = Math.min(intensity, this._turningLimit);
         } else if (this._pitchTarget > 0) {
             this._pitchTarget = 0;
         }
     };
-
+    /**
+     * Sets the target angular velocity to roll to the left with intensity (maxed
+     * out at the turning limit), or if no intensity was given, with the turning
+     * limit.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.rollLeft = function (intensity) {
-        // if no intensity was given for the turn, turn with maximum power (mouse or
-        // joystick control can have fine intensity control, while with keyboard,
-        // when the key is pressed, we just call this without parameter)
         if ((intensity === null) || (intensity === undefined)) {
-            this._rollTarget = -this.TURNING_LIMIT;
-            // if a specific intensity was set, set the target to it, capping it out at
-            // the maximum allowed turning speed
+            this._rollTarget = -this._turningLimit;
         } else if (intensity > 0) {
-            this._rollTarget = -Math.min(intensity, this.TURNING_LIMIT);
+            this._rollTarget = -Math.min(intensity, this._turningLimit);
         } else if (this._rollTarget < 0) {
             this._rollTarget = 0;
         }
     };
-
+    /**
+     * Sets the target angular velocity to roll to the right with intensity (maxed
+     * out at the turning limit), or if no intensity was given, with the turning
+     * limit.
+     * @param {Number} [intensity]
+     */
     ManeuveringComputer.prototype.rollRight = function (intensity) {
-        // if no intensity was given for the turn, turn with maximum power (mouse or
-        // joystick control can have fine intensity control, while with keyboard,
-        // when the key is pressed, we just call this without parameter)
         if ((intensity === null) || (intensity === undefined)) {
-            this._rollTarget = this.TURNING_LIMIT;
-            // if a specific intensity was set, set the target to it, capping it out at
-            // the maximum allowed turning speed
+            this._rollTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._rollTarget = Math.min(intensity, this.TURNING_LIMIT);
+            this._rollTarget = Math.min(intensity, this._turningLimit);
         } else if (this._rollTarget > 0) {
             this._rollTarget = 0;
         }
     };
-
+    /**
+     * Sets the burn levels of all the thrusters of the ship according to the
+     * current flight mode, flight parameters and control actions issued by the 
+     * pilot.
+     */
     ManeuveringComputer.prototype.controlThrusters = function () {
+        // we will add the needed burn levels together, so start from zero
         this._spacecraft.resetThrusterBurn();
-
+        // grab flight parameters for velocity control
+        var relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
+        var speed = relativeVelocityMatrix[13];
+        var speedThreshold = 0.01;
+        // grab flight parameters for turning control
         var turningMatrix = this._spacecraft.getTurningMatrix();
         var turnThreshold = 0.00002;
-        var speedThreshold = 0.01;
-
+        // cash possibly restricted turn parameters (in rad/5ms)
+        var turningLimit = this._turningLimit;
+        var yawTarget = this._yawTarget;
+        var pitchTarget = this._pitchTarget;
+        // restrict turning according to current speed in restricted mode
+        if (this._restricted && (speed !== 0.0)) {
+            // restrict the limit if needed (convert from rad/sec to rad/5ms)
+            turningLimit = Math.min(turningLimit, this._spacecraft.getMaxTurnRateAtSpeed(speed) / 200);
+            //apply the restricted limit
+            yawTarget = Math.min(Math.max(yawTarget, -turningLimit), turningLimit);
+            pitchTarget = Math.min(Math.max(pitchTarget, -turningLimit), turningLimit);
+        }
         // controlling yaw
         var yawAngle = Math.sign(turningMatrix[4]) * Vec.angle2u([0, 1], Vec.normal2([turningMatrix[4], turningMatrix[5]]));
-        if ((this._yawTarget - yawAngle) > turnThreshold) {
+        if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("yawRight",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._yawTarget - yawAngle)));
-        } else if ((this._yawTarget - yawAngle) < -turnThreshold) {
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
+        } else if ((yawTarget - yawAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("yawLeft",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - this._yawTarget)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
         }
         // controlling pitch
         var pitchAngle = Math.sign(turningMatrix[6]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[5], turningMatrix[6]]));
-        if ((this._pitchTarget - pitchAngle) > turnThreshold) {
+        if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchUp",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._pitchTarget - pitchAngle)));
-        } else if ((this._pitchTarget - pitchAngle) < -turnThreshold) {
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
+        } else if ((pitchTarget - pitchAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchDown",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - this._pitchTarget)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
         }
         // controlling roll
         var rollAngle = Math.sign(-turningMatrix[2]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[0], turningMatrix[2]]));
@@ -1011,10 +1088,7 @@ Application.createModule({name: "Logic",
             this._spacecraft.addThrusterBurn("rollLeft",
                     Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
         }
-
         // controlling forward/reverse
-        var relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
-        var speed = relativeVelocityMatrix[13];
         if ((this._speedTarget - speed) > speedThreshold) {
             this._spacecraft.addThrusterBurn("forward",
                     Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
@@ -1044,7 +1118,9 @@ Application.createModule({name: "Logic",
                         Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
             }
         }
-
+        // reset the targets, as new controls are needed from the pilot in the
+        // next step to keep these targets up (e.g. continuously pressing the
+        // key, moving the mouse or keeping the mouse displaced from center)
         this._yawTarget = 0;
         this._pitchTarget = 0;
         this._rollTarget = 0;
@@ -1067,8 +1143,6 @@ Application.createModule({name: "Logic",
      * @returns {Spacecraft}
      */
     function Spacecraft(spacecraftClass, owner, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
-        ControllableEntity.call(this, null);
-
         this.class = spacecraftClass;
         this.owner = owner;
 
@@ -1108,9 +1182,6 @@ Application.createModule({name: "Logic",
 
         this.toBeDeleted = false;
     }
-
-    Spacecraft.prototype = new ControllableEntity();
-    Spacecraft.prototype.constructor = Spacecraft;
 
     Spacecraft.prototype.getFlightMode = function () {
         return this._maneuveringComputer.getFlightMode();
@@ -1207,6 +1278,25 @@ Application.createModule({name: "Logic",
                         ),
                 Mat.matrix4from3(Mat.matrix3from4(this.physicalModel.rotationMatrixInverse))
                 );
+    };
+
+    /**
+     * 
+     * @returns {Number|null} in rad/sec^2
+     */
+    Spacecraft.prototype.getAngularAccelerationPerSecond = function () {
+        return this.propulsion ?
+                this.propulsion._class.angularThrust / this.physicalModel.mass * 200 * 200 :
+                null;
+    };
+    
+    /**
+     * 
+     * @param {Number} speed in m/s
+     * @returns {Number} in rad/sec
+     */
+    Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
+        return Math.abs(this.propulsion._class.thrust / (this.physicalModel.mass * speed));
     };
 
     Spacecraft.prototype.getClass = function () {
@@ -1313,7 +1403,7 @@ Application.createModule({name: "Logic",
 
     Spacecraft.prototype.addPropulsion = function (propulsionClass) {
         this.propulsion = new Propulsion(propulsionClass, this.physicalModel);
-        this._maneuveringComputer.update();
+        this._maneuveringComputer.updateTurningLimit();
     };
 
     /**
@@ -1413,6 +1503,7 @@ Application.createModule({name: "Logic",
         this.physicalModel.simulate(dt);
         this.visualModel.setPositionMatrix(this.physicalModel.positionMatrix);
         this.visualModel.setOrientationMatrix(this.physicalModel.orientationMatrix);
+        this._maneuveringComputer.updateSpeedIncrement(dt);
     };
 
     /**
