@@ -42,6 +42,7 @@ Application.createModule({name: "Scene",
      * @param {Boolean} renderedWithDepthMask Tells whether this object should be rendered when the depth mask is on (= it contains non-transparent triangles)
      * @param {Boolean} renderedWithoutDepthMask Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)
      * @param {Number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this value, render will not take place.
+     * @returns {VisualObject}
      */
     function VisualObject(shader, renderedWithDepthMask, renderedWithoutDepthMask, smallestParentSizeWhenDrawn) {
         this.shader = shader;
@@ -49,6 +50,7 @@ Application.createModule({name: "Scene",
 
         this.toBeDeleted = false;
 
+        this._scene = null;
         this.renderParent = null;
         this.subnodes = new Array();
 
@@ -75,6 +77,21 @@ Application.createModule({name: "Scene",
          */
         this._firstView = null;
     }
+
+    VisualObject.prototype.getScene = function () {
+        return this._scene;
+    };
+
+    VisualObject.prototype.setScene = function (scene) {
+        this._scene = scene;
+        for (var i = 0; i < this.subnodes.length; i++) {
+            this.subnodes[i].setScene(scene);
+        }
+    };
+
+    VisualObject.prototype.getRenderParent = function () {
+        return this.renderParent;
+    };
 
     VisualObject.prototype.setUniformValueFunction = function (uniformName, valueFunction) {
         this.uniformValueFunctions[uniformName] = valueFunction;
@@ -144,6 +161,11 @@ Application.createModule({name: "Scene",
     VisualObject.prototype.addSubnode = function (subnode) {
         this.subnodes.push(subnode);
         subnode.renderParent = this;
+        subnode.setScene(this._scene);
+    };
+
+    VisualObject.prototype.removeFromScene = function () {
+        this.toBeDeleted = true;
     };
 
     /**
@@ -771,21 +793,24 @@ Application.createModule({name: "Scene",
     function ShipMesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode, smallestParentSizeWhenDrawn) {
         Mesh.call(this, modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode, smallestParentSizeWhenDrawn);
 
-        this.luminosityFactors = new Float32Array(20);
-        for (var i = 0; i < this.luminosityFactors.length; i++) {
-            this.luminosityFactors[i] = 0.0;
+        this._luminosityFactors = new Float32Array(20);
+        for (var i = 0; i < this._luminosityFactors.length; i++) {
+            this._luminosityFactors[i] = 0.0;
         }
 
         var self = this;
 
         this.uniformValueFunctions["u_luminosityFactors"] = function () {
-            return self.luminosityFactors;
+            return self._luminosityFactors;
         };
     }
 
     ShipMesh.prototype = new Mesh([]);
     ShipMesh.prototype.constructor = ShipMesh;
 
+    ShipMesh.prototype.setLuminosityFactor = function (index, value) {
+        this._luminosityFactors[index] = value;
+    };
 
     /**
      * Creates a billboard type visual object, used for projectiles.
@@ -1970,6 +1995,7 @@ Application.createModule({name: "Scene",
      */
     Scene.prototype.addObject = function (newVisualObject) {
         this.objects.push(newVisualObject);
+        newVisualObject.setScene(this);
     };
 
     Scene.prototype.clearObjects = function () {
@@ -2079,7 +2105,7 @@ Application.createModule({name: "Scene",
     Scene.prototype.cleanUp = function () {
         for (var i = 0; i < this.objects.length; i++) {
             this.objects[i].cascadeCleanUp();
-            while ((i < this.objects.length) && ((this.objects[i] === undefined) || (this.objects[i].toBeDeleted))) {
+            while ((i < this.objects.length) && ((!this.objects[i]) || (this.objects[i].toBeDeleted))) {
                 this.objects[i] = null;
                 this.objects.splice(i, 1);
             }

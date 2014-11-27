@@ -109,6 +109,10 @@ Application.createModule({name: "Physics",
                 Mat.inverseOfScaling4(this.scalingMatrix)
                 );
     };
+    
+    PhysicalObject.prototype.addForce = function (force) {
+        this.forces.push(force);
+    };
 
     /**
      * Checks the forces for one with the given ID, if it exists, renews its
