@@ -539,6 +539,13 @@ Application.createModule({name: "Logic",
          * @type VisualObject
          */
         this._shipModel = null;
+        /**
+         * The level of intensity this thuster is currently used with. (0 is off,
+         * 1 is maximum)
+         * @name Thruster#_burnLevel
+         * @type Number
+         */
+        this._burnLevel = 0;
     }
     /**
      * Adds a renderable node representing the particle that is rendered to show
@@ -562,14 +569,29 @@ Application.createModule({name: "Logic",
         this._shipModel = parentNode;
     };
     /**
-     * Sets the burn level of this thruster to the passed value.
+     * Updates the visual representation of this thruster to represent the current
+     * burn level.
+     */
+    Thruster.prototype._updateVisuals = function () {
+        // set the size of the particle that shows the burn
+        this._visualModel.setRelSize(this._burnLevel);
+        // set the strength of which the luminosity texture is lighted
+        this._shipModel.setLuminosityFactor(this._slot.group, Math.min(1.0, 2 * this._burnLevel));
+    };
+    /**
+     * Sets the burn level of this thruster to zero.
+     */
+    Thruster.prototype.resetBurn = function () {
+        this._burnLevel = 0;
+        this._updateVisuals();
+    };
+    /**
+     * Adds the passed value to the current burn level of this thruster.
      * @param {Number} value
      */
-    Thruster.prototype.setBurn = function (value) {
-        // set the size of the particle that shows the burn
-        this._visualModel.setRelSize(value);
-        // set the strength of which the luminosity texture is lighted
-        this._shipModel.setLuminosityFactor(this._slot.group, Math.min(1.0, value * 2));
+    Thruster.prototype.addBurn = function (value) {
+        this._burnLevel += value;
+        this._updateVisuals();
     };
     /**
      * @class Represents the propulsion system equipped to a spacecraft.
@@ -613,12 +635,6 @@ Application.createModule({name: "Logic",
             "rollLeft": {burn: 0, thrusters: []},
             "rollRight": {burn: 0, thrusters: []}
         };
-        /**
-         * A thruster burn can only be set to this or higher level.
-         * @name Propulsion#_minimalBurn
-         * @type Number
-         */
-        this._minimalBurn = 0.001;
     }
     /**
      * Creates and adds thruster objects to all the thruster slots in the passed
@@ -655,17 +671,26 @@ Application.createModule({name: "Logic",
         return this._thrusterUses[use].burn;
     };
     /**
-     * Sets the thruster burn level corresponding to the thrusters of the passed 
+     * Adds to the thruster burn level corresponding to the thrusters of the passed 
      * use command.
-     * @param {String} use The use identifying which thrusters' level to set. e.g.
-     * "forward" or "yawLeft"
-     * @param {Number} value The new thruster burn level.
+     * @param {String} use The use identifying which thrusters' level to increase. 
+     * e.g. "forward" or "yawLeft"
+     * @param {Number} value The amount added to the thruster burn level.
      */
-    Propulsion.prototype.setThrusterBurn = function (use, value) {
-        if ((value === 0) || (value > this._minimalBurn)) {
-            this._thrusterUses[use].burn = value;
+    Propulsion.prototype.addThrusterBurn = function (use, value) {
+        this._thrusterUses[use].burn += value;
+        for (var i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
+            this._thrusterUses[use].thrusters[i].addBurn(value);
+        }
+    };
+    /**
+     * Resets the all the thruster burn levels to zero.
+     */
+    Propulsion.prototype.resetThrusterBurn = function () {
+        for (var use in this._thrusterUses) {
+            this._thrusterUses[use].burn = 0;
             for (var i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
-                this._thrusterUses[use].thrusters[i].setBurn(value);
+                this._thrusterUses[use].thrusters[i].resetBurn();
             }
         }
     };
@@ -678,40 +703,40 @@ Application.createModule({name: "Logic",
         var yawAxis = [this._drivenPhysicalObject.orientationMatrix[8], this._drivenPhysicalObject.orientationMatrix[9], this._drivenPhysicalObject.orientationMatrix[10]];
         var pitchAxis = [this._drivenPhysicalObject.orientationMatrix[0], this._drivenPhysicalObject.orientationMatrix[1], this._drivenPhysicalObject.orientationMatrix[2]];
 
-        if (this._thrusterUses["forward"].burn > this._minimalBurn) {
+        if (this._thrusterUses["forward"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses["forward"].burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["reverse"].burn > this._minimalBurn) {
+        if (this._thrusterUses["reverse"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.thrust * this._thrusterUses["reverse"].burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["slideRight"].burn > this._minimalBurn) {
+        if (this._thrusterUses["slideRight"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("slideRightThrust", 2 * this._class.thrust * this._thrusterUses["slideRight"].burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["slideLeft"].burn > this._minimalBurn) {
+        if (this._thrusterUses["slideLeft"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("slideLeftThrust", -2 * this._class.thrust * this._thrusterUses["slideLeft"].burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["raise"].burn > this._minimalBurn) {
+        if (this._thrusterUses["raise"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.thrust * this._thrusterUses["raise"].burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["lower"].burn > this._minimalBurn) {
+        if (this._thrusterUses["lower"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -2 * this._class.thrust * this._thrusterUses["lower"].burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["yawRight"].burn > this._minimalBurn) {
+        if (this._thrusterUses["yawRight"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", 2 * this._class.angularThrust * this._thrusterUses["yawRight"].burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["yawLeft"].burn > this._minimalBurn) {
+        if (this._thrusterUses["yawLeft"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -2 * this._class.angularThrust * this._thrusterUses["yawLeft"].burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["pitchUp"].burn > this._minimalBurn) {
+        if (this._thrusterUses["pitchUp"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -2 * this._class.angularThrust * this._thrusterUses["pitchUp"].burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["pitchDown"].burn > this._minimalBurn) {
+        if (this._thrusterUses["pitchDown"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", 2 * this._class.angularThrust * this._thrusterUses["pitchDown"].burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["rollRight"].burn > this._minimalBurn) {
+        if (this._thrusterUses["rollRight"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -2 * this._class.angularThrust * this._thrusterUses["rollRight"].burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["rollLeft"].burn > this._minimalBurn) {
+        if (this._thrusterUses["rollLeft"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.angularThrust * this._thrusterUses["rollLeft"].burn, directionVector, timeBurstLength);
         }
     };
@@ -814,8 +839,16 @@ Application.createModule({name: "Logic",
          * @type Number
          */
         this._turningLimit = null;
+        this.updateSpeedIncrementPerSecond();
         this.updateTurningLimit();
     }
+    /**
+     * Updates the speed increment per second to how much the ship can accelerate 
+     * in one second with the current propulsion system.
+     */
+    ManeuveringComputer.prototype.updateSpeedIncrementPerSecond = function () {
+        this._speedIncrementPerSecond = this._spacecraft.getAccelerationPerSecond() || 50;
+    };
     /**
      * Updates the calculated speed increment according to how much time has
      * elapsed since the last control step.
@@ -1279,6 +1312,16 @@ Application.createModule({name: "Logic",
                 Mat.matrix4from3(Mat.matrix3from4(this.physicalModel.rotationMatrixInverse))
                 );
     };
+    
+    /**
+     * 
+     * @returns {Number|null} in m/s^2
+     */
+    Spacecraft.prototype.getAccelerationPerSecond = function() {
+        return this.propulsion ?
+                this.propulsion._class.thrust / this.physicalModel.mass :
+                null;
+    };
 
     /**
      * 
@@ -1286,10 +1329,10 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getAngularAccelerationPerSecond = function () {
         return this.propulsion ?
-                this.propulsion._class.angularThrust / this.physicalModel.mass * 200 * 200 :
+                this.propulsion._class.angularThrust / this.physicalModel.mass :
                 null;
     };
-    
+
     /**
      * 
      * @param {Number} speed in m/s
@@ -1403,6 +1446,7 @@ Application.createModule({name: "Logic",
 
     Spacecraft.prototype.addPropulsion = function (propulsionClass) {
         this.propulsion = new Propulsion(propulsionClass, this.physicalModel);
+        this._maneuveringComputer.updateSpeedIncrementPerSecond();
         this._maneuveringComputer.updateTurningLimit();
     };
 
@@ -1427,29 +1471,12 @@ Application.createModule({name: "Logic",
         }
     };
 
-    Spacecraft.prototype.setThrusterBurn = function (use, value) {
-        this.propulsion.setThrusterBurn(use, value);
-    };
-
     Spacecraft.prototype.resetThrusterBurn = function () {
-        this.setThrusterBurn("forward", 0);
-        this.setThrusterBurn("reverse", 0);
-        this.setThrusterBurn("slideLeft", 0);
-        this.setThrusterBurn("slideRight", 0);
-        this.setThrusterBurn("raise", 0);
-        this.setThrusterBurn("lower", 0);
-        this.setThrusterBurn("yawLeft", 0);
-        this.setThrusterBurn("yawRight", 0);
-        this.setThrusterBurn("pitchUp", 0);
-        this.setThrusterBurn("pitchDown", 0);
-        this.setThrusterBurn("rollLeft", 0);
-        this.setThrusterBurn("rollRight", 0);
+        this.propulsion.resetThrusterBurn();
     };
 
     Spacecraft.prototype.addThrusterBurn = function (use, value) {
-        this.propulsion.setThrusterBurn(
-                use,
-                this.propulsion.getThrusterBurn(use) + value);
+        this.propulsion.addThrusterBurn(use, value);
     };
 
     Spacecraft.prototype.addDirectionalThrusterBurn = function (directionVector, value) {
@@ -1486,7 +1513,7 @@ Application.createModule({name: "Logic",
 
     Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference) {
         // note: the division by 2 in the end is on purpose: 0.5 of thruster burn produces full angular thrust (1.0 is firing both for turning and movement)
-        return angularVelocityDifference * this.physicalModel.mass / this.propulsion._class.angularThrust / 2 / (timeBurstLength / 5);
+        return angularVelocityDifference * this.physicalModel.mass / this.propulsion._class.angularThrust / 2 * 200 / (timeBurstLength / 1000);
     };
 
     Spacecraft.prototype.toggleHitboxVisibility = function () {

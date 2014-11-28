@@ -142,35 +142,35 @@
         <shader name="permanentParticle" />
         <texture filename="textures/flare.png" />
         <color r="0.0" g="0.8" b="1.0" />
-        <power thrust="500000" angularThrust="0.5" />
+        <power thrust="50 * 10" angularThrust="90 * 10" />
     </PropulsionClass>
         
     <PropulsionClass name="bomber">
         <shader name="permanentParticle" />
         <texture filename="textures/flare.png" />
         <color r="0.0" g="0.8" b="1.0" />
-        <power thrust="700000" angularThrust="1.0" />
+        <power thrust="30 * 35" angularThrust="75 * 35" />
     </PropulsionClass>
 	
     <PropulsionClass name="corvette">
         <shader name="permanentParticle" />
         <texture filename="textures/flare.png" />
         <color r="0.0" g="0.8" b="1.0" />
-        <power thrust="12000000" angularThrust="8" />
+        <power thrust="15 * 800" angularThrust="30 * 800" />
     </PropulsionClass>
 	
     <PropulsionClass name="frigate">
         <shader name="permanentParticle" />
         <texture filename="textures/flare.png" />
         <color r="0.0" g="0.8" b="1.0" />
-        <power thrust="33000000" angularThrust="20" />
+        <power thrust="10 * 2200" angularThrust="20 * 2200" />
     </PropulsionClass>
 	
     <PropulsionClass name="cruiser">
         <shader name="permanentParticle" />
         <texture filename="textures/flare.png" />
         <color r="0.0" g="0.8" b="1.0" />
-        <power thrust="250000000" angularThrust="140" />
+        <power thrust="5 * 25000" angularThrust="10 * 25000" />
     </PropulsionClass>
         
     <SpacecraftType name="interceptor">

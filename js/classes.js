@@ -66,6 +66,22 @@ Application.createModule({name: "Classes",
     }
 
     /**
+     * Evaluates mathematically the string representation of a simple expression 
+     * containing only multiplication operators and floating point numbers (and
+     * possibly space characters), and returns the result.
+     * @param {String} productExpression
+     * @returns {Number}
+     */
+    function evaluateProduct(productExpression) {
+        var operands = productExpression.split("*");
+        var result = 1;
+        for (var i=0; i<operands.length;i++) {
+            result *= parseFloat(operands[i]);
+        }
+        return result;
+    }
+
+    /**
      * Creates a skybox class and loads its properties from the passed XML tag, if any.
      * @class A skybox represents the background picture rendered for the 
      * environment using a cubemap sampler and a full viewport quad. Skybox classes 
@@ -624,7 +640,8 @@ Application.createModule({name: "Classes",
         this.thrust = null;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
-         * used to turn it.
+         * used to turn it, in kg*rad/s^2 (mass is considered instead of a
+         * calculated coefficient based on shape, for simplicity)
          * @name PropulsionClass#angularThrust
          * @type Number
          */
@@ -644,8 +661,10 @@ Application.createModule({name: "Classes",
     PropulsionClass.prototype.loadFromXMLTag = function (xmlTag) {
         this.name = xmlTag.getAttribute("name");
         this.thrusterBurnParticle = new ParticleDescriptor(xmlTag);
-        this.thrust = parseFloat(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust"));
-        this.angularThrust = parseFloat(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust"));
+        // convert from kilonewtons (ton*m/s^2) to newtons
+        this.thrust = evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust")) * 1000;
+        // convert the given, ton*degrees/s^2 value to kg*rad/s^2
+        this.angularThrust = evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust")) / 180 * Math.PI * 1000;
         Object.freeze(this);
     };
 

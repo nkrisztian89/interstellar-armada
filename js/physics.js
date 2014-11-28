@@ -266,16 +266,15 @@ Application.createModule({name: "Physics",
                 if (this.torques[i].duration > 0.1) {
                     // in reality, the shape of the object should be taken into account,
                     // for simplicity, the mass is taken as the only coefficient
+                    // this is in rad/s^2
                     a = this.torques[i].strength / this.mass;
                     t = Math.min(dt, this.torques[i].duration) / 1000; // t is in seconds
                     this.orientationMatrix = Mat.mul4(this.orientationMatrix, Mat.rotation4(this.torques[i].axis, 1 / 2 * a * t * t));
                     // calculate the acceleration caused to update the ang. acc. matrix
+                    // divide by 200 to convert rad/sec to rad/5ms
                     angularAccMatrix = Mat.mul4(
                             angularAccMatrix,
-                            Mat.rotation4(this.torques[i].axis, a * t * 200));
-                    // multiplied by 200 since we need the amount or rotation
-                    // caused per 5 ms, not per 1 s represented in the 
-                    // matrix (see above)
+                            Mat.rotation4(this.torques[i].axis, a * t / 200));
                     // register that the torque's effect has been considered for dt ms
                     this.torques[i].duration = Math.max(this.torques[i].duration - dt, 0.0);
                 }
