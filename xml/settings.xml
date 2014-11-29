@@ -39,8 +39,10 @@
                 <action name="fire" continuous="true" description="Fire primary weapons." />
                 <action name="forward" continuous="true" description="Forward thrust (free mode) or increase speed." />
                 <action name="reverse" continuous="true" description="Reverse thrust (free mode) or decrease speed." />
-                <action name="slideLeft" continuous="true" description="Strafe left." />
-                <action name="slideRight" continuous="true" description="Strafe right" />
+                <action name="strafeLeft" continuous="true" description="Strafe left." />
+                <action name="strafeRight" continuous="true" description="Strafe right." />
+                <action name="raise" continuous="true" description="Strafe upwards." />
+                <action name="lower" continuous="true" description="Strafe downwards." />
                 <action name="resetSpeed" description="Reset speed to zero (compensated mode)." />
                 <action name="yawLeft" continuous="true" description="Turn to the left." />
                 <action name="yawRight" continuous="true" description="Turn to the right." />
@@ -70,12 +72,14 @@
         <input>
             <inputDevice type="keyboard">
                 <binding action="fire" key="space" />
-                <binding action="changeFlightMode" key="o" />
+                <binding action="changeFlightMode" key="tab" />
                 <binding action="forward" key="w" />
                 <binding action="reverse" key="s" />
-                <binding action="slideLeft" key="a" />
-                <binding action="slideRight" key="d" />
-                <binding action="resetSpeed" key="backspace" />
+                <binding action="strafeLeft" key="a" />
+                <binding action="strafeRight" key="d" />
+                <binding action="raise" key="r" />
+                <binding action="lower" key="f" />
+                <binding action="resetSpeed" key="0" />
                 <binding action="yawLeft" key="left" />
                 <binding action="yawRight" key="right" />
                 <binding action="pitchDown" key="up" />

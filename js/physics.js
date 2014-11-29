@@ -109,7 +109,7 @@ Application.createModule({name: "Physics",
                 Mat.inverseOfScaling4(this.scalingMatrix)
                 );
     };
-    
+
     PhysicalObject.prototype.addForce = function (force) {
         this.forces.push(force);
     };

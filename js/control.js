@@ -366,6 +366,16 @@ Application.createModule({name: "Control",
     };
 
     /**
+     * Returns whether the default browser actions for the key of the passed code
+     * should be enabled while this interpreter is active.
+     * @param {Number} keyCode
+     * @returns {Boolean}
+     */
+    KeyboardInputInterpreter.prototype.defaultActionEnabledForKey = function (keyCode) {
+        return ["f5", "f11", 'escape'].indexOf(this.getKeyOfCode(keyCode)) >= 0;
+    };
+
+    /**
      * If there is no key bound yet to the action associated with the passed key
      * binding, adds the binding. If there already is a binding, overwrites it with
      * the passed binding, as there can be no two key combinations be bound to the
@@ -453,6 +463,10 @@ Application.createModule({name: "Control",
      */
     KeyboardInputInterpreter.prototype.handleKeyDown = function (event) {
         this._currentlyPressedKeys[event.keyCode] = true;
+        if (!this.defaultActionEnabledForKey(event.keyCode)) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
     };
 
     /**
@@ -462,6 +476,10 @@ Application.createModule({name: "Control",
      */
     KeyboardInputInterpreter.prototype.handleKeyUp = function (event) {
         this._currentlyPressedKeys[event.keyCode] = false;
+        if (!this.defaultActionEnabledForKey(event.keyCode)) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
     };
 
     /**
@@ -477,6 +495,12 @@ Application.createModule({name: "Control",
         };
         document.onkeyup = function (e) {
             self.handleKeyUp(e);
+        };
+        document.onkeypress = function (e) {
+            if (!self.defaultActionEnabledForKey(e.keyCode)) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
         };
         this._listening = true;
     };
@@ -1499,15 +1523,26 @@ Application.createModule({name: "Control",
             self._controlledSpacecraft.stopReverse();
         });
         // strafing to left and right
-        this.setActionFunctions("slideLeft", function (i) {
-            self._controlledSpacecraft.slideLeft(i);
+        this.setActionFunctions("strafeLeft", function (i) {
+            self._controlledSpacecraft.strafeLeft(i);
         }, function () {
-            self._controlledSpacecraft.stopLeftSlide();
+            self._controlledSpacecraft.stopLeftStrafe();
         });
-        this.setActionFunctions("slideRight", function (i) {
-            self._controlledSpacecraft.slideRight(i);
+        this.setActionFunctions("strafeRight", function (i) {
+            self._controlledSpacecraft.strafeRight(i);
         }, function () {
-            self._controlledSpacecraft.stopRightSlide();
+            self._controlledSpacecraft.stopRightStrafe();
+        });
+        // strafing up and down
+        this.setActionFunctions("raise", function (i) {
+            self._controlledSpacecraft.raise(i);
+        }, function () {
+            self._controlledSpacecraft.stopRaise();
+        });
+        this.setActionFunctions("lower", function (i) {
+            self._controlledSpacecraft.lower(i);
+        }, function () {
+            self._controlledSpacecraft.stopLower();
         });
         // resetting speed to 0
         this.setActionFunction("resetSpeed", true, function () {
@@ -2049,8 +2084,8 @@ Application.createModule({name: "Control",
      */
     ControlContext.prototype.switchToPilotMode = function (pilotedSpacecraft) {
         this._fighterController.setControlledSpacecraft(pilotedSpacecraft);
-        pilotedSpacecraft.resetViews();
-        this._cameraController.setCameraToFollowObject(pilotedSpacecraft.visualModel);
+        pilotedSpacecraft.resetViewCameras();
+        this._cameraController.setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         this.disableAction("cameraMoveLeft");
@@ -2063,7 +2098,7 @@ Application.createModule({name: "Control",
         this.disableAction("cameraTurnRight");
         this.disableAction("cameraTurnUp");
         this.disableAction("cameraTurnDown");
-        Armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.class.fullName + " " + pilotedSpacecraft.class.spacecraftType.fullName);
+        Armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
         Armada.getScreen().showCrosshair();
         Armada.getScreen().showUI();
         document.body.style.cursor = 'crosshair';

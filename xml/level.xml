@@ -24,25 +24,25 @@
         </orientation>
     </Camera>
 	
-    <Spacecraft class="falcon" owner="human" piloted="true">
+    <Spacecraft class="falcon" piloted="true">
         <position x="0.0" y="0.0" z="-60.0" />
         <equipment profile="full" />
     </Spacecraft>
 	
-    <Spacecraft class="falcon" owner="human">
+    <Spacecraft class="falcon">
         <position x="-7.5" y="20" z="-160" />
     </Spacecraft>
 	
-    <Spacecraft class="falcon" owner="human">
+    <Spacecraft class="falcon">
         <position x="-1050" y="-150" z="-300" />
     </Spacecraft>
 	
-    <Spacecraft class="viper" owner="human">
+    <Spacecraft class="viper">
         <position x="50" y="-30" z="-170" />
         <equipment profile="full" />
     </Spacecraft>
 	
-    <Spacecraft class="viper" owner="human">
+    <Spacecraft class="viper">
         <position x="50" y="50" z="-160" />
         <equipment>
             <weapons>
@@ -52,15 +52,15 @@
         </equipment>
     </Spacecraft>
 	
-    <Spacecraft class="viper" owner="human">
+    <Spacecraft class="viper">
         <position x="50" y="50" z="-1160" />
     </Spacecraft>
 	
-    <Spacecraft class="aries" owner="human">
+    <Spacecraft class="aries">
         <position x="-60" y="-50" z="-280" />
     </Spacecraft>
 	
-    <Spacecraft class="taurus" owner="human">
+    <Spacecraft class="taurus">
         <position x="200" y="-80" z="-350" />
         <orientation>
             <turn axis="z" degree="90" />
@@ -68,7 +68,7 @@
         <equipment profile="full" />
     </Spacecraft>
 	
-    <Spacecraft class="libra" owner="human">
+    <Spacecraft class="libra">
         <position x="-100" y="400" z="-400" />
         <orientation>
             <turn axis="z" degree="90" />

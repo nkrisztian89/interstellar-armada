@@ -732,7 +732,7 @@ Application.createModule({name: "Classes",
         /**
          * The list of uses this thruster has. Possible uses are: 
          * (direction:) 
-         * forward,reverse,slideLeft,slideRight,raise,lower;
+         * forward,reverse,strafeLeft,strafeRight,raise,lower;
          * (turn:)
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
          * @name ThrusterSlot#uses

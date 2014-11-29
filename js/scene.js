@@ -117,7 +117,7 @@ Application.createModule({name: "Scene",
         this._firstView = firstView;
     };
 
-    VisualObject.prototype.resetViews = function () {
+    VisualObject.prototype.resetViewCameras = function () {
         for (
                 var view = this._firstView;
                 view !== null;

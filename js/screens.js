@@ -743,7 +743,7 @@ Application.createModule({name: "Screens",
 
         this._level.onLoad = function () {
             self.updateStatus("loading additional configuration...", 5);
-            self._level.addRandomShips("human", {falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
+            self._level.addRandomShips({falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
 
             self.updateStatus("building scene...", 10);
             var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();

@@ -299,7 +299,7 @@ Application.createModule({name: "Logic",
                 positionMatrix,
                 orientationMatrix,
                 Mat.scaling4(projectileClass.size),
-                spacecraft.physicalModel.velocityMatrix,
+                spacecraft.getVelocityMatrix(),
                 []);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
@@ -357,7 +357,7 @@ Application.createModule({name: "Logic",
     /**
      * Simulates the movement of the projectile and checks if it hit any objects.
      * @param {Number} dt The passed time since the last simulation in milliseconds.
-     * @param {PhysicalObject[]} hitObjects The list of object that is possible for
+     * @param {PhysicalObject[]} hitObjects The list of objects that is possible for
      * the projectile to hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjects) {
@@ -370,7 +370,7 @@ Application.createModule({name: "Logic",
             this._visualModel.orientationMatrix = this._physicalModel.orientationMatrix;
             var positionVector = Mat.translationVector4(this._physicalModel.positionMatrix);
             for (var i = 0; i < hitObjects.length; i++) {
-                if ((hitObjects[i] !== this._origin) && (hitObjects[i].physicalModel.checkHit(positionVector, [], 0))) {
+                if ((hitObjects[i] !== this._origin) && (hitObjects[i].checkHit(positionVector, [], 0))) {
                     this.destroy();
                 }
             }
@@ -624,8 +624,8 @@ Application.createModule({name: "Logic",
         this._thrusterUses = {
             "forward": {burn: 0, thrusters: []},
             "reverse": {burn: 0, thrusters: []},
-            "slideLeft": {burn: 0, thrusters: []},
-            "slideRight": {burn: 0, thrusters: []},
+            "strafeLeft": {burn: 0, thrusters: []},
+            "strafeRight": {burn: 0, thrusters: []},
             "raise": {burn: 0, thrusters: []},
             "lower": {burn: 0, thrusters: []},
             "yawLeft": {burn: 0, thrusters: []},
@@ -636,6 +636,21 @@ Application.createModule({name: "Logic",
             "rollRight": {burn: 0, thrusters: []}
         };
     }
+    /**
+     * Returns the thrust power of this propulsion system, in newtowns.
+     * @returns {Number}
+     */
+    Propulsion.prototype.getThrust = function () {
+        return this._class.thrust;
+    };
+    /**
+     * Returns the angular thrust power of this propulsion system, measured in
+     * kg*rad/s^2.
+     * @returns {Number}
+     */
+    Propulsion.prototype.getAngularThrust = function () {
+        return this._class.angularThrust;
+    };
     /**
      * Creates and adds thruster objects to all the thruster slots in the passed
      * array
@@ -709,11 +724,11 @@ Application.createModule({name: "Logic",
         if (this._thrusterUses["reverse"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.thrust * this._thrusterUses["reverse"].burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["slideRight"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("slideRightThrust", 2 * this._class.thrust * this._thrusterUses["slideRight"].burn, pitchAxis, timeBurstLength);
+        if (this._thrusterUses["strafeRight"].burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", 2 * this._class.thrust * this._thrusterUses["strafeRight"].burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["slideLeft"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("slideLeftThrust", -2 * this._class.thrust * this._thrusterUses["slideLeft"].burn, pitchAxis, timeBurstLength);
+        if (this._thrusterUses["strafeLeft"].burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -2 * this._class.thrust * this._thrusterUses["strafeLeft"].burn, pitchAxis, timeBurstLength);
         }
         if (this._thrusterUses["raise"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.thrust * this._thrusterUses["raise"].burn, yawAxis, timeBurstLength);
@@ -847,7 +862,7 @@ Application.createModule({name: "Logic",
      * in one second with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateSpeedIncrementPerSecond = function () {
-        this._speedIncrementPerSecond = this._spacecraft.getAccelerationPerSecond() || 50;
+        this._speedIncrementPerSecond = this._spacecraft.getMaxAcceleration() || 50;
     };
     /**
      * Updates the calculated speed increment according to how much time has
@@ -862,7 +877,7 @@ Application.createModule({name: "Logic",
      * turning to in one second with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateTurningLimit = function () {
-        this._turningLimit = this._spacecraft.getAngularAccelerationPerSecond() / 200;
+        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() / 200;
     };
     /**
      * Returns a string representation of the current flight mode.
@@ -879,7 +894,7 @@ Application.createModule({name: "Logic",
     ManeuveringComputer.prototype.changeFlightMode = function () {
         if (!this._compensated) {
             this._compensated = true;
-            this._speedTarget = Mat.translationLength(this._spacecraft.physicalModel.velocityMatrix);
+            this._speedTarget = Mat.translationLength(this._spacecraft.getVelocityMatrix());
         } else if (!this._restricted) {
             this._restricted = true;
         } else {
@@ -933,7 +948,7 @@ Application.createModule({name: "Logic",
      * the thrusters have been ignited accoringly.
      * @param {Number} [intensity]
      */
-    ManeuveringComputer.prototype.slideLeft = function (intensity) {
+    ManeuveringComputer.prototype.strafeLeft = function (intensity) {
         intensity ?
                 this._strafeTarget = -intensity :
                 this._strafeTarget = -Number.MAX_VALUE;
@@ -942,7 +957,7 @@ Application.createModule({name: "Logic",
      * Sets the target speed for strafing to zero, if was set to a speed to the
      * left.
      */
-    ManeuveringComputer.prototype.stopLeftSlide = function () {
+    ManeuveringComputer.prototype.stopLeftStrafe = function () {
         (this._strafeTarget < 0) && (this._strafeTarget = 0);
     };
     /**
@@ -951,7 +966,7 @@ Application.createModule({name: "Logic",
      * the thrusters have been ignited accoringly.
      * @param {Number} [intensity]
      */
-    ManeuveringComputer.prototype.slideRight = function (intensity) {
+    ManeuveringComputer.prototype.strafeRight = function (intensity) {
         intensity ?
                 this._strafeTarget = intensity :
                 this._strafeTarget = Number.MAX_VALUE;
@@ -960,8 +975,44 @@ Application.createModule({name: "Logic",
      * Sets the target speed for strafing to zero, if was set to a speed to the
      * right.
      */
-    ManeuveringComputer.prototype.stopRightSlide = function () {
+    ManeuveringComputer.prototype.stopRightStrafe = function () {
         (this._strafeTarget > 0) && (this._strafeTarget = 0);
+    };
+    /**
+     * Sets the target speed for lifting downwards to intensity, or if not
+     * given, to maximum. This target is reset to zero in each control step after 
+     * the thrusters have been ignited accoringly.
+     * @param {Number} [intensity]
+     */
+    ManeuveringComputer.prototype.lower = function (intensity) {
+        intensity ?
+                this._liftTarget = -intensity :
+                this._liftTarget = -Number.MAX_VALUE;
+    };
+    /**
+     * Sets the target speed for lifting to zero, if was set to a speed to lift
+     * downwards
+     */
+    ManeuveringComputer.prototype.stopLower = function () {
+        (this._liftTarget < 0) && (this._liftTarget = 0);
+    };
+    /**
+     * Sets the target speed for lifting upwards to intensity, or if not
+     * given, to maximum. This target is reset to zero in each control step after 
+     * the thrusters have been ignited accoringly.
+     * @param {Number} [intensity]
+     */
+    ManeuveringComputer.prototype.raise = function (intensity) {
+        intensity ?
+                this._liftTarget = intensity :
+                this._liftTarget = Number.MAX_VALUE;
+    };
+    /**
+     * Sets the target speed for strafing to zero, if was set to a speed to lift
+     * upwards.
+     */
+    ManeuveringComputer.prototype.stopRaise = function () {
+        (this._liftTarget > 0) && (this._liftTarget = 0);
     };
     /**
      * Resets the target (forward/reverse) speed to zero. (except in free flight 
@@ -1133,10 +1184,10 @@ Application.createModule({name: "Logic",
         if (this._compensated || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
-                this._spacecraft.addThrusterBurn("slideRight",
+                this._spacecraft.addThrusterBurn("strafeRight",
                         Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
             } else if ((this._strafeTarget - speed) < -speedThreshold) {
-                this._spacecraft.addThrusterBurn("slideLeft",
+                this._spacecraft.addThrusterBurn("strafeLeft",
                         Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
             }
         }
@@ -1160,209 +1211,429 @@ Application.createModule({name: "Logic",
         this._strafeTarget = 0;
         this._liftTarget = 0;
     };
-
     /**
-     * Creates and initializes a Spacecraft object. Loads all necessary models into
-     * the resource center of graphicsContext, taking into account the maximum
-     * enabled LOD defined in the scene of graphicsContext.
      * @class Represents a specific spacecraft (fighter, warship, freighter, space
      * station etc.) in the game.
-     * @param {SpacecraftClass} spacecraftClass
-     * @param {String} owner
-     * @param {Float32Array} positionMatrix
-     * @param {Float32Array} orientationMatrix
-     * @param {Projectile[]} [projectileArray=null]
-     * @param {String} [equipmentProfileName]
+     * @param {SpacecraftClass} spacecraftClass The class of the spacecraft that
+     * describes its general properties.
+     * @param {Float32Array} positionMatrix The translation matrix describing
+     * the initial position of the spacecraft.
+     * @param {Float32Array} orientationMatrix The rotation matrix describing
+     * the initial orientation of the spacecraft.
+     * @param {Projectile[]} [projectileArray=null] The array to which the
+     * spacecraft will add its fired projectiles.
+     * @param {String} [equipmentProfileName] The name of the equipment profile
+     * to use to equip the spacecraft. If not given, the spacecraft will not be
+     * equipped.
      * @returns {Spacecraft}
      */
-    function Spacecraft(spacecraftClass, owner, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
-        this.class = spacecraftClass;
-        this.owner = owner;
-
+    function Spacecraft(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
         /**
-         * @name Spacecraft#visualModel
-         * @type VisualObject
+         * The class of this spacecraft that describes its general properties.
+         * @name Spacecraft#_class
+         * @type SpacecraftClass
          */
-        this.visualModel = null;
-        this._scene = null;
+        this._class = spacecraftClass;
         /**
-         * @name Spacecraft#physicalModel
+         * The renderable node that represents this spacecraft in a scene.
+         * @name Spacecraft#_visualModel
+         * @type ShipMesh
+         */
+        this._visualModel = null;
+        /**
+         * The object representing the physical properties of this spacecraft.
+         * Used to calculate the movement and rotation of the craft as well as
+         * check for collisions and hits.
+         * @name Spacecraft#_physicalModel
          * @type PhysicalObject
          */
-        this.physicalModel = new Physics.PhysicalObject(
-                this.class.mass,
+        this._physicalModel = new Physics.PhysicalObject(
+                this._class.mass,
                 positionMatrix,
                 orientationMatrix,
-                Mat.scaling4(this.class.modelSize),
+                Mat.scaling4(this._class.modelSize),
                 Mat.identity4(),
-                this.class.bodies);
-
-        this.weapons = new Array();
-
-        this.propulsion = null;
-
+                this._class.bodies);
+        /**
+         * The list of weapons this spacecraft is equipped with.
+         * @name Spacecraft#_weapons
+         * @type Weapon[]
+         */
+        this._weapons = new Array();
+        /**
+         * The propulsion system this spacecraft is equipped with.
+         * @name Spacecraft#_propulsion
+         * @type Propulsion
+         */
+        this._propulsion = null;
+        /**
+         * The maneuvering computer of this spacecraft that translates high
+         * level maneuvering commands issued to this craft into thruster control.
+         * @name Spacecraft#_maneuveringComputer
+         * @type ManeuveringComputer
+         */
         this._maneuveringComputer = new ManeuveringComputer(this);
-
-        if (equipmentProfileName !== undefined) {
-            this.equipProfile(this.class.equipmentProfiles[equipmentProfileName]);
-        }
-
+        /**
+         * The renderable object that is used as the parent for the visual
+         * representation of the hitboxes of this craft.
+         * @name Spacecraft#_hitbox
+         * @type VisualObject
+         */
         this._hitbox = null;
-        this._projectileArray = null;
-        if (projectileArray !== undefined) {
-            this._projectileArray = projectileArray;
+        /**
+         * The array to which the spacecraft will add its fired projectiles.
+         * @name Spacecraft#_projectileArray
+         * @type Projectile[]
+         */
+        this._projectileArray = projectileArray || null;
+        // equipping the craft if a profile name was given
+        if (equipmentProfileName !== undefined) {
+            this.equipProfile(this._class.equipmentProfiles[equipmentProfileName]);
         }
-
-        this.toBeDeleted = false;
     }
-
+    /**
+     * Returns the object describing class of this spacecraft.
+     * @returns {SpacecraftClass}
+     */
+    Spacecraft.prototype.getClass = function () {
+        return this._class;
+    };
+    /**
+     * Returns the name of the class of this spacecraft. (e.g. Falcon or Aries)
+     * @returns {String}
+     */
+    Spacecraft.prototype.getClassName = function () {
+        return this._class.fullName;
+    };
+    /**
+     * Returns the name of the type of this spacecraft. (e.g. Interceptor or
+     * Corvette)
+     * @returns {String}
+     */
+    Spacecraft.prototype.getTypeName = function () {
+        return this._class.spacecraftType.fullName;
+    };
+    /**
+     * Returns the renderable object that represents this spacecraft in a scene.
+     * @returns {VisualObject}
+     */
+    Spacecraft.prototype.getVisualModel = function () {
+        return this._visualModel;
+    };
+    /**
+     * Returns the object used for the physics simulation of this spacecraft.
+     * @returns {PhysicalObject}
+     */
+    Spacecraft.prototype.getPhysicalModel = function () {
+        return this._physicalModel;
+    };
+    /**
+     * Returns whether this spacecraft object can be reused to represent a new
+     * spacecraft.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.canBeReused = function () {
+        return false;
+    };
+    /**
+     * Returns a string representation of the current flight mode set for this
+     * craft. (free / compensated / restricted)
+     * @returns {String}
+     */
     Spacecraft.prototype.getFlightMode = function () {
         return this._maneuveringComputer.getFlightMode();
     };
-
+    /**
+     * Switches to the next available flight mode.
+     */
     Spacecraft.prototype.changeFlightMode = function () {
         this._maneuveringComputer.changeFlightMode();
     };
-
+    /**
+     * Control command for forward thrust for the maneuvering computer.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.forward = function (intensity) {
         this._maneuveringComputer.forward(intensity);
     };
-
+    /**
+     * Control command for stopping forward thrust for the maneuvering computer.
+     */
     Spacecraft.prototype.stopForward = function () {
         this._maneuveringComputer.stopForward();
     };
-
+    /**
+     * Control command for reverse thrust for the maneuvering computer.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.reverse = function (intensity) {
         this._maneuveringComputer.reverse(intensity);
     };
-
+    /**
+     * Control command for stopping reverse thrust for the maneuvering computer.
+     */
     Spacecraft.prototype.stopReverse = function () {
         this._maneuveringComputer.stopReverse();
     };
-
-    Spacecraft.prototype.slideLeft = function (intensity) {
-        this._maneuveringComputer.slideLeft(intensity);
+    /**
+     * Control command for strafing to the left for the maneuvering computer.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
+    Spacecraft.prototype.strafeLeft = function (intensity) {
+        this._maneuveringComputer.strafeLeft(intensity);
     };
-
-    Spacecraft.prototype.stopLeftSlide = function () {
-        this._maneuveringComputer.stopLeftSlide();
+    /**
+     * Control command for stopping strafing to the left for the maneuvering computer.
+     */
+    Spacecraft.prototype.stopLeftStrafe = function () {
+        this._maneuveringComputer.stopLeftStrafe();
     };
-
-    Spacecraft.prototype.slideRight = function (intensity) {
-        this._maneuveringComputer.slideRight(intensity);
+    /**
+     * Control command for strafing to the right for the maneuvering computer.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
+    Spacecraft.prototype.strafeRight = function (intensity) {
+        this._maneuveringComputer.strafeRight(intensity);
     };
-
-    Spacecraft.prototype.stopRightSlide = function () {
-        this._maneuveringComputer.stopRightSlide();
+    /**
+     * Control command for stopping strafing to the right for the maneuvering computer.
+     */
+    Spacecraft.prototype.stopRightStrafe = function () {
+        this._maneuveringComputer.stopRightStrafe();
     };
-
+    /**
+     * Control command for lifting upwards for the maneuvering computer.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
+    Spacecraft.prototype.raise = function (intensity) {
+        this._maneuveringComputer.raise(intensity);
+    };
+    /**
+     * Control command for stopping lifting upwards for the maneuvering computer.
+     */
+    Spacecraft.prototype.stopRaise = function () {
+        this._maneuveringComputer.stopRaise();
+    };
+    /**
+     * Control command for lifting downwards for the maneuvering computer.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
+    Spacecraft.prototype.lower = function (intensity) {
+        this._maneuveringComputer.lower(intensity);
+    };
+    /**
+     * Control command for stopping lifting downwards for the maneuvering computer.
+     */
+    Spacecraft.prototype.stopLower = function () {
+        this._maneuveringComputer.stopLower();
+    };
+    /**
+     * Control command for the maneuvering computer to reset the target speed to
+     * zero.
+     */
     Spacecraft.prototype.resetSpeed = function () {
         this._maneuveringComputer.resetSpeed();
     };
-
+    /**
+     * Control command for the maneuvering computer to yaw to the left.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.yawLeft = function (intensity) {
         this._maneuveringComputer.yawLeft(intensity);
     };
-
+    /**
+     * Control command for the maneuvering computer to yaw to the right.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.yawRight = function (intensity) {
         this._maneuveringComputer.yawRight(intensity);
     };
-
+    /**
+     * Control command for the maneuvering computer to pitch upwards.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.pitchUp = function (intensity) {
         this._maneuveringComputer.pitchUp(intensity);
     };
-
+    /**
+     * Control command for the maneuvering computer to pitch downwards.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.pitchDown = function (intensity) {
         this._maneuveringComputer.pitchDown(intensity);
     };
-
+    /**
+     * Control command for the maneuvering computer to roll to the left.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.rollLeft = function (intensity) {
         this._maneuveringComputer.rollLeft(intensity);
     };
-
+    /**
+     * Control command for the maneuvering computer to roll to the right.
+     * @param {Number} [intensity] Optional intensity for the command, if the
+     * player uses an input device that has intensity control (e.g. mouse, joystick)
+     */
     Spacecraft.prototype.rollRight = function (intensity) {
         this._maneuveringComputer.rollRight(intensity);
     };
-
+    /**
+     * Returns the 4x4 translation matrix describing the position of this 
+     * spacecraft in world space.
+     * @returns {Float32Array}
+     */
     Spacecraft.prototype.getPositionMatrix = function () {
-        return this.physicalModel.positionMatrix;
+        return this._physicalModel.positionMatrix;
     };
-
+    /**
+     * Returns the 4x4 rotation matrix describing the orientation of this 
+     * spacecraft in world space.
+     * @returns {Float32Array}
+     */
     Spacecraft.prototype.getOrientationMatrix = function () {
-        return this.physicalModel.orientationMatrix;
+        return this._physicalModel.orientationMatrix;
     };
-
+    /**
+     * Returns the 4x4 scaling matrix describing the scaling of the meshes and
+     * physical model representing this spacecraft in world space.
+     * @returns {Float32Array}
+     */
     Spacecraft.prototype.getScalingMatrix = function () {
-        return this.physicalModel.scalingMatrix;
+        return this._physicalModel.scalingMatrix;
     };
-
+    /**
+     * Returns the 4x4 translation matrix describing the current velocity of this
+     * spacecraft in world space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getVelocityMatrix = function () {
+        return this._physicalModel.velocityMatrix;
+    };
+    /**
+     * Returns the 4x4 translation matrix describing the current velocity of this
+     * spacecraft in relative (model) space.
+     * @returns {Float32Array}
+     */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
         return Mat.mul4(
-                this.physicalModel.velocityMatrix,
-                Mat.matrix4from3(Mat.matrix3from4(this.physicalModel.rotationMatrixInverse))
+                this._physicalModel.velocityMatrix,
+                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse))
                 );
     };
-
+    /**
+     * Returns the 4x4 rotation matrix describing the current rotation of this
+     * spacecraft in relative (model) space.
+     * @returns {Float32Array}
+     */
     Spacecraft.prototype.getTurningMatrix = function () {
         return Mat.mul4(
                 Mat.mul4(
-                        this.physicalModel.orientationMatrix,
-                        this.physicalModel.angularVelocityMatrix
-                        ),
-                Mat.matrix4from3(Mat.matrix3from4(this.physicalModel.rotationMatrixInverse))
-                );
+                        this._physicalModel.orientationMatrix,
+                        this._physicalModel.angularVelocityMatrix),
+                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse)));
     };
-    
     /**
-     * 
-     * @returns {Number|null} in m/s^2
+     * Returns the maximum acceleration the spacecraft can achieve using its
+     * currently equipped propulsion system.
+     * @returns {Number|null} The acceleration, in m/s^2. Null, if no propulsion
+     * is equipped.
      */
-    Spacecraft.prototype.getAccelerationPerSecond = function() {
-        return this.propulsion ?
-                this.propulsion._class.thrust / this.physicalModel.mass :
+    Spacecraft.prototype.getMaxAcceleration = function () {
+        return this._propulsion ?
+                this._propulsion.getThrust() / this._physicalModel.mass :
                 null;
     };
-
     /**
-     * 
-     * @returns {Number|null} in rad/sec^2
+     * Returns the maximum angular acceleration the spacecraft can achieve using
+     * its currently equipped propulsion system.
+     * @returns {Number|null} The angular acceleration, in rad/s^2. Null, if
+     * no propulsion is equipped.
      */
-    Spacecraft.prototype.getAngularAccelerationPerSecond = function () {
-        return this.propulsion ?
-                this.propulsion._class.angularThrust / this.physicalModel.mass :
+    Spacecraft.prototype.getMaxAngularAcceleration = function () {
+        return this._propulsion ?
+                this._propulsion.getAngularThrust() / this._physicalModel.mass :
                 null;
     };
-
     /**
-     * 
-     * @param {Number} speed in m/s
-     * @returns {Number} in rad/sec
+     * Returns the maximum turning rate the spacecraft can keep at the passed
+     * speed while providing the needed centripetal force with its thrusters
+     * to keep itself on a circular path.
+     * @param {Number} speed The speed in m/s.
+     * @returns {Number} Thre turning rate in rad/s.
      */
     Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
-        return Math.abs(this.propulsion._class.thrust / (this.physicalModel.mass * speed));
+        return Math.abs(this._propulsion.getThrust() / (this._physicalModel.mass * speed));
     };
-
-    Spacecraft.prototype.getClass = function () {
-        return this.class;
-    };
-
+    /**
+     * Returns an associative array containing the texture resources that this
+     * spacecraft uses for rendering, organized by the texture roles (types),
+     * e.g. "specular".
+     * @returns {Object}
+     */
     Spacecraft.prototype.getTextures = function () {
         var result = new Object();
-        for (var textureType in this.class.textureDescriptors) {
-            result[textureType] = Armada.resources().getOrAddTextureFromDescriptor(this.class.textureDescriptors[textureType]);
+        for (var textureType in this._class.textureDescriptors) {
+            result[textureType] = Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptors[textureType]);
         }
         return result;
     };
-
     /**
-     * 
-     * @param {Scene} scene
-     * @param {Number} [lod]
-     * @param {Boolean} [addHitboxes=true]
-     * @param {Boolean} [addWeapons=true]
-     * @param {Boolean} [addThrusterParticles=true]
-     * @param {Boolean} [wireframe=false]
-     * @returns {ShipMesh}
+     * Adds a renderable object that represents the index'th body of the physical
+     * model of this spacecraft.
+     * @param {Number} index The index of the body to represent.
+     */
+    Spacecraft.prototype._addHitboxModel = function (index) {
+        var phyModelWithLOD = new Scene.ModelWithLOD(
+                Armada.resources().getOrAddModelByName(
+                Egom.cuboidModel(
+                        this._class.name + "-body" + index,
+                        this._class.bodies[index].width,
+                        this._class.bodies[index].height,
+                        this._class.bodies[index].depth,
+                        [0.0, 1.0, 1.0, 0.5])),
+                0);
+        var hitZoneMesh = new Scene.Mesh(
+                [phyModelWithLOD],
+                Armada.resources().getShader(this._class.shaderName),
+                {
+                    color: Armada.resources().getOrAddTexture("textures/white.png"),
+                    specular: Armada.resources().getOrAddTexture("textures/white.png"),
+                    luminosity: Armada.resources().getOrAddTexture("textures/white.png")
+                },
+        Mat.translation4v(Mat.translationVector3(this._class.bodies[index].positionMatrix)),
+                this._class.bodies[index].orientationMatrix,
+                Mat.identity4(),
+                false);
+        this._hitbox.addSubnode(hitZoneMesh);
+    };
+    /**
+     * Creates and adds the renderable objects to represent this spacecraft to
+     * the passed scene.
+     * @param {Scene} scene The scene to which the objects will be added.
+     * @param {Number} [lod] The level of detail to use for adding the models.
+     * If not given, all available LODs will be added for dynamic LOD rendering.
+     * @param {Boolean} [addHitboxes=true] Whether to add boxes to represent the
+     * hitboxes corresponding to this spacecraft. (not set to visible by default)
+     * @param {Boolean} [addWeapons=true] Whether to add the models of the weapons
+     * equipped on the spacecraft.
+     * @param {Boolean} [addThrusterParticles=true] Whether to add the particles
+     * representing the glow of the ignited thrusters. (only visible when and as
+     * much as thrusters are actually ignited)
+     * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
+     * drawing mode (or in solid).
+     * @returns {ShipMesh} The renderable object created to represent the 
+     * spacecraft.
      */
     Spacecraft.prototype.addToScene = function (scene, lod, addHitboxes, addWeapons, addThrusterParticles, wireframe) {
         var i, j;
@@ -1371,85 +1642,82 @@ Application.createModule({name: "Logic",
         modelsWithLOD = new Array();
         // if no specific level of detail is given, load all that are within the global LOD load limit
         // if a specific LOD is given only load that one
-        for (i = 0; i < this.class.modelReferences.length; i++) {
-            if (((lod === undefined) && (Armada.graphics().getMaxLoadedLOD() >= this.class.modelReferences[i].lod)) ||
-                    ((lod !== undefined) && (this.class.modelReferences[i].lod === lod))) {
+        for (i = 0; i < this._class.modelReferences.length; i++) {
+            if (((lod === undefined) && (Armada.graphics().getMaxLoadedLOD() >= this._class.modelReferences[i].lod)) ||
+                    ((lod !== undefined) && (this._class.modelReferences[i].lod === lod))) {
                 modelsWithLOD.push(new Scene.ModelWithLOD(
-                        Armada.resources().getOrAddModelFromFile(this.class.modelReferences[i].filename),
-                        this.class.modelReferences[i].lod
+                        Armada.resources().getOrAddModelFromFile(this._class.modelReferences[i].filename),
+                        this._class.modelReferences[i].lod
                         ));
             }
         }
+        // cash the references to the textures
         var textures = this.getTextures();
-        this.visualModel = new Scene.ShipMesh(
+        // add the main model of the spacecraft
+        this._visualModel = new Scene.ShipMesh(
                 modelsWithLOD,
-                Armada.resources().getShader(this.class.shaderName),
+                Armada.resources().getShader(this._class.shaderName),
                 textures,
-                this.physicalModel.positionMatrix,
-                this.physicalModel.orientationMatrix,
-                Mat.scaling4(this.class.modelSize),
+                this._physicalModel.positionMatrix,
+                this._physicalModel.orientationMatrix,
+                Mat.scaling4(this._class.modelSize),
                 (wireframe === true));
-        scene.addObject(this.visualModel);
-
-        // visualize physical model
+        scene.addObject(this._visualModel);
+        // visualize physical model (hitboxes)
         if ((addHitboxes === undefined) || (addHitboxes === true)) {
-            this._hitbox = new Scene.VisualObject(Armada.resources().getShader(this.class.shaderName), false, false);
-            for (i = 0; i < this.class.bodies.length; i++) {
-                var phyModelWithLOD = new Scene.ModelWithLOD(
-                        Armada.resources().getOrAddModelByName(
-                        Egom.cuboidModel(
-                                this.class.name + "-body" + i,
-                                this.class.bodies[i].width,
-                                this.class.bodies[i].height,
-                                this.class.bodies[i].depth,
-                                [0.0, 1.0, 1.0, 0.5])),
-                        0);
-                var hitZoneMesh = new Scene.Mesh(
-                        [phyModelWithLOD],
-                        Armada.resources().getShader(this.class.shaderName),
-                        {
-                            color: Armada.resources().getOrAddTexture("textures/white.png"),
-                            specular: Armada.resources().getOrAddTexture("textures/white.png"),
-                            luminosity: Armada.resources().getOrAddTexture("textures/white.png")
-                        },
-                Mat.translation4v(Mat.translationVector3(this.class.bodies[i].positionMatrix)),
-                        this.class.bodies[i].orientationMatrix,
-                        Mat.identity4(),
-                        false);
-                this._hitbox.addSubnode(hitZoneMesh);
+            // add the parent objects for the hitboxes
+            this._hitbox = new Scene.VisualObject(Armada.resources().getShader(this._class.shaderName), false, false);
+            // add the models for the hitboxes themselves
+            for (i = 0; i < this._class.bodies.length; i++) {
+                this._addHitboxModel(i);
             }
             this._hitbox.hide();
-            this.visualModel.addSubnode(this._hitbox);
+            this._visualModel.addSubnode(this._hitbox);
         }
         // add the weapons
         if ((addWeapons === undefined) || (addWeapons === true)) {
-            for (i = 0; i < this.weapons.length; i++) {
-                this.weapons[i].addToScene(this.visualModel, lod, wireframe);
+            for (i = 0; i < this._weapons.length; i++) {
+                this._weapons[i].addToScene(this._visualModel, lod, wireframe);
             }
         }
         // add the thruster particles
         if ((addThrusterParticles === undefined) || (addThrusterParticles === true)) {
-            this.propulsion.addThrusters(this.class.thrusterSlots);
-            this.propulsion.addToScene(this.visualModel);
+            this._propulsion.addThrusters(this._class.thrusterSlots);
+            this._propulsion.addToScene(this._visualModel);
         }
-        this._scene = scene;
-        return this.visualModel;
+        return this._visualModel;
     };
-
-
+    /**
+     * Adds camera objects that correspond to the views defined for this 
+     * spacecraft type and follow this specific spacecraft.
+     * @param {Scene} scene The scene to add the cameras to.
+     */
+    Spacecraft.prototype.addCamerasForViews = function (scene) {
+        for (var i = 0; i < this._class.views.length; i++) {
+            scene.addCamera(this._class.views[i].createCameraForObject(scene.width / scene.height, this._visualModel));
+        }
+    };
+    /**
+     * Equips a weapon of the given class to the ship's next free weapon hard
+     * point, if any are available.
+     * @param {WeaponClass} weaponClass
+     */
     Spacecraft.prototype.addWeapon = function (weaponClass) {
-        if (this.weapons.length < this.class.weaponSlots.length) {
-            var slot = this.class.weaponSlots[this.weapons.length];
-            this.weapons.push(new Weapon(weaponClass, this, slot));
+        if (this._weapons.length < this._class.weaponSlots.length) {
+            var slot = this._class.weaponSlots[this._weapons.length];
+            this._weapons.push(new Weapon(weaponClass, this, slot));
         }
     };
-
+    /**
+     * Equips a propulsion system of the given class to the ship, replacing the
+     * previous propulsion system, if one was equipped.
+     * @param {PropulsionClass} propulsionClass
+     */
     Spacecraft.prototype.addPropulsion = function (propulsionClass) {
-        this.propulsion = new Propulsion(propulsionClass, this.physicalModel);
+        this._propulsion = new Propulsion(propulsionClass, this._physicalModel);
         this._maneuveringComputer.updateSpeedIncrementPerSecond();
         this._maneuveringComputer.updateTurningLimit();
     };
-
     /**
      * Equips the spacecraft according to the specifications in the given equipment
      * profile.
@@ -1464,77 +1732,89 @@ Application.createModule({name: "Logic",
             this.addPropulsion(Armada.logic().getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
         }
     };
-
+    /**
+     * Fires all of the ship's weapons.
+     */
     Spacecraft.prototype.fire = function () {
-        for (var i = 0; i < this.weapons.length; i++) {
-            this.weapons[i].fire(this._projectileArray);
+        for (var i = 0; i < this._weapons.length; i++) {
+            this._weapons[i].fire(this._projectileArray);
         }
     };
-
+    /**
+     * Resets all the thruster burn levels of the spacecraft to zero.
+     */
     Spacecraft.prototype.resetThrusterBurn = function () {
-        this.propulsion.resetThrusterBurn();
+        this._propulsion.resetThrusterBurn();
     };
-
+    /**
+     * Adds to the current burn level to all thrusters that have the specified
+     * use.
+     * @param {String} use The use of the thrusters to add burn to (e.g. "forward")
+     * @param {Number} value The value to add to the current burn level.
+     */
     Spacecraft.prototype.addThrusterBurn = function (use, value) {
-        this.propulsion.addThrusterBurn(use, value);
+        this._propulsion.addThrusterBurn(use, value);
     };
-
-    Spacecraft.prototype.addDirectionalThrusterBurn = function (directionVector, value) {
-        if (value < 0) {
-            value = -value;
-            directionVector[0] = -directionVector[0];
-            directionVector[1] = -directionVector[1];
-            directionVector[2] = -directionVector[2];
-        }
-        var relativeDirection = Vec.mulVec3Mat3(directionVector, Mat.matrix3from4(this.physicalModel.modelMatrixInverse));
-        if (relativeDirection[0] > 0.0001) {
-            this.addThrusterBurn("slideRight", relativeDirection[0] * value);
-        }
-        if (relativeDirection[0] < -0.0001) {
-            this.addThrusterBurn("slideLeft", -relativeDirection[0] * value);
-        }
-        if (relativeDirection[1] > 0.0001) {
-            this.addThrusterBurn("forward", relativeDirection[1] * value);
-        }
-        if (relativeDirection[1] < -0.0001) {
-            this.addThrusterBurn("reverse", -relativeDirection[1] * value);
-        }
-        if (relativeDirection[2] > 0.0001) {
-            this.addThrusterBurn("raise", relativeDirection[2] * value);
-        }
-        if (relativeDirection[2] < -0.0001) {
-            this.addThrusterBurn("lower", -relativeDirection[2] * value);
-        }
-    };
-
+    /**
+     * Returns the thruster burn level that is needed to produce the passed
+     * difference in speed using the current propulsion system.
+     * @param {Number} speedDifference The speed different that needs to be produced,
+     * in m/s.
+     * @returns {Number}
+     */
     Spacecraft.prototype.getNeededBurnForSpeedChange = function (speedDifference) {
-        return speedDifference * this.physicalModel.mass / this.propulsion._class.thrust / 2 / (timeBurstLength / 1000);
+        // division by 2 because the full thrust is produced at 0.5 burn level
+        // (full burn level is for both turning and accelerating)
+        // final division because one burst of thrust lasts for a small fraction
+        // of a second, while the basic calculation gives the needed thrust for
+        // one second (as units of measurement are SI aligned)
+        return speedDifference * this._physicalModel.mass / this._propulsion.getThrust() / 2 / (timeBurstLength / 1000);
     };
-
+    /**
+     * Returns the thruster burn level that is needed to produce the passed 
+     * difference in angular velocity using the current propulsion system.
+     * @param {Number} angularVelocityDifference The angular velocity difference
+     * that needs to be produced, in rad/5ms !!.
+     * @returns {Number}
+     */
     Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference) {
-        // note: the division by 2 in the end is on purpose: 0.5 of thruster burn produces full angular thrust (1.0 is firing both for turning and movement)
-        return angularVelocityDifference * this.physicalModel.mass / this.propulsion._class.angularThrust / 2 * 200 / (timeBurstLength / 1000);
+        // multiply by 200 to convert given difference from rad/5ms to rad/s
+        // division by 2 because the full angular thrust is produced at 0.5 burn level
+        // (full burn level is for both turning and accelerating) 
+        // final division because one burst of thrust lasts for a small fraction
+        // of a second, while the basic calculation gives the needed thrust for
+        // one second (as units of measurement are SI aligned)
+        return angularVelocityDifference * 200 * this._physicalModel.mass / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
     };
-
+    /**
+     * Toggles the visibility of the models representing the hitboxes of this
+     * spacecraft.
+     */
     Spacecraft.prototype.toggleHitboxVisibility = function () {
         this._hitbox.toggleVisibility();
     };
-
-    Spacecraft.prototype.resetViews = function () {
-        this.visualModel.resetViews();
+    /**
+     * Resets the parameters (position and orientation) of the cameras that 
+     * correspond to the different views fixed on this spacecraft in the scene.
+     */
+    Spacecraft.prototype.resetViewCameras = function () {
+        this._visualModel.resetViewCameras();
     };
-
+    /**
+     * Performs all the phyics and logic simulation of this spacecraft.
+     * @param {Number} dt The elapsed time since the last simulation step, in
+     * milliseconds.
+     */
     Spacecraft.prototype.simulate = function (dt) {
         this._maneuveringComputer.controlThrusters();
-        this.propulsion.simulate(dt);
-        this.physicalModel.simulate(dt);
-        this.visualModel.setPositionMatrix(this.physicalModel.positionMatrix);
-        this.visualModel.setOrientationMatrix(this.physicalModel.orientationMatrix);
+        this._propulsion.simulate(dt);
+        this._physicalModel.simulate(dt);
+        this._visualModel.setPositionMatrix(this._physicalModel.positionMatrix);
+        this._visualModel.setOrientationMatrix(this._physicalModel.orientationMatrix);
         this._maneuveringComputer.updateSpeedIncrement(dt);
     };
 
     /**
-     * Defines a level.
      * @class The domain specific part of the model of what happens in the game, 
      * with spaceships, projectiles and so.
      * @returns {Level}
@@ -1590,6 +1870,11 @@ Application.createModule({name: "Logic",
          * @type Number
          */
         this._pilotedCraftIndex = null;
+        /**
+         * @name Level#_hitObjects
+         * @type PhysicalObject[]
+         */
+        this._hitObjects = null;
 
         this.camera = null;
         this.cameraController = null;
@@ -1671,7 +1956,6 @@ Application.createModule({name: "Logic",
         for (i = 0; i < spacecraftTags.length; i++) {
             var spacecraft = new Spacecraft(
                     Armada.logic().getSpacecraftClass(spacecraftTags[i].getAttribute("class")),
-                    this.getPlayer(spacecraftTags[i].getAttribute("owner")),
                     Mat.translationFromXMLTag(spacecraftTags[i].getElementsByTagName("position")[0]),
                     Mat.rotation4FromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
                     this._projectiles
@@ -1686,7 +1970,7 @@ Application.createModule({name: "Logic",
                 // if a profile is referenced in the equipment tag, look up that profile 
                 // and equip according to that
                 if (equipmentTag.hasAttribute("profile")) {
-                    spacecraft.equipProfile(spacecraft.class.equipmentProfiles[equipmentTag.getAttribute("profile")]);
+                    spacecraft.equipProfile(spacecraft._class.equipmentProfiles[equipmentTag.getAttribute("profile")]);
                     // if no profile is referenced, simply create a custom profile from the tags inside
                     // the equipment tag, and equip that
                 } else {
@@ -1694,20 +1978,19 @@ Application.createModule({name: "Logic",
                     spacecraft.equipProfile(equipmentProfile);
                 }
                 // if there is no equipment tag, attempt to load the profile named "default"    
-            } else if (spacecraft.class.equipmentProfiles["default"] !== undefined) {
-                spacecraft.equipProfile(spacecraft.class.equipmentProfiles["default"]);
+            } else if (spacecraft._class.equipmentProfiles["default"] !== undefined) {
+                spacecraft.equipProfile(spacecraft._class.equipmentProfiles["default"]);
             }
             this._spacecrafts.push(spacecraft);
         }
     };
 
-    Level.prototype.addRandomShips = function (owner, shipNumbersPerClass, mapSize) {
+    Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize) {
         for (var shipClass in shipNumbersPerClass) {
             for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
                 this._spacecrafts.push(
                         new Spacecraft(
                                 Armada.logic().getSpacecraftClass(shipClass),
-                                this.getPlayer(owner),
                                 Mat.translation4(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
                                 Mat.identity4(),
                                 this._projectiles,
@@ -1745,12 +2028,11 @@ Application.createModule({name: "Logic",
             this.camera.setOrientationMatrix(this._cameraStartPosition.orientationMatrix);
         }
 
+        this._hitObjects = new Array();
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].addToScene(scene);
-            // creating the cameras for the different views of the ship
-            for (j = 0; j < this._spacecrafts[i].class.views.length; j++) {
-                scene.addCamera(this._spacecrafts[i].class.views[j].createCameraForObject(scene.width / scene.height, this._spacecrafts[i].visualModel));
-            }
+            this._spacecrafts[i].addCamerasForViews(scene);
+            this._hitObjects.push(this._spacecrafts[i].getPhysicalModel());
         }
 
 
@@ -1785,9 +2067,11 @@ Application.createModule({name: "Logic",
 
     Level.prototype.tick = function (dt) {
         for (var i = 0; i < this._spacecrafts.length; i++) {
-            if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].toBeDeleted)) {
+            if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
                 this._spacecrafts[i] = null;
                 this._spacecrafts.splice(i, 1);
+                this._hitObjects[i] = null;
+                this._hitObjects.splice(i, 1);
             } else {
                 this._spacecrafts[i].simulate(dt);
             }
@@ -1798,7 +2082,7 @@ Application.createModule({name: "Logic",
                 this._projectiles[i] = null;
                 this._projectiles.splice(i, 1);
             } else {
-                this._projectiles[i].simulate(dt, this._spacecrafts);
+                this._projectiles[i].simulate(dt, this._hitObjects);
             }
         }
         for (var i = 0; i < this._dustClouds.length; i++) {

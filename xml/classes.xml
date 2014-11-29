@@ -256,16 +256,16 @@
             <slot x="2.6" y="10" z="7" size="0.9" use="lower,pitchDown" group="1" />
             <slot x="-2.6" y="10" z="7" size="0.9" use="lower,pitchDown" group="1" />
                         
-            <slot x="6.8" y="23" z="-2.5" size="0.9" use="raise,pitchUp,slideLeft" group="2" />
-            <slot x="-6.8" y="23" z="-2.5" size="0.9" use="raise,pitchUp,slideRight" group="2" />
+            <slot x="6.8" y="23" z="-2.5" size="0.9" use="raise,pitchUp,strafeLeft" group="2" />
+            <slot x="-6.8" y="23" z="-2.5" size="0.9" use="raise,pitchUp,strafeRight" group="2" />
                         
-            <slot x="27.4" y="3.5" z="2.5" size="0.9" use="slideLeft" group="5" />
-            <slot x="27.4" y="0.5" z="2.5" size="0.9" use="slideLeft" group="5" />
-            <slot x="25.6" y="-2.5" z="9.3" size="0.9" use="slideLeft" group="5" />
+            <slot x="27.4" y="3.5" z="2.5" size="0.9" use="strafeLeft" group="5" />
+            <slot x="27.4" y="0.5" z="2.5" size="0.9" use="strafeLeft" group="5" />
+            <slot x="25.6" y="-2.5" z="9.3" size="0.9" use="strafeLeft" group="5" />
                         
-            <slot x="-27.4" y="3.5" z="2.5" size="0.9" use="slideRight" group="6" />
-            <slot x="-27.4" y="0.5" z="2.5" size="0.9" use="slideRight" group="6" />
-            <slot x="-25.6" y="-2.5" z="9.3" size="0.9" use="slideRight" group="6" />
+            <slot x="-27.4" y="3.5" z="2.5" size="0.9" use="strafeRight" group="6" />
+            <slot x="-27.4" y="0.5" z="2.5" size="0.9" use="strafeRight" group="6" />
+            <slot x="-25.6" y="-2.5" z="9.3" size="0.9" use="strafeRight" group="6" />
                         
             <slot x="18" y="4.0" z="11.2" size="1.5" use="lower,rollRight,pitchUp" group="13" />
             <slot x="-18" y="4.0" z="11.2" size="1.5" use="lower,rollLeft,pitchUp" group="14" />
@@ -354,26 +354,26 @@
             <slot x="-41.2" y="16.7" z="27" size="1.8" use="reverse,yawLeft,pitchUp" group="6" />	
             <slot x="-30.8" y="16.7" z="27" size="1.8" use="reverse,yawLeft,pitchUp" group="6" />
                         
-            <slot x="11.9" y="30.6" z="-18" size="1.8" use="rollRight,slideLeft,yawLeft" group="7" />
-            <slot x="11.9" y="23.4" z="-18" size="1.8" use="rollRight,slideLeft" group="9" />
+            <slot x="11.9" y="30.6" z="-18" size="1.8" use="rollRight,strafeLeft,yawLeft" group="7" />
+            <slot x="11.9" y="23.4" z="-18" size="1.8" use="rollRight,strafeLeft" group="9" />
                         
-            <slot x="-11.9" y="30.6" z="-18" size="1.8" use="rollLeft,slideRight,yawRight" group="8" />
-            <slot x="-11.9" y="23.4" z="-18" size="1.8" use="rollLeft,slideRight" group="10" />
+            <slot x="-11.9" y="30.6" z="-18" size="1.8" use="rollLeft,strafeRight,yawRight" group="8" />
+            <slot x="-11.9" y="23.4" z="-18" size="1.8" use="rollLeft,strafeRight" group="10" />
                         
             <slot x="30.05" y="-4,2" z="40.3" size="1.8" use="rollRight,lower" group="11" />
             <slot x="30.05" y="-11.4" z="40.3" size="1.8" use="rollRight,lower" group="11" />
                         
-            <slot x="41.95" y="-4,2" z="19.7" size="1.8" use="rollLeft,raise,slideLeft,pitchDown" group="12" />
-            <slot x="41.95" y="-11.4" z="19.7" size="1.8" use="rollLeft,raise,slideLeft,pitchDown" group="12" />
+            <slot x="41.95" y="-4,2" z="19.7" size="1.8" use="rollLeft,raise,strafeLeft,pitchDown" group="12" />
+            <slot x="41.95" y="-11.4" z="19.7" size="1.8" use="rollLeft,raise,strafeLeft,pitchDown" group="12" />
                         
-            <slot x="-41.95" y="-4,2" z="19.7" size="1.8" use="rollRight,raise,slideRight,pitchDown" group="13" />
-            <slot x="-41.95" y="-11.4" z="19.7" size="1.8" use="rollRight,raise,slideRight,pitchDown" group="13" />
+            <slot x="-41.95" y="-4,2" z="19.7" size="1.8" use="rollRight,raise,strafeRight,pitchDown" group="13" />
+            <slot x="-41.95" y="-11.4" z="19.7" size="1.8" use="rollRight,raise,strafeRight,pitchDown" group="13" />
                         
             <slot x="-30.05" y="-4,2" z="40.3" size="1.8" use="rollLeft,lower" group="14" />
             <slot x="-30.05" y="-11.4" z="40.3" size="1.8" use="rollLeft,lower" group="14" />
                         
-            <slot x="6.4" y="33.6" z="10.44" size="1.8" use="pitchDown,lower,slideLeft" group="15" />
-            <slot x="-6.4" y="33.6" z="10.44" size="1.8" use="pitchDown,lower,slideRight" group="16" />
+            <slot x="6.4" y="33.6" z="10.44" size="1.8" use="pitchDown,lower,strafeLeft" group="15" />
+            <slot x="-6.4" y="33.6" z="10.44" size="1.8" use="pitchDown,lower,strafeRight" group="16" />
                         
             <slot x="8.05" y="53.8" z="-4.7" size="1.8" use="pitchUp,raise" group="17" />
             <slot x="-8.05" y="53.8" z="-4.7" size="1.8" use="pitchUp,raise" group="17" />
@@ -448,8 +448,8 @@
             <slot x="77.5" y="-311" z="0" size="13.4" use="forward" group="8" />	
             <slot x="-77.5" y="-311" z="0" size="13.4" use="forward" group="8" />	
                         
-            <slot x="56" y="285" z="0" size="5.0" use="yawLeft,slideLeft" group="1" />
-            <slot x="-56" y="285" z="0" size="5.0" use="yawRight,slideRight" group="2" />
+            <slot x="56" y="285" z="0" size="5.0" use="yawLeft,strafeLeft" group="1" />
+            <slot x="-56" y="285" z="0" size="5.0" use="yawRight,strafeRight" group="2" />
                         
             <slot x="14" y="285" z="28" size="5.5" use="pitchDown,rollRight,lower" group="5" />
             <slot x="-14" y="285" z="28" size="5.5" use="pitchDown,rollLeft,lower" group="6" />
@@ -461,8 +461,8 @@
             <slot x="75" y="53" z="-20" size="8.5" use="reverse" group="7" />
             <slot x="-75" y="53" z="-20" size="8.5" use="reverse" group="7" />
                         
-            <slot x="109" y="-273" z="0" size="5.0" use="yawRight,slideLeft" group="9" />
-            <slot x="-109" y="-273" z="0" size="5.0" use="yawLeft,slideRight" group="12" />
+            <slot x="109" y="-273" z="0" size="5.0" use="yawRight,strafeLeft" group="9" />
+            <slot x="-109" y="-273" z="0" size="5.0" use="yawLeft,strafeRight" group="12" />
                         
             <slot x="77.5" y="-273" z="31.5" size="5.0" use="pitchUp,rollRight,lower" group="11" />
             <slot x="-77.5" y="-273" z="31.5" size="5.0" use="pitchUp,rollLeft,lower" group="14" />
@@ -562,11 +562,11 @@
             <slot x="-131.5" y="-154" z="102.4" size="13.4" use="reverse" group="2" />	
             <slot x="-154.5" y="-154" z="62.6" size="13.4" use="reverse" group="2" />
 			
-            <slot x="56" y="-211" z="-165" size="5.5" use="rollRight,slideLeft,yawRight" group="3" />
-            <slot x="56" y="-239" z="-165" size="5.5" use="rollRight,slideLeft,yawRight" group="3" />
+            <slot x="56" y="-211" z="-165" size="5.5" use="rollRight,strafeLeft,yawRight" group="3" />
+            <slot x="56" y="-239" z="-165" size="5.5" use="rollRight,strafeLeft,yawRight" group="3" />
 			
-            <slot x="-56" y="-211" z="-165" size="5.5" use="rollLeft,slideRight,yawLeft" group="4" />
-            <slot x="-56" y="-239" z="-165" size="5.5" use="rollLeft,slideRight,yawLeft" group="4" />
+            <slot x="-56" y="-211" z="-165" size="5.5" use="rollLeft,strafeRight,yawLeft" group="4" />
+            <slot x="-56" y="-239" z="-165" size="5.5" use="rollLeft,strafeRight,yawLeft" group="4" />
 			
             <slot x="115.5" y="-211" z="130.1" size="5.5" use="rollRight,lower,yawLeft,pitchUp" group="7" />
             <slot x="115.5" y="-239" z="130.1" size="5.5" use="rollRight,lower,yawLeft,pitchUp" group="7" />
@@ -584,8 +584,8 @@
             <slot x="0" y="69" z="-10" size="7.3" use="reverse" group="2" />	
             <slot x="38" y="69" z="-10" size="7.3" use="reverse" group="2" />	
 			
-            <slot x="58" y="215" z="54.15" size="4.5" use="yawLeft,slideLeft" group="9" />
-            <slot x="-58" y="215" z="54.15" size="4.5" use="yawRight,slideRight" group="10" />
+            <slot x="58" y="215" z="54.15" size="4.5" use="yawLeft,strafeLeft" group="9" />
+            <slot x="-58" y="215" z="54.15" size="4.5" use="yawRight,strafeRight" group="10" />
 			
             <slot x="14" y="215" z="76" size="5.5" use="pitchDown,lower" group="11" />
             <slot x="-14" y="215" z="76" size="5.5" use="pitchDown,lower" group="11" />
@@ -594,11 +594,11 @@
             <slot x="0" y="255" z="-110" size="8.0" use="pitchUp,raise" group="12" />
             <slot x="0" y="290" z="-110" size="8.0" use="pitchUp,raise" group="12" />
 			
-            <slot x="158" y="-40" z="20" size="8.0" use="slideLeft" group="13" />
-            <slot x="216" y="20" z="-80" size="8.0" use="slideLeft" group="13" />
+            <slot x="158" y="-40" z="20" size="8.0" use="strafeLeft" group="13" />
+            <slot x="216" y="20" z="-80" size="8.0" use="strafeLeft" group="13" />
 			
-            <slot x="-158" y="-40" z="20" size="8.0" use="slideRight" group="14" />
-            <slot x="-216" y="20" z="-80" size="8.0" use="slideRight" group="14" />
+            <slot x="-158" y="-40" z="20" size="8.0" use="strafeRight" group="14" />
+            <slot x="-216" y="20" z="-80" size="8.0" use="strafeRight" group="14" />
         </thrusterSlots>
                 
         <views>
@@ -717,22 +717,22 @@
         </weaponSlots>
 
         <thrusterSlots>
-            <slot x="309" y="-1335" z="641" size="14.6" use="yawRight,slideLeft,rollLeft" group="1" />
-            <slot x="309" y="-1415" z="641" size="14.6" use="yawRight,slideLeft,rollLeft" group="1" />
-            <slot x="309" y="-1495" z="641" size="14.6" use="yawRight,slideLeft,rollLeft" group="1" />
-            <slot x="309" y="-1575" z="641" size="14.6" use="yawRight,slideLeft,rollLeft" group="1" />
-            <slot x="309" y="-1335" z="-641" size="14.6" use="yawRight,slideLeft,rollRight" group="2" />
-            <slot x="309" y="-1415" z="-641" size="14.6" use="yawRight,slideLeft,rollRight" group="2" />
-            <slot x="309" y="-1495" z="-641" size="14.6" use="yawRight,slideLeft,rollRight" group="2" />
-            <slot x="309" y="-1575" z="-641" size="14.6" use="yawRight,slideLeft,rollRight" group="2" />
-            <slot x="-309" y="-1335" z="641" size="14.6" use="yawLeft,slideRight,rollRight" group="3" />
-            <slot x="-309" y="-1415" z="641" size="14.6" use="yawLeft,slideRight,rollRight" group="3" />
-            <slot x="-309" y="-1495" z="641" size="14.6" use="yawLeft,slideRight,rollRight" group="3" />
-            <slot x="-309" y="-1575" z="641" size="14.6" use="yawLeft,slideRight,rollRight" group="3" />
-            <slot x="-309" y="-1335" z="-641" size="14.6" use="yawLeft,slideRight,rollLeft" group="4" />
-            <slot x="-309" y="-1415" z="-641" size="14.6" use="yawLeft,slideRight,rollLeft" group="4" />
-            <slot x="-309" y="-1495" z="-641" size="14.6" use="yawLeft,slideRight,rollLeft" group="4" />
-            <slot x="-309" y="-1575" z="-641" size="14.6" use="yawLeft,slideRight,rollLeft" group="4" />
+            <slot x="309" y="-1335" z="641" size="14.6" use="yawRight,strafeLeft,rollLeft" group="1" />
+            <slot x="309" y="-1415" z="641" size="14.6" use="yawRight,strafeLeft,rollLeft" group="1" />
+            <slot x="309" y="-1495" z="641" size="14.6" use="yawRight,strafeLeft,rollLeft" group="1" />
+            <slot x="309" y="-1575" z="641" size="14.6" use="yawRight,strafeLeft,rollLeft" group="1" />
+            <slot x="309" y="-1335" z="-641" size="14.6" use="yawRight,strafeLeft,rollRight" group="2" />
+            <slot x="309" y="-1415" z="-641" size="14.6" use="yawRight,strafeLeft,rollRight" group="2" />
+            <slot x="309" y="-1495" z="-641" size="14.6" use="yawRight,strafeLeft,rollRight" group="2" />
+            <slot x="309" y="-1575" z="-641" size="14.6" use="yawRight,strafeLeft,rollRight" group="2" />
+            <slot x="-309" y="-1335" z="641" size="14.6" use="yawLeft,strafeRight,rollRight" group="3" />
+            <slot x="-309" y="-1415" z="641" size="14.6" use="yawLeft,strafeRight,rollRight" group="3" />
+            <slot x="-309" y="-1495" z="641" size="14.6" use="yawLeft,strafeRight,rollRight" group="3" />
+            <slot x="-309" y="-1575" z="641" size="14.6" use="yawLeft,strafeRight,rollRight" group="3" />
+            <slot x="-309" y="-1335" z="-641" size="14.6" use="yawLeft,strafeRight,rollLeft" group="4" />
+            <slot x="-309" y="-1415" z="-641" size="14.6" use="yawLeft,strafeRight,rollLeft" group="4" />
+            <slot x="-309" y="-1495" z="-641" size="14.6" use="yawLeft,strafeRight,rollLeft" group="4" />
+            <slot x="-309" y="-1575" z="-641" size="14.6" use="yawLeft,strafeRight,rollLeft" group="4" />
 
             <slot x="172.88" y="-1032" z="445" size="23.3" use="reverse" group="5" />
             <slot x="167.88" y="-1062" z="525" size="23.3" use="reverse" group="5" />
@@ -796,19 +796,19 @@
             <slot x="-300" y="1990" z="-139.4" size="21.3" use="pitchUp,rollRight,raise" group="13" />
             <slot x="-300" y="2070" z="-134.1" size="21.3" use="pitchUp,rollRight,raise" group="13" />
 
-            <slot x="395" y="2205" z="0" size="16.6" use="yawLeft,slideLeft" group="11" />
-            <slot x="377" y="2275" z="0" size="16.6" use="yawLeft,slideLeft" group="11" />
-            <slot x="359" y="2345" z="0" size="16.6" use="yawLeft,slideLeft" group="11" />
-            <slot x="341" y="2415" z="0" size="16.6" use="yawLeft,slideLeft" group="11" />
-            <slot x="323" y="2485" z="0" size="16.6" use="yawLeft,slideLeft" group="11" />
-            <slot x="305" y="2555" z="0" size="16.6" use="yawLeft,slideLeft" group="11" />
+            <slot x="395" y="2205" z="0" size="16.6" use="yawLeft,strafeLeft" group="11" />
+            <slot x="377" y="2275" z="0" size="16.6" use="yawLeft,strafeLeft" group="11" />
+            <slot x="359" y="2345" z="0" size="16.6" use="yawLeft,strafeLeft" group="11" />
+            <slot x="341" y="2415" z="0" size="16.6" use="yawLeft,strafeLeft" group="11" />
+            <slot x="323" y="2485" z="0" size="16.6" use="yawLeft,strafeLeft" group="11" />
+            <slot x="305" y="2555" z="0" size="16.6" use="yawLeft,strafeLeft" group="11" />
 
-            <slot x="-395" y="2205" z="0" size="16.6" use="yawRight,slideRight" group="14" />
-            <slot x="-377" y="2275" z="0" size="16.6" use="yawRight,slideRight" group="14" />
-            <slot x="-359" y="2345" z="0" size="16.6" use="yawRight,slideRight" group="14" />
-            <slot x="-341" y="2415" z="0" size="16.6" use="yawRight,slideRight" group="14" />
-            <slot x="-323" y="2485" z="0" size="16.6" use="yawRight,slideRight" group="14" />
-            <slot x="-305" y="2555" z="0" size="16.6" use="yawRight,slideRight" group="14" />
+            <slot x="-395" y="2205" z="0" size="16.6" use="yawRight,strafeRight" group="14" />
+            <slot x="-377" y="2275" z="0" size="16.6" use="yawRight,strafeRight" group="14" />
+            <slot x="-359" y="2345" z="0" size="16.6" use="yawRight,strafeRight" group="14" />
+            <slot x="-341" y="2415" z="0" size="16.6" use="yawRight,strafeRight" group="14" />
+            <slot x="-323" y="2485" z="0" size="16.6" use="yawRight,strafeRight" group="14" />
+            <slot x="-305" y="2555" z="0" size="16.6" use="yawRight,strafeRight" group="14" />
         </thrusterSlots>
 
         <dockingSpaces>
