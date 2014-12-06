@@ -85,6 +85,33 @@ Mat.null4 = function () {
 };
 
 /**
+ * Return a 3x3 matrix comprised of the first 9 elements of the passed array.
+ * @param {Float32Array|Number[9]} m
+ * @returns {Float32Array}
+ */
+Mat.matrix3 = function (m) {
+    return new Float32Array([
+        m[0], m[1], m[2],
+        m[3], m[4], m[5],
+        m[6], m[7], m[8]
+    ]);
+};
+
+/**
+ * Return a 4x4 matrix comprised of the first 16 elements of the passed array.
+ * @param {Float32Array|Number[16]} m
+ * @returns {Float32Array}
+ */
+Mat.matrix4 = function (m) {
+    return new Float32Array([
+        m[0], m[1], m[2], m[3],
+        m[4], m[5], m[6], m[7],
+        m[8], m[9], m[10], m[11],
+        m[12], m[13], m[14], m[15]
+    ]);
+};
+
+/**
  * Returns a 4x4 transformation matrix describing a translation.
  * @param {Number} x The x coordinate of the translation.
  * @param {Number} y The y coordinate of the translation.
@@ -234,7 +261,7 @@ Mat.rotation4FromXMLTags = function (tags) {
  * @param {Number[]} vz A 3D or 4D vector.
  * @returns {Float32Array}
  */
-Mat.fromVectorsTo3 = function (vx,vy,vz) {
+Mat.fromVectorsTo3 = function (vx, vy, vz) {
     return new Float32Array([
         vx[0], vx[1], vx[2],
         vy[0], vy[1], vy[2],
@@ -252,18 +279,54 @@ Mat.fromVectorsTo3 = function (vx,vy,vz) {
  * @param {Number[]} vw A 3D or 4D vector.
  * @returns {Float32Array}
  */
-Mat.fromVectorsTo4 = function (vx,vy,vz,vw) {
-    vw = vw || [0.0,0.0,0.0,1.0];
+Mat.fromVectorsTo4 = function (vx, vy, vz, vw) {
+    vw = vw || [0.0, 0.0, 0.0, 1.0];
     return new Float32Array([
-        vx[0], vx[1], vx[2], vx.length>3 ? vx[3] : 0.0,
-        vy[0], vy[1], vy[2], vy.length>3 ? vy[3] : 0.0,
-        vz[0], vz[1], vz[2], vz.length>3 ? vz[3] : 0.0,
+        vx[0], vx[1], vx[2], vx.length > 3 ? vx[3] : 0.0,
+        vy[0], vy[1], vy[2], vy.length > 3 ? vy[3] : 0.0,
+        vz[0], vz[1], vz[2], vz.length > 3 ? vz[3] : 0.0,
         vw[0], vw[1], vw[2], vw[3]
     ]);
 };
 
 // -----------------------------------------------------------------------------
 // Functions of a single matrix
+
+/**
+ * Returns the first row vector of a 4x4 matrix.
+ * @param {Float32Array} m A 4x4 matrix.
+ * @returns {Number[4]}
+ */
+Mat.getRowA4 = function (m) {
+    return [m[0], m[1], m[2], m[3]];
+};
+
+/**
+ * Returns the second row vector of a 4x4 matrix.
+ * @param {Float32Array} m A 4x4 matrix.
+ * @returns {Number[4]}
+ */
+Mat.getRowB4 = function (m) {
+    return [m[4], m[5], m[6], m[7]];
+};
+
+/**
+ * Returns the third row vector of a 4x4 matrix.
+ * @param {Float32Array} m A 4x4 matrix.
+ * @returns {Number[4]}
+ */
+Mat.getRowC4 = function (m) {
+    return [m[8], m[9], m[10], m[11]];
+};
+
+/**
+ * Returns the fourth row vector of a 4x4 matrix.
+ * @param {Float32Array} m A 4x4 matrix.
+ * @returns {Number[4]}
+ */
+Mat.getRowD4 = function (m) {
+    return [m[12], m[13], m[14], m[15]];
+};
 
 /**
  * Returns the determinant of the passed 3x3 matrix.
@@ -305,6 +368,20 @@ Mat.translationVector4 = function (m) {
  */
 Mat.translationLength = function (m) {
     return Vec.length3([m[12], m[13], m[14]]);
+};
+
+/**
+ * Returns the string representation of a 3x3 matrix.
+ * @param {Float32Array} m A 3x3 matrix.
+ * @param {Number} [d=2] The number of decimals to include in the string for the 
+ * matrix components.
+ * @returns {String}
+ */
+Mat.toString3 = function (m, d) {
+    d = d || 2;
+    return m[0].toFixed(d) + " " + m[1].toFixed(d) + " " + m[2].toFixed(d) + "\n" +
+            m[3].toFixed(d) + " " + m[4].toFixed(d) + " " + m[5].toFixed(d) + "\n" +
+            m[6].toFixed(d) + " " + m[7].toFixed(d) + " " + m[8].toFixed(d);
 };
 
 /**
@@ -419,10 +496,10 @@ Mat.inverse3 = function (m) {
         for (i = 0; i < 3; i++) {
             // first swap the row to have a non-zero element at the diagonal
             // position, if needed
-            if ((m2[i * 4]) === 0) {
+            if (Math.abs(m2[i * 4]) <= 0.0001) {
                 // first, find a non-zero element in the same (i) column
                 j = i + 1;
-                while (m2[j * 3 + i] === 0) {
+                while (Math.abs(m2[j * 3 + i]) <= 0.0001) {
                     j++;
                 }
                 // when found it in row 'j' swap the 'i'th and 'j'th rows
@@ -488,10 +565,10 @@ Mat.inverse4 = function (m) {
     for (i = 0; i < 4; i++) {
         // first swap the row to have a non-zero element at the diagonal
         // position, if needed
-        if ((m2[i * 5]) === 0) {
+        if (Math.abs(m2[i * 5]) <= 0.0001) {
             // first, find a non-zero element in the same (i) column
             j = i + 1;
-            while (m2[j * 4 + i] === 0) {
+            while (Math.abs(m2[j * 4 + i]) <= 0.0001) {
                 j++;
             }
             // when found it in row 'j' swap the 'i'th and 'j'th rows

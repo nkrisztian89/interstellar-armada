@@ -566,6 +566,7 @@ Application.createModule({name: "Screens",
                 var curDate = new Date();
                 Armada.control().control();
                 self._level.tick(curDate - prevDate);
+                self._battleScene.activeCamera.update();
                 prevDate = curDate;
             }, 1000 / freq);
             Armada.control().startListening();
@@ -741,9 +742,10 @@ Application.createModule({name: "Screens",
 
         var self = this;
 
-        this._level.onLoad = function () {
+        self.updateStatus("loading level information...", 0);
+        this._level.requestLoadFromFile(levelSourceFilename, function () {
             self.updateStatus("loading additional configuration...", 5);
-            self._level.addRandomShips({falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000);
+            self._level.addRandomShips({falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000, Mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true);
 
             self.updateStatus("building scene...", 10);
             var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
@@ -759,7 +761,7 @@ Application.createModule({name: "Screens",
                         ranges: Armada.graphics().getShadowRanges(),
                         depthRatio: Armada.graphics().getShadowDepthRatio()
                     });
-            self._level.buildScene(self._battleScene);
+            self._level.addToScene(self._battleScene);
 
             Armada.control().getController("general").setLevel(self._level);
             Armada.control().getController("camera").setControlledCamera(self._battleScene.activeCamera);
@@ -772,7 +774,6 @@ Application.createModule({name: "Screens",
             Armada.resources().executeWhenReady(function () {
                 self.updateStatus("initializing WebGL...", 75);
                 self.bindSceneToCanvas(self._battleScene, self.getScreenCanvas("battleCanvas"));
-                self._level.addProjectileResourcesToContext(self.getScreenCanvas("battleCanvas").getManagedContext());
                 self.updateStatus("", 100);
                 self._smallHeader.setContent("running an early test of Interstellar Armada, version: " + Armada.getVersion());
                 Armada.control().switchToSpectatorMode();
@@ -784,10 +785,7 @@ Application.createModule({name: "Screens",
             });
 
             Armada.resources().requestResourceLoad();
-        };
-
-        self.updateStatus("loading level information...", 0);
-        this._level.requestLoadFromFile(levelSourceFilename);
+        });
     };
 
     /**
@@ -1034,7 +1032,7 @@ Application.createModule({name: "Screens",
         // using % operator does not work with -1, reverted to "if"
         this._itemIndex -= 1;
         if (this._itemIndex === -1) {
-            this._itemIndex = Armada.logic().getSpacecraftClasses().length - 1;
+            this._itemIndex = Armada.logic().getSpacecraftClassesInArray().length - 1;
         }
         this.loadShip();
     };
@@ -1044,7 +1042,7 @@ Application.createModule({name: "Screens",
      * screen. Loops around.
      */
     DatabaseScreen.prototype.selectNextShip = function () {
-        this._itemIndex = (this._itemIndex + 1) % Armada.logic().getSpacecraftClasses().length;
+        this._itemIndex = (this._itemIndex + 1) % Armada.logic().getSpacecraftClassesInArray().length;
         this.loadShip();
     };
 
@@ -1071,7 +1069,7 @@ Application.createModule({name: "Screens",
         Armada.logic().executeWhenReady(function () {
             // display the data that can be displayed right away, and show loading
             // for the rest
-            var shipClass = Armada.logic().getSpacecraftClasses()[self._itemIndex];
+            var shipClass = Armada.logic().getSpacecraftClassesInArray()[self._itemIndex];
             self._itemName.setContent(shipClass.fullName);
             self._itemType.setContent(shipClass.spacecraftType.fullName);
             self._itemDescription.setContent("Loading...");
@@ -1086,7 +1084,7 @@ Application.createModule({name: "Screens",
                     "default"
                     );
             // add the ship to the scene in triangle drawing mode
-            self._solidModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), false, true, false, false);
+            self._solidModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), false, {weapons: true});
             // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
             self._solidModel.cascadeSetShader(Armada.graphics().getShadowMapping() ?
                     Armada.resources().getShader("shadowMapReveal")
@@ -1102,7 +1100,7 @@ Application.createModule({name: "Screens",
                 return self._itemLength / 10;
             });
             // add the ship to the scene in line drawing mode as well
-            self._wireframeModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), false, true, false, true);
+            self._wireframeModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), true, {weapons: true});
             // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
             self._wireframeModel.cascadeSetShader(Armada.resources().getShader("oneColorReveal"));
             // set the necessary uniform functions for the one colored reveal shader

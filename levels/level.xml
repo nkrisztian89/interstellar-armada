@@ -1,21 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <level>
-    <Players count="2">
-        <Player name="human" />
-        <Player name="computer" />
-    </Players>
-	
-    <Skybox class="deepspace" />
-        
-    <BackgroundObject class="standardSun">
-        <position angleAlpha="90" angleBeta="20" />
-    </BackgroundObject>
-        
-    <BackgroundObject class="smallBlueStar">
-        <position angleAlpha="-90" angleBeta="-40" />
-    </BackgroundObject>
-        
-    <DustCloud class="standard" />
+    <Environment createFrom="deepSpaceTwoStars" />
     
     <Camera>
         <position x="0.0" y="-850.0" z="300.0" />

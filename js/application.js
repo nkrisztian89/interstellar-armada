@@ -88,7 +88,7 @@ var Application = Application || (function () {
      * satisfied before building this module.
      * @returns {Application.Module}
      */
-    function Module(name,dependencies) {
+    function Module(name, dependencies) {
         /**
          * The name of the module. It will be also stored in a property of the
          * application with the same name.
@@ -166,13 +166,13 @@ var Application = Application || (function () {
             // if it also has been loaded, we can go on with the recursion 
             if (_scripts[filename].loaded) {
                 loadNextScriptFunction();
-            // if it was added but not loaded yet, append a new event handler to 
-            // its HTML tag to continue with this recursion as well, after it
-            // has been loaded
+                // if it was added but not loaded yet, append a new event handler to 
+                // its HTML tag to continue with this recursion as well, after it
+                // has been loaded
             } else {
                 _scripts[filename].tag.addEventListener("load", loadNextScriptFunction);
             }
-        // if the script has not been added yet, add it
+            // if the script has not been added yet, add it
         } else {
             _scripts[filename] = new Script(filename);
             // add a new script tag inside the head of the document
@@ -204,32 +204,32 @@ var Application = Application || (function () {
         }
         return true;
     }
-    
+
     /**
      * Builds the modules the dependencies of which have been satisfied.
      */
     function _buildModules() {
-        for(var name in _modules) {
-            if(_modules[name].dependenciesResolved()) {
+        for (var name in _modules) {
+            if (_modules[name].dependenciesResolved()) {
                 _modules[name].build && _modules[name].build();
             }
         }
     }
-    
+
     /**
      * Executes and erases the callback functions the dependencies of which have
      * been satisfied.
      */
     function _executeCallbacks() {
-        for(var i=0;i<_callbacks.length;i++) {
-            if(_resolved(_callbacks[i].dependencies)) {
+        for (var i = 0; i < _callbacks.length; i++) {
+            if (_resolved(_callbacks[i].dependencies)) {
                 _callbacks[i].callback();
-                _callbacks.splice(i,1);
+                _callbacks.splice(i, 1);
                 i--;
             }
         }
     }
-    
+
     /**
      * Sets the given dependency to resolved and triggers a check for building
      * modules and executing callbacks the dependencies of which are now resolved.
@@ -243,7 +243,7 @@ var Application = Application || (function () {
         _buildModules();
         _executeCallbacks();
     }
-    
+
     /**
      * Returns a function that resolves the dependency from the script with the
      * given filename.
@@ -251,7 +251,7 @@ var Application = Application || (function () {
      * @returns {Function}
      */
     function _createResolveScript(script) {
-        return function() {
+        return function () {
             _resolveDependency({script: script});
         };
     }
@@ -271,8 +271,8 @@ var Application = Application || (function () {
                 var script = (dependencies[i].module ? dependencies[i].from : dependencies[i].script);
                 _loadScripts(_folders["javascript"], [script], _createResolveScript(script));
             }
-        // if there were no dependencies given, initiate the module build/callback
-        // execution directly (otherwise it would never trigger)
+            // if there were no dependencies given, initiate the module build/callback
+            // execution directly (otherwise it would never trigger)
         } else {
             _buildModules();
             _executeCallbacks();
@@ -295,9 +295,22 @@ var Application = Application || (function () {
                 this.showError("Asked for folder for file type '" + fileType + "', and folder for such files is not registered!", "severe");
             }
         },
+        /**
+         * Sets the associative array containing the folder paths for different
+         * file types. The Javascript folder is set to the value by the key
+         * "javascript", "js" or "script".
+         * @param {Object} folders
+         */
         setFolders: function (folders) {
             _folders = folders;
             _folders["javascript"] = _folders["javascript"] || _folders["js"] || _folders["script"];
+        },
+        /**
+         * Sets a new logging verbosity level.
+         * @param {type} value
+         */
+        setLogVerbosity: function (value) {
+            _logVerbosity = value;
         },
         /**
          * Returns the relative URL of a resource file of the given type and name.
@@ -444,6 +457,24 @@ var Application = Application || (function () {
             }, "application/xml");
         },
         /**
+         * Returns the first XML element under the passed parent element (or XML
+         * document root element, if a document was passed) that has the passed
+         * tag name, if it exists. If no element with the passed tag name was
+         * found, shows an error to the user.
+         * @param {Document|Element} parent
+         * @param {String} tagName
+         * @returns {Element}
+         */
+        getFirstXMLElement: function (parent, tagName) {
+            var elements = parent.getElementsByTagName(tagName);
+            if (elements.length > 0) {
+                return elements[0];
+            } else {
+                var parentTagName = parent.tagName || parent.documentElement.tagName;
+                this.showError("Couldn't find expected '"+tagName+"' element under '"+parentTagName+"'!");
+            }
+        },
+        /**
          * Initializes the application by running the script at the given URL.
          * @param {String} scriptURL
          */
@@ -481,7 +512,9 @@ var Application = Application || (function () {
         /**
          * Creates a new module based on the supplied description and executes
          * the callback function to build the module once all its dependencies
-         * are satisfied.
+         * are satisfied. It also augments the created module with a log function
+         * that refers back the application's log function, but adds the module's
+         * name.
          * @param {Object} moduleDesc The description of the module.<br/>
          * Must have a name property, which will serve as the name for the module
          * and the name of the property the module is stored in.<br/>
@@ -497,8 +530,8 @@ var Application = Application || (function () {
             if (_modules[moduleDesc.name]) {
                 return;
             }
-            this.log("Creating module: '" + moduleDesc.name + "'...",2);
-            _modules[moduleDesc.name] = new Module(moduleDesc.name,moduleDesc.dependencies);
+            this.log("Creating module: '" + moduleDesc.name + "'...", 2);
+            _modules[moduleDesc.name] = new Module(moduleDesc.name, moduleDesc.dependencies);
             var self = this;
             // The build function assigns the property to store the module in,
             // and calls the resolve function to trigger a check of newly resolved
@@ -507,8 +540,12 @@ var Application = Application || (function () {
             // resolution (that would otherwise trigger it again)
             _modules[moduleDesc.name].build = function () {
                 self[moduleDesc.name] = callback();
+                // augmenting the created module with a log function
+                self[moduleDesc.name].log = self[moduleDesc.name].log || function(message, verbosity) {
+                    self.log(moduleDesc.name+": "+message, verbosity);
+                };
                 _modules[moduleDesc.name].build = null;
-                Application.log("Finished loading module: '" + moduleDesc.name + "'",2);
+                Application.log("Finished loading module: '" + moduleDesc.name + "'", 2);
                 _resolveDependency({module: moduleDesc.name});
             };
             _resolve(moduleDesc.dependencies);

@@ -30,67 +30,23 @@
 Application.createModule({name: "Classes",
     dependencies: [
         {script: "matrices.js"},
+        {script: "utils.js"},
         {module: "Physics", from: "physics.js"},
         {module: "Scene", from: "scene.js"}]}, function () {
     // create a reference to the used modules in the local scope for cleaner and
     // faster access
     var Physics = Application.Physics;
     var Scene = Application.Scene;
-
-    /**
-     * Returns a [red,green,blue] array representing an RGB color based on the
-     * data stored in the attributes of the passed XML tag.
-     * @param {Element} tag
-     * @returns {Number[3]}
-     */
-    function getRGBColorFromXMLTag(tag) {
-        return [
-            parseFloat(tag.getAttribute("r")),
-            parseFloat(tag.getAttribute("g")),
-            parseFloat(tag.getAttribute("b"))
-        ];
-    }
-
-    /**
-     * Returns a [width,height,depth] array representing an 3D dimensions based on the
-     * data stored in the attributes of the passed XML tag.
-     * @param {Element} tag
-     * @returns {Number[3]}
-     */
-    function getDimensionsFromXMLTag(tag) {
-        return [
-            parseFloat(tag.getAttribute("w")),
-            parseFloat(tag.getAttribute("h")),
-            parseFloat(tag.getAttribute("d"))
-        ];
-    }
-
-    /**
-     * Evaluates mathematically the string representation of a simple expression 
-     * containing only multiplication operators and floating point numbers (and
-     * possibly space characters), and returns the result.
-     * @param {String} productExpression
-     * @returns {Number}
-     */
-    function evaluateProduct(productExpression) {
-        var operands = productExpression.split("*");
-        var result = 1;
-        for (var i=0; i<operands.length;i++) {
-            result *= parseFloat(operands[i]);
-        }
-        return result;
-    }
-
     /**
      * Creates a skybox class and loads its properties from the passed XML tag, if any.
      * @class A skybox represents the background picture rendered for the 
      * environment using a cubemap sampler and a full viewport quad. Skybox classes 
      * can be defined with different properties (in classes.xml) for different 
      * backgrounds, and then the right one can be instantiated for each level 
-     * ({l@link Skybox} class).
+     * ({@link Skybox} class).
      * @param {Element} [xmlTag] A reference to an XML tag from which the skybox
      * class properties can be initialized.
-     * @returns {Classes.SkyboxClass}
+     * @returns {SkyboxClass}
      */
     function SkyboxClass(xmlTag) {
         /**
@@ -238,7 +194,7 @@ Application.createModule({name: "Classes",
         }
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
         this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
-        this.color = getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
+        this.color = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
         Object.freeze(this);
     };
 
@@ -286,7 +242,7 @@ Application.createModule({name: "Classes",
      */
     BackgroundObjectClass.prototype.loadFromXMLTag = function (xmlTag) {
         this.name = xmlTag.getAttribute("name");
-        this.lightColor = getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
+        this.lightColor = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
         this.layers = new Array();
         var layerTags = xmlTag.getElementsByTagName("layer");
         for (var i = 0; i < layerTags.length; i++) {
@@ -357,7 +313,7 @@ Application.createModule({name: "Classes",
         this.name = xmlTag.getAttribute("name");
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
         this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"));
-        this.color = getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
+        this.color = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
         this.range = parseFloat(xmlTag.getAttribute("range"));
         Object.freeze(this);
     };
@@ -662,9 +618,9 @@ Application.createModule({name: "Classes",
         this.name = xmlTag.getAttribute("name");
         this.thrusterBurnParticle = new ParticleDescriptor(xmlTag);
         // convert from kilonewtons (ton*m/s^2) to newtons
-        this.thrust = evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust")) * 1000;
+        this.thrust = Utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust")) * 1000;
         // convert the given, ton*degrees/s^2 value to kg*rad/s^2
-        this.angularThrust = evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust")) / 180 * Math.PI * 1000;
+        this.angularThrust = Utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust")) / 180 * Math.PI * 1000;
         Object.freeze(this);
     };
 
@@ -1242,7 +1198,7 @@ Application.createModule({name: "Classes",
             this.bodies.push(new Physics.Body(
                     Mat.translationFromXMLTag(bodyTags[i]),
                     Mat.rotation4FromXMLTags(bodyTags[i].getElementsByTagName("turn")),
-                    getDimensionsFromXMLTag(bodyTags[i])
+                    Utils.getDimensionsFromXMLTag(bodyTags[i])
                     ));
         }
 

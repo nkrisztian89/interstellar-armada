@@ -22,6 +22,7 @@
     </graphics>
     <logic>
         <classes source="classes.xml" />
+        <environments source="environments.xml" />
         <database modelRotation="true" />
     </logic>
     <control>

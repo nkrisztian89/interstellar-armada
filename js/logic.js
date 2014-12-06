@@ -1,5 +1,4 @@
 "use strict";
-
 /**
  * @fileOverview This file implements the game logic of the Interstellar 
  * Armada program.
@@ -42,6 +41,8 @@ Application.createModule({name: "Logic",
     var Physics = Application.Physics;
     var Egom = Application.Egom;
     var Scene = Application.Scene;
+    // a reference to this module which will be returned in the end
+    var Module;
     /**
      * The length of impulse-like events in milliseconds (such as thruster bursts or 
      * weapon shots)
@@ -79,8 +80,7 @@ Application.createModule({name: "Logic",
                 Armada.resources().getShader(this._class.shaderName),
                 this._class.samplerName,
                 Armada.resources().getCubemappedTexture(this._class.cubemap),
-                scene.activeCamera
-                ));
+                scene.activeCamera));
     };
     /**
      * Represents an "infinitely far away" object in space (typically a star)
@@ -127,8 +127,7 @@ Application.createModule({name: "Logic",
                     Armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
                     this._class.layers[i].color,
                     this._class.layers[i].size,
-                    Mat.translation4v(Vec.scaled3(this._position, 4500))
-                    );
+                    Mat.translation4v(Vec.scaled3(this._position, 4500)));
             layerParticle.setRelSize(1.0);
             scene.addBackgroundObject(layerParticle);
         }
@@ -266,11 +265,11 @@ Application.createModule({name: "Logic",
      * @class Represents a projectile fired from a weapon.
      * @param {ProjectileClass} projectileClass The class of the projectile
      * defining its general properties.
-     * @param {Float32Array} positionMatrix The transformation matrix describing
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing
      * the initial position of the projectile.
-     * @param {Float32Array} orientationMatrix The transformation matrix describing
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing
      * the initial oriantation of the projectile.
-     * @param {Spacecraft} spacecraft The spacecraft which fired the projectile.
+     * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
      * @param {Force} [startingForce] A force that will be applied to the (physical
      * model of) projectile to kick off its movement.
      * @returns {Projectile}
@@ -296,10 +295,10 @@ Application.createModule({name: "Logic",
          */
         this._physicalModel = new Physics.PhysicalObject(
                 projectileClass.mass,
-                positionMatrix,
-                orientationMatrix,
+                positionMatrix || Mat.identity4(),
+                orientationMatrix || Mat.identity4(),
                 Mat.scaling4(projectileClass.size),
-                spacecraft.getVelocityMatrix(),
+                spacecraft ? spacecraft.getVelocityMatrix() : Mat.null4(),
                 []);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
@@ -329,20 +328,36 @@ Application.createModule({name: "Logic",
         return (this._timeLeft <= 0);
     };
     /**
-     * Adds a renderable node representing this projectile to the passed scene.
-     * @param {Scene} scene The scene to which to add the renderable object
-     * presenting the projectile.
+     * Creates the renderable object that can be used to represent this projectile
+     * in a visual scene, if it has not been created yet.
      */
-    Projectile.prototype.addToScene = function (scene) {
-        this._visualModel = new Scene.Billboard(
+    Projectile.prototype._createVisualModel = function () {
+        this._visualModel = this._visualModel || new Scene.Billboard(
                 Armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
                 Armada.resources().getShader(this._class.shaderName),
                 Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
                 this._class.size,
                 this._physicalModel.positionMatrix,
-                this._physicalModel.orientationMatrix
-                );
+                this._physicalModel.orientationMatrix);
+    };
+    /**
+     * Adds a renderable node representing this projectile to the passed scene.
+     * @param {Scene} scene The scene to which to add the renderable object
+     * presenting the projectile.
+     */
+    Projectile.prototype.addToScene = function (scene) {
+        this._createVisualModel();
         scene.addObject(this._visualModel);
+    };
+    /**
+     * Adds the resources required to render this projectile to the passed scene,
+     * so they get loaded at the next resource load as well as added to any context
+     * the scene is added to.
+     * @param {Scene} scene
+     */
+    Projectile.prototype.addResourcesToScene = function (scene) {
+        this._createVisualModel();
+        scene.addResourcesOfObject(this._visualModel);
     };
     /**
      * Removes the renferences to the renderable and physics objects of the
@@ -470,6 +485,37 @@ Application.createModule({name: "Logic",
         parentNode.addSubnode(this._visualModel);
     };
     /**
+     * Returns the renderable object representing the muzzle flash that is visible
+     * when the barrel having the passed index is firing a projectile.
+     * @param {Number} barrelIndex
+     * @returns {DynamicParticle}
+     */
+    Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex) {
+        var projectileClass = this._class.barrels[barrelIndex].projectileClass;
+        var muzzleFlashPosMatrix = Mat.translation4v(this._class.barrels[barrelIndex].positionVector);
+        return new Scene.DynamicParticle(
+                Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+                Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
+                Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
+                projectileClass.muzzleFlash.color,
+                projectileClass.size,
+                muzzleFlashPosMatrix,
+                muzzleFlashTimeLength);
+    };
+    /**
+     * Adds the resources required to render the projeciles fired by this weapon
+     * to the passed scene, so they get loaded at the next resource load as well 
+     * as added to any context the scene is added to.
+     * @param {Scene} scene
+     */
+    Weapon.prototype.addProjectileResourcesToScene = function (scene) {
+        for (var i = 0; i < this._class.barrels.length; i++) {
+            scene.addResourcesOfObject(this._getMuzzleFlashForBarrel(i));
+            var projectile = new Projectile(this._class.barrels[i].projectileClass);
+            projectile.addResourcesToScene(scene);
+        }
+    };
+    /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed
      * array.
      * @param {Projectile[]} projectiles
@@ -490,17 +536,8 @@ Application.createModule({name: "Logic",
                 // cache variables
                 var projectileClass = this._class.barrels[i].projectileClass;
                 var barrelPosVector = Vec.mulVec3Mat3(this._class.barrels[i].positionVector, Mat.matrix3from4(Mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
-                var muzzleFlashPosMatrix = Mat.translation4v(this._class.barrels[i].positionVector);
                 // add the muzzle flash of this barrel
-                var muzzleFlash = new Scene.DynamicParticle(
-                        Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-                        Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
-                        Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
-                        projectileClass.muzzleFlash.color,
-                        projectileClass.size,
-                        muzzleFlashPosMatrix,
-                        muzzleFlashTimeLength
-                        );
+                var muzzleFlash = this._getMuzzleFlashForBarrel(i);
                 this._visualModel.addSubnode(muzzleFlash);
                 // add the projectile of this barrel
                 var p = new Projectile(
@@ -717,7 +754,6 @@ Application.createModule({name: "Logic",
         var directionVector = [this._drivenPhysicalObject.orientationMatrix[4], this._drivenPhysicalObject.orientationMatrix[5], this._drivenPhysicalObject.orientationMatrix[6]];
         var yawAxis = [this._drivenPhysicalObject.orientationMatrix[8], this._drivenPhysicalObject.orientationMatrix[9], this._drivenPhysicalObject.orientationMatrix[10]];
         var pitchAxis = [this._drivenPhysicalObject.orientationMatrix[0], this._drivenPhysicalObject.orientationMatrix[1], this._drivenPhysicalObject.orientationMatrix[2]];
-
         if (this._thrusterUses["forward"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses["forward"].burn, directionVector, timeBurstLength);
         }
@@ -1211,14 +1247,15 @@ Application.createModule({name: "Logic",
         this._strafeTarget = 0;
         this._liftTarget = 0;
     };
+    // #########################################################################
     /**
      * @class Represents a specific spacecraft (fighter, warship, freighter, space
      * station etc.) in the game.
      * @param {SpacecraftClass} spacecraftClass The class of the spacecraft that
      * describes its general properties.
-     * @param {Float32Array} positionMatrix The translation matrix describing
+     * @param {Float32Array} [positionMatrix] The translation matrix describing
      * the initial position of the spacecraft.
-     * @param {Float32Array} orientationMatrix The rotation matrix describing
+     * @param {Float32Array} [orientationMatrix] The rotation matrix describing
      * the initial orientation of the spacecraft.
      * @param {Projectile[]} [projectileArray=null] The array to which the
      * spacecraft will add its fired projectiles.
@@ -1233,7 +1270,7 @@ Application.createModule({name: "Logic",
          * @name Spacecraft#_class
          * @type SpacecraftClass
          */
-        this._class = spacecraftClass;
+        this._class = null;
         /**
          * The renderable node that represents this spacecraft in a scene.
          * @name Spacecraft#_visualModel
@@ -1247,19 +1284,13 @@ Application.createModule({name: "Logic",
          * @name Spacecraft#_physicalModel
          * @type PhysicalObject
          */
-        this._physicalModel = new Physics.PhysicalObject(
-                this._class.mass,
-                positionMatrix,
-                orientationMatrix,
-                Mat.scaling4(this._class.modelSize),
-                Mat.identity4(),
-                this._class.bodies);
+        this._physicalModel = null;
         /**
          * The list of weapons this spacecraft is equipped with.
          * @name Spacecraft#_weapons
          * @type Weapon[]
          */
-        this._weapons = new Array();
+        this._weapons = null;
         /**
          * The propulsion system this spacecraft is equipped with.
          * @name Spacecraft#_propulsion
@@ -1272,7 +1303,7 @@ Application.createModule({name: "Logic",
          * @name Spacecraft#_maneuveringComputer
          * @type ManeuveringComputer
          */
-        this._maneuveringComputer = new ManeuveringComputer(this);
+        this._maneuveringComputer = null;
         /**
          * The renderable object that is used as the parent for the visual
          * representation of the hitboxes of this craft.
@@ -1285,12 +1316,43 @@ Application.createModule({name: "Logic",
          * @name Spacecraft#_projectileArray
          * @type Projectile[]
          */
+        this._projectileArray = null;
+        // initializing the properties based on the parameters
+        if (spacecraftClass) {
+            this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName);
+        }
+    }
+    // #########################################################################
+    // initializer
+    /**
+     * Initializes the properties of the spacecraft. Used by the constructor
+     * and the methods that load the data from an external source.
+     * @param {SpacecraftClass} spacecraftClass
+     * @param {Float32Array} [positionMatrix]
+     * @param {Float32Array} [orientationMatrix]
+     * @param {Projectile[]} [projectileArray]
+     * @param {String} [equipmentProfileName]
+     * @see Spacecraft
+     */
+    Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
+        this._class = spacecraftClass;
+        this._physicalModel = new Physics.PhysicalObject(
+                this._class.mass,
+                positionMatrix || Mat.identity4(),
+                orientationMatrix || Mat.identity4(),
+                Mat.scaling4(this._class.modelSize),
+                Mat.identity4(),
+                this._class.bodies);
+        this._weapons = new Array();
+        this._maneuveringComputer = new ManeuveringComputer(this);
         this._projectileArray = projectileArray || null;
         // equipping the craft if a profile name was given
         if (equipmentProfileName !== undefined) {
             this.equipProfile(this._class.equipmentProfiles[equipmentProfileName]);
         }
-    }
+    };
+    // #########################################################################
+    // direct getters and setters
     /**
      * Returns the object describing class of this spacecraft.
      * @returns {SpacecraftClass}
@@ -1298,6 +1360,22 @@ Application.createModule({name: "Logic",
     Spacecraft.prototype.getClass = function () {
         return this._class;
     };
+    /**
+     * Returns the renderable object that represents this spacecraft in a scene.
+     * @returns {VisualObject}
+     */
+    Spacecraft.prototype.getVisualModel = function () {
+        return this._visualModel;
+    };
+    /**
+     * Returns the object used for the physics simulation of this spacecraft.
+     * @returns {PhysicalObject}
+     */
+    Spacecraft.prototype.getPhysicalModel = function () {
+        return this._physicalModel;
+    };
+    // #########################################################################
+    // indirect getters and setters
     /**
      * Returns the name of the class of this spacecraft. (e.g. Falcon or Aries)
      * @returns {String}
@@ -1314,26 +1392,177 @@ Application.createModule({name: "Logic",
         return this._class.spacecraftType.fullName;
     };
     /**
-     * Returns the renderable object that represents this spacecraft in a scene.
-     * @returns {VisualObject}
-     */
-    Spacecraft.prototype.getVisualModel = function () {
-        return this._visualModel;
-    };
-    /**
-     * Returns the object used for the physics simulation of this spacecraft.
-     * @returns {PhysicalObject}
-     */
-    Spacecraft.prototype.getPhysicalModel = function () {
-        return this._physicalModel;
-    };
-    /**
      * Returns whether this spacecraft object can be reused to represent a new
      * spacecraft.
      * @returns {Boolean}
      */
     Spacecraft.prototype.canBeReused = function () {
         return false;
+    };
+    /**
+     * Returns the 4x4 translation matrix describing the position of this 
+     * spacecraft in world space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getPositionMatrix = function () {
+        return this._physicalModel.positionMatrix;
+    };
+    /**
+     * Returns the 4x4 rotation matrix describing the orientation of this 
+     * spacecraft in world space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getOrientationMatrix = function () {
+        return this._physicalModel.orientationMatrix;
+    };
+    /**
+     * Returns the 4x4 scaling matrix describing the scaling of the meshes and
+     * physical model representing this spacecraft in world space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getScalingMatrix = function () {
+        return this._physicalModel.scalingMatrix;
+    };
+    /**
+     * Returns the 4x4 translation matrix describing the current velocity of this
+     * spacecraft in world space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getVelocityMatrix = function () {
+        return this._physicalModel.velocityMatrix;
+    };
+    /**
+     * Returns the 4x4 translation matrix describing the current velocity of this
+     * spacecraft in relative (model) space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getRelativeVelocityMatrix = function () {
+        return Mat.mul4(
+                this._physicalModel.velocityMatrix,
+                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse))
+                );
+    };
+    /**
+     * Returns the 4x4 rotation matrix describing the current rotation of this
+     * spacecraft in relative (model) space.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getTurningMatrix = function () {
+        return Mat.mul4(
+                Mat.mul4(
+                        this._physicalModel.orientationMatrix,
+                        this._physicalModel.angularVelocityMatrix),
+                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse)));
+    };
+    /**
+     * Returns the maximum acceleration the spacecraft can achieve using its
+     * currently equipped propulsion system.
+     * @returns {Number|null} The acceleration, in m/s^2. Null, if no propulsion
+     * is equipped.
+     */
+    Spacecraft.prototype.getMaxAcceleration = function () {
+        return this._propulsion ?
+                this._propulsion.getThrust() / this._physicalModel.mass :
+                null;
+    };
+    /**
+     * Returns the maximum angular acceleration the spacecraft can achieve using
+     * its currently equipped propulsion system.
+     * @returns {Number|null} The angular acceleration, in rad/s^2. Null, if
+     * no propulsion is equipped.
+     */
+    Spacecraft.prototype.getMaxAngularAcceleration = function () {
+        return this._propulsion ?
+                this._propulsion.getAngularThrust() / this._physicalModel.mass :
+                null;
+    };
+    /**
+     * Returns the maximum turning rate the spacecraft can keep at the passed
+     * speed while providing the needed centripetal force with its thrusters
+     * to keep itself on a circular path.
+     * @param {Number} speed The speed in m/s.
+     * @returns {Number} Thre turning rate in rad/s.
+     */
+    Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
+        return Math.abs(this._propulsion.getThrust() / (this._physicalModel.mass * speed));
+    };
+    /**
+     * Returns an associative array containing the texture resources that this
+     * spacecraft uses for rendering, organized by the texture roles (types),
+     * e.g. "specular".
+     * @returns {Object}
+     */
+    Spacecraft.prototype.getTextures = function () {
+        var result = new Object();
+        for (var textureType in this._class.textureDescriptors) {
+            result[textureType] = Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptors[textureType]);
+        }
+        return result;
+    };
+    /**
+     * Returns the thruster burn level that is needed to produce the passed
+     * difference in speed using the current propulsion system.
+     * @param {Number} speedDifference The speed different that needs to be produced,
+     * in m/s.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getNeededBurnForSpeedChange = function (speedDifference) {
+        // division by 2 because the full thrust is produced at 0.5 burn level
+        // (full burn level is for both turning and accelerating)
+        // final division because one burst of thrust lasts for a small fraction
+        // of a second, while the basic calculation gives the needed thrust for
+        // one second (as units of measurement are SI aligned)
+        return speedDifference * this._physicalModel.mass / this._propulsion.getThrust() / 2 / (timeBurstLength / 1000);
+    };
+    /**
+     * Returns the thruster burn level that is needed to produce the passed 
+     * difference in angular velocity using the current propulsion system.
+     * @param {Number} angularVelocityDifference The angular velocity difference
+     * that needs to be produced, in rad/5ms !!.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference) {
+        // multiply by 200 to convert given difference from rad/5ms to rad/s
+        // division by 2 because the full angular thrust is produced at 0.5 burn level
+        // (full burn level is for both turning and accelerating) 
+        // final division because one burst of thrust lasts for a small fraction
+        // of a second, while the basic calculation gives the needed thrust for
+        // one second (as units of measurement are SI aligned)
+        return angularVelocityDifference * 200 * this._physicalModel.mass / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
+    };
+    // #########################################################################
+    // other methods
+    /**
+     * Initializes the properties of this spacecraft based on the data stored
+     * in the passed XML tag.
+     * @param {Element} xmlTag
+     * @param {Projectile[]} [projectileArray=null] The array to which the
+     * spacecraft will add its fired projectiles.
+     */
+    Spacecraft.prototype.loadFromXMLTag = function (xmlTag, projectileArray) {
+        this._init(
+                Armada.logic().getSpacecraftClass(xmlTag.getAttribute("class")),
+                Mat.translationFromXMLTag(xmlTag.getElementsByTagName("position")[0]),
+                Mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn")),
+                projectileArray);
+        // equipping the created spacecraft
+        // if there is an quipment tag...
+        if (xmlTag.getElementsByTagName("equipment").length > 0) {
+            var equipmentTag = xmlTag.getElementsByTagName("equipment")[0];
+            // if a profile is referenced in the equipment tag, look up that profile 
+            // and equip according to that
+            if (equipmentTag.hasAttribute("profile")) {
+                this.equipProfile(this._class.equipmentProfiles[equipmentTag.getAttribute("profile")]);
+                // if no profile is referenced, simply create a custom profile from the tags inside
+                // the equipment tag, and equip that
+            } else {
+                var equipmentProfile = new Classes.EquipmentProfile(equipmentTag);
+                this.equipProfile(equipmentProfile);
+            }
+            // if there is no equipment tag, attempt to load the profile named "default"    
+        } else if (this._class.equipmentProfiles["default"] !== undefined) {
+            this.equipProfile(this._class.equipmentProfiles["default"]);
+        }
     };
     /**
      * Returns a string representation of the current flight mode set for this
@@ -1489,106 +1718,6 @@ Application.createModule({name: "Logic",
         this._maneuveringComputer.rollRight(intensity);
     };
     /**
-     * Returns the 4x4 translation matrix describing the position of this 
-     * spacecraft in world space.
-     * @returns {Float32Array}
-     */
-    Spacecraft.prototype.getPositionMatrix = function () {
-        return this._physicalModel.positionMatrix;
-    };
-    /**
-     * Returns the 4x4 rotation matrix describing the orientation of this 
-     * spacecraft in world space.
-     * @returns {Float32Array}
-     */
-    Spacecraft.prototype.getOrientationMatrix = function () {
-        return this._physicalModel.orientationMatrix;
-    };
-    /**
-     * Returns the 4x4 scaling matrix describing the scaling of the meshes and
-     * physical model representing this spacecraft in world space.
-     * @returns {Float32Array}
-     */
-    Spacecraft.prototype.getScalingMatrix = function () {
-        return this._physicalModel.scalingMatrix;
-    };
-    /**
-     * Returns the 4x4 translation matrix describing the current velocity of this
-     * spacecraft in world space.
-     * @returns {Float32Array}
-     */
-    Spacecraft.prototype.getVelocityMatrix = function () {
-        return this._physicalModel.velocityMatrix;
-    };
-    /**
-     * Returns the 4x4 translation matrix describing the current velocity of this
-     * spacecraft in relative (model) space.
-     * @returns {Float32Array}
-     */
-    Spacecraft.prototype.getRelativeVelocityMatrix = function () {
-        return Mat.mul4(
-                this._physicalModel.velocityMatrix,
-                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse))
-                );
-    };
-    /**
-     * Returns the 4x4 rotation matrix describing the current rotation of this
-     * spacecraft in relative (model) space.
-     * @returns {Float32Array}
-     */
-    Spacecraft.prototype.getTurningMatrix = function () {
-        return Mat.mul4(
-                Mat.mul4(
-                        this._physicalModel.orientationMatrix,
-                        this._physicalModel.angularVelocityMatrix),
-                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse)));
-    };
-    /**
-     * Returns the maximum acceleration the spacecraft can achieve using its
-     * currently equipped propulsion system.
-     * @returns {Number|null} The acceleration, in m/s^2. Null, if no propulsion
-     * is equipped.
-     */
-    Spacecraft.prototype.getMaxAcceleration = function () {
-        return this._propulsion ?
-                this._propulsion.getThrust() / this._physicalModel.mass :
-                null;
-    };
-    /**
-     * Returns the maximum angular acceleration the spacecraft can achieve using
-     * its currently equipped propulsion system.
-     * @returns {Number|null} The angular acceleration, in rad/s^2. Null, if
-     * no propulsion is equipped.
-     */
-    Spacecraft.prototype.getMaxAngularAcceleration = function () {
-        return this._propulsion ?
-                this._propulsion.getAngularThrust() / this._physicalModel.mass :
-                null;
-    };
-    /**
-     * Returns the maximum turning rate the spacecraft can keep at the passed
-     * speed while providing the needed centripetal force with its thrusters
-     * to keep itself on a circular path.
-     * @param {Number} speed The speed in m/s.
-     * @returns {Number} Thre turning rate in rad/s.
-     */
-    Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
-        return Math.abs(this._propulsion.getThrust() / (this._physicalModel.mass * speed));
-    };
-    /**
-     * Returns an associative array containing the texture resources that this
-     * spacecraft uses for rendering, organized by the texture roles (types),
-     * e.g. "specular".
-     * @returns {Object}
-     */
-    Spacecraft.prototype.getTextures = function () {
-        var result = new Object();
-        for (var textureType in this._class.textureDescriptors) {
-            result[textureType] = Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptors[textureType]);
-        }
-        return result;
-    };
-    /**
      * Adds a renderable object that represents the index'th body of the physical
      * model of this spacecraft.
      * @param {Number} index The index of the body to represent.
@@ -1623,19 +1752,23 @@ Application.createModule({name: "Logic",
      * @param {Scene} scene The scene to which the objects will be added.
      * @param {Number} [lod] The level of detail to use for adding the models.
      * If not given, all available LODs will be added for dynamic LOD rendering.
-     * @param {Boolean} [addHitboxes=true] Whether to add boxes to represent the
-     * hitboxes corresponding to this spacecraft. (not set to visible by default)
-     * @param {Boolean} [addWeapons=true] Whether to add the models of the weapons
-     * equipped on the spacecraft.
-     * @param {Boolean} [addThrusterParticles=true] Whether to add the particles
-     * representing the glow of the ignited thrusters. (only visible when and as
-     * much as thrusters are actually ignited)
      * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
      * drawing mode (or in solid).
+     * @param {Object} [addSupplements] An object describing what additional
+     * supplementary objects / resources to add to the scene along with the
+     * basic representation of the ship. Contains boolean properties for each
+     * possible supplement, marking if that particular supplement should be 
+     * added. Supported properties:
+     * <ul>
+     * <li>hitboxes</li>
+     * <li>weapons</li>
+     * <li>thursterParticles</li>
+     * <li>projectileResources</li>
+     * </ul>
      * @returns {ShipMesh} The renderable object created to represent the 
      * spacecraft.
      */
-    Spacecraft.prototype.addToScene = function (scene, lod, addHitboxes, addWeapons, addThrusterParticles, wireframe) {
+    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements) {
         var i, j;
         var modelsWithLOD;
         // loading or setting models
@@ -1664,7 +1797,7 @@ Application.createModule({name: "Logic",
                 (wireframe === true));
         scene.addObject(this._visualModel);
         // visualize physical model (hitboxes)
-        if ((addHitboxes === undefined) || (addHitboxes === true)) {
+        if ((addSupplements) && (addSupplements.hitboxes === true)) {
             // add the parent objects for the hitboxes
             this._hitbox = new Scene.VisualObject(Armada.resources().getShader(this._class.shaderName), false, false);
             // add the models for the hitboxes themselves
@@ -1675,15 +1808,21 @@ Application.createModule({name: "Logic",
             this._visualModel.addSubnode(this._hitbox);
         }
         // add the weapons
-        if ((addWeapons === undefined) || (addWeapons === true)) {
+        if ((addSupplements) && (addSupplements.weapons === true)) {
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].addToScene(this._visualModel, lod, wireframe);
             }
         }
         // add the thruster particles
-        if ((addThrusterParticles === undefined) || (addThrusterParticles === true)) {
+        if ((addSupplements) && (addSupplements.thrusterParticles === true)) {
             this._propulsion.addThrusters(this._class.thrusterSlots);
             this._propulsion.addToScene(this._visualModel);
+        }
+        // add projectile resources
+        if ((addSupplements) && (addSupplements.projectileResources === true)) {
+            for (i = 0; i < this._weapons.length; i++) {
+                this._weapons[i].addProjectileResourcesToScene(scene);
+            }
         }
         return this._visualModel;
     };
@@ -1756,37 +1895,6 @@ Application.createModule({name: "Logic",
         this._propulsion.addThrusterBurn(use, value);
     };
     /**
-     * Returns the thruster burn level that is needed to produce the passed
-     * difference in speed using the current propulsion system.
-     * @param {Number} speedDifference The speed different that needs to be produced,
-     * in m/s.
-     * @returns {Number}
-     */
-    Spacecraft.prototype.getNeededBurnForSpeedChange = function (speedDifference) {
-        // division by 2 because the full thrust is produced at 0.5 burn level
-        // (full burn level is for both turning and accelerating)
-        // final division because one burst of thrust lasts for a small fraction
-        // of a second, while the basic calculation gives the needed thrust for
-        // one second (as units of measurement are SI aligned)
-        return speedDifference * this._physicalModel.mass / this._propulsion.getThrust() / 2 / (timeBurstLength / 1000);
-    };
-    /**
-     * Returns the thruster burn level that is needed to produce the passed 
-     * difference in angular velocity using the current propulsion system.
-     * @param {Number} angularVelocityDifference The angular velocity difference
-     * that needs to be produced, in rad/5ms !!.
-     * @returns {Number}
-     */
-    Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference) {
-        // multiply by 200 to convert given difference from rad/5ms to rad/s
-        // division by 2 because the full angular thrust is produced at 0.5 burn level
-        // (full burn level is for both turning and accelerating) 
-        // final division because one burst of thrust lasts for a small fraction
-        // of a second, while the basic calculation gives the needed thrust for
-        // one second (as units of measurement are SI aligned)
-        return angularVelocityDifference * 200 * this._physicalModel.mass / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
-    };
-    /**
      * Toggles the visibility of the models representing the hitboxes of this
      * spacecraft.
      */
@@ -1813,46 +1921,128 @@ Application.createModule({name: "Logic",
         this._visualModel.setOrientationMatrix(this._physicalModel.orientationMatrix);
         this._maneuveringComputer.updateSpeedIncrement(dt);
     };
-
+    // #########################################################################
     /**
-     * @class The domain specific part of the model of what happens in the game, 
-     * with spaceships, projectiles and so.
-     * @returns {Level}
+     * @class Represents an environment that can be used to build a visual 
+     * representation and perform the game logic on a virtual environment where 
+     * the game takes place.
+     * @param {Element} xmlTag If given, the data of the environment will be
+     * initialized from this XML tag.
+     * @returns {Environment}
      */
-    function Level() {
+    function Environment(xmlTag) {
         /**
-         * The associative array of players that compete on this level. The keys
-         * are the names of the players.
-         * @name Level#_players
-         * @type Object
-         */
-        this._players = null;
-        /**
-         * The list of skyboxes this level contains as background.
-         * @name Level#_skyboxes
+         * The list of skyboxes this environment contains as background.
+         * @name Environment#_skyboxes
          * @type Skybox[]
          */
         this._skyboxes = null;
         /**
-         * The list of background objects (stars, nebulae) this level contains.
-         * @name Level#_backgroundObject
+         * The list of background objects (stars, nebulae) this environment contains.
+         * @name Environment#_backgroundObjects
          * @type BackgroundObject[]
          */
         this._backgroundObjects = null;
         /**
-         * The list of dust clouds this level contains.
-         * @name Level#_dustClouds
+         * The list of dust clouds this environment contains.
+         * @name Environment#_dustClouds
          * @type DustCloud[]
          */
         this._dustClouds = null;
         /**
-         * The starting position and orientation of the camera if a scene is 
-         * generated for this level. The position and orientation matrices has to be
-         * stored in this object.
-         * @name Level#_cameraStartPosition
-         * @type Object
+         * The camera relative to which the environment is rendered.
+         * @name Environment#_camera
+         * @type Camera
          */
-        this._cameraStartPosition = null;
+        this._camera = null;
+        // if given, load the data from the XML tag
+        xmlTag && this.loadFromXMLTag(xmlTag);
+    }
+    // #########################################################################
+    // other methods
+    /**
+     * Loads all the data about this environment stored in the passed XML tag.
+     * @param {Element} xmlTag
+     */
+    Environment.prototype.loadFromXMLTag = function (xmlTag) {
+        var i;
+        this._skyboxes = new Array();
+        var skyboxTags = xmlTag.getElementsByTagName("Skybox");
+        for (i = 0; i < skyboxTags.length; i++) {
+            this._skyboxes.push(new Skybox(Armada.logic().getSkyboxClass(skyboxTags[i].getAttribute("class"))));
+        }
+
+        this._backgroundObjects = new Array();
+        var backgroundObjectTags = xmlTag.getElementsByTagName("BackgroundObject");
+        for (i = 0; i < backgroundObjectTags.length; i++) {
+            this._backgroundObjects.push(new BackgroundObject(
+                    Armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+                    backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
+                    backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
+                    ));
+        }
+
+        this._dustClouds = new Array();
+        var dustCloudTags = xmlTag.getElementsByTagName("DustCloud");
+        for (i = 0; i < dustCloudTags.length; i++) {
+            this._dustClouds.push(new DustCloud(Armada.logic().getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
+        }
+    };
+    /**
+     * Adds renderable objects representing all visual elements of the 
+     * environment to the passed scene.
+     * @param {Scene} scene
+     */
+    Environment.prototype.addToScene = function (scene) {
+        var i;
+        for (i = 0; i < this._skyboxes.length; i++) {
+            this._skyboxes[i].addToScene(scene);
+        }
+        for (i = 0; i < this._backgroundObjects.length; i++) {
+            this._backgroundObjects[i].addToScene(scene);
+        }
+        for (i = 0; i < this._dustClouds.length; i++) {
+            this._dustClouds[i].addToScene(scene);
+        }
+        this._camera = scene.activeCamera;
+    };
+    /**
+     * Performs a simulation step to update the state of the environment.
+     */
+    Environment.prototype.simulate = function () {
+        for (var i = 0; i < this._dustClouds.length; i++) {
+            this._dustClouds[i].simulate(this._camera);
+        }
+    };
+    // #########################################################################
+    /**
+     * @class Represents a battle scene with an environment, spacecrafts, 
+     * projectiles. Can create scenes for visual representation using the held
+     * references as well as perform the game logic and physics simulation
+     * among the contained objects.
+     * @returns {Level}
+     */
+    function Level() {
+        /**
+         * Stores the attributes of the environment where this level is situated.
+         * @name Level#_environment
+         * @type Environment
+         */
+        this._environment = null;
+        /**
+         * The starting position of the camera if a scene is generated for this 
+         * level.
+         * @name Level#_cameraStartPositionMatrix
+         * @type Float32Array
+         */
+        this._cameraStartPositionMatrix = null;
+        /**
+         * The starting orientation of the camera if a scene is generated for this 
+         * level.
+         * @name Level#_cameraStartOrientationMatrix
+         * @type Float32Array
+         */
+        this._cameraStartOrientationMatrix = null;
         /**
          * The list of spacecrafts that are placed on the map of this level.
          * @name Level#_spacecrafts
@@ -1860,6 +2050,7 @@ Application.createModule({name: "Logic",
          */
         this._spacecrafts = null;
         /**
+         * An array to store the projectiles fired by the spacecrafts.
          * @name Level#_projectiles
          * @type Projectile[]
          */
@@ -1871,25 +2062,16 @@ Application.createModule({name: "Logic",
          */
         this._pilotedCraftIndex = null;
         /**
+         * A list of references to all the physical objects that take part in
+         * collision / hit check in this level to easily pass them to such
+         * simulation methods.
          * @name Level#_hitObjects
          * @type PhysicalObject[]
          */
         this._hitObjects = null;
-
-        this.camera = null;
-        this.cameraController = null;
-
-        this.onLoad = null;
     }
-
-    Level.prototype.getPlayer = function (name) {
-        return this._players[name];
-    };
-
-    Level.prototype.addPlayer = function (player) {
-        this._players[player.name] = player;
-    };
-
+    // #########################################################################
+    // indirect getters and setters
     Level.prototype.getPilotedSpacecraft = function () {
         if (this._pilotedCraftIndex !== null) {
             return this._spacecrafts[this._pilotedCraftIndex];
@@ -1897,175 +2079,147 @@ Application.createModule({name: "Logic",
             return null;
         }
     };
-
-    Level.prototype.requestLoadFromFile = function (filename) {
+    // #########################################################################
+    // other methods
+    /**
+     * Sends an asynchronous request to grab the file with the passed name from
+     * the level folder and initializes the level data when the file has been
+     * loaded.
+     * @param {String} filename
+     * @param {Function} [callback] An optional function to execute after the
+     * level has been loaded.
+     */
+    Level.prototype.requestLoadFromFile = function (filename, callback) {
         var self = this;
-        Application.requestXMLFile("level", filename, function (levelSource) {
-            self.loadFromXML(levelSource);
-            if (self.onLoad !== null) {
-                self.onLoad();
+        Application.requestXMLFile("level", filename, function (xmlDoc) {
+            self.loadFromXML(xmlDoc);
+            if (callback) {
+                callback();
             }
         });
     };
+    /**
+     * Loads all the data describing this level from the passed XML document.
+     * @param {Document} xmlDoc
+     */
+    Level.prototype.loadFromXML = function (xmlDoc) {
+        Module.log("Loading level from XML file...", 2);
 
-    Level.prototype.loadFromXML = function (levelSource) {
-        var i;
-
-        this._players = new Object();
-        var playerTags = levelSource.getElementsByTagName("Player");
-        for (var i = 0; i < playerTags.length; i++) {
-            this.addPlayer(new Player(playerTags[i].getAttribute("name")));
+        this._environment = new Environment();
+        var environmentTag = Application.getFirstXMLElement(xmlDoc, "Environment");
+        if (environmentTag.hasAttribute("createFrom")) {
+            this._environment = Armada.logic().getEnvironment(environmentTag.getAttribute("createFrom"));
+        } else {
+            this._environment.loadFromXMLTag(environmentTag);
         }
 
-        this._skyboxes = new Array();
-        var skyboxTags = levelSource.getElementsByTagName("Skybox");
-        for (i = 0; i < skyboxTags.length; i++) {
-            this._skyboxes.push(new Skybox(Armada.logic().getSkyboxClass(skyboxTags[i].getAttribute("class"))));
-        }
-
-        this._backgroundObjects = new Array();
-        var backgroundObjectTags = levelSource.getElementsByTagName("BackgroundObject");
-        for (i = 0; i < backgroundObjectTags.length; i++) {
-            this._backgroundObjects.push(new BackgroundObject(
-                    Armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
-                    backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
-                    backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
-                    ));
-        }
-
-        this._dustClouds = new Array();
-        var dustCloudTags = levelSource.getElementsByTagName("DustCloud");
-        for (i = 0; i < dustCloudTags.length; i++) {
-            this._dustClouds.push(new DustCloud(Armada.logic().getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
-        }
-
-        this._cameraStartPosition = new Object();
-        var cameraTags = levelSource.getElementsByTagName("Camera");
+        this._cameraStartPositionMatrix = Mat.identity4();
+        this._cameraStartOrientationMatrix = Mat.identity4();
+        var cameraTags = xmlDoc.getElementsByTagName("Camera");
         if (cameraTags.length > 0) {
             if (cameraTags[0].getElementsByTagName("position").length > 0) {
-                this._cameraStartPosition.positionMatrix = Mat.translation4v(Vec.scaled3(Vec.fromXMLTag3(cameraTags[0].getElementsByTagName("position")[0]), -1));
+                this._cameraStartPositionMatrix = Mat.translation4v(Vec.scaled3(Vec.fromXMLTag3(cameraTags[0].getElementsByTagName("position")[0]), -1));
             }
             if (cameraTags[0].getElementsByTagName("orientation").length > 0) {
-                this._cameraStartPosition.orientationMatrix = Mat.rotation4FromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
+                this._cameraStartOrientationMatrix = Mat.rotation4FromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
             }
         }
 
         this._projectiles = new Array();
         this._spacecrafts = new Array();
-        var spacecraftTags = levelSource.getElementsByTagName("Spacecraft");
-        for (i = 0; i < spacecraftTags.length; i++) {
-            var spacecraft = new Spacecraft(
-                    Armada.logic().getSpacecraftClass(spacecraftTags[i].getAttribute("class")),
-                    Mat.translationFromXMLTag(spacecraftTags[i].getElementsByTagName("position")[0]),
-                    Mat.rotation4FromXMLTags(spacecraftTags[i].getElementsByTagName("turn")),
-                    this._projectiles
-                    );
+        var spacecraftTags = xmlDoc.getElementsByTagName("Spacecraft");
+        for (var i = 0; i < spacecraftTags.length; i++) {
+            var spacecraft = new Spacecraft();
+            spacecraft.loadFromXMLTag(spacecraftTags[i], this._projectiles);
             if (spacecraftTags[i].getAttribute("piloted") === "true") {
                 this._pilotedCraftIndex = i;
             }
-            // equipping the created spacecraft
-            // if there is an quipment tag...
-            if (spacecraftTags[i].getElementsByTagName("equipment").length > 0) {
-                var equipmentTag = spacecraftTags[i].getElementsByTagName("equipment")[0];
-                // if a profile is referenced in the equipment tag, look up that profile 
-                // and equip according to that
-                if (equipmentTag.hasAttribute("profile")) {
-                    spacecraft.equipProfile(spacecraft._class.equipmentProfiles[equipmentTag.getAttribute("profile")]);
-                    // if no profile is referenced, simply create a custom profile from the tags inside
-                    // the equipment tag, and equip that
-                } else {
-                    var equipmentProfile = new Classes.EquipmentProfile(equipmentTag);
-                    spacecraft.equipProfile(equipmentProfile);
-                }
-                // if there is no equipment tag, attempt to load the profile named "default"    
-            } else if (spacecraft._class.equipmentProfiles["default"] !== undefined) {
-                spacecraft.equipProfile(spacecraft._class.equipmentProfiles["default"]);
-            }
             this._spacecrafts.push(spacecraft);
         }
+        Module.log("Level successfully loaded.", 2);
     };
-
-    Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize) {
+    /**
+     * Adds spacecrafts to the level at random positions.
+     * @param {Object} shipNumbersPerClass An associative array describing how
+     * many ships of different classes to add. The keys are the class names, the
+     * values are the number of ships to add.
+     * @param {Number} mapSize The size (width, height and depth, all the same) 
+     * of the area within to add the ships (centered at the origo)
+     * @param {Float32Array} orientationMatrix The matrix describing the 
+     * orientation of the added ships.
+     * @param {Boolean} randomTurnAroundX Whether to randomly turn the placed
+     * ships around the X axis of their orientation matrix.
+     * @param {Boolean} randomTurnAroundY Whether to randomly turn the placed
+     * ships around the Y axis of thier orientation matrix.
+     * @param {Boolean} randomTurnAroundZ Whether to randomly turn the placed
+     * ships around the Z axis of their orientation matrix.
+     */
+    Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ) {
         for (var shipClass in shipNumbersPerClass) {
             for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
+                var orientation = orientationMatrix ?
+                        Mat.matrix4(orientationMatrix) : Mat.identity4();
+                if (randomTurnAroundZ) {
+                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowC4(orientation), Math.random() * Math.PI * 2));
+                }
+                if (randomTurnAroundX) {
+                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowA4(orientationMatrix || Mat.identity4()), Math.random() * Math.PI * 2));
+                }
+                if (randomTurnAroundY) {
+                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowB4(orientationMatrix || Mat.identity4()), Math.random() * Math.PI * 2));
+                }
                 this._spacecrafts.push(
                         new Spacecraft(
                                 Armada.logic().getSpacecraftClass(shipClass),
                                 Mat.translation4(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
-                                Mat.identity4(),
+                                orientation,
                                 this._projectiles,
-                                "default"
-                                )
-                        );
+                                "default"));
             }
         }
     };
-
     /**
-     * 
+     * Adds renderable objects representing all visual elements of the level to
+     * the passed scene.
      * @param {Scene} scene
      */
-    Level.prototype.buildScene = function (scene) {
-        var i, j;
-
-        for (i = 0; i < this._skyboxes.length; i++) {
-            this._skyboxes[i].addToScene(scene);
-        }
-
-        for (i = 0; i < this._backgroundObjects.length; i++) {
-            this._backgroundObjects[i].addToScene(scene);
-        }
-
-        for (i = 0; i < this._dustClouds.length; i++) {
-            this._dustClouds[i].addToScene(scene);
-        }
-
-        this.camera = scene.activeCamera;
-        if (this._cameraStartPosition.positionMatrix !== undefined) {
-            this.camera.setPositionMatrix(this._cameraStartPosition.positionMatrix);
-        }
-        if (this._cameraStartPosition.orientationMatrix !== undefined) {
-            this.camera.setOrientationMatrix(this._cameraStartPosition.orientationMatrix);
-        }
-
+    Level.prototype.addToScene = function (scene) {
+        var i;
+        this._environment.addToScene(scene);
         this._hitObjects = new Array();
         for (i = 0; i < this._spacecrafts.length; i++) {
-            this._spacecrafts[i].addToScene(scene);
+            this._spacecrafts[i].addToScene(scene, undefined, false, {
+                hitboxes: true,
+                weapons: true,
+                thrusterParticles: true,
+                projectileResources: true
+            });
             this._spacecrafts[i].addCamerasForViews(scene);
             this._hitObjects.push(this._spacecrafts[i].getPhysicalModel());
         }
-
-
-        // adding the projectile resources to make sure they will be requested for
-        // loading, as they are not added to the scene in the beginning
-        for (var i = 0; i < Armada.logic().projectileClasses.length; i++) {
-            Armada.resources().getShader(Armada.logic().projectileClasses[i].shaderName);
-            Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].textureDescriptor);
-            Armada.resources().getShader(Armada.logic().projectileClasses[i].muzzleFlash.shaderName);
-            Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].muzzleFlash.textureDescriptor);
-            Armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + Armada.logic().projectileClasses[i].name, Armada.logic().projectileClasses[i].intersections));
+        if (this._cameraStartPositionMatrix) {
+            scene.activeCamera.setPositionMatrix(this._cameraStartPositionMatrix);
         }
-        Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel"));
-    };
-
-    Level.prototype.addProjectileResourcesToContext = function (context) {
-        for (var i = 0; i < Armada.logic().projectileClasses.length; i++) {
-            Armada.resources().getShader(Armada.logic().projectileClasses[i].shaderName).addToContext(context);
-            Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].textureDescriptor).addToContext(context);
-            Armada.resources().getShader(Armada.logic().projectileClasses[i].muzzleFlash.shaderName).addToContext(context);
-            Armada.resources().getOrAddTextureFromDescriptor(Armada.logic().projectileClasses[i].muzzleFlash.textureDescriptor).addToContext(context);
-            Armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + Armada.logic().projectileClasses[i].name, Armada.logic().projectileClasses[i].intersections)).addToContext(context, false);
+        if (this._cameraStartOrientationMatrix) {
+            scene.activeCamera.setOrientationMatrix(this._cameraStartOrientationMatrix);
         }
-        Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")).addToContext(context);
     };
-
+    /**
+     * Toggles the visibility of the hitboxes of all spacecrafts in the level.
+     */
     Level.prototype.toggleHitboxVisibility = function () {
         for (var i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].toggleHitboxVisibility();
         }
     };
-
+    /**
+     * Performs the physics and game logic simulation of all the object in the
+     * level.
+     * @param {Number} dt The time passed since the last simulation step, in
+     * milliseconds.
+     */
     Level.prototype.tick = function (dt) {
+        this._environment.simulate();
         for (var i = 0; i < this._spacecrafts.length; i++) {
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
                 this._spacecrafts[i] = null;
@@ -2078,278 +2232,332 @@ Application.createModule({name: "Logic",
         }
         for (var i = 0; i < this._projectiles.length; i++) {
             if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
-                Application.log("Projectile removed.", 2);
+                Module.log("Projectile removed.", 2);
                 this._projectiles[i] = null;
                 this._projectiles.splice(i, 1);
             } else {
                 this._projectiles[i].simulate(dt, this._hitObjects);
             }
         }
-        for (var i = 0; i < this._dustClouds.length; i++) {
-            this._dustClouds[i].simulate(this.camera);
-        }
-        this.camera.update();
     };
-
-    function Player(name) {
-        this.name = name;
-    }
-
+    // #########################################################################
     /**
-     * @class A class responsible for loading and storing game logic related settings
-     * and data as well and provide an interface to access them.
+     * @class A class responsible for loading and storing game logic related 
+     * settings and data as well and provide an interface to access them.
      * @returns {LogicContext}
      */
     function LogicContext() {
         Resource.call(this);
-
+        /**
+         * The name of the file (without path) that contains the descriptions
+         * of the in-game classes.
+         * @name LogicContext#_classesSourceFileName
+         * @type String
+         */
         this._classesSourceFileName = null;
-
-        this.skyboxClasses = new Array();
-        this.backgroundObjectClasses = new Array();
-        this.dustCloudClasses = new Array();
-        this.weaponClasses = new Array();
-        this.spacecraftClasses = new Array();
+        /**
+         * The name of the file (without path) that contains the descriptions
+         * of the reusable environments.
+         * @name LogicContext#_environmentsSourceFileName
+         * @type String
+         */
+        this._environmentsSourceFileName = null;
+        /**
+         * An associative array storing the SkyboxClass objects that describe
+         * the available Skybox classes in the game. The keys are the name
+         * properties of the stored class objects.
+         * @name LogicContext#_skyboxClasses
+         * @type Object
+         */
+        this._skyboxClasses = null;
+        /**
+         * An associative array storing the BackgroundObjectClass objects that 
+         * describe the available BackgroundObject classes in the game. The keys 
+         * are the name properties of the stored class objects.
+         * @name LogicContext#_backgroundObjectClasses
+         * @type Object
+         */
+        this._backgroundObjectClasses = null;
+        /**
+         * An associative array storing the DustCloudClass objects that describe
+         * the available DustCloud classes in the game. The keys are the name
+         * properties of the stored class objects.
+         * @name LogicContext#_dustCloudClasses
+         * @type Object
+         */
+        this._dustCloudClasses = null;
+        /**
+         * An associative array storing the WeaponClass objects that describe
+         * the available Weapon classes in the game. The keys are the name
+         * properties of the stored class objects.
+         * @name LogicContext#_weaponClasses
+         * @type Object
+         */
+        this._weaponClasses = null;
+        /**
+         * An associative array storing the SpacecraftClass objects that describe
+         * the available Spacecraft classes in the game. The keys are the name
+         * properties of the stored class objects.
+         * @name LogicContext#_spacecraftClasses
+         * @type Object
+         */
+        this._spacecraftClasses = null;
+        /**
+         * An associative array storing the SpacecraftType objects that describe
+         * the available Spacecraft types in the game. The keys are the name
+         * properties of the stored type objects.
+         * @name LogicContext#_spacecraftTypes
+         * @type Object
+         */
         this._spacecraftTypes = null;
-        this.projectileClasses = new Array();
-        this.propulsionClasses = new Array();
-
+        /**
+         * An associative array storing the ProjectileClass objects that describe
+         * the available Projectile classes in the game. The keys are the name
+         * properties of the stored class objects.
+         * @name LogicContext#_projectileClasses
+         * @type Object
+         */
+        this._projectileClasses = null;
+        /**
+         * An associative array storing the PropulsionClass objects that describe
+         * the available Propulsion classes in the game. The keys are the name
+         * properties of the stored class objects.
+         * @name LogicContext#_propulsionClasses
+         * @type Object
+         */
+        this._propulsionClasses = null;
+        /**
+         * An associative array storing the reusable Environment objects that 
+         * describe possible environments for levels. The keys are the names
+         * of the environments.
+         * @name LogicContext#_environments
+         * @type Object
+         */
+        this._environments = null;
+        /**
+         * Whether the rotation of models (both automatic and manual) is enabled
+         * on the database screen.
+         * @name LogicContext#_databaseModelRotation
+         * @type Boolean
+         */
         this._databaseModelRotation = null;
     }
-
     LogicContext.prototype = new Resource();
     LogicContext.prototype.constructor = LogicContext;
-
-    LogicContext.prototype.loadSkyboxClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("SkyboxClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.SkyboxClass(classTags[i]));
-        }
-
-        this.skyboxClasses = result;
-        return result;
-    };
-
-    LogicContext.prototype.loadBackgroundObjectClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("BackgroundObjectClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.BackgroundObjectClass(classTags[i]));
-        }
-        this.backgroundObjectClasses = result;
-        return result;
-    };
-
+    // #########################################################################
+    // direct getters and setters
     /**
-     * 
-     * @param {Element} classesXML
-     * @returns {DustCloudClass[]}
+     * Returns whether the rotation (both automatic and manual) of models on the
+     * database screen is currently turned on.
+     * @returns {Boolean}
      */
-    LogicContext.prototype.loadDustCloudClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("DustCloudClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.DustCloudClass(classTags[i]));
-        }
-
-        this.dustCloudClasses = result;
-        return result;
-    };
-
-    LogicContext.prototype.loadProjectileClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("ProjectileClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.ProjectileClass(classTags[i]));
-        }
-
-        this.projectileClasses = result;
-        return result;
-    };
-
-    LogicContext.prototype.loadWeaponClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("WeaponClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.WeaponClass(classTags[i]));
-        }
-
-        this.weaponClasses = result;
-        return result;
-    };
-
-    LogicContext.prototype.loadPropulsionClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("PropulsionClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.PropulsionClass(classTags[i]));
-        }
-
-        this.propulsionClasses = result;
-        return result;
-    };
-
-    LogicContext.prototype.loadSpacecraftTypes = function (classesXML) {
-        var result = new Object();
-
-        var typeTags = classesXML.getElementsByTagName("SpacecraftType");
-        for (var i = 0; i < typeTags.length; i++) {
-            var spacecraftType = new Classes.SpacecraftType(typeTags[i]);
-            result[spacecraftType.name] = spacecraftType;
-        }
-
-        this._spacecraftTypes = result;
-        return result;
-    };
-
-    LogicContext.prototype.loadSpacecraftClasses = function (classesXML) {
-        var result = new Array();
-
-        var classTags = classesXML.getElementsByTagName("SpacecraftClass");
-        for (var i = 0; i < classTags.length; i++) {
-            result.push(new Classes.SpacecraftClass(classTags[i]));
-        }
-
-        this.spacecraftClasses = result;
-        return result;
-    };
-
-
-    LogicContext.prototype.loadClassesFromXML = function (xmlSource) {
-        this.loadSkyboxClasses(xmlSource);
-        this.loadBackgroundObjectClasses(xmlSource);
-        this.loadDustCloudClasses(xmlSource);
-        this.loadProjectileClasses(xmlSource);
-        this.loadWeaponClasses(xmlSource);
-        this.loadPropulsionClasses(xmlSource);
-        this.loadSpacecraftTypes(xmlSource);
-        this.loadSpacecraftClasses(xmlSource);
-    };
-
-    LogicContext.prototype.requestClassesLoad = function () {
-        var self = this;
-        Application.requestXMLFile("config", this._classesSourceFileName, function (classesXML) {
-            self.loadClassesFromXML(classesXML);
-            self.setToReady();
-        });
-    };
-
-
-    LogicContext.prototype.loadFromXML = function (xmlSource) {
-        this._databaseModelRotation = (xmlSource.getElementsByTagName("database")[0].getAttribute("modelRotation") === "true");
-        this._classesSourceFileName = xmlSource.getElementsByTagName("classes")[0].getAttribute("source");
-        this.requestClassesLoad();
-    };
-
     LogicContext.prototype.getDatabaseModelRotation = function () {
         return this._databaseModelRotation;
     };
-
+    /**
+     * Return the skybox class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SkyboxClass}
+     */
     LogicContext.prototype.getSkyboxClass = function (name) {
-        var i = 0;
-        while ((i < this.skyboxClasses.length) && (this.skyboxClasses[i].name !== name)) {
-            i++;
-        }
-        if (i < this.skyboxClasses.length) {
-            return this.skyboxClasses[i];
-        } else {
-            return null;
-        }
+        return this._skyboxClasses[name] || null;
     };
-
+    /**
+     * Return the background object class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {BackgroundObjectClass}
+     */
     LogicContext.prototype.getBackgroundObjectClass = function (name) {
-        var i = 0;
-        while ((i < this.backgroundObjectClasses.length) && (this.backgroundObjectClasses[i].name !== name)) {
-            i++;
-        }
-        if (i < this.backgroundObjectClasses.length) {
-            return this.backgroundObjectClasses[i];
-        } else {
-            return null;
-        }
+        return this._backgroundObjectClasses[name] || null;
     };
-
+    /**
+     * Return the dust cloud class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {DustCloudClass}
+     */
     LogicContext.prototype.getDustCloudClass = function (name) {
-        var i = 0;
-        while ((i < this.dustCloudClasses.length) && (this.dustCloudClasses[i].name !== name)) {
-            i++;
-        }
-        if (i < this.dustCloudClasses.length) {
-            return this.dustCloudClasses[i];
-        } else {
-            return null;
-        }
+        return this._dustCloudClasses[name] || null;
     };
-
+    /**
+     * Return the projectile class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ProjectileClass}
+     */
     LogicContext.prototype.getProjectileClass = function (name) {
-        var i = 0;
-        while ((i < this.projectileClasses.length) && (this.projectileClasses[i].name !== name)) {
-            i++;
-        }
-        if (i < this.projectileClasses.length) {
-            return this.projectileClasses[i];
-        } else {
-            return null;
-        }
+        return this._projectileClasses[name] || null;
     };
-
-
+    /**
+     * Return the weapon class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {WeaponClass}
+     */
     LogicContext.prototype.getWeaponClass = function (name) {
-        var i = 0;
-        while ((i < this.weaponClasses.length) && (this.weaponClasses[i].name !== name)) {
-            i++;
-        }
-        if (i < this.weaponClasses.length) {
-            return this.weaponClasses[i];
-        } else {
-            return null;
-        }
+        return this._weaponClasses[name] || null;
     };
-
+    /**
+     * Return the propulsion class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {PropulsionClass}
+     */
     LogicContext.prototype.getPropulsionClass = function (name) {
-        var i = 0;
-        while ((i < this.propulsionClasses.length) && (this.propulsionClasses[i].name !== name)) {
-            i++;
-        }
-        if (i < this.propulsionClasses.length) {
-            return this.propulsionClasses[i];
-        } else {
-            return null;
-        }
+        return this._propulsionClasses[name] || null;
     };
-
+    /**
+     * Return the spacecraft type with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SpacecraftType}
+     */
     LogicContext.prototype.getSpacecraftType = function (name) {
-        return this._spacecraftTypes[name];
+        return this._spacecraftTypes[name] || null;
     };
-
+    /**
+     * Return the spacecraft class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SpacecraftClass}
+     */
     LogicContext.prototype.getSpacecraftClass = function (name) {
-        var i = 0;
-        while ((i < this.spacecraftClasses.length) && (this.spacecraftClasses[i].name !== name)) {
-            i++;
+        return this._spacecraftClasses[name] || null;
+    };
+    /**
+     * Return the reusable environment with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {Environment}
+     */
+    LogicContext.prototype.getEnvironment = function (name) {
+        return this._environments[name] || null;
+    };
+    // #########################################################################
+    // indirect getters and setters
+    /**
+     * Returns all the available spacecraft classes in an array.
+     * @returns {SpacecraftClass[]}
+     */
+    LogicContext.prototype.getSpacecraftClassesInArray = function () {
+        var result = new Array();
+        for (var p in this._spacecraftClasses) {
+            result.push(this._spacecraftClasses[p]);
         }
-        if (i < this.spacecraftClasses.length) {
-            return this.spacecraftClasses[i];
-        } else {
-            return null;
+        return result;
+    };
+    // #########################################################################
+    // other methods
+    /**
+     * Adds a class of a the given type of entity to the stored classes.
+     * @param {String} entityClassName e.g. "Skybox", "BackgroundObject"
+     * @param {SkyboxClass|BackgroundObjectClass|WeaponClass|...} entityClass
+     */
+    LogicContext.prototype.addClass = function (entityClassName, entityClass) {
+        entityClassName = entityClassName[0].toLowerCase() + entityClassName.substring(1, entityClassName.length);
+        this["_" + entityClassName + "Classes"][entityClass.name] = entityClass;
+    };
+    /**
+     * Loads the available classes for the objects with the given class name from
+     * the XML tags residing below the passed tag / document which have the
+     * proper tag name.
+     * @param {Element|Document} xmlDoc The parent of the elements which store
+     * the class descriptions.
+     * @param {String} entityClassName The name of the (JS) class of objects for which
+     * the available in-game classes are to be loaded. e.g. "Skybox", "Weapon".
+     * An in-game class has to exist for this kind of objects (with a JS class named
+     * "SkyboxClass" for example) that has a constructor taking an XML element
+     * as parameter to initialize the properties of the class from.
+     */
+    LogicContext.prototype.addClassesFromXML = function (xmlDoc, entityClassName) {
+        // set first letter to lowercase to find and initialize the property storing these classes
+        entityClassName = entityClassName[0].toLowerCase() + entityClassName.substring(1, entityClassName.length);
+        this["_" + entityClassName + "Classes"] = new Object();
+        // set the first letter to uppercase to find the XML tags by name and add the
+        // class object themselves
+        entityClassName = entityClassName[0].toUpperCase() + entityClassName.substring(1, entityClassName.length);
+        var classTags = xmlDoc.getElementsByTagName(entityClassName + "Class");
+        for (var i = 0; i < classTags.length; i++) {
+            this.addClass(entityClassName, new Classes[entityClassName + "Class"](classTags[i]));
         }
     };
-
-    LogicContext.prototype.getSpacecraftClasses = function () {
-        return this.spacecraftClasses;
+    /**
+     * Loads the available spacecraft types from the XML tags residing below the 
+     * passed tag / document.
+     * @param {Element|Document} xmlDoc The parent of the elements which store
+     * the type descriptions.
+     */
+    LogicContext.prototype.loadSpacecraftTypes = function (xmlDoc) {
+        this._spacecraftTypes = new Object();
+        var typeTags = xmlDoc.getElementsByTagName("SpacecraftType");
+        for (var i = 0; i < typeTags.length; i++) {
+            var spacecraftType = new Classes.SpacecraftType(typeTags[i]);
+            this._spacecraftTypes[spacecraftType.name] = spacecraftType;
+        }
     };
-
+    /**
+     * Sends an asynchronous request to grab the file containing the in-game
+     * class descriptions and sets a callback to load those descriptions and
+     * initiate the loading of reusable environments when ready.
+     */
+    LogicContext.prototype.requestClassesLoad = function () {
+        var self = this;
+        Application.requestXMLFile("config", this._classesSourceFileName, function (xmlDoc) {
+            self.loadClassesFromXML(xmlDoc);
+            self.requestEnvironmentsLoad();
+        });
+    };
+    /**
+     * Loads the desciptions of all in-game classes from the passed XML document,
+     * creates and stores all the appropriate in-game class objects for them.
+     * @param {Document} xmlDoc
+     */
+    LogicContext.prototype.loadClassesFromXML = function (xmlDoc) {
+        this.addClassesFromXML(xmlDoc, "Skybox");
+        this.addClassesFromXML(xmlDoc, "BackgroundObject");
+        this.addClassesFromXML(xmlDoc, "DustCloud");
+        this.addClassesFromXML(xmlDoc, "Projectile");
+        this.addClassesFromXML(xmlDoc, "Weapon");
+        this.addClassesFromXML(xmlDoc, "Propulsion");
+        this.loadSpacecraftTypes(xmlDoc);
+        this.addClassesFromXML(xmlDoc, "Spacecraft");
+    };
+    /**
+     * Sends an asynchronous request to grab the file containing the reusable
+     * environment descriptions and sets a callback to load those descriptions 
+     * and set the resource state of this context to ready when done.
+     */
+    LogicContext.prototype.requestEnvironmentsLoad = function () {
+        var self = this;
+        Application.requestXMLFile("environment", this._environmentsSourceFileName, function (xmlDoc) {
+            self.loadEnvironmentsFromXML(xmlDoc);
+            self.setToReady();
+        });
+    };
+    /**
+     * Loads the desciptions of all reusable environments from the passed XML 
+     * document, creates and stores all the objects for them.
+     * @param {Document} xmlDoc
+     */
+    LogicContext.prototype.loadEnvironmentsFromXML = function (xmlDoc) {
+        this._environments = new Object();
+        var environmentTags = xmlDoc.getElementsByTagName("Environment");
+        for (var i = 0; i < environmentTags.length; i++) {
+            var environment = new Environment(environmentTags[i]);
+            this._environments[environmentTags[i].getAttribute("name")] = environment;
+        }
+    };
+    /**
+     * Loads all the setting and references from the passed XML document and
+     * initiates the request(s) necessary to load additional configuration from
+     * referenced files.
+     * @param {Document} xmlDoc
+     */
+    LogicContext.prototype.loadFromXML = function (xmlDoc) {
+        this._databaseModelRotation = (xmlDoc.getElementsByTagName("database")[0].getAttribute("modelRotation") === "true");
+        this._classesSourceFileName = xmlDoc.getElementsByTagName("classes")[0].getAttribute("source");
+        this._environmentsSourceFileName = xmlDoc.getElementsByTagName("environments")[0].getAttribute("source");
+        this.requestClassesLoad();
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
-    return {
+    Module = {
         Spacecraft: Spacecraft,
         Level: Level,
         LogicContext: LogicContext
     };
+    return Module;
 });

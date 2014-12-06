@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Environments>
+    <Environment name="deepSpaceTwoStars">
+        <Skybox class="deepspace" />
+        
+        <BackgroundObject class="standardSun">
+            <position angleAlpha="90" angleBeta="20" />
+        </BackgroundObject>
+        
+        <BackgroundObject class="smallBlueStar">
+            <position angleAlpha="-90" angleBeta="-40" />
+        </BackgroundObject>
+        
+        <DustCloud class="standard" />
+    </Environment>
+</Environments>

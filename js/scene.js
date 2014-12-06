@@ -592,6 +592,7 @@ Application.createModule({name: "Scene",
         this.submeshes = new Array();
 
         this.modelMatrix = Mat.identity4();
+        this.modelMatrixCalculated = false;
 
         var self = this;
 
@@ -599,7 +600,7 @@ Application.createModule({name: "Scene",
             return self.getCascadeModelMatrix();
         };
         this.uniformValueFunctions["u_normalMatrix"] = function () {
-            return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(self.getCascadeModelMatrix())));
+            return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(self.getCascadeModelMatrix())));;
         };
     }
 
@@ -1890,6 +1891,9 @@ Application.createModule({name: "Scene",
         this.objects = new Array();
         this.cameras = new Array();
         this.lights = new Array();
+        
+        // objects that will not be rendered, but their resources will be added
+        this._resourceHolderObjects = new Array();
 
         this.setActiveCamera(new SceneCamera(width / height, 60, 1000));
 
@@ -2028,6 +2032,14 @@ Application.createModule({name: "Scene",
         }
         return this.objects[0];
     };
+    
+    /**
+     * @param {VisualObject} object
+     */
+    Scene.prototype.addResourcesOfObject = function (object) {
+        this._resourceHolderObjects.push(object);
+        object.setScene(this);
+    };
 
     Scene.prototype.addLightSource = function (newLightSource) {
         this.lights.push(newLightSource);
@@ -2127,6 +2139,9 @@ Application.createModule({name: "Scene",
         }
         for (i = 0; i < this.objects.length; i++) {
             this.objects[i].cascadeAddToContext(context);
+        }
+        for (i = 0; i < this._resourceHolderObjects.length; i++) {
+            this._resourceHolderObjects[i].cascadeAddToContext(context);
         }
         this._contexts.push(context);
     };
