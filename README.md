@@ -36,7 +36,7 @@ For developers
 I'm using the NetBeans IDE (8.0.1) with its web development (+GLSL) plugins to 
 develop this application.
 
-The code is currently in a later phase a full refactoring process. Next to 
+The code is currently in a later phase of a full refactoring process. Next to 
 structural and legibility changes, I'm adding comments to all classes, fields and
 methods. Many parts are already fully commented. You can generate a HTML 
 documentation for the program using [JSDoc](https://github.com/jsdoc3/jsdoc),

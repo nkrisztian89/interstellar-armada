@@ -927,8 +927,8 @@ Application.createModule({name: "Screens",
         this._rotationLoop = setInterval(function ()
         {
             var curDate = new Date();
-            self._solidModel.rotate(self._item.visualModel.getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
-            self._wireframeModel.rotate(self._item.visualModel.getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            self._solidModel.rotate(self._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            self._wireframeModel.rotate(self._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
             prevDate = curDate;
         }, 1000 / 60);
     };
@@ -1080,7 +1080,6 @@ Application.createModule({name: "Screens",
             // to the scene
             self._item = new Logic.Spacecraft(
                     shipClass,
-                    "",
                     Mat.identity4(),
                     Mat.identity4(),
                     null,
@@ -1124,9 +1123,9 @@ Application.createModule({name: "Screens",
             // been loaded
             Armada.resources().executeWhenReady(function () {
                 // get the length of the ship based on the length of its model
-                self._itemLength = self._item.visualModel.modelsWithLOD[0].model.getHeight();
-                self._itemLengthInMeters = self._item.visualModel.modelsWithLOD[0].model.getHeightInMeters();
-                self._itemFront = self._item.visualModel.modelsWithLOD[0].model.getMaxY();
+                self._itemLength = self._item.getVisualModel().modelsWithLOD[0].model.getHeight();
+                self._itemLengthInMeters = self._item.getVisualModel().modelsWithLOD[0].model.getHeightInMeters();
+                self._itemFront = self._item.getVisualModel().modelsWithLOD[0].model.getMaxY();
                 self._itemDescription.setContent(
                         shipClass.description + "<br/>" +
                         "<br/>" +
@@ -1140,11 +1139,11 @@ Application.createModule({name: "Screens",
                 // data if it already exists
                 self.bindSceneToCanvas(self._scene, self.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
-                self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.visualModel.getScaledSize()));
+                self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.getVisualModel().getScaledSize()));
                 if (Armada.graphics().getShadowMapping() && (Armada.graphics().getShaderComplexity() === "normal")) {
                     self._scene.setShadowMapRanges([
-                        0.5 * self._item.visualModel.getScaledSize(),
-                        self._item.visualModel.getScaledSize()
+                        0.5 * self._item.getVisualModel().getScaledSize(),
+                        self._item.getVisualModel().getScaledSize()
                     ]);
                     self._scene.enableShadowMapping();
                 } else {
