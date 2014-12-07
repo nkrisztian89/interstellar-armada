@@ -337,8 +337,8 @@ Application.createModule({name: "Logic",
                 Armada.resources().getShader(this._class.shaderName),
                 Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
                 this._class.size,
-                this._physicalModel.positionMatrix,
-                this._physicalModel.orientationMatrix);
+                this._physicalModel.getPositionMatrix(),
+                this._physicalModel.getOrientationMatrix());
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
@@ -381,9 +381,9 @@ Application.createModule({name: "Logic",
             this.destroy();
         } else {
             this._physicalModel.simulate(dt);
-            this._visualModel.positionMatrix = this._physicalModel.positionMatrix;
-            this._visualModel.orientationMatrix = this._physicalModel.orientationMatrix;
-            var positionVector = Mat.translationVector4(this._physicalModel.positionMatrix);
+            this._visualModel.positionMatrix = this._physicalModel.getPositionMatrix();
+            this._visualModel.orientationMatrix = this._physicalModel.getOrientationMatrix();
+            var positionVector = Mat.translationVector3(this._physicalModel.getPositionMatrix());
             for (var i = 0; i < hitObjects.length; i++) {
                 if ((hitObjects[i] !== this._origin) && (hitObjects[i].checkHit(positionVector, [], 0))) {
                     this.destroy();
@@ -751,9 +751,9 @@ Application.createModule({name: "Logic",
      * to the physical object it drives.
      */
     Propulsion.prototype.simulate = function () {
-        var directionVector = [this._drivenPhysicalObject.orientationMatrix[4], this._drivenPhysicalObject.orientationMatrix[5], this._drivenPhysicalObject.orientationMatrix[6]];
-        var yawAxis = [this._drivenPhysicalObject.orientationMatrix[8], this._drivenPhysicalObject.orientationMatrix[9], this._drivenPhysicalObject.orientationMatrix[10]];
-        var pitchAxis = [this._drivenPhysicalObject.orientationMatrix[0], this._drivenPhysicalObject.orientationMatrix[1], this._drivenPhysicalObject.orientationMatrix[2]];
+        var directionVector = Mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
+        var yawAxis = Mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
+        var pitchAxis = Mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
         if (this._thrusterUses["forward"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses["forward"].burn, directionVector, timeBurstLength);
         }
@@ -1405,7 +1405,7 @@ Application.createModule({name: "Logic",
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getPositionMatrix = function () {
-        return this._physicalModel.positionMatrix;
+        return this._physicalModel.getPositionMatrix();
     };
     /**
      * Returns the 4x4 rotation matrix describing the orientation of this 
@@ -1413,7 +1413,7 @@ Application.createModule({name: "Logic",
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getOrientationMatrix = function () {
-        return this._physicalModel.orientationMatrix;
+        return this._physicalModel.getOrientationMatrix();
     };
     /**
      * Returns the 4x4 scaling matrix describing the scaling of the meshes and
@@ -1421,7 +1421,7 @@ Application.createModule({name: "Logic",
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getScalingMatrix = function () {
-        return this._physicalModel.scalingMatrix;
+        return this._physicalModel.getScalingMatrix();
     };
     /**
      * Returns the 4x4 translation matrix describing the current velocity of this
@@ -1429,7 +1429,7 @@ Application.createModule({name: "Logic",
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getVelocityMatrix = function () {
-        return this._physicalModel.velocityMatrix;
+        return this._physicalModel.getVelocityMatrix();
     };
     /**
      * Returns the 4x4 translation matrix describing the current velocity of this
@@ -1438,9 +1438,8 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
         return Mat.mul4(
-                this._physicalModel.velocityMatrix,
-                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse))
-                );
+                this._physicalModel.getVelocityMatrix(),
+                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the 4x4 rotation matrix describing the current rotation of this
@@ -1450,9 +1449,9 @@ Application.createModule({name: "Logic",
     Spacecraft.prototype.getTurningMatrix = function () {
         return Mat.mul4(
                 Mat.mul4(
-                        this._physicalModel.orientationMatrix,
-                        this._physicalModel.angularVelocityMatrix),
-                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.rotationMatrixInverse)));
+                        this._physicalModel.getOrientationMatrix(),
+                        this._physicalModel.getAngularVelocityMatrix()),
+                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the maximum acceleration the spacecraft can achieve using its
@@ -1462,7 +1461,7 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getMaxAcceleration = function () {
         return this._propulsion ?
-                this._propulsion.getThrust() / this._physicalModel.mass :
+                this._propulsion.getThrust() / this._physicalModel.getMass() :
                 null;
     };
     /**
@@ -1473,7 +1472,7 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getMaxAngularAcceleration = function () {
         return this._propulsion ?
-                this._propulsion.getAngularThrust() / this._physicalModel.mass :
+                this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
                 null;
     };
     /**
@@ -1484,7 +1483,7 @@ Application.createModule({name: "Logic",
      * @returns {Number} Thre turning rate in rad/s.
      */
     Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
-        return Math.abs(this._propulsion.getThrust() / (this._physicalModel.mass * speed));
+        return Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed));
     };
     /**
      * Returns an associative array containing the texture resources that this
@@ -1512,7 +1511,7 @@ Application.createModule({name: "Logic",
         // final division because one burst of thrust lasts for a small fraction
         // of a second, while the basic calculation gives the needed thrust for
         // one second (as units of measurement are SI aligned)
-        return speedDifference * this._physicalModel.mass / this._propulsion.getThrust() / 2 / (timeBurstLength / 1000);
+        return speedDifference * this._physicalModel.getMass() / this._propulsion.getThrust() / 2 / (timeBurstLength / 1000);
     };
     /**
      * Returns the thruster burn level that is needed to produce the passed 
@@ -1528,10 +1527,10 @@ Application.createModule({name: "Logic",
         // final division because one burst of thrust lasts for a small fraction
         // of a second, while the basic calculation gives the needed thrust for
         // one second (as units of measurement are SI aligned)
-        return angularVelocityDifference * 200 * this._physicalModel.mass / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
+        return angularVelocityDifference * 200 * this._physicalModel.getMass() / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
     };
     // #########################################################################
-    // other methods
+    // methods
     /**
      * Initializes the properties of this spacecraft based on the data stored
      * in the passed XML tag.
@@ -1727,9 +1726,9 @@ Application.createModule({name: "Logic",
                 Armada.resources().getOrAddModelByName(
                 Egom.cuboidModel(
                         this._class.name + "-body" + index,
-                        this._class.bodies[index].width,
-                        this._class.bodies[index].height,
-                        this._class.bodies[index].depth,
+                        this._class.bodies[index].getWidth(),
+                        this._class.bodies[index].getHeight(),
+                        this._class.bodies[index].getDepth(),
                         [0.0, 1.0, 1.0, 0.5])),
                 0);
         var hitZoneMesh = new Scene.Mesh(
@@ -1740,8 +1739,8 @@ Application.createModule({name: "Logic",
                     specular: Armada.resources().getOrAddTexture("textures/white.png"),
                     luminosity: Armada.resources().getOrAddTexture("textures/white.png")
                 },
-        Mat.translation4v(Mat.translationVector3(this._class.bodies[index].positionMatrix)),
-                this._class.bodies[index].orientationMatrix,
+        Mat.translation4v(Mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
+                this._class.bodies[index].getOrientationMatrix(),
                 Mat.identity4(),
                 false);
         this._hitbox.addSubnode(hitZoneMesh);
@@ -1791,8 +1790,8 @@ Application.createModule({name: "Logic",
                 modelsWithLOD,
                 Armada.resources().getShader(this._class.shaderName),
                 textures,
-                this._physicalModel.positionMatrix,
-                this._physicalModel.orientationMatrix,
+                this._physicalModel.getPositionMatrix(),
+                this._physicalModel.getOrientationMatrix(),
                 Mat.scaling4(this._class.modelSize),
                 (wireframe === true));
         scene.addObject(this._visualModel);
@@ -1917,8 +1916,8 @@ Application.createModule({name: "Logic",
         this._maneuveringComputer.controlThrusters();
         this._propulsion.simulate(dt);
         this._physicalModel.simulate(dt);
-        this._visualModel.setPositionMatrix(this._physicalModel.positionMatrix);
-        this._visualModel.setOrientationMatrix(this._physicalModel.orientationMatrix);
+        this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
+        this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         this._maneuveringComputer.updateSpeedIncrement(dt);
     };
     // #########################################################################
@@ -1959,7 +1958,7 @@ Application.createModule({name: "Logic",
         xmlTag && this.loadFromXMLTag(xmlTag);
     }
     // #########################################################################
-    // other methods
+    // methods
     /**
      * Loads all the data about this environment stored in the passed XML tag.
      * @param {Element} xmlTag
@@ -2080,7 +2079,7 @@ Application.createModule({name: "Logic",
         }
     };
     // #########################################################################
-    // other methods
+    // methods
     /**
      * Sends an asynchronous request to grab the file with the passed name from
      * the level folder and initializes the level data when the file has been
@@ -2440,7 +2439,7 @@ Application.createModule({name: "Logic",
         return result;
     };
     // #########################################################################
-    // other methods
+    // methods
     /**
      * Adds a class of a the given type of entity to the stored classes.
      * @param {String} entityClassName e.g. "Skybox", "BackgroundObject"

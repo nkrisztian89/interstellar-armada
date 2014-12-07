@@ -43,7 +43,7 @@ var Armada = Armada || (function (app) {
      * @name Armada#_version
      * @type String
      */
-    var _version = "0.1.0:105";
+    var _version = "0.1.0:106";
     /**
      * Holds the Game object that contains the fields and methods of game 
      * instance, such as methods for loading the configuration and resources of 
