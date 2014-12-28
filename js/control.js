@@ -33,8 +33,9 @@ Application.createModule({name: "Control",
     // create a reference to the used modules in the local scope for cleaner and
     // faster access
     var Resource = Application.Resource.Resource;
+    // a reference to this module which will be returned in the end
+    var Module;
     /**
-     * Creates a new key binding object.
      * @class Represents a key (combination) - action association.
      * @param {Element|String} [xmlTagOrActionName] If a string is given, it will
      * be taken as the name of the action to be assigned. Otherwise it is taken as
@@ -540,7 +541,6 @@ Application.createModule({name: "Control",
     };
 
     /**
-     * Creates a new mouse binding object.
      * @class Represents the assignment of a mouse action (such as move, click...) 
      * to an in-game action. (such as fire)
      * @param {Element} [xmlTag] If given, the properties will be initialized from
@@ -602,8 +602,6 @@ Application.createModule({name: "Control",
             this.loadFromXMLTag(xmlTag);
         }
     }
-    ;
-
     /**
      * Loads the properties of the key binding as stored in the passed XML tag.
      * @param {Element} xmlTag
@@ -1105,7 +1103,270 @@ Application.createModule({name: "Control",
         this._mousePositionChange = [0, 0];
         return result;
     };
-
+    /**
+     * @class Represents the assignment of a gamepad/joystick action (moving an 
+     * axis or pressing a button) to an in-game action. (such as fire)
+     * @param {Element} [xmlTag] If given, the properties will be initialized from
+     * the data stored in this XML tag.
+     */
+    function GamepadBinding(xmlTag) {
+        /**
+         * Name of the in-game action the gamepad action is bound to.
+         * @name GamepadBinding#_actionName
+         * @type String
+         */
+        this._actionName = null;
+        /**
+         * Which mouse button should be pressed to trigger this binding.
+         * @name GamepadBinding#_button
+         * @type Number
+         */
+        this._button = null;
+        this._axisIndex = null;
+        this._axisPositive = null;
+        // if an xmlTag was specified, initialize the properties from there
+        if (xmlTag !== undefined) {
+            this.loadFromXMLTag(xmlTag);
+        }
+    }
+    /**
+     * Loads the properties of the binding as stored in the passed XML tag.
+     * @param {Element} xmlTag
+     */
+    GamepadBinding.prototype.loadFromXMLTag = function (xmlTag) {
+        this._actionName = xmlTag.getAttribute("action");
+        if (xmlTag.hasAttribute("button")) {
+            this._button = parseInt(xmlTag.getAttribute("button"));
+        }
+        if (xmlTag.hasAttribute("axis")) {
+            this._axisIndex = Math.abs(parseInt(xmlTag.getAttribute("axis")));
+            this._axisPositive = (xmlTag.getAttribute("axis")[0] !== "-");
+        }
+    };
+    /**
+     * Saves the properties of this binding to HTML5 local storage.
+     */
+    GamepadBinding.prototype.saveToLocalStorage = function () {
+        localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_button'] = this._button;
+        localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisIndex'] = this._axisIndex;
+        localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisPositive'] = this._axisPositive;
+    };
+    /**
+     * Loads the properties of the binding if they are stored in the HTML5 local
+     * storage object.
+     */
+    GamepadBinding.prototype.loadFromLocalStorage = function () {
+        if (localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_button'] !== undefined) {
+            this._button = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisIndex']);
+            this._axisIndex = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_button']);
+            this._axisPositive = (localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisPositive'] === "true");
+        }
+    };
+    /**
+     * Removes the properties of this binding from the HTML5 local storage.
+     */
+    GamepadBinding.prototype.removeFromLocalStorage = function () {
+        localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_gamepad_button');
+        localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_gamepad_axisIndex');
+        localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_gamepad_axisPositive');
+    };
+    /**
+     * Returns the name of the action assigned in this binding. Has to be a name
+     * that can be processed by the appropriate {@link Controller}s.
+     * @returns {String}
+     */
+    GamepadBinding.prototype.getActionName = function () {
+        return this._actionName;
+    };
+    /**
+     * Returns how much is the gamepad action  triggered according to the current gamepad 
+     * state passed as parameter. Gamepad actions can have different trigger intensities
+     * (the gamepad axes are offset to a different degree), therefore the returned
+     * value is an integer.
+     * @param {Object} gamepad The gamepad object containing the current gamepad
+     * state.
+     * @returns {Number} Whether the action was triggerend and with what intensity.
+     * Zero means the action was not triggered, a positive value represents the 
+     * intensity.
+     */
+    GamepadBinding.prototype.getTriggeredIntensity = function (gamepad) {
+        if (!gamepad) {
+            return 0;
+        }
+        // first if this is a button assignment, check the state of the appropriate
+        // gamepad button
+        if (this._button !== null) {
+            return (gamepad.buttons[this._button] === 1.0 ||
+                    ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
+        }
+        if (this._axisIndex !== null) {
+            return Math.max((0.0075 * gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
+        }
+        return 0;
+    };
+    /**
+     * Returns a string representation describing the action the user needs
+     * to perform to trigger this binding.
+     * @returns {String}
+     */
+    GamepadBinding.prototype.getControlString = function () {
+        if (this._button !== null) {
+            return "button " + this._button;
+        }
+        if (this._axisIndex !== null) {
+            return "axis " + this._axisIndex + " " + (this._axisPositive ? "positive" : "negative");
+        }
+        return "";
+    };
+    /**
+     * @class Monitors the gamepad/joystick inputs and stores the current state 
+     * of the gamepad/joystick. 
+     * Can load and store gamepad bindings and based on the current state and the 
+     * bindings, determine the list of currently triggered actions that controllers 
+     * can/should execute.
+     * @param {Element} [xmlTag] Upon initialization, it can load the bindings from
+     * this XML tag if specified.
+     * @returns {GamepadInputInterpreter}
+     */
+    function GamepadInputInterpreter(xmlTag) {
+        this._deviceType = "Joystick";
+        this._gamepad = null;
+        /**
+         * An associative array storing the active gamepad bindings by the names of the
+         * actions that they are associated to.
+         * @name GamepadInputInterpreter#_bindings
+         * @type Object
+         */
+        this._bindings = new Object();
+        /**
+         * Whether the interpreter is currently listening for input.
+         * @name GamepadInputInterpreter#_listening
+         * @type Boolean
+         */
+        this._listening = false;
+        // if an xmlTag was specified, initialize the bindings from there
+        if (xmlTag !== undefined) {
+            this.loadFromXMLTag(xmlTag);
+        }
+    }
+    /**
+     * Returns of the name of the device this interpreter monitors. Every input
+     * interpreter should implement this function.
+     * @returns {String}
+     */
+    GamepadInputInterpreter.prototype.getDeviceName = function () {
+        return this._deviceType;
+    };
+    /**
+     * If there is no gamepad action bound yet to the in-game action associated with 
+     * the passed binding, adds the binding. If there already is a binding, overwrites 
+     * it with the passed binding, as there can be no two gamepad actions be bound to the
+     * same in-game action for now. This method is for setting default bindings.
+     * @see GamepadInputInterpreter#setAndStoreBinding
+     * @param {MouseBinding} binding
+     */
+    GamepadInputInterpreter.prototype.setBinding = function (binding) {
+        this._bindings[binding.getActionName()] = binding;
+    };
+    /**
+     * Sets (adds or overwrites) the gamepad binding associated with the in-game action of the 
+     * passed binding, and also stores the binding in HTML5 local storage. This 
+     * method is for setting custom local bindings.
+     * @see GamepadInputInterpreter#setBinding
+     * @param {GamepadBinding} binding
+     */
+    GamepadInputInterpreter.prototype.setAndStoreBinding = function (binding) {
+        this.setBinding(binding);
+        binding.saveToLocalStorage();
+    };
+    /**
+     * Returns a string describing the gamepad action assigned to the action with
+     * the passed name.
+     * @param {String} actionName
+     * @returns {String}
+     */
+    GamepadInputInterpreter.prototype.getControlStringForAction = function (actionName) {
+        if (this._bindings[actionName] !== undefined) {
+            return this._bindings[actionName].getControlString();
+        } else {
+            return "";
+        }
+    };
+    /**
+     * Loads the properties of the interpreter such as the (default) gamepad bindings
+     * from the passed XML tag.
+     * @param {Element} xmlTag
+     */
+    GamepadInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
+        var i;
+        var bindingTags = xmlTag.getElementsByTagName("binding");
+        for (i = 0; i < bindingTags.length; i++) {
+            this.setBinding(new GamepadBinding(bindingTags[i]));
+        }
+    };
+    /**
+     * Loads the properties of the interpreter such as the (custom local) gamepad bindings
+     * from HTML5 local storage.
+     */
+    GamepadInputInterpreter.prototype.loadFromLocalStorage = function () {
+        for (var actionName in this._bindings) {
+            this._bindings[actionName].loadFromLocalStorage();
+        }
+    };
+    /**
+     * Removes custom mouse bindings stored in HTML5 local storage.
+     */
+    GamepadInputInterpreter.prototype.removeFromLocalStorage = function () {
+        for (var actionName in this._bindings) {
+            this._bindings[actionName].removeFromLocalStorage();
+        }
+    };
+    GamepadInputInterpreter.prototype.handleGamepadConnected = function (event) {
+        if (!this._gamepad) {
+            this._gamepad = event.gamepad;
+        }
+    };
+    /**
+     * Sets the event handlers to grab a gamepad object for this interpreter
+     * once it has become available for the web application.
+     * The triggered actions can be queried from this interpreter after this 
+     * method has been called.
+     */
+    GamepadInputInterpreter.prototype.startListening = function () {
+        var self = this;
+        window.addEventListener("gamepadconnected", function (e) {
+            self.handleGamepadConnected(e);
+        });
+        this._listening = true;
+    };
+    /**
+     * The triggered actions cannot be queried from this interpreter after this 
+     * function has been called.
+     */
+    GamepadInputInterpreter.prototype.stopListening = function () {
+        window.ongamepadconnected = null;
+        this._listening = false;
+    };
+    /**
+     * Returns the list of currently triggered actions and their intensity based on 
+     * the internally stored gamepad state and gamepad bindings.
+     * @returns {Object[]} The list of action names and intensities. The name 
+     * (String) property stores the action's name and the intensity (Number) property 
+     * the intensity.
+     */
+    GamepadInputInterpreter.prototype.getTriggeredActions = function () {
+        var result = new Array();
+        for (var bindingActionName in this._bindings) {
+            var actionIntensity = this._bindings[bindingActionName].getTriggeredIntensity(this._gamepad);
+            if (actionIntensity > 0) {
+                result.push({
+                    name: bindingActionName,
+                    intensity: actionIntensity
+                });
+            }
+        }
+        return result;
+    };
     /**
      * @class Represents an in-game action that can be triggered by the user and a 
      * controller can execute certain functions on methods on their controlled 
@@ -1783,6 +2044,7 @@ Application.createModule({name: "Control",
          * @type MouseInputInterpreter
          */
         this._mouseInterpreter = null;
+        this._joystickInterpreter = null;
         /**
          * The list of controllers, which control various entities found in the game.
          * @name ControlContext#_controllers
@@ -1846,6 +2108,9 @@ Application.createModule({name: "Control",
         if (inputInterpreter instanceof MouseInputInterpreter) {
             this._mouseInterpreter = this._inputInterpreters[this._inputInterpreters.length - 1];
         }
+        if (inputInterpreter instanceof GamepadInputInterpreter) {
+            this._joystickInterpreter = this._inputInterpreters[this._inputInterpreters.length - 1];
+        }
     };
 
     /**
@@ -1860,7 +2125,7 @@ Application.createModule({name: "Control",
      * Returns the stored intepreter of the given type. (indicating the input device)
      * @param {String} interpreterType An all lowercase representation of the type,
      * e.g. "keyboard" or "mouse"
-     * @return {KeyboardInputInterpreter|MouseInputInterpreter}
+     * @return {KeyboardInputInterpreter|MouseInputInterpreter|GamepadInputInterpreter}
      */
     ControlContext.prototype.getInterpreter = function (interpreterType) {
         if (this["_" + interpreterType + "Interpreter"]) {
@@ -1999,6 +2264,9 @@ Application.createModule({name: "Control",
                     case "mouse":
                         this.addInputInterpreter(new MouseInputInterpreter(interpreterTags[i]));
                         break;
+                    case "joystick":
+                        this.addInputInterpreter(new GamepadInputInterpreter(interpreterTags[i]));
+                        break;
                     default:
                         Application.showError("Unrecognized input device type: '" + interpreterTags[i].getAttribute("type") + "'!",
                                 "severe", "Every input device defined in the settings file must be of one of the following types: " +
@@ -2130,9 +2398,10 @@ Application.createModule({name: "Control",
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
-    return {
+    Module = {
         KeyBinding: KeyBinding,
         KeyboardInputInterpreter: KeyboardInputInterpreter,
         ControlContext: ControlContext
     };
+    return Module;
 });

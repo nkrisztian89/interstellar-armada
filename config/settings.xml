@@ -123,6 +123,15 @@
                 <binding action="pitchDown" move="down" fromCenter="true" />
                 <binding action="pitchUp" move="up" fromCenter="true" />
             </inputDevice>
+            <inputDevice type="joystick">
+                <binding action="fire" button="0" />
+                <binding action="yawLeft" axis="-2" />
+                <binding action="yawRight" axis="+2" />
+                <binding action="pitchDown" axis="-1" />
+                <binding action="pitchUp" axis="+1" />
+                <binding action="rollLeft" axis="-0" />
+                <binding action="rollRight" axis="+0" />
+            </inputDevice>
         </input>
     </control>
 </settings>
