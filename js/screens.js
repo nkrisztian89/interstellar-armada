@@ -1086,7 +1086,7 @@ Application.createModule({name: "Screens",
             // add the ship to the scene in triangle drawing mode
             self._solidModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), false, {weapons: true});
             // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-            self._solidModel.cascadeSetShader(Armada.graphics().getShadowMapping() ?
+            self._solidModel.getNode().setShader(Armada.graphics().getShadowMapping() ?
                     Armada.resources().getShader("shadowMapReveal")
                     : Armada.resources().getShader("simpleReveal"));
             // set the necessary uniform functions for the reveal shader
@@ -1102,7 +1102,7 @@ Application.createModule({name: "Screens",
             // add the ship to the scene in line drawing mode as well
             self._wireframeModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), true, {weapons: true});
             // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-            self._wireframeModel.cascadeSetShader(Armada.resources().getShader("oneColorReveal"));
+            self._wireframeModel.getNode().setShader(Armada.resources().getShader("oneColorReveal"));
             // set the necessary uniform functions for the one colored reveal shader
             self._wireframeModel.setUniformValueFunction("u_color", function () {
                 return [0.0, 1.0, 0.0, 1.0];

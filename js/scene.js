@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview This file the {@link Scene} class, which can be used to build
- * and render a scene containing {@link VisualObject} instances.
+ * and render a scene containing {@link RenderableNode} instances.
  * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
  * @version 0.1-dev
  */
@@ -33,523 +33,1197 @@ Application.createModule({name: "Scene",
     // create a reference to the used modules in the local scope for cleaner and
     // faster access
     var GL = Application.GL;
+    // a reference to this module which will be returned in the end
+    var Module;
+    // #########################################################################
     /**
-     * Creates a new VisualObject.
-     * @class The parent class of all objects to be rendered in the scene graph such
-     * as full viewport quads, shaded meshes, billboards or particle systems. Serves
-     * as a node, contains references to its parent and subnodes as well.
-     * @param {Shader} shader The shader that should be active while rendering this object
-     * @param {Boolean} renderedWithDepthMask Tells whether this object should be rendered when the depth mask is on (= it contains non-transparent triangles)
-     * @param {Boolean} renderedWithoutDepthMask Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)
-     * @param {Number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this value, render will not take place.
-     * @returns {VisualObject}
+     * @class Represents a three dimensional object situated in a virtual space.
+     * This is used as a mixin class, adding its functionality to classes that
+     * have otherwise a different superclass.
+     * @constructor
+     * @param {Float32Array} [positionMatrix] Initial position.
+     * @param {Float32Array} [orientationMatrix] Initial orientation.
+     * @param {Float32Array} [scalingMatrix] Initial scaling.
+     * @param {Number} [size=1]
+     * @returns {Object3D}
      */
-    function VisualObject(shader, renderedWithDepthMask, renderedWithoutDepthMask, smallestParentSizeWhenDrawn) {
-        this.shader = shader;
-        this.uniformValueFunctions = new Array();
-
-        this.toBeDeleted = false;
-
-        this._scene = null;
-        this.renderParent = null;
-        this.subnodes = new Array();
-
-        this.visible = true;
-
-        this.visibleWidth = 0;
-        this.visibleHeight = 0;
-
-        this.lastInsideFrustumState = false;
-
-        this.insideParent = undefined;
-        this.smallestParentSizeWhenDrawn = smallestParentSizeWhenDrawn;
-
-        this.renderedWithDepthMask = renderedWithDepthMask;
-        this.renderedWithoutDepthMask = renderedWithoutDepthMask;
-
-        this.modelMatrixCalculated = false;
-
-        this._wasRendered = false;
-
+    function Object3D(positionMatrix, orientationMatrix, scalingMatrix, size) {
         /**
-         * @name VisualObject#_firstView
+         * Optional parent, relative to which the position, orientation and
+         * scaling of this object is interpreted.
+         * @name Object3D#_parent
+         * @type Object3D
+         */
+        this._parent = null;
+        /**
+         * @name Object3D#_positionMatrix
+         * @type Float32Array
+         */
+        this._positionMatrix = positionMatrix || Mat.identity4();
+        /**
+         * @name Object3D#_orientationMatrix
+         * @type Float32Array
+         */
+        this._orientationMatrix = orientationMatrix || Mat.identity4();
+        /**
+         * @name Object3D#_scalingMatrix
+         * @type Float32Array
+         */
+        this._scalingMatrix = scalingMatrix || Mat.identity4();
+        /**
+         * Cache variable to store the calculated value of the combined model
+         * matrix.
+         * @name Object3D#_modelMatrix
+         * @type Float32Array
+         */
+        this._modelMatrix = null;
+        /**
+         * @name Object3D#_size
+         * @type Number
+         */
+        this._size = size !== undefined ? size : 1;
+        /**
+         * Cache value to store whether the object is situated within its parent's
+         * boundaries, as the parent's values can be used for certain calculations
+         * in this case.
+         * @name Object3D#_insideParent
+         * @type Boolean
+         */
+        this._insideParent = null;
+        /**
+         * Stored value of the last frustum calculation result. Not used for
+         * caching but to avoid creating a new object to store this every time.
+         * @name Object3D#_lastSizeInsideViewFrustum
+         * @type Object
+         */
+        this._lastSizeInsideViewFrustum = {width: -1, height: -1};
+    }
+    /**
+     * Adds the methods of an Object3D class to the prototype of the class passed
+     * as the 'this' variable (so usage: makeObject3DMixinClass.call(ClassName)),
+     * so subsequently created instances of it can be used as Object3D instances.
+     * It is an IIFE to create the methods themselves only once and cache them
+     * in a closure, and only add the references when it is used.
+     * @type Function(this:Object3D)
+     */
+    var makeObject3DMixinClass = (function () {
+        /**
+         * Return the parent (might be null).
+         * @returns {Object3D}
+         */
+        function getParent() {
+            return this._parent;
+        }
+        /**
+         * Sets a new parent.
+         * @param {Object3D} parent
+         */
+        function setParent(parent) {
+            this._parent = parent;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /**
+         * Returns the translation matrix describing the position of the object
+         * in world space.
+         * @returns {Float32Array}
+         */
+        function getPositionMatrix() {
+            return this._positionMatrix;
+        }
+        /**
+         * Sets a new position matrix.
+         * @param {Float32Array} value
+         */
+        function setPositionMatrix(value) {
+            this._positionMatrix = value;
+            this._modelMatrix = null;
+            this._insideParent = null;
+        }
+        /**
+         * Returns a 3D vector describing the position.
+         * @returns {Array.<Number>}
+         */
+        function getPositionVector() {
+            return [
+                this._positionMatrix[12],
+                this._positionMatrix[13],
+                this._positionMatrix[14]
+            ];
+        }
+        /**
+         * Translates the current position by (x;y;z).
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} z
+         */
+        function translate(x, y, z) {
+            this.setPositionMatrix(Mat.mul4(this._positionMatrix, Mat.translation4(x, y, z)));
+        }
+        /**
+         * Translates the current position by the given 3D vector.
+         * @param {Array.<Number>} v [x,y,z]
+         */
+        function translatev(v) {
+            this.setPositionMatrix(Mat.mul4(this._positionMatrix, Mat.translation4v(v)));
+        }
+        /**
+         * Translates the current position by mutliplying it by the given matrix.
+         * @param {Float32Array} matrix
+         */
+        function translateByMatrix(matrix) {
+            this.setPositionMatrix(Mat.mul4(this._positionMatrix, matrix));
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /**
+         * Returns the rotation matrix describing the orientation of the object.
+         * * @returns {Float32Array}
+         */
+        function getOrientationMatrix() {
+            return this._orientationMatrix;
+        }
+        /**
+         * Sets a new orientation matrix.
+         * @param {Float32Array} value
+         */
+        function setOrientationMatrix(value) {
+            this._orientationMatrix = value;
+            this._modelMatrix = null;
+        }
+        /**
+         * Returns the 3D vector corresponding to the X axis of the current
+         * orientation.
+         * @returns {Array.<Number>}
+         */
+        function getXDirectionVector() {
+            return [
+                this._orientationMatrix[0],
+                this._orientationMatrix[1],
+                this._orientationMatrix[2]
+            ];
+        }
+        /**
+         * Returns the 3D vector corresponding to the Y axis of the current
+         * orientation.
+         * @returns {Array.<Number>}
+         */
+        function getYDirectionVector() {
+            return [
+                this._orientationMatrix[4],
+                this._orientationMatrix[5],
+                this._orientationMatrix[6]
+            ];
+        }
+        /**
+         * Returns the 3D vector corresponding to the Z axis of the current
+         * orientation.
+         * @returns {Array.<Number>}
+         */
+        function getZDirectionVector() {
+            return [
+                this._orientationMatrix[8],
+                this._orientationMatrix[9],
+                this._orientationMatrix[10]
+            ];
+        }
+        /**
+         * Rotates the current orientation around the given axis by the given
+         * angle.
+         * @param {Array.<Number>} axis The 3D vector of the axis.
+         * @param {Number} angle Angle in radians.
+         */
+        function rotate(axis, angle) {
+            this.setOrientationMatrix(Mat.mul4(this._orientationMatrix, Mat.rotation4(axis, angle)));
+        }
+        /**
+         * Rotates the current orientation by multiplying it by the given roation
+         * matrix.
+         * @param {Float32Array} matrix
+         */
+        function rotateByMatrix(matrix) {
+            this.setOrientationMatrix(Mat.mul4(this._orientationMatrix, matrix));
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /**
+         * Returns the scaling matrix describing the size of the object. 
+         * * @returns {Float32Array}
+         */
+        function getScalingMatrix() {
+            return this._scalingMatrix;
+        }
+        /**
+         * Sets a new scaling matrix.
+         * @param {Float32Array} value
+         */
+        function setScalingMatrix(value) {
+            this._scalingMatrix = value;
+            this._modelMatrix = null;
+        }
+        /**
+         * Returns a scaling matrix corresponding to the stacked scaling applied
+         * on this object originating both from its parents' and own scaling.
+         * @returns {Float32Array}
+         */
+        function getCascadeScalingMatrix() {
+            return  this._parent ?
+                    Mat.mul4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
+                    this._scalingMatrix;
+        }
+        //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /**
+         * Returns the calculated combined model matrix of this object. Uses
+         * cache.
+         * @returns {Float32Array}
+         */
+        function getModelMatrix() {
+            this._modelMatrix = this._modelMatrix || Mat.mul4(Mat.mul4(this._scalingMatrix, this._orientationMatrix), this._positionMatrix);
+            return  this._parent ?
+                    Mat.mul4(this._modelMatrix, this._parent.getModelMatrix()) :
+                    this._modelMatrix;
+        }
+        /**
+         * Returns the size of this object.
+         * @returns {Number}
+         */
+        function getSize() {
+            return this._size;
+        }
+        /**
+         * Returns the size of this object in world space, accounting for all the
+         * scaling.
+         * @returns {Number}
+         */
+        function getScaledSize() {
+            return this.getSize() * this.getCascadeScalingMatrix()[0];
+        }
+        /**
+         * Returns whether the object is situated within the boundaries of its
+         * parent. Uses cache.
+         * @returns {Boolean}
+         */
+        function isInsideParent() {
+            if (this._insideParent === null) {
+                this._insideParent = this._parent ?
+                        (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
+                        (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
+                        (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())
+                        : false;
+            }
+            return this._insideParent;
+        }
+        /**
+         * Checks if the object is inside the viewing frustum of the passed camera,
+         * taking into account the parents of the object as well. Also sets the view
+         * width and height members of the object.
+         * @param {Camera} camera The camera the frustum of which is to be checked
+         * @returns {Object} 
+         */
+        function getSizeInsideViewFrustum(camera) {
+            // scaling and orientation is lost here, since we create a new translation
+            // matrix based on the original transformation
+            var baseMatrix =
+                    Mat.translation4v(Mat.translationVector4(
+                            Mat.mul4(
+                                    this.getModelMatrix(),
+                                    camera.getCameraMatrix()
+                                    )
+                            ));
+            // we reintroduce appropriate scaling, but not the orientation, so 
+            // we can check border points of the properly scaled model, but translated
+            // along the axes of the camera space
+            var fullMatrix =
+                    Mat.mul4(
+                            Mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
+                            camera.getPerspectiveMatrix()
+                            );
+
+            var position = Vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
+            position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
+            position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
+            position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
+            var zOffsetPosition = Vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
+            var zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
+
+            // frustum culling: back and front
+            if (((zOffset > -1.0) && (zOffset < 1.0)) || ((position[2] > -1.0) && (position[2] < 1.0))) {
+                // frustum culling: sides
+                var xOffsetPosition = Vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
+                var yOffsetPosition = Vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
+                var xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
+                var yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
+                if (
+                        !(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) &&
+                        !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))
+                        ) {
+                    this._lastSizeInsideViewFrustum.width = xOffset;
+                    this._lastSizeInsideViewFrustum.height = yOffset;
+                    return this._lastSizeInsideViewFrustum;
+                } else {
+                    this._lastSizeInsideViewFrustum.width = 0;
+                    this._lastSizeInsideViewFrustum.height = 0;
+                    return this._lastSizeInsideViewFrustum;
+                }
+            } else {
+                this._lastSizeInsideViewFrustum.width = 0;
+                this._lastSizeInsideViewFrustum.height = 0;
+                return this._lastSizeInsideViewFrustum;
+            }
+        }
+        return function () {
+            this.prototype.getParent = getParent;
+            this.prototype.setParent = setParent;
+            this.prototype.getPositionMatrix = getPositionMatrix;
+            this.prototype.setPositionMatrix = setPositionMatrix;
+            this.prototype.getOrientationMatrix = getOrientationMatrix;
+            this.prototype.setOrientationMatrix = setOrientationMatrix;
+            this.prototype.getScalingMatrix = getScalingMatrix;
+            this.prototype.setScalingMatrix = setScalingMatrix;
+            this.prototype.getPositionVector = getPositionVector;
+            this.prototype.translate = translate;
+            this.prototype.translatev = translatev;
+            this.prototype.translateByMatrix = translateByMatrix;
+            this.prototype.getXDirectionVector = getXDirectionVector;
+            this.prototype.getYDirectionVector = getYDirectionVector;
+            this.prototype.getZDirectionVector = getZDirectionVector;
+            this.prototype.rotate = rotate;
+            this.prototype.rotateByMatrix = rotateByMatrix;
+            this.prototype.getCascadeScalingMatrix = getCascadeScalingMatrix;
+            this.prototype.getModelMatrix = getModelMatrix;
+            this.prototype.getSize = getSize;
+            this.prototype.getScaledSize = getScaledSize;
+            this.prototype.isInsideParent = isInsideParent;
+            this.prototype.getSizeInsideViewFrustum = getSizeInsideViewFrustum;
+        };
+    })();
+    // #########################################################################
+    /**
+     * @constructor
+     * @struct
+     * @param {ManagedGLContext} context
+     * @param {Boolean} depthMask
+     * @param {Scene} scene
+     * @param {RenderableObject} parent
+     * @param {Camera} camera
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @param {LODContext} lodContext
+     * @returns {RenderParameters}
+     */
+    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext) {
+        /**
+         * @name RenderParameters#context
+         * @type ManagedGLContext
+         */
+        this.context = context;
+        /**
+         * @name RenderParameters#depthMask
+         * @type Boolean
+         */
+        this.depthMask = depthMask;
+        /**
+         * @name RenderParameters#scene
+         * @type Scene
+         */
+        this.scene = scene;
+        /**
+         * @name RenderParameters#parent
+         * @type RenderableObject
+         */
+        this.parent = parent;
+        /**
+         * @name RenderParameters#camera
          * @type Camera
          */
-        this._firstView = null;
+        this.camera = camera;
+        /**
+         * @name RenderParameters#viewportWidth
+         * @type Number
+         */
+        this.viewportWidth = viewportWidth;
+        /**
+         * @name RenderParameters#viewportHeight
+         * @type Number
+         */
+        this.viewportHeight = viewportHeight;
+        /**
+         * @name RenderParameters#lodContext
+         * @type LODContext
+         */
+        this.lodContext = lodContext;
     }
-
-    VisualObject.prototype.getScene = function () {
+    // #########################################################################
+    /**
+     * @class The superclass of all objects that can be rendered on the screen.
+     * @constructor
+     * @param {Shader} shader The shader that should be active while rendering this object
+     * @param {[Boolean=true]} renderedWithDepthMask Tells whether this object should be rendered when the depth mask is on (= it contains non-transparent triangles)
+     * @param {[Boolean=true]} renderedWithoutDepthMask Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)
+     * @returns {RenderableObject}
+     */
+    function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask) {
+        /**
+         * A reference to the node holding this object.
+         * @name RenderableObject#_node
+         * @type RenderableNode
+         */
+        this._node = null;
+        /**
+         * A flag marking whether this object has been rendered in the current
+         * frame already.
+         * @name RenderableObject#_wasRendered
+         * @type Boolean
+         */
+        this._wasRendered = null;
+        /**
+         * The shader to use while rendering this object.
+         * @name RenderableObject#_shader
+         * @type Shader
+         */
+        this._shader = shader;
+        /**
+         * The textures this object uses, ordered by their roles/types.
+         * @name RenderableObject#_textures
+         * @type Object.<String, Texture|Cubemap>
+         */
+        this._textures = new Object();
+        /**
+         * The functions to call when calculating the values of uniform variables
+         * before assigning them, ordered by the names of the variables.
+         * @name RenderableObject#_uniformValueFunctions
+         * @type Object.<String, Function>
+         */
+        this._uniformValueFunctions = new Object();
+        /**
+         * Flag, whether this object should be rendered when the depth mask is on.
+         * @name RenderableObject#_isRenderedWithDepthMask
+         * @type Boolean
+         */
+        this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
+        /**
+         * Flag, whether this object should be rendered when the depth mask is off.
+         * @name RenderableObject#_isRenderedWithoutDepthMask
+         * @type Boolean
+         */
+        this._isRenderedWithoutDepthMask = renderedWithoutDepthMask === undefined ? true : renderedWithoutDepthMask;
+        /**
+         * Flag, whether this object is no longer valid and can be used to store
+         * a new object.
+         * @name RenderableObject#_canBeReused
+         * @type Boolean
+         */
+        this._canBeReused = false;
+    }
+    /**
+     * Returns the node that contains this object. If there is no such node,
+     * creates an isolated one to contain it from now on and returns that.
+     * @returns {RenderableNode}
+     */
+    RenderableObject.prototype.getNode = function () {
+        if (this._node === null) {
+            this._node = new RenderableNode(this);
+        }
+        return this._node;
+    };
+    /**
+     * Sets a new node reference for this object.
+     * @param {RenderableNode} node
+     */
+    RenderableObject.prototype.setNode = function (node) {
+        this._node = node;
+    };
+    /**
+     * Return the shader of this object.
+     * @returns {Shader}
+     */
+    RenderableObject.prototype.getShader = function () {
+        return this._shader;
+    };
+    /**
+     * Sets a new shader.
+     * @param {Shader} shader
+     */
+    RenderableObject.prototype.setShader = function (shader) {
+        this._shader = shader;
+    };
+    /**
+     * Sets the texture specified for the given role. If there was already a
+     * texture set, overwrites the reference.
+     * @param {String} role
+     * @param {Texture|Cubemap} texture
+     */
+    RenderableObject.prototype.setTexture = function (role, texture) {
+        this._textures[role] = texture;
+    };
+    /**
+     * Assigns a function to get the value of the uniform with the passed name.
+     * Overwrites potential previous assignments.
+     * @param {String} uniformName
+     * @param {Function(this:RenderableObject)} valueFunction
+     */
+    RenderableObject.prototype.setUniformValueFunction = function (uniformName, valueFunction) {
+        this._uniformValueFunctions[uniformName] = valueFunction.bind(this);
+    };
+    /**
+     * Returns a function that obtains the texture location of the texture with
+     * the given role within the given context.
+     * @param {String} role
+     * @param {ManagedGLContext} context
+     * @returns {Function}
+     */
+    RenderableObject.prototype.createTextureLocationGetter = function (role, context) {
+        return function () {
+            return this._textures[role].getTextureBindLocation(context);
+        }.bind(this);
+    };
+    /**
+     * Adds and sets up the resources used for rendering of this object to the
+     * passed context. Subclasses must extend its functionality to add additional
+     * resources they might use.
+     * @param {ManagedGLContext} context
+     */
+    RenderableObject.prototype.addToContext = function (context) {
+        this._shader.addToContext(context);
+        for (var role in this._textures) {
+            this._textures[role].addToContext(context);
+            if (this._textures[role] instanceof GL.Texture) {
+                this.setUniformValueFunction("u_" + role + "Texture", this.createTextureLocationGetter(role, context));
+            } else if (this._textures[role] instanceof GL.Cubemap) {
+                this.setUniformValueFunction("u_" + role + "Cubemap", this.createTextureLocationGetter(role, context));
+            } else {
+                Application.showError("Attemtping to add a texture of unknown type to the GL context.");
+            }
+        }
+    };
+    /**
+     * Binds the used textures within the passed context.
+     * @param {ManagedGLContext} context
+     */
+    RenderableObject.prototype.bindTextures = function (context) {
+        for (var role in this._textures) {
+            context.bindTexture(this._textures[role]);
+        }
+    };
+    /**
+     * Assigns the uniforms specific to this object within the passed context.
+     * @param {ManagedGLContext} context
+     */
+    RenderableObject.prototype.assignUniforms = function (context) {
+        this._shader.assignUniforms(context, this._uniformValueFunctions);
+    };
+    /**
+     * Marks the object as one that is no longer valid and can be reused to
+     * hold a different object.
+     * For pooling support.
+     */
+    RenderableObject.prototype.markAsReusable = function () {
+        this._canBeReused = true;
+    };
+    /**
+     * Returns whether this object is invalid and can be reused to hold a new one.
+     * For pooling support.
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.canBeReused = function () {
+        return this._canBeReused;
+    };
+    /**
+     * Called at the beginning of the render of each frame, to reset object,
+     * e.g. to invalidate all cached values that were only valid for one frame.
+     * Subclasses must extend its functionality to reset their additional 
+     * attributes.
+     */
+    RenderableObject.prototype.reset = function () {
+        this._wasRendered = false;
+    };
+    /**
+     * Called before every render to check whether to proceed with the rendering
+     * or not, according to the current parameters. Subclasses must add their 
+     * own subsequent checks to this function.
+     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.shouldBeRendered = function (renderParameters) {
+        if (this._canBeReused === true) {
+            return false;
+        }
+        return (renderParameters.depthMask && this._isRenderedWithDepthMask) || (!renderParameters.depthMask && this._isRenderedWithoutDepthMask);
+    };
+    /**
+     * Called before every render, after the object passes the test whether it
+     * should be rendered. Subclasses must add their own preparation to this
+     * function.
+     * @param {RenderParameters} renderParameters
+     */
+    RenderableObject.prototype.prepareForRender = function (renderParameters) {
+        renderParameters.context.setCurrentShader(this._shader);
+        renderParameters.scene.assignUniforms(renderParameters.context, this._shader);
+        this.bindTextures(renderParameters.context);
+        this.assignUniforms(renderParameters.context);
+    };
+    /**
+     * The function actually performing the rendering, after all checks and
+     * preparations. Override this function with appropriate functionality
+     * for subclasses. Here it does nothing.
+     */
+    RenderableObject.prototype.performRender = function () {
+    };
+    /**
+     * Called after a render has been finished. Additional cleanup/logging can
+     * be added to this in subclasses.
+     */
+    RenderableObject.prototype.finishRender = function () {
+        this._wasRendered = true;
+    };
+    /**
+     * Handles the full render flow, with checks and preparations. Don't override
+     * this.
+     * @param {RenderParameters} renderParameters
+     */
+    RenderableObject.prototype.render = function (renderParameters) {
+        if (this.shouldBeRendered(renderParameters)) {
+            this.prepareForRender(renderParameters);
+            this.performRender(renderParameters);
+            this.finishRender(renderParameters);
+        }
+    };
+    /**
+     * Called every time before rendering to a shadow map would occur to check 
+     * whether to proceed with the rendering or not, according to the current 
+     * parameters. Subclasses must add their own subsequent checks to this function.
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.shouldBeRenderedToShadowMap = function () {
+        return !this._canBeReused;
+    };
+    /**
+     * Called before every shadow map render, after the object passes the test 
+     * whether it should be rendered to shadow map. Subclasses must add their 
+     * own preparation to this function.
+     */
+    RenderableObject.prototype.prepareForRenderToShadowMap = function () {
+    };
+    /**
+     * The function actually performing the rendering to shadow map, after all 
+     * checks and preparations. Override this function with appropriate functionality
+     * for subclasses. Here it does nothing.
+     */
+    RenderableObject.prototype.performRenderToShadowMap = function () {
+    };
+    /**
+     * Handles the full shadow map render flow, with checks and preparations. 
+     * Don't override this.
+     * @param {RenderParameters} renderParameters
+     */
+    RenderableObject.prototype.renderToShadowMap = function (renderParameters) {
+        if (this.shouldBeRenderedToShadowMap(renderParameters)) {
+            this.prepareForRenderToShadowMap(renderParameters);
+            this.performRenderToShadowMap(renderParameters);
+        }
+    };
+    /**
+     * Returns whether this object has (already) been rendered in the current
+     * frame.
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.wasRendered = function () {
+        return this._wasRendered;
+    };
+    /**
+     * Returns the number of triangles drawn on the screen to render this object.
+     * Must be ovverriden in subclasses.
+     * @returns {Number}
+     */
+    RenderableObject.prototype.getNumberOfDrawnTriangles = function () {
+        return 0;
+    };
+    // #########################################################################
+    /**
+     * @class A node on the rendering tree, that can hold a renderable object as well
+     * as references to children nodes.
+     * @constructor
+     * @param {RenderableObject} renderableObject
+     * @returns {RenderableNode}
+     */
+    function RenderableNode(renderableObject) {
+        /**
+         * The object this node holds that can be rendered.
+         * @name RenderableNode#_renderableObject
+         * @type RenderableObject
+         */
+        this._renderableObject = renderableObject;
+        renderableObject.setNode(this);
+        /**
+         * The scene this node is part of.
+         * @name RenderableNode#_scene
+         * @type Scene
+         */
+        this._scene = null;
+        /**
+         * A reference to the parent node of this node.
+         * @name RenderableNode#_parent
+         * @type RenderableNode
+         */
+        this._parent = null;
+        /**
+         * The list of subnodes (children) this node is connected to.
+         * @name RenderableNode#_subnodes
+         * @type Array.<RenderableNode>
+         */
+        this._subnodes = new Array();
+        /**
+         * A flag to mark whether this node and its subnodes should be rendered.
+         * @name RenderableNode#_visible
+         * @type Boolean
+         */
+        this._visible = true;
+        /**
+         * A reference to the fist camera of the scene that follows this object.
+         * @name RenderableNode#_firstCamera
+         * @type Camera
+         */
+        this._firstCamera = null;
+        /**
+         * A variable to hold the rendering parameters passed to the held object
+         * before each render, in order to avoid creating a new object to store
+         * these at each render.
+         * @name RenderableNode#_renderParameters
+         * @type RenderParameters
+         */
+        this._renderParameters = new RenderParameters();
+    }
+    /**
+     * Returns whether this node can be reused to hold a different object.
+     * @returns {Boolean}
+     */
+    RenderableNode.prototype.canBeReused = function () {
+        if (this._renderableObject.canBeReused()) {
+            for (var i = 0; i < this._subnodes.length; i++) {
+                if (this._subnodes[i].canBeReused() === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+    /**
+     * Returns the scene this node is part of.
+     * @returns {Scene}
+     */
+    RenderableNode.prototype.getScene = function () {
         return this._scene;
     };
-
-    VisualObject.prototype.setScene = function (scene) {
-        this._scene = scene;
-        for (var i = 0; i < this.subnodes.length; i++) {
-            this.subnodes[i].setScene(scene);
-        }
-    };
-
-    VisualObject.prototype.getRenderParent = function () {
-        return this.renderParent;
-    };
-
-    VisualObject.prototype.setUniformValueFunction = function (uniformName, valueFunction) {
-        this.uniformValueFunctions[uniformName] = valueFunction;
-    };
-
-    VisualObject.prototype.show = function () {
-        this.visible = true;
-    };
-
-    VisualObject.prototype.hide = function () {
-        this.visible = false;
-    };
-
-    VisualObject.prototype.toggleVisibility = function () {
-        this.visible = !this.visible;
-    };
-
-    VisualObject.prototype.getFirstView = function () {
-        return this._firstView;
-    };
-
-    VisualObject.prototype.setFirstView = function (firstView) {
-        this._firstView = firstView;
-    };
-
-    VisualObject.prototype.resetViewCameras = function () {
-        for (
-                var view = this._firstView;
-                view !== null;
-                view = ((view.nextView === this._firstView) ? null : view.nextView)) {
-            view.reset();
-        }
-    };
-
-    VisualObject.prototype.addToContext = function (context) {
-        this.shader.addToContext(context);
-    };
-
-    VisualObject.prototype.cascadeAddToContext = function (context) {
-        this.addToContext(context);
-        var i;
-        for (var i = 0; i < this.subnodes.length; i++) {
-            this.subnodes[i].cascadeAddToContext(context);
-        }
-    };
-
-    VisualObject.prototype.setShader = function (shader) {
-        this.shader = shader;
-    };
-
-    VisualObject.prototype.cascadeSetShader = function (shader) {
-        this.setShader(shader);
-        var i;
-        for (var i = 0; i < this.subnodes.length; i++) {
-            this.subnodes[i].setShader(shader);
-        }
-    };
-
-    VisualObject.prototype.bindTextures = function () {
-    };
-
     /**
-     * Adds a subnode to the rendering tree.
-     * @param {VisualObject} subnode The subnode to be added to the rendering tree. 
+     * Sets up the node (and its subnodes) as part of the passed scene.
+     * @param {Scene} scene
+     */
+    RenderableNode.prototype.setScene = function (scene) {
+        this._scene = scene;
+        if (scene) {
+            scene.addObjectToContexts(this._renderableObject);
+        }
+        for (var i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].setScene(scene);
+        }
+    };
+    /**
+     * Returns the parent node of this node.
+     * @returns {RenderableNode}
+     */
+    RenderableNode.prototype.getParent = function () {
+        return this._parent;
+    };
+    /**
+     * Sets up the node to have a new parent.
+     * @param {RenderableNode} parent
+     */
+    RenderableNode.prototype.setParent = function (parent) {
+        this._parent = parent;
+        this.setScene(parent.getScene());
+        if (this._renderableObject.setParent) {
+            this._renderableObject.setParent(parent.getRenderableObject());
+        }
+    };
+    /**
+     * Returns the renderable object held by this node.
+     * @returns {RenderableObject}
+     */
+    RenderableNode.prototype.getRenderableObject = function () {
+        return this._renderableObject;
+    };
+    /**
+     * Sets the node (and its visible subnodes) to be rendered from now on.
+     */
+    RenderableNode.prototype.show = function () {
+        this._visible = true;
+    };
+    /**
+     * Sets the node and its subnodes not to be rendered from now on.
+     */
+    RenderableNode.prototype.hide = function () {
+        this._visible = false;
+    };
+    /**
+     * Switches the visibility of the node to the opposite.
+     */
+    RenderableNode.prototype.toggleVisibility = function () {
+        this._visible = !this._visible;
+    };
+    /**
+     * Adds a subnode to this node.
+     * @param {RenderableNode} subnode The subnode to be added to the rendering tree. 
      * It will be rendered relative to this object (transformation matrices stack)
      */
-    VisualObject.prototype.addSubnode = function (subnode) {
-        this.subnodes.push(subnode);
-        subnode.renderParent = this;
-        subnode.setScene(this._scene);
+    RenderableNode.prototype.addSubnode = function (subnode) {
+        this._subnodes.push(subnode);
+        subnode.setParent(this);
     };
-
-    VisualObject.prototype.removeFromScene = function () {
-        this.toBeDeleted = true;
+    /**
+     * Resets the held object and all subnodes. Called at the beginning of each
+     * frame.
+     */
+    RenderableNode.prototype.reset = function () {
+        this._renderableObject.reset();
+        for (var i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].reset();
+        }
     };
-
+    /**
+     * Sets up the stored render parameters that are passed to the held renderable
+     * object for the next rendering.
+     * @param {ManagedGLContext} context
+     * @param {Number} screenWidth
+     * @param {Number} screenHeight
+     * @param {Boolean} depthMask
+     */
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask) {
+        this._renderParameters.context = context;
+        this._renderParameters.depthMask = depthMask;
+        this._renderParameters.scene = this._scene;
+        this._renderParameters.parent = this._parent ? this._parent.getRenderableObject() : null;
+        this._renderParameters.camera = this._scene.activeCamera;
+        this._renderParameters.viewportWidth = screenWidth;
+        this._renderParameters.viewportHeight = screenHeight;
+        this._renderParameters.lodContext = this._scene.getLODContext();
+    };
+    /**
+     * Renders the object at this node and all subnodes, if visible.
+     * @param {ManagedGLContext} context
+     * @param {Number} screenWidth
+     * @param {Number} screenHeight
+     * @param {Boolean} depthMask
+     */
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask) {
+        // the visible property determines visibility of all subnodes as well
+        if (this._visible) {
+            this.setRenderParameters(context, screenWidth, screenHeight, depthMask);
+            this._renderableObject.render(this._renderParameters);
+            for (var i = 0; i < this._subnodes.length; i++) {
+                this._subnodes[i].render(context, screenWidth, screenHeight, depthMask);
+            }
+        }
+    };
+    /**
+     * Renders the object at this node and all subnodes to the shadow map, if visible.
+     * @param {ManagedGLContext} context
+     * @param {Number} screenWidth
+     * @param {Number} screenHeight
+     */
+    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight) {
+        // the visible property determines visibility of all subnodes as well
+        if (this._visible) {
+            this.setRenderParameters(context, screenWidth, screenHeight, true);
+            this._renderableObject.renderToShadowMap(this._renderParameters);
+            // recursive rendering of all subnodes
+            for (var i = 0; i < this._subnodes.length; i++) {
+                this._subnodes[i].renderToShadowMap(context, screenWidth, screenHeight);
+            }
+        }
+    };
+    /**
+     * Returns the first camera in the scene following this node.
+     * @returns {Camera}
+     */
+    RenderableNode.prototype.getFirstCamera = function () {
+        return this._firstCamera;
+    };
+    /**
+     * Sets the reference to the first camera following this node.
+     * @param {Camera} firstCamera
+     */
+    RenderableNode.prototype.setFirstCamera = function (firstCamera) {
+        this._firstCamera = firstCamera;
+    };
+    /**
+     * Resets the state of all cameras that follow this node.
+     */
+    RenderableNode.prototype.resetViewCameras = function () {
+        for (
+                var camera = this._firstCamera;
+                camera !== null;
+                camera = ((camera.getNextView() === this._firstCamera) ? null : camera.getNextView())) {
+            camera.reset();
+        }
+    };
+    /**
+     * Adds and sets up all resources needed to render the held object and all
+     * subnodes to the given context.
+     * @param {ManagedGLContext} context
+     */
+    RenderableNode.prototype.addToContext = function (context) {
+        this._renderableObject.addToContext(context);
+        for (var i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].addToContext(context);
+        }
+    };
+    /**
+     * Sets the shader to use for the held object and for all subnodes.
+     * @param {Shader} shader
+     */
+    RenderableNode.prototype.setShader = function (shader) {
+        this._renderableObject.setShader(shader);
+        for (var i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].setShader(shader);
+        }
+    };
     /**
      * Removes all subnodes from the subtree of this object that are deleted or
      * are marked for deletion.
      */
-    VisualObject.prototype.cascadeCleanUp = function () {
-        for (var i = 0; i < this.subnodes.length; i++) {
-            this.subnodes[i].cascadeCleanUp();
-            while ((i < this.subnodes.length) && ((this.subnodes[i] === undefined) || (this.subnodes[i].toBeDeleted))) {
-                this.subnodes[i] = null;
-                this.subnodes.splice(i, 1);
+    RenderableNode.prototype.cleanUp = function () {
+        for (var i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].cleanUp();
+            while ((i < this._subnodes.length) && ((!this._subnodes[i]) || (this._subnodes[i].canBeReused() === true))) {
+                this._subnodes.splice(i, 1);
             }
         }
     };
-
     /**
-     * Returns the translation matrix describing the position of the 
-     * visual object. Actual calculations have to be implemented in children 
-     * classes, this one always returns an identity matrix.
-     * @returns {Float32Array} A 4x4 identity matrix.
+     * Returns the number of triangles drawn on the screen to render this node
+     * and all its subnodes.
+     * @returns {Number}
      */
-    VisualObject.prototype.getPositionMatrix = function () {
-        return Mat.identity4();
-    };
-
-    /**
-     * Returns the rotation matrix describing the orientation of the 
-     * visual object. Actual calculations have to be implemented in children 
-     * classes, this one always returns an identity matrix.
-     * * @returns {Float32Array} A 4x4 identity matrix.
-     */
-    VisualObject.prototype.getOrientationMatrix = function () {
-        return Mat.identity4();
-    };
-
-    /**
-     * Returns the scaling matrix describing the size of the 
-     * visual object. Actual calculations have to be implemented in children 
-     * classes, this one always returns an identity matrix.
-     * * @returns {Float32Array} A 4x4 identity matrix.
-     */
-    VisualObject.prototype.getScalingMatrix = function () {
-        return Mat.identity4();
-    };
-
-    /**
-     * Returns the numerical size of the visual object.
-     * Actual calculations have to be implemented in children 
-     * classes, this one always returns 1.
-     * @returns {number} Always 1.
-     */
-    VisualObject.prototype.getSize = function () {
-        return 1;
-    };
-
-    /**
-     * Returns the model transformation matrix of the visual object. 
-     * Actual calculations have to be implemented in children classes to include
-     * translation, rotation, scaling as well as cascading operations based on
-     * relative positioning.
-     * * @returns {Float32Array} A 4x4 identity matrix.
-     */
-    VisualObject.prototype.getModelMatrix = function () {
-        return Mat.identity4();
-    };
-
-    /**
-     * Returns the vector that represents the position of the visual
-     * object in the scene, taking into account the transformations of its parent
-     * classes.
-     * * @returns {number[]} A 3 element float vector indicating the position.
-     */
-    VisualObject.prototype.getCascadePositionVector = function () {
-        if (this.renderParent !== null) {
-            return Vec.add3(
-                    this.renderParent.getCascadePositionVector(),
-                    Vec.mulVec3Mat4(
-                            Mat.translationVector3(
-                                    this.getPositionMatrix()
-                                    ),
-                            Mat.mul4(
-                                    this.renderParent.getScalingMatrix(),
-                                    this.renderParent.getOrientationMatrix()
-                                    )
-                            )
-                    );
-        } else {
-            return Mat.translationVector3(this.getPositionMatrix());
-        }
-    };
-
-    /**
-     * Returns the scaling matrix that represents the size of the
-     * visual object in the scene, taking into account the scaling of its parent
-     * classes.
-     * * @returns {Float32Array} A 4x4 scaling matrix indicating the size.
-     */
-    VisualObject.prototype.getCascadeScalingMatrix = function () {
-        if (this.renderParent !== null) {
-            return Mat.mul4(this.renderParent.getCascadeScalingMatrix(), this.getScalingMatrix());
-        } else {
-            return this.getScalingMatrix();
-        }
-    };
-
-    VisualObject.prototype.getScaledSize = function () {
-        return this.getSize() * this.getCascadeScalingMatrix()[0];
-    };
-
-    /**
-     * * @returns {Float32Array} A 4x4 transformation matrix.
-     */
-    VisualObject.prototype.getCascadeModelMatrix = function () {
-        if (this.renderParent !== null) {
-            return Mat.mul4(this.getModelMatrix(), this.renderParent.getCascadeModelMatrix());
-        } else {
-            return this.getModelMatrix();
-        }
-    };
-
-    /**
-     * Assigns all uniforms in the shader program associated with this object that
-     * this object has a value function for, using the appropriate webGL calls.
-     * The matching is done based on the names of the uniforms.
-     * @param {ManagedGLContext} context The webGL context to use
-     */
-    VisualObject.prototype.assignUniforms = function (context) {
-        this.shader.assignUniforms(context, this.uniformValueFunctions);
-    };
-
-    /**
-     * Checks if the object is inside the viewing frustum of the passed camera,
-     * taking into account the parents of the object as well. Also sets the view
-     * width and height members of the object.
-     * @param {Camera} camera The camera the frustum of which is to be checked
-     * @returns {boolean} Whether the object is inside the frustum.
-     */
-    VisualObject.prototype.isInsideViewFrustum = function (camera) {
-        if (this.renderParent !== null) {
-            if (this.insideParent === undefined) {
-                this.insideParent = (Math.abs(this.getPositionMatrix()[12]) < this.renderParent.getSize()) &&
-                        (Math.abs(this.getPositionMatrix()[13]) < this.renderParent.getSize()) &&
-                        (Math.abs(this.getPositionMatrix()[14]) < this.renderParent.getSize());
-            }
-            if (this.insideParent === true) {
-                if (this.renderParent.lastInsideFrustumState === false) {
-                    this.visibleWidth = 0;
-                    this.visibleHeight = 0;
-                    this.lastInsideFrustumState = false;
-                    return this.lastInsideFrustumState;
-                } else {
-                    this.visibleWidth = this.renderParent.visibleWidth;
-                    this.visibleHeight = this.renderParent.visibleHeight;
-                    this.lastInsideFrustumState = true;
-                    return this.lastInsideFrustumState;
-                }
-            }
-        }
-        // scaling and orientation is lost here, since we create a new translation
-        // matrix based on the original transformation
-        var baseMatrix =
-                Mat.translation4v(Mat.translationVector4(
-                        Mat.mul4(
-                                this.getCascadeModelMatrix(),
-                                camera.getCameraMatrix()
-                                )
-                        ));
-        // we reintroduce appropriate scaling, but not the orientation, so 
-        // we can check border points of the properly scaled model, but translated
-        // along the axes of the camera space
-        var fullMatrix =
-                Mat.mul4(
-                        Mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
-                        camera.getPerspectiveMatrix()
-                        );
-
-        var position = Vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
-        position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
-        position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
-        position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
-        var zOffsetPosition = Vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
-        var zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
-
-        // frustum culling: back and front
-        if (((zOffset > -1.0) && (zOffset < 1.0)) || ((position[2] > -1.0) && (position[2] < 1.0))) {
-            // frustum culling: sides
-            var xOffsetPosition = Vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
-            var yOffsetPosition = Vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
-            var xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
-            var yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
-            if (
-                    !(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) &&
-                    !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))
-                    ) {
-                this.visibleWidth = xOffset;
-                this.visibleHeight = yOffset;
-                this.lastInsideFrustumState = true;
-            } else {
-                this.visibleWidth = 0;
-                this.visibleHeight = 0;
-                this.lastInsideFrustumState = false;
-            }
-        } else {
-            this.visibleWidth = 0;
-            this.visibleHeight = 0;
-            this.lastInsideFrustumState = false;
-        }
-        return this.lastInsideFrustumState;
-    };
-
-    /**
-     * A method to check if the visual object needs to be rendered according to this
-     * LOD parameters and depth mask phase (a model at a certain LOD might or might 
-     * not contain transparent triangles) Needs to be implemented in the descendant
-     * classes.
-     * @param {Number} screenWidth
-     * @param {Number} screenHeight
-     * @param {LODContext} lodContext
-     * @param {Boolean} depthMask
-     * @returns {Boolean}
-     */
-    VisualObject.prototype.needsToBeRendered = function (screenWidth, screenHeight, lodContext, depthMask) {
-        return true;
-    };
-
-    VisualObject.prototype.render = function () {
-    };
-
-    VisualObject.prototype.renderShadowMap = function () {
-    };
-
-    /**
-     * Renders the object and all its subnodes.
-     * @param {ManagedGLContext} managedGLContext
-     * @param {Scene} scene The scene within which the object is located.
-     * @param {number} screenWidth The size of the rendering viewport in pixels,
-     * to determine the actual drawn size of the object (for dynamic LOD)
-     * * @param {number} screenHeight The size of the rendering viewport in pixels,
-     * to determine the actual drawn size of the object (for dynamic LOD)
-     * @param {boolean} depthMaskPhase Whether we are drawing in the depthmask
-     * enabled or disabled phase (renders only phase matches with the type of the
-     * shader the object has)
-     * */
-    VisualObject.prototype.cascadeRender = function (managedGLContext, scene, screenWidth, screenHeight, depthMaskPhase) {
-        this._wasRendered = false;
-        // the visible property determines visibility of all subnodes as well
-        if (this.visible) {
-            // subnodes (children) are only rendered if the parent's visible size
-            // reaches a set limit
-            if ((this.renderParent === null) || (this.smallestParentSizeWhenDrawn === undefined) ||
-                    (Math.max(this.renderParent.visibleWidth * screenWidth / 2, this.renderParent.visibleHeight * screenHeight / 2) >= this.smallestParentSizeWhenDrawn)) {
-                // checking if the object is rendered in this phase (depth mask on/
-                // off) and it is inside the view frustum
-                if (((this.renderedWithDepthMask === true) && (depthMaskPhase === true)) ||
-                        ((this.renderedWithoutDepthMask === true) && (depthMaskPhase === false))) {
-                    // the frustum check only needs to be calculated if this is the
-                    // first pass (depth mask on), or the object wasn't rendered
-                    // in the first pass
-                    if ((
-                            ((this.renderedWithDepthMask === false) || (depthMaskPhase === true))
-                            && (this.isInsideViewFrustum(scene.activeCamera))
-                            ) || (this.lastInsideFrustumState === true)) {
-                        if (this.needsToBeRendered(screenWidth, screenHeight, scene.lodContext, depthMaskPhase)) {
-                            managedGLContext.setCurrentShader(this.shader);
-                            scene.assignUniforms(managedGLContext, this.shader);
-                            this.bindTextures(managedGLContext);
-                            this.assignUniforms(managedGLContext);
-                            this.render(managedGLContext, depthMaskPhase);
-                            this._wasRendered = true;
-                        }
-                    }
-                }
-                // recursive rendering of all subnodes
-                for (var i = 0; i < this.subnodes.length; i++) {
-                    this.subnodes[i].cascadeRender(managedGLContext, scene, screenWidth, screenHeight, depthMaskPhase);
-                }
-            }
-        }
-    };
-
-    VisualObject.prototype.cascadeRenderShadowMap = function (managedGLContext, scene, screenWidth, screenHeight) {
-        // the visible property determines visibility of all subnodes as well
-        if (this.visible) {
-            this.renderShadowMap(managedGLContext, scene, screenWidth, screenHeight);
-            // recursive rendering of all subnodes
-            for (var i = 0; i < this.subnodes.length; i++) {
-                this.subnodes[i].cascadeRenderShadowMap(managedGLContext, scene, screenWidth, screenHeight);
-            }
-        }
-    };
-
-    /**
-     * Sets the modelMatrixCalculated property of this object and its whole subtree
-     * to false.
-     */
-    VisualObject.prototype.cascadeResetModelMatrixCalculated = function () {
-        var i;
-        this.modelMatrixCalculated = false;
-        for (var i = 0; i < this.subnodes.length; i++) {
-            this.subnodes[i].cascadeResetModelMatrixCalculated();
-        }
-    };
-
-    VisualObject.prototype.getNumberOfDrawnTriangles = function () {
-        return 0;
-    };
-
-    VisualObject.prototype.cascadeGetNumberOfDrawnTriangles = function () {
+    RenderableNode.prototype.getNumberOfDrawnTriangles = function () {
         var result = 0;
-        if (this._wasRendered) {
-            result += this.getNumberOfDrawnTriangles();
+        if (this._renderableObject.wasRendered()) {
+            result += this._renderableObject.getNumberOfDrawnTriangles();
         }
-        for (var i = 0; i < this.subnodes.length; i++) {
-            result += this.subnodes[i].cascadeGetNumberOfDrawnTriangles();
+        for (var i = 0; i < this._subnodes.length; i++) {
+            result += this._subnodes[i].getNumberOfDrawnTriangles();
         }
         return result;
     };
+    // #########################################################################
+    /**
+     * @class A renderable object with the functionality of the Object3D class
+     * mixed in. In addition, provides caching for frustum calculations.
+     * @constructor
+     * @extends RenderableObject
+     * @extends Object3D
+     * @param {Shader} shader
+     * @param {Boolean} renderedWithDepthMask
+     * @param {Boolean} renderedWithoutDepthMask
+     * @param {Float32Array} [positionMatrix] Initial position.
+     * @param {Float32Array} [orientationMatrix] Initial orientation.
+     * @param {Float32Array} [scalingMatrix] Initial scaling.
+     * @returns {RenderableObject3D}
+     */
+    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix) {
+        RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask);
+        Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix);
+        /**
+         * The cached value of the size of this object on the screen from the 
+         * last frustum calculation.
+         * @name RenderableObject3D#_visibleSize
+         * @type {width: Number, height: Number}
+         */
+        this._visibleSize = {width: -1, height: -1};
+        /**
+         * The cached value marking whether the object fell within the shadow
+         * cast frustum during the last calculation.
+         * @name RenderableObject3D#_insideShadowCastFrustum
+         * @type Boolean
+         */
+        this._insideShadowCastFrustum = null;
+        /**
+         * If the visible width or height of the object is below this limit, it
+         * will not be rendered. (measured in pixels)
+         * @name RenderableObject3D#_smallestSizeWhenDrawn
+         * @type Number
+         */
+        this._smallestSizeWhenDrawn = 0;
+        /**
+         * If the visible width or height of the parent is below this limit, and
+         * the object is situated within the parent, the object will not be 
+         * rendered. (measured in pixels)
+         * @name RenderableObject3D#_smallestParentSizeWhenDrawn
+         * @type Number
+         */
+        this._smallestParentSizeWhenDrawn = 0;
+    }
 
+    RenderableObject3D.prototype = new RenderableObject();
+    makeObject3DMixinClass.call(RenderableObject3D);
+    RenderableObject3D.prototype.constructor = RenderableObject;
+
+    /**
+     * Sets a new minimum size limit, below which rendering will be disabled.
+     * @param {Number} value
+     */
+    RenderableObject3D.prototype.setSmallestSizeWhenDrawn = function (value) {
+        this._smallestSizeWhenDrawn = value;
+    };
+    /**
+     * Sets a new minimum parent size limit, below which rendering will be disabled.
+     * @param {Number} value
+     */
+    RenderableObject3D.prototype.setSmallestParentSizeWhenDrawn = function (value) {
+        this._smallestParentSizeWhenDrawn = value;
+    };
+    /**
+     * Returns the size of the object on the screen, using the frustum of the
+     * passed camera. Uses cache.
+     * @param {Camera} camera
+     * @returns {{width: Number, height: Number}}
+     */
+    RenderableObject3D.prototype.getVisibleSize = function (camera) {
+        if (this._visibleSize.width < 0) {
+            this._visibleSize = this.getSizeInsideViewFrustum(camera);
+        }
+        return this._visibleSize;
+    };
+    /**
+     * Returns whether the object is within the view frustum, using the passed
+     * camera. Uses cache.
+     * @param {Camera} camera
+     * @returns {Boolean}
+     */
+    RenderableObject3D.prototype.isInsideViewFrustum = function (camera) {
+        return (this.getVisibleSize(camera).width > 0);
+    };
+    /**
+     * Return the maximum (horizontal or vertical) span of the object on the
+     * screen, measured in pixels. Call only after the visible size has been 
+     * calculated for some camera.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    RenderableObject3D.prototype.getSizeInPixels = function (viewportWidth,viewportHeight) {
+        if (this._visibleSize.width < 0) {
+            Application.showError("Attempting to access the size of an object on the screen in pixels, before the size has been calculated.");
+        }
+        return Math.max(this._visibleSize.width * viewportWidth / 2, this._visibleSize.height * viewportHeight / 2);
+    };
+    /**
+     * Returns whether the object is within the shadow cast frustum, using the
+     * passed camera. Uses cache.
+     * @param {Camera} camera
+     * @returns {Boolean}
+     */
+    RenderableObject3D.prototype.isInsideShadowCastFrustum = function (camera) {
+        if (this._insideShadowCastFrustum === null) {
+            this._insideShadowCastFrustum = this.getSizeInsideViewFrustum(camera).width > 0;
+        }
+        return this._insideShadowCastFrustum;
+    };
+    /**
+     * @override
+     * Extend's the superclass method, erases cached values.
+     */
+    RenderableObject3D.prototype.reset = function () {
+        RenderableObject.prototype.reset.call(this);
+        this._visibleSize.width = -1;
+        this._visibleSize.height = -1;
+        this._insideShadowCastFrustum = null;
+    };
+    /**
+     * @override
+     * Adds a cached frustum check to the checks of the superclass.
+     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
+     */
+    RenderableObject3D.prototype.shouldBeRendered = function (renderParameters) {
+        if (RenderableObject.prototype.shouldBeRendered.call(this, renderParameters)) {
+            if (this.isInsideParent() === true) {
+                if ((renderParameters.parent.isInsideViewFrustum === undefined) || (renderParameters.parent.isInsideViewFrustum(renderParameters.camera))) {
+                    var visibleSize = renderParameters.parent.getVisibleSize(renderParameters.camera);
+                    this._visibleSize.width = visibleSize.width;
+                    this._visibleSize.height = visibleSize.height;
+                    if (renderParameters.parent.getSizeInPixels(renderParameters.viewportWidth,renderParameters.viewportHeight) < this._smallestParentSizeWhenDrawn) {
+                        return false;
+                    }
+                    return true;
+                } else {
+                    this._visibleSize.width = 0;
+                    this._visibleSize.height = 0;
+                    return false;
+                }
+            } else {
+                var visibleSize = this.getVisibleSize(renderParameters.camera);
+                if (this.getSizeInPixels(renderParameters.viewportWidth,renderParameters.viewportHeight) < this._smallestSizeWhenDrawn)  {
+                    return false;
+                }
+                return this.isInsideViewFrustum(renderParameters.camera);
+            }
+        }
+    };
+    // #########################################################################
     /**
      * Creates a new Full Viewport Quad visual object.
      * @class Represent a Full Viewport Quad to be used for drawing the background
      * using a cube mapped texture.
-     * @extends VisualObject
+     * @constructor
+     * @extends RenderableObject
      * @param {EgomModel} model The model to be used (see fvqModel()).
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {string} samplerName The name of the uniform variable that holds the
      * texture sampler for the drawing.
      * @param {Cubemap} cubemap The cubemap object to be used for mapping the background
      * @param {Camera} camera The camera to be used for querying the cube map.
+     * @returns {FVQ}
      * */
     function FVQ(model, shader, samplerName, cubemap, camera) {
-        VisualObject.call(this, shader, false, true);
-        this.model = model;
-        this.samplerName = samplerName;
-        this.cubemap = cubemap;
-        this.camera = camera;
-
-        var self = this;
-
-        this.uniformValueFunctions[this.samplerName] = function () {
-            return self.cubemap.id;
-        };
-        this.uniformValueFunctions["u_viewDirectionProjectionInverse"] = function () {
-            return Mat.inverse4(Mat.mul4(self.camera.getOrientationMatrix(), self.camera.getPerspectiveMatrix()));
-        };
+        RenderableObject.call(this, shader, false, true);
+        this._model = model;
+        this._samplerName = samplerName;
+        this.setTexture(samplerName, cubemap);
+        this._camera = camera;
+        this.setUniformValueFunction("u_viewDirectionProjectionInverse", function () {
+            return Mat.inverse4(Mat.mul4(this._camera.getOrientationMatrix(), this._camera.getPerspectiveMatrix()));
+        });
     }
 
-    FVQ.prototype = new VisualObject();
+    FVQ.prototype = new RenderableObject();
     FVQ.prototype.constructor = FVQ;
 
-    FVQ.prototype.addToContext = function (context) {
-        VisualObject.prototype.addToContext.call(this, context);
-        this.model.addToContext(context, false);
-        this.cubemap.addToContext(context);
-    };
-
     /**
-     * Always returns true as the FVQ always has to be rendered.
-     * @returns {boolean} Always true.
-     */
-    FVQ.prototype.isInsideViewFrustum = function () {
-        return true;
-    };
-
-    FVQ.prototype.bindTextures = function (context) {
-        context.bindTexture(this.cubemap);
-    };
-
-    /**
-     * Renders the FVQ, binding the cube mapped texture.
+     * @override
      * @param {ManagedGLContext} context
      */
-    FVQ.prototype.render = function (context) {
-        this.model.render(context, false);
+    FVQ.prototype.addToContext = function (context) {
+        RenderableObject.prototype.addToContext.call(this, context);
+        this._model.addToContext(context, false);
     };
-
+    /**
+     * @override
+     * Renders the FVQ, binding the cube mapped texture.
+     * @param {RenderParameters} renderParameters
+     */
+    FVQ.prototype.performRender = function (renderParameters) {
+        this._model.render(renderParameters.context, false);
+    };
+    /**
+     * @override
+     * @returns {Number}
+     */
     FVQ.prototype.getNumberOfDrawnTriangles = function () {
         return 2;
     };
-
+    // #########################################################################
     /**
      * Creates a LOD associated 3D model object.
-     * @class A 3D model paired up with Level Of Detail indicator.
+     * @struct A 3D model paired up with Level Of Detail indicator.
+     * @constructor
      * @param {EgomModel} model The 3D model data.
      * @param {Number} lod The LOD level to be associated with the model.
      */
@@ -557,12 +1231,12 @@ Application.createModule({name: "Scene",
         this.model = model;
         this.lod = lod;
     }
-
+    // #########################################################################
     /**
      * Creates a mesh type visual object.
      * @class Visual object that renders a 3D model from a set of different LOD
      * options.
-     * @extends VisualObject
+     * @extends RenderableObject3D
      * @param {ModelWithLOD[]} modelsWithLOD The series of 3D models with their 
      * associated LOD information.
      * @param {Shader} shader The shader that should be active while rendering this object.
@@ -571,15 +1245,13 @@ Application.createModule({name: "Scene",
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
      * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing the initial size of the object.
      * @param {boolean} lineMode Whether the mesh should be drawn as wireframe instead of solid.
-     * @param {Number} smallestParentSizeWhenDrawn
      */
-    function Mesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode, smallestParentSizeWhenDrawn) {
-        VisualObject.call(this, shader, true, true, smallestParentSizeWhenDrawn);
+    function Mesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode) {
+        RenderableObject3D.call(this, shader, true, true, positionMatrix, orientationMatrix, scalingMatrix);
+        this.setSmallestSizeWhenDrawn(5);
+        this.setSmallestParentSizeWhenDrawn(25);
         this.modelsWithLOD = modelsWithLOD;
-        this.textures = textures;
-        this.positionMatrix = positionMatrix;
-        this.orientationMatrix = orientationMatrix;
-        this.scalingMatrix = scalingMatrix;
+        this._textures = textures;
         this.lineMode = lineMode;
         /**
          * @name Mesh#model
@@ -591,113 +1263,25 @@ Application.createModule({name: "Scene",
 
         this.submeshes = new Array();
 
-        this.modelMatrix = Mat.identity4();
-        this.modelMatrixCalculated = false;
-
-        var self = this;
-
-        this.uniformValueFunctions["u_modelMatrix"] = function () {
-            return self.getCascadeModelMatrix();
-        };
-        this.uniformValueFunctions["u_normalMatrix"] = function () {
-            return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(self.getCascadeModelMatrix())));;
-        };
+        this.setUniformValueFunction("u_modelMatrix", function () {
+            return this.getModelMatrix();
+        });
+        this.setUniformValueFunction("u_normalMatrix", function () {
+            return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(this.getModelMatrix())));
+        });
     }
 
-    Mesh.prototype = new VisualObject();
+    Mesh.prototype = new RenderableObject3D();
     Mesh.prototype.constructor = Mesh;
 
-    Mesh.prototype.createTextureLocationGetter = function (role, context) {
-        var self = this;
-        return function () {
-            return self.textures[role].getTextureBindLocation(context);
-        };
-    };
-
     Mesh.prototype.addToContext = function (context) {
-        VisualObject.prototype.addToContext.call(this, context);
-        var i;
-        for (i = 0; i < this.modelsWithLOD.length; i++) {
+        RenderableObject3D.prototype.addToContext.call(this, context);
+        for (var i = 0; i < this.modelsWithLOD.length; i++) {
             this.modelsWithLOD[i].model.addToContext(context, this.lineMode);
             if (this.modelsWithLOD[i].model.getSize() > this.modelSize) {
                 this.modelSize = this.modelsWithLOD[i].model.getSize();
             }
         }
-        for (var role in this.textures) {
-            this.textures[role].addToContext(context);
-            this.uniformValueFunctions["u_" + role + "Texture"] = this.createTextureLocationGetter(role, context);
-        }
-    };
-
-    /**
-     * Returns the translation matrix describing the position of the mesh.
-     * @returns {Float32Array} The 4x4 translation matrix indicating the position.
-     */
-    Mesh.prototype.getPositionMatrix = function () {
-        return this.positionMatrix;
-    };
-
-    Mesh.prototype.setPositionMatrix = function (newValue) {
-        this.positionMatrix = newValue;
-        this.modelMatrixCalculated = false;
-    };
-
-    Mesh.prototype.translate = function (x, y, z) {
-        this.setPositionMatrix(Mat.mul4(this.positionMatrix, Mat.translation4(x, y, z)));
-    };
-
-    /**
-     * Returns the rotation matrix describing the orientation of the mesh.
-     * @returns {Float32Array} The 4x4 rotation matrix indicating the orientation.
-     */
-    Mesh.prototype.getOrientationMatrix = function () {
-        return this.orientationMatrix;
-    };
-
-    Mesh.prototype.getXDirectionVector = function () {
-        return [
-            this.orientationMatrix[0],
-            this.orientationMatrix[1],
-            this.orientationMatrix[2]
-        ];
-    };
-
-    Mesh.prototype.getYDirectionVector = function () {
-        return [
-            this.orientationMatrix[4],
-            this.orientationMatrix[5],
-            this.orientationMatrix[6]
-        ];
-    };
-
-    Mesh.prototype.getZDirectionVector = function () {
-        return [
-            this.orientationMatrix[8],
-            this.orientationMatrix[9],
-            this.orientationMatrix[10]
-        ];
-    };
-
-    Mesh.prototype.setOrientationMatrix = function (newValue) {
-        this.orientationMatrix = newValue;
-        this.modelMatrixCalculated = false;
-    };
-
-    Mesh.prototype.rotate = function (axis, angle) {
-        this.setOrientationMatrix(Mat.mul4(this.orientationMatrix, Mat.rotation4(axis, angle)));
-    };
-
-    /**
-     * Returns the scaling matrix describing the size of the mesh.
-     * @returns {Float32Array} The 4x4 scaling matrix indicating the size.
-     */
-    Mesh.prototype.getScalingMatrix = function () {
-        return this.scalingMatrix;
-    };
-
-    Mesh.prototype.setScalingMatrix = function (newValue) {
-        this.scalingMatrix = newValue;
-        this.modelMatrixCalculated = false;
     };
 
     /**
@@ -709,101 +1293,93 @@ Application.createModule({name: "Scene",
     };
 
     /**
-     * Returns the model transformation matrix of the mesh.
-     * @returns {Float32Array} The 4x4 model transformation matrix of the object.
-     */
-    Mesh.prototype.getModelMatrix = function () {
-        if (this.modelMatrixCalculated === false) {
-            this.modelMatrix = Mat.mul4(Mat.mul4(this.scalingMatrix, this.orientationMatrix), this.positionMatrix);
-            this.modelMatrixCalculated = true;
-        }
-        return this.modelMatrix;
-    };
-
-    /**
      * A method to check if the mesh needs to be rendered according to these
      * LOD parameters and depth mask phase (a model at a certain LOD might or might 
      * not contain transparent triangles) Also sets the model property to the model
      * with the calculated LOD.
-     * @param {Number} screenWidth
-     * @param {Number} screenHeight
-     * @param {LODContext} lodContext
-     * @param {Boolean} depthMask
+     * @param {RenderParameters} renderParameters
      * @returns {Boolean}
      */
-    Mesh.prototype.needsToBeRendered = function (screenWidth, screenHeight, lodContext, depthMask) {
-        // choose the model of appropriate LOD
-        var visibleSize = Math.max(this.visibleWidth * screenWidth / 2, this.visibleHeight * screenHeight / 2);
-        var closestLOD = -1;
-        for (var i = 0; i < this.modelsWithLOD.length; i++) {
-            if (
-                    (closestLOD === -1) ||
-                    (this.modelsWithLOD[i].lod <= lodContext.maxEnabledLOD) &&
-                    (
-                            (closestLOD > lodContext.maxEnabledLOD) ||
-                            ((lodContext.thresholds[closestLOD] > visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod] <= visibleSize)) ||
-                            ((lodContext.thresholds[closestLOD] <= visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod] <= visibleSize) && (this.modelsWithLOD[i].lod > closestLOD)) ||
-                            ((lodContext.thresholds[closestLOD] > visibleSize) && (lodContext.thresholds[this.modelsWithLOD[i].lod] > visibleSize) && (this.modelsWithLOD[i].lod < closestLOD))
-                            )) {
-                closestLOD = this.modelsWithLOD[i].lod;
-                this.model = this.modelsWithLOD[i].model;
+    Mesh.prototype.shouldBeRendered = function (renderParameters) {
+        if (RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters)) {
+            // choose the model of appropriate LOD
+            var visibleSize = this.getSizeInPixels(renderParameters.viewportWidth,renderParameters.viewportHeight);
+            var closestLOD = -1;
+            for (var i = 0; i < this.modelsWithLOD.length; i++) {
+                if (
+                        (closestLOD === -1) ||
+                        (this.modelsWithLOD[i].lod <= renderParameters.lodContext.maxEnabledLOD) &&
+                        (
+                                (closestLOD > renderParameters.lodContext.maxEnabledLOD) ||
+                                ((renderParameters.lodContext.thresholds[closestLOD] > visibleSize) && (renderParameters.lodContext.thresholds[this.modelsWithLOD[i].lod] <= visibleSize)) ||
+                                ((renderParameters.lodContext.thresholds[closestLOD] <= visibleSize) && (renderParameters.lodContext.thresholds[this.modelsWithLOD[i].lod] <= visibleSize) && (this.modelsWithLOD[i].lod > closestLOD)) ||
+                                ((renderParameters.lodContext.thresholds[closestLOD] > visibleSize) && (renderParameters.lodContext.thresholds[this.modelsWithLOD[i].lod] > visibleSize) && (this.modelsWithLOD[i].lod < closestLOD))
+                                )) {
+                    closestLOD = this.modelsWithLOD[i].lod;
+                    this.model = this.modelsWithLOD[i].model;
+                }
             }
-        }
 
-        if (this.lineMode === true) {
-            return true;
-        } else {
-            if (depthMask === true) {
-                if (this.model.getNumOpaqueTriangles() > 0) {
+            if (this.lineMode === true) {
+                return true;
+            } else {
+                if (renderParameters.depthMask === true) {
+                    if (this.model.getNumOpaqueTriangles() > 0) {
+                        return true;
+                    }
+                } else if ((renderParameters.depthMask === false) && (this.model.getNumTransparentTriangles() > 0)) {
                     return true;
                 }
-            } else if ((depthMask === false) && (this.model.getNumTransparentTriangles() > 0)) {
-                return true;
             }
-        }
-        return false;
-    };
-
-    Mesh.prototype.bindTextures = function (context) {
-        for (var textureType in this.textures) {
-            context.bindTexture(this.textures[textureType]);
+            return false;
         }
     };
 
     /**
-     * Renders the appropriate model of the mesh.
-     * @param {ManagedGLContext} context
-     * @param {boolean} depthMask Tells whether the depth mask is turned on during this render pass.
+     * 
+     * @param {RenderParameters} renderParameters
      */
-    Mesh.prototype.render = function (context, depthMask) {
-        this.model.render(context, this.lineMode, depthMask);
+    Mesh.prototype.performRender = function (renderParameters) {
+        this.model.render(renderParameters.context, this.lineMode, renderParameters.depthMask);
     };
-
-    Mesh.prototype.renderShadowMap = function (context, scene, screenWidth, screenHeight) {
-        if (this.isInsideViewFrustum(scene.activeCamera)
-                && this.needsToBeRendered(screenWidth, screenHeight, scene.lodContext, true)) {
-            context.getCurrentShader().assignUniforms(context, this.uniformValueFunctions);
-            this.model.render(context, this.lineMode);
+    /**
+     * 
+     * @param {RenderParameters} renderParameters
+     */
+    Mesh.prototype.shouldBeRenderedToShadowMap = function (renderParameters) {
+        if (RenderableObject3D.prototype.shouldBeRenderedToShadowMap.call(this, renderParameters)) {
+            return this.shouldBeRendered(renderParameters);
         }
+    };
+    /**
+     * 
+     * @param {RenderParameters} renderParameters
+     */
+    Mesh.prototype.prepareForRenderToShadowMap = function (renderParameters) {
+        renderParameters.context.getCurrentShader().assignUniforms(renderParameters.context, this._uniformValueFunctions);
+    };
+    /**
+     * 
+     * @param {RenderParameters} renderParameters
+     */
+    Mesh.prototype.performRenderToShadowMap = function (renderParameters) {
+        this.model.render(renderParameters.context, this.lineMode);
     };
 
     Mesh.prototype.getNumberOfDrawnTriangles = function () {
-        return this.model._triangles.length;
+        return this.model ? this.model._triangles.length : 0;
     };
 
-    function ShipMesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode, smallestParentSizeWhenDrawn) {
-        Mesh.call(this, modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode, smallestParentSizeWhenDrawn);
+    function ShipMesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode) {
+        Mesh.call(this, modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, lineMode);
 
         this._luminosityFactors = new Float32Array(20);
         for (var i = 0; i < this._luminosityFactors.length; i++) {
             this._luminosityFactors[i] = 0.0;
         }
-
-        var self = this;
-
-        this.uniformValueFunctions["u_luminosityFactors"] = function () {
-            return self._luminosityFactors;
-        };
+        this.setUniformValueFunction("u_luminosityFactors", function () {
+            return this._luminosityFactors;
+        });
     }
 
     ShipMesh.prototype = new Mesh([]);
@@ -816,7 +1392,7 @@ Application.createModule({name: "Scene",
     /**
      * Creates a billboard type visual object, used for projectiles.
      * @class Visual object that renders a 2D billboard transformed in 3D space.
-     * @extends VisualObject
+     * @extends RenderableObject3D
      * @param {EgomModel} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Texture} texture The texture that should be bound while rendering this object
@@ -825,27 +1401,21 @@ Application.createModule({name: "Scene",
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
      */
     function Billboard(model, shader, texture, size, positionMatrix, orientationMatrix) {
-        VisualObject.call(this, shader, false, true);
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, Mat.scaling4(size));
         this.model = model;
-        this.texture = texture;
-        this.positionMatrix = positionMatrix;
-        this.orientationMatrix = orientationMatrix;
-        this.scalingMatrix = Mat.scaling4(size);
+        this.setTexture("color", texture);
 
-        var self = this;
-
-        this.uniformValueFunctions["u_modelMatrix"] = function () {
-            return Mat.mul4(Mat.mul4(self.scalingMatrix, self.orientationMatrix), self.positionMatrix);
-        };
+        this.setUniformValueFunction("u_modelMatrix", function () {
+            return this.getModelMatrix();
+        });
     }
 
-    Billboard.prototype = new VisualObject();
+    Billboard.prototype = new RenderableObject3D();
     Billboard.prototype.constructor = Billboard;
 
     Billboard.prototype.addToContext = function (context) {
-        VisualObject.prototype.addToContext.call(this, context);
+        RenderableObject3D.prototype.addToContext.call(this, context);
         this.model.addToContext(context, false);
-        this.texture.addToContext(context);
     };
 
     /**
@@ -857,20 +1427,13 @@ Application.createModule({name: "Scene",
         return true;
     };
 
-    Billboard.prototype.bindTextures = function (context) {
-        var self = this;
-        this.uniformValueFunctions["u_colorTexture"] = function () {
-            return self.texture.getTextureBindLocation(context);
-        };
-        context.bindTexture(this.texture);
-    };
-
     /**
+     * @override
      * Renders the billboard, binding the texture.
-     * @param {Managed3DContext} context
+     * @param {RenderParameters} renderParameters
      */
-    Billboard.prototype.render = function (context) {
-        this.model.render(context, false);
+    Billboard.prototype.performRender = function (renderParameters) {
+        this.model.render(renderParameters.context, false);
     };
 
     Billboard.prototype.getNumberOfDrawnTriangles = function () {
@@ -883,7 +1446,7 @@ Application.createModule({name: "Scene",
      * @class Visual object that renders a 2D billboard positioned in 3D space and
      * dynamically changing size during it's lifespan. Used for flashes and
      * particle systems.
-     * @extends VisualObject
+     * @extends RenderableObject3D
      * @param {EgomModel} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Texture} texture The texture that should be bound while rendering this object.
@@ -891,45 +1454,38 @@ Application.createModule({name: "Scene",
      * @param {number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {number} duration The lifespan of the particle in milliseconds.
-     * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this, render will not take place.
      */
-    function DynamicParticle(model, shader, texture, color, size, positionMatrix, duration, smallestParentSizeWhenDrawn) {
-        VisualObject.call(this, shader, false, true, smallestParentSizeWhenDrawn);
+    function DynamicParticle(model, shader, texture, color, size, positionMatrix, duration) {
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, Mat.identity4(), Mat.scaling4(size));
+        this.setSmallestSizeWhenDrawn(4);
+        this.setSmallestParentSizeWhenDrawn(20);
         this.model = model;
-        this.texture = texture;
+        this.setTexture("color", texture);
         this.color = color;
-        this.positionMatrix = positionMatrix;
-        this.scalingMatrix = Mat.scaling4(size);
 
         this.creationTime = new Date().getTime();
         this.duration = duration;
-        var self = this;
 
-        this.uniformValueFunctions["u_modelMatrix"] = function () {
-            return self.getCascadeModelMatrix();
-        };
-        this.uniformValueFunctions["u_billboardSize"] = function () {
-            return self.scalingMatrix[0];
-        };
-        this.uniformValueFunctions["u_relAge"] = function () {
-            return (new Date().getTime() - self.creationTime) / self.duration;
-        };
-        this.uniformValueFunctions["u_color"] = function () {
-            return self.color;
-        };
+        this.setUniformValueFunction("u_modelMatrix", function () {
+            return this.getModelMatrix();
+        });
+        this.setUniformValueFunction("u_billboardSize", function () {
+            return this._scalingMatrix[0];
+        });
+        this.setUniformValueFunction("u_relAge", function () {
+            return (new Date().getTime() - this.creationTime) / this.duration;
+        });
+        this.setUniformValueFunction("u_color", function () {
+            return this.color;
+        });
     }
 
-    DynamicParticle.prototype = new VisualObject();
+    DynamicParticle.prototype = new RenderableObject3D();
     DynamicParticle.prototype.constructor = DynamicParticle;
 
-    DynamicParticle.prototype.getModelMatrix = function () {
-        return Mat.mul4(this.scalingMatrix, this.positionMatrix);
-    };
-
     DynamicParticle.prototype.addToContext = function (context) {
-        VisualObject.prototype.addToContext.call(this, context);
+        RenderableObject3D.prototype.addToContext.call(this, context);
         this.model.addToContext(context, false);
-        this.texture.addToContext(context);
     };
 
     /**
@@ -938,26 +1494,19 @@ Application.createModule({name: "Scene",
      * @returns {boolean} Always true.
      */
     DynamicParticle.prototype.isInsideViewFrustum = function () {
-        return (this.renderParent === null ? true : this.renderParent.lastInsideFrustumState);
-    };
-
-    DynamicParticle.prototype.bindTextures = function (context) {
-        var self = this;
-        this.uniformValueFunctions["u_colorTexture"] = function () {
-            return self.texture.getTextureBindLocation(context);
-        };
-        context.bindTexture(this.texture);
+        return (this.getParent() && this.isInsideParent()) ? this.getParent().isInsideViewFrustum() : true;
     };
 
     /**
+     * @override
      * Renders the particle, binding the needed texture.
-     * @param {Managed3DContext} context
+     * @param {RenderParameters} renderParameters
      */
-    DynamicParticle.prototype.render = function (context) {
+    DynamicParticle.prototype.performRender = function (renderParameters) {
         if (new Date().getTime() >= this.creationTime + this.duration) {
             this.toBeDeleted = true;
         } else {
-            this.model.render(context, false);
+            this.model.render(renderParameters.context, false);
         }
     };
 
@@ -975,15 +1524,14 @@ Application.createModule({name: "Scene",
      * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
      * @param {number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
-     * @param {number} smallestParentSizeWhenDrawn If the rendering parent's apparent size is smaller than this, render will not take place.
      */
-    function StaticParticle(model, shader, texture, color, size, positionMatrix, smallestParentSizeWhenDrawn) {
-        DynamicParticle.call(this, model, shader, texture, color, size, positionMatrix, 1000, smallestParentSizeWhenDrawn);
+    function StaticParticle(model, shader, texture, color, size, positionMatrix) {
+        DynamicParticle.call(this, model, shader, texture, color, size, positionMatrix, 1000);
         this._relSize = 0;
-        var self = this;
-        this.uniformValueFunctions["u_relAge"] = function () {
-            return 1.0 - self._relSize;
-        };
+
+        this.setUniformValueFunction("u_relAge", function () {
+            return 1.0 - this._relSize;
+        });
     }
 
     StaticParticle.prototype = new DynamicParticle();
@@ -1006,91 +1554,78 @@ Application.createModule({name: "Scene",
         this.visible = this._relSize >= 0.001;
     };
 
-    /**
-     * Renders the particle, binding the needed texture.
-     * @param {Managed3DContext} context
-     */
-    StaticParticle.prototype.render = function (context) {
-        if (this._relSize > 0) {
-            this.model.render(context, false);
+    StaticParticle.prototype.shouldBeRendered = function (renderParameters) {
+        if (DynamicParticle.prototype.shouldBeRendered.call(this, renderParameters)) {
+            return this._relSize > 0;
         }
     };
 
     /**
-     * 
+     * @override
+     * Renders the particle, binding the needed texture.
+     * @param {RenderParameters} renderParameters
+     */
+    StaticParticle.prototype.performRender = function (renderParameters) {
+        this.model.render(renderParameters.context, false);
+    };
+
+    /**
+     * The cloud is rendered through rendering its particles.
+     * This object only exists to set the uniforms common to all particles.
      * @param {Shader} shader
      * @param {Number[]} color The RGBA components of the color of the points.
      * @param {Number} range
      * @returns {PointCloud}
      */
     function PointCloud(shader, color, range) {
-        VisualObject.call(this, shader, false, true);
+        RenderableObject.call(this, shader, false, true);
         this.color = color;
         this.range = range;
         this.shift = [0.0, 0.0, 0.0];
 
-        var self = this;
-
-        this.uniformValueFunctions["u_color"] = function () {
-            return self.color;
-        };
-        this.uniformValueFunctions["u_shift"] = function () {
-            return self.shift;
-        };
-        this.uniformValueFunctions["u_length"] = function () {
-            return Vec.length3(self.shift);
-        };
-        this.uniformValueFunctions["u_farthestZ"] = function () {
-            return self.range;
-        };
+        this.setUniformValueFunction("u_color", function () {
+            return this.color;
+        });
+        this.setUniformValueFunction("u_shift", function () {
+            return this.shift;
+        });
+        this.setUniformValueFunction("u_length", function () {
+            return Vec.length3(this.shift);
+        });
+        this.setUniformValueFunction("u_farthestZ", function () {
+            return this.range;
+        });
     }
 
-    PointCloud.prototype = new VisualObject();
+    PointCloud.prototype = new RenderableObject();
     PointCloud.prototype.constructor = PointCloud;
-
-    /**
-     * We always need to render the dust cloud.
-     * @returns {Boolean} Always true.
-     */
-    PointCloud.prototype.isInsideViewFrustum = function () {
-        return true;
-    };
-
-    /**
-     * Doesn't do anything, the cloud is rendered through rendering its particles.
-     * This object only exists to set the uniforms common to all particles.
-     */
-    PointCloud.prototype.render = function () {
-    };
 
     /**
      * Creates a dust particle type visual object.
      * @class Visual object that renders a point like object as a line as it is
      * moving. Used to represent dust particles that give a visual clue about the
      * motion of the camera.
-     * @extends VisualObject
+     * @extends RenderableObject
      * @param {Egom.Model} model A model of 2 vertices has to be passed (see lineModel()).
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      */
     function PointParticle(model, shader, positionMatrix) {
-        VisualObject.call(this, shader, false, true);
+        RenderableObject.call(this, shader, false, true);
         this.positionMatrix = positionMatrix;
 
         this.model = model;
 
-        var self = this;
-
-        this.uniformValueFunctions["u_modelMatrix"] = function () {
-            return self.getCascadeModelMatrix();
-        };
+        this.setUniformValueFunction("u_modelMatrix", function () {
+            return this.getModelMatrix();
+        });
     }
 
-    PointParticle.prototype = new VisualObject();
+    PointParticle.prototype = new RenderableObject();
     PointParticle.prototype.constructor = PointParticle;
 
     PointParticle.prototype.addToContext = function (context) {
-        VisualObject.prototype.addToContext.call(this, context);
+        RenderableObject.prototype.addToContext.call(this, context);
         this.model.addToContext(context, false);
     };
 
@@ -1099,21 +1634,12 @@ Application.createModule({name: "Scene",
     };
 
     /**
-     * Always returns true as is it faster to skip the check because anyway we are
-     * only rendering one line here.
-     * @param {Camera} camera Irrelevant in this case.
-     * @returns {boolean} Always true.
-     */
-    PointParticle.prototype.isInsideViewFrustum = function (camera) {
-        return true;
-    };
-
-    /**
+     * @override
      * Renders the particle.
-     * @param {Managed3DContext} context
+     * @param {RenderParameters} renderParameters
      */
-    PointParticle.prototype.render = function (context) {
-        this.model.render(context, true);
+    PointParticle.prototype.performRender = function (renderParameters) {
+        this.model.render(renderParameters.context, true);
     };
 
     /**
@@ -1125,16 +1651,14 @@ Application.createModule({name: "Scene",
      * @param {number} fov The Field Of View of the camera in degrees.
      * @param {boolean} controllablePosition Whether the position of the camera is changeable by the player.
      * @param {boolean} controllableDirection Whether the direction of the camera is changeable by the player.
-     * @param {VisualObject} followedObject The object to which the camera position and direction has to be interpredet.
+     * @param {RenderableObject} followedObject The object to which the camera position and direction has to be interpredet.
      * If undefined, the camera position is interpreted as absolute (relative to scene center)
      * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
      * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
      * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
      */
     function Camera(aspect, fov, controllablePosition, controllableDirection, followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
-        this._positionMatrix = Mat.identity4();
-        this._orientationMatrix = Mat.identity4();
-        this._matrix = Mat.identity4();
+        Object3D.call(this, Mat.identity4(), Mat.identity4(), Mat.identity4());
         this.velocityVector = [0, 0, 0];
         this.maxSpeed = 5;
         this.acceleration = 0.1;
@@ -1155,72 +1679,23 @@ Application.createModule({name: "Scene",
         this.nextView = null;
     }
 
-    Camera.prototype._updateMatrix = function () {
-        this._matrix = Mat.mul4(this._positionMatrix, this._orientationMatrix);
-    };
-
-    Camera.prototype.getPositionMatrix = function () {
-        return this._positionMatrix;
-    };
-
-    Camera.prototype.getPositionVector = function () {
-        return [
-            this._positionMatrix[12],
-            this._positionMatrix[13],
-            this._positionMatrix[14]
-        ];
-    };
-
-    Camera.prototype.setPositionMatrix = function (matrix) {
-        this._positionMatrix = matrix;
-        this._updateMatrix();
-    };
-
-    Camera.prototype.translate = function (x, y, z) {
-        this._positionMatrix = Mat.mul4(this._positionMatrix, Mat.translation4(x, y, z));
-        this._updateMatrix();
-    };
-
-    Camera.prototype.translatev = function (v) {
-        this._positionMatrix = Mat.mul4(this._positionMatrix, Mat.translation4v(v));
-        this._updateMatrix();
-    };
-
-    Camera.prototype.translateByMatrix = function (matrix) {
-        this._positionMatrix = Mat.mul4(this._positionMatrix, matrix);
-        this._updateMatrix();
-    };
-
-    Camera.prototype.getOrientationMatrix = function () {
-        return this._orientationMatrix;
-    };
-
-    Camera.prototype.setOrientationMatrix = function (matrix) {
-        this._orientationMatrix = matrix;
-        this._updateMatrix();
-    };
-
-    Camera.prototype.rotate = function (axis, angle) {
-        this._orientationMatrix = Mat.mul4(this._orientationMatrix, Mat.rotation4(axis, angle));
-        this._updateMatrix();
-    };
-
-    Camera.prototype.rotateByMatrix = function (matrix) {
-        this._orientationMatrix = Mat.mul4(this._orientationMatrix, matrix);
-        this._updateMatrix();
-    };
+    makeObject3DMixinClass.call(Camera);
 
     Camera.prototype.getCameraMatrix = function () {
-        return this._matrix;
+        return Mat.mul4(this.getPositionMatrix(), this.getOrientationMatrix());
     };
 
     Camera.prototype.getPerspectiveMatrix = function () {
         return this._perspectiveMatrix;
     };
 
+    Camera.prototype.getNextView = function () {
+        return this.nextView;
+    };
+
     /**
      * Sets the camera up to follow the given visual object.
-     * @param {VisualObject} followedObject The object to which the camera position and direction has to be interpredet.
+     * @param {RenderableObject} followedObject The object to which the camera position and direction has to be interpredet.
      * If undefined, the camera position is interpreted as absolute (relative to scene center)
      * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
      * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
@@ -1239,8 +1714,8 @@ Application.createModule({name: "Scene",
         this.originalFollowPositionMatrix = followPositionMatrix;
         this.originalFollowOrientationMatrix = followOrientationMatrix;
         this.rotationCenterIsObject = rotationCenterIsObject;
-        if (!followedObject.getFirstView()) {
-            followedObject.setFirstView(this);
+        if (!followedObject.getNode().getFirstCamera()) {
+            followedObject.getNode().setFirstCamera(this);
         }
     };
 
@@ -1695,7 +2170,7 @@ Application.createModule({name: "Scene",
 
     SceneCamera.prototype.followObject = function (object) {
         if (object) {
-            this.followCamera(object.getFirstView(), 500);
+            this.followCamera(object.getNode().getFirstCamera(), 500);
         } else {
             this.followCamera(null, 0);
         }
@@ -1747,14 +2222,12 @@ Application.createModule({name: "Scene",
                         Mat.scaled4(this.adaptationStartOrientationMatrix, 1.0 - adaptationProgress),
                         Mat.scaled4(this.followedCamera._orientationMatrix, adaptationProgress)
                         ));
-                this._updateMatrix();
                 this.setFOV(this.adaptationStartFOV + (this.followedCamera._fov - this.adaptationStartFOV) * adaptationProgress);
                 this._previousFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
             } else {
                 this._positionMatrix = this.followedCamera._positionMatrix;
                 this._orientationMatrix = this.followedCamera._orientationMatrix;
                 this._perspectiveMatrix = this.followedCamera._perspectiveMatrix;
-                this._updateMatrix();
                 var newFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
                 var velocityMatrix = Mat.mul4(Mat.translation4(
                         -newFollowedPosition[12] + this._previousFollowedPosition[12],
@@ -1891,7 +2364,7 @@ Application.createModule({name: "Scene",
         this.objects = new Array();
         this.cameras = new Array();
         this.lights = new Array();
-        
+
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = new Array();
 
@@ -1975,19 +2448,30 @@ Application.createModule({name: "Scene",
 
     /**
      * Appends a new visual object to the list of background objects.
-     * @param {VisualObject} newVisualObject The object to append.
+     * @param {RenderableObject} newRenderableObject The object to append.
      */
-    Scene.prototype.addBackgroundObject = function (newVisualObject) {
-        this._backgroundObjects.push(newVisualObject);
+    Scene.prototype.addBackgroundObject = function (newRenderableObject) {
+        var node = new RenderableNode(newRenderableObject);
+        this._backgroundObjects.push(node);
+        node.setScene(this);
+        return node;
     };
 
     /**
      * Appends a new visual object to the topmost level of the scene graph.
-     * @param {VisualObject} newVisualObject The object to append.
+     * @param {RenderableObject} newRenderableObject The object to append.
      */
-    Scene.prototype.addObject = function (newVisualObject) {
-        this.objects.push(newVisualObject);
-        newVisualObject.setScene(this);
+    Scene.prototype.addObject = function (newRenderableObject) {
+        var node = new RenderableNode(newRenderableObject);
+        this.objects.push(node);
+        node.setScene(this);
+        return node;
+    };
+
+    Scene.prototype.addObjectToContexts = function (newRenderableObject) {
+        for (var i = 0; i < this._contexts.length; i++) {
+            newRenderableObject.addToContext(this._contexts[i]);
+        }
     };
 
     Scene.prototype.clearObjects = function () {
@@ -1997,15 +2481,15 @@ Application.createModule({name: "Scene",
 
     /**
      * 
-     * @returns {VisualObject}
+     * @returns {RenderableObject}
      */
     Scene.prototype.getFirstObject = function () {
         return this.objects[0];
     };
 
     /**
-     * @param {VisualObject} currentObject
-     * @returns {VisualObject}
+     * @param {RenderableObject} currentObject
+     * @returns {RenderableObject}
      */
     Scene.prototype.getNextObject = function (currentObject) {
         for (var i = 0; i < this.objects.length; i++) {
@@ -2019,8 +2503,8 @@ Application.createModule({name: "Scene",
     };
 
     /**
-     * @param {VisualObject} currentObject
-     * @returns {VisualObject}
+     * @param {RenderableObject} currentObject
+     * @returns {RenderableObject}
      */
     Scene.prototype.getPreviousObject = function (currentObject) {
         for (var i = 0; i < this.objects.length; i++) {
@@ -2032,13 +2516,14 @@ Application.createModule({name: "Scene",
         }
         return this.objects[0];
     };
-    
+
     /**
-     * @param {VisualObject} object
+     * @param {RenderableObject} object
      */
     Scene.prototype.addResourcesOfObject = function (object) {
-        this._resourceHolderObjects.push(object);
-        object.setScene(this);
+        var node = new RenderableNode(object);
+        this._resourceHolderObjects.push(node);
+        node.setScene(this);
     };
 
     Scene.prototype.addLightSource = function (newLightSource) {
@@ -2104,8 +2589,8 @@ Application.createModule({name: "Scene",
      */
     Scene.prototype.cleanUp = function () {
         for (var i = 0; i < this.objects.length; i++) {
-            this.objects[i].cascadeCleanUp();
-            while ((i < this.objects.length) && ((!this.objects[i]) || (this.objects[i].toBeDeleted))) {
+            this.objects[i].cleanUp();
+            while ((i < this.objects.length) && ((!this.objects[i]) || (this.objects[i].canBeReused() === true))) {
                 this.objects[i] = null;
                 this.objects.splice(i, 1);
             }
@@ -2135,13 +2620,13 @@ Application.createModule({name: "Scene",
             this.lights[i].addToContext(context, i, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
         for (i = 0; i < this._backgroundObjects.length; i++) {
-            this._backgroundObjects[i].cascadeAddToContext(context);
+            this._backgroundObjects[i].addToContext(context);
         }
         for (i = 0; i < this.objects.length; i++) {
-            this.objects[i].cascadeAddToContext(context);
+            this.objects[i].addToContext(context);
         }
         for (i = 0; i < this._resourceHolderObjects.length; i++) {
-            this._resourceHolderObjects[i].cascadeAddToContext(context);
+            this._resourceHolderObjects[i].addToContext(context);
         }
         this._contexts.push(context);
     };
@@ -2197,7 +2682,7 @@ Application.createModule({name: "Scene",
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         for (var i = 0; i < this.objects.length; i++) {
-            this.objects[i].cascadeRenderShadowMap(context, this, this.width, this.height);
+            this.objects[i].renderToShadowMap(context, this, this.width, this.height);
         }
     };
 
@@ -2207,7 +2692,7 @@ Application.createModule({name: "Scene",
      * @param {ManagedGLContext} context
      */
     Scene.prototype.render = function (context) {
-        Application.log("Rendering scene...", 3);
+        Module.log("Rendering scene...", 3);
         this._drawnTriangles = 0;
 
         var gl = context.gl;
@@ -2215,7 +2700,7 @@ Application.createModule({name: "Scene",
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
         for (var i = 0; i < this.objects.length; i++) {
-            this.objects[i].cascadeResetModelMatrixCalculated();
+            this.objects[i].reset();
         }
 
         if (this._shadowMappingEnabled) {
@@ -2271,9 +2756,9 @@ Application.createModule({name: "Scene",
         }
 
         for (var i = 0; i < this._backgroundObjects.length; i++) {
-            this._backgroundObjects[i].cascadeResetModelMatrixCalculated();
-            this._backgroundObjects[i].cascadeRender(context, this, this.width, this.height, false);
-            this._drawnTriangles += this._backgroundObjects[i].cascadeGetNumberOfDrawnTriangles();
+            this._backgroundObjects[i].reset();
+            this._backgroundObjects[i].render(context, this.width, this.height, false);
+            this._drawnTriangles += this._backgroundObjects[i].getNumberOfDrawnTriangles();
         }
 
         gl.enable(gl.DEPTH_TEST);
@@ -2281,28 +2766,33 @@ Application.createModule({name: "Scene",
 
         // first rendering pass: rendering the non-transparent triangles with 
         // Z buffer writing turned on
+        Module.log("Rendering transparent phase...", 4);
         gl.disable(gl.BLEND);
         for (var i = 0; i < this.objects.length; i++) {
-            this.objects[i].cascadeRender(context, this, this.width, this.height, true);
-            this._drawnTriangles += this.objects[i].cascadeGetNumberOfDrawnTriangles();
+            Module.log("Rendering object " + i + "...", 4);
+            this.objects[i].render(context, this.width, this.height, true);
+            this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
         }
         // second rendering pass: rendering the transparent triangles with 
         // Z buffer writing turned off
+        Module.log("Rendering opaque phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
         for (var i = 0; i < this.objects.length; i++) {
-            this.objects[i].cascadeRender(context, this, this.width, this.height, false);
-            this._drawnTriangles += this.objects[i].cascadeGetNumberOfDrawnTriangles();
+            Module.log("Rendering object " + i + "...", 4);
+            this.objects[i].render(context, this.width, this.height, false);
+            this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
         }
     };
 
     // -------------------------------------------------------------------------
     // The public interface of the module
-    return {
+    Module = {
         Scene: Scene,
         LightSource: LightSource,
         Camera: Camera,
-        VisualObject: VisualObject,
+        RenderableObject: RenderableObject,
+        RenderableNode: RenderableNode,
         FVQ: FVQ,
         ModelWithLOD: ModelWithLOD,
         Mesh: Mesh,
@@ -2313,4 +2803,5 @@ Application.createModule({name: "Scene",
         PointCloud: PointCloud,
         PointParticle: PointParticle
     };
+    return Module;
 });

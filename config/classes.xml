@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Classes>
     <SkyboxClass name="deepspace">
-        <shader name="skybox" samplerName="u_skybox" />
+        <shader name="skybox" samplerName="skybox" />
         <cubemap name="deepspace" />
     </SkyboxClass>
         

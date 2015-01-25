@@ -1720,10 +1720,10 @@ Application.createModule({name: "Control",
 
     /**
      * Sets the controlled camera to follow the passed visual object from now on.
-     * @param {VisualObject} visualObject
+     * @param {RenderableObject} renderableObject
      */
-    CameraController.prototype.setCameraToFollowObject = function (visualObject) {
-        this._controlledCamera.followObject(visualObject);
+    CameraController.prototype.setCameraToFollowObject = function (renderableObject) {
+        this._controlledCamera.followObject(renderableObject);
     };
 
     /**

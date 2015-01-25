@@ -283,7 +283,7 @@
         </attributes>
         <uniforms>
             <uniform name="u_viewDirectionProjectionInverse" type="mat4" />
-            <uniform name="u_skybox" type="samplerCube" />
+            <uniform name="u_skyboxCubemap" type="samplerCube" />
         </uniforms>
     </Shader>
 	

@@ -142,7 +142,7 @@ Application.createModule({name: "GL",
     /**
      * Adds the texture resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as typically this
-     * will be called many times, with different {@link VisualObject}s containing 
+     * will be called many times, with different {@link RenderableObject}s containing 
      * the texture request it to be added to the context where they are to be
      * drawn) The action is only executed when the texture has been loaded.
      * @param {ManagedGLContext} context
@@ -301,7 +301,7 @@ Application.createModule({name: "GL",
     /**
      * Adds the cubemap resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as this might be called 
-     * multiple times, with different {@link VisualObject}s containing 
+     * multiple times, with different {@link RenderableObject}s containing 
      * the cubemap request it to be added to the context where they are to be
      * drawn) The action is only executed when the cubemap has been loaded.
      * @param {ManagedGLContext} context
@@ -1004,7 +1004,7 @@ Application.createModule({name: "GL",
     /**
      * Adds the shader resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as typically this
-     * will be called many times, with different {@link VisualObject}s containing 
+     * will be called many times, with different {@link RenderableObject}s containing 
      * the shader request it to be added to the context where they are to be
      * drawn) The action is only executed when the shader has been loaded.
      * @param {ManagedGLContext} context
@@ -2218,6 +2218,9 @@ Application.createModule({name: "GL",
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        Texture: Texture,
+        Cubemap: Cubemap,
+        Shader: Shader,
         FrameBuffer: FrameBuffer,
         ManagedGLContext: ManagedGLContext,
         ResourceManager: ResourceManager

@@ -162,10 +162,10 @@ Application.createModule({name: "Logic",
     /**
      * Adds the visual model of this particle to a scene, using the passed node
      * as its rendering parent.
-     * @param {PointCloud} cloudVisualModel
+     * @param {PointCloud} cloudNode
      */
-    DustParticle.prototype.addToScene = function (cloudVisualModel) {
-        cloudVisualModel.addSubnode(this._visualModel);
+    DustParticle.prototype.addToScene = function (cloudNode) {
+        cloudNode.addSubnode(new Scene.RenderableNode(this._visualModel));
     };
     /**
      * Updates the position of the particle to be acound the camera within proper
@@ -237,7 +237,7 @@ Application.createModule({name: "Logic",
                 Armada.resources().getShader(this._class.shaderName),
                 this._class.color,
                 this._class.range);
-        scene.addObject(this._visualModel);
+        var node = scene.addObject(this._visualModel);
         this._particles = new Array();
         for (i = 0; i < this._class.numberOfParticles; i++) {
             var particle = new DustParticle(
@@ -247,7 +247,7 @@ Application.createModule({name: "Logic",
                             (Math.random() - 0.5) * 2 * this._class.range,
                             (Math.random() - 0.5) * 2 * this._class.range,
                             (Math.random() - 0.5) * 2 * this._class.range));
-            particle.addToScene(this._visualModel);
+            particle.addToScene(node);
             this._particles.push(particle);
         }
     };
@@ -284,7 +284,7 @@ Application.createModule({name: "Logic",
         /**
          * The renderable node that represents this projectile in a scene.
          * @name Projectile#_visualModel
-         * @type VisualObject
+         * @type RenderableObject
          */
         this._visualModel = null;
         /**
@@ -365,7 +365,7 @@ Application.createModule({name: "Logic",
      */
     Projectile.prototype.destroy = function () {
         this._timeLeft = 0;
-        this._visualModel.removeFromScene();
+        this._visualModel.markAsReusable();
         this._visualModel = null;
         this._physicalModel = null;
     };
@@ -381,8 +381,8 @@ Application.createModule({name: "Logic",
             this.destroy();
         } else {
             this._physicalModel.simulate(dt);
-            this._visualModel.positionMatrix = this._physicalModel.getPositionMatrix();
-            this._visualModel.orientationMatrix = this._physicalModel.getOrientationMatrix();
+            this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
+            this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             var positionVector = Mat.translationVector3(this._physicalModel.getPositionMatrix());
             for (var i = 0; i < hitObjects.length; i++) {
                 if ((hitObjects[i] !== this._origin) && (hitObjects[i].checkHit(positionVector, [], 0))) {
@@ -429,7 +429,7 @@ Application.createModule({name: "Logic",
         /**
          * The renderable node that represents this weapon in a scene.
          * @name Weapon#_visualModel
-         * @type VisualObject
+         * @type RenderableObject
          */
         this._visualModel = null;
     }
@@ -482,7 +482,7 @@ Application.createModule({name: "Logic",
                 this._slot.orientationMatrix,
                 Mat.identity4(),
                 (wireframe === true));
-        parentNode.addSubnode(this._visualModel);
+        parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
     };
     /**
      * Returns the renderable object representing the muzzle flash that is visible
@@ -538,7 +538,7 @@ Application.createModule({name: "Logic",
                 var barrelPosVector = Vec.mulVec3Mat3(this._class.barrels[i].positionVector, Mat.matrix3from4(Mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
                 // add the muzzle flash of this barrel
                 var muzzleFlash = this._getMuzzleFlashForBarrel(i);
-                this._visualModel.addSubnode(muzzleFlash);
+                this._visualModel.getNode().addSubnode(new Scene.RenderableNode(muzzleFlash));
                 // add the projectile of this barrel
                 var p = new Projectile(
                         projectileClass,
@@ -546,7 +546,7 @@ Application.createModule({name: "Logic",
                         projectileOriMatrix,
                         this._spacecraft,
                         new Physics.Force("", this._class.barrels[i].force, [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
-                p.addToScene(this._visualModel.getScene());
+                p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
             }
         }
@@ -567,13 +567,13 @@ Application.createModule({name: "Logic",
         /**
          * The renderable object that is used to render the thruster burn particle.
          * @name Thruster#_visualModel
-         * @type VisualObject
+         * @type RenderableObject
          */
         this._visualModel = null;
         /**
          * The renderable object corresponding to the ship this thruster is located on.
          * @name Thruster#_shipModel
-         * @type VisualObject
+         * @type RenderableObject
          */
         this._shipModel = null;
         /**
@@ -600,10 +600,9 @@ Application.createModule({name: "Logic",
                 Armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
                 particleDescriptor.color,
                 this._slot.size,
-                Mat.translation4v(this._slot.positionVector),
-                20);
-        parentNode.addSubnode(this._visualModel);
-        this._shipModel = parentNode;
+                Mat.translation4v(this._slot.positionVector));
+        parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
+        this._shipModel = parentNode.getRenderableObject();
     };
     /**
      * Updates the visual representation of this thruster to represent the current
@@ -704,7 +703,7 @@ Application.createModule({name: "Logic",
     /**
      * Adds all necessary renderable objects under the passed parent node that
      * can be used to render the propulsion system (and its thrusters).
-     * @param {VisualObject} parentNode
+     * @param {RenderableNode} parentNode
      */
     Propulsion.prototype.addToScene = function (parentNode) {
         for (var use in this._thrusterUses) {
@@ -1308,7 +1307,7 @@ Application.createModule({name: "Logic",
          * The renderable object that is used as the parent for the visual
          * representation of the hitboxes of this craft.
          * @name Spacecraft#_hitbox
-         * @type VisualObject
+         * @type RenderableObject
          */
         this._hitbox = null;
         /**
@@ -1362,7 +1361,7 @@ Application.createModule({name: "Logic",
     };
     /**
      * Returns the renderable object that represents this spacecraft in a scene.
-     * @returns {VisualObject}
+     * @returns {RenderableObject}
      */
     Spacecraft.prototype.getVisualModel = function () {
         return this._visualModel;
@@ -1743,7 +1742,7 @@ Application.createModule({name: "Logic",
                 this._class.bodies[index].getOrientationMatrix(),
                 Mat.identity4(),
                 false);
-        this._hitbox.addSubnode(hitZoneMesh);
+        this._hitbox.addSubnode(new Scene.RenderableNode(hitZoneMesh));
     };
     /**
      * Creates and adds the renderable objects to represent this spacecraft to
@@ -1794,28 +1793,28 @@ Application.createModule({name: "Logic",
                 this._physicalModel.getOrientationMatrix(),
                 Mat.scaling4(this._class.modelSize),
                 (wireframe === true));
-        scene.addObject(this._visualModel);
+        var node = scene.addObject(this._visualModel);
         // visualize physical model (hitboxes)
         if ((addSupplements) && (addSupplements.hitboxes === true)) {
             // add the parent objects for the hitboxes
-            this._hitbox = new Scene.VisualObject(Armada.resources().getShader(this._class.shaderName), false, false);
+            this._hitbox = new Scene.RenderableNode(new Scene.RenderableObject(Armada.resources().getShader(this._class.shaderName), false, false));
             // add the models for the hitboxes themselves
             for (i = 0; i < this._class.bodies.length; i++) {
                 this._addHitboxModel(i);
             }
             this._hitbox.hide();
-            this._visualModel.addSubnode(this._hitbox);
+            node.addSubnode(this._hitbox);
         }
         // add the weapons
         if ((addSupplements) && (addSupplements.weapons === true)) {
             for (i = 0; i < this._weapons.length; i++) {
-                this._weapons[i].addToScene(this._visualModel, lod, wireframe);
+                this._weapons[i].addToScene(node, lod, wireframe);
             }
         }
         // add the thruster particles
         if ((addSupplements) && (addSupplements.thrusterParticles === true)) {
             this._propulsion.addThrusters(this._class.thrusterSlots);
-            this._propulsion.addToScene(this._visualModel);
+            this._propulsion.addToScene(node);
         }
         // add projectile resources
         if ((addSupplements) && (addSupplements.projectileResources === true)) {
@@ -1905,7 +1904,7 @@ Application.createModule({name: "Logic",
      * correspond to the different views fixed on this spacecraft in the scene.
      */
     Spacecraft.prototype.resetViewCameras = function () {
-        this._visualModel.resetViewCameras();
+        this._visualModel.getNode().resetViewCameras();
     };
     /**
      * Performs all the phyics and logic simulation of this spacecraft.

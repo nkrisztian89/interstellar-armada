@@ -1028,7 +1028,7 @@ Application.createModule({name: "Classes",
      * Creates a virtual camera following the given object according to the view's
      * parameters.
      * @param {Number} aspect The X/Y aspect ratio of the camera.
-     * @param {VisualObject} followedObject The object relative to which the camera 
+     * @param {RenderableObject} followedObject The object relative to which the camera 
      * position and direction has to be interpreted.
      * @returns {Camera} The created camera.
      */
