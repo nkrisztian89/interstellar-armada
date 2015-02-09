@@ -1121,9 +1121,9 @@ Application.createModule({name: "Screens",
             // been loaded
             Armada.resources().executeWhenReady(function () {
                 // get the length of the ship based on the length of its model
-                self._itemLength = self._item.getVisualModel().modelsWithLOD[0].model.getHeight();
-                self._itemLengthInMeters = self._item.getVisualModel().modelsWithLOD[0].model.getHeightInMeters();
-                self._itemFront = self._item.getVisualModel().modelsWithLOD[0].model.getMaxY();
+                self._itemLength = self._item.getVisualModel()._modelsWithLOD[0].model.getHeight();
+                self._itemLengthInMeters = self._item.getVisualModel()._modelsWithLOD[0].model.getHeightInMeters();
+                self._itemFront = self._item.getVisualModel()._modelsWithLOD[0].model.getMaxY();
                 self._itemDescription.setContent(
                         shipClass.description + "<br/>" +
                         "<br/>" +

@@ -436,7 +436,7 @@ Application.createModule({name: "Logic",
     /**
      * Adds a renderable node representing this weapon to the scene under the
      * passed parent node.
-     * @param {ShipMesh} parentNode The parent node to which to attach this
+     * @param {ParameterizedMesh} parentNode The parent node to which to attach this
      * weapon in the scene. (normally the renderable node of the spacecraft
      * that has this weapon, but optionally can be different)
      * @param {Number} [lod] The level of detail to use for the added model. If no
@@ -587,7 +587,7 @@ Application.createModule({name: "Logic",
     /**
      * Adds a renderable node representing the particle that is rendered to show
      * the burn level of this thruster to the scene under the passed parent node.
-     * @param {ShipMesh} parentNode The parent node to which to attach the
+     * @param {ParameterizedMesh} parentNode The parent node to which to attach the
      * particle in the scene. (normally the renderable node of the spacecraft
      * that has this thruster)
      * @param {ParticleDescriptor} particleDescriptor The descriptor of the 
@@ -612,7 +612,7 @@ Application.createModule({name: "Logic",
         // set the size of the particle that shows the burn
         this._visualModel.setRelSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
-        this._shipModel.setLuminosityFactor(this._slot.group, Math.min(1.0, 2 * this._burnLevel));
+        this._shipModel.setParameter("luminosityFactors", this._slot.group, Math.min(1.0, 2 * this._burnLevel));
     };
     /**
      * Sets the burn level of this thruster to zero.
@@ -1273,7 +1273,7 @@ Application.createModule({name: "Logic",
         /**
          * The renderable node that represents this spacecraft in a scene.
          * @name Spacecraft#_visualModel
-         * @type ShipMesh
+         * @type ParameterizedMesh
          */
         this._visualModel = null;
         /**
@@ -1763,7 +1763,7 @@ Application.createModule({name: "Logic",
      * <li>thursterParticles</li>
      * <li>projectileResources</li>
      * </ul>
-     * @returns {ShipMesh} The renderable object created to represent the 
+     * @returns {ParameterizedMesh} The renderable object created to represent the 
      * spacecraft.
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements) {
@@ -1785,14 +1785,15 @@ Application.createModule({name: "Logic",
         // cash the references to the textures
         var textures = this.getTextures();
         // add the main model of the spacecraft
-        this._visualModel = new Scene.ShipMesh(
+        this._visualModel = new Scene.ParameterizedMesh(
                 modelsWithLOD,
                 Armada.resources().getShader(this._class.shaderName),
                 textures,
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix(),
                 Mat.scaling4(this._class.modelSize),
-                (wireframe === true));
+                (wireframe === true),
+                [{name: "luminosityFactors", length: 20}]);
         var node = scene.addObject(this._visualModel);
         // visualize physical model (hitboxes)
         if ((addSupplements) && (addSupplements.hitboxes === true)) {
