@@ -1481,12 +1481,12 @@ Application.createModule({name: "GL",
         // so that drawElements can also be used for rendering
         // this code can be useful later, when actual indexed rendering will be supported
         /*var indexBufferData = new Array(sumVertices);
-        for (i = 0; i < sumVertices; i++) {
-            indexBufferData[i] = i;
-        }
-        var indexBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexBufferData), this.gl.STATIC_DRAW);*/
+         for (i = 0; i < sumVertices; i++) {
+         indexBufferData[i] = i;
+         }
+         var indexBuffer = this.gl.createBuffer();
+         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+         this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexBufferData), this.gl.STATIC_DRAW);*/
         // creating a Float32Array of the appropriate size for each needed buffer
         this._vertexBuffers = new Object();
         for (i = 0; i < this._shaders.length; i++) {
@@ -1495,10 +1495,13 @@ Application.createModule({name: "GL",
                 this.addVertexBuffer(new VertexBuffer(shaderAttributes[j].name, shaderAttributes[j].role, shaderAttributes[j].size, sumVertices));
             }
         }
+        ///TODO: refactor to support loading specific LOD ranges
         // filling the buffer data arrays from model data
         var bufferSize = 0;
         for (i = 0; i < this._models.length; i++) {
-            bufferSize += this._models[i].loadToVertexBuffers(this, bufferSize);
+            for (var j = this._models[i].getMinLOD(); j <= this._models[i].getMaxLOD(); j++) {
+                bufferSize += this._models[i].loadToVertexBuffers(this, bufferSize, j);
+            }
         }
         // load the data to GPU memory and bind the attributes of the shaders with 
         // the corresponding VBOs
@@ -2007,27 +2010,31 @@ Application.createModule({name: "GL",
     /**
      * Looks for a model with the given filename in the resource manager, if not
      * present yet, adds it, then returns it.
+     * @param {String} modelName
      * @param {String} filename The name of the file of the model resource we are looking for.
+     * @param {Number} [lod=0]
      * @returns {EgomModel} The found or added model object in the resource manager.
      */
-    ResourceManager.prototype.getOrAddModelFromFile = function (filename) {
-        if (this._models[filename] === undefined) {
+    ResourceManager.prototype.getOrAddModelFromFile = function (modelName, filename, lod) {
+        if (this._models[modelName] === undefined) {
             this._numModels += 1;
             this.resetReadyState();
-            this._models[filename] = new Egom.Model(filename);
-            var self = this;
-            this._models[filename].executeWhenReady(function () {
-                self._numModelsLoaded += 1;
-                self.onResourceLoad(filename, self.getNumberOfResources(), self.getNumberOfLoadedResources());
-                if (self.allModelsLoaded()) {
-                    self.onAllModelsLoad();
+            this._models[modelName] = new Egom.Model();
+            this._models[modelName].setSourceFileForLOD(filename, lod);
+            this._models[modelName].executeWhenReady(function () {
+                this._numModelsLoaded += 1;
+                this.onResourceLoad(modelName, this.getNumberOfResources(), this.getNumberOfLoadedResources());
+                if (this.allModelsLoaded()) {
+                    this.onAllModelsLoad();
                 }
-                if (self.allResourcesLoaded()) {
-                    self.setToReady();
+                if (this.allResourcesLoaded()) {
+                    this.setToReady();
                 }
-            });
+            }.bind(this));
+        } else {
+            this._models[modelName].setSourceFileForLOD(filename, lod);
         }
-        return this._models[filename];
+        return this._models[modelName];
     };
     /**
      * Gets the model stored in the resource manager, searching for it by its name, 
@@ -2079,7 +2086,7 @@ Application.createModule({name: "GL",
      */
     ResourceManager.prototype.requestModelLoadFromFile = function () {
         for (var model in this._models) {
-            this._models[model].requestLoadFromFile();
+            this._models[model].requestLoadFromFiles();
         }
     };
     /**

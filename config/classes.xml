@@ -416,11 +416,12 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="aries_lod4.egm" lod="4" />
+            <!--model filename="aries_lod4.egm" lod="4" />
             <model filename="aries_lod3.egm" lod="3" />
             <model filename="aries_lod2.egm" lod="2" />
             <model filename="aries_lod1.egm" lod="1" />
-            <model filename="aries_lod0.egm" lod="0" />
+            <model filename="aries_lod0.egm" lod="0" /-->
+            <model filename="aries_lod0-4.egm" lod="0" />
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -505,11 +506,12 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="taurus_lod4.egm" lod="4"/>
+            <!--model filename="taurus_lod4.egm" lod="4"/>
             <model filename="taurus_lod3.egm" lod="3"/>
             <model filename="taurus_lod2.egm" lod="2"/>
             <model filename="taurus_lod1.egm" lod="1"/>
-            <model filename="taurus_lod0.egm" lod="0"/>
+            <model filename="taurus_lod0.egm" lod="0"/-->
+            <model filename="taurus_lod0-4.egm" lod="0"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -646,11 +648,12 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="libra_lod4.egm" lod="4"/>
+            <!--model filename="libra_lod4.egm" lod="4"/>
             <model filename="libra_lod3.egm" lod="3"/>
             <model filename="libra_lod2.egm" lod="2"/>
             <model filename="libra_lod1.egm" lod="1"/>
-            <model filename="libra_lod0.egm" lod="0"/>
+            <model filename="libra_lod0.egm" lod="0"/-->
+            <model filename="libra_lod0-4.egm" lod="0"/>
         </models>
         <texture filename="textures/libra.png" type="color" />
         <texture filename="textures/libra_specular.png" type="specular" />

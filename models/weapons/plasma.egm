@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EgomModel version="2.0">
+  <info>
+    <property name="name" value="plasma"/>
+    <property name="author" value="Krisztian Nagy"/>
+  </info>
   <vertices count="77">
     <vertex i="1" x="0" y="-50000" z="-10000" />
     <vertex i="2" x="30000" y="-95000" z="23000" />

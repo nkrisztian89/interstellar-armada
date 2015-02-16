@@ -957,8 +957,6 @@ Application.createModule({name: "Screens",
     };
 
     DatabaseScreen.prototype.initializeCanvas = function () {
-        var self = this;
-
         this._loadingBox.show();
         this.updateStatus("initializing database...", 0);
 
@@ -981,12 +979,12 @@ Application.createModule({name: "Screens",
         this._scene.addLightSource(new Scene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
         Armada.resources().onResourceLoad = function (resourceName, totalResources, loadedResources) {
-            self.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
-        };
+            this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
+        }.bind(this);
         Armada.resources().executeWhenReady(function () {
-            self.updateStatus("", 100);
-            self._loadingBox.hide();
-        });
+            this.updateStatus("", 100);
+            this._loadingBox.hide();
+        }.bind(this));
 
         this.updateStatus("loading graphical resources...", 15);
 
@@ -997,31 +995,31 @@ Application.createModule({name: "Screens",
         // by moving the mouse
         canvas.onmousedown = function (e) {
             if (Armada.logic().getDatabaseModelRotation()) {
-                self._mousePos = [e.screenX, e.screenY];
+                this._mousePos = [e.screenX, e.screenY];
                 // automatic rotation should stop for the time of manual rotation
-                self.stopRotationLoop();
+                this.stopRotationLoop();
                 // the mouse might go out from over the canvas during rotation, so register the
                 // move event handler on the document body
                 document.body.onmousemove = function (e) {
-                    self._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - self._mousePos[0]) / 180 * Math.PI);
-                    self._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - self._mousePos[1]) / 180 * Math.PI);
-                    self._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - self._mousePos[0]) / 180 * Math.PI);
-                    self._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - self._mousePos[1]) / 180 * Math.PI);
-                    self._mousePos = [e.screenX, e.screenY];
-                };
+                    this._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
+                    this._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
+                    this._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
+                    this._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
+                    this._mousePos = [e.screenX, e.screenY];
+                }.bind(this);
                 // once the user releases the mouse button, the event handlers should be cancelled
                 // and the automatic rotation started again
                 document.body.onmouseup = function (e) {
                     document.body.onmousemove = null;
                     document.body.onmouseup = null;
-                    self.startRotationLoop();
+                    this.startRotationLoop();
                     e.preventDefault();
                     return false;
-                };
+                }.bind(this);
             }
             e.preventDefault();
             return false;
-        };
+        }.bind(this);
     };
 
     /**
@@ -1065,18 +1063,17 @@ Application.createModule({name: "Screens",
         this._scene.clearObjects();
         this.render();
 
-        var self = this;
         Armada.logic().executeWhenReady(function () {
             // display the data that can be displayed right away, and show loading
             // for the rest
-            var shipClass = Armada.logic().getSpacecraftClassesInArray()[self._itemIndex];
-            self._itemName.setContent(shipClass.fullName);
-            self._itemType.setContent(shipClass.spacecraftType.fullName);
-            self._itemDescription.setContent("Loading...");
+            var shipClass = Armada.logic().getSpacecraftClassesInArray()[this._itemIndex];
+            this._itemName.setContent(shipClass.fullName);
+            this._itemType.setContent(shipClass.spacecraftType.fullName);
+            this._itemDescription.setContent("Loading...");
 
             // create a ship that can be used to add the models (ship with default weapons
             // to the scene
-            self._item = new Logic.Spacecraft(
+            this._item = new Logic.Spacecraft(
                     shipClass,
                     Mat.identity4(),
                     Mat.identity4(),
@@ -1084,94 +1081,94 @@ Application.createModule({name: "Screens",
                     "default"
                     );
             // add the ship to the scene in triangle drawing mode
-            self._solidModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), false, {weapons: true});
+            this._solidModel = this._item.addToScene(this._scene, Armada.graphics().getMaxLoadedLOD(), false, {weapons: true});
             // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-            self._solidModel.getNode().setShader(Armada.graphics().getShadowMapping() ?
+            this._solidModel.getNode().setShader(Armada.graphics().getShadowMapping() ?
                     Armada.resources().getShader("shadowMapReveal")
                     : Armada.resources().getShader("simpleReveal"));
             // set the necessary uniform functions for the reveal shader
-            self._solidModel.setUniformValueFunction("u_revealFront", function () {
+            this._solidModel.setUniformValueFunction("u_revealFront", function () {
                 return true;
             });
-            self._solidModel.setUniformValueFunction("u_revealStart", function () {
-                return self._itemFront - ((self._revealState - 1.0) * self._itemLength * 1.1);
-            });
-            self._solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
-                return self._itemLength / 10;
-            });
+            this._solidModel.setUniformValueFunction("u_revealStart", function () {
+                return this._itemFront - ((this._revealState - 1.0) * this._itemLength * 1.1);
+            }, this);
+            this._solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
+                return this._itemLength / 10;
+            }, this);
             // add the ship to the scene in line drawing mode as well
-            self._wireframeModel = self._item.addToScene(self._scene, Armada.graphics().getMaxLoadedLOD(), true, {weapons: true});
+            this._wireframeModel = this._item.addToScene(this._scene, Armada.graphics().getMaxLoadedLOD(), true, {weapons: true});
             // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-            self._wireframeModel.getNode().setShader(Armada.resources().getShader("oneColorReveal"));
+            this._wireframeModel.getNode().setShader(Armada.resources().getShader("oneColorReveal"));
             // set the necessary uniform functions for the one colored reveal shader
-            self._wireframeModel.setUniformValueFunction("u_color", function () {
+            this._wireframeModel.setUniformValueFunction("u_color", function () {
                 return [0.0, 1.0, 0.0, 1.0];
             });
-            self._wireframeModel.setUniformValueFunction("u_revealFront", function () {
-                return (self._revealState <= 1.0);
-            });
-            self._wireframeModel.setUniformValueFunction("u_revealStart", function () {
-                return self._itemFront - ((self._revealState > 1.0 ? (self._revealState - 1.0) : self._revealState) * self._itemLength * 1.1);
-            });
-            self._wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
-                return (self._revealState <= 1.0) ? (self._itemLength / 10) : 0;
-            });
+            this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
+                return (this._revealState <= 1.0);
+            }, this);
+            this._wireframeModel.setUniformValueFunction("u_revealStart", function () {
+                return this._itemFront - ((this._revealState > 1.0 ? (this._revealState - 1.0) : this._revealState) * this._itemLength * 1.1);
+            }, this);
+            this._wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
+                return (this._revealState <= 1.0) ? (this._itemLength / 10) : 0;
+            }, this);
 
             // set the callback for when the potentially needed additional file resources have 
             // been loaded
             Armada.resources().executeWhenReady(function () {
                 // get the length of the ship based on the length of its model
-                self._itemLength = self._item.getVisualModel()._modelsWithLOD[0].model.getHeight();
-                self._itemLengthInMeters = self._item.getVisualModel()._modelsWithLOD[0].model.getHeightInMeters();
-                self._itemFront = self._item.getVisualModel()._modelsWithLOD[0].model.getMaxY();
-                self._itemDescription.setContent(
+                this._itemLength = this._item.getVisualModel()._model.getHeight();
+                this._itemLengthInMeters = this._item.getVisualModel()._model.getHeightInMeters();
+                this._itemFront = this._item.getVisualModel()._model.getMaxY();
+                this._itemDescription.setContent(
                         shipClass.description + "<br/>" +
                         "<br/>" +
-                        "Length: " + (((self._itemLengthInMeters) < 100) ?
-                                (self._itemLengthInMeters).toPrecision(3)
-                                : Math.round(self._itemLengthInMeters)) +
+                        "Length: " + (((this._itemLengthInMeters) < 100) ?
+                                (this._itemLengthInMeters).toPrecision(3)
+                                : Math.round(this._itemLengthInMeters)) +
                         " m<br/>" +
                         "Weapon slots: " + shipClass.weaponSlots.length + "<br/>" +
                         "Thrusters: " + shipClass.thrusterSlots.length);
                 // this will create the GL context if needed or update it with the new
                 // data if it already exists
-                self.bindSceneToCanvas(self._scene, self.getScreenCanvas("databaseCanvas"));
+                this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
-                self._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -self._item.getVisualModel().getScaledSize()));
+                this._scene.activeCamera.setPositionMatrix(Mat.translation4(0, 0, -this._item.getVisualModel().getScaledSize()));
                 if (Armada.graphics().getShadowMapping() && (Armada.graphics().getShaderComplexity() === "normal")) {
-                    self._scene.setShadowMapRanges([
-                        0.5 * self._item.getVisualModel().getScaledSize(),
-                        self._item.getVisualModel().getScaledSize()
+                    this._scene.setShadowMapRanges([
+                        0.5 * this._item.getVisualModel().getScaledSize(),
+                        this._item.getVisualModel().getScaledSize()
                     ]);
-                    self._scene.enableShadowMapping();
+                    this._scene.enableShadowMapping();
                 } else {
-                    self._scene.disableShadowMapping();
+                    this._scene.disableShadowMapping();
                 }
 
-                self._revealState = 0.0;
+                this._revealState = 0.0;
 
                 var singleRender = true;
                 if (Armada.logic().getDatabaseModelRotation()) {
-                    self.startRotationLoop();
+                    this.startRotationLoop();
                     singleRender = false;
                 }
                 if (Armada.graphics().getShaderComplexity() === "normal") {
-                    self.startRevealLoop();
+                    this.startRevealLoop();
                     singleRender = false;
                 }
                 if (singleRender) {
-                    self._sceneCanvasBindings[0].canvas.getManagedContext().setup();
-                    self.render();
+                    this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
+                    this.render();
                 } else {
-                    self.startRenderLoop(1000 / 60);
+                    this.startRenderLoop(1000 / 60);
                 }
 
                 document.body.style.cursor = 'default';
-            });
+            }.bind(this));
 
             // initiate the loading of additional file resources if they are needed
             Armada.resources().requestResourceLoad();
-        });
+        }.bind(this));
     };
 
     /**

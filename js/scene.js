@@ -83,9 +83,9 @@ Application.createModule({name: "Scene",
          */
         this._size = size !== undefined ? size : 1;
         /**
-         * Cache value to store whether the object is situated within its parent's
-         * boundaries, as the parent's values can be used for certain calculations
-         * in this case.
+         * Cache value to store whether the object is situated within its 
+         * parent's boundaries, as the parent's values can be used for certain 
+         * calculations in this case.
          * @name Object3D#_insideParent
          * @type Boolean
          */
@@ -99,9 +99,10 @@ Application.createModule({name: "Scene",
         this._lastSizeInsideViewFrustum = {width: -1, height: -1};
     }
     /**
-     * Adds the methods of an Object3D class to the prototype of the class passed
-     * as the 'this' variable (so usage: makeObject3DMixinClass.call(ClassName)),
-     * so subsequently created instances of it can be used as Object3D instances.
+     * Adds the methods of an Object3D class to the prototype of the class 
+     * passed as the 'this' variable (so usage: 
+     * makeObject3DMixinClass.call(ClassName)), so subsequently created 
+     * instances of it can be used as Object3D instances.
      * It is an IIFE to create the methods themselves only once and cache them
      * in a closure, and only add the references when it is used.
      * @type Function(this:Object3D)
@@ -167,7 +168,8 @@ Application.createModule({name: "Scene",
             this.setPositionMatrix(Mat.mul4(this._positionMatrix, Mat.translation4v(v)));
         }
         /**
-         * Translates the current position by mutliplying it by the given matrix.
+         * Translates the current position by mutliplying it by the given 
+         * matrix.
          * @param {Float32Array} matrix
          */
         function translateByMatrix(matrix) {
@@ -235,8 +237,8 @@ Application.createModule({name: "Scene",
             this.setOrientationMatrix(Mat.mul4(this._orientationMatrix, Mat.rotation4(axis, angle)));
         }
         /**
-         * Rotates the current orientation by multiplying it by the given roation
-         * matrix.
+         * Rotates the current orientation by multiplying it by the given 
+         * rotation matrix.
          * @param {Float32Array} matrix
          */
         function rotateByMatrix(matrix) {
@@ -288,8 +290,8 @@ Application.createModule({name: "Scene",
             return this._size;
         }
         /**
-         * Returns the size of this object in world space, accounting for all the
-         * scaling.
+         * Returns the size of this object in world space, accounting for all 
+         * the scaling.
          * @returns {Number}
          */
         function getScaledSize() {
@@ -311,10 +313,11 @@ Application.createModule({name: "Scene",
             return this._insideParent;
         }
         /**
-         * Checks if the object is inside the viewing frustum of the passed camera,
-         * taking into account the parents of the object as well. Also sets the view
-         * width and height members of the object.
-         * @param {Camera} camera The camera the frustum of which is to be checked
+         * Checks if the object is inside the viewing frustum of the passed 
+         * camera, taking into account the parents of the object as well. Also 
+         * sets the view width and height members of the object.
+         * @param {Camera} camera The camera the frustum of which is to be 
+         * checked
          * @returns {Object} 
          */
         function getSizeInsideViewFrustum(camera) {
@@ -454,9 +457,14 @@ Application.createModule({name: "Scene",
     /**
      * @class The superclass of all objects that can be rendered on the screen.
      * @constructor
-     * @param {Shader} shader The shader that should be active while rendering this object
-     * @param {[Boolean=true]} renderedWithDepthMask Tells whether this object should be rendered when the depth mask is on (= it contains non-transparent triangles)
-     * @param {[Boolean=true]} renderedWithoutDepthMask Tells whether this object should be rendered when the depth mask is off (= it contains transparent triangles)
+     * @param {Shader} shader The shader that should be active while rendering 
+     * this object
+     * @param {[Boolean=true]} renderedWithDepthMask Tells whether this object 
+     * should be rendered when the depth mask is on (= it contains 
+     * non-transparent triangles)
+     * @param {[Boolean=true]} renderedWithoutDepthMask Tells whether this 
+     * object should be rendered when the depth mask is off (= it contains 
+     * transparent triangles)
      * @returns {RenderableObject}
      */
     function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask) {
@@ -486,20 +494,23 @@ Application.createModule({name: "Scene",
          */
         this._textures = new Object();
         /**
-         * The functions to call when calculating the values of uniform variables
-         * before assigning them, ordered by the names of the variables.
+         * The functions to call when calculating the values of uniform 
+         * variables before assigning them, ordered by the names of the 
+         * variables.
          * @name RenderableObject#_uniformValueFunctions
          * @type Object.<String, Function>
          */
         this._uniformValueFunctions = new Object();
         /**
-         * Flag, whether this object should be rendered when the depth mask is on.
+         * Flag, whether this object should be rendered when the depth mask is 
+         * on.
          * @name RenderableObject#_isRenderedWithDepthMask
          * @type Boolean
          */
         this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
         /**
-         * Flag, whether this object should be rendered when the depth mask is off.
+         * Flag, whether this object should be rendered when the depth mask is 
+         * off.
          * @name RenderableObject#_isRenderedWithoutDepthMask
          * @type Boolean
          */
@@ -565,9 +576,10 @@ Application.createModule({name: "Scene",
      * Overwrites potential previous assignments.
      * @param {String} uniformName
      * @param {Function(this:RenderableObject)} valueFunction
+     * @param {Object} alternativeThis
      */
-    RenderableObject.prototype.setUniformValueFunction = function (uniformName, valueFunction) {
-        this._uniformValueFunctions[uniformName] = valueFunction.bind(this);
+    RenderableObject.prototype.setUniformValueFunction = function (uniformName, valueFunction, alternativeThis) {
+        this._uniformValueFunctions[uniformName] = valueFunction.bind(alternativeThis ? alternativeThis : this);
     };
     /**
      * Returns a function that obtains the texture location of the texture with
@@ -583,8 +595,8 @@ Application.createModule({name: "Scene",
     };
     /**
      * Adds and sets up the resources used for rendering of this object to the
-     * passed context. Subclasses must extend its functionality to add additional
-     * resources they might use.
+     * passed context. Subclasses must extend its functionality to add 
+     * additional resources they might use.
      * @param {ManagedGLContext} context
      */
     RenderableObject.prototype.addToContext = function (context) {
@@ -625,8 +637,8 @@ Application.createModule({name: "Scene",
         this._canBeReused = true;
     };
     /**
-     * Returns whether this object is invalid and can be reused to hold a new one.
-     * For pooling support.
+     * Returns whether this object is invalid and can be reused to hold a new 
+     * one. For pooling support.
      * @returns {Boolean}
      */
     RenderableObject.prototype.canBeReused = function () {
@@ -681,8 +693,8 @@ Application.createModule({name: "Scene",
         this._wasRendered = true;
     };
     /**
-     * Handles the full render flow, with checks and preparations. Don't override
-     * this.
+     * Handles the full render flow, with checks and preparations. Don't 
+     * override this.
      * @param {RenderParameters} renderParameters
      */
     RenderableObject.prototype.render = function (renderParameters) {
@@ -695,7 +707,8 @@ Application.createModule({name: "Scene",
     /**
      * Called every time before rendering to a shadow map would occur to check 
      * whether to proceed with the rendering or not, according to the current 
-     * parameters. Subclasses must add their own subsequent checks to this function.
+     * parameters. Subclasses must add their own subsequent checks to this 
+     * function.
      * @returns {Boolean}
      */
     RenderableObject.prototype.shouldBeRenderedToShadowMap = function () {
@@ -710,8 +723,8 @@ Application.createModule({name: "Scene",
     };
     /**
      * The function actually performing the rendering to shadow map, after all 
-     * checks and preparations. Override this function with appropriate functionality
-     * for subclasses. Here it does nothing.
+     * checks and preparations. Override this function with appropriate 
+     * functionality for subclasses. Here it does nothing.
      */
     RenderableObject.prototype.performRenderToShadowMap = function () {
     };
@@ -735,7 +748,8 @@ Application.createModule({name: "Scene",
         return this._wasRendered;
     };
     /**
-     * Returns the number of triangles drawn on the screen to render this object.
+     * Returns the number of triangles drawn on the screen to render this 
+     * object.
      * Must be ovverriden in subclasses.
      * @returns {Number}
      */
@@ -744,8 +758,8 @@ Application.createModule({name: "Scene",
     };
     // #########################################################################
     /**
-     * @class A node on the rendering tree, that can hold a renderable object as well
-     * as references to children nodes.
+     * @class A node on the rendering tree, that can hold a renderable object as 
+     * well as references to children nodes.
      * @constructor
      * @param {RenderableObject} renderableObject
      * @returns {RenderableNode}
@@ -877,8 +891,10 @@ Application.createModule({name: "Scene",
     };
     /**
      * Adds a subnode to this node.
-     * @param {RenderableNode} subnode The subnode to be added to the rendering tree. 
-     * It will be rendered relative to this object (transformation matrices stack)
+     * @param {RenderableNode} subnode The subnode to be added to the rendering 
+     * tree. 
+     * It will be rendered relative to this object (transformation matrices 
+     * stack)
      */
     RenderableNode.prototype.addSubnode = function (subnode) {
         this._subnodes.push(subnode);
@@ -895,7 +911,8 @@ Application.createModule({name: "Scene",
         }
     };
     /**
-     * Sets up the stored render parameters that are passed to the held renderable
+     * Sets up the stored render parameters that are passed to the held 
+     * renderable
      * object for the next rendering.
      * @param {ManagedGLContext} context
      * @param {Number} screenWidth
@@ -930,7 +947,8 @@ Application.createModule({name: "Scene",
         }
     };
     /**
-     * Renders the object at this node and all subnodes to the shadow map, if visible.
+     * Renders the object at this node and all subnodes to the shadow map, if 
+     * visible.
      * @param {ManagedGLContext} context
      * @param {Number} screenWidth
      * @param {Number} screenHeight
@@ -1175,38 +1193,40 @@ Application.createModule({name: "Scene",
     };
     // #########################################################################
     /**
-     * @class Represent a Full Viewport Quad to be used for drawing the background
-     * using a cube mapped texture.
+     * @class A Full Viewport Quad to be used for rendering the background using 
+     * a cube mapped texture.
      * @constructor
      * @extends RenderableObject
-     * @param {EgomModel} model Pass a model describing a simple quad that fills
+     * @param {Model} model Pass a model describing a simple quad that fills
      * the screen.
-     * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {String} samplerName The name of the uniform variable that holds the
-     * texture sampler for the drawing, which will be prefixed with "u_" and 
+     * @param {Shader} shader The shader that should be active while rendering 
+     * this object.
+     * @param {String} samplerName The name of the uniform variable that holds 
+     * the texture sampler for the drawing, which will be prefixed with "u_" and 
      * suffixed with "Sampler".
-     * @param {Cubemap} cubemap The cubemap object to be used for mapping the background
+     * @param {Cubemap} cubemap The cubemap object to be used for mapping the 
+     * background
      * @param {Camera} camera The camera to be used for querying the cube map.
-     * @returns {FVQ}
+     * @returns {CubemapSampledFVQ}
      * */
-    function FVQ(model, shader, samplerName, cubemap, camera) {
+    function CubemapSampledFVQ(model, shader, samplerName, cubemap, camera) {
         RenderableObject.call(this, shader, false, true);
         /**
          * Must be a quad model that fills the screen.
-         * @name FVQ#_model
+         * @name CubemapSampledFVQ#_model
          * @type Model
          */
         this._model = model;
         /**
-         * The name of the uniform variable that holds the texture sampler is this
-         * variable prefixed with "u_" and suffixed with "Sampler".
-         * @name FVQ#_samplerName
+         * The name of the uniform variable that holds the texture sampler is 
+         * this variable prefixed with "u_" and suffixed with "Sampler".
+         * @name CubemapSampledFVQ#_samplerName
          * @type String
          */
         this._samplerName = samplerName;
         /**
          * The camera to be used for querying the cube map.
-         * @name FVQ#_camera
+         * @name CubemapSampledFVQ#_camera
          * @type Camera
          */
         this._camera = camera;
@@ -1215,13 +1235,13 @@ Application.createModule({name: "Scene",
             return Mat.inverse4(Mat.mul4(this._camera.getOrientationMatrix(), this._camera.getPerspectiveMatrix()));
         });
     }
-    FVQ.prototype = new RenderableObject();
-    FVQ.prototype.constructor = FVQ;
+    CubemapSampledFVQ.prototype = new RenderableObject();
+    CubemapSampledFVQ.prototype.constructor = CubemapSampledFVQ;
     /**
      * @override
      * @param {ManagedGLContext} context
      */
-    FVQ.prototype.addToContext = function (context) {
+    CubemapSampledFVQ.prototype.addToContext = function (context) {
         RenderableObject.prototype.addToContext.call(this, context);
         this._model.addToContext(context, false);
     };
@@ -1229,34 +1249,23 @@ Application.createModule({name: "Scene",
      * @override
      * @param {RenderParameters} renderParameters
      */
-    FVQ.prototype.performRender = function (renderParameters) {
+    CubemapSampledFVQ.prototype.performRender = function (renderParameters) {
         this._model.render(renderParameters.context, false);
     };
     /**
      * @override
      * @returns {Number}
      */
-    FVQ.prototype.getNumberOfDrawnTriangles = function () {
+    CubemapSampledFVQ.prototype.getNumberOfDrawnTriangles = function () {
         return 2;
     };
-    // #########################################################################
-    /**
-     * @struct A 3D model paired up with Level Of Detail indicator.
-     * @constructor
-     * @param {EgomModel} model The 3D model data.
-     * @param {Number} lod The LOD level to be associated with the model.
-     */
-    function ModelWithLOD(model, lod) {
-        this.model = model;
-        this.lod = lod;
-    }
     // #########################################################################
     /**
      * @class Visual object that renders a 3D model from a set of different LOD
      * options.
      * @constructor
      * @extends RenderableObject3D
-     * @param {Array.<ModelWithLOD>} modelsWithLOD The series of 3D models with their associated LOD information.
+     * @param {Model} model The 3D model with meshes for different LODs.
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative array, with the roles as keys.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
@@ -1264,7 +1273,7 @@ Application.createModule({name: "Scene",
      * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing the initial size of the object.
      * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe instead of solid.
      */
-    function Mesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe) {
+    function ShadedLODMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe) {
         RenderableObject3D.call(this, shader, true, true, positionMatrix, orientationMatrix, scalingMatrix);
         this.setSmallestSizeWhenDrawn(5);
         this.setSmallestParentSizeWhenDrawn(25);
@@ -1272,10 +1281,10 @@ Application.createModule({name: "Scene",
         /**
          * Stores all the models representing this mesh at different levels of
          * detail.
-         * @name Mesh#_modelsWithLOD
-         * @type Array.<ModelWithLOD>
+         * @name Mesh#_model
+         * @type Model
          */
-        this._modelsWithLOD = modelsWithLOD;
+        this._model = model;
         /**
          * Whether or not the rendering mode of this mesh is wireframe.
          * @name Mesh#_wireframe
@@ -1285,10 +1294,10 @@ Application.createModule({name: "Scene",
         /**
          * The model currently chosen for rendering. Acts as a cached reference
          * to be used after the proper model has been chosen for a frame.
-         * @name Mesh#_currentModel
-         * @type Model
+         * @name Mesh#_currentLOD
+         * @type Number
          */
-        this._currentModel = null;
+        this._currentLOD = null;
         /**
          * Stores the size of the largest model (of any LOD) representing this
          * object. It is the double of the (absolute) largest coordinate found 
@@ -1304,18 +1313,18 @@ Application.createModule({name: "Scene",
             return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(this.getModelMatrix())));
         });
     }
-    Mesh.prototype = new RenderableObject3D();
-    Mesh.prototype.constructor = Mesh;
+    ShadedLODMesh.prototype = new RenderableObject3D();
+    ShadedLODMesh.prototype.constructor = ShadedLODMesh;
     /**
      * @override
      * @param {ManagedGLContext} context
      */
-    Mesh.prototype.addToContext = function (context) {
+    ShadedLODMesh.prototype.addToContext = function (context) {
         RenderableObject3D.prototype.addToContext.call(this, context);
-        for (var i = 0; i < this._modelsWithLOD.length; i++) {
-            this._modelsWithLOD[i].model.addToContext(context, this._wireframe);
-            if (this._modelsWithLOD[i].model.getSize() > this._modelSize) {
-                this._modelSize = this._modelsWithLOD[i].model.getSize();
+        this._model.addToContext(context, this._wireframe);
+        for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
+            if (this._model.getSize(i) > this._modelSize) {
+                this._modelSize = this._model.getSize(i);
             }
         }
     };
@@ -1323,7 +1332,7 @@ Application.createModule({name: "Scene",
      * Returns the size of the largest model of the mesh.
      * @returns {Number} The size of the largest model of the mesh.
      */
-    Mesh.prototype.getSize = function () {
+    ShadedLODMesh.prototype.getSize = function () {
         return this._modelSize;
     };
     /**
@@ -1332,49 +1341,48 @@ Application.createModule({name: "Scene",
      * @param {RenderParameters} renderParameters
      * @returns {Model}
      */
-    Mesh.prototype.getCurrentModel = function (renderParameters) {
-        if (this._currentModel === null) {
+    ShadedLODMesh.prototype.getCurrentLOD = function (renderParameters) {
+        if (this._currentLOD === null) {
             var visibleSize = this.getSizeInPixels(renderParameters);
-            var closestLOD = -1;
-            for (var i = 0; i < this._modelsWithLOD.length; i++) {
+            this._currentLOD = -1;
+            for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
                 if (
-                        (closestLOD === -1) ||
-                        (this._modelsWithLOD[i].lod <= renderParameters.lodContext.maxEnabledLOD) &&
+                        (this._currentLOD === -1) ||
+                        (i <= renderParameters.lodContext.maxEnabledLOD) &&
                         (
-                                (closestLOD > renderParameters.lodContext.maxEnabledLOD) ||
-                                ((renderParameters.lodContext.thresholds[closestLOD] > visibleSize) && (renderParameters.lodContext.thresholds[this._modelsWithLOD[i].lod] <= visibleSize)) ||
-                                ((renderParameters.lodContext.thresholds[closestLOD] <= visibleSize) && (renderParameters.lodContext.thresholds[this._modelsWithLOD[i].lod] <= visibleSize) && (this._modelsWithLOD[i].lod > closestLOD)) ||
-                                ((renderParameters.lodContext.thresholds[closestLOD] > visibleSize) && (renderParameters.lodContext.thresholds[this._modelsWithLOD[i].lod] > visibleSize) && (this._modelsWithLOD[i].lod < closestLOD))
+                                (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] > visibleSize) && (renderParameters.lodContext.thresholds[i] <= visibleSize)) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] <= visibleSize) && (renderParameters.lodContext.thresholds[i] <= visibleSize) && (i > this._currentLOD)) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] > visibleSize) && (renderParameters.lodContext.thresholds[i] > visibleSize) && (i < this._currentLOD))
                                 )) {
-                    closestLOD = this._modelsWithLOD[i].lod;
-                    this._currentModel = this._modelsWithLOD[i].model;
+                    this._currentLOD = i;
                 }
             }
         }
-        return this._currentModel;
+        return this._currentLOD;
     };
     /**
      * @override
      */
-    Mesh.prototype.resetForNewFrame = function () {
+    ShadedLODMesh.prototype.resetForNewFrame = function () {
         RenderableObject3D.prototype.resetForNewFrame.call(this);
-        this._currentModel = null;
+        this._currentLOD = null;
     };
     /**
      * @override
      * @param {RenderParameters} renderParameters
      * @returns {Boolean}
      */
-    Mesh.prototype.shouldBeRendered = function (renderParameters) {
+    ShadedLODMesh.prototype.shouldBeRendered = function (renderParameters) {
         if (RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters)) {
             if (this._wireframe === true) {
                 return true;
             } else {
                 if (renderParameters.depthMask === true) {
-                    if (this.getCurrentModel(renderParameters).getNumOpaqueTriangles() > 0) {
+                    if (this._model.getNumOpaqueTriangles(this.getCurrentLOD(renderParameters)) > 0) {
                         return true;
                     }
-                } else if ((renderParameters.depthMask === false) && (this.getCurrentModel(renderParameters).getNumTransparentTriangles() > 0)) {
+                } else if ((renderParameters.depthMask === false) && (this._model.getNumTransparentTriangles(this.getCurrentLOD(renderParameters)) > 0)) {
                     return true;
                 }
             }
@@ -1385,14 +1393,14 @@ Application.createModule({name: "Scene",
      * @override
      * @param {RenderParameters} renderParameters
      */
-    Mesh.prototype.performRender = function (renderParameters) {
-        this.getCurrentModel(renderParameters).render(renderParameters.context, this._wireframe, renderParameters.depthMask);
+    ShadedLODMesh.prototype.performRender = function (renderParameters) {
+        this._model.render(renderParameters.context, this._wireframe, renderParameters.depthMask, this.getCurrentLOD(renderParameters));
     };
     /**
      * @override
      * @param {RenderParameters} renderParameters
      */
-    Mesh.prototype.shouldBeRenderedToShadowMap = function (renderParameters) {
+    ShadedLODMesh.prototype.shouldBeRenderedToShadowMap = function (renderParameters) {
         if (RenderableObject3D.prototype.shouldBeRenderedToShadowMap.call(this, renderParameters)) {
             return this.shouldBeRendered(renderParameters);
         }
@@ -1401,31 +1409,31 @@ Application.createModule({name: "Scene",
      * @override
      * @param {RenderParameters} renderParameters
      */
-    Mesh.prototype.prepareForRenderToShadowMap = function (renderParameters) {
+    ShadedLODMesh.prototype.prepareForRenderToShadowMap = function (renderParameters) {
         renderParameters.context.getCurrentShader().assignUniforms(renderParameters.context, this._uniformValueFunctions);
     };
     /**
      * @override
      * @param {RenderParameters} renderParameters
      */
-    Mesh.prototype.performRenderToShadowMap = function (renderParameters) {
-        this.getCurrentModel(renderParameters).render(renderParameters.context, this._wireframe);
+    ShadedLODMesh.prototype.performRenderToShadowMap = function (renderParameters) {
+        this._model.render(renderParameters.context, this._wireframe, undefined, this.getCurrentLOD(renderParameters));
     };
     /**
      * @override
      * @returns {Number}
      */
-    Mesh.prototype.getNumberOfDrawnTriangles = function () {
-        return (this._wireframe === false) && (this._currentModel) ? this._currentModel._triangles.length : 0;
+    ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function () {
+        return (this._wireframe === false) && (this._currentLOD) ? this._model.getNumTriangles(this._currentLOD) : 0;
     };
     // #########################################################################
     /**
      * @class A mesh that has associated float parameter arrays, which can be 
      * set through this object and are passed to WebGL through uniforms before
      * each render.
-     * @extends Mesh
+     * @extends ShadedLODMesh
      * @constructor
-     * @param {Array.<ModelWithLOD>} modelsWithLOD The series of 3D models with their associated LOD information.
+     * @param {Model} model
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative array, with the roles as keys.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
@@ -1436,8 +1444,8 @@ Application.createModule({name: "Scene",
      *  The uniform variables will be identified by this name prefixed with "u_".
      * @returns {ParameterizedMesh}
      */
-    function ParameterizedMesh(modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, parameterArrays) {
-        Mesh.call(this, modelsWithLOD, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe);
+    function ParameterizedMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, parameterArrays) {
+        ShadedLODMesh.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe);
         /**
          * The values of the parameter arrays.
          * @name ParameterizedMesh#_parameterArrays
@@ -1452,7 +1460,7 @@ Application.createModule({name: "Scene",
             this.setUniformValueFunction("u_"+parameterArrays[i].name, this.createGetParameterArrayFunction(parameterArrays[i].name));
         }
     }
-    ParameterizedMesh.prototype = new Mesh([]);
+    ParameterizedMesh.prototype = new ShadedLODMesh([]);
     ParameterizedMesh.prototype.constructor = ParameterizedMesh;
     /**
      * Returns a function to that returns the parameter array identified by the passed name.
@@ -2885,9 +2893,8 @@ Application.createModule({name: "Scene",
         Camera: Camera,
         RenderableObject: RenderableObject,
         RenderableNode: RenderableNode,
-        FVQ: FVQ,
-        ModelWithLOD: ModelWithLOD,
-        Mesh: Mesh,
+        CubemapSampledFVQ: CubemapSampledFVQ,
+        ShadedLODMesh: ShadedLODMesh,
         ParameterizedMesh: ParameterizedMesh,
         Billboard: Billboard,
         StaticParticle: StaticParticle,

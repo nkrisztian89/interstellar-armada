@@ -75,7 +75,7 @@ Application.createModule({name: "Logic",
      * @param {Scene} scene
      */
     Skybox.prototype.addToScene = function (scene) {
-        scene.addBackgroundObject(new Scene.FVQ(
+        scene.addBackgroundObject(new Scene.CubemapSampledFVQ(
                 Armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
                 Armada.resources().getShader(this._class.shaderName),
                 this._class.samplerName,
@@ -446,14 +446,13 @@ Application.createModule({name: "Logic",
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
         var closestLOD = -1;
+        ///TODO: refactor the model selection
         // loading or setting models
-        var modelsWithLOD = new Array();
+        var model = null;
         for (var i = 0; i < this._class.modelReferences.length; i++) {
             if (((lod === undefined) && (this._class.modelReferences[i].lod <= Armada.graphics().getMaxLoadedLOD())) ||
                     ((lod !== undefined) && (this._class.modelReferences[i].lod === lod))) {
-                modelsWithLOD.push(new Scene.ModelWithLOD(
-                        Armada.resources().getOrAddModelFromFile(this._class.modelReferences[i].filename),
-                        this._class.modelReferences[i].lod));
+                model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[i].filename, this._class.modelReferences[i].lod);
             }
             // in case no suitable LOD is available, remember which one was the closest to make sure we
             // can load at least one
@@ -465,17 +464,15 @@ Application.createModule({name: "Logic",
             }
         }
         // if no suitable LOD could be found, load the closest one
-        if (modelsWithLOD.length === 0) {
+        if (!model) {
             for (i = 0; i < this._class.modelReferences.length; i++) {
                 if (this._class.modelReferences[i].lod === closestLOD) {
-                    modelsWithLOD.push(new Scene.ModelWithLOD(
-                            Armada.resources().getOrAddModelFromFile(this._class.modelReferences[i].filename),
-                            this._class.modelReferences[i].lod));
+                    model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[i].filename, this._class.modelReferences[i].lod);
                 }
             }
         }
-        this._visualModel = new Scene.Mesh(
-                modelsWithLOD,
+        this._visualModel = new Scene.ShadedLODMesh(
+                model,
                 Armada.resources().getShader(this._spacecraft.getClass().shaderName),
                 this._spacecraft.getTextures(),
                 this._slot.positionMatrix,
@@ -1721,17 +1718,16 @@ Application.createModule({name: "Logic",
      * @param {Number} index The index of the body to represent.
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
-        var phyModelWithLOD = new Scene.ModelWithLOD(
+        var phyModel = 
                 Armada.resources().getOrAddModelByName(
                 Egom.cuboidModel(
                         this._class.name + "-body" + index,
                         this._class.bodies[index].getWidth(),
                         this._class.bodies[index].getHeight(),
                         this._class.bodies[index].getDepth(),
-                        [0.0, 1.0, 1.0, 0.5])),
-                0);
-        var hitZoneMesh = new Scene.Mesh(
-                [phyModelWithLOD],
+                        [0.0, 1.0, 1.0, 0.5]));
+        var hitZoneMesh = new Scene.ShadedLODMesh(
+                phyModel,
                 Armada.resources().getShader(this._class.shaderName),
                 {
                     color: Armada.resources().getOrAddTexture("textures/white.png"),
@@ -1767,26 +1763,26 @@ Application.createModule({name: "Logic",
      * spacecraft.
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements) {
-        var i, j;
-        var modelsWithLOD;
+        var i;
+        var model = null;
+        ///TODO: refactor model selection
         // loading or setting models
-        modelsWithLOD = new Array();
         // if no specific level of detail is given, load all that are within the global LOD load limit
         // if a specific LOD is given only load that one
         for (i = 0; i < this._class.modelReferences.length; i++) {
             if (((lod === undefined) && (Armada.graphics().getMaxLoadedLOD() >= this._class.modelReferences[i].lod)) ||
                     ((lod !== undefined) && (this._class.modelReferences[i].lod === lod))) {
-                modelsWithLOD.push(new Scene.ModelWithLOD(
-                        Armada.resources().getOrAddModelFromFile(this._class.modelReferences[i].filename),
-                        this._class.modelReferences[i].lod
-                        ));
+                model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[i].filename, this._class.modelReferences[i].lod);
             }
+        }
+        if (model === null) {
+            model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[0].filename);
         }
         // cash the references to the textures
         var textures = this.getTextures();
         // add the main model of the spacecraft
         this._visualModel = new Scene.ParameterizedMesh(
-                modelsWithLOD,
+                model,
                 Armada.resources().getShader(this._class.shaderName),
                 textures,
                 this._physicalModel.getPositionMatrix(),

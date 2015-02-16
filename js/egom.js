@@ -41,7 +41,7 @@ Application.createModule({name: "Egom",
      * The list of EgomModel versions that can be loaded from file.
      * @type String[]
      */
-    var _supportedVersions = ["2.0", "2.1"];
+    var _supportedVersions = ["2.0", "2.1", "2.2"];
 
     /**
      * @name Vertex
@@ -187,10 +187,10 @@ Application.createModule({name: "Egom",
     function Triangle(model, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex) {
         /**
          * The model to which this triangle is added.
-         * @name Triangle#_model
-         * @type Model
+         * @name Triangle#_mesh
+         * @type Mesh
          */
-        this._model = model;
+        this._mesh = model;
         /**
          * The index (in the model) of the first vertex of the triangle.
          * @name Triangle#a
@@ -241,7 +241,7 @@ Application.createModule({name: "Egom",
          * @name Triangle#_normals
          * @type Number[][3]
          */
-        this._normals = normals || Vec.normal3(Vec.cross3(this._model.getVector(a, b), this._model.getVector(a, c)));
+        this._normals = normals || Vec.normal3(Vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
         /**
          * The index of the group this triangle belongs to. (for setting different
          * uniform values for certain triangle groups of the model while rendering)
@@ -263,23 +263,11 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * @class Stores the attributes that a model has associated with a managed
+     * @class Stores the attributes that a mesh has associated with a managed
      * WebGL context.
-     * @returns {ModelContextProperties}
+     * @returns {MeshContextProperties}
      */
-    function ModelContextProperties() {
-        /**
-         * Whether the wireframe model is used in the context.
-         * @name ModelContextProperties#wireframe
-         * @type Boolean
-         */
-        this.wireframe = null;
-        /**
-         * Whether the solid model is used in the context.
-         * @name ModelContextProperties#wireframe
-         * @type Boolean
-         */
-        this.solid = null;
+    function MeshContextProperties() {
         /**
          * The index marking where the data belonging to the lines of this 
          * model starts in the vertex buffer objects.
@@ -303,194 +291,122 @@ Application.createModule({name: "Egom",
         this.bufferStartTransparent = null;
     }
 
-    /**
-     * Creates a new 3D model object, and if a file name was given, loads the data
-     * from the file. Only Egom XML format is supported.
-     * @name Model
-     * @alias Egom.Model
-     * @class Represents a 3D polygonal model.
-     * @extends Resource
-     * @param {String} [filename] The name of the file to load the model from.
-     */
-    function Model(filename) {
-        Resource.call(this);
+    ///TODO: add comments for class & methods
+    function Mesh() {
         /**
          * The array of vertices of the model. These can be referenced by index
          * when defining lines or triangles.
-         * @name Model#_vertices
+         * @name Mesh#_vertices
          * @type Vertex[]
          */
         this._vertices = new Array();
         /**
          * The array of lines of the model for wireframe rendering.
-         * @name Model#_lines
+         * @name Mesh#_lines
          * @type Line[]
          */
         this._lines = new Array();
         /**
          * The array of triangles of the model for solid rendering.
-         * @name Model#_triangles
+         * @name Mesh#_triangles
          * @type Triangle[]
          */
         this._triangles = new Array();
         /**
          * The size of the model. It is the double of the (absolute) largest coordinate
          * found among the vertices.
-         * @name Model#_size
+         * @name Mesh#_size
          * @type Number
          */
         this._size = 0;
         /**
          * The largest positive X coordinate found among the vertices.
-         * @name Model#_maxX
+         * @name Mesh#_maxX
          * @type Number
          */
         this._maxX = 0;
         /**
          * The largest negative X coordinate found among the vertices.
-         * @name Model#_minX
+         * @name Mesh#_minX
          * @type Number
          */
         this._minX = 0;
         /**
          * The largest positive Y coordinate found among the vertices.
-         * @name Model#_maxY
+         * @name Mesh#_maxY
          * @type Number
          */
         this._maxY = 0;
         /**
          * The largest negative Y coordinate found among the vertices.
-         * @name Model#_minY
+         * @name Mesh#_minY
          * @type Number
          */
         this._minY = 0;
         /**
          * The largest positive Z coordinate found among the vertices.
-         * @name Model#_maxZ
+         * @name Mesh#_maxZ
          * @type Number
          */
         this._maxZ = 0;
         /**
          * The largest negative Z coordinate found among the vertices.
-         * @name Model#_minZ
+         * @name Mesh#_minZ
          * @type Number
          */
         this._minZ = 0;
         /**
          * The number of opaque triangles this model contains.
-         * @name Model#_nOpaqueTriangles
+         * @name Mesh#_nOpaqueTriangles
          * @type Number
          */
         this._nOpaqueTriangles = 0;
         /**
          * The number of transparent triangles this model contains.
-         * @name Model#_nTransparentTriangles
+         * @name Mesh#_nTransparentTriangles
          * @type Number
          */
         this._nTransparentTriangles = 0;
         /**
-         * The name of this model.
-         * @name Model#_name
-         * @type String
+         * An associative array storing ModelContextProperties objects for each
+         * context this mesh is associated with, organized by the names of the
+         * contexts.
+         * @name Mesh#_contextProperties
+         * @type Object.<String, MeshContextProperties>
          */
-        this._name = null;
+        this._contextProperties = new Object();
         /**
-         * The name of the file that holds this model.
-         * @name Model#_filename
-         * @type String
+         * The default texture coordinates for newly added triangles and quads.
+         * @name Mesh#_texCoords
+         * @type Number[4][2]
          */
-        this._filename = filename;
-        /**
-         * The version string identifying the exact format of the model file.
-         * @name Model#_version
-         * @type String
-         */
-        this._version = null;
-        // if no filename was specified, the model is set up to be edited from code
-        // and can be used any time from now, otherwise we should wait until the
-        // file is loaded
-        if (!filename) {
-            this.setToReady();
-        }
+        this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
         /**
          * The default luminosity value for newly added lines and triangles.
-         * @name Model#_luminosity
+         * @name Mesh#_luminosity
          * @type Number
          */
         this._luminosity = 0;
         /**
          * The default shininess value for newly added lines and triangles.
-         * @name Model#_shininess
+         * @name Mesh#_shininess
          * @type Number
          */
         this._shininess = 0;
         /**
-         * The default texture coordinates for newly added triangles and quads.
-         * @name Model#_texCoords
-         * @type Number[4][2]
-         */
-        this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
-        /**
          * The default group index for newly added triangles and lines.
-         * @name Model#_currentGroupIndex
+         * @name Mesh#_currentGroupIndex
          * @type Number
          */
         this._currentGroupIndex = 0;
-        /**
-         * The object storing the info (meta) properties of the model.
-         * @name Model#_infoProperties
-         * @type Object
-         */
-        this._infoProperties = new Object();
-        /**
-         * The length of one model-space unit in meters.
-         * @name Model#_scale
-         * @type Number
-         */
-        this._scale = 1;
-        /**
-         * An associative array storing ModelContextProperties objects for each
-         * context this model is associated with, organized by the names of the
-         * contexts.
-         * @name Model#_contextProperties
-         * @type Object
-         */
-        this._contextProperties = new Object();
+        this._nullVertex = new Vertex([0.0, 0.0, 0.0]);
     }
-
-    Model.prototype = new Resource();
-    Model.prototype.constructor = Model;
-
-    /**
-     * Returns the name of the model. (not the same as the filename - a name can be
-     * set directly, or read from the model file)
-     * @returns {String}
-     */
-    Model.prototype.getName = function () {
-        return this._name;
-    };
-
-    /**
-     * Sets a name for the model.
-     * @param {String} name
-     */
-    Model.prototype.setName = function (name) {
-        this._name = name;
-    };
-
-    /**
-     * Returns the associated model file name.
-     * @returns {String}
-     */
-    Model.prototype.getFilename = function () {
-        return this._filename;
-    };
 
     /**
      * Returns the number of completely opaque triangles this model contains.
      * @returns {Number}
      */
-    Model.prototype.getNumOpaqueTriangles = function () {
+    Mesh.prototype.getNumOpaqueTriangles = function () {
         return this._nOpaqueTriangles;
     };
 
@@ -499,8 +415,44 @@ Application.createModule({name: "Egom",
      * model contains.
      * @returns {Number}
      */
-    Model.prototype.getNumTransparentTriangles = function () {
+    Mesh.prototype.getNumTransparentTriangles = function () {
         return this._nTransparentTriangles;
+    };
+
+    /**
+     * Returns the number of triangles this model contains.
+     * @returns {Number}
+     */
+    Mesh.prototype.getNumTriangles = function () {
+        return this._triangles.length;
+    };
+
+    /**
+     * Sets the default properties for newly added lines and triangles.
+     * @param {Number} luminosity The default luminosity value (0.0-1.0) to use
+     * from now on.
+     * @param {Number} shininess The default shininess exponent value to use from
+     * now on.
+     */
+    Mesh.prototype.setDefaultProperties = function (luminosity, shininess) {
+        this._luminosity = luminosity;
+        this._shininess = shininess;
+    };
+
+    Mesh.prototype.resetMesh = function () {
+        this.resetVertices();
+        this.resetLines();
+        this.resetTriangles();
+    };
+
+    Mesh.prototype.resetVertices = function () {
+        this._vertices = new Array();
+        this._maxX = 0;
+        this._minX = 0;
+        this._maxY = 0;
+        this._minY = 0;
+        this._maxZ = 0;
+        this._minZ = 0;
     };
 
     /**
@@ -508,19 +460,18 @@ Application.createModule({name: "Egom",
      * @param {Number} index The index of the vertex to create/overwrite. Can
      * be bigger than the currently available indices, in which case the needed
      * new vertices will be created at (0;0;0).
-     * @param {Number[3]} position Coordinates of the vertex to set.
-     * @param {Number[2]} [texCoords] Texture coordinates of the vertex to set.
+     * @param {Vertex} vertex
      */
-    Model.prototype.setVertex = function (index, position, texCoords) {
+    Mesh.prototype.setVertex = function (index, vertex) {
         // if we are setting a vertex with a higher index than the currently stored
         // ones, create new vertices in between
         if (this._vertices.length < index) {
             for (var i = this._vertices.length; i < index; i++) {
-                this._vertices[i] = new Vertex([0.0, 0.0, 0.0]);
+                this._vertices[i] = this._nullVertex;
             }
         }
         // set the vertex
-        this._vertices[index] = new Vertex(position, texCoords);
+        this._vertices[index] = vertex;
         // update the size related data
         if (Math.abs(this._vertices[index].x * 2) > this._size) {
             this._size = Math.abs(this._vertices[index].x * 2);
@@ -556,8 +507,26 @@ Application.createModule({name: "Egom",
      * @param {Number[3]} position
      * @param {Number[2]} [texCoords]
      */
-    Model.prototype.appendVertex = function (position, texCoords) {
-        this.setVertex(this._vertices.length, position, texCoords);
+    Mesh.prototype.appendVertex = function (position, texCoords) {
+        this.setVertex(this._vertices.length, new Vertex(position, texCoords));
+    };
+
+    Mesh.prototype.resetLines = function (count) {
+        this._lines = new Array(count);
+    };
+
+    Mesh.prototype.addLine = function (line) {
+        this._lines.push(line);
+    };
+
+    Mesh.prototype.setLine = function (index, line) {
+        this._lines[index] = line;
+    };
+
+    Mesh.prototype.resetTriangles = function () {
+        this._triangles = new Array();
+        this._nOpaqueTriangles = 0;
+        this._nTransparentTriangles = 0;
     };
 
     /**
@@ -568,7 +537,7 @@ Application.createModule({name: "Egom",
      * of the vector.
      * @returns {Number[3]}
      */
-    Model.prototype.getVector = function (vertex1Index, vertex2Index) {
+    Mesh.prototype.getVector = function (vertex1Index, vertex2Index) {
         return [
             this._vertices[vertex2Index].x - this._vertices[vertex1Index].x,
             this._vertices[vertex2Index].y - this._vertices[vertex1Index].y,
@@ -576,15 +545,23 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * Sets the default properties for newly added lines and triangles.
-     * @param {Number} luminosity The default luminosity value (0.0-1.0) to use
-     * from now on.
-     * @param {Number} shininess The default shininess exponent value to use from
-     * now on.
+     * 
+     * @param {Triangle} triangle
+     * @param {Boolean} withoutLines
+     * @returns {undefined}
      */
-    Model.prototype.setDefaultProperties = function (luminosity, shininess) {
-        this._luminosity = luminosity;
-        this._shininess = shininess;
+    Mesh.prototype.addTriangle = function (triangle, withoutLines) {
+        this._triangles.push(triangle);
+        // the default setting is to also add the corresponding border lines of the triangle
+        if (!withoutLines) {
+            this._lines.push(new Line(triangle.a, triangle.b, triangle.color, triangle.luminosity, triangle.getNormal(0)));
+            this._lines.push(new Line(triangle.b, triangle.c, triangle.color, triangle.luminosity, triangle.getNormal(0)));
+            this._lines.push(new Line(triangle.c, triangle.a, triangle.color, triangle.luminosity, triangle.getNormal(0)));
+        }
+        // important to update the appropriate count
+        (triangle.color[3] < 1.0) ?
+                this._nTransparentTriangles++ :
+                this._nOpaqueTriangles++;
     };
 
     /**
@@ -607,8 +584,9 @@ Application.createModule({name: "Egom",
      * be used separately. If none are given, the normal of th surface of the 
      * triangles will be generated and used.<br/>
      * groupIndex (Number): The index of the groups to which to add the triangle.
+     * @returns {Triangle} The added triangle
      */
-    Model.prototype.addTriangle = function (a, b, c, params) {
+    Mesh.prototype.addTriangleWithParams = function (a, b, c, params) {
         // the default color is opaque white
         var color = params.color || [1.0, 1.0, 1.0, 1.0];
         // if not specified, use the model's default luminosity/shininess
@@ -626,17 +604,9 @@ Application.createModule({name: "Egom",
         // if not specified, use the model's default group index
         var groupIndex = params.groupIndex || this._currentGroupIndex;
         // create and add the new triangle
-        this._triangles.push(new Triangle(this, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex));
-        // the default setting is to also add the corresponding border lines of the triangle
-        if (!params.withoutLines) {
-            this._lines.push(new Line(a, b, color, luminosity, normals ? normals[0] : null));
-            this._lines.push(new Line(b, c, color, luminosity, normals ? normals[0] : null));
-            this._lines.push(new Line(c, a, color, luminosity, normals ? normals[0] : null));
-        }
-        // important to update the appropriate count
-        (color[3] < 1.0) ?
-                this._nTransparentTriangles++ :
-                this._nOpaqueTriangles++;
+        var triangle = new Triangle(this, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex);
+        this.addTriangle(triangle, params.withoutLines);
+        return triangle;
     };
 
     /**
@@ -647,9 +617,9 @@ Application.createModule({name: "Egom",
      * @param {Number} d The index of the fourth vertex of the quad.
      * @param {Object} params The parameters of the quad in the same format as with
      * single triangles.
-     * @see Model#addTriangle
+     * @see Mesh#addTriangle
      */
-    Model.prototype.addQuad = function (a, b, c, d, params) {
+    Mesh.prototype.addQuad = function (a, b, c, d, params) {
         params = params || {};
         // adding the first triangle
         // first, create the approrpiate parameters for the triangle based on the
@@ -669,7 +639,7 @@ Application.createModule({name: "Egom",
                         [params.normals[0], params.normals[1], params.normals[2]] :
                         params.normals) :
                 null;
-        this.addTriangle(a, b, c, triangle1Params);
+        this.addTriangleWithParams(a, b, c, triangle1Params);
         // adding the first triangle
         var triangle2Params = Object.create(params);
         triangle2Params.texCoords = params.useVertexTexCoords ?
@@ -682,7 +652,7 @@ Application.createModule({name: "Egom",
                         [params.normals[2], params.normals[3], params.normals[0]] :
                         params.normals) :
                 null;
-        this.addTriangle(c, d, a, triangle2Params);
+        this.addTriangleWithParams(c, d, a, triangle2Params);
         // adding the 4 lines around the quad
         if (!params.withoutLines) {
             var color = params.color || [1.0, 1.0, 1.0, 1.0];
@@ -696,245 +666,11 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * Issues an asynchronous request to grab the file containing the model data,
-     * and sets a callback to load the data once the file has been downloaded.
-     * @param {String} [filename] The name of the file to load the model from.
-     * @returns {Boolean} Whether the request was issued. (if no filename is
-     * specified for the model, or it has already been loaded from the same file,
-     * the request will not be issued)
-     */
-    Model.prototype.requestLoadFromFile = function (filename) {
-        // check if there is a new filename given
-        if (filename && (filename !== this._filename)) {
-            this._filename = filename;
-            this.resetReadyState();
-        }
-        // only issue the request if the model is not already loaded
-        if (!this.isReadyToUse()) {
-            if (!this._filename) {
-                Application.showError(
-                        "Attempting to load a model from file, but no filename was specified.",
-                        null,
-                        this._name ? "Name of the model: " + this._name : "The model has no name either.");
-                return false;
-            }
-            var self = this;
-            Application.requestXMLFile("model", this._filename, function (responseXML) {
-                self._loadFromXML(responseXML);
-                self.setToReady();
-            });
-            return true;
-        }
-        return false;
-    };
-
-    /**
-     * Loads the model data from the passed XML document.
-     * @param {Document} xmlDoc
-     * @returns {Boolean} Whether the loading has been successful.
-     */
-    Model.prototype._loadFromXML = function (xmlDoc) {
-        var i;
-        Application.log("Loading EgomModel from file: " + this._filename + " ...", 2);
-        // checking the passed XML document
-        if (!(xmlDoc instanceof Document)) {
-            Application.showError("'" + this._filename + "' does not appear to be an XML document.",
-                    "severe",
-                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
-            return false;
-        }
-        if (xmlDoc.documentElement.nodeName !== "EgomModel") {
-            Application.showError("'" + this._filename + "' does not appear to be an EgomModel file.",
-                    "severe",
-                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                    "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
-                    "'" + xmlDoc.documentElement.nodeName + "' instead.");
-            return false;
-        }
-        // checking EgomModel version
-        this._version = xmlDoc.documentElement.getAttribute("version");
-        if (!this._version) {
-            Application.showError("Model from file: '" + this._filename + "' could not be loaded, because the file version could not have been determined.", "severe");
-            return false;
-        }
-        if (_supportedVersions.indexOf(this._version) < 0) {
-            Application.showError("Model from file: '" + this._filename + "' could not be loaded, because the version of the file (" + this._version + ") is not supported.",
-                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
-            return false;
-        }
-        // loading info properties
-        this._name = null;
-        this._scale = 1;
-        this._infoProperties = new Object();
-        if (xmlDoc.getElementsByTagName("info").length > 0) {
-            var propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
-            for (var i = 0; i < propertyTags.length; i++) {
-                var propName = propertyTags[i].getAttribute("name");
-                switch (propName) {
-                    case "name":
-                        this._name = propertyTags[i].getAttribute("value");
-                        break;
-                    case "scale":
-                        this._scale = propertyTags[i].getAttribute("value");
-                        break;
-                    default:
-                        this._infoProperties[propName] = propertyTags[i].getAttribute("value");
-                }
-            }
-        }
-        if (this._version === "2.0") {
-            this._scale = parseFloat(this._infoProperties["size of one unit in mm"]) * 10;
-        }
-        // setting up some variables for version-specific loading
-        var vertexTagName = null;
-        var lineTagName = null;
-        var triangleTagName = null;
-        switch (this._version) {
-            case "2.0":
-                vertexTagName = "vertex";
-                lineTagName = "line";
-                triangleTagName = "triangle";
-                break;
-            case "2.1":
-                vertexTagName = "v";
-                lineTagName = "l";
-                triangleTagName = "t";
-                break;
-        }
-        // loading vertices
-        var nVertices = parseInt(xmlDoc.getElementsByTagName("vertices")[0].getAttribute("count"));
-        this._vertices = new Array();
-        var vertexTags = xmlDoc.getElementsByTagName(vertexTagName);
-        this._maxX = 0;
-        this._minX = 0;
-        this._maxY = 0;
-        this._minY = 0;
-        this._maxZ = 0;
-        this._minZ = 0;
-        for (i = 0; i < nVertices; i++) {
-            var index = parseInt(vertexTags[i].getAttribute("i"));
-            this.setVertex(index, (this._version === "2.1" ?
-                    [
-                        parseFloat(vertexTags[i].getAttribute("x")),
-                        parseFloat(vertexTags[i].getAttribute("y")),
-                        parseFloat(vertexTags[i].getAttribute("z"))
-                    ]
-                    // version 2.0
-                    : [
-                        parseFloat(vertexTags[i].getAttribute("x")) / 10000,
-                        parseFloat(vertexTags[i].getAttribute("y")) / -10000,
-                        parseFloat(vertexTags[i].getAttribute("z")) / -10000
-                    ]));
-        }
-        Application.log("Loaded " + nVertices + " vertices.", 3);
-        // loading lines
-        var nLines = parseInt(xmlDoc.getElementsByTagName("lines")[0].getAttribute("count"));
-        this._lines = new Array(nLines);
-        var lineTags = xmlDoc.getElementsByTagName(lineTagName);
-        for (var i = 0; i < nLines; i++) {
-            this._lines[i] = new Line(
-                    parseInt(lineTags[i].getAttribute("a")),
-                    parseInt(lineTags[i].getAttribute("b")),
-                    (this._version === "2.1" ?
-                            lineTags[i].getAttribute("color").split(",").map(parseFloat)
-                            // version 2.0
-                            : [
-                                parseInt(lineTags[i].getAttribute("red")) / 255,
-                                parseInt(lineTags[i].getAttribute("green")) / 255,
-                                parseInt(lineTags[i].getAttribute("blue")) / 255]),
-                    (this._version === "2.1" ?
-                            parseFloat(lineTags[i].getAttribute("lum"))
-                            // version 2.0
-                            : parseInt(lineTags[i].getAttribute("luminosity")) / 255),
-                    (this._version === "2.1" ?
-                            lineTags[i].getAttribute("n").split(",").map(parseFloat)
-                            // version 2.0
-                            : [
-                                parseFloat(lineTags[i].getAttribute("nx")),
-                                -parseFloat(lineTags[i].getAttribute("ny")),
-                                -parseFloat(lineTags[i].getAttribute("nz"))]));
-        }
-        Application.log("Loaded " + nLines + " lines.", 3);
-        // loading triangles
-        var nTriangles = parseInt(xmlDoc.getElementsByTagName("triangles")[0].getAttribute("count"));
-        this._triangles = new Array();
-        var triangleTags = xmlDoc.getElementsByTagName(triangleTagName);
-        var params = {};
-        for (var i = 0; i < nTriangles; i++) {
-            params.color = this._version === "2.1" ?
-                    triangleTags[i].getAttribute("color").split(",").map(parseFloat)
-                    // version 2.0
-                    : [
-                        parseInt(triangleTags[i].getAttribute("red")) / 255,
-                        parseInt(triangleTags[i].getAttribute("green")) / 255,
-                        parseInt(triangleTags[i].getAttribute("blue")) / 255,
-                        (255 - parseInt(triangleTags[i].getAttribute("alpha"))) / 255];
-            params.luminosity = this._version === "2.1" ?
-                    parseFloat(triangleTags[i].getAttribute("lum"))
-                    // version 2.0
-                    : parseInt(triangleTags[i].getAttribute("luminosity")) / 255;
-            params.shininess = this._version === "2.1" ?
-                    parseInt(triangleTags[i].getAttribute("shi"))
-                    // version 2.0
-                    : parseInt(triangleTags[i].getAttribute("shininess"));
-            params.texCoords = this._version === "2.1" ?
-                    [
-                        triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
-                        triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
-                        triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
-                    ]
-                    // version 2.0
-                    : [
-                        [
-                            parseFloat(triangleTags[i].getAttribute("tax")),
-                            parseFloat(triangleTags[i].getAttribute("tay"))],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("tbx")),
-                            parseFloat(triangleTags[i].getAttribute("tby"))],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("tcx")),
-                            parseFloat(triangleTags[i].getAttribute("tcy"))]];
-            params.normals = this._version === "2.1" ?
-                    (triangleTags[i].hasAttribute("n") ?
-                            [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
-                            [
-                                triangleTags[i].getAttribute("na").split(",").map(parseFloat),
-                                triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
-                                triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
-                            ])
-                    // version 2.0
-                    : [
-                        [
-                            parseFloat(triangleTags[i].getAttribute("nax")),
-                            -parseFloat(triangleTags[i].getAttribute("nay")),
-                            -parseFloat(triangleTags[i].getAttribute("naz"))],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("nbx")),
-                            -parseFloat(triangleTags[i].getAttribute("nby")),
-                            -parseFloat(triangleTags[i].getAttribute("nbz"))],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("ncx")),
-                            -parseFloat(triangleTags[i].getAttribute("ncy")),
-                            -parseFloat(triangleTags[i].getAttribute("ncz"))]];
-            params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
-            params.withoutLines = true;
-            this.addTriangle(
-                    triangleTags[i].getAttribute("a"),
-                    triangleTags[i].getAttribute("b"),
-                    triangleTags[i].getAttribute("c"),
-                    params);
-        }
-        Application.log("Loaded " + triangleTags.length + " triangles.", 3);
-        Application.log("Model loaded.", 2);
-    };
-
-    /**
      * Returns the size of the model, which is calculated as the double of the
      * farthest (X,Y or Z) vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getSize = function () {
+    Mesh.prototype.getSize = function () {
         return this._size;
     };
 
@@ -942,7 +678,7 @@ Application.createModule({name: "Egom",
      * Returns the greatest positive X vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getMaxX = function () {
+    Mesh.prototype.getMaxX = function () {
         return this._maxX;
     };
 
@@ -950,7 +686,7 @@ Application.createModule({name: "Egom",
      * Returns the greatest negative X vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getMinX = function () {
+    Mesh.prototype.getMinX = function () {
         return this._minX;
     };
 
@@ -958,7 +694,7 @@ Application.createModule({name: "Egom",
      * Returns the greatest positive Y vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getMaxY = function () {
+    Mesh.prototype.getMaxY = function () {
         return this._maxY;
     };
 
@@ -966,7 +702,7 @@ Application.createModule({name: "Egom",
      * Returns the greatest negative Y vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getMinY = function () {
+    Mesh.prototype.getMinY = function () {
         return this._minY;
     };
 
@@ -974,7 +710,7 @@ Application.createModule({name: "Egom",
      * Returns the greatest positive Z vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getMaxZ = function () {
+    Mesh.prototype.getMaxZ = function () {
         return this._maxZ;
     };
 
@@ -982,7 +718,7 @@ Application.createModule({name: "Egom",
      * Returns the greatest negative Z vertex coordinate to be found in the model.
      * @returns {Number}
      */
-    Model.prototype.getMinZ = function () {
+    Mesh.prototype.getMinZ = function () {
         return this._minZ;
     };
 
@@ -991,7 +727,7 @@ Application.createModule({name: "Egom",
      * between the smallest and greatest X coordinates found among the vertices.
      * @returns {Number}
      */
-    Model.prototype.getWidth = function () {
+    Mesh.prototype.getWidth = function () {
         return this._maxX - this._minX;
     };
 
@@ -1000,7 +736,7 @@ Application.createModule({name: "Egom",
      * between the smallest and greatest Y coordinates found among the vertices.
      * @returns {Number}
      */
-    Model.prototype.getHeight = function () {
+    Mesh.prototype.getHeight = function () {
         return this._maxY - this._minY;
     };
 
@@ -1009,80 +745,8 @@ Application.createModule({name: "Egom",
      * between the smallest and greatest Z coordinates found among the vertices.
      * @returns {Number}
      */
-    Model.prototype.getDepth = function () {
+    Mesh.prototype.getDepth = function () {
         return this._maxZ - this._minZ;
-    };
-
-    /**
-     * Returns the width of the model in meters.
-     * @returns {Number}
-     */
-    Model.prototype.getWidthInMeters = function () {
-        return (this._maxX - this._minX) * this._scale;
-    };
-
-    /**
-     * Returns the height of the model in meters.
-     * @returns {Number}
-     */
-    Model.prototype.getHeightInMeters = function () {
-        return (this._maxY - this._minY) * this._scale;
-    };
-
-    /**
-     * Returns the depth of the model in meters.
-     * @returns {Number}
-     */
-    Model.prototype.getDepthInMeters = function () {
-        return (this._maxZ - this._minZ) * this._scale;
-    };
-
-    /**
-     * Adds this model to the passed ManagedGLContext in the specified drawing
-     * mode (wireframe or solid), so that later the vertex buffers of the context
-     * can be filled with its data.
-     * @param {ManagedGLContext} context The context to which the model should 
-     * be added.
-     * @param {Boolean} wireframe Whether to add the model for wireframe drawing.
-     * Both modes can be added after each other with two calls of this functions.
-     */
-    Model.prototype.addToContext = function (context, wireframe) {
-        // get the already stored properties for easier access
-        var props = this._contextProperties[context.getName()];
-        // If the model hasn't been added to this context at all yet, add it with
-        // the appropriate mode.
-        if (!props) {
-            props = new ModelContextProperties();
-            props.wireframe = wireframe;
-            props.solid = !wireframe;
-            context.addModel(this);
-            // If the model itself was added, check if it has been added with this
-            // mode, and if not, the context needs to be reset in order to trigger
-            // a new vertex buffer loading next time it is initialized, since new
-            // data will need to be loaded to the buffers.
-        } else {
-            if (!props.wireframe && wireframe) {
-                props.wireframe = true;
-                context.resetReadyState();
-            }
-            if (!props.solid && !wireframe) {
-                props.solid = true;
-                context.resetReadyState();
-            }
-        }
-        // update the stored parameters
-        this._contextProperties[context.getName()] = props;
-    };
-
-    /**
-     * Clears all previous bindings to managed WebGL contexts. After this, the
-     * model needs to be added again to contexts if it needs to be rendered in
-     * them.
-     */
-    Model.prototype.clearContextBindings = function () {
-        for (var contextName in this._contextProperties) {
-            delete this._contextProperties[contextName];
-        }
     };
 
     /**
@@ -1100,7 +764,7 @@ Application.createModule({name: "Egom",
      * position, texCoord, normal, color, luminosity, shininess, groupIndex.
      * The dataSize property contains the number of vertices.
      */
-    Model.prototype.getBufferData = function (wireframe, startIndex) {
+    Mesh.prototype.getBufferData = function (wireframe, startIndex) {
         var vertexData, texCoordData, normalData, colorData, luminosityData,
                 shininessData, groupIndexData, triangleIndexData;
         startIndex = startIndex || 0;
@@ -1276,13 +940,13 @@ Application.createModule({name: "Egom",
 
     /**
      * Returns the size of the vertex buffer data (number of vertices) that this
-     * model has for the specified context.
-     * @param {ManagedGLContext} context
+     * mesh has for the specified context.
+     * @param {Boolean} wireframe
+     * @param {Boolean} solid
      * @returns {Number}
      */
-    Model.prototype.getBufferSize = function (context) {
-        var props = this._contextProperties[context.getName()];
-        return (props.wireframe ? this._lines.length * 2 : 0) + (props.solid ? this._triangles.length * 3 : 0);
+    Mesh.prototype.getBufferSize = function (wireframe, solid) {
+        return (wireframe ? this._lines.length * 2 : 0) + (solid ? this._triangles.length * 3 : 0);
     };
 
     /**
@@ -1292,20 +956,22 @@ Application.createModule({name: "Egom",
      * @param {ManagedGLContext} context
      * @param {Number} startIndex The data will be added starting from this 
      * vertex index within the buffer objects.
+     * @param {Boolean} wireframe
+     * @param {Boolean} solid
      * @returns {Number} The number of vertices for which data has been added.
      */
-    Model.prototype.loadToVertexBuffers = function (context, startIndex) {
+    Mesh.prototype.loadToVertexBuffers = function (context, startIndex, wireframe, solid) {
         var bufferData = null;
         var dataSize = 0;
-        var props = this._contextProperties[context.getName()];
-        if (props.wireframe) {
+        var props = this._contextProperties[context.getName()] || new MeshContextProperties();
+        if (wireframe) {
             bufferData = this.getBufferData(true, startIndex);
             props.bufferStartWireframe = startIndex;
             context.setVertexBufferData(bufferData, startIndex);
             dataSize += bufferData.dataSize;
             startIndex += bufferData.dataSize;
         }
-        if (props.solid) {
+        if (solid) {
             bufferData = this.getBufferData(false, startIndex);
             props.bufferStartSolid = startIndex;
             props.bufferStartTransparent = startIndex + this._nOpaqueTriangles * 3;
@@ -1313,6 +979,7 @@ Application.createModule({name: "Egom",
             dataSize += bufferData.dataSize;
             startIndex += bufferData.dataSize;
         }
+        this._contextProperties[context.getName()] = props;
         return dataSize;
     };
 
@@ -1329,7 +996,7 @@ Application.createModule({name: "Egom",
      * rendered. False means only transparent parts, and undefined (omitted) means
      * the whole model. Only effective in solid rendering mode.
      */
-    Model.prototype.render = function (context, wireframe, opaque) {
+    Mesh.prototype.render = function (context, wireframe, opaque) {
         var props = this._contextProperties[context.getName()];
         if (wireframe === true) {
             context.gl.drawArrays(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length);
@@ -1370,7 +1037,7 @@ Application.createModule({name: "Egom",
      * @param {Boolean} cullFace Whether the faces facing the inside of the cuboid
      * should be culled (omitted)
      */
-    Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
+    Mesh.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
         var i0 = +this._vertices.length;
 
         // front
@@ -1459,7 +1126,7 @@ Application.createModule({name: "Egom",
      * @param {Boolean} cullFace Whether to omit the triangles from the inside 
      * of the sphere.
      */
-    Model.prototype.addSphere = function (x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace) {
+    Mesh.prototype.addSphere = function (x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace) {
         // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
         for (var i = 0; i < angles; i++) {
             for (var j = 0; j < angles; j++) {
@@ -1486,11 +1153,11 @@ Application.createModule({name: "Egom",
             var n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
             var n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
             var n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-            this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
                 texCoords: [uv1, uv2, uv3],
                 normals: [n1, n2, n3]});
             if (cullFace !== true) {
-                this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                     texCoords: [uv1, uv3, uv2],
                     normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
             }
@@ -1506,11 +1173,11 @@ Application.createModule({name: "Egom",
             n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
             n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
             n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-            this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
                 texCoords: [uv1, uv2, uv3],
                 normals: [n1, n2, n3]});
             if (cullFace !== true) {
-                this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                     texCoords: [uv1, uv3, uv2],
                     normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
             }
@@ -1523,11 +1190,11 @@ Application.createModule({name: "Egom",
                 n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
                 n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
                 n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-                this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
                     texCoords: [uv1, uv2, uv3],
                     normals: [n1, n2, n3]});
                 if (cullFace !== true) {
-                    this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                         texCoords: [uv1, uv3, uv2],
                         normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
                 }
@@ -1538,14 +1205,864 @@ Application.createModule({name: "Egom",
                 n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
                 n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
                 n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-                this.addTriangle(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
                     texCoords: [uv1, uv2, uv3],
                     normals: [n1, n2, n3]});
                 if (cullFace !== true) {
-                    this.addTriangle(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                         texCoords: [uv1, uv3, uv2],
                         normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
                 }
+            }
+        }
+    };
+
+    /**
+     * @class Stores the attributes that a model has associated with a managed
+     * WebGL context.
+     * @returns {ModelContextProperties}
+     */
+    function ModelContextProperties() {
+        /**
+         * Whether the wireframe model is used in the context.
+         * @name ModelContextProperties#wireframe
+         * @type Boolean
+         */
+        this.wireframe = null;
+        /**
+         * Whether the solid model is used in the context.
+         * @name ModelContextProperties#wireframe
+         * @type Boolean
+         */
+        this.solid = null;
+        this.minLOD = null;
+        this.maxLOD = null;
+    }
+
+    ///TODO: add comments for class & methods
+    /**
+     * @name Model
+     * @class Represents a 3D polygonal model.
+     * @extends Resource
+     */
+    function Model() {
+        Resource.call(this);
+        /**
+         * @name Model#_meshes
+         * @type Array.<Mesh>
+         */
+        this._meshes = new Array();
+        this._minLOD = null;
+        this._maxLOD = null;
+        /**
+         * @name Model#_editedMesh
+         * @type Mesh
+         */
+        this._editedMesh = null;
+        this._minEditedLOD = 0;
+        this._maxEditedLOD = 0;
+        /**
+         * The name of this model.
+         * @name Model#_name
+         * @type String
+         */
+        this._name = null;
+        /**
+         * The names of the files that hold the meshes for this model. The index
+         * indicates the default LOD of the mesh stored in the file.
+         * @name Model#_filenames
+         * @type Array.<String>
+         */
+        this._filenames = new Array();
+        /**
+         * The version string identifying the exact format of the model file.
+         * @name Model#_version
+         * @type String
+         */
+        this._version = null;
+        /**
+         * The object storing the info (meta) properties of the model.
+         * @name Model#_infoProperties
+         * @type Object
+         */
+        this._infoProperties = new Object();
+        /**
+         * The length of one model-space unit in meters.
+         * @name Model#_scale
+         * @type Number
+         */
+        this._scale = 1;
+        /**
+         * An associative array storing ModelContextProperties objects for each
+         * context this model is associated with, organized by the names of the
+         * contexts.
+         * @name Model#_contextProperties
+         * @type Object.<String, ModelContextProperties>
+         */
+        this._contextProperties = new Object();
+        this._numFilesToLoad = 0;
+        this._numLoadedFiles = 0;
+        this.setToReady();
+    }
+
+    Model.prototype = new Resource();
+    Model.prototype.constructor = Model;
+
+    /**
+     * Returns the name of the model. (not the same as the filename - a name can be
+     * set directly, or read from the model file)
+     * @returns {String}
+     */
+    Model.prototype.getName = function () {
+        return this._name;
+    };
+
+    /**
+     * Sets a name for the model.
+     * @param {String} name
+     */
+    Model.prototype.setName = function (name) {
+        this._name = name;
+    };
+
+    /**
+     * @param {String} filename
+     * @param {Number} [lod=0]
+     */
+    Model.prototype.setSourceFileForLOD = function (filename, lod) {
+        lod = lod || 0;
+        for (var i = this._filenames.length; i <= lod; i++) {
+            this._filenames.push("");
+        }
+        if (this._filenames[lod] !== filename) {
+            this._filenames[lod] = filename;
+            this.resetReadyState();
+        }
+    };
+
+    /**
+     * Sets the default properties for newly added lines and triangles.
+     * @param {Number} luminosity The default luminosity value (0.0-1.0) to use
+     * from now on.
+     * @param {Number} shininess The default shininess exponent value to use from
+     * now on.
+     */
+    Model.prototype.setDefaultProperties = function (luminosity, shininess) {
+        for (var i = 0; i < this._meshes.length; i++) {
+            this._meshes[i].setDefaultProperties(luminosity, shininess);
+        }
+    };
+
+    Model.prototype.createXMLLoaderFunctionForLOD = function (lod) {
+        return function (responseXML) {
+            this._loadFromXML(this._filenames[lod], responseXML, lod);
+            this._numLoadedFiles++;
+            if (this._numLoadedFiles === this._numFilesToLoad) {
+                this.setToReady();
+            }
+        }.bind(this);
+    };
+
+    /**
+     * Issues an asynchronous request to grab the file containing the model data,
+     * and sets a callback to load the data once the file has been downloaded.
+     * @returns {Boolean} Whether the request was issued. (if no filename is
+     * specified for the model, or it has already been loaded from the same file,
+     * the request will not be issued)
+     */
+    Model.prototype.requestLoadFromFiles = function () {
+        // only issue the request if the model is not already loaded
+        if (!this.isReadyToUse()) {
+            if (this._filenames.length === 0) {
+                Application.showError(
+                        "Attempting to load a model from file, but no filenames were specified.",
+                        null,
+                        this._name ? "Name of the model: " + this._name : "The model has no name either.");
+                return false;
+            }
+            this._numFilesToLoad = 0;
+            this._numLoadedFiles = 0;
+            for (var i = 0; i < this._filenames.length; i++) {
+                if (this._filenames[i].length > 0) {
+                    this._numFilesToLoad++;
+                    Application.requestXMLFile("model", this._filenames[i], this.createXMLLoaderFunctionForLOD(i));
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+
+    Model.prototype.getMinLOD = function () {
+        return this._minLOD;
+    };
+
+    Model.prototype.getMaxLOD = function () {
+        return this._maxLOD;
+    };
+
+    Model.prototype.updateLODInfo = function (minLOD, maxLOD) {
+        this._minLOD = this._minLOD === null ? minLOD : (minLOD < this._minLOD ? minLOD : this._minLOD);
+        this._maxLOD = this._maxLOD === null ? maxLOD : (maxLOD > this._maxLOD ? maxLOD : this._maxLOD);
+    };
+
+    /**
+     * 
+     * @param {Number} lod
+     * @returns {Mesh}
+     */
+    Model.prototype.getMeshWithLOD = function (lod) {
+        for (var i = this._meshes.length; i <= lod; i++) {
+            this._meshes.push(new Mesh());
+        }
+        return this._meshes[lod];
+    };
+
+    Model.prototype.startEditingMeshWithLOD = function (lod) {
+        this._editedMesh = this.getMeshWithLOD(lod);
+    };
+
+    Model.prototype.stopEditingMesh = function () {
+        this._editedMesh = null;
+    };
+
+    Model.prototype.getCurrentlyEditedMesh = function () {
+        return this._editedMesh;
+    };
+
+    Model.prototype.setMinimumEditedLOD = function (value) {
+        this._minEditedLOD = value;
+    };
+
+    Model.prototype.setMaximumEditedLOD = function (value) {
+        this._maxEditedLOD = value;
+    };
+
+    /**
+     * Loads the model data from the passed XML document.
+     * @param {String} filename
+     * @param {Document} xmlDoc
+     * @param {Number} defaultLOD
+     * @returns {Boolean} Whether the loading has been successful.
+     */
+    Model.prototype._loadFromXML = function (filename, xmlDoc, defaultLOD) {
+        var resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
+            if (minLoadedLOD === null) {
+                for (var i = newMinLoadedLOD; i <= newMaxLoadedLOD; i++) {
+                    this.getMeshWithLOD(i).resetMesh();
+                }
+                minLoadedLOD = newMinLoadedLOD;
+                maxLoadedLOD = newMaxLoadedLOD;
+            } else {
+                for (var i = newMinLoadedLOD; i < minLoadedLOD; i++) {
+                    this.getMeshWithLOD(i).resetMesh();
+                }
+                for (var i = maxLoadedLOD + 1; i <= newMaxLoadedLOD; i++) {
+                    this.getMeshWithLOD(i).resetMesh();
+                }
+                minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
+                maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
+            }
+        }.bind(this);
+        defaultLOD = defaultLOD || 0;
+        var minLoadedLOD = null;
+        var maxLoadedLOD = null;
+        var i;
+        Application.log("Loading EgomModel data from file: " + filename + " ...", 2);
+        // checking the passed XML document
+        if (!(xmlDoc instanceof Document)) {
+            Application.showError("'" + filename + "' does not appear to be an XML document.",
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
+            return false;
+        }
+        if (xmlDoc.documentElement.nodeName !== "EgomModel") {
+            Application.showError("'" + filename + "' does not appear to be an EgomModel file.",
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
+                    "'" + xmlDoc.documentElement.nodeName + "' instead.");
+            return false;
+        }
+        // checking EgomModel version
+        this._version = xmlDoc.documentElement.getAttribute("version");
+        if (!this._version) {
+            Application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            return false;
+        }
+        if (_supportedVersions.indexOf(this._version) < 0) {
+            Application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + this._version + ") is not supported.",
+                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+            return false;
+        }
+        // loading info properties
+        this._name = null;
+        this._scale = 1;
+        this._infoProperties = new Object();
+        if (xmlDoc.getElementsByTagName("info").length > 0) {
+            var propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
+            for (var i = 0; i < propertyTags.length; i++) {
+                var propName = propertyTags[i].getAttribute("name");
+                switch (propName) {
+                    case "name":
+                        this._name = propertyTags[i].getAttribute("value");
+                        break;
+                    case "scale":
+                        this._scale = propertyTags[i].getAttribute("value");
+                        break;
+                    default:
+                        this._infoProperties[propName] = propertyTags[i].getAttribute("value");
+                }
+            }
+        }
+        if (this._version === "2.0") {
+            this._scale = parseFloat(this._infoProperties["size of one unit in mm"]) * 10;
+        }
+        // setting up some variables for version-specific loading
+        var vertexTagName = null;
+        var lineTagName = null;
+        var triangleTagName = null;
+        switch (this._version) {
+            case "2.0":
+                vertexTagName = "vertex";
+                lineTagName = "line";
+                triangleTagName = "triangle";
+                break;
+            case "2.1":
+            case "2.2":
+                vertexTagName = "v";
+                lineTagName = "l";
+                triangleTagName = "t";
+                break;
+        }
+        // loading vertices
+        var vertexTags = xmlDoc.getElementsByTagName(vertexTagName);
+        var nVertices = vertexTags.length;
+        for (i = 0; i < nVertices; i++) {
+            var index = parseInt(vertexTags[i].getAttribute("i"));
+            var minLOD = defaultLOD;
+            var maxLOD = defaultLOD;
+            if (vertexTags[i].hasAttribute("lod")) {
+                var minMaxLOD = vertexTags[i].getAttribute("lod").split("-");
+                minLOD = parseInt(minMaxLOD[0]);
+                maxLOD = parseInt(minMaxLOD[1]);
+            }
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            var vertex = new Vertex(
+                    (parseFloat(this._version) >= 2.1 ?
+                            [
+                                parseFloat(vertexTags[i].getAttribute("x")),
+                                parseFloat(vertexTags[i].getAttribute("y")),
+                                parseFloat(vertexTags[i].getAttribute("z"))
+                            ]
+                            // version 2.0
+                            : [
+                                parseFloat(vertexTags[i].getAttribute("x")) / 10000,
+                                parseFloat(vertexTags[i].getAttribute("y")) / -10000,
+                                parseFloat(vertexTags[i].getAttribute("z")) / -10000
+                            ]));
+            for (var j = minLOD; j <= maxLOD; j++) {
+                this.getMeshWithLOD(j).setVertex(index, vertex);
+            }
+        }
+        Application.log("Loaded " + nVertices + " vertices.", 3);
+        // loading lines
+        var lineTags = xmlDoc.getElementsByTagName(lineTagName);
+        var nLines = lineTags.length;
+        for (i = 0; i < nLines; i++) {
+            var minLOD = defaultLOD;
+            var maxLOD = defaultLOD;
+            if (lineTags[i].hasAttribute("lod")) {
+                var minMaxLOD = lineTags[i].getAttribute("lod").split("-");
+                minLOD = parseInt(minMaxLOD[0]);
+                maxLOD = parseInt(minMaxLOD[1]);
+            }
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            var line = new Line(
+                    parseInt(lineTags[i].getAttribute("a")),
+                    parseInt(lineTags[i].getAttribute("b")),
+                    (parseFloat(this._version) >= 2.1 ?
+                            lineTags[i].getAttribute("color").split(",").map(parseFloat)
+                            // version 2.0
+                            : [
+                                parseInt(lineTags[i].getAttribute("red")) / 255,
+                                parseInt(lineTags[i].getAttribute("green")) / 255,
+                                parseInt(lineTags[i].getAttribute("blue")) / 255]),
+                    (parseFloat(this._version) >= 2.1 ?
+                            parseFloat(lineTags[i].getAttribute("lum"))
+                            // version 2.0
+                            : parseInt(lineTags[i].getAttribute("luminosity")) / 255),
+                    (parseFloat(this._version) >= 2.1 ?
+                            lineTags[i].getAttribute("n").split(",").map(parseFloat)
+                            // version 2.0
+                            : [
+                                parseFloat(lineTags[i].getAttribute("nx")),
+                                -parseFloat(lineTags[i].getAttribute("ny")),
+                                -parseFloat(lineTags[i].getAttribute("nz"))]));
+            for (var j = minLOD; j <= maxLOD; j++) {
+                this.getMeshWithLOD(j).setLine(i, line);
+            }
+        }
+        Application.log("Loaded " + nLines + " lines.", 3);
+        // loading triangles
+        var triangleTags = xmlDoc.getElementsByTagName(triangleTagName);
+        var nTriangles = triangleTags.length;
+        var params = {};
+        for (var i = 0; i < nTriangles; i++) {
+            var minLOD = defaultLOD;
+            var maxLOD = defaultLOD;
+            if (triangleTags[i].hasAttribute("lod")) {
+                var minMaxLOD = triangleTags[i].getAttribute("lod").split("-");
+                minLOD = parseInt(minMaxLOD[0]);
+                maxLOD = parseInt(minMaxLOD[1]);
+            }
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            params.color = parseFloat(this._version) >= 2.1 ?
+                    triangleTags[i].getAttribute("color").split(",").map(parseFloat)
+                    // version 2.0
+                    : [
+                        parseInt(triangleTags[i].getAttribute("red")) / 255,
+                        parseInt(triangleTags[i].getAttribute("green")) / 255,
+                        parseInt(triangleTags[i].getAttribute("blue")) / 255,
+                        (255 - parseInt(triangleTags[i].getAttribute("alpha"))) / 255];
+            params.luminosity = parseFloat(this._version) >= 2.1 ?
+                    parseFloat(triangleTags[i].getAttribute("lum"))
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("luminosity")) / 255;
+            params.shininess = parseFloat(this._version) >= 2.1 ?
+                    parseInt(triangleTags[i].getAttribute("shi"))
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("shininess"));
+            params.texCoords = parseFloat(this._version) >= 2.1 ?
+                    [
+                        triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
+                        triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
+                        triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
+                    ]
+                    // version 2.0
+                    : [
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tax")),
+                            parseFloat(triangleTags[i].getAttribute("tay"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tbx")),
+                            parseFloat(triangleTags[i].getAttribute("tby"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tcx")),
+                            parseFloat(triangleTags[i].getAttribute("tcy"))]];
+            params.normals = parseFloat(this._version) >= 2.1 ?
+                    (triangleTags[i].hasAttribute("n") ?
+                            [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
+                            [
+                                triangleTags[i].getAttribute("na").split(",").map(parseFloat),
+                                triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
+                                triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
+                            ])
+                    // version 2.0
+                    : [
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
+            params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
+            params.withoutLines = true;
+            var triangle = null;
+            for (var j = minLOD; j <= maxLOD; j++) {
+                if (!triangle) {
+                    triangle = this.getMeshWithLOD(j).addTriangleWithParams(
+                            triangleTags[i].getAttribute("a"),
+                            triangleTags[i].getAttribute("b"),
+                            triangleTags[i].getAttribute("c"),
+                            params);
+                } else {
+                    this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
+                }
+            }
+        }
+        Application.log("Loaded " + triangleTags.length + " triangles.", 3);
+        Application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
+        var str = "";
+        for (i = this._minLOD; i <= this._maxLOD; i++) {
+            str += "[" + i + "]: " + this.getMeshWithLOD(i).getNumOpaqueTriangles() + " ";
+        }
+        console.log(str);
+    };
+
+    /**
+     * Returns the size of the model, which is calculated as the double of the
+     * farthest (X,Y or Z) vertex coordinate to be found in the model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getSize = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getSize();
+    };
+
+    /**
+     * Returns the greatest positive X vertex coordinate to be found in the 
+     * model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getMaxX = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getMaxX();
+    };
+
+    /**
+     * Returns the greatest negative X vertex coordinate to be found in the 
+     * model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getMinX = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getMinX();
+    };
+
+    /**
+     * Returns the greatest positive Y vertex coordinate to be found in the 
+     * model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getMaxY = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getMaxY();
+    };
+
+    /**
+     * Returns the greatest negative Y vertex coordinate to be found in the 
+     * model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getMinY = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getMinY();
+    };
+
+    /**
+     * Returns the greatest positive Z vertex coordinate to be found in the 
+     * model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getMaxZ = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getMaxZ();
+    };
+
+    /**
+     * Returns the greatest negative Z vertex coordinate to be found in the 
+     * model.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getMinZ = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getMinZ();
+    };
+
+    /**
+     * Returns the width of the model, which is calculated as the difference
+     * between the smallest and greatest X coordinates found among the vertices.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getWidth = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getWidth();
+    };
+
+    /**
+     * Returns the height of the model, which is calculated as the difference
+     * between the smallest and greatest Y coordinates found among the vertices.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getHeight = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getHeight();
+    };
+
+    /**
+     * Returns the depth of the model, which is calculated as the difference
+     * between the smallest and greatest Z coordinates found among the vertices.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getDepth = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getDepth();
+    };
+
+    /**
+     * Returns the width of the model in meters.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getWidthInMeters = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getWidth(lod) * this._scale;
+    };
+
+    /**
+     * Returns the height of the model in meters.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getHeightInMeters = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getHeight(lod) * this._scale;
+    };
+
+    /**
+     * Returns the depth of the model in meters.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getDepthInMeters = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getDepth(lod) * this._scale;
+    };
+
+    /**
+     * Returns the number of completely opaque triangles this model contains.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getNumOpaqueTriangles = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getNumOpaqueTriangles();
+    };
+
+    /**
+     * Returns the number of transparent triangles this model contains.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getNumTransparentTriangles = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getNumTransparentTriangles();
+    };
+
+    /**
+     * Returns the number of triangles this model contains.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getNumTriangles = function (lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getNumTriangles();
+    };
+
+    /**
+     * Adds this model to the passed ManagedGLContext in the specified drawing
+     * mode (wireframe or solid), so that later the vertex buffers of the 
+     * context can be filled with its data.
+     * @param {ManagedGLContext} context The context to which the model should 
+     * be added.
+     * @param {Boolean} wireframe Whether to add the model for wireframe 
+     * drawing.
+     * Both modes can be added after each other with two calls of this 
+     * functions.
+     */
+    Model.prototype.addToContext = function (context, wireframe) {
+        this._minLOD = this._minLOD || 0;
+        this._maxLOD = this._maxLOD || 0;
+        // get the already stored properties for easier access
+        var props = this._contextProperties[context.getName()];
+        // If the model hasn't been added to this context at all yet, add it with
+        // the appropriate mode.
+        if (!props) {
+            props = new ModelContextProperties();
+            props.wireframe = wireframe;
+            props.solid = !wireframe;
+            props.minLOD = this._minLOD;
+            props.maxLOD = this._maxLOD;
+            context.addModel(this);
+            // If the model itself was added, check if it has been added with this
+            // mode, and if not, the context needs to be reset in order to trigger
+            // a new vertex buffer loading next time it is initialized, since new
+            // data will need to be loaded to the buffers.
+        } else {
+            if (!props.wireframe && wireframe) {
+                props.wireframe = true;
+                context.resetReadyState();
+            }
+            if (!props.solid && !wireframe) {
+                props.solid = true;
+                context.resetReadyState();
+            }
+            if (props.minLOD > this._minLOD) {
+                props.minLOD = this._minLOD;
+                context.resetReadyState();
+            }
+            if (props.maxLOD < this._maxLOD) {
+                props.maxLOD = this._maxLOD;
+                context.resetReadyState();
+            }
+        }
+        // update the stored parameters
+        this._contextProperties[context.getName()] = props;
+    };
+
+    /**
+     * Clears all previous bindings to managed WebGL contexts. After this, the
+     * model needs to be added again to contexts if it needs to be rendered in
+     * them.
+     */
+    Model.prototype.clearContextBindings = function () {
+        for (var contextName in this._contextProperties) {
+            delete this._contextProperties[contextName];
+        }
+    };
+
+    /**
+     * 
+     * @param {Boolean} wireframe
+     * @param {Number} startIndex
+     * @param {Number} [lod=0]
+     * @returns {Object}
+     */
+    Model.prototype.getBufferData = function (wireframe, startIndex, lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getBufferData(wireframe, startIndex);
+    };
+
+    /**
+     * Returns the size of the vertex buffer data (number of vertices) that this
+     * model has for the specified context.
+     * @param {ManagedGLContext} context
+     * @returns {Number}
+     */
+    Model.prototype.getBufferSize = function (context) {
+        var props = this._contextProperties[context.getName()];
+        var result = 0;
+        for (var i = props.minLOD; i <= props.maxLOD; i++) {
+            result += this.getMeshWithLOD(i).getBufferSize(props.wireframe, props.solid);
+        }
+        return result;
+    };
+
+    /**
+     * Loads the model's vertex data into the vertex buffer objects of the specified
+     * context. Data for wireframe and solid rendering is added based on whether
+     * the model has been previously added to the context in the respective mode.
+     * @param {ManagedGLContext} context
+     * @param {Number} startIndex The data will be added starting from this 
+     * vertex index within the buffer objects.
+     * @param {Number} [lod=0]
+     * @returns {Number} The number of vertices for which data has been added.
+     */
+    Model.prototype.loadToVertexBuffers = function (context, startIndex, lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        var props = this._contextProperties[context.getName()];
+        return this.getMeshWithLOD(lod).loadToVertexBuffers(context, startIndex, props.wireframe, props.solid);
+    };
+
+    /**
+     * Renders the model within the passed context, with the specified rendering
+     * mode (wireframe or solid).
+     * @param {ManagedGLContext} context The context into which the model is to
+     * be rendered. The model has to be added to this context previously in the
+     * same rendering mode, and the context needs to be set up afterwards for
+     * rendering.
+     * @param {Boolean} wireframe Whether the model should be rendered in 
+     * wireframe mode.
+     * @param {Boolean} opaque Whether only the opaque parts of the model should be
+     * rendered. False means only transparent parts, and undefined (omitted) means
+     * the whole model. Only effective in solid rendering mode.
+     * @param {Number} [lod=0]
+     */
+    Model.prototype.render = function (context, wireframe, opaque, lod) {
+        lod = lod !== undefined ? lod : this._minLOD;
+        this.getMeshWithLOD(lod).render(context, wireframe, opaque);
+    };
+
+    /**
+     * Adds a new vertex to the currently edited mesh.
+     * @param {Number[3]} position
+     * @param {Number[2]} [texCoords]
+     */
+    Model.prototype.appendVertex = function (position, texCoords) {
+        if (this._editedMesh) {
+            this._editedMesh.appendVertex(position, texCoords);
+        } else {
+            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+                this.getMeshWithLOD(i).appendVertex(position, texCoords);
+            }
+        }
+    };
+
+    Model.prototype.addLine = function (line) {
+        if (this._editedMesh) {
+            this._editedMesh.addLine(line);
+        } else {
+            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+                this.getMeshWithLOD(i).addLine(line);
+            }
+        }
+    };
+
+    /**
+     * Adds two triangles forming a quadrilateral between 4 vertices.
+     * @param {Number} a The index of the first vertex of the quad.
+     * @param {Number} b The index of the second vertex of the quad.
+     * @param {Number} c The index of the third vertex of the quad.
+     * @param {Number} d The index of the fourth vertex of the quad.
+     * @param {Object} params The parameters of the quad in the same format as with
+     * single triangles.
+     * @see Model#addTriangle
+     */
+    Model.prototype.addQuad = function (a, b, c, d, params) {
+        if (this._editedMesh) {
+            this._editedMesh.addQuad(a, b, c, d, params);
+        } else {
+            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+                this.getMeshWithLOD(i).addQuad(a, b, c, d, params);
+            }
+        }
+    };
+
+    /**
+     * Adds a cuboid geometry to the object. (both vertices and faces)
+     * @param {Number} x The X coordinate of the center of the cuboid.
+     * @param {Number} y The Y coordinate of the center of the cuboid.
+     * @param {Number} z The Z coordinate of the center of the cuboid.
+     * @param {Number} width The width (X dimension) of the cuboid.
+     * @param {Number} height The height (Y dimension) of the cuboid.
+     * @param {Number} depth The depth (Z dimension) of the cuboid.
+     * @param {Number[4]} color The color of the faces of the cuboid 
+     * ([red,green,blue,alpha])
+     * @param {Number} luminosity The luminosity factor of the cuboid faces of 
+     * the cuboid (0.0-1.0)
+     * @param {Number[4][2]} textureCoordinates The texture coordinates for the 
+     * faces of the cuboid (the two coordinates for each of the 4 vertices of one
+     * face.
+     * @param {Boolean} cullFace Whether the faces facing the inside of the cuboid
+     * should be culled (omitted)
+     */
+    Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
+        if (this._editedMesh) {
+            this._editedMesh.addCuboid(x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace);
+        } else {
+            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+                this.getMeshWithLOD(i).addCuboid(x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace);
             }
         }
     };
@@ -1664,7 +2181,7 @@ Application.createModule({name: "Egom",
             name && result.setName(name);
             result.appendVertex([0.0, 0.0, 0.0]);
             result.appendVertex(vector);
-            result._lines.push(new Line(0, 1, color, 1, vector));
+            result.addLine(new Line(0, 1, color, 1, vector));
             return result;
         }
     };
