@@ -906,10 +906,10 @@ Application.createModule({name: "Logic",
     };
     /**
      * Updates the turning limit to how much the ship can accelerate its
-     * turning to in one second with the current propulsion system.
+     * turning to in half second with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateTurningLimit = function () {
-        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() / 200;
+        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() / 200 / 2;
     };
     /**
      * Returns a string representation of the current flight mode.
@@ -1794,7 +1794,7 @@ Application.createModule({name: "Logic",
         // visualize physical model (hitboxes)
         if ((addSupplements) && (addSupplements.hitboxes === true)) {
             // add the parent objects for the hitboxes
-            this._hitbox = new Scene.RenderableNode(new Scene.RenderableObject(Armada.resources().getShader(this._class.shaderName), false, false));
+            this._hitbox = new Scene.RenderableNode(new Scene.RenderableObject3D(Armada.resources().getShader(this._class.shaderName), false, false));
             // add the models for the hitboxes themselves
             for (i = 0; i < this._class.bodies.length; i++) {
                 this._addHitboxModel(i);

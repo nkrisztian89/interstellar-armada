@@ -769,8 +769,9 @@ Application.createModule({name: "Egom",
                 shininessData, groupIndexData, triangleIndexData;
         startIndex = startIndex || 0;
         if (wireframe === true) {
-            vertexData = new Float32Array(this._lines.length * 6);
-            for (var i = 0; i < this._lines.length; i++) {
+            var nLines = this._lines.length;
+            vertexData = new Float32Array(nLines * 6);
+            for (var i = 0; i < nLines; i++) {
                 vertexData[i * 6 + 0] = this._vertices[this._lines[i].a].x;
                 vertexData[i * 6 + 1] = this._vertices[this._lines[i].a].y;
                 vertexData[i * 6 + 2] = this._vertices[this._lines[i].a].z;
@@ -778,15 +779,15 @@ Application.createModule({name: "Egom",
                 vertexData[i * 6 + 4] = this._vertices[this._lines[i].b].y;
                 vertexData[i * 6 + 5] = this._vertices[this._lines[i].b].z;
             }
-            texCoordData = new Float32Array(this._lines.length * 4);
-            for (var i = 0; i < this._lines.length; i++) {
+            texCoordData = new Float32Array(nLines * 4);
+            for (var i = 0; i < nLines; i++) {
                 texCoordData[i * 4 + 0] = 0.0;
                 texCoordData[i * 4 + 1] = 1.0;
                 texCoordData[i * 4 + 2] = 1.0;
                 texCoordData[i * 4 + 3] = 1.0;
             }
-            normalData = new Float32Array(this._lines.length * 6);
-            for (var i = 0; i < this._lines.length; i++) {
+            normalData = new Float32Array(nLines * 6);
+            for (var i = 0; i < nLines; i++) {
                 normalData[i * 6 + 0] = this._lines[i].normal[0];
                 normalData[i * 6 + 1] = this._lines[i].normal[1];
                 normalData[i * 6 + 2] = this._lines[i].normal[2];
@@ -794,8 +795,8 @@ Application.createModule({name: "Egom",
                 normalData[i * 6 + 4] = this._lines[i].normal[1];
                 normalData[i * 6 + 5] = this._lines[i].normal[2];
             }
-            colorData = new Float32Array(this._lines.length * 8);
-            for (var i = 0; i < this._lines.length; i++) {
+            colorData = new Float32Array(nLines * 8);
+            for (var i = 0; i < nLines; i++) {
                 colorData[i * 8 + 0] = this._lines[i].color[0];
                 colorData[i * 8 + 1] = this._lines[i].color[1];
                 colorData[i * 8 + 2] = this._lines[i].color[2];
@@ -805,23 +806,24 @@ Application.createModule({name: "Egom",
                 colorData[i * 8 + 6] = this._lines[i].color[2];
                 colorData[i * 8 + 7] = 1.0;
             }
-            luminosityData = new Float32Array(this._lines.length * 2);
-            for (var i = 0; i < this._lines.length; i++) {
+            luminosityData = new Float32Array(nLines * 2);
+            for (var i = 0; i < nLines; i++) {
                 luminosityData[i * 2] = this._lines[i].luminosity;
                 luminosityData[i * 2 + 1] = this._lines[i].luminosity;
             }
-            shininessData = new Float32Array(this._lines.length * 2);
-            for (var i = 0; i < this._lines.length; i++) {
+            shininessData = new Float32Array(nLines * 2);
+            for (var i = 0; i < nLines; i++) {
                 shininessData[i * 2 + 0] = 0;
                 shininessData[i * 2 + 1] = 0;
             }
-            groupIndexData = new Float32Array(this._lines.length * 2);
-            for (var i = 0; i < this._lines.length; i++) {
+            groupIndexData = new Float32Array(nLines * 2);
+            for (var i = 0; i < nLines; i++) {
                 groupIndexData[i * 2 + 0] = 0;
                 groupIndexData[i * 2 + 1] = 0;
             }
-            triangleIndexData = new Float32Array(this._triangles.length * 3);
-            for (var i = 0; i < this._triangles.length; i++) {
+            var nTriangles = this._triangles.length;
+            triangleIndexData = new Float32Array(nTriangles * 3);
+            for (var i = 0; i < nTriangles; i++) {
                 triangleIndexData[i * 12 + 0] = 0;
                 triangleIndexData[i * 12 + 1] = 0;
                 triangleIndexData[i * 12 + 2] = 0;
@@ -836,8 +838,9 @@ Application.createModule({name: "Egom",
                 triangleIndexData[i * 12 + 11] = 0;
             }
         } else {
-            vertexData = new Float32Array(this._triangles.length * 9);
-            for (var i = 0; i < this._triangles.length; i++) {
+            var nTriangles = this._triangles.length;
+            vertexData = new Float32Array(nTriangles * 9);
+            for (var i = 0; i < nTriangles; i++) {
                 vertexData[i * 9 + 0] = this._vertices[this._triangles[i].a].x;
                 vertexData[i * 9 + 1] = this._vertices[this._triangles[i].a].y;
                 vertexData[i * 9 + 2] = this._vertices[this._triangles[i].a].z;
@@ -848,8 +851,8 @@ Application.createModule({name: "Egom",
                 vertexData[i * 9 + 7] = this._vertices[this._triangles[i].c].y;
                 vertexData[i * 9 + 8] = this._vertices[this._triangles[i].c].z;
             }
-            texCoordData = new Float32Array(this._triangles.length * 6);
-            for (var i = 0; i < this._triangles.length; i++) {
+            texCoordData = new Float32Array(nTriangles * 6);
+            for (var i = 0; i < nTriangles; i++) {
                 texCoordData[i * 6 + 0] = this._triangles[i].texCoords[0][0];
                 texCoordData[i * 6 + 1] = this._triangles[i].texCoords[0][1];
                 texCoordData[i * 6 + 2] = this._triangles[i].texCoords[1][0];
@@ -857,8 +860,8 @@ Application.createModule({name: "Egom",
                 texCoordData[i * 6 + 4] = this._triangles[i].texCoords[2][0];
                 texCoordData[i * 6 + 5] = this._triangles[i].texCoords[2][1];
             }
-            normalData = new Float32Array(this._triangles.length * 9);
-            for (var i = 0; i < this._triangles.length; i++) {
+            normalData = new Float32Array(nTriangles * 9);
+            for (var i = 0; i < nTriangles; i++) {
                 normalData[i * 9 + 0] = this._triangles[i].getNormal(0)[0];
                 normalData[i * 9 + 1] = this._triangles[i].getNormal(0)[1];
                 normalData[i * 9 + 2] = this._triangles[i].getNormal(0)[2];
@@ -869,8 +872,8 @@ Application.createModule({name: "Egom",
                 normalData[i * 9 + 7] = this._triangles[i].getNormal(2)[1];
                 normalData[i * 9 + 8] = this._triangles[i].getNormal(2)[2];
             }
-            colorData = new Float32Array(this._triangles.length * 12);
-            for (var i = 0; i < this._triangles.length; i++) {
+            colorData = new Float32Array(nTriangles * 12);
+            for (var i = 0; i < nTriangles; i++) {
                 colorData[i * 12 + 0] = this._triangles[i].color[0];
                 colorData[i * 12 + 1] = this._triangles[i].color[1];
                 colorData[i * 12 + 2] = this._triangles[i].color[2];
@@ -884,26 +887,26 @@ Application.createModule({name: "Egom",
                 colorData[i * 12 + 10] = this._triangles[i].color[2];
                 colorData[i * 12 + 11] = this._triangles[i].color[3];
             }
-            luminosityData = new Float32Array(this._triangles.length * 3);
-            for (var i = 0; i < this._triangles.length; i++) {
+            luminosityData = new Float32Array(nTriangles * 3);
+            for (var i = 0; i < nTriangles; i++) {
                 luminosityData[i * 3] = this._triangles[i].luminosity;
                 luminosityData[i * 3 + 1] = this._triangles[i].luminosity;
                 luminosityData[i * 3 + 2] = this._triangles[i].luminosity;
             }
-            shininessData = new Float32Array(this._triangles.length * 3);
-            for (var i = 0; i < this._triangles.length; i++) {
+            shininessData = new Float32Array(nTriangles * 3);
+            for (var i = 0; i < nTriangles; i++) {
                 shininessData[i * 3] = this._triangles[i].shininess;
                 shininessData[i * 3 + 1] = this._triangles[i].shininess;
                 shininessData[i * 3 + 2] = this._triangles[i].shininess;
             }
-            groupIndexData = new Float32Array(this._triangles.length * 3);
-            for (var i = 0; i < this._triangles.length; i++) {
+            groupIndexData = new Float32Array(nTriangles * 3);
+            for (var i = 0; i < nTriangles; i++) {
                 groupIndexData[i * 3] = this._triangles[i].groupIndex;
                 groupIndexData[i * 3 + 1] = this._triangles[i].groupIndex;
                 groupIndexData[i * 3 + 2] = this._triangles[i].groupIndex;
             }
-            triangleIndexData = new Float32Array(this._triangles.length * 12);
-            for (var i = 0; i < this._triangles.length; i++) {
+            triangleIndexData = new Float32Array(nTriangles * 12);
+            for (var i = 0; i < nTriangles; i++) {
                 var ix = startIndex + i;
                 var index = new Array();
                 for (var j = 0; j < 4; j++) {
@@ -1467,6 +1470,8 @@ Application.createModule({name: "Egom",
         defaultLOD = defaultLOD || 0;
         var minLoadedLOD = null;
         var maxLoadedLOD = null;
+        var defaultMinLOD = null;
+        var defaultMaxLOD = null;
         var i;
         Application.log("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed XML document
@@ -1499,6 +1504,8 @@ Application.createModule({name: "Egom",
         // loading info properties
         this._name = null;
         this._scale = 1;
+        var defaultShininess = 0;
+        var colorPalette = null;
         this._infoProperties = new Object();
         if (xmlDoc.getElementsByTagName("info").length > 0) {
             var propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
@@ -1510,6 +1517,19 @@ Application.createModule({name: "Egom",
                         break;
                     case "scale":
                         this._scale = propertyTags[i].getAttribute("value");
+                        break;
+                    case "defaultLOD":
+                        var defLOD = propertyTags[i].getAttribute("value").split("-");
+                        defaultMinLOD = defLOD[0];
+                        defaultMaxLOD = defLOD[1];
+                        break;
+                    case "defaultShininess":
+                        defaultShininess = parseInt(propertyTags[i].getAttribute("value"));
+                        break;
+                    case "colorPalette":
+                        colorPalette = propertyTags[i].getAttribute("value").split(" ").map(function (s) {
+                            return s.split(",").map(parseFloat);
+                        });
                         break;
                     default:
                         this._infoProperties[propName] = propertyTags[i].getAttribute("value");
@@ -1541,8 +1561,8 @@ Application.createModule({name: "Egom",
         var nVertices = vertexTags.length;
         for (i = 0; i < nVertices; i++) {
             var index = parseInt(vertexTags[i].getAttribute("i"));
-            var minLOD = defaultLOD;
-            var maxLOD = defaultLOD;
+            var minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            var maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
             if (vertexTags[i].hasAttribute("lod")) {
                 var minMaxLOD = vertexTags[i].getAttribute("lod").split("-");
                 minLOD = parseInt(minMaxLOD[0]);
@@ -1572,8 +1592,8 @@ Application.createModule({name: "Egom",
         var lineTags = xmlDoc.getElementsByTagName(lineTagName);
         var nLines = lineTags.length;
         for (i = 0; i < nLines; i++) {
-            var minLOD = defaultLOD;
-            var maxLOD = defaultLOD;
+            var minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            var maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
             if (lineTags[i].hasAttribute("lod")) {
                 var minMaxLOD = lineTags[i].getAttribute("lod").split("-");
                 minLOD = parseInt(minMaxLOD[0]);
@@ -1585,14 +1605,14 @@ Application.createModule({name: "Egom",
                     parseInt(lineTags[i].getAttribute("a")),
                     parseInt(lineTags[i].getAttribute("b")),
                     (parseFloat(this._version) >= 2.1 ?
-                            lineTags[i].getAttribute("color").split(",").map(parseFloat)
+                            (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"))] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
                             // version 2.0
                             : [
                                 parseInt(lineTags[i].getAttribute("red")) / 255,
                                 parseInt(lineTags[i].getAttribute("green")) / 255,
                                 parseInt(lineTags[i].getAttribute("blue")) / 255]),
                     (parseFloat(this._version) >= 2.1 ?
-                            parseFloat(lineTags[i].getAttribute("lum"))
+                            (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
                             // version 2.0
                             : parseInt(lineTags[i].getAttribute("luminosity")) / 255),
                     (parseFloat(this._version) >= 2.1 ?
@@ -1612,8 +1632,8 @@ Application.createModule({name: "Egom",
         var nTriangles = triangleTags.length;
         var params = {};
         for (var i = 0; i < nTriangles; i++) {
-            var minLOD = defaultLOD;
-            var maxLOD = defaultLOD;
+            var minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            var maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
             if (triangleTags[i].hasAttribute("lod")) {
                 var minMaxLOD = triangleTags[i].getAttribute("lod").split("-");
                 minLOD = parseInt(minMaxLOD[0]);
@@ -1622,7 +1642,7 @@ Application.createModule({name: "Egom",
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             params.color = parseFloat(this._version) >= 2.1 ?
-                    triangleTags[i].getAttribute("color").split(",").map(parseFloat)
+                    (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"))] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
                     // version 2.0
                     : [
                         parseInt(triangleTags[i].getAttribute("red")) / 255,
@@ -1630,11 +1650,11 @@ Application.createModule({name: "Egom",
                         parseInt(triangleTags[i].getAttribute("blue")) / 255,
                         (255 - parseInt(triangleTags[i].getAttribute("alpha"))) / 255];
             params.luminosity = parseFloat(this._version) >= 2.1 ?
-                    parseFloat(triangleTags[i].getAttribute("lum"))
+                    (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
                     // version 2.0
                     : parseInt(triangleTags[i].getAttribute("luminosity")) / 255;
             params.shininess = parseFloat(this._version) >= 2.1 ?
-                    parseInt(triangleTags[i].getAttribute("shi"))
+                    (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi")) : defaultShininess)
                     // version 2.0
                     : parseInt(triangleTags[i].getAttribute("shininess"));
             params.texCoords = parseFloat(this._version) >= 2.1 ?
@@ -1693,11 +1713,11 @@ Application.createModule({name: "Egom",
         }
         Application.log("Loaded " + triangleTags.length + " triangles.", 3);
         Application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
-        var str = "";
+        var str = "Number of triangles per LOD for " + this._name + ": ";
         for (i = this._minLOD; i <= this._maxLOD; i++) {
-            str += "[" + i + "]: " + this.getMeshWithLOD(i).getNumOpaqueTriangles() + " ";
+            str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
-        console.log(str);
+        Application.log(str, 3);
     };
 
     /**

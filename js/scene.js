@@ -37,6 +37,56 @@ Application.createModule({name: "Scene",
     var Module;
     // #########################################################################
     /**
+     * @struct Holds a certain LOD configuration to be used for making LOD 
+     * decisions while rendering.
+     * @constructor
+     * @param {Number} maxEnabledLOD The highest LOD that can be chosen while 
+     * rendering.
+     * @param {Number[]} thresholds The threshold size in pixels for each LOD.
+     * For each object the highest LOD, for which its size exceeds the 
+     * threshold, will be used.
+     * @param {Boolean} compensateForObjectSize Whether a compensated object 
+     * size should be taken into account for the LOD decision, taking objects
+     * bigger than a reference size as smaller, and smallers ones as bigger.
+     * This is used to make better LOD decisions for objects spanning a wide
+     * range of sizes, but having more similar size details.
+     * @param {[Number]} referenceSize The size that should be taken as is, when
+     * compensation is enabled.
+     * @returns {LODContext}
+     */
+    function LODContext(maxEnabledLOD, thresholds, compensateForObjectSize, referenceSize) {
+        /**
+         * The highest renderable LOD.
+         * @name LODContext#maxEnabledLOD
+         * @type type Number
+         */
+        this.maxEnabledLOD = parseInt(maxEnabledLOD);
+        /**
+         * The threshold for each LOD that a renderable object must exceed (in 
+         * size) to be drawn with that LOD.
+         * @name LODContext#thresholds
+         * @type Number[]
+         */
+        this.thresholds = thresholds;
+        /**
+         * Whether a compensated object size should be taken into account for 
+         * the LOD decision, taking objects bigger than a reference size as 
+         * smaller, and smallers ones as bigger.
+         * This is used to make better LOD decisions for objects spanning a wide
+         * range of sizes, but having more similar size details.
+         * @name LODContext#compensateForObjectSize
+         * @type Boolean
+         */
+        this.compensateForObjectSize = compensateForObjectSize;
+        /**
+         * The size that should be taken as is, when compensation is enabled.
+         * @name LODContext#referenceSize
+         * @type Number
+         */
+        this.referenceSize = referenceSize;
+    }
+    // #########################################################################
+    /**
      * @class Represents a three dimensional object situated in a virtual space. 
      * This is used as a mixin class, adding its functionality to classes that 
      * have otherwise a different superclass.
@@ -1281,20 +1331,20 @@ Application.createModule({name: "Scene",
         /**
          * Stores all the models representing this mesh at different levels of
          * detail.
-         * @name Mesh#_model
+         * @name ShadedLODMesh#_model
          * @type Model
          */
         this._model = model;
         /**
          * Whether or not the rendering mode of this mesh is wireframe.
-         * @name Mesh#_wireframe
+         * @name ShadedLODMesh#_wireframe
          * @type Boolean
          */
         this._wireframe = wireframe;
         /**
          * The model currently chosen for rendering. Acts as a cached reference
          * to be used after the proper model has been chosen for a frame.
-         * @name Mesh#_currentLOD
+         * @name ShadedLODMesh#_currentLOD
          * @type Number
          */
         this._currentLOD = null;
@@ -1302,10 +1352,17 @@ Application.createModule({name: "Scene",
          * Stores the size of the largest model (of any LOD) representing this
          * object. It is the double of the (absolute) largest coordinate found 
          * among the vertices of the model.
-         * @name Mesh#_modelSize
+         * @name ShadedLODMesh#_modelSize
          * @type Number
          */
         this._modelSize = 0;
+        /**
+         * The factors to use when calculating compensated LOD sizes, order by
+         * the reference sizes.
+         * @name ShadedLODMesh#_lodSizeFactors
+         * @type Object.<String, Number>
+         */
+        this._lodSizeFactors = new Object();
         this.setUniformValueFunction("u_modelMatrix", function () {
             return this.getModelMatrix();
         });
@@ -1336,14 +1393,27 @@ Application.createModule({name: "Scene",
         return this._modelSize;
     };
     /**
-     * Returns the model that has the appropriate LOD for passed the render 
-     * parameters.
+     * 
+     * @param {Number} visibleSize
+     * @param {Number} referenceSize
+     * @returns {Number}
+     */
+    ShadedLODMesh.prototype.getLODSize = function (visibleSize, referenceSize) {
+        if (this._lodSizeFactors[referenceSize.toString()] === undefined) {
+            this._lodSizeFactors[referenceSize.toString()] = Math.log10(referenceSize + 10) / Math.log10(this.getScaledSize() + 10);
+        }
+        return visibleSize * this._lodSizeFactors[referenceSize.toString()];
+    };
+    /**
+     * Returns the LOD that should be used when rendering using the passed 
+     * render parameters.
      * @param {RenderParameters} renderParameters
-     * @returns {Model}
+     * @returns {Number}
      */
     ShadedLODMesh.prototype.getCurrentLOD = function (renderParameters) {
         if (this._currentLOD === null) {
             var visibleSize = this.getSizeInPixels(renderParameters);
+            var lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
             this._currentLOD = -1;
             for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
                 if (
@@ -1351,9 +1421,9 @@ Application.createModule({name: "Scene",
                         (i <= renderParameters.lodContext.maxEnabledLOD) &&
                         (
                                 (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] > visibleSize) && (renderParameters.lodContext.thresholds[i] <= visibleSize)) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] <= visibleSize) && (renderParameters.lodContext.thresholds[i] <= visibleSize) && (i > this._currentLOD)) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] > visibleSize) && (renderParameters.lodContext.thresholds[i] > visibleSize) && (i < this._currentLOD))
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
                                 )) {
                     this._currentLOD = i;
                 }
@@ -1457,7 +1527,7 @@ Application.createModule({name: "Scene",
             for (var j = 0; j < parameterArrays[i].length; j++) {
                 this._parameterArrays[parameterArrays[i].name][j] = 0.0;
             }
-            this.setUniformValueFunction("u_"+parameterArrays[i].name, this.createGetParameterArrayFunction(parameterArrays[i].name));
+            this.setUniformValueFunction("u_" + parameterArrays[i].name, this.createGetParameterArrayFunction(parameterArrays[i].name));
         }
     }
     ParameterizedMesh.prototype = new ShadedLODMesh([]);
@@ -2592,7 +2662,7 @@ Application.createModule({name: "Scene",
      * @returns {RenderableObject}
      */
     Scene.prototype.getNextObject = function (currentObject) {
-        for (var i = 0; i < this.objects.length; i++) {
+        for (var i = 0, $ = this.objects.length; i < $; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === (this.objects.length - 1)) ?
                         this.objects[0] :
@@ -2607,7 +2677,7 @@ Application.createModule({name: "Scene",
      * @returns {RenderableObject}
      */
     Scene.prototype.getPreviousObject = function (currentObject) {
-        for (var i = 0; i < this.objects.length; i++) {
+        for (var i = 0, $ = this.objects.length; i < $; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === 0) ?
                         this.objects[this.objects.length - 1] :
@@ -2666,7 +2736,7 @@ Application.createModule({name: "Scene",
         var i;
         this.width = newWidth;
         this.height = newHeight;
-        for (var i = 0; i < this.cameras.length; i++) {
+        for (var i = 0, $ = this.cameras.length; i < $; i++) {
             this.cameras[i].setAspect(this.width / this.height);
         }
         this.activeCamera.setAspect(this.width / this.height);
@@ -2702,7 +2772,7 @@ Application.createModule({name: "Scene",
      * @param {ManagedGLContext} context
      */
     Scene.prototype.addToContext = function (context) {
-        var i;
+        var i, $;
         if (this._shadowMappingEnabled) {
             this._shadowMappingShader.addToContext(context);
             var self = this;
@@ -2719,13 +2789,13 @@ Application.createModule({name: "Scene",
         for (i = 0; i < this.lights.length; i++) {
             this.lights[i].addToContext(context, i, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
-        for (i = 0; i < this._backgroundObjects.length; i++) {
+        for (i = 0, $ = this._backgroundObjects.length; i < $; i++) {
             this._backgroundObjects[i].addToContext(context);
         }
-        for (i = 0; i < this.objects.length; i++) {
+        for (i = 0, $ = this.objects.length; i < $; i++) {
             this.objects[i].addToContext(context);
         }
-        for (i = 0; i < this._resourceHolderObjects.length; i++) {
+        for (i = 0, $ = this._resourceHolderObjects.length; i < $; i++) {
             this._resourceHolderObjects[i].addToContext(context);
         }
         this._contexts.push(context);
@@ -2781,7 +2851,7 @@ Application.createModule({name: "Scene",
         gl.depthMask(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        for (var i = 0; i < this.objects.length; i++) {
+        for (var i = 0, $ = this.objects.length; i < $; i++) {
             this.objects[i].renderToShadowMap(context, this.width, this.height);
         }
     };
@@ -2799,7 +2869,7 @@ Application.createModule({name: "Scene",
 
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
-        for (var i = 0; i < this.objects.length; i++) {
+        for (var i = 0, $ = this.objects.length; i < $; i++) {
             this.objects[i].resetForNewFrame();
         }
 
@@ -2855,7 +2925,7 @@ Application.createModule({name: "Scene",
             this.assignUniforms(context, context.getCurrentShader());
         }
 
-        for (var i = 0; i < this._backgroundObjects.length; i++) {
+        for (var i = 0, $ = this._backgroundObjects.length; i < $; i++) {
             this._backgroundObjects[i].resetForNewFrame();
             this._backgroundObjects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this._backgroundObjects[i].getNumberOfDrawnTriangles();
@@ -2868,7 +2938,7 @@ Application.createModule({name: "Scene",
         // Z buffer writing turned on
         Module.log("Rendering transparent phase...", 4);
         gl.disable(gl.BLEND);
-        for (var i = 0; i < this.objects.length; i++) {
+        for (var i = 0, $ = this.objects.length; i < $; i++) {
             Module.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, true);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
@@ -2878,7 +2948,7 @@ Application.createModule({name: "Scene",
         Module.log("Rendering opaque phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
-        for (var i = 0; i < this.objects.length; i++) {
+        for (var i = 0, $ = this.objects.length; i < $; i++) {
             Module.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
@@ -2888,10 +2958,12 @@ Application.createModule({name: "Scene",
     // -------------------------------------------------------------------------
     // The public interface of the module
     Module = {
+        LODContext: LODContext,
         Scene: Scene,
         LightSource: LightSource,
         Camera: Camera,
         RenderableObject: RenderableObject,
+        RenderableObject3D: RenderableObject3D,
         RenderableNode: RenderableNode,
         CubemapSampledFVQ: CubemapSampledFVQ,
         ShadedLODMesh: ShadedLODMesh,

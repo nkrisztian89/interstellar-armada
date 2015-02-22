@@ -2,7 +2,7 @@
 <settings>
     <graphics>
         <context antialiasing="true" filtering="trilinear" shadowMapping="true">
-            <shadows quality="2048" ranges="25,60,125,250,500,1000" numRanges="4" depthRatio="1.5" />
+            <shadows quality="2048" ranges="10,30,90,200,400,1000" numRanges="4" depthRatio="1.5" />
         </context>
         <shaders source="shaders.xml" complexity="normal" />
         <levelOfDetailSettings>
@@ -12,7 +12,7 @@
                 <limit screenSizeLessThan="500" level="2" />
                 <limit screenSizeLessThan="800" level="3" />
             </lodLoadProfile>
-            <lodDisplayProfile maxLevel="4">
+            <lodDisplayProfile maxLevel="4" compensateForObjectSize="true" referenceSize="100">
                 <limit objectSizeLessThan="30" level="0" />
                 <limit objectSizeLessThan="60" level="1" />
                 <limit objectSizeLessThan="250" level="2" />

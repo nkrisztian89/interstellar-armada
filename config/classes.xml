@@ -94,7 +94,7 @@
     </ProjectileClass>
 	
     <WeaponClass name="plasma">
-        <model filename="weapons/plasma.egm" lod="1" />
+        <model filename="weapons/plasma_lod0-4.egm" lod="4" />
         <logic cooldown="250" />
         <barrels>
             <barrel projectile="plasma" force="1200" x="0" y="10" z="0" />
@@ -102,10 +102,11 @@
     </WeaponClass>
 	
     <WeaponClass name="turret">
-        <model filename="weapons/turret_lod3.egm" lod="3" />
+        <!--model filename="weapons/turret_lod3.egm" lod="3" />
         <model filename="weapons/turret_lod2.egm" lod="2" />
         <model filename="weapons/turret_lod1.egm" lod="1" />
-        <model filename="weapons/turret_lod0.egm" lod="0" />
+        <model filename="weapons/turret_lod0.egm" lod="0" /-->
+        <model filename="weapons/turret_lod0-4.egm" lod="4" />
         <logic cooldown="250" />
         <barrels>
             <barrel projectile="plasma" force="1500" x="2" y="25" z="10" />
@@ -142,7 +143,7 @@
         <shader name="permanentParticle" />
         <texture filename="textures/flare.png" />
         <color r="0.0" g="0.8" b="1.0" />
-        <power thrust="50 * 10" angularThrust="90 * 10" />
+        <power thrust="50 * 10" angularThrust="180 * 10" />
     </PropulsionClass>
         
     <PropulsionClass name="bomber">
@@ -203,11 +204,12 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="falcon_lod4.egm" lod="4"/>
+            <!--model filename="falcon_lod4.egm" lod="4"/>
             <model filename="falcon_lod3.egm" lod="3"/>
             <model filename="falcon_lod2.egm" lod="2"/>
             <model filename="falcon_lod1.egm" lod="1"/>
-            <model filename="falcon_lod0.egm" lod="0"/>
+            <model filename="falcon_lod0.egm" lod="0"/-->
+            <model filename="falcon_lod0-4.egm" lod="4"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -313,11 +315,12 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="viper_lod4.egm" lod="4"/>
+            <!--model filename="viper_lod4.egm" lod="4"/>
             <model filename="viper_lod3.egm" lod="3"/>
             <model filename="viper_lod2.egm" lod="2"/>
             <model filename="viper_lod1.egm" lod="1"/>
-            <model filename="viper_lod0.egm" lod="0"/>
+            <model filename="viper_lod0.egm" lod="0"/-->
+            <model filename="viper_lod0-4.egm" lod="4"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -421,7 +424,7 @@
             <model filename="aries_lod2.egm" lod="2" />
             <model filename="aries_lod1.egm" lod="1" />
             <model filename="aries_lod0.egm" lod="0" /-->
-            <model filename="aries_lod0-4.egm" lod="0" />
+            <model filename="aries_lod0-4.egm" lod="4" />
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -511,7 +514,7 @@
             <model filename="taurus_lod2.egm" lod="2"/>
             <model filename="taurus_lod1.egm" lod="1"/>
             <model filename="taurus_lod0.egm" lod="0"/-->
-            <model filename="taurus_lod0-4.egm" lod="0"/>
+            <model filename="taurus_lod0-4.egm" lod="4"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -653,7 +656,7 @@
             <model filename="libra_lod2.egm" lod="2"/>
             <model filename="libra_lod1.egm" lod="1"/>
             <model filename="libra_lod0.egm" lod="0"/-->
-            <model filename="libra_lod0-4.egm" lod="0"/>
+            <model filename="libra_lod0-4.egm" lod="4"/>
         </models>
         <texture filename="textures/libra.png" type="color" />
         <texture filename="textures/libra_specular.png" type="specular" />

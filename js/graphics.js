@@ -29,32 +29,13 @@
 Application.createModule({name: "Graphics",
     dependencies: [
         {module: "Resource", from: "resource.js"},
-        {module: "GL", from: "gl.js"}]}, function () {
+        {module: "GL", from: "gl.js"},
+        {module: "Scene", from: "scene.js"}]}, function () {
     // create a reference to the used modules in the local scope for cleaner and
     // faster access
     var Resource = Application.Resource.Resource;
     var GL = Application.GL;
-    /**
-     * @class Holds a certain LOD configuration to be used for making LOD decisions while rendering.
-     * @param {number} maxEnabledLOD The highest LOD that can be chosen while rendering.
-     * @param {number[]} thresholds The threshold size in pixels for each LOD.
-     * For each object the highest LOD, for which its size exceeds the threshold, will be used.
-     */
-    function LODContext(maxEnabledLOD, thresholds) {
-        /**
-         * The highest renderable LOD.
-         * @name LODContext#maxEnabledLOD
-         * @type type Number
-         */
-        this.maxEnabledLOD = parseInt(maxEnabledLOD);
-        /**
-         * The threshold for each LOD that a renderable object must exceed (in size)
-         * to be drawn with that LOD.
-         * @name LODContext#thresholds
-         * @type Number[]
-         */
-        this.thresholds = thresholds;
-    }
+    var Scene = Application.Scene;
 
     /**
      * @class A graphics context for other modules, to be used to pass the 
@@ -226,7 +207,11 @@ Application.createModule({name: "Graphics",
         for (i = 0; i < lodDisplayLimitTags.length; i++) {
             lodDisplayLimits[parseInt(lodDisplayLimitTags[i].getAttribute("level")) + 1] = parseInt(lodDisplayLimitTags[i].getAttribute("objectSizeLessThan"));
         }
-        this._lodContext = new LODContext(parseInt(lodDisplayProfileTag.getAttribute("maxLevel")), lodDisplayLimits);
+        this._lodContext = new Scene.LODContext(
+                parseInt(lodDisplayProfileTag.getAttribute("maxLevel")),
+                lodDisplayLimits,
+                (lodDisplayProfileTag.getAttribute("compensateForObjectSize") === "true"),
+                parseInt(lodDisplayProfileTag.getAttribute("referenceSize")));
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.

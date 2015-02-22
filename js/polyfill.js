@@ -35,3 +35,13 @@ Math.sign = Math.sign || function (x) {
         return x;
     return x > 0 ? 1 : -1;
 };
+
+/**
+ * Math.log10 from ECMAScript 6, only implemented in Chrome, Firefox and recent
+ * Opera.
+ * @param {Number} x
+ * @returns {Number}
+ */
+Math.log10 = Math.log10 || function(x) {
+  return Math.log(x) / Math.LN10;
+};
