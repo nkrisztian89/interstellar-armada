@@ -55,6 +55,12 @@ Application.createModule({name: "Logic",
      */
     var muzzleFlashTimeLength = 500;
     /**
+     * Default seed to use for generating random numbers to alloc consistent
+     * and comparable testing.
+     * @type Number
+     */
+    var defaultRandomSeed = 4718;
+    /**
      * @class Represents a skybox that can be added to a scene to render the
      * background using a cube mapped texture defined by the passed class of the
      * skybox.
@@ -2148,25 +2154,28 @@ Application.createModule({name: "Logic",
      * ships around the Y axis of thier orientation matrix.
      * @param {Boolean} randomTurnAroundZ Whether to randomly turn the placed
      * ships around the Z axis of their orientation matrix.
+     * @param {Number} [randomSeed]
      */
-    Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ) {
+    Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ, randomSeed) {
+        randomSeed = randomSeed || defaultRandomSeed;
+        var random = Math.seed(randomSeed);
         for (var shipClass in shipNumbersPerClass) {
             for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
                 var orientation = orientationMatrix ?
                         Mat.matrix4(orientationMatrix) : Mat.identity4();
                 if (randomTurnAroundZ) {
-                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowC4(orientation), Math.random() * Math.PI * 2));
+                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowC4(orientation), random() * Math.PI * 2));
                 }
                 if (randomTurnAroundX) {
-                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowA4(orientationMatrix || Mat.identity4()), Math.random() * Math.PI * 2));
+                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowA4(orientationMatrix || Mat.identity4()), random() * Math.PI * 2));
                 }
                 if (randomTurnAroundY) {
-                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowB4(orientationMatrix || Mat.identity4()), Math.random() * Math.PI * 2));
+                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowB4(orientationMatrix || Mat.identity4()), random() * Math.PI * 2));
                 }
                 this._spacecrafts.push(
                         new Spacecraft(
                                 Armada.logic().getSpacecraftClass(shipClass),
-                                Mat.translation4(Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2, Math.random() * mapSize - mapSize / 2),
+                                Mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                                 orientation,
                                 this._projectiles,
                                 "default"));

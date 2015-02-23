@@ -1221,8 +1221,9 @@ Application.createModule({name: "Scene",
             if (this.isInsideParent() === true) {
                 if ((renderParameters.parent.isInsideViewFrustum === undefined) || (renderParameters.parent.isInsideViewFrustum(renderParameters))) {
                     var visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
-                    this._visibleSize.width = visibleSize.width;
-                    this._visibleSize.height = visibleSize.height;
+                    var relativeFactor = this.getSize() / renderParameters.parent.getSize();
+                    this._visibleSize.width = visibleSize.width * relativeFactor;
+                    this._visibleSize.height = visibleSize.height * relativeFactor;
                     if (renderParameters.parent.getSizeInPixels(renderParameters) < this._smallestParentSizeWhenDrawn) {
                         return false;
                     }

@@ -45,3 +45,18 @@ Math.sign = Math.sign || function (x) {
 Math.log10 = Math.log10 || function(x) {
   return Math.log(x) / Math.LN10;
 };
+
+/**
+ * The seed of the standard random number function is not controllable, which
+ * prevents consistent testing with the same pseudo random sample data. This
+ * is a quick and relatively good replacement which returns a custom seeded
+ * PRNG function.
+ * @param {Number} s The seed the resulting function should use.
+ * @returns {Function} A PRNG that returns pseudo random numbers between 0.0
+ * and 1.0 with each call, and uses the supplied seed.
+ */
+Math.seed = function(s) {
+    return function() {
+        s = Math.sin(s) * 10000; return s - Math.floor(s);
+    };
+};

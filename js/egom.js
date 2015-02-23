@@ -1717,7 +1717,7 @@ Application.createModule({name: "Egom",
         for (i = this._minLOD; i <= this._maxLOD; i++) {
             str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
-        Application.log(str, 3);
+        Application.log(str, 2);
     };
 
     /**

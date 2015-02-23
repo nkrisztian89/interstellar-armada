@@ -54,7 +54,7 @@
     </Spacecraft>
 	
     <Spacecraft class="libra">
-        <position x="-100" y="400" z="-400" />
+        <position x="-100" y="500" z="-400" />
         <orientation>
             <turn axis="z" degree="90" />
         </orientation>
