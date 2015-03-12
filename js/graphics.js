@@ -211,7 +211,8 @@ Application.createModule({name: "Graphics",
                 parseInt(lodDisplayProfileTag.getAttribute("maxLevel")),
                 lodDisplayLimits,
                 (lodDisplayProfileTag.getAttribute("compensateForObjectSize") === "true"),
-                parseInt(lodDisplayProfileTag.getAttribute("referenceSize")));
+                parseInt(lodDisplayProfileTag.getAttribute("referenceSize")),
+                parseFloat(lodDisplayProfileTag.getAttribute("minimumRelativeSize")));
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.

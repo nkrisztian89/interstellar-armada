@@ -52,9 +52,13 @@ Application.createModule({name: "Scene",
      * range of sizes, but having more similar size details.
      * @param {[Number]} referenceSize The size that should be taken as is, when
      * compensation is enabled.
+     * @param {[Number]} minimumRelativeSize If the relative size of a object 
+     * inside a parent (compared to the size of the parent) is smaller than this
+     * value, this value will be used instead to calculate the relative visible
+     * size.
      * @returns {LODContext}
      */
-    function LODContext(maxEnabledLOD, thresholds, compensateForObjectSize, referenceSize) {
+    function LODContext(maxEnabledLOD, thresholds, compensateForObjectSize, referenceSize, minimumRelativeSize) {
         /**
          * The highest renderable LOD.
          * @name LODContext#maxEnabledLOD
@@ -83,7 +87,15 @@ Application.createModule({name: "Scene",
          * @name LODContext#referenceSize
          * @type Number
          */
-        this.referenceSize = referenceSize;
+        this.referenceSize = referenceSize || 100;
+        /**
+         * If the relative size of a object inside a parent (compared to the 
+         * size of the parent) is smaller than this value, this value will be 
+         * used instead to calculate the relative visible size.
+         * @name LODContext#minimumRelativeSize
+         * @type Number
+         */
+        this.minimumRelativeSize = minimumRelativeSize || 0.05;
     }
     // #########################################################################
     /**
@@ -1126,14 +1138,6 @@ Application.createModule({name: "Scene",
          * @type Number
          */
         this._smallestSizeWhenDrawn = 0;
-        /**
-         * If the visible width or height of the parent is below this limit, and
-         * the object is situated within the parent, the object will not be 
-         * rendered. (measured in pixels)
-         * @name RenderableObject3D#_smallestParentSizeWhenDrawn
-         * @type Number
-         */
-        this._smallestParentSizeWhenDrawn = 0;
     }
 
     RenderableObject3D.prototype = new RenderableObject();
@@ -1146,13 +1150,6 @@ Application.createModule({name: "Scene",
      */
     RenderableObject3D.prototype.setSmallestSizeWhenDrawn = function (value) {
         this._smallestSizeWhenDrawn = value;
-    };
-    /**
-     * Sets a new minimum parent size limit, below which rendering will be disabled.
-     * @param {Number} value
-     */
-    RenderableObject3D.prototype.setSmallestParentSizeWhenDrawn = function (value) {
-        this._smallestParentSizeWhenDrawn = value;
     };
     /**
      * Returns the size of the object on the screen, using the frustum of the
@@ -1221,10 +1218,10 @@ Application.createModule({name: "Scene",
             if (this.isInsideParent() === true) {
                 if ((renderParameters.parent.isInsideViewFrustum === undefined) || (renderParameters.parent.isInsideViewFrustum(renderParameters))) {
                     var visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
-                    var relativeFactor = this.getSize() / renderParameters.parent.getSize();
+                    var relativeFactor = Math.max(this.getSize() / renderParameters.parent.getSize(), renderParameters.lodContext.minimumRelativeSize);
                     this._visibleSize.width = visibleSize.width * relativeFactor;
                     this._visibleSize.height = visibleSize.height * relativeFactor;
-                    if (renderParameters.parent.getSizeInPixels(renderParameters) < this._smallestParentSizeWhenDrawn) {
+                    if (this.getSizeInPixels(renderParameters) < this._smallestSizeWhenDrawn) {
                         return false;
                     }
                     return true;
@@ -1327,7 +1324,6 @@ Application.createModule({name: "Scene",
     function ShadedLODMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe) {
         RenderableObject3D.call(this, shader, true, true, positionMatrix, orientationMatrix, scalingMatrix);
         this.setSmallestSizeWhenDrawn(5);
-        this.setSmallestParentSizeWhenDrawn(25);
         this.setTextures(textures);
         /**
          * Stores all the models representing this mesh at different levels of
@@ -1629,7 +1625,6 @@ Application.createModule({name: "Scene",
     function DynamicParticle(model, shader, texture, color, size, positionMatrix, duration) {
         RenderableObject3D.call(this, shader, false, true, positionMatrix, Mat.identity4(), Mat.scaling4(size));
         this.setSmallestSizeWhenDrawn(4);
-        this.setSmallestParentSizeWhenDrawn(20);
         this.model = model;
         this.setTexture("color", texture);
         this.color = color;
@@ -2663,7 +2658,7 @@ Application.createModule({name: "Scene",
      * @returns {RenderableObject}
      */
     Scene.prototype.getNextObject = function (currentObject) {
-        for (var i = 0, $ = this.objects.length; i < $; i++) {
+        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === (this.objects.length - 1)) ?
                         this.objects[0] :
@@ -2678,7 +2673,7 @@ Application.createModule({name: "Scene",
      * @returns {RenderableObject}
      */
     Scene.prototype.getPreviousObject = function (currentObject) {
-        for (var i = 0, $ = this.objects.length; i < $; i++) {
+        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === 0) ?
                         this.objects[this.objects.length - 1] :
@@ -2737,7 +2732,7 @@ Application.createModule({name: "Scene",
         var i;
         this.width = newWidth;
         this.height = newHeight;
-        for (var i = 0, $ = this.cameras.length; i < $; i++) {
+        for (var i = 0, _length_ = this.cameras.length; i < _length_; i++) {
             this.cameras[i].setAspect(this.width / this.height);
         }
         this.activeCamera.setAspect(this.width / this.height);
@@ -2773,7 +2768,7 @@ Application.createModule({name: "Scene",
      * @param {ManagedGLContext} context
      */
     Scene.prototype.addToContext = function (context) {
-        var i, $;
+        var i, _length_;
         if (this._shadowMappingEnabled) {
             this._shadowMappingShader.addToContext(context);
             var self = this;
@@ -2790,13 +2785,13 @@ Application.createModule({name: "Scene",
         for (i = 0; i < this.lights.length; i++) {
             this.lights[i].addToContext(context, i, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
-        for (i = 0, $ = this._backgroundObjects.length; i < $; i++) {
+        for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
             this._backgroundObjects[i].addToContext(context);
         }
-        for (i = 0, $ = this.objects.length; i < $; i++) {
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             this.objects[i].addToContext(context);
         }
-        for (i = 0, $ = this._resourceHolderObjects.length; i < $; i++) {
+        for (i = 0, _length_ = this._resourceHolderObjects.length; i < _length_; i++) {
             this._resourceHolderObjects[i].addToContext(context);
         }
         this._contexts.push(context);
@@ -2852,7 +2847,7 @@ Application.createModule({name: "Scene",
         gl.depthMask(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        for (var i = 0, $ = this.objects.length; i < $; i++) {
+        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             this.objects[i].renderToShadowMap(context, this.width, this.height);
         }
     };
@@ -2870,7 +2865,7 @@ Application.createModule({name: "Scene",
 
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
-        for (var i = 0, $ = this.objects.length; i < $; i++) {
+        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             this.objects[i].resetForNewFrame();
         }
 
@@ -2926,7 +2921,7 @@ Application.createModule({name: "Scene",
             this.assignUniforms(context, context.getCurrentShader());
         }
 
-        for (var i = 0, $ = this._backgroundObjects.length; i < $; i++) {
+        for (var i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
             this._backgroundObjects[i].resetForNewFrame();
             this._backgroundObjects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this._backgroundObjects[i].getNumberOfDrawnTriangles();
@@ -2939,7 +2934,7 @@ Application.createModule({name: "Scene",
         // Z buffer writing turned on
         Module.log("Rendering transparent phase...", 4);
         gl.disable(gl.BLEND);
-        for (var i = 0, $ = this.objects.length; i < $; i++) {
+        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             Module.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, true);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
@@ -2949,7 +2944,7 @@ Application.createModule({name: "Scene",
         Module.log("Rendering opaque phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
-        for (var i = 0, $ = this.objects.length; i < $; i++) {
+        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             Module.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();

@@ -1782,7 +1782,7 @@ Application.createModule({name: "Logic",
             }
         }
         if (model === null) {
-            model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[0].filename);
+            model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[0].filename, this._class.modelReferences[i].lod);
         }
         // cash the references to the textures
         var textures = this.getTextures();

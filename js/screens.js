@@ -729,6 +729,7 @@ Application.createModule({name: "Screens",
 
     BattleScreen.prototype.startNewBattle = function (levelSourceFilename) {
         document.body.style.cursor = 'wait';
+        var loadingStartTime = new Date();
         this.hideStats();
         this.hideUI();
         this.hideCrosshair();
@@ -775,6 +776,7 @@ Application.createModule({name: "Screens",
                 self.updateStatus("initializing WebGL...", 75);
                 self.bindSceneToCanvas(self._battleScene, self.getScreenCanvas("battleCanvas"));
                 self.updateStatus("", 100);
+                Application.log("Game data loaded in "+((new Date()-loadingStartTime)/1000).toFixed(3)+" seconds!",1);
                 self._smallHeader.setContent("running an early test of Interstellar Armada, version: " + Armada.getVersion());
                 Armada.control().switchToSpectatorMode();
                 self._battleCursor = document.body.style.cursor;
