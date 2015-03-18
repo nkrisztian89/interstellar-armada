@@ -2012,15 +2012,17 @@ Application.createModule({name: "GL",
      * present yet, adds it, then returns it.
      * @param {String} modelName
      * @param {String} filename The name of the file of the model resource we are looking for.
-     * @param {Number} [lod=0]
+     * @param {Boolean} fileIsMultiLOD
+     * @param {Number} [lod]
      * @returns {EgomModel} The found or added model object in the resource manager.
      */
-    ResourceManager.prototype.getOrAddModelFromFile = function (modelName, filename, lod) {
+    ResourceManager.prototype.getOrAddModelFromFile = function (modelName, filename, fileIsMultiLOD, lod) {
         if (this._models[modelName] === undefined) {
             this._numModels += 1;
             this.resetReadyState();
             this._models[modelName] = new Egom.Model();
-            this._models[modelName].setSourceFileForLOD(filename, lod);
+            console.log("Setting filename of " + modelName + " for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + filename);
+            this._models[modelName].setSourceFileForLOD(filename, fileIsMultiLOD, lod);
             this._models[modelName].executeWhenReady(function () {
                 this._numModelsLoaded += 1;
                 this.onResourceLoad(modelName, this.getNumberOfResources(), this.getNumberOfLoadedResources());
@@ -2032,7 +2034,8 @@ Application.createModule({name: "GL",
                 }
             }.bind(this));
         } else {
-            this._models[modelName].setSourceFileForLOD(filename, lod);
+            console.log("Setting filename of " + modelName + " for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + filename);
+            this._models[modelName].setSourceFileForLOD(filename, fileIsMultiLOD, lod);
         }
         return this._models[modelName];
     };

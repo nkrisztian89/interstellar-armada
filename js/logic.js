@@ -451,34 +451,8 @@ Application.createModule({name: "Logic",
      * mode.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
-        var closestLOD = -1;
-        ///TODO: refactor the model selection
-        // loading or setting models
-        var model = null;
-        for (var i = 0; i < this._class.modelReferences.length; i++) {
-            if (((lod === undefined) && (this._class.modelReferences[i].lod <= Armada.graphics().getMaxLoadedLOD())) ||
-                    ((lod !== undefined) && (this._class.modelReferences[i].lod === lod))) {
-                model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[i].filename, this._class.modelReferences[i].lod);
-            }
-            // in case no suitable LOD is available, remember which one was the closest to make sure we
-            // can load at least one
-            if ((closestLOD === -1) || (
-                    ((lod === undefined) && (this._class.modelReferences[i].lod < closestLOD)) ||
-                    ((lod !== undefined) && (this._class.modelReferences[i].lod > closestLOD))
-                    )) {
-                closestLOD = this._class.modelReferences[i].lod;
-            }
-        }
-        // if no suitable LOD could be found, load the closest one
-        if (!model) {
-            for (i = 0; i < this._class.modelReferences.length; i++) {
-                if (this._class.modelReferences[i].lod === closestLOD) {
-                    model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[i].filename, this._class.modelReferences[i].lod);
-                }
-            }
-        }
         this._visualModel = new Scene.ShadedLODMesh(
-                model,
+                this._class.addModelToResourceManager(this._class.name, lod),
                 Armada.resources().getShader(this._spacecraft.getClass().shaderName),
                 this._spacecraft.getTextures(),
                 this._slot.positionMatrix,
@@ -1724,7 +1698,7 @@ Application.createModule({name: "Logic",
      * @param {Number} index The index of the body to represent.
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
-        var phyModel = 
+        var phyModel =
                 Armada.resources().getOrAddModelByName(
                 Egom.cuboidModel(
                         this._class.name + "-body" + index,
@@ -1770,25 +1744,11 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements) {
         var i;
-        var model = null;
-        ///TODO: refactor model selection
-        // loading or setting models
-        // if no specific level of detail is given, load all that are within the global LOD load limit
-        // if a specific LOD is given only load that one
-        for (i = 0; i < this._class.modelReferences.length; i++) {
-            if (((lod === undefined) && (Armada.graphics().getMaxLoadedLOD() >= this._class.modelReferences[i].lod)) ||
-                    ((lod !== undefined) && (this._class.modelReferences[i].lod === lod))) {
-                model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[i].filename, this._class.modelReferences[i].lod);
-            }
-        }
-        if (model === null) {
-            model = Armada.resources().getOrAddModelFromFile(this._class.name, this._class.modelReferences[0].filename, this._class.modelReferences[i].lod);
-        }
         // cash the references to the textures
         var textures = this.getTextures();
         // add the main model of the spacecraft
         this._visualModel = new Scene.ParameterizedMesh(
-                model,
+                this._class.addModelToResourceManager(this._class.name, lod),
                 Armada.resources().getShader(this._class.shaderName),
                 textures,
                 this._physicalModel.getPositionMatrix(),

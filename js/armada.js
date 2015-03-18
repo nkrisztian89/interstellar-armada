@@ -43,7 +43,7 @@ var Armada = Armada || (function (app) {
      * @name Armada#_version
      * @type String
      */
-    var _version = "0.1.0:106+refactoring-6";
+    var _version = "0.1.0:106+refactoring-7";
     /**
      * Holds the Game object that contains the fields and methods of game 
      * instance, such as methods for loading the configuration and resources of 
@@ -67,7 +67,7 @@ var Armada = Armada || (function (app) {
         level: "levels/",
         environment: "levels/"
     });
-    app.setLogVerbosity(0);
+    app.setLogVerbosity(2);
     // -------------------------------------------------------------------------
     // Public methods
     /**

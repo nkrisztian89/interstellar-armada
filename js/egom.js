@@ -511,8 +511,8 @@ Application.createModule({name: "Egom",
         this.setVertex(this._vertices.length, new Vertex(position, texCoords));
     };
 
-    Mesh.prototype.resetLines = function (count) {
-        this._lines = new Array(count);
+    Mesh.prototype.resetLines = function () {
+        this._lines = [];
     };
 
     Mesh.prototype.addLine = function (line) {
@@ -1276,7 +1276,8 @@ Application.createModule({name: "Egom",
          * @name Model#_filenames
          * @type Array.<String>
          */
-        this._filenames = new Array();
+        this._singleLODFilenames = [];
+        this._multiLODFilenames = [];
         /**
          * The version string identifying the exact format of the model file.
          * @name Model#_version
@@ -1302,7 +1303,7 @@ Application.createModule({name: "Egom",
          * @name Model#_contextProperties
          * @type Object.<String, ModelContextProperties>
          */
-        this._contextProperties = new Object();
+        this._contextProperties = {};
         this._numFilesToLoad = 0;
         this._numLoadedFiles = 0;
         this.setToReady();
@@ -1330,15 +1331,17 @@ Application.createModule({name: "Egom",
 
     /**
      * @param {String} filename
+     * @param {Boolean} fileIsMultiLOD
      * @param {Number} [lod=0]
      */
-    Model.prototype.setSourceFileForLOD = function (filename, lod) {
+    Model.prototype.setSourceFileForLOD = function (filename, fileIsMultiLOD, lod) {
+        var i, filenames = fileIsMultiLOD ? this._multiLODFilenames : this._singleLODFilenames;
         lod = lod || 0;
-        for (var i = this._filenames.length; i <= lod; i++) {
-            this._filenames.push("");
+        for (i = filenames.length; i <= lod; i++) {
+            filenames.push("");
         }
-        if (this._filenames[lod] !== filename) {
-            this._filenames[lod] = filename;
+        if (filenames[lod] !== filename) {
+            filenames[lod] = filename;
             this.resetReadyState();
         }
     };
@@ -1356,9 +1359,9 @@ Application.createModule({name: "Egom",
         }
     };
 
-    Model.prototype.createXMLLoaderFunctionForLOD = function (lod) {
+    Model.prototype.createXMLLoaderFunctionForLOD = function (lod, multi) {
         return function (responseXML) {
-            this._loadFromXML(this._filenames[lod], responseXML, lod);
+            this._loadFromXML(multi ? this._multiLODFilenames[lod] : this._singleLODFilenames[lod], responseXML, lod);
             this._numLoadedFiles++;
             if (this._numLoadedFiles === this._numFilesToLoad) {
                 this.setToReady();
@@ -1374,9 +1377,10 @@ Application.createModule({name: "Egom",
      * the request will not be issued)
      */
     Model.prototype.requestLoadFromFiles = function () {
+        var i, lod;
         // only issue the request if the model is not already loaded
         if (!this.isReadyToUse()) {
-            if (this._filenames.length === 0) {
+            if ((this._singleLODFilenames.length === 0) && (this._multiLODFilenames.length === 0)) {
                 Application.showError(
                         "Attempting to load a model from file, but no filenames were specified.",
                         null,
@@ -1385,10 +1389,25 @@ Application.createModule({name: "Egom",
             }
             this._numFilesToLoad = 0;
             this._numLoadedFiles = 0;
-            for (var i = 0; i < this._filenames.length; i++) {
-                if (this._filenames[i].length > 0) {
+            // loading the highest LOD multi-LOD file
+            Application.log("Choosing highest LOD multi-LOD file for " + this._name + "...");
+            lod = -1;
+            for (i = 0; i < this._multiLODFilenames.length; i++) {
+                Application.log("LOD " + i + ": " + this._multiLODFilenames[i]);
+                if (this._multiLODFilenames[i].length > 0) {
+                    lod = i;
+                }
+            }
+            if (lod >= 0) {
+                this._numFilesToLoad++;
+                Application.requestXMLFile("model", this._multiLODFilenames[lod], this.createXMLLoaderFunctionForLOD(lod, true));
+            }
+            // loading any requested single LOD files with higher LOD than the
+            // highest multi-LOD one
+            for (i = 0; i < this._singleLODFilenames.length; i++) {
+                if ((this._singleLODFilenames[i].length > 0) && (i > lod)) {
                     this._numFilesToLoad++;
-                    Application.requestXMLFile("model", this._filenames[i], this.createXMLLoaderFunctionForLOD(i));
+                    Application.requestXMLFile("model", this._singleLODFilenames[i], this.createXMLLoaderFunctionForLOD(i, false));
                 }
             }
             return true;
@@ -1623,7 +1642,7 @@ Application.createModule({name: "Egom",
                                 -parseFloat(lineTags[i].getAttribute("ny")),
                                 -parseFloat(lineTags[i].getAttribute("nz"))]));
             for (var j = minLOD; j <= maxLOD; j++) {
-                this.getMeshWithLOD(j).setLine(i, line);
+                this.getMeshWithLOD(j).addLine(line);
             }
         }
         Application.log("Loaded " + nLines + " lines.", 3);

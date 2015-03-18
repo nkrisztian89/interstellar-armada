@@ -1115,7 +1115,7 @@ Application.createModule({name: "Screens",
             this._wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
                 return (this._revealState <= 1.0) ? (this._itemLength / 10) : 0;
             }, this);
-
+            
             // set the callback for when the potentially needed additional file resources have 
             // been loaded
             Armada.resources().executeWhenReady(function () {

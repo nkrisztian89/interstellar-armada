@@ -94,7 +94,11 @@
     </ProjectileClass>
 	
     <WeaponClass name="plasma">
-        <model filename="weapons/plasma_lod0-4.egm" lod="4" />
+        <model path="weapons/plasma_lod0-0.egm" maxLOD="0" />
+        <model path="weapons/plasma_lod0-1.egm" maxLOD="1" />
+        <model path="weapons/plasma_lod0-2.egm" maxLOD="2" />
+        <model path="weapons/plasma_lod0-3.egm" maxLOD="3" />
+        <model path="weapons/plasma_lod0-4.egm" maxLOD="4" />
         <logic cooldown="250" />
         <barrels>
             <barrel projectile="plasma" force="1200" x="0" y="10" z="0" />
@@ -102,7 +106,11 @@
     </WeaponClass>
 	
     <WeaponClass name="turret">
-        <model filename="weapons/turret_lod0-4.egm" lod="4" />
+        <model path="weapons/turret_lod0-0.egm" maxLOD="0" />
+        <model path="weapons/turret_lod0-1.egm" maxLOD="1" />
+        <model path="weapons/turret_lod0-2.egm" maxLOD="2" />
+        <model path="weapons/turret_lod0-3.egm" maxLOD="3" />
+        <model path="weapons/turret_lod0-4.egm" maxLOD="4" />
         <logic cooldown="250" />
         <barrels>
             <barrel projectile="plasma" force="1500" x="2" y="25" z="10" />
@@ -113,7 +121,11 @@
     </WeaponClass>
 	
     <WeaponClass name="cannon">
-        <model filename="weapons/cannon_lod0-4.egm" lod="4" />
+        <model path="weapons/cannon_lod0-0.egm" maxLOD="0" />
+        <model path="weapons/cannon_lod0-1.egm" maxLOD="1" />
+        <model path="weapons/cannon_lod0-2.egm" maxLOD="2" />
+        <model path="weapons/cannon_lod0-3.egm" maxLOD="3" />
+        <model path="weapons/cannon_lod0-4.egm" maxLOD="4" />
         <logic cooldown="1500" />
         <barrels>
             <barrel projectile="proton" force="8000" x="0" y="100" z="0" />
@@ -121,7 +133,11 @@
     </WeaponClass>
 	
     <WeaponClass name="largeCannon">
-        <model filename="weapons/ion_cannon_lod0-4.egm" lod="4" />
+        <model path="weapons/ion_cannon_lod0-0.egm" maxLOD="0" />
+        <model path="weapons/ion_cannon_lod0-1.egm" maxLOD="1" />
+        <model path="weapons/ion_cannon_lod0-2.egm" maxLOD="2" />
+        <model path="weapons/ion_cannon_lod0-3.egm" maxLOD="3" />
+        <model path="weapons/ion_cannon_lod0-4.egm" maxLOD="4" />
         <logic cooldown="5000" />
         <barrels>
             <barrel projectile="ion" force="50000" x="0" y="320" z="0" />
@@ -193,7 +209,11 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="falcon_lod0-4.egm" lod="4"/>
+            <model path="falcon_lod0-0.egm" maxLOD="0"/>
+            <model path="falcon_lod0-1.egm" maxLOD="1"/>
+            <model path="falcon_lod0-2.egm" maxLOD="2"/>
+            <model path="falcon_lod0-3.egm" maxLOD="3"/>
+            <model path="falcon_lod0-4.egm" maxLOD="4"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -299,7 +319,11 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="viper_lod0-4.egm" lod="4"/>
+            <model path="viper_lod0-0.egm" maxLOD="0"/>
+            <model path="viper_lod0-1.egm" maxLOD="1"/>
+            <model path="viper_lod0-2.egm" maxLOD="2"/>
+            <model path="viper_lod0-3.egm" maxLOD="3"/>
+            <model path="viper_lod0-4.egm" maxLOD="4"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -398,7 +422,11 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="aries_lod0-4.egm" lod="4" />
+            <model path="aries_lod0-0.egm" maxLOD="0" />
+            <model path="aries_lod0-1.egm" maxLOD="1" />
+            <model path="aries_lod0-2.egm" maxLOD="2" />
+            <model path="aries_lod0-3.egm" maxLOD="3" />
+            <model path="aries_lod0-4.egm" maxLOD="4" />
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -483,7 +511,11 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="taurus_lod0-4.egm" lod="4"/>
+            <model path="taurus_lod0-0.egm" maxLOD="0"/>
+            <model path="taurus_lod0-1.egm" maxLOD="1"/>
+            <model path="taurus_lod0-2.egm" maxLOD="2"/>
+            <model path="taurus_lod0-3.egm" maxLOD="3"/>
+            <model path="taurus_lod0-4.egm" maxLOD="4"/>
         </models>
         <texture filename="textures/falcon.png" type="color" />
         <texture filename="textures/falcon_specular.png" type="specular" />
@@ -620,7 +652,11 @@
             </description>
         </information>
         <models size ="0.2">
-            <model filename="libra_lod0-4.egm" lod="4"/>
+            <model path="libra_lod0-0.egm" maxLOD="0"/>
+            <model path="libra_lod0-1.egm" maxLOD="1"/>
+            <model path="libra_lod0-2.egm" maxLOD="2"/>
+            <model path="libra_lod0-3.egm" maxLOD="3"/>
+            <model path="libra_lod0-4.egm" maxLOD="4"/>
         </models>
         <texture filename="textures/libra.png" type="color" />
         <texture filename="textures/libra_specular.png" type="specular" />

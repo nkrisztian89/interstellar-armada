@@ -1,4 +1,6 @@
 "use strict";
+/*jslint plusplus: true */
+/*jslint nomen: true */
 
 /**
  * @fileOverview This file contains the declatations of all classes of in-game
@@ -241,12 +243,13 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     BackgroundObjectClass.prototype.loadFromXMLTag = function (xmlTag) {
+        var i, tags;
         this.name = xmlTag.getAttribute("name");
         this.lightColor = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
-        this.layers = new Array();
-        var layerTags = xmlTag.getElementsByTagName("layer");
-        for (var i = 0; i < layerTags.length; i++) {
-            this.layers.push(new ParticleDescriptor(layerTags[i]));
+        this.layers = [];
+        tags = xmlTag.getElementsByTagName("layer");
+        for (i = 0; i < tags.length; i++) {
+            this.layers.push(new ParticleDescriptor(tags[i]));
         }
         Object.freeze(this);
     };
@@ -312,7 +315,7 @@ Application.createModule({name: "Classes",
     DustCloudClass.prototype.loadFromXMLTag = function (xmlTag) {
         this.name = xmlTag.getAttribute("name");
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
-        this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"));
+        this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"), 10);
         this.color = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
         this.range = parseFloat(xmlTag.getAttribute("range"));
         Object.freeze(this);
@@ -396,43 +399,52 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     ProjectileClass.prototype.loadFromXMLTag = function (xmlTag) {
+        var i, tags;
         this.name = xmlTag.getAttribute("name");
         this.size = parseFloat(xmlTag.getElementsByTagName("billboard")[0].getAttribute("size"));
-        this.intersections = new Array();
-        var intersectionTags = xmlTag.getElementsByTagName("intersection");
-        for (var i = 0; i < intersectionTags.length; i++) {
-            this.intersections.push(parseFloat(intersectionTags[i].getAttribute("position")));
+        this.intersections = [];
+        tags = xmlTag.getElementsByTagName("intersection");
+        for (i = 0; i < tags.length; i++) {
+            this.intersections.push(parseFloat(tags[i].getAttribute("position")));
         }
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
         this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
         this.mass = parseFloat(xmlTag.getElementsByTagName("physics")[0].getAttribute("mass"));
-        this.duration = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("duration"));
+        this.duration = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("duration"), 10);
         this.muzzleFlash = new ParticleDescriptor(xmlTag.getElementsByTagName("muzzleFlash")[0]);
         Object.freeze(this);
     };
 
     /**
-     * Defines a model reference, which holds a reference to a model file name and
-     * the model's associated LOD (Level Of Detail), and loads its data from the passed
-     * XML tag, if any.
-     * @class Represents a reference to a particular model file with some additional
-     * associated information (right now, only Level Of Detail)
+     * Initializes the class from the specified XML tag, if given.
+     * @class Represents a reference to a particular model file with some 
+     * additional associated information:<br/>
+     * - LOD, maximum LOD: using this info, the resource management
+     * system can decide, which model files to request for download to satisfy
+     * LOD settings
      * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {ModelReference}
+     * @returns {ModelDescriptor}
      */
-    function ModelReference(xmlTag) {
+    function ModelDescriptor(xmlTag) {
         /**
-         * The name of the model file.
-         * @name ModelReference#name
+         * The path of the model file, relative to the models folder.
+         * @name ModelDescriptor#path
          * @type String
          */
-        this.filename = null;
+        this.path = null;
         /**
-         * The level of detail. 0 is the lowest.
-         * @name ModelReference#lod
+         * The level of detail the model file contains for single-LOD files.
+         * @name ModelDescriptor#lod
          * @type Number
          */
         this.lod = null;
+        /**
+         * The maximum level of detail the model file contains, for multi-LOD
+         * files.
+         * @name ModelDescriptor#maxLOD
+         * @type Number
+         */
+        this.maxLOD = null;
         // if an XML tag was specified, initialize the properties from there    
         if (xmlTag !== undefined) {
             this.loadFromXMLTag(xmlTag);
@@ -441,14 +453,128 @@ Application.createModule({name: "Classes",
 
     /**
      * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
+     * tag, and then freezes the object to make sure properties of this class 
+     * cannot be accidentally altered.
      * @param {Element} xmlTag
      */
-    ModelReference.prototype.loadFromXMLTag = function (xmlTag) {
-        this.filename = xmlTag.getAttribute("filename");
-        this.lod = parseInt(xmlTag.getAttribute("lod"));
+    ModelDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
+        this.path = xmlTag.getAttribute("path");
+        this.lod = xmlTag.hasAttribute("lod") ? parseInt(xmlTag.getAttribute("lod"), 10) : null;
+        this.maxLOD = xmlTag.hasAttribute("maxLOD") ? parseInt(xmlTag.getAttribute("maxLOD"), 10) : null;
         Object.freeze(this);
+    };
+
+    /**
+     * Returns whether the referenced model file contains the model with the 
+     * given LOD.
+     * @param {Number} lod Level Of Detail
+     * @returns {Boolean}
+     */
+    ModelDescriptor.prototype.containsLOD = function (lod) {
+        return (this.lod === lod) || ((this.maxLOD !== null) && (this.maxLOD >= lod));
+    };
+
+    /**
+     * Returns whether this is a descriptor for a model file that contains more
+     * than one LOD of a model.
+     * @returns {Boolean}
+     */
+    ModelDescriptor.prototype.containsMultipleLOD = function () {
+        return this.maxLOD !== null;
+    };
+
+    /**
+     * Returns whether this is a descriptor for a model file that contains a
+     * single LOD of a model.
+     * @returns {Boolean}
+     */
+    ModelDescriptor.prototype.containsSingleLOD = function () {
+        return this.lod !== null;
+    };
+
+    /**
+     * @class The base class for classes that have an associated 3D model (such
+     * as weapon or spacecraft class classes). Handles the loading of 
+     * descriptors of the model.
+     * @returns {ClassWithModel}
+     */
+    function ClassWithModel() {
+        /**
+         * The file names and associated LODs (Levels Of Detail) for the models 
+         * of this class.
+         * @name ClassWithModel#modelDescriptors
+         * @type ModelDescriptor[]
+         */
+        this.modelDescriptors = null;
+    }
+
+    /**
+     * Loads the model descriptors for this class from a parent XML tag.
+     * @param {Element} xmlTag
+     */
+    ClassWithModel.prototype.loadFromXMLTag = function (xmlTag) {
+        var i, tags;
+        this.modelDescriptors = [];
+        tags = xmlTag.getElementsByTagName("model");
+        for (i = 0; i < tags.length; i++) {
+            this.modelDescriptors.push(new ModelDescriptor(tags[i]));
+        }
+    };
+
+    /**
+     * @param {String} name
+     * @param {Number} [lod]
+     * @returns {Model}
+     */
+    ClassWithModel.prototype.addModelToResourceManager = function (name, lod) {
+        var i, bestLOD, bestIndex, result;
+        // if no specific LOD was requested, add all from 0 to the max loaded
+        // LOD (according to the graphics settings)
+        if (lod === undefined) {
+            // first, find the best multi-LOD file and add it
+            bestIndex = -1;
+            bestLOD = -1;
+            for (i = 0; i < this.modelDescriptors.length; i++) {
+                if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD <= Armada.graphics().getMaxLoadedLOD())) {
+                    if ((bestIndex === -1) || (this.modelDescriptors[i].maxLOD > bestLOD)) {
+                        bestIndex = i;
+                        bestLOD = this.modelDescriptors[i].maxLOD;
+                    }
+                }
+            }
+            if (bestIndex > -1) {
+                result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
+            }
+            // if the multi-LOD file didn't cover all needed LODs, try to fill
+            // the gap from single LOD files
+            for (i = 0; i < this.modelDescriptors.length; i++) {
+                if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod <= Armada.graphics().getMaxLoadedLOD())) {
+                    if (this.modelDescriptors[i].lod > bestLOD) {
+                        result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[i].path, false, this.modelDescriptors[i].lod);
+                    }
+                }
+            }
+        } else {
+            // if a specific LOD was requested, try to add the closest (less or 
+            // equal) LOD, of possible, from single LOD file
+            bestIndex = -1;
+            for (bestLOD = lod; (bestLOD > -1) && (bestIndex === -1); bestLOD--) {
+                for (i = 0; i < this.modelDescriptors.length; i++) {
+                    if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod === bestLOD)) {
+                        bestIndex = i;
+                        result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, false, bestLOD);
+                        break;
+                    }
+                    if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD === bestLOD)) {
+                        bestIndex = i;
+                        console.log("@@@@@@@@@@@@@@@@ " + name + " : " + bestIndex + " - " + this.modelDescriptors[bestIndex].path);
+                        result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
     };
 
     /**
@@ -505,10 +631,12 @@ Application.createModule({name: "Classes",
      * @class Each spacecraft can have weapons, all of which belong to a certain
      * weapon class. This class represent one of such classes, describing the 
      * general properties of all weapons in that class.
+     * @extends ClassWithModel
      * @param {Element} [xmlTag] The XML tag to load the data from.
      * @returns {WeaponClass}
      */
     function WeaponClass(xmlTag) {
+        ClassWithModel.call(this);
         /**
          * The name by which the weapon class can be referred to, such as when 
          * describing what weapons are a certain ship equipped with.
@@ -516,13 +644,6 @@ Application.createModule({name: "Classes",
          * @type String
          */
         this.name = null;
-        /**
-         * The file names and associated LODs (Levels Of Detail) for the models of 
-         * this weapon. (will be rendered on the ships)
-         * @name WeaponClass#modelReferences
-         * @type ModelReference[]
-         */
-        this.modelReferences = null;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @name WeaponClass#cooldown
@@ -541,6 +662,9 @@ Application.createModule({name: "Classes",
         }
     }
 
+    WeaponClass.prototype = new ClassWithModel();
+    WeaponClass.prototype.constructor = WeaponClass;
+
     /**
      * Loads the values for the properties of the class from the passed XML 
      * tag, and then freezes the object to make sure properties of this class cannot
@@ -548,18 +672,14 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     WeaponClass.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
+        var i, tags;
+        ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
         this.name = xmlTag.getAttribute("name");
-        this.modelReferences = new Array();
-        var modelTags = xmlTag.getElementsByTagName("model");
-        for (i = 0; i < modelTags.length; i++) {
-            this.modelReferences.push(new ModelReference(modelTags[i]));
-        }
-        this.cooldown = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("cooldown"));
-        this.barrels = new Array();
-        var barrelTags = xmlTag.getElementsByTagName("barrel");
-        for (i = 0; i < barrelTags.length; i++) {
-            this.barrels.push(new Barrel(barrelTags[i]));
+        this.cooldown = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("cooldown"), 10);
+        this.barrels = [];
+        tags = xmlTag.getElementsByTagName("barrel");
+        for (i = 0; i < tags.length; i++) {
+            this.barrels.push(new Barrel(tags[i]));
         }
         Object.freeze(this);
     };
@@ -721,7 +841,7 @@ Application.createModule({name: "Classes",
         this.positionVector.push(1.0);
         this.size = parseFloat(xmlTag.getAttribute("size"));
         this.uses = xmlTag.getAttribute("use").split(',');
-        this.group = xmlTag.hasAttribute("group") ? parseInt(xmlTag.getAttribute("group")) : 0;
+        this.group = xmlTag.hasAttribute("group") ? parseInt(xmlTag.getAttribute("group"), 10) : 0;
         Object.freeze(this);
     };
 
@@ -855,7 +975,7 @@ Application.createModule({name: "Classes",
      * Clears the list of weapon descriptors.
      */
     EquipmentProfile.prototype.clearWeaponDescriptors = function () {
-        this._weaponDescriptors = new Array();
+        this._weaponDescriptors = [];
     };
 
     /**
@@ -888,7 +1008,7 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     EquipmentProfile.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
+        var i, tags;
         if (xmlTag.hasAttribute("name")) {
             this.setName(xmlTag.getAttribute("name"));
         } else {
@@ -896,9 +1016,9 @@ Application.createModule({name: "Classes",
         }
         this.clearWeaponDescriptors();
         if (xmlTag.getElementsByTagName("weapons").length > 0) {
-            var weaponTags = xmlTag.getElementsByTagName("weapons")[0].getElementsByTagName("weapon");
-            for (i = 0; i < weaponTags.length; i++) {
-                this.addWeaponDescriptor(new WeaponDescriptor(weaponTags[i]));
+            tags = xmlTag.getElementsByTagName("weapons")[0].getElementsByTagName("weapon");
+            for (i = 0; i < tags.length; i++) {
+                this.addWeaponDescriptor(new WeaponDescriptor(tags[i]));
             }
         }
         if (xmlTag.getElementsByTagName("propulsion").length > 0) {
@@ -1042,11 +1162,13 @@ Application.createModule({name: "Classes",
      * ship or a space station all belong to a certain class that determines their
      * general properties such as appearance, mass and so on. This class represent
      * such a spacecraft class.
+     * @extends ClassWithModel
      * @param {Element} [xmlTag] The XML tag which contains the description of
      * this spacecraft class.
      * @returns {SpacecraftClass}
      */
     function SpacecraftClass(xmlTag) {
+        ClassWithModel.call(this);
         /**
          * The name by which the class can be referred to.
          * @name SpacecraftClass#name
@@ -1071,13 +1193,6 @@ Application.createModule({name: "Classes",
          * @type String
          */
         this.description = null;
-        /**
-         * The file names and their associated LODs (Levels Of Detail) of the model 
-         * files of this class.
-         * @name SpacecraftClass#modelReferences
-         * @type ModelReference[]
-         */
-        this.modelReferences = null;
         /**
          * The model will be scaled by this number (on all 3 axes)
          * @name SpacecraftClass#modelSize
@@ -1143,6 +1258,9 @@ Application.createModule({name: "Classes",
         }
     }
 
+    SpacecraftClass.prototype = new ClassWithModel();
+    SpacecraftClass.prototype.constructor = SpacecraftClass;
+
     /**
      * Loads the values for the properties of the spacecraft class from the passed XML 
      * tag, and then freezes the object to make sure properties of this class cannot
@@ -1150,19 +1268,21 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     SpacecraftClass.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
+        var i, tag, tags;
+
+        ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
 
         this.name = xmlTag.getAttribute("name");
         this.spacecraftType = Armada.logic().getSpacecraftType(xmlTag.getAttribute("type"));
 
         // initializing informational properties
         if (xmlTag.getElementsByTagName("information").length > 0) {
-            var infoTag = xmlTag.getElementsByTagName("information")[0];
-            if (infoTag.getElementsByTagName("fullName").length > 0) {
-                this.fullName = infoTag.getElementsByTagName("fullName")[0].textContent;
+            tag = xmlTag.getElementsByTagName("information")[0];
+            if (tag.getElementsByTagName("fullName").length > 0) {
+                this.fullName = tag.getElementsByTagName("fullName")[0].textContent;
             }
-            if (infoTag.getElementsByTagName("description").length > 0) {
-                this.description = infoTag.getElementsByTagName("description")[0].textContent;
+            if (tag.getElementsByTagName("description").length > 0) {
+                this.description = tag.getElementsByTagName("description")[0].textContent;
             }
         }
         if (this.fullName === null) {
@@ -1173,62 +1293,56 @@ Application.createModule({name: "Classes",
         }
 
         // initializing model geometry information
-        var modelsTag = xmlTag.getElementsByTagName("models")[0];
-        this.modelReferences = new Array();
-        var modelTags = modelsTag.getElementsByTagName("model");
-        for (i = 0; i < modelTags.length; i++) {
-            this.modelReferences.push(new ModelReference(modelTags[i]));
-        }
-        this.modelSize = parseFloat(modelsTag.getAttribute("size"));
+        tag = xmlTag.getElementsByTagName("models")[0];
+        this.modelSize = parseFloat(tag.getAttribute("size"));
 
         // reading the textures into an object, where the texture types are the
         // names of the properties
-        this.textureDescriptors = new Object();
-        var textureTags = xmlTag.getElementsByTagName("texture");
-        for (i = 0; i < textureTags.length; i++) {
-            this.textureDescriptors[textureTags[i].getAttribute("type")] = new TextureDescriptor(textureTags[i]);
+        this.textureDescriptors = {};
+        tags = xmlTag.getElementsByTagName("texture");
+        for (i = 0; i < tags.length; i++) {
+            this.textureDescriptors[tags[i].getAttribute("type")] = new TextureDescriptor(tags[i]);
         }
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
 
         // initializing physics properties
         this.mass = xmlTag.getElementsByTagName("physics")[0].getAttribute("mass");
-        this.bodies = new Array();
-        var bodyTags = xmlTag.getElementsByTagName("body");
-        for (i = 0; i < bodyTags.length; i++) {
+        this.bodies = [];
+        tags = xmlTag.getElementsByTagName("body");
+        for (i = 0; i < tags.length; i++) {
             this.bodies.push(new Physics.Body(
-                    Mat.translationFromXMLTag(bodyTags[i]),
-                    Mat.rotation4FromXMLTags(bodyTags[i].getElementsByTagName("turn")),
-                    Utils.getDimensionsFromXMLTag(bodyTags[i])
-                    ));
+                    Mat.translationFromXMLTag(tags[i]),
+                    Mat.rotation4FromXMLTags(tags[i].getElementsByTagName("turn")),
+                    Utils.getDimensionsFromXMLTag(tags[i])));
         }
 
         // initializing equipment properties
-        this.weaponSlots = new Array();
+        this.weaponSlots = [];
         if (xmlTag.getElementsByTagName("weaponSlots").length > 0) {
-            var weaponSlotTags = xmlTag.getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
-            for (i = 0; i < weaponSlotTags.length; i++) {
-                this.weaponSlots.push(new WeaponSlot(weaponSlotTags[i]));
+            tags = xmlTag.getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
+            for (i = 0; i < tags.length; i++) {
+                this.weaponSlots.push(new WeaponSlot(tags[i]));
             }
         }
-        this.thrusterSlots = new Array();
+        this.thrusterSlots = [];
         if (xmlTag.getElementsByTagName("thrusterSlots").length > 0) {
-            var thrusterSlotTags = xmlTag.getElementsByTagName("thrusterSlots")[0].getElementsByTagName("slot");
-            for (i = 0; i < thrusterSlotTags.length; i++) {
-                this.thrusterSlots.push(new ThrusterSlot(thrusterSlotTags[i]));
+            tags = xmlTag.getElementsByTagName("thrusterSlots")[0].getElementsByTagName("slot");
+            for (i = 0; i < tags.length; i++) {
+                this.thrusterSlots.push(new ThrusterSlot(tags[i]));
             }
         }
-        this.equipmentProfiles = new Object();
-        var equipmentProfileTags = xmlTag.getElementsByTagName("equipmentProfile");
-        for (i = 0; i < equipmentProfileTags.length; i++) {
-            this.equipmentProfiles[equipmentProfileTags[i].getAttribute("name")] = new EquipmentProfile(equipmentProfileTags[i]);
+        this.equipmentProfiles = {};
+        tags = xmlTag.getElementsByTagName("equipmentProfile");
+        for (i = 0; i < tags.length; i++) {
+            this.equipmentProfiles[tags[i].getAttribute("name")] = new EquipmentProfile(tags[i]);
         }
 
         // initializing views
-        this.views = new Array();
+        this.views = [];
         if (xmlTag.getElementsByTagName("views").length > 0) {
-            var viewTags = xmlTag.getElementsByTagName("views")[0].getElementsByTagName("view");
-            for (i = 0; i < viewTags.length; i++) {
-                this.views.push(new ObjectView(viewTags[i]));
+            tags = xmlTag.getElementsByTagName("views")[0].getElementsByTagName("view");
+            for (i = 0; i < tags.length; i++) {
+                this.views.push(new ObjectView(tags[i]));
             }
         }
     };
