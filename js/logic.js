@@ -451,6 +451,7 @@ Application.createModule({name: "Logic",
      * mode.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
+        console.log("Adding weapon (" + this._class.name + ") to scene...");
         this._visualModel = new Scene.ShadedLODMesh(
                 this._class.addModelToResourceManager(this._class.name, lod),
                 Armada.resources().getShader(this._spacecraft.getClass().shaderName),
@@ -1746,6 +1747,7 @@ Application.createModule({name: "Logic",
         var i;
         // cash the references to the textures
         var textures = this.getTextures();
+        console.log("Adding spacecraft (" + this._class.fullName + ") to scene...");
         // add the main model of the spacecraft
         this._visualModel = new Scene.ParameterizedMesh(
                 this._class.addModelToResourceManager(this._class.name, lod),

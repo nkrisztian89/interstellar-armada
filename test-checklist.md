@@ -9,6 +9,7 @@ Test configurations:
 +   Mac OS X 10.10 64bit, NVidia, Safari
 +   Mac OS X 10.10 64bit, NVidia, Firefox
 +   Mac OS X 10.10 64bit, NVidia, Chrome
++   Ubuntu Phone 14.10 armv7, Ubuntu browser
 Test scenarios:
 ===============
 +   New game > Piloting mode > Mouse turn around > Mouse fire

@@ -1242,6 +1242,12 @@ Application.createModule({name: "Egom",
         this.maxLOD = null;
     }
 
+    //TODO: comment
+    function ModelFile(path) {
+        this.path = path;
+        this.loaded = false;
+    }
+
     ///TODO: add comments for class & methods
     /**
      * @name Model
@@ -1274,10 +1280,10 @@ Application.createModule({name: "Egom",
          * The names of the files that hold the meshes for this model. The index
          * indicates the default LOD of the mesh stored in the file.
          * @name Model#_filenames
-         * @type Array.<String>
+         * @type Array.<ModelFile>
          */
-        this._singleLODFilenames = [];
-        this._multiLODFilenames = [];
+        this._singleLODFiles = [];
+        this._multiLODFiles = [];
         /**
          * The version string identifying the exact format of the model file.
          * @name Model#_version
@@ -1330,20 +1336,23 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * @param {String} filename
+     * @param {String} path
      * @param {Boolean} fileIsMultiLOD
      * @param {Number} [lod=0]
+     * @returns {Boolean} Whether a new path has been set.
      */
-    Model.prototype.setSourceFileForLOD = function (filename, fileIsMultiLOD, lod) {
-        var i, filenames = fileIsMultiLOD ? this._multiLODFilenames : this._singleLODFilenames;
+    Model.prototype.setSourcePathForLOD = function (path, fileIsMultiLOD, lod) {
+        var i, files = fileIsMultiLOD ? this._multiLODFiles : this._singleLODFiles;
         lod = lod || 0;
-        for (i = filenames.length; i <= lod; i++) {
-            filenames.push("");
+        for (i = files.length; i <= lod; i++) {
+            files.push(new ModelFile(""));
         }
-        if (filenames[lod] !== filename) {
-            filenames[lod] = filename;
+        if (files[lod].path !== path) {
+            files[lod] = new ModelFile(path);
             this.resetReadyState();
+            return true;
         }
+        return false;
     };
 
     /**
@@ -1361,7 +1370,9 @@ Application.createModule({name: "Egom",
 
     Model.prototype.createXMLLoaderFunctionForLOD = function (lod, multi) {
         return function (responseXML) {
-            this._loadFromXML(multi ? this._multiLODFilenames[lod] : this._singleLODFilenames[lod], responseXML, lod);
+            var modelFile = multi ? this._multiLODFiles[lod] : this._singleLODFiles[lod];
+            this._loadFromXML(modelFile.path, responseXML, lod);
+            modelFile.loaded = true;
             this._numLoadedFiles++;
             if (this._numLoadedFiles === this._numFilesToLoad) {
                 this.setToReady();
@@ -1378,11 +1389,12 @@ Application.createModule({name: "Egom",
      */
     Model.prototype.requestLoadFromFiles = function () {
         var i, lod;
+        console.log("Requesting the loading of model from files...");
         // only issue the request if the model is not already loaded
         if (!this.isReadyToUse()) {
-            if ((this._singleLODFilenames.length === 0) && (this._multiLODFilenames.length === 0)) {
+            if ((this._singleLODFiles.length === 0) && (this._multiLODFiles.length === 0)) {
                 Application.showError(
-                        "Attempting to load a model from file, but no filenames were specified.",
+                        "Attempting to load a model from file, but no files were specified.",
                         null,
                         this._name ? "Name of the model: " + this._name : "The model has no name either.");
                 return false;
@@ -1390,24 +1402,26 @@ Application.createModule({name: "Egom",
             this._numFilesToLoad = 0;
             this._numLoadedFiles = 0;
             // loading the highest LOD multi-LOD file
-            Application.log("Choosing highest LOD multi-LOD file for " + this._name + "...");
+            Application.log("Choosing highest LOD multi-LOD file for model...");
             lod = -1;
-            for (i = 0; i < this._multiLODFilenames.length; i++) {
-                Application.log("LOD " + i + ": " + this._multiLODFilenames[i]);
-                if (this._multiLODFilenames[i].length > 0) {
+            for (i = 0; i < this._multiLODFiles.length; i++) {
+                Application.log("LOD " + i + ": " + this._multiLODFiles[i].path);
+                if (this._multiLODFiles[i].path.length > 0) {
                     lod = i;
                 }
             }
             if (lod >= 0) {
                 this._numFilesToLoad++;
-                Application.requestXMLFile("model", this._multiLODFilenames[lod], this.createXMLLoaderFunctionForLOD(lod, true));
+                console.log("Found multi-LOD file of level " + lod + ": " + this._multiLODFiles[lod].path + ". Requesting...");
+                Application.requestXMLFile("model", this._multiLODFiles[lod].path, this.createXMLLoaderFunctionForLOD(lod, true));
             }
             // loading any requested single LOD files with higher LOD than the
             // highest multi-LOD one
-            for (i = 0; i < this._singleLODFilenames.length; i++) {
-                if ((this._singleLODFilenames[i].length > 0) && (i > lod)) {
+            for (i = 0; i < this._singleLODFiles.length; i++) {
+                if ((this._singleLODFiles[i].length > 0) && (i > lod)) {
                     this._numFilesToLoad++;
-                    Application.requestXMLFile("model", this._singleLODFilenames[i], this.createXMLLoaderFunctionForLOD(i, false));
+                    console.log("Requesting single-LOD file of level " + i + ": " + this._singleLODFiles[i].path + " ...");
+                    Application.requestXMLFile("model", this._singleLODFiles[i].path, this.createXMLLoaderFunctionForLOD(i, false));
                 }
             }
             return true;
@@ -1921,6 +1935,7 @@ Application.createModule({name: "Egom",
      * functions.
      */
     Model.prototype.addToContext = function (context, wireframe) {
+        console.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") +" mode)...");
         this._minLOD = this._minLOD || 0;
         this._maxLOD = this._maxLOD || 0;
         // get the already stored properties for easier access

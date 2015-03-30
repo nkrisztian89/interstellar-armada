@@ -2007,35 +2007,47 @@ Application.createModule({name: "GL",
             return this._requestedShaders[name];
         }
     };
+
+    //TODO: comments
+    ResourceManager.prototype.modelDidLoad = function (modelName) {
+        this._numModelsLoaded += 1;
+        this.onResourceLoad(modelName, this.getNumberOfResources(), this.getNumberOfLoadedResources());
+        if (this.allModelsLoaded()) {
+            this.onAllModelsLoad();
+        }
+        if (this.allResourcesLoaded()) {
+            this.setToReady();
+        }
+    };
+
     /**
      * Looks for a model with the given filename in the resource manager, if not
      * present yet, adds it, then returns it.
      * @param {String} modelName
-     * @param {String} filename The name of the file of the model resource we are looking for.
+     * @param {String} path The path to the file of the model resource we are looking for. (relative to the model folder)
      * @param {Boolean} fileIsMultiLOD
      * @param {Number} [lod]
      * @returns {EgomModel} The found or added model object in the resource manager.
      */
-    ResourceManager.prototype.getOrAddModelFromFile = function (modelName, filename, fileIsMultiLOD, lod) {
+    ResourceManager.prototype.getOrAddModelFromFile = function (modelName, path, fileIsMultiLOD, lod) {
         if (this._models[modelName] === undefined) {
             this._numModels += 1;
             this.resetReadyState();
             this._models[modelName] = new Egom.Model();
-            console.log("Setting filename of " + modelName + " for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + filename);
-            this._models[modelName].setSourceFileForLOD(filename, fileIsMultiLOD, lod);
+            console.log("Setting path of model '" + modelName + "' for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + path);
+            this._models[modelName].setSourcePathForLOD(path, fileIsMultiLOD, lod);
             this._models[modelName].executeWhenReady(function () {
-                this._numModelsLoaded += 1;
-                this.onResourceLoad(modelName, this.getNumberOfResources(), this.getNumberOfLoadedResources());
-                if (this.allModelsLoaded()) {
-                    this.onAllModelsLoad();
-                }
-                if (this.allResourcesLoaded()) {
-                    this.setToReady();
-                }
+                this.modelDidLoad(modelName);
             }.bind(this));
         } else {
-            console.log("Setting filename of " + modelName + " for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + filename);
-            this._models[modelName].setSourceFileForLOD(filename, fileIsMultiLOD, lod);
+            console.log("Setting filename of " + modelName + " for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + path);
+            if (this._models[modelName].setSourcePathForLOD(path, fileIsMultiLOD, lod)) {
+                this._numModelsLoaded -= 1;
+                this.resetReadyState();
+                this._models[modelName].executeWhenReady(function () {
+                    this.modelDidLoad(modelName);
+                }.bind(this));
+            }
         }
         return this._models[modelName];
     };
@@ -2197,12 +2209,18 @@ Application.createModule({name: "GL",
      * the action queue set for when all resources get loaded.
      */
     ResourceManager.prototype.requestResourceLoad = function () {
+        console.log("Requesting loading of resources contained in the resource manager...");
         if (this.allResourcesLoaded() === true) {
+            console.log("There are no resources to load, executing set up callback queue right away...");
             this.executeOnReadyQueue();
         } else {
+            console.log("Requesting the loading of textures from files...");
             this.requestTextureLoadFromFile();
+            console.log("Requesting the loading of cubemaps from files...");
             this.requestCubemappedTextureLoadFromFile();
+            console.log("Requesting the loading of shaders from files...");
             this.requestShaderLoadFromFile();
+            console.log("Requesting the loading of models from files...");
             this.requestModelLoadFromFile();
         }
     };

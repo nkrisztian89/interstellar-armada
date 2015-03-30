@@ -528,6 +528,7 @@ Application.createModule({name: "Classes",
      */
     ClassWithModel.prototype.addModelToResourceManager = function (name, lod) {
         var i, bestLOD, bestIndex, result;
+        console.log("Adding "+ ((lod === undefined) ? "all LODs" : ("LOD " +lod)) + " of model with name: '"+name+"' to resource manager...");
         // if no specific LOD was requested, add all from 0 to the max loaded
         // LOD (according to the graphics settings)
         if (lod === undefined) {
@@ -567,7 +568,6 @@ Application.createModule({name: "Classes",
                     }
                     if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD === bestLOD)) {
                         bestIndex = i;
-                        console.log("@@@@@@@@@@@@@@@@ " + name + " : " + bestIndex + " - " + this.modelDescriptors[bestIndex].path);
                         result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
                         break;
                     }
