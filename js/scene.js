@@ -1314,14 +1314,23 @@ Application.createModule({name: "Scene",
      * @constructor
      * @extends RenderableObject3D
      * @param {Model} model The 3D model with meshes for different LODs.
-     * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative array, with the roles as keys.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
-     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
-     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing the initial size of the object.
-     * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe instead of solid.
+     * @param {Shader} shader The shader that should be active while rendering 
+     * this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix 
+     * representing the initial position of the object.
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix 
+     * representing the initial orientation of the object.
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing 
+     * the initial size of the object.
+     * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe 
+     * instead of solid.
+     * @param {Number} [lod] If given, only this specific LOD (if available) 
+     * will be used for rendering this model
      */
-    function ShadedLODMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe) {
+    function ShadedLODMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod) {
         RenderableObject3D.call(this, shader, true, true, positionMatrix, orientationMatrix, scalingMatrix);
         this.setSmallestSizeWhenDrawn(5);
         this.setTextures(textures);
@@ -1360,6 +1369,13 @@ Application.createModule({name: "Scene",
          * @type Object.<String, Number>
          */
         this._lodSizeFactors = new Object();
+        /**
+         * If a static LOD is chosen, the model is always rendered using this 
+         * LOD (or the closest available one)
+         * @name ShadedLODMesh#_staticLOD
+         * @type Number|null
+         */
+        this._staticLOD = lod !== undefined ? lod : null;
         this.setUniformValueFunction("u_modelMatrix", function () {
             return this.getModelMatrix();
         });
@@ -1401,6 +1417,7 @@ Application.createModule({name: "Scene",
         }
         return visibleSize * this._lodSizeFactors[referenceSize.toString()];
     };
+
     /**
      * Returns the LOD that should be used when rendering using the passed 
      * render parameters.
@@ -1409,20 +1426,24 @@ Application.createModule({name: "Scene",
      */
     ShadedLODMesh.prototype.getCurrentLOD = function (renderParameters) {
         if (this._currentLOD === null) {
-            var visibleSize = this.getSizeInPixels(renderParameters);
-            var lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
-            this._currentLOD = -1;
-            for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
-                if (
-                        (this._currentLOD === -1) ||
-                        (i <= renderParameters.lodContext.maxEnabledLOD) &&
-                        (
-                                (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
-                                )) {
-                    this._currentLOD = i;
+            if (this._staticLOD !== null) {
+                this._currentLOD = this._model.getClosestAvailableLOD(this._staticLOD);
+            } else {
+                var visibleSize = this.getSizeInPixels(renderParameters);
+                var lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
+                this._currentLOD = -1;
+                for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
+                    if (
+                            (this._currentLOD === -1) ||
+                            (i <= renderParameters.lodContext.maxEnabledLOD) &&
+                            (
+                                    (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
+                                    ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
+                                    ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
+                                    ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
+                                    )) {
+                        this._currentLOD = i;
+                    }
                 }
             }
         }
@@ -1433,7 +1454,9 @@ Application.createModule({name: "Scene",
      */
     ShadedLODMesh.prototype.resetForNewFrame = function () {
         RenderableObject3D.prototype.resetForNewFrame.call(this);
-        this._currentLOD = null;
+        if (this._staticLOD === null) {
+            this._currentLOD = null;
+        }
     };
     /**
      * @override
@@ -1501,18 +1524,29 @@ Application.createModule({name: "Scene",
      * @extends ShadedLODMesh
      * @constructor
      * @param {Model} model
-     * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative array, with the roles as keys.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
-     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
-     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing the initial size of the object.
-     * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe instead of solid.
-     * @param {Array.<{name:String,length:Number}>} parameterArrays The list of names to identify the parameter arrays later when setting their values, and the lengths of the arrays.
-     *  The uniform variables will be identified by this name prefixed with "u_".
+     * @param {Shader} shader The shader that should be active while rendering 
+     * this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix 
+     * representing the initial position of the object.
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix 
+     * representing the initial orientation of the object.
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing 
+     * the initial size of the object.
+     * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe 
+     * instead of solid.
+     * @param {Number} [lod] If given, only this specific LOD (if available) 
+     * will be used for rendering this model
+     * @param {Array.<{name:String,length:Number}>} parameterArrays The list of 
+     * names to identify the parameter arrays later when setting their values, 
+     * and the lengths of the arrays.
+     * The uniform variables will be identified by this name prefixed with "u_".
      * @returns {ParameterizedMesh}
      */
-    function ParameterizedMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, parameterArrays) {
-        ShadedLODMesh.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe);
+    function ParameterizedMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, parameterArrays) {
+        ShadedLODMesh.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod);
         /**
          * The values of the parameter arrays.
          * @name ParameterizedMesh#_parameterArrays
@@ -1530,7 +1564,8 @@ Application.createModule({name: "Scene",
     ParameterizedMesh.prototype = new ShadedLODMesh([]);
     ParameterizedMesh.prototype.constructor = ParameterizedMesh;
     /**
-     * Returns a function to that returns the parameter array identified by the passed name.
+     * Returns a function to that returns the parameter array identified by the 
+     * passed name.
      * @param {String} name
      * @returns {Function}
      */
@@ -1540,7 +1575,8 @@ Application.createModule({name: "Scene",
         };
     };
     /**
-     * Sets the value of the element at the passed index of the parameter array identified by the passed name.
+     * Sets the value of the element at the passed index of the parameter array 
+     * identified by the passed name.
      * @param {String} name
      * @param {Number} index
      * @param {Number} value
@@ -1548,6 +1584,7 @@ Application.createModule({name: "Scene",
     ParameterizedMesh.prototype.setParameter = function (name, index, value) {
         this._parameterArrays[name][index] = value;
     };
+    ///TODO: continue refactoring from here
     // #########################################################################
     /**
      * @class Visual object that renders a 2D billboard transformed in 3D space.

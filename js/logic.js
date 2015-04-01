@@ -459,7 +459,8 @@ Application.createModule({name: "Logic",
                 this._slot.positionMatrix,
                 this._slot.orientationMatrix,
                 Mat.identity4(),
-                (wireframe === true));
+                (wireframe === true),
+                lod);
         parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
     };
     /**
@@ -1757,6 +1758,7 @@ Application.createModule({name: "Logic",
                 this._physicalModel.getOrientationMatrix(),
                 Mat.scaling4(this._class.modelSize),
                 (wireframe === true),
+                lod,
                 [{name: "luminosityFactors", length: 20}]);
         var node = scene.addObject(this._visualModel);
         // visualize physical model (hitboxes)

@@ -1495,7 +1495,6 @@ Application.createModule({name: "GL",
                 this.addVertexBuffer(new VertexBuffer(shaderAttributes[j].name, shaderAttributes[j].role, shaderAttributes[j].size, sumVertices));
             }
         }
-        ///TODO: refactor to support loading specific LOD ranges
         // filling the buffer data arrays from model data
         var bufferSize = 0;
         for (i = 0; i < this._models.length; i++) {
@@ -2008,7 +2007,12 @@ Application.createModule({name: "GL",
         }
     };
 
-    //TODO: comments
+    /**
+     * Automatically called when a model has finished loading. Do not call 
+     * directly, set the onResourceLoad() ad onAllModelsLoad() methods instead
+     * to handle the loading events.
+     * @param {String} modelName The name of the model that has been loaded.
+     */
     ResourceManager.prototype.modelDidLoad = function (modelName) {
         this._numModelsLoaded += 1;
         this.onResourceLoad(modelName, this.getNumberOfResources(), this.getNumberOfLoadedResources());

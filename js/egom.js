@@ -291,7 +291,13 @@ Application.createModule({name: "Egom",
         this.bufferStartTransparent = null;
     }
 
-    ///TODO: add comments for class & methods
+    /**
+     * A single, specific mesh consisting of lines (for wireframe rendering) and 
+     * triangles (for solid rendering) that connect 3D vertices. Multiple such
+     * meshes that represent the same 3D model on different levels of detail
+     * are grouped together in the Model class.
+     * @returns {Mesh}
+     */
     function Mesh() {
         /**
          * The array of vertices of the model. These can be referenced by index
@@ -399,6 +405,13 @@ Application.createModule({name: "Egom",
          * @type Number
          */
         this._currentGroupIndex = 0;
+        /**
+         * A property for convenience and optimization, all filler null vectors
+         * point to this object instead of creating a separate vertex object
+         * for each.
+         * @name Mesh#_nullVertex
+         * @type Vertex
+         */
         this._nullVertex = new Vertex([0.0, 0.0, 0.0]);
     }
 
@@ -439,14 +452,21 @@ Application.createModule({name: "Egom",
         this._shininess = shininess;
     };
 
+    /**
+     * Resets all data stored in the mesh, so a new geometry can be built inside
+     * this object.
+     */
     Mesh.prototype.resetMesh = function () {
         this.resetVertices();
         this.resetLines();
         this.resetTriangles();
     };
 
+    /**
+     * Deletes the vertices of the mesh and resets related properties.
+     */
     Mesh.prototype.resetVertices = function () {
-        this._vertices = new Array();
+        this._vertices = [];
         this._maxX = 0;
         this._minX = 0;
         this._maxY = 0;
@@ -511,18 +531,34 @@ Application.createModule({name: "Egom",
         this.setVertex(this._vertices.length, new Vertex(position, texCoords));
     };
 
+    /**
+     * Deletes the lines of the mesh.
+     */
     Mesh.prototype.resetLines = function () {
         this._lines = [];
     };
 
+    /**
+     * Adds a new line to the mesh. Does not check if the same line already
+     * exists.
+     * @param {Line} line
+     */
     Mesh.prototype.addLine = function (line) {
         this._lines.push(line);
     };
 
+    /**
+     * Replaces the line stored at the given index with a new one.
+     * @param {Number} index
+     * @param {Line} line
+     */
     Mesh.prototype.setLine = function (index, line) {
         this._lines[index] = line;
     };
 
+    /**
+     * Deletes the triangles of the mesh and resets related properties.
+     */
     Mesh.prototype.resetTriangles = function () {
         this._triangles = new Array();
         this._nOpaqueTriangles = 0;
@@ -545,10 +581,11 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * 
+     * Adds a new triangle to the mesh. Does not check if the same triangle
+     * already exists. Also adds 3 lines corresponding to the edges of the 
+     * triangle, unless specified otherwise in the parameters.
      * @param {Triangle} triangle
-     * @param {Boolean} withoutLines
-     * @returns {undefined}
+     * @param {Boolean} [withoutLines=false]
      */
     Mesh.prototype.addTriangle = function (triangle, withoutLines) {
         this._triangles.push(triangle);
@@ -565,7 +602,8 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * Adds a new triangle to the model.
+     * Creates a triangle using the supplied and the default editing parameters
+     * and adds it to the mesh.
      * @param {Number} a The index of the first vertex of the triangle.
      * @param {Number} b The index of the second vertex of the triangle.
      * @param {Number} c The index of the third vertex of the triangle.
@@ -1221,7 +1259,7 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * @class Stores the attributes that a model has associated with a managed
+     * @struct Stores the attributes that a model has associated with a managed
      * WebGL context.
      * @returns {ModelContextProperties}
      */
@@ -1238,37 +1276,98 @@ Application.createModule({name: "Egom",
          * @type Boolean
          */
         this.solid = null;
+        /**
+         * The minimum LOD with which this model has been added to the context.
+         * The vertex buffer data should be filled with the mesh data starting
+         * from this LOD, when the context is initialized.
+         * @name ModelContextProperties#minLOD
+         * @type Number
+         */
         this.minLOD = null;
+        /**
+         * The maximum LOD with which this model has been added to the context.
+         * The vertex buffer data should be filled with the mesh data up to this 
+         * LOD, when the context is initialized.
+         * @name ModelContextProperties#maxLOD
+         * @type Number
+         */
         this.maxLOD = null;
     }
 
-    //TODO: comment
+    /**
+     * @struct The data associtated with a file storing a single or multiple 
+     * LODs of a model.
+     * @param {String} path The path where this file is located relative to the
+     * models folder.
+     * @returns {ModelFile}
+     * 
+     */
     function ModelFile(path) {
+        /**
+         * The path where this file is located relative to the models folder.
+         * @name ModelFile#path
+         * @type String
+         */
         this.path = path;
+        /**
+         * Whether the data from this file has been loaded to a Model instance.
+         * Currently not used anywhere, as simply the min and max LOD info is
+         * to decide if a file needs to be loaded or not.
+         * @name ModelFile#loaded
+         * @type Boolean
+         */
         this.loaded = false;
     }
 
-    ///TODO: add comments for class & methods
     /**
      * @name Model
-     * @class Represents a 3D polygonal model.
+     * @class Combines different Mesh object into one, multi-LOD 3D model and
+     * provides functionality for loading these different LODs from a single or
+     * multiple files.
      * @extends Resource
      */
     function Model() {
         Resource.call(this);
         /**
+         * The mesh ordered by their LOD (the index corresponds to the LOD of
+         * the mesh)
          * @name Model#_meshes
          * @type Array.<Mesh>
          */
-        this._meshes = new Array();
+        this._meshes = [];
+        /**
+         * The minimum LOD for which this model currently stores info. It is set
+         * when mesh info is loaded from a file.
+         * @name Model#_minLOD
+         * @type Number
+         */
         this._minLOD = null;
+        /**
+         * The maximum LOD for which this model currently stores info. It is set
+         * when mesh info is loaded from a file.
+         * @name Model#_maxLOD
+         * @type Number
+         */
         this._maxLOD = null;
         /**
+         * A convenience property holding a reference to the currently edited
+         * mesh, in case a single LOD is set to be edited. Editing operations
+         * affect only this mesh, if it is set.
          * @name Model#_editedMesh
          * @type Mesh
          */
         this._editedMesh = null;
+        /**
+         * Editing operations affect the meshes equal to or above this LOD.
+         * @name Model#_minEditedLOD
+         * @type Number
+         */
         this._minEditedLOD = 0;
+        /**
+         * Editing operations affect the meshes up to this LOD.
+         * @name Model#_maxEditedLOD
+         * @type Number
+         */
         this._maxEditedLOD = 0;
         /**
          * The name of this model.
@@ -1277,19 +1376,19 @@ Application.createModule({name: "Egom",
          */
         this._name = null;
         /**
-         * The names of the files that hold the meshes for this model. The index
-         * indicates the default LOD of the mesh stored in the file.
-         * @name Model#_filenames
+         * The the files that hold single-LOD meshes for this model. The index
+         * indicates the LOD of the mesh stored in the file.
+         * @name Model#_singleLODFiles
          * @type Array.<ModelFile>
          */
         this._singleLODFiles = [];
-        this._multiLODFiles = [];
         /**
-         * The version string identifying the exact format of the model file.
-         * @name Model#_version
-         * @type String
+         * The the files that hold multi-LOD meshes for this model. The index
+         * indicates the maximum LOD of the mesh stored in the file.
+         * @name Model#_multiLODFiles
+         * @type Array.<ModelFile>
          */
-        this._version = null;
+        this._multiLODFiles = [];
         /**
          * The object storing the info (meta) properties of the model.
          * @name Model#_infoProperties
@@ -1310,8 +1409,22 @@ Application.createModule({name: "Egom",
          * @type Object.<String, ModelContextProperties>
          */
         this._contextProperties = {};
+        /**
+         * When the model is requested to be loaded from files, it is counted
+         * in this property, how many file requests need to be sent.
+         * @name Model#_numFilesToLoad
+         * @type Number
+         */
         this._numFilesToLoad = 0;
+        /**
+         * The amount of files that already has finished loading (to decide
+         * whether the loading of the model as a whole resource has finished).
+         * @name Model#_numLoadedFiles
+         * @type Number
+         */
         this._numLoadedFiles = 0;
+        // by default, no files are added and therefore the model as a resource
+        // is considered ready
         this.setToReady();
     }
 
@@ -1336,9 +1449,13 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * @param {String} path
-     * @param {Boolean} fileIsMultiLOD
-     * @param {Number} [lod=0]
+     * Sets or overwrites the path of a the file containing meshes for this 
+     * model.
+     * @param {String} path The path of the model file.
+     * @param {Boolean} fileIsMultiLOD Whether the file contains multiple-LODs
+     * of the model or only a single one.
+     * @param {Number} [lod=0] For single-LOD meshes, they will be loaded for
+     * this LOD, if LOD info is not provided in the file.
      * @returns {Boolean} Whether a new path has been set.
      */
     Model.prototype.setSourcePathForLOD = function (path, fileIsMultiLOD, lod) {
@@ -1368,6 +1485,13 @@ Application.createModule({name: "Egom",
         }
     };
 
+    /**
+     * A helper function that creates a callback function to be used to load
+     * the model data from an XML object. Do not use directly.
+     * @param {Number} lod
+     * @param {Boolean} multi
+     * @returns {Function}
+     */
     Model.prototype.createXMLLoaderFunctionForLOD = function (lod, multi) {
         return function (responseXML) {
             var modelFile = multi ? this._multiLODFiles[lod] : this._singleLODFiles[lod];
@@ -1381,11 +1505,12 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * Issues an asynchronous request to grab the file containing the model data,
-     * and sets a callback to load the data once the file has been downloaded.
-     * @returns {Boolean} Whether the request was issued. (if no filename is
-     * specified for the model, or it has already been loaded from the same file,
-     * the request will not be issued)
+     * Issues asynchronous requests to grab the minimum number of files
+     * containing mesh data covering all the LODs for this model.
+     * Sets callbacks to load the data once the files has been downloaded.
+     * @returns {Boolean} Whether request were actually issued. (if no files are
+     * specified for the model, or it has already been loaded in all LODs,
+     * no request will be issued)
      */
     Model.prototype.requestLoadFromFiles = function () {
         var i, lod;
@@ -1429,21 +1554,43 @@ Application.createModule({name: "Egom",
         return false;
     };
 
+    /**
+     * Returns the minimum LOD this model has a mesh for.
+     * @returns {Number}
+     */
     Model.prototype.getMinLOD = function () {
         return this._minLOD;
     };
 
+    /**
+     * Returns the maximum LOD this model has a mesh for.
+     * @returns {Number}
+     */
     Model.prototype.getMaxLOD = function () {
         return this._maxLOD;
     };
+    
+    /**
+     * Returns the LOD closest to the specified level this model has a mesh for.
+     * @param {Number} lod
+     * @returns {Number}
+     */
+    Model.prototype.getClosestAvailableLOD = function (lod) {
+        return Math.min(Math.max(this.getMinLOD(), lod), this.getMaxLOD());
+    };
 
+    /**
+     * Extends the covered LOD range if needed to include the passed range.
+     * @param {Number} minLOD
+     * @param {Number} maxLOD
+     */
     Model.prototype.updateLODInfo = function (minLOD, maxLOD) {
         this._minLOD = this._minLOD === null ? minLOD : (minLOD < this._minLOD ? minLOD : this._minLOD);
         this._maxLOD = this._maxLOD === null ? maxLOD : (maxLOD > this._maxLOD ? maxLOD : this._maxLOD);
     };
 
     /**
-     * 
+     * Returns the mesh containing this model at the given LOD.
      * @param {Number} lod
      * @returns {Mesh}
      */
@@ -1454,24 +1601,43 @@ Application.createModule({name: "Egom",
         return this._meshes[lod];
     };
 
+    /**
+     * After calling this method, editing methods of the model will affect the 
+     * mesh that contains the specified LOD.
+     * @param {Number} lod
+     */
     Model.prototype.startEditingMeshWithLOD = function (lod) {
         this._editedMesh = this.getMeshWithLOD(lod);
+        this._minEditedLOD = lod;
+        this._maxEditedLOD = lod;
     };
 
-    Model.prototype.stopEditingMesh = function () {
-        this._editedMesh = null;
-    };
-
+    /**
+     * If available, returns a reference to the currently edited mesh.
+     * @returns {Mesh}
+     */
     Model.prototype.getCurrentlyEditedMesh = function () {
         return this._editedMesh;
     };
 
+    /**
+     * After this call, editing methods will affect meshes with LODs greater
+     * than or equal to the passed value (up to the set maximum)
+     * @param {Number} value
+     */
     Model.prototype.setMinimumEditedLOD = function (value) {
         this._minEditedLOD = value;
+        this._editedMesh = (this._minEditedLOD === this._maxEditedLOD) ? this.getMeshWithLOD(value) : null;
     };
 
+    /**
+     * After this call, editing methods will affect meshes with LODs smaller
+     * than or equal to the passed value (down to the set minimum)
+     * @param {Number} value
+     */
     Model.prototype.setMaximumEditedLOD = function (value) {
         this._maxEditedLOD = value;
+        this._editedMesh = (this._minEditedLOD === this._maxEditedLOD) ? this.getMeshWithLOD(value) : null;
     };
 
     /**
@@ -1524,13 +1690,13 @@ Application.createModule({name: "Egom",
             return false;
         }
         // checking EgomModel version
-        this._version = xmlDoc.documentElement.getAttribute("version");
-        if (!this._version) {
+        var version = xmlDoc.documentElement.getAttribute("version");
+        if (!version) {
             Application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
             return false;
         }
-        if (_supportedVersions.indexOf(this._version) < 0) {
-            Application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + this._version + ") is not supported.",
+        if (_supportedVersions.indexOf(version) < 0) {
+            Application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
                     "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }
@@ -1569,14 +1735,14 @@ Application.createModule({name: "Egom",
                 }
             }
         }
-        if (this._version === "2.0") {
+        if (version === "2.0") {
             this._scale = parseFloat(this._infoProperties["size of one unit in mm"]) * 10;
         }
         // setting up some variables for version-specific loading
         var vertexTagName = null;
         var lineTagName = null;
         var triangleTagName = null;
-        switch (this._version) {
+        switch (version) {
             case "2.0":
                 vertexTagName = "vertex";
                 lineTagName = "line";
@@ -1604,7 +1770,7 @@ Application.createModule({name: "Egom",
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             var vertex = new Vertex(
-                    (parseFloat(this._version) >= 2.1 ?
+                    (parseFloat(version) >= 2.1 ?
                             [
                                 parseFloat(vertexTags[i].getAttribute("x")),
                                 parseFloat(vertexTags[i].getAttribute("y")),
@@ -1637,18 +1803,18 @@ Application.createModule({name: "Egom",
             var line = new Line(
                     parseInt(lineTags[i].getAttribute("a")),
                     parseInt(lineTags[i].getAttribute("b")),
-                    (parseFloat(this._version) >= 2.1 ?
+                    (parseFloat(version) >= 2.1 ?
                             (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"))] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
                             // version 2.0
                             : [
                                 parseInt(lineTags[i].getAttribute("red")) / 255,
                                 parseInt(lineTags[i].getAttribute("green")) / 255,
                                 parseInt(lineTags[i].getAttribute("blue")) / 255]),
-                    (parseFloat(this._version) >= 2.1 ?
+                    (parseFloat(version) >= 2.1 ?
                             (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
                             // version 2.0
                             : parseInt(lineTags[i].getAttribute("luminosity")) / 255),
-                    (parseFloat(this._version) >= 2.1 ?
+                    (parseFloat(version) >= 2.1 ?
                             lineTags[i].getAttribute("n").split(",").map(parseFloat)
                             // version 2.0
                             : [
@@ -1674,7 +1840,7 @@ Application.createModule({name: "Egom",
             }
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
-            params.color = parseFloat(this._version) >= 2.1 ?
+            params.color = parseFloat(version) >= 2.1 ?
                     (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"))] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
                     // version 2.0
                     : [
@@ -1682,15 +1848,15 @@ Application.createModule({name: "Egom",
                         parseInt(triangleTags[i].getAttribute("green")) / 255,
                         parseInt(triangleTags[i].getAttribute("blue")) / 255,
                         (255 - parseInt(triangleTags[i].getAttribute("alpha"))) / 255];
-            params.luminosity = parseFloat(this._version) >= 2.1 ?
+            params.luminosity = parseFloat(version) >= 2.1 ?
                     (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
                     // version 2.0
                     : parseInt(triangleTags[i].getAttribute("luminosity")) / 255;
-            params.shininess = parseFloat(this._version) >= 2.1 ?
+            params.shininess = parseFloat(version) >= 2.1 ?
                     (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi")) : defaultShininess)
                     // version 2.0
                     : parseInt(triangleTags[i].getAttribute("shininess"));
-            params.texCoords = parseFloat(this._version) >= 2.1 ?
+            params.texCoords = parseFloat(version) >= 2.1 ?
                     [
                         triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
                         triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
@@ -1707,7 +1873,7 @@ Application.createModule({name: "Egom",
                         [
                             parseFloat(triangleTags[i].getAttribute("tcx")),
                             parseFloat(triangleTags[i].getAttribute("tcy"))]];
-            params.normals = parseFloat(this._version) >= 2.1 ?
+            params.normals = parseFloat(version) >= 2.1 ?
                     (triangleTags[i].hasAttribute("n") ?
                             [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
                             [
@@ -1987,10 +2153,15 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * 
-     * @param {Boolean} wireframe
-     * @param {Number} startIndex
-     * @param {Number} [lod=0]
+     * Returns the data about this 3D model that is in a proper format to be 
+     * loaded into GL vertex buffers.
+     * @param {Boolean} wireframe Whether data for wireframe rendering should
+     * be returned (false -> solid rendering)
+     * @param {Number} startIndex The current size of the vertex buffers to
+     * which the data from this model is to be added to, so that correct
+     * indices will be calculated.
+     * @param {Number} [lod=0] The LOD of the mesh to be added (only one mesh
+     * may be added at a time)
      * @returns {Object}
      */
     Model.prototype.getBufferData = function (wireframe, startIndex, lod) {
@@ -2049,7 +2220,7 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * Adds a new vertex to the currently edited mesh.
+     * Adds a new vertex to the currently edited mesh(es).
      * @param {Number[3]} position
      * @param {Number[2]} [texCoords]
      */
@@ -2063,6 +2234,10 @@ Application.createModule({name: "Egom",
         }
     };
 
+    /**
+     * Adds a new line to the currently edited mesh(es).
+     * @param {Line} line
+     */
     Model.prototype.addLine = function (line) {
         if (this._editedMesh) {
             this._editedMesh.addLine(line);
