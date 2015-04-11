@@ -1,99 +1,64 @@
-"use strict";
 /**
- * @fileOverview This file contains wrapper classes for accessing WebGL 
- * functionality and manage the corresponding resources.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file Provides an interface to interact with WebGL in a managed way. Offers
+ * rather low level functionality, but using it is still much more transparent 
+ * than accessing WebGL directly.
+ * Usage:
+ * - create a managed context and associate it with an HTML5 canvas element
+ * - create the managed resources that you want to use (textures, shaders,
+ * models)
+ * - set the data for the managed resources using their provided methods
+ * - add the resources to the context
+ * - initialize the context
+ * - set the shader and its uniforms using the managed resources
+ * - use the render function of the model to render it to the context
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true */
+/*global define, Image */
 
-Application.createModule({name: "GL",
-    dependencies: [
-        {module: "Resource", from: "resource.js"},
-        {module: "Egom", from: "egom.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Resource = Application.Resource.Resource;
-    var Egom = Application.Egom;
+define(function () {
+    "use strict";
     /**
-     * Creates a new Texture object.
-     * @class Represents a 2D texture resource.
-     * @extends Resource
-     * @param {String} filename The name of file from which the texture resource 
-     * is to be loaded. The constructor itself does not initiate the loading.
+     * @class Represents a managed WebGL texture.
+     * @param {Image} image The Image object that contains the data of the
+     * texture and can be passed to WebGL. It has to already contain the data
+     * when you add this texture to any context.
      * @param {Boolean} [useMipmap=true] Whether mipmapping should be used with
      * this texture.
+     * @returns {ManagedTexture}
      */
-    function Texture(filename, useMipmap) {
-        Resource.call(this);
-        // properties for file resource management
+    function ManagedTexture(image, useMipmap) {
         /**
-         * The name of the file where the texture resides. It actually contains the
-         * whole path relative to the site root.
-         * @name Texture#_filename
-         * @type String
+         * Contains the data to be passed to WebGL.
+         * @type Image
          */
-        this._filename = filename;
+        this._image = image;
         /**
          * Whether mipmapping should be used with this texture.
-         * @name Texture#_mipmap
          * @type Boolean
          */
         this._mipmap = (useMipmap !== undefined) ? useMipmap : true;
         /**
-         * An Image object to manage the loading of the texture from file.
-         * @name Texture#_image
-         * @type Image
-         */
-        this._image = new Image();
-        // properties for WebGL resource management
-        /**
-         * The associative array of WebGL texture IDs belonging to managed contexts 
-         * which this texture has been associated with. The keys are the names of the managed
-         * contexts, and values are the WebGL IDs (handles)
-         * @name Texture#_ids
+         * The associative array of WebGL texture IDs belonging to managed 
+         * contexts which this texture has been associated with. The keys are 
+         * the names of the managed contexts, and values are the WebGL IDs 
+         * (handles)
          * @type Object
          */
-        this._ids = new Object();
+        this._ids = {};
         /**
          * The associative array of bound WebGL texture locations (texture unit indices)
          * belonging to managed contexts which this texture has been associated with. 
          * The keys are the names of the managed contexts, and values are the location
          * indices.
-         * @name Texture#_locations
          * @type Object
          */
-        this._locations = new Object();
+        this._locations = {};
     }
-    // as it is an asynchronously loaded resource, we set the Resource as parent
-    // class to make handling easier
-    Texture.prototype = new Resource();
-    Texture.prototype.constructor = Texture;
-    /**
-     * Getter for the _filename property.
-     * @returns {String}
-     */
-    Texture.prototype.getFilename = function () {
-        return this._filename;
-    };
     /**
      * Returns the WebGL ID of this texture valid in the supplied managed context.
      * Error checking is not performed - if there is no valid ID for this context,
@@ -101,7 +66,7 @@ Application.createModule({name: "GL",
      * @param {ManagedGLContext} context
      * @returns {WebGLTexture}
      */
-    Texture.prototype.getIDForContext = function (context) {
+    ManagedTexture.prototype.getIDForContext = function (context) {
         return this._ids[context.getName()];
     };
     /**
@@ -110,7 +75,7 @@ Application.createModule({name: "GL",
      * @param {ManagedGLContext} context
      * @returns {Number}
      */
-    Texture.prototype.getTextureBindLocation = function (context) {
+    ManagedTexture.prototype.getTextureBindLocation = function (context) {
         return this._locations[context.getName()];
     };
     /**
@@ -119,67 +84,48 @@ Application.createModule({name: "GL",
      * @param {ManagedGLContext} context
      * @param {Number} location
      */
-    Texture.prototype.setTextureBindLocation = function (context, location) {
+    ManagedTexture.prototype.setTextureBindLocation = function (context, location) {
         this._locations[context.getName()] = location;
-    };
-    /**
-     * Initiates an asynchronous request to load the texture from file. When the
-     * loading finishes, the texture {@link Resource} is marked ready to use and 
-     * the potentially queued actions are executed.
-     */
-    Texture.prototype.requestLoadFromFile = function () {
-        if (this.isReadyToUse() === false) {
-            var self = this;
-            // when loaded, set the resource to ready and execute queued functions
-            this._image.onload = function () {
-                self.setToReady();
-            };
-            // setting the src property will automatically result in an asynchronous
-            // request to grab the texture file
-            this._image.src = this._filename;
-        }
     };
     /**
      * Adds the texture resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as typically this
      * will be called many times, with different {@link RenderableObject}s containing 
      * the texture request it to be added to the context where they are to be
-     * drawn) The action is only executed when the texture has been loaded.
+     * drawn)
      * @param {ManagedGLContext} context
      */
-    Texture.prototype.addToContext = function (context) {
-        this.executeWhenReady(function () {
-            if (this._ids[context.getName()] === undefined) {
-                var gl = context.gl;
-                this._ids[context.getName()] = gl.createTexture();
-                this._locations[context.getName()] = context.bindTexture(this);
-                // Upload the image into the texture.
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
-                // Set the parameters so we can render any size image.
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                if (this._mipmap === false) {
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                } else {
-                    if (context.getFiltering() === "bilinear") {
-                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-                    } else if (context.getFiltering() === "trilinear") {
-                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-                    } else if (context.getFiltering() === "anisotropic") {
-                        gl.texParameterf(gl.TEXTURE_2D, context.getAnisotropicFilter().TEXTURE_MAX_ANISOTROPY_EXT, 4);
-                    }
-                    gl.generateMipmap(gl.TEXTURE_2D);
+    ManagedTexture.prototype.addToContext = function (context) {
+        if (this._ids[context.getName()] === undefined) {
+            var gl = context.gl;
+            this._ids[context.getName()] = gl.createTexture();
+            this._locations[context.getName()] = context.bindTexture(this);
+            // Upload the image into the texture.
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
+            // Set the parameters so we can render any size image.
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            if (this._mipmap === false) {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            } else {
+                if (context.getFiltering() === "bilinear") {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+                } else if (context.getFiltering() === "trilinear") {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                } else if (context.getFiltering() === "anisotropic") {
+                    gl.texParameterf(gl.TEXTURE_2D, context.getAnisotropicFilter().TEXTURE_MAX_ANISOTROPY_EXT, 4);
                 }
+                gl.generateMipmap(gl.TEXTURE_2D);
             }
-        });
+        }
     };
     /**
      * Clears all previous bindings to managed WebGL contexts.
      */
-    Texture.prototype.clearContextBindings = function () {
-        this._ids = new Object();
-        this._locations = new Object();
+    ManagedTexture.prototype.clearContextBindings = function () {
+        this._ids = {};
+        this._locations = {};
     };
     /**
      * Creates a new Cubemap object.
@@ -417,18 +363,18 @@ Application.createModule({name: "GL",
      * @name ShaderUniform#VariableTypes
      */
     ShaderUniform.prototype.VariableTypes = Object.freeze(
-            {
-                none: 0,
-                float: 1,
-                mat4: 2,
-                mat3: 3,
-                vec3: 4,
-                vec4: 5,
-                sampler2D: 6,
-                samplerCube: 7,
-                int: 8,
-                bool: 9
-            });
+        {
+            none: 0,
+            float: 1,
+            mat4: 2,
+            mat3: 3,
+            vec3: 4,
+            vec4: 5,
+            sampler2D: 6,
+            samplerCube: 7,
+            int: 8,
+            bool: 9
+        });
     /**
      * Determining the enumeration value of a shader variable type from the string
      * containing the name of the variable type so that a faster hash table switch 
@@ -687,9 +633,9 @@ Application.createModule({name: "GL",
         this._id = context.gl.createBuffer();
         context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
         context.gl.bufferData(
-                context.gl.ARRAY_BUFFER,
-                this._data,
-                context.gl.STATIC_DRAW);
+            context.gl.ARRAY_BUFFER,
+            this._data,
+            context.gl.STATIC_DRAW);
         this.freeData();
     };
     /**
@@ -1300,27 +1246,27 @@ Application.createModule({name: "GL",
             }
             if (!this.gl) {
                 Application.showError("Unable to initialize WebGL.", "critical",
-                        "It looks like your device, browser or graphics drivers do not " +
-                        "support web 3D graphics. Make sure your browser and graphics " +
-                        "drivers are updated to the latest version, and you are using " +
-                        "a modern web browser (Firefox or Chrome are recommended).\n" +
-                        "Please note that some phones or handheld devices do not have 3D " +
-                        "web capabilities, even if you use the latest software.");
+                    "It looks like your device, browser or graphics drivers do not " +
+                    "support web 3D graphics. Make sure your browser and graphics " +
+                    "drivers are updated to the latest version, and you are using " +
+                    "a modern web browser (Firefox or Chrome are recommended).\n" +
+                    "Please note that some phones or handheld devices do not have 3D " +
+                    "web capabilities, even if you use the latest software.");
                 return;
             } else {
                 Application.showError("Your device appears to only have experimental WebGL (web based 3D) support.",
-                        undefined, "This application relies on 3D web features, and without full support, " +
-                        "the graphics of the application might be displayed with glitches or not at all. " +
-                        "If you experience problems, it is recommended to use lower graphics quality settings.");
+                    undefined, "This application relies on 3D web features, and without full support, " +
+                    "the graphics of the application might be displayed with glitches or not at all. " +
+                    "If you experience problems, it is recommended to use lower graphics quality settings.");
             }
         }
         var gl = this.gl;
         if (Armada.graphics().getAntialiasing() && !gl.getContextAttributes().antialias) {
             Application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
-                    "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
-                    "this error message showing up again, disable antialiasing in the graphics settings or try " +
-                    "running the application in a different browser. Antialiasing will not work, but otherwise this " +
-                    "error will have no consequences.", gl);
+                "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
+                "this error message showing up again, disable antialiasing in the graphics settings or try " +
+                "running the application in a different browser. Antialiasing will not work, but otherwise this " +
+                "error will have no consequences.", gl);
         }
         // save the information about WebGL limits
         this._maxBoundTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
@@ -1332,14 +1278,14 @@ Application.createModule({name: "GL",
         this._maxFragmentShaderUniforms = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
         this._maxVaryings = gl.getParameter(gl.MAX_VARYING_VECTORS);
         Application.log("WebGL context successfully created.\n" +
-                " Available texture units: " + this._maxBoundTextures + "\n" +
-                " Maximum texture size: " + this._maxTextureSize + "\n" +
-                " Maximum cubemap size: " + this._maxCubemapSize + "\n" +
-                " Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
-                " Available vertex attributes: " + this._maxVertexAttributes + "\n" +
-                " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
-                " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
-                " Available varying vectors: " + this._maxVaryings, 1);
+            " Available texture units: " + this._maxBoundTextures + "\n" +
+            " Maximum texture size: " + this._maxTextureSize + "\n" +
+            " Maximum cubemap size: " + this._maxCubemapSize + "\n" +
+            " Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
+            " Available vertex attributes: " + this._maxVertexAttributes + "\n" +
+            " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
+            " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
+            " Available varying vectors: " + this._maxVaryings, 1);
         // is filtering is set to anisotropic, try to grab the needed extension. If that fails,
         // fall back to trilinear filtering.
         if (this._filtering === "anisotropic") {
@@ -1599,7 +1545,7 @@ Application.createModule({name: "GL",
     /**
      * Binds the given {@link Texture} or {@link Cubemap} resource or the texture
      * associated to the given {@link FrameBuffer} resource to the given texture unit index.
-     * @param {Texture|Cubemap|FrameBuffer} texture The resource to bind for rendering.
+     * @param {ManagedTexture|Cubemap|FrameBuffer} texture The resource to bind for rendering.
      * @param {Number|Boolean} place To which activeTexture place is the texture to be bound.
      * If omitted, the texture will be bound to any free unit if one is available, and 
      * to a unit with a rotating index, if no free units are available. If a specific
@@ -1640,7 +1586,7 @@ Application.createModule({name: "GL",
         if (!this._boundTextures[place] || (this._boundTextures[place].texture !== texture)) {
             // make the selected texture unit active
             this.gl.activeTexture(this.gl.TEXTURE0 + place);
-            if (texture instanceof Texture) {
+            if (texture instanceof ManagedTexture) {
                 Application.log("Binding texture: '" + texture.getFilename() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getIDForContext(this));
                 texture.setTextureBindLocation(this, place);
@@ -1872,11 +1818,11 @@ Application.createModule({name: "GL",
      */
     ResourceManager.prototype.allResourcesLoaded = function () {
         return (
-                this.allCubemappedTexturesLoaded() &&
-                this.allShadersLoaded() &&
-                this.allTexturesLoaded() &&
-                this.allModelsLoaded()
-                );
+            this.allCubemappedTexturesLoaded() &&
+            this.allShadersLoaded() &&
+            this.allTexturesLoaded() &&
+            this.allModelsLoaded()
+            );
     };
     /**
      * Returns the total number of resources requested for loading.
@@ -1898,7 +1844,7 @@ Application.createModule({name: "GL",
      * reference to it, otherwise adds a new texture with this filename.
      * @param {String} filename
      * @param {Boolean} [useMipmap=true]
-     * @returns {Texture}
+     * @returns {ManagedTexture}
      */
     ResourceManager.prototype.getOrAddTexture = function (filename, useMipmap) {
         var textureName = filename;
@@ -1908,7 +1854,7 @@ Application.createModule({name: "GL",
         if (this._textures[textureName] === undefined) {
             this._numTextures += 1;
             this.resetReadyState();
-            this._textures[textureName] = new Texture(filename, useMipmap);
+            this._textures[textureName] = new ManagedTexture(filename, useMipmap);
             var self = this;
             this._textures[textureName].executeWhenReady(function () {
                 self._numTexturesLoaded += 1;
@@ -2174,19 +2120,19 @@ Application.createModule({name: "GL",
             var attributeTags = shaderTags[i].getElementsByTagName("attribute");
             for (j = 0; j < attributeTags.length; j++) {
                 attributes.push(new ShaderAttribute(
-                        attributeTags[j].getAttribute("name"),
-                        parseInt(attributeTags[j].getAttribute("size")),
-                        attributeTags[j].getAttribute("role"))
-                        );
+                    attributeTags[j].getAttribute("name"),
+                    parseInt(attributeTags[j].getAttribute("size")),
+                    attributeTags[j].getAttribute("role"))
+                    );
             }
             var uniforms = new Array();
             var uniformTags = shaderTags[i].getElementsByTagName("uniform");
             for (j = 0; j < uniformTags.length; j++) {
                 uniforms.push(new ShaderUniform(
-                        uniformTags[j].getAttribute("name"),
-                        uniformTags[j].getAttribute("type"),
-                        uniformTags[j].hasAttribute("arraySize") ? uniformTags[j].getAttribute("arraySize") : 0)
-                        );
+                    uniformTags[j].getAttribute("name"),
+                    uniformTags[j].getAttribute("type"),
+                    uniformTags[j].hasAttribute("arraySize") ? uniformTags[j].getAttribute("arraySize") : 0)
+                    );
                 if (uniformTags[j].hasAttribute("memberOf")) {
                     var parent = uniformTags[j].getAttribute("memberOf");
                     for (k = 0; k < uniforms.length; k++) {
@@ -2197,14 +2143,14 @@ Application.createModule({name: "GL",
                 }
             }
             this.addShader(new Shader(
-                    shaderTags[i].getAttribute("name"),
-                    shaderTags[i].getElementsByTagName("vertex")[0].getAttribute("filename"),
-                    shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
-                    shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
-                    attributes,
-                    uniforms,
-                    (shaderTags[i].hasAttribute("fallback") ? shaderTags[i].getAttribute("fallback") : null)
-                    ));
+                shaderTags[i].getAttribute("name"),
+                shaderTags[i].getElementsByTagName("vertex")[0].getAttribute("filename"),
+                shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
+                shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
+                attributes,
+                uniforms,
+                (shaderTags[i].hasAttribute("fallback") ? shaderTags[i].getAttribute("fallback") : null)
+                ));
         }
     };
     /**
@@ -2250,11 +2196,12 @@ Application.createModule({name: "GL",
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        Texture: Texture,
+        ManagedTexture: ManagedTexture,
         Cubemap: Cubemap,
         Shader: Shader,
         FrameBuffer: FrameBuffer,
         ManagedGLContext: ManagedGLContext,
         ResourceManager: ResourceManager
     };
+
 });

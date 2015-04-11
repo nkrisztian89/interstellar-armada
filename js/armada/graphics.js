@@ -1,57 +1,31 @@
-"use strict";
-
 /**
- * @fileOverview This file contains the classes to load graphics configuration
- * and set up an according graphics context to use in the game.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, plusplus: true, white: true */
+/*global define, parseFloat, window, localStorage */
 
-Application.createModule({name: "Graphics",
-    dependencies: [
-        {module: "Resource", from: "resource.js"},
-        {module: "GL", from: "gl.js"},
-        {module: "Scene", from: "scene.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Resource = Application.Resource.Resource;
-    var GL = Application.GL;
-    var Scene = Application.Scene;
-
+define(["modules/application", "modules/async-resource", "modules/resource-manager", "modules/buda-scene"], function (Application, asyncResource, resourceManager, budaScene) {
+    "use strict";
     /**
      * @class A graphics context for other modules, to be used to pass the 
      * important properties of the current graphics environment to functions that
      * can manipulate it.
-     * @extends Resource
+     * @extends asyncResource.Resource
      */
     function GraphicsContext() {
-        Resource.call(this);
+        asyncResource.Resource.call(this);
         /**
          * The resource manager holding and managing all the games graphical
          * resources e.g. shader, models or textures.
          * @name GraphicsContext#_resourceManager
          * @type GL.ResourceManager
          */
-        this._resourceManager = new GL.ResourceManager();
+        this._resourceManager = new resourceManager.ResourceManager();
         /**
          * The XML tag storing the default graphics settings.
          * @name GraphicsContext#_xmlSource
@@ -126,7 +100,7 @@ Application.createModule({name: "Graphics",
          */
         this._shadowDepthRatio = null;
     }
-    GraphicsContext.prototype = new Resource();
+    GraphicsContext.prototype = new asyncResource.Resource();
     GraphicsContext.prototype.constructor = GraphicsContext;
     /**
      * Returns the resource manager managing the graphical resources of the game.
@@ -142,9 +116,13 @@ Application.createModule({name: "Graphics",
      * settings should be restored or completely new settings should be initialized.
      */
     GraphicsContext.prototype.loadFromXMLTag = function (xmlTag, onlyRestoreSettings) {
-        var i;
+        var i,
+              shadersTag,
+              contextTag, shadowTag,
+              lodLoadProfileTag, loadLoadLimitTags,
+              lodDisplayProfileTag, lodDisplayLimitTags, lodDisplayLimits;
         onlyRestoreSettings = onlyRestoreSettings || false;
-        var shadersTag = xmlTag.getElementsByTagName("shaders")[0];
+        shadersTag = xmlTag.getElementsByTagName("shaders")[0];
         // if new settings are to be initialized, we need to load the shader and
         // cube map descriptions
         if (!onlyRestoreSettings) {
@@ -165,7 +143,7 @@ Application.createModule({name: "Graphics",
             this._shaderComplexity = shadersTag.getAttribute("complexity");
             this._resourceManager.useFallbackShaders(shadersTag.getAttribute("complexity") !== "normal");
         }
-        var contextTag = xmlTag.getElementsByTagName("context")[0];
+        contextTag = xmlTag.getElementsByTagName("context")[0];
         if (contextTag !== null) {
             if (contextTag.hasAttribute("antialiasing")) {
                 this._antialiasing = (contextTag.getAttribute("antialiasing") === "true");
@@ -175,44 +153,45 @@ Application.createModule({name: "Graphics",
             }
             if (contextTag.hasAttribute("shadowMapping")) {
                 this._shadowMapping = (contextTag.getAttribute("shadowMapping") === "true");
-                var shadowTag = contextTag.getElementsByTagName("shadows")[0];
+                shadowTag = contextTag.getElementsByTagName("shadows")[0];
                 if (shadowTag !== null) {
-                    this._shadowQuality = (parseInt(shadowTag.getAttribute("quality")));
+                    this._shadowQuality = (parseInt(shadowTag.getAttribute("quality"), 10));
                     this._shadowRanges = shadowTag.getAttribute("ranges").split(",").map(parseFloat);
-                    this._shadowDistance = (parseInt(shadowTag.getAttribute("numRanges")));
+                    this._shadowDistance = (parseInt(shadowTag.getAttribute("numRanges"), 10));
                     this._shadowDepthRatio = parseFloat(shadowTag.getAttribute("depthRatio"));
                 }
             }
         }
         // load the LOD load settings (maximum loaded LOD)
-        var lodLoadProfileTag = xmlTag.getElementsByTagName("lodLoadProfile")[0];
-        this._maxLoadedLOD = parseInt(lodLoadProfileTag.getAttribute("maxLevel"));
+        lodLoadProfileTag = xmlTag.getElementsByTagName("lodLoadProfile")[0];
+        this._maxLoadedLOD = parseInt(lodLoadProfileTag.getAttribute("maxLevel"), 10);
         // if the maximum loaded LOD is limited by screen width, check the current width
         // and apply the limit
         if (lodLoadProfileTag.getAttribute("autoLimitByScreenWidth") === "true") {
-            var loadLoadLimitTags = lodLoadProfileTag.getElementsByTagName("limit");
+            loadLoadLimitTags = lodLoadProfileTag.getElementsByTagName("limit");
             for (i = 0; i < loadLoadLimitTags.length; i++) {
                 // take the width of the window, therefore playing in a small window
                 // will not use unnecesarily high detail, even if the screen is big
                 if ((window.innerWidth < loadLoadLimitTags[i].getAttribute("screenSizeLessThan")) &&
-                        (this._maxLoadedLOD > loadLoadLimitTags[i].getAttribute("level"))) {
-                    this._maxLoadedLOD = parseInt(loadLoadLimitTags[i].getAttribute("level"));
+                      (this._maxLoadedLOD > loadLoadLimitTags[i].getAttribute("level"))) {
+                    this._maxLoadedLOD = parseInt(loadLoadLimitTags[i].getAttribute("level"), 10);
                 }
             }
         }
         // load the LOD display settings (maximum displayed LOD, thresholds)
-        var lodDisplayProfileTag = xmlTag.getElementsByTagName("lodDisplayProfile")[0];
-        var lodDisplayLimitTags = lodDisplayProfileTag.getElementsByTagName("limit");
-        var lodDisplayLimits = new Array(lodDisplayLimitTags.length + 1, 0);
+        lodDisplayProfileTag = xmlTag.getElementsByTagName("lodDisplayProfile")[0];
+        lodDisplayLimitTags = lodDisplayProfileTag.getElementsByTagName("limit");
+        lodDisplayLimits = new Array(lodDisplayLimitTags.length + 1);
+        lodDisplayLimits[0] = 0;
         for (i = 0; i < lodDisplayLimitTags.length; i++) {
-            lodDisplayLimits[parseInt(lodDisplayLimitTags[i].getAttribute("level")) + 1] = parseInt(lodDisplayLimitTags[i].getAttribute("objectSizeLessThan"));
+            lodDisplayLimits[parseInt(lodDisplayLimitTags[i].getAttribute("level"), 10) + 1] = parseInt(lodDisplayLimitTags[i].getAttribute("objectSizeLessThan"), 10);
         }
-        this._lodContext = new Scene.LODContext(
-                parseInt(lodDisplayProfileTag.getAttribute("maxLevel")),
-                lodDisplayLimits,
-                (lodDisplayProfileTag.getAttribute("compensateForObjectSize") === "true"),
-                parseInt(lodDisplayProfileTag.getAttribute("referenceSize")),
-                parseFloat(lodDisplayProfileTag.getAttribute("minimumRelativeSize")));
+        this._lodContext = new budaScene.Scene.LODContext(
+              parseInt(lodDisplayProfileTag.getAttribute("maxLevel"), 10),
+              lodDisplayLimits,
+              (lodDisplayProfileTag.getAttribute("compensateForObjectSize") === "true"),
+              parseInt(lodDisplayProfileTag.getAttribute("referenceSize"), 10),
+              parseFloat(lodDisplayProfileTag.getAttribute("minimumRelativeSize")));
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
@@ -225,7 +204,7 @@ Application.createModule({name: "Graphics",
             this._filtering = localStorage.interstellarArmada_graphics_filtering;
         }
         if (localStorage.interstellarArmada_graphics_maxLOD !== undefined) {
-            this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD));
+            this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD, 10));
         }
         if (localStorage.interstellarArmada_graphics_shaderComplexity !== undefined) {
             this.setShaderComplexity(localStorage.interstellarArmada_graphics_shaderComplexity);
@@ -234,10 +213,10 @@ Application.createModule({name: "Graphics",
             this._shadowMapping = (localStorage.interstellarArmada_graphics_shadowMapping === "true");
         }
         if (localStorage.interstellarArmada_graphics_shadowQuality !== undefined) {
-            this._shadowQuality = (parseInt(localStorage.interstellarArmada_graphics_shadowQuality));
+            this._shadowQuality = (parseInt(localStorage.interstellarArmada_graphics_shadowQuality, 10));
         }
         if (localStorage.interstellarArmada_graphics_shadowDistance !== undefined) {
-            this._shadowDistance = (parseInt(localStorage.interstellarArmada_graphics_shadowDistance));
+            this._shadowDistance = (parseInt(localStorage.interstellarArmada_graphics_shadowDistance, 10));
         }
         this.setToReady();
     };
@@ -290,7 +269,7 @@ Application.createModule({name: "Graphics",
                 break;
             default:
                 Application.showError("Attempting to set texture filtering to: '" + value + "', which is not a supported option.",
-                        "minor", "Filtering has been instead set to bilinear.");
+                      "minor", "Filtering has been instead set to bilinear.");
                 this._filtering = "bilinear";
         }
         localStorage.interstellarArmada_graphics_filtering = this._filtering;
@@ -338,7 +317,7 @@ Application.createModule({name: "Graphics",
                 break;
             default:
                 Application.showError("Attempting to set complexity to: '" + value + "', which is not a supported option.",
-                        "minor", "Shader complexity has been instead set to normal.");
+                      "minor", "Shader complexity has been instead set to normal.");
                 this._shaderComplexity = "normal";
         }
         this._resourceManager.useFallbackShaders(this._shaderComplexity === "simple");
@@ -379,8 +358,8 @@ Application.createModule({name: "Graphics",
      * @returns {Number[]}
      */
     GraphicsContext.prototype.getShadowRanges = function () {
-        var result = new Array();
-        for (var i = 0; i < this._shadowDistance; i++) {
+        var i, result = [];
+        for (i = 0; i < this._shadowDistance; i++) {
             result.push(this._shadowRanges[i]);
         }
         return result;

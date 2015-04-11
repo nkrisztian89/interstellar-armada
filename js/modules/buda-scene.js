@@ -1,40 +1,16 @@
-"use strict";
-
 /**
- * @fileOverview This file the {@link Scene} class, which can be used to build
- * and render a scene containing {@link RenderableNode} instances.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true */
+/*global define */
 
-Application.createModule({name: "Scene",
-    dependencies: [
-        {script: "matrices.js"},
-        {module: "GL", from: "gl.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var GL = Application.GL;
-    // a reference to this module which will be returned in the end
-    var Module;
+
+define([], function () {
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -2990,7 +2966,7 @@ Application.createModule({name: "Scene",
 
     // -------------------------------------------------------------------------
     // The public interface of the module
-    Module = {
+    return {
         LODContext: LODContext,
         Scene: Scene,
         LightSource: LightSource,
@@ -3007,5 +2983,4 @@ Application.createModule({name: "Scene",
         PointCloud: PointCloud,
         PointParticle: PointParticle
     };
-    return Module;
 });

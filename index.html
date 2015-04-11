@@ -37,11 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <link href="css/database.css" rel="stylesheet" type="text/css"/>
         <link href="css/ingame-menu.css" rel="stylesheet" type="text/css"/>
 
-        <!-- Adding the ?123 bypasses caching, to make sure the newest version
-             of the source file is loaded -->
-        <script src="js/application.js?123"></script>
+        <script data-main="js/main.js" src="js/libs/require.js"></script>
     </head>
-    <body onload="Application.initialize('js/armada.js');">
+    <body>
         <div class="horizontallyCentered contentWide outerContainer pageContainer">
             <img src="pictures/thumb.png" alt="Interstellar Armada" />
             <h3>

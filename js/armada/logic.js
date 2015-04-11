@@ -1,48 +1,16 @@
-"use strict";
 /**
- * @fileOverview This file implements the game logic of the Interstellar 
- * Armada program.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, white: true */
+/*global define */
 
-Application.createModule({name: "Logic",
-    dependencies: [
-        {script: "polyfill.js"},
-        {script: "matrices.js"},
-        {module: "Resource", from: "resource.js"},
-        {module: "Classes", from: "classes.js"},
-        {module: "Physics", from: "physics.js"},
-        {module: "Egom", from: "egom.js"},
-        {module: "Scene", from: "scene.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Resource = Application.Resource.Resource;
-    var Classes = Application.Classes;
-    var Physics = Application.Physics;
-    var Egom = Application.Egom;
-    var Scene = Application.Scene;
-    // a reference to this module which will be returned in the end
-    var Module;
+define([], function () {
+    "use strict";
     /**
      * The length of impulse-like events in milliseconds (such as thruster bursts or 
      * weapon shots)
@@ -82,11 +50,11 @@ Application.createModule({name: "Logic",
      */
     Skybox.prototype.addToScene = function (scene) {
         scene.addBackgroundObject(new Scene.CubemapSampledFVQ(
-                Armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
-                Armada.resources().getShader(this._class.shaderName),
-                this._class.samplerName,
-                Armada.resources().getCubemappedTexture(this._class.cubemap),
-                scene.activeCamera));
+              Armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
+              Armada.resources().getShader(this._class.shaderName),
+              this._class.samplerName,
+              Armada.resources().getCubemappedTexture(this._class.cubemap),
+              scene.activeCamera));
     };
     /**
      * Represents an "infinitely far away" object in space (typically a star)
@@ -128,12 +96,12 @@ Application.createModule({name: "Logic",
         scene.addLightSource(new Scene.LightSource(this._class.lightColor, this._position));
         for (i = 0; i < this._class.layers.length; i++) {
             layerParticle = new Scene.StaticParticle(
-                    Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-                    Armada.resources().getShader(this._class.layers[i].shaderName),
-                    Armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
-                    this._class.layers[i].color,
-                    this._class.layers[i].size,
-                    Mat.translation4v(Vec.scaled3(this._position, 4500)));
+                  Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+                  Armada.resources().getShader(this._class.layers[i].shaderName),
+                  Armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
+                  this._class.layers[i].color,
+                  this._class.layers[i].size,
+                  Mat.translation4v(Vec.scaled3(this._position, 4500)));
             layerParticle.setRelSize(1.0);
             scene.addBackgroundObject(layerParticle);
         }
@@ -155,9 +123,9 @@ Application.createModule({name: "Logic",
          * @type PointParticle
          */
         this._visualModel = new Scene.PointParticle(
-                Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], cloud.getColor())),
-                shader,
-                positionMatrix);
+              Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], cloud.getColor())),
+              shader,
+              positionMatrix);
         /**
          * The distance up to how far away this particle can be from the camera.
          * @name DustParticle#_range
@@ -240,19 +208,19 @@ Application.createModule({name: "Logic",
     DustCloud.prototype.addToScene = function (scene) {
         var i;
         this._visualModel = new Scene.PointCloud(
-                Armada.resources().getShader(this._class.shaderName),
-                this._class.color,
-                this._class.range);
+              Armada.resources().getShader(this._class.shaderName),
+              this._class.color,
+              this._class.range);
         var node = scene.addObject(this._visualModel);
         this._particles = new Array();
         for (i = 0; i < this._class.numberOfParticles; i++) {
             var particle = new DustParticle(
-                    this,
-                    Armada.resources().getShader(this._class.shaderName),
-                    Mat.translation4(
-                            (Math.random() - 0.5) * 2 * this._class.range,
-                            (Math.random() - 0.5) * 2 * this._class.range,
-                            (Math.random() - 0.5) * 2 * this._class.range));
+                  this,
+                  Armada.resources().getShader(this._class.shaderName),
+                  Mat.translation4(
+                        (Math.random() - 0.5) * 2 * this._class.range,
+                        (Math.random() - 0.5) * 2 * this._class.range,
+                        (Math.random() - 0.5) * 2 * this._class.range));
             particle.addToScene(node);
             this._particles.push(particle);
         }
@@ -300,12 +268,12 @@ Application.createModule({name: "Logic",
          * @type PhysicalObject
          */
         this._physicalModel = new Physics.PhysicalObject(
-                projectileClass.mass,
-                positionMatrix || Mat.identity4(),
-                orientationMatrix || Mat.identity4(),
-                Mat.scaling4(projectileClass.size),
-                spacecraft ? spacecraft.getVelocityMatrix() : Mat.null4(),
-                []);
+              projectileClass.mass,
+              positionMatrix || Mat.identity4(),
+              orientationMatrix || Mat.identity4(),
+              Mat.scaling4(projectileClass.size),
+              spacecraft ? spacecraft.getVelocityMatrix() : Mat.null4(),
+              []);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
          * @name Porjectile#_timeLeft
@@ -339,12 +307,12 @@ Application.createModule({name: "Logic",
      */
     Projectile.prototype._createVisualModel = function () {
         this._visualModel = this._visualModel || new Scene.Billboard(
-                Armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
-                Armada.resources().getShader(this._class.shaderName),
-                Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
-                this._class.size,
-                this._physicalModel.getPositionMatrix(),
-                this._physicalModel.getOrientationMatrix());
+              Armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
+              Armada.resources().getShader(this._class.shaderName),
+              Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
+              this._class.size,
+              this._physicalModel.getPositionMatrix(),
+              this._physicalModel.getOrientationMatrix());
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
@@ -453,14 +421,14 @@ Application.createModule({name: "Logic",
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
         console.log("Adding weapon (" + this._class.name + ") to scene...");
         this._visualModel = new Scene.ShadedLODMesh(
-                this._class.addModelToResourceManager(this._class.name, lod),
-                Armada.resources().getShader(this._spacecraft.getClass().shaderName),
-                this._spacecraft.getTextures(),
-                this._slot.positionMatrix,
-                this._slot.orientationMatrix,
-                Mat.identity4(),
-                (wireframe === true),
-                lod);
+              this._class.addModelToResourceManager(this._class.name, lod),
+              Armada.resources().getShader(this._spacecraft.getClass().shaderName),
+              this._spacecraft.getTextures(),
+              this._slot.positionMatrix,
+              this._slot.orientationMatrix,
+              Mat.identity4(),
+              (wireframe === true),
+              lod);
         parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
     };
     /**
@@ -473,13 +441,13 @@ Application.createModule({name: "Logic",
         var projectileClass = this._class.barrels[barrelIndex].projectileClass;
         var muzzleFlashPosMatrix = Mat.translation4v(this._class.barrels[barrelIndex].positionVector);
         return new Scene.DynamicParticle(
-                Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-                Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
-                Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
-                projectileClass.muzzleFlash.color,
-                projectileClass.size,
-                muzzleFlashPosMatrix,
-                muzzleFlashTimeLength);
+              Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+              Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
+              Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
+              projectileClass.muzzleFlash.color,
+              projectileClass.size,
+              muzzleFlashPosMatrix,
+              muzzleFlashTimeLength);
     };
     /**
      * Adds the resources required to render the projeciles fired by this weapon
@@ -520,11 +488,11 @@ Application.createModule({name: "Logic",
                 this._visualModel.getNode().addSubnode(new Scene.RenderableNode(muzzleFlash));
                 // add the projectile of this barrel
                 var p = new Projectile(
-                        projectileClass,
-                        Mat.mul4(projectilePosMatrix, Mat.translation4v(barrelPosVector)),
-                        projectileOriMatrix,
-                        this._spacecraft,
-                        new Physics.Force("", this._class.barrels[i].force, [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
+                      projectileClass,
+                      Mat.mul4(projectilePosMatrix, Mat.translation4v(barrelPosVector)),
+                      projectileOriMatrix,
+                      this._spacecraft,
+                      new Physics.Force("", this._class.barrels[i].force, [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
             }
@@ -574,12 +542,12 @@ Application.createModule({name: "Logic",
      */
     Thruster.prototype.addToScene = function (parentNode, particleDescriptor) {
         this._visualModel = new Scene.StaticParticle(
-                Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-                Armada.resources().getShader(particleDescriptor.shaderName),
-                Armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
-                particleDescriptor.color,
-                this._slot.size,
-                Mat.translation4v(this._slot.positionVector));
+              Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+              Armada.resources().getShader(particleDescriptor.shaderName),
+              Armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
+              particleDescriptor.color,
+              this._slot.size,
+              Mat.translation4v(this._slot.positionVector));
         parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
         this._shipModel = parentNode.getRenderableObject();
     };
@@ -900,7 +868,7 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.getFlightMode = function () {
         return this._compensated ?
-                (this._restricted ? "restricted" : "compensated") : "free";
+              (this._restricted ? "restricted" : "compensated") : "free";
     };
     /**
      * Switches to the next flight mode. (free / compensated / restricted)
@@ -923,8 +891,8 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
         this._compensated ?
-                this._speedTarget += (intensity || this._speedIncrement) :
-                this._speedTarget = Number.MAX_VALUE;
+              this._speedTarget += (intensity || this._speedIncrement) :
+              this._speedTarget = Number.MAX_VALUE;
     };
     /**
      * Sets the target speed to the current speed if it is bigger. Only works 
@@ -943,8 +911,8 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
         this._compensated ?
-                this._speedTarget -= (intensity || this._speedIncrement) :
-                this._speedTarget = -Number.MAX_VALUE;
+              this._speedTarget -= (intensity || this._speedIncrement) :
+              this._speedTarget = -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed to the current speed if it is smaller. Only works 
@@ -964,8 +932,8 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.strafeLeft = function (intensity) {
         intensity ?
-                this._strafeTarget = -intensity :
-                this._strafeTarget = -Number.MAX_VALUE;
+              this._strafeTarget = -intensity :
+              this._strafeTarget = -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -982,8 +950,8 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.strafeRight = function (intensity) {
         intensity ?
-                this._strafeTarget = intensity :
-                this._strafeTarget = Number.MAX_VALUE;
+              this._strafeTarget = intensity :
+              this._strafeTarget = Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1000,8 +968,8 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.lower = function (intensity) {
         intensity ?
-                this._liftTarget = -intensity :
-                this._liftTarget = -Number.MAX_VALUE;
+              this._liftTarget = -intensity :
+              this._liftTarget = -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for lifting to zero, if was set to a speed to lift
@@ -1018,8 +986,8 @@ Application.createModule({name: "Logic",
      */
     ManeuveringComputer.prototype.raise = function (intensity) {
         intensity ?
-                this._liftTarget = intensity :
-                this._liftTarget = Number.MAX_VALUE;
+              this._liftTarget = intensity :
+              this._liftTarget = Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to lift
@@ -1163,46 +1131,46 @@ Application.createModule({name: "Logic",
         var yawAngle = Math.sign(turningMatrix[4]) * Vec.angle2u([0, 1], Vec.normal2([turningMatrix[4], turningMatrix[5]]));
         if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("yawRight",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
         } else if ((yawTarget - yawAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("yawLeft",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
         }
         // controlling pitch
         var pitchAngle = Math.sign(turningMatrix[6]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[5], turningMatrix[6]]));
         if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchUp",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
         } else if ((pitchTarget - pitchAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchDown",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
         }
         // controlling roll
         var rollAngle = Math.sign(-turningMatrix[2]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[0], turningMatrix[2]]));
         if ((this._rollTarget - rollAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("rollRight",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
         } else if ((this._rollTarget - rollAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("rollLeft",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
         }
         // controlling forward/reverse
         if ((this._speedTarget - speed) > speedThreshold) {
             this._spacecraft.addThrusterBurn("forward",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
         } else if ((this._speedTarget - speed) < -speedThreshold) {
             this._spacecraft.addThrusterBurn("reverse",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget)));
+                  Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget)));
         }
         // controlling horizontal drift
         if (this._compensated || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeRight",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
+                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
             } else if ((this._strafeTarget - speed) < -speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeLeft",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
+                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
             }
         }
         // controlling vertical drift
@@ -1210,10 +1178,10 @@ Application.createModule({name: "Logic",
             speed = relativeVelocityMatrix[14];
             if ((this._liftTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("raise",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed)));
+                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed)));
             } else if ((this._liftTarget - speed) < -speedThreshold) {
                 this._spacecraft.addThrusterBurn("lower",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
+                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
             }
         }
         // reset the targets, as new controls are needed from the pilot in the
@@ -1315,12 +1283,12 @@ Application.createModule({name: "Logic",
     Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
         this._class = spacecraftClass;
         this._physicalModel = new Physics.PhysicalObject(
-                this._class.mass,
-                positionMatrix || Mat.identity4(),
-                orientationMatrix || Mat.identity4(),
-                Mat.scaling4(this._class.modelSize),
-                Mat.identity4(),
-                this._class.bodies);
+              this._class.mass,
+              positionMatrix || Mat.identity4(),
+              orientationMatrix || Mat.identity4(),
+              Mat.scaling4(this._class.modelSize),
+              Mat.identity4(),
+              this._class.bodies);
         this._weapons = new Array();
         this._maneuveringComputer = new ManeuveringComputer(this);
         this._projectileArray = projectileArray || null;
@@ -1416,8 +1384,8 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
         return Mat.mul4(
-                this._physicalModel.getVelocityMatrix(),
-                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+              this._physicalModel.getVelocityMatrix(),
+              Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the 4x4 rotation matrix describing the current rotation of this
@@ -1426,10 +1394,10 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getTurningMatrix = function () {
         return Mat.mul4(
-                Mat.mul4(
-                        this._physicalModel.getOrientationMatrix(),
-                        this._physicalModel.getAngularVelocityMatrix()),
-                Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+              Mat.mul4(
+                    this._physicalModel.getOrientationMatrix(),
+                    this._physicalModel.getAngularVelocityMatrix()),
+              Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the maximum acceleration the spacecraft can achieve using its
@@ -1439,8 +1407,8 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getMaxAcceleration = function () {
         return this._propulsion ?
-                this._propulsion.getThrust() / this._physicalModel.getMass() :
-                null;
+              this._propulsion.getThrust() / this._physicalModel.getMass() :
+              null;
     };
     /**
      * Returns the maximum angular acceleration the spacecraft can achieve using
@@ -1450,8 +1418,8 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.getMaxAngularAcceleration = function () {
         return this._propulsion ?
-                this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
-                null;
+              this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
+              null;
     };
     /**
      * Returns the maximum turning rate the spacecraft can keep at the passed
@@ -1518,10 +1486,10 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype.loadFromXMLTag = function (xmlTag, projectileArray) {
         this._init(
-                Armada.logic().getSpacecraftClass(xmlTag.getAttribute("class")),
-                Mat.translationFromXMLTag(xmlTag.getElementsByTagName("position")[0]),
-                Mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn")),
-                projectileArray);
+              Armada.logic().getSpacecraftClass(xmlTag.getAttribute("class")),
+              Mat.translationFromXMLTag(xmlTag.getElementsByTagName("position")[0]),
+              Mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn")),
+              projectileArray);
         // equipping the created spacecraft
         // if there is an quipment tag...
         if (xmlTag.getElementsByTagName("equipment").length > 0) {
@@ -1701,25 +1669,25 @@ Application.createModule({name: "Logic",
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
         var phyModel =
-                Armada.resources().getOrAddModelByName(
-                Egom.cuboidModel(
-                        this._class.name + "-body" + index,
-                        this._class.bodies[index].getWidth(),
-                        this._class.bodies[index].getHeight(),
-                        this._class.bodies[index].getDepth(),
-                        [0.0, 1.0, 1.0, 0.5]));
+              Armada.resources().getOrAddModelByName(
+              Egom.cuboidModel(
+                    this._class.name + "-body" + index,
+                    this._class.bodies[index].getWidth(),
+                    this._class.bodies[index].getHeight(),
+                    this._class.bodies[index].getDepth(),
+                    [0.0, 1.0, 1.0, 0.5]));
         var hitZoneMesh = new Scene.ShadedLODMesh(
-                phyModel,
-                Armada.resources().getShader(this._class.shaderName),
-                {
-                    color: Armada.resources().getOrAddTexture("textures/white.png"),
-                    specular: Armada.resources().getOrAddTexture("textures/white.png"),
-                    luminosity: Armada.resources().getOrAddTexture("textures/white.png")
-                },
+              phyModel,
+              Armada.resources().getShader(this._class.shaderName),
+              {
+                  color: Armada.resources().getOrAddTexture("textures/white.png"),
+                  specular: Armada.resources().getOrAddTexture("textures/white.png"),
+                  luminosity: Armada.resources().getOrAddTexture("textures/white.png")
+              },
         Mat.translation4v(Mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
-                this._class.bodies[index].getOrientationMatrix(),
-                Mat.identity4(),
-                false);
+              this._class.bodies[index].getOrientationMatrix(),
+              Mat.identity4(),
+              false);
         this._hitbox.addSubnode(new Scene.RenderableNode(hitZoneMesh));
     };
     /**
@@ -1751,15 +1719,15 @@ Application.createModule({name: "Logic",
         console.log("Adding spacecraft (" + this._class.fullName + ") to scene...");
         // add the main model of the spacecraft
         this._visualModel = new Scene.ParameterizedMesh(
-                this._class.addModelToResourceManager(this._class.name, lod),
-                Armada.resources().getShader(this._class.shaderName),
-                textures,
-                this._physicalModel.getPositionMatrix(),
-                this._physicalModel.getOrientationMatrix(),
-                Mat.scaling4(this._class.modelSize),
-                (wireframe === true),
-                lod,
-                [{name: "luminosityFactors", length: 20}]);
+              this._class.addModelToResourceManager(this._class.name, lod),
+              Armada.resources().getShader(this._class.shaderName),
+              textures,
+              this._physicalModel.getPositionMatrix(),
+              this._physicalModel.getOrientationMatrix(),
+              Mat.scaling4(this._class.modelSize),
+              (wireframe === true),
+              lod,
+              [{name: "luminosityFactors", length: 20}]);
         var node = scene.addObject(this._visualModel);
         // visualize physical model (hitboxes)
         if ((addSupplements) && (addSupplements.hitboxes === true)) {
@@ -1941,10 +1909,10 @@ Application.createModule({name: "Logic",
         var backgroundObjectTags = xmlTag.getElementsByTagName("BackgroundObject");
         for (i = 0; i < backgroundObjectTags.length; i++) {
             this._backgroundObjects.push(new BackgroundObject(
-                    Armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
-                    backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
-                    backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
-                    ));
+                  Armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+                  backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
+                  backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
+                  ));
         }
 
         this._dustClouds = new Array();
@@ -2126,7 +2094,7 @@ Application.createModule({name: "Logic",
         for (var shipClass in shipNumbersPerClass) {
             for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
                 var orientation = orientationMatrix ?
-                        Mat.matrix4(orientationMatrix) : Mat.identity4();
+                      Mat.matrix4(orientationMatrix) : Mat.identity4();
                 if (randomTurnAroundZ) {
                     orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowC4(orientation), random() * Math.PI * 2));
                 }
@@ -2137,12 +2105,12 @@ Application.createModule({name: "Logic",
                     orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowB4(orientationMatrix || Mat.identity4()), random() * Math.PI * 2));
                 }
                 this._spacecrafts.push(
-                        new Spacecraft(
-                                Armada.logic().getSpacecraftClass(shipClass),
-                                Mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
-                                orientation,
-                                this._projectiles,
-                                "default"));
+                      new Spacecraft(
+                            Armada.logic().getSpacecraftClass(shipClass),
+                            Mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
+                            orientation,
+                            this._projectiles,
+                            "default"));
             }
         }
     };
@@ -2522,10 +2490,9 @@ Application.createModule({name: "Logic",
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
-    Module = {
+    return {
         Spacecraft: Spacecraft,
         Level: Level,
         LogicContext: LogicContext
     };
-    return Module;
 });

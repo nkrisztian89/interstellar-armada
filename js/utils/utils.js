@@ -69,3 +69,20 @@ Utils.evaluateProduct = function (productExpression) {
     }
     return result;
 };
+
+/**
+ * Returns the first XML element under the passed parent element (or XML
+ * document root element, if a document was passed) that has the passed
+ * tag name, if it exists. If no element with the passed tag name was
+ * found, shows an error to the user.
+ * @param {Document|Element} parent
+ * @param {String} tagName
+ * @returns {Element}
+ */
+Utils.getFirstXMLElement = function (parent, tagName) {
+    var elements = parent.getElementsByTagName(tagName);
+    if (elements.length > 0) {
+        return elements[0];
+    }
+    return null;
+};
