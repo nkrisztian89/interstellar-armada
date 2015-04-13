@@ -1,34 +1,19 @@
-"use strict";
-
 /**
- * @fileOverview This file implements the simple newtonian physics engine of the
- * Interstellar Armada program.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, white: true */
+/*global define */
 
-Application.createModule({name: "Physics",
-    dependencies: [
-        {script: "matrices.js"}]}, function () {
+define([
+    "utils/vectors",
+    "utils/matrices"
+], function (vec, mat) {
+    "use strict";
     /**
      * @class Represents a force affecting a physical object, causing it to 
      * accelerate at a constant rate in the direction of the force.
@@ -58,7 +43,7 @@ Application.createModule({name: "Physics",
          * @name Force#_direction
          * @type Number[3]
          */
-        this._direction = Vec.normal3(direction);
+        this._direction = vec.normal3(direction);
         /**
          * For how much more time is this force in effect, in milliseconds.
          * @name Force#_duration
@@ -85,7 +70,7 @@ Application.createModule({name: "Physics",
      */
     Force.prototype.renew = function (strength, direction, duration) {
         this._strength = strength;
-        this._direction = Vec.normal3(direction);
+        this._direction = vec.normal3(direction);
         this._duration = duration;
     };
     /**
@@ -112,7 +97,7 @@ Application.createModule({name: "Physics",
      * @returns {Number[3]} The acceleration vector, in m/s^2.
      */
     Force.prototype.getAccelerationVector = function (mass) {
-        return Vec.scaled3(this._direction, this._strength / mass);
+        return vec.scaled3(this._direction, this._strength / mass);
     };
     // #########################################################################
     /**
@@ -143,7 +128,7 @@ Application.createModule({name: "Physics",
          * @name Torque#_axis
          * @type Number[3]
          */
-        this._axis = Vec.normal3(axis);
+        this._axis = vec.normal3(axis);
         /**
          * For how much more time is this torque in effect, in milliseconds.
          * @name Torque#_duration
@@ -201,7 +186,7 @@ Application.createModule({name: "Physics",
     Torque.prototype.getAngularAccelerationMatrixOverTime = function (mass, t) {
         // in reality, the shape of the object should be taken into account,
         // for simplicity, the mass is taken as the only coefficient
-        return Mat.rotation4(this._axis, this._strength / mass * t);
+        return mat.rotation4(this._axis, this._strength / mass * t);
     };
     // #########################################################################
     /**
@@ -307,7 +292,7 @@ Application.createModule({name: "Physics",
      * @returns {Float32Array} A 4x4 transformation matrix.
      */
     Body.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || Mat.mul4(Mat.inverseOfTranslation4(this._positionMatrix), Mat.inverseOfRotation4(this._orientationMatrix));
+        this._modelMatrixInverse = this._modelMatrixInverse || mat.mul4(mat.inverseOfTranslation4(this._positionMatrix), mat.inverseOfRotation4(this._orientationMatrix));
         return this._modelMatrixInverse;
     };
     /**
@@ -327,11 +312,11 @@ Application.createModule({name: "Physics",
      * @returns {Boolean} Whether the point is inside or not.
      */
     Body.prototype.checkHit = function (relativePositionVector) {
-        relativePositionVector = Vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse());
+        relativePositionVector = vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse());
         return (
-                (relativePositionVector[0] >= -this._width * 0.5) && (relativePositionVector[0] <= this._width * 0.5) &&
-                (relativePositionVector[1] >= -this._height * 0.5) && (relativePositionVector[1] <= this._height * 0.5) &&
-                (relativePositionVector[2] >= -this._depth * 0.5) && (relativePositionVector[2] <= this._depth * 0.5));
+              (relativePositionVector[0] >= -this._width * 0.5) && (relativePositionVector[0] <= this._width * 0.5) &&
+              (relativePositionVector[1] >= -this._height * 0.5) && (relativePositionVector[1] <= this._height * 0.5) &&
+              (relativePositionVector[2] >= -this._depth * 0.5) && (relativePositionVector[2] <= this._depth * 0.5));
     };
     // #########################################################################
     /**
@@ -402,7 +387,7 @@ Application.createModule({name: "Physics",
          * @name PhysicalObject#_angularVelocityMatrix
          * @type Float32Array
          */
-        this._angularVelocityMatrix = Mat.identity4();
+        this._angularVelocityMatrix = mat.identity4();
         /**
          * The list of forces affecting this object.
          * @name PhysicalObject#_forces
@@ -517,7 +502,7 @@ Application.createModule({name: "Physics",
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getRotationMatrixInverse = function () {
-        this._rotationMatrixInverse = this._rotationMatrixInverse || Mat.inverseOfRotation4(this._orientationMatrix);
+        this._rotationMatrixInverse = this._rotationMatrixInverse || mat.inverseOfRotation4(this._orientationMatrix);
         return this._rotationMatrixInverse;
     };
     /**
@@ -526,11 +511,11 @@ Application.createModule({name: "Physics",
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || Mat.mul4(
-                Mat.mul4(
-                        Mat.inverseOfTranslation4(this._positionMatrix),
-                        this.getRotationMatrixInverse()),
-                Mat.inverseOfScaling4(this._scalingMatrix));
+        this._modelMatrixInverse = this._modelMatrixInverse || mat.mul4(
+              mat.mul4(
+                    mat.inverseOfTranslation4(this._positionMatrix),
+                    this.getRotationMatrixInverse()),
+              mat.inverseOfScaling4(this._scalingMatrix));
         return this._modelMatrixInverse;
     };
     // #########################################################################
@@ -591,18 +576,18 @@ Application.createModule({name: "Physics",
         this._bodySize = 0;
         var bodyPos;
         for (var i = 0; i < this._bodies.length; i++) {
-            bodyPos = Mat.translationVector3(this._bodies[i].getPositionMatrix());
-            var halfDim = Vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), Mat.matrix3from4(Mat.mul4(
-                    this._orientationMatrix,
-                    this._bodies[i].getOrientationMatrix())));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, halfDim)));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [halfDim[0], halfDim[1], -halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [halfDim[0], -halfDim[1], halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [halfDim[0], -halfDim[1], -halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [-halfDim[0], halfDim[1], halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [-halfDim[0], halfDim[1], -halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [-halfDim[0], -halfDim[1], halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, Vec.length3(Vec.add3(bodyPos, [-halfDim[0], -halfDim[1], -halfDim[2]])));
+            bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
+            var halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.matrix3from4(mat.mul4(
+                  this._orientationMatrix,
+                  this._bodies[i].getOrientationMatrix())));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, halfDim)));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [halfDim[0], halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [halfDim[0], -halfDim[1], halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [halfDim[0], -halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [-halfDim[0], halfDim[1], halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [-halfDim[0], halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [-halfDim[0], -halfDim[1], halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [-halfDim[0], -halfDim[1], -halfDim[2]])));
         }
     };
     /**
@@ -617,7 +602,7 @@ Application.createModule({name: "Physics",
         // make the vector 4D for the matrix multiplication
         positionVector.push(1);
         // first, preliminary check based on position relative to the whole object
-        var relativePos = Vec.mulVec4Mat4(positionVector, this.getModelMatrixInverse());
+        var relativePos = vec.mulVec4Mat4(positionVector, this.getModelMatrixInverse());
         if ((Math.abs(relativePos[0]) < this._bodySize) && (Math.abs(relativePos[1]) < this._bodySize) && (Math.abs(relativePos[2]) < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
             for (var i = 0; (result === false) && (i < this._bodies.length); i++) {
@@ -631,8 +616,8 @@ Application.createModule({name: "Physics",
      * compensating for floating point inaccuracies.
      */
     PhysicalObject.prototype._correctMatrices = function () {
-        this.setOrientationMatrix(Mat.correctedOrthogonal4(this._orientationMatrix));
-        this._angularVelocityMatrix = Mat.correctedOrthogonal4(this._angularVelocityMatrix);
+        this.setOrientationMatrix(mat.correctedOrthogonal4(this._orientationMatrix));
+        this._angularVelocityMatrix = mat.correctedOrthogonal4(this._angularVelocityMatrix);
     };
     /**
      * Performs the physics calculations for the object based on the forces and 
@@ -646,54 +631,54 @@ Application.createModule({name: "Physics",
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
-            this.setPositionMatrix(Mat.mul4(this._positionMatrix, Mat.translation4v(Vec.scaled3(Mat.translationVector3(this._velocityMatrix), dt / 1000))));
+            this.setPositionMatrix(mat.mul4(this._positionMatrix, mat.translation4v(vec.scaled3(mat.translationVector3(this._velocityMatrix), dt / 1000))));
             // calculate the movement that happened as a result of the acceleration
             // the affecting forces caused since the previous step
             // (s=1/2*a*t^2)
-            var accelerationMatrix = Mat.identity4();
+            var accelerationMatrix = mat.identity4();
             for (i = 0; i < this._forces.length; i++) {
                 t = this._forces[i].getExertionDuration(dt) / 1000; // t is in seconds
                 if (t > 0) {
                     a = this._forces[i].getAccelerationVector(this._mass);
-                    this.setPositionMatrix(Mat.mul4(
-                            this._positionMatrix,
-                            Mat.translation4v(Vec.scaled3(a, 1 / 2 * t * t))));
+                    this.setPositionMatrix(mat.mul4(
+                          this._positionMatrix,
+                          mat.translation4v(vec.scaled3(a, 1 / 2 * t * t))));
                     // calculate the caused acceleration to update the velocity matrix
-                    accelerationMatrix = Mat.mul4(
-                            accelerationMatrix,
-                            Mat.translation4v(Vec.scaled3(a, t)));
+                    accelerationMatrix = mat.mul4(
+                          accelerationMatrix,
+                          mat.translation4v(vec.scaled3(a, t)));
                 }
             }
             // update velocity matrix
-            this._velocityMatrix = Mat.mul4(this._velocityMatrix, accelerationMatrix);
+            this._velocityMatrix = mat.mul4(this._velocityMatrix, accelerationMatrix);
             // the same process with rotation and torques
             // the angular velocity matrix represents the rotation that happens
             // during the course of 5 milliseconds (since rotation cannot be
             // interpolated easily, for that quaternions should be used)
             for (i = 0; i + 2 < dt; i += 5) {
-                this.setOrientationMatrix(Mat.mul4(this._orientationMatrix, this._angularVelocityMatrix));
+                this.setOrientationMatrix(mat.mul4(this._orientationMatrix, this._angularVelocityMatrix));
             }
             // calculate the rotation that happened as a result of the angular
             // acceleration the affecting torques caused since the previous step
-            var angularAccMatrix = Mat.identity4();
+            var angularAccMatrix = mat.identity4();
             for (i = 0; i < this._torques.length; i++) {
                 t = this._torques[i].getExertionDuration(dt) / 1000; // t is in seconds
                 if (t > 0) {
-                    this.setOrientationMatrix(Mat.mul4(
-                            this._orientationMatrix,
-                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t)));
+                    this.setOrientationMatrix(mat.mul4(
+                          this._orientationMatrix,
+                          this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t)));
                     // angular acceleration matrix stores angular acceleration for 5ms
-                    angularAccMatrix = Mat.mul4(
-                            angularAccMatrix,
-                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, t / 200));
+                    angularAccMatrix = mat.mul4(
+                          angularAccMatrix,
+                          this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, t / 200));
                 }
             }
             // update angular velocity matrix
-            this._angularVelocityMatrix = Mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
+            this._angularVelocityMatrix = mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
             // correct matrix inaccuracies and close to zero values resulting from
             // floating point operations
-            this._velocityMatrix = Mat.straightened(this._velocityMatrix, 0.0001);
-            this._angularVelocityMatrix = Mat.straightened(this._angularVelocityMatrix, 0.00002);
+            this._velocityMatrix = mat.straightened(this._velocityMatrix, 0.0001);
+            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, 0.00002);
             this._correctMatrices();
         }
     };

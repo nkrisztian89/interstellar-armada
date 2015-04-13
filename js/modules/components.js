@@ -1,39 +1,20 @@
-"use strict";
-
 /**
- * @fileOverview This file defines the {@link SimpleComponent}, 
- * {@link ScreenComponent} and its descendant classes, which provide reusable
- * UI functionality for the HTML5 parts of the UI, that can be added to {@link 
- * GameScreen}s.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, white: true */
+/*global define */
 
-Application.createModule({name: "Components",
-    dependencies: [
-        {module: "Resource", from: "resource.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Resource = Application.Resource.Resource;
+define([
+    "modules/application",
+    "modules/async-resource"
+], function (application, asyncResource) {
+    "use strict";
+
     /**
      * Creates a simple component object.
      * @class A wrapper class around a regular HTML5 element, that makes it easier
@@ -91,8 +72,8 @@ Application.createModule({name: "Components",
     SimpleComponent.prototype.initComponent = function () {
         this._element = document.getElementById(this._name);
         if (!this._element) {
-            Application.showError("Cannot initialize component: '" + this._name + "'!", "severe",
-                    "No element can be found on the page with a corresponding ID!");
+            application.showError("Cannot initialize component: '" + this._name + "'!", "severe",
+                  "No element can be found on the page with a corresponding ID!");
         } else {
             this._displayStyle = this._element.style.display;
         }
@@ -136,7 +117,7 @@ Application.createModule({name: "Components",
      * HTML document, stored in an external file, hence the name) and can be appended 
      * to {@link GameScreen}s. Specific components can be the descendants of this 
      * class, and implement their own various methods.
-     * @extends Resource
+     * @extends asyncResource.Resource
      * @param {String} name The name of the component to be identified by. Names
      * must be unique within one {@link GameScreen}.
      * @param {String} htmlFilename The filename of the HTML document where the structure
@@ -147,7 +128,7 @@ Application.createModule({name: "Components",
      * @returns {ExternalComponent}
      */
     function ExternalComponent(name, htmlFilename, cssFilename) {
-        Resource.call(this);
+        asyncResource.Resource.call(this);
         /**
          * The name of the component to be identified by.
          * @name ExternalComponent#name
@@ -215,7 +196,7 @@ Application.createModule({name: "Components",
         }
     }
 
-    ExternalComponent.prototype = new Resource();
+    ExternalComponent.prototype = new asyncResource.Resource();
     ExternalComponent.prototype.constructor = ExternalComponent;
 
     /**
@@ -229,7 +210,7 @@ Application.createModule({name: "Components",
         // If specified, add a <link> tag pointing to the CSS file containing the 
         // styling of this component. Also check if the CSS file has already been 
         // linked, and only add it if not.
-        if ((cssFilename !== undefined) && (document.head.querySelectorAll("link[href='" + Armada.getFileURL("css", cssFilename) + "']").length === 0)) {
+        if ((cssFilename !== undefined) && (document.head.querySelectorAll("link[href='" + application.getFileURL("css", cssFilename) + "']").length === 0)) {
             this._cssLoaded = false;
             var cssLink = document.createElement("link");
             cssLink.setAttribute("rel", "stylesheet");
@@ -240,14 +221,14 @@ Application.createModule({name: "Components",
                     self._onModelLoad();
                 }
             };
-            cssLink.href = Armada.getFileURL("css", cssFilename);
+            cssLink.href = application.getFileURL("css", cssFilename);
             document.head.appendChild(cssLink);
         } else {
             this._cssLoaded = true;
         }
         // send an asynchronous request to grab the HTML file containing the DOM of
         // this component
-        Application.requestTextFile("component", this._source, function (responseText) {
+        application.requestTextFile("component", this._source, function (responseText) {
             self._model = document.implementation.createHTMLDocument(self._name);
             self._model.documentElement.innerHTML = responseText;
             // All elements with an "id" attribute within this structure have to
@@ -684,7 +665,7 @@ Application.createModule({name: "Components",
             if (i < this._valueList.length) {
                 this.selectValueWithIndex(i);
             } else {
-                Application.showError("Attempted to select value: '" + value + "' for '" + this._propertyName + "', which is not one of the available options.", "minor");
+                application.showError("Attempted to select value: '" + value + "' for '" + this._propertyName + "', which is not one of the available options.", "minor");
             }
         });
     };
@@ -702,7 +683,7 @@ Application.createModule({name: "Components",
                     this.onChange();
                 }
             } else {
-                Application.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1), "minor");
+                application.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1), "minor");
             }
         });
     };

@@ -1,0 +1,11 @@
+{
+    "configFileURLs": {
+        "resources": "resources.json",
+        "classes": "classes.xml",
+        "settings": "settings.xml",
+        "environments": "environments.xml"
+    },
+    "levels": [
+        "level.xml"
+    ]
+}

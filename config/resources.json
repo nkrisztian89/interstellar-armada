@@ -1,0 +1,514 @@
+{
+    "textures": [
+        {
+            "name": "flare",
+            "basepath": "flare",
+            "format": "png",
+            "useMipmap": true,
+            "type_suffixes": {
+                "emissive": ""
+            },
+            "quality_suffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "plasma",
+            "basepath": "plasma_full",
+            "format": "png",
+            "useMipmap": false,
+            "type_suffixes": {
+                "emissive": ""
+            },
+            "quality_suffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "proton",
+            "basepath": "proton_full",
+            "format": "png",
+            "useMipmap": false,
+            "type_suffixes": {
+                "emissive": ""
+            },
+            "quality_suffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "ion",
+            "basepath": "ion_full",
+            "format": "png",
+            "useMipmap": false,
+            "type_suffixes": {
+                "emissive": ""
+            },
+            "quality_suffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "falcon",
+            "basepath": "falcon",
+            "format": "png",
+            "useMipmap": true,
+            "type_suffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "quality_suffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "libra",
+            "basepath": "libra",
+            "format": "png",
+            "useMipmap": true,
+            "type_suffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "quality_suffixes": {
+                "normal": ""
+            }
+        }
+    ],
+    "cubemaps": [
+        {
+            "name": "deepspace",
+            "basepath": "cube/",
+            "images": {
+                "pos_x": "cm_1c2.jpg",
+                "neg_x": "cm_1c2.jpg",
+                "pos_y": "cm_1c2.jpg",
+                "neg_y": "cm_1c2.jpg",
+                "pos_z": "cm_1c2.jpg",
+                "neg_z": "cm_1c2.jpg"
+            }
+        }
+    ],
+    "shaders": [
+        {
+            "name": "oneColor",
+            "vertexShaderSource": "mesh/oneColor.vert",
+            "fragmentShaderSource": "mesh/oneColor.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position"
+            }
+        },
+        {
+            "name": "colored",
+            "vertexShaderSource": "mesh/colored.vert",
+            "fragmentShaderSource": "mesh/colored.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "color": "a_color"
+            }
+        },
+        {
+            "name": "textured",
+            "fallback": "colored",
+            "vertexShaderSource": "mesh/textured.vert",
+            "fragmentShaderSource": "mesh/textured.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "color": "a_color"
+            }
+        },
+        {
+            "name": "lambert",
+            "fallback": "textured",
+            "vertexShaderSource": "mesh/lambert.vert",
+            "fragmentShaderSource": "mesh/lambert.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "normal": "a_normal",
+                "color": "a_color"
+            }
+        },
+        {
+            "name": "lambert-with-luminosity",
+            "fallback": "lambert",
+            "vertexShaderSource": "mesh/lambert-with-luminosity.vert",
+            "fragmentShaderSource": "mesh/lambert-with-luminosity.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "normal": "a_normal",
+                "color": "a_color",
+                "luminosity": "a_luminosity"
+            }
+        },
+        {
+            "name": "simple",
+            "fallback": "lambert-with-luminosity",
+            "vertexShaderSource": "mesh/simple.vert",
+            "fragmentShaderSource": "mesh/simple.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "normal": "a_normal",
+                "color": "a_color",
+                "luminosity": "a_luminosity",
+                "shininess": "a_shininess"
+            }
+        },
+        {
+            "name": "simpleReveal",
+            "fallback": "lambert-with-luminosity",
+            "vertexShaderSource": "mesh/simpleWithModelPos.vert",
+            "fragmentShaderSource": "mesh/simpleReveal.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "normal": "a_normal",
+                "color": "a_color",
+                "luminosity": "a_luminosity",
+                "shininess": "a_shininess"
+            }
+        },
+        {
+            "name": "oneColorReveal",
+            "fallback": "oneColor",
+            "vertexShaderSource": "mesh/simpleWithModelPos.vert",
+            "fragmentShaderSource": "mesh/oneColorReveal.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position"
+            }
+        },
+        {
+            "name": "ship",
+            "fallback": "lambert-with-luminosity",
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "normal": "a_normal",
+                "color": "a_color",
+                "luminosity": "a_luminosity",
+                "shininess": "a_shininess",
+                "groupIndex": "a_groupIndex",
+                "triangleIndex": "a_index"
+            }
+        },
+        {
+            "name": "shadowMapReveal",
+            "fallback": "lambert-with-luminosity",
+            "vertexShaderSource": "mesh/modelPosShadowMapping.vert",
+            "fragmentShaderSource": "mesh/shadowMapReveal.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord",
+                "normal": "a_normal",
+                "color": "a_color",
+                "luminosity": "a_luminosity",
+                "shininess": "a_shininess",
+                "triangleIndex": "a_index"
+            }
+        },
+        {
+            "name": "skybox",
+            "vertexShaderSource": "billboard/skybox.vert",
+            "fragmentShaderSource": "billboard/skybox.frag",
+            "blendType": "none",
+            "attributeMapping": {
+                "position": "a_position"
+            }
+        },
+        {
+            "name": "billboard",
+            "vertexShaderSource": "billboard/billboard.vert",
+            "fragmentShaderSource": "billboard/billboard.frag",
+            "blendType": "add",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord"
+            }
+        },
+        {
+            "name": "particle",
+            "vertexShaderSource": "billboard/particle.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendType": "add",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord"
+            }
+        },
+        {
+            "name": "permanentParticle",
+            "vertexShaderSource": "billboard/linearSizeParticle.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendType": "add",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord"
+            }
+        },
+        {
+            "name": "permanentParticle",
+            "vertexShaderSource": "billboard/linearSizeParticle.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendType": "add",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord"
+            }
+        },
+        {
+            "name": "backgroundBillboard",
+            "vertexShaderSource": "billboard/backgroundBillboard.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendType": "add",
+            "attributeMapping": {
+                "position": "a_position",
+                "texCoord": "a_texCoord"
+            }
+        },
+        {
+            "name": "dust",
+            "vertexShaderSource": "dust.vert",
+            "fragmentShaderSource": "dust.frag",
+            "blendType": "none",
+            "attributeMapping": {
+                "position": "a_position"
+            }
+        },
+        {
+            "name": "shadowMapping",
+            "vertexShaderSource": "shadow-mapping.vert",
+            "fragmentShaderSource": "shadow-mapping.frag",
+            "blendType": "mix",
+            "attributeMapping": {
+                "position": "a_position",
+                "triangleIndex": "a_triangleIndex"
+            }
+        }
+    ],
+    "models": [
+        {
+            "name": "plasma",
+            "basepath": "weapons/plasma",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "turret",
+            "basepath": "weapons/turret",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "cannon",
+            "basepath": "weapons/cannon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "ion_cannon",
+            "basepath": "weapons/ion_cannon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "falcon",
+            "basepath": "weapons/falcon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "viper",
+            "basepath": "weapons/viper",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "aries",
+            "basepath": "weapons/aries",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "taurus",
+            "basepath": "weapons/taurus",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "libra",
+            "basepath": "weapons/libra",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        }
+    ]
+}

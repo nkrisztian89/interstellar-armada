@@ -10,7 +10,10 @@
 /*global define */
 
 
-define([], function () {
+define([
+    "utils/vectors",
+    "utils/matrices"
+], function (vec, mat) {
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -97,17 +100,17 @@ define([], function () {
          * @name Object3D#_positionMatrix
          * @type Float32Array
          */
-        this._positionMatrix = positionMatrix || Mat.identity4();
+        this._positionMatrix = positionMatrix || mat.identity4();
         /**
          * @name Object3D#_orientationMatrix
          * @type Float32Array
          */
-        this._orientationMatrix = orientationMatrix || Mat.identity4();
+        this._orientationMatrix = orientationMatrix || mat.identity4();
         /**
          * @name Object3D#_scalingMatrix
          * @type Float32Array
          */
-        this._scalingMatrix = scalingMatrix || Mat.identity4();
+        this._scalingMatrix = scalingMatrix || mat.identity4();
         /**
          * Cache variable to store the calculated value of the combined model
          * matrix.
@@ -196,14 +199,14 @@ define([], function () {
          * @param {Number} z
          */
         function translate(x, y, z) {
-            this.setPositionMatrix(Mat.mul4(this._positionMatrix, Mat.translation4(x, y, z)));
+            this.setPositionMatrix(mat.mul4(this._positionMatrix, mat.translation4(x, y, z)));
         }
         /**
          * Translates the current position by the given 3D vector.
          * @param {Array.<Number>} v [x,y,z]
          */
         function translatev(v) {
-            this.setPositionMatrix(Mat.mul4(this._positionMatrix, Mat.translation4v(v)));
+            this.setPositionMatrix(mat.mul4(this._positionMatrix, mat.translation4v(v)));
         }
         /**
          * Translates the current position by mutliplying it by the given 
@@ -211,7 +214,7 @@ define([], function () {
          * @param {Float32Array} matrix
          */
         function translateByMatrix(matrix) {
-            this.setPositionMatrix(Mat.mul4(this._positionMatrix, matrix));
+            this.setPositionMatrix(mat.mul4(this._positionMatrix, matrix));
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -272,7 +275,7 @@ define([], function () {
          * @param {Number} angle Angle in radians.
          */
         function rotate(axis, angle) {
-            this.setOrientationMatrix(Mat.mul4(this._orientationMatrix, Mat.rotation4(axis, angle)));
+            this.setOrientationMatrix(mat.mul4(this._orientationMatrix, mat.rotation4(axis, angle)));
         }
         /**
          * Rotates the current orientation by multiplying it by the given 
@@ -280,7 +283,7 @@ define([], function () {
          * @param {Float32Array} matrix
          */
         function rotateByMatrix(matrix) {
-            this.setOrientationMatrix(Mat.mul4(this._orientationMatrix, matrix));
+            this.setOrientationMatrix(mat.mul4(this._orientationMatrix, matrix));
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -305,8 +308,8 @@ define([], function () {
          */
         function getCascadeScalingMatrix() {
             return  this._parent ?
-                    Mat.mul4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
-                    this._scalingMatrix;
+                  mat.mul4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
+                  this._scalingMatrix;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -315,10 +318,10 @@ define([], function () {
          * @returns {Float32Array}
          */
         function getModelMatrix() {
-            this._modelMatrix = this._modelMatrix || Mat.mul4(Mat.mul4(this._scalingMatrix, this._orientationMatrix), this._positionMatrix);
+            this._modelMatrix = this._modelMatrix || mat.mul4(mat.mul4(this._scalingMatrix, this._orientationMatrix), this._positionMatrix);
             return  this._parent ?
-                    Mat.mul4(this._modelMatrix, this._parent.getModelMatrix()) :
-                    this._modelMatrix;
+                  mat.mul4(this._modelMatrix, this._parent.getModelMatrix()) :
+                  this._modelMatrix;
         }
         /**
          * Returns the size of this object.
@@ -343,10 +346,10 @@ define([], function () {
         function isInsideParent() {
             if (this._insideParent === null) {
                 this._insideParent = this._parent ?
-                        (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
-                        (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
-                        (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())
-                        : false;
+                      (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
+                      (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
+                      (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())
+                      : false;
             }
             return this._insideParent;
         }
@@ -362,39 +365,39 @@ define([], function () {
             // scaling and orientation is lost here, since we create a new translation
             // matrix based on the original transformation
             var baseMatrix =
-                    Mat.translation4v(Mat.translationVector4(
-                            Mat.mul4(
-                                    this.getModelMatrix(),
-                                    camera.getCameraMatrix()
-                                    )
-                            ));
+                  mat.translation4v(mat.translationVector4(
+                        mat.mul4(
+                              this.getModelMatrix(),
+                              camera.getCameraMatrix()
+                              )
+                        ));
             // we reintroduce appropriate scaling, but not the orientation, so 
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
             var fullMatrix =
-                    Mat.mul4(
-                            Mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
-                            camera.getPerspectiveMatrix()
-                            );
+                  mat.mul4(
+                        mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
+                        camera.getPerspectiveMatrix()
+                        );
 
-            var position = Vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
+            var position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
             position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
             position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
             position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
-            var zOffsetPosition = Vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
+            var zOffsetPosition = vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
             var zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
 
             // frustum culling: back and front
             if (((zOffset > -1.0) && (zOffset < 1.0)) || ((position[2] > -1.0) && (position[2] < 1.0))) {
                 // frustum culling: sides
-                var xOffsetPosition = Vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
-                var yOffsetPosition = Vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
+                var xOffsetPosition = vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
+                var yOffsetPosition = vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
                 var xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
                 var yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
                 if (
-                        !(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) &&
-                        !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))
-                        ) {
+                      !(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) &&
+                      !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))
+                      ) {
                     this._lastSizeInsideViewFrustum.width = xOffset;
                     this._lastSizeInsideViewFrustum.height = yOffset;
                     return this._lastSizeInsideViewFrustum;
@@ -1021,9 +1024,9 @@ define([], function () {
      */
     RenderableNode.prototype.resetViewCameras = function () {
         for (
-                var camera = this._firstCamera;
-                camera !== null;
-                camera = ((camera.getNextView() === this._firstCamera) ? null : camera.getNextView())) {
+              var camera = this._firstCamera;
+              camera !== null;
+              camera = ((camera.getNextView() === this._firstCamera) ? null : camera.getNextView())) {
             camera.reset();
         }
     };
@@ -1256,7 +1259,7 @@ define([], function () {
         this._camera = camera;
         this.setTexture(samplerName, cubemap);
         this.setUniformValueFunction("u_viewDirectionProjectionInverse", function () {
-            return Mat.inverse4(Mat.mul4(this._camera.getOrientationMatrix(), this._camera.getPerspectiveMatrix()));
+            return mat.inverse4(mat.mul4(this._camera.getOrientationMatrix(), this._camera.getPerspectiveMatrix()));
         });
     }
     CubemapSampledFVQ.prototype = new RenderableObject();
@@ -1356,7 +1359,7 @@ define([], function () {
             return this.getModelMatrix();
         });
         this.setUniformValueFunction("u_normalMatrix", function () {
-            return Mat.transposed3(Mat.inverse3(Mat.matrix3from4(this.getModelMatrix())));
+            return mat.transposed3(mat.inverse3(mat.matrix3from4(this.getModelMatrix())));
         });
     }
     ShadedLODMesh.prototype = new RenderableObject3D();
@@ -1410,14 +1413,14 @@ define([], function () {
                 this._currentLOD = -1;
                 for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
                     if (
-                            (this._currentLOD === -1) ||
-                            (i <= renderParameters.lodContext.maxEnabledLOD) &&
-                            (
-                                    (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
-                                    ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
-                                    ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
-                                    ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
-                                    )) {
+                          (this._currentLOD === -1) ||
+                          (i <= renderParameters.lodContext.maxEnabledLOD) &&
+                          (
+                                (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
+                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
+                                )) {
                         this._currentLOD = i;
                     }
                 }
@@ -1575,7 +1578,7 @@ define([], function () {
      * @returns {Billboard}
      */
     function Billboard(model, shader, texture, size, positionMatrix, orientationMatrix) {
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, Mat.scaling4(size));
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
         this.setTexture("color", texture);
         /**
          * @name Billboard#_model
@@ -1636,7 +1639,7 @@ define([], function () {
      * @param {number} duration The lifespan of the particle in milliseconds.
      */
     function DynamicParticle(model, shader, texture, color, size, positionMatrix, duration) {
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, Mat.identity4(), Mat.scaling4(size));
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.scaling4(size));
         this.setSmallestSizeWhenDrawn(4);
         this.model = model;
         this.setTexture("color", texture);
@@ -1769,7 +1772,7 @@ define([], function () {
             return this.shift;
         });
         this.setUniformValueFunction("u_length", function () {
-            return Vec.length3(this.shift);
+            return vec.length3(this.shift);
         });
         this.setUniformValueFunction("u_farthestZ", function () {
             return this.range;
@@ -1837,7 +1840,7 @@ define([], function () {
      * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
      */
     function Camera(aspect, fov, controllablePosition, controllableDirection, followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
-        Object3D.call(this, Mat.identity4(), Mat.identity4(), Mat.identity4());
+        Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
         this.velocityVector = [0, 0, 0];
         this.maxSpeed = 5;
         this.acceleration = 0.1;
@@ -1861,7 +1864,7 @@ define([], function () {
     makeObject3DMixinClass.call(Camera);
 
     Camera.prototype.getCameraMatrix = function () {
-        return Mat.mul4(this.getPositionMatrix(), this.getOrientationMatrix());
+        return mat.mul4(this.getPositionMatrix(), this.getOrientationMatrix());
     };
 
     Camera.prototype.getPerspectiveMatrix = function () {
@@ -1883,10 +1886,10 @@ define([], function () {
     Camera.prototype.followObject = function (followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
         this.followedObject = followedObject;
         if (followPositionMatrix === undefined) {
-            followPositionMatrix = Mat.identity4();
+            followPositionMatrix = mat.identity4();
         }
         if (followOrientationMatrix === undefined) {
-            followOrientationMatrix = Mat.identity4();
+            followOrientationMatrix = mat.identity4();
         }
         this.followPositionMatrix = followPositionMatrix;
         this.followOrientationMatrix = followOrientationMatrix;
@@ -1907,7 +1910,7 @@ define([], function () {
     };
 
     Camera.prototype.updatePerspectiveMatrix = function () {
-        this._perspectiveMatrix = Mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * 3.1415 / 360 / 2) / 2 / 20, 5000.0);
+        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * 3.1415 / 360 / 2) / 2 / 20, 5000.0);
     };
 
     /**
@@ -2054,7 +2057,7 @@ define([], function () {
     Camera.prototype.stopLeftMove = function () {
         if (this.velocityVector[0] > 0) {
             this.velocityVector[0] -=
-                    Math.min(this.acceleration, this.velocityVector[0]);
+                  Math.min(this.acceleration, this.velocityVector[0]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopLeftMove();
@@ -2075,7 +2078,7 @@ define([], function () {
     Camera.prototype.stopRightMove = function () {
         if (this.velocityVector[0] < 0) {
             this.velocityVector[0] +=
-                    Math.min(this.acceleration, -this.velocityVector[0]);
+                  Math.min(this.acceleration, -this.velocityVector[0]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopRightMove();
@@ -2096,7 +2099,7 @@ define([], function () {
     Camera.prototype.stopUpMove = function () {
         if (this.velocityVector[1] < 0) {
             this.velocityVector[1] +=
-                    Math.min(this.acceleration, -this.velocityVector[1]);
+                  Math.min(this.acceleration, -this.velocityVector[1]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopUpMove();
@@ -2117,7 +2120,7 @@ define([], function () {
     Camera.prototype.stopDownMove = function () {
         if (this.velocityVector[1] > 0) {
             this.velocityVector[1] -=
-                    Math.min(this.acceleration, this.velocityVector[1]);
+                  Math.min(this.acceleration, this.velocityVector[1]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopDownMove();
@@ -2138,7 +2141,7 @@ define([], function () {
     Camera.prototype.stopForwardMove = function () {
         if (this.velocityVector[2] > 0) {
             this.velocityVector[2] -=
-                    Math.min(this.acceleration, this.velocityVector[2]);
+                  Math.min(this.acceleration, this.velocityVector[2]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopForwardMove();
@@ -2159,7 +2162,7 @@ define([], function () {
     Camera.prototype.stopBackwardMove = function () {
         if (this.velocityVector[2] < 0) {
             this.velocityVector[2] +=
-                    Math.min(this.acceleration, -this.velocityVector[2]);
+                  Math.min(this.acceleration, -this.velocityVector[2]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopBackwardMove();
@@ -2168,46 +2171,46 @@ define([], function () {
 
     Camera.prototype.updatePosition = function () {
         if (this.controllablePosition) {
-            var inverseOrientationMatrix = Mat.transposed3(Mat.inverse3(Mat.matrix3from4(this.getOrientationMatrix())));
-            var translationVector = Vec.mulMat3Vec3(
-                    inverseOrientationMatrix,
-                    this.velocityVector
-                    );
+            var inverseOrientationMatrix = mat.transposed3(mat.inverse3(mat.matrix3from4(this.getOrientationMatrix())));
+            var translationVector = vec.mulMat3Vec3(
+                  inverseOrientationMatrix,
+                  this.velocityVector
+                  );
             if (this.followedObject === undefined) {
                 this.translatev(translationVector);
             } else {
                 this.followPositionMatrix =
-                        Mat.mul4(
-                                this.followPositionMatrix,
-                                Mat.translation4v(translationVector)
-                                );
+                      mat.mul4(
+                            this.followPositionMatrix,
+                            mat.translation4v(translationVector)
+                            );
             }
         }
         if (this.followedObject) {
             var camPositionMatrix =
-                    Mat.mul4(
-                            Mat.mul4(
-                                    this.rotationCenterIsObject ?
-                                    Mat.translation4v(Mat.translationVector4(Mat.mul4(
-                                            this.followPositionMatrix,
-                                            Mat.inverseOfRotation4(this.followOrientationMatrix)
-                                            )))
-                                    :
+                  mat.mul4(
+                        mat.mul4(
+                              this.rotationCenterIsObject ?
+                              mat.translation4v(mat.translationVector4(mat.mul4(
                                     this.followPositionMatrix,
-                                    this.followedObject.getOrientationMatrix()
-                                    ),
-                            this.followedObject.getPositionMatrix()
-                            );
+                                    mat.inverseOfRotation4(this.followOrientationMatrix)
+                                    )))
+                              :
+                              this.followPositionMatrix,
+                              this.followedObject.getOrientationMatrix()
+                              ),
+                        this.followedObject.getPositionMatrix()
+                        );
             var newPositionMatrix =
-                    Mat.translation4(
-                            -camPositionMatrix[12],
-                            -camPositionMatrix[13],
-                            -camPositionMatrix[14]
-                            );
-            var velocityMatrix = Mat.mul4(Mat.translation4(
-                    newPositionMatrix[12] - this.getPositionMatrix()[12],
-                    newPositionMatrix[13] - this.getPositionMatrix()[13],
-                    newPositionMatrix[14] - this.getPositionMatrix()[14]), this.getOrientationMatrix());
+                  mat.translation4(
+                        -camPositionMatrix[12],
+                        -camPositionMatrix[13],
+                        -camPositionMatrix[14]
+                        );
+            var velocityMatrix = mat.mul4(mat.translation4(
+                  newPositionMatrix[12] - this.getPositionMatrix()[12],
+                  newPositionMatrix[13] - this.getPositionMatrix()[13],
+                  newPositionMatrix[14] - this.getPositionMatrix()[14]), this.getOrientationMatrix());
             this.setPositionMatrix(newPositionMatrix);
         }
     };
@@ -2217,43 +2220,43 @@ define([], function () {
         if (this.controllableDirection) {
             if (this.followedObject === undefined) {
                 rotationMatrix =
-                        Mat.mul4(
-                                Mat.rotation4(
-                                        [0, 1, 0],
-                                        this.angularVelocityVector[1]
-                                        ),
-                                Mat.rotation4(
-                                        [1, 0, 0],
-                                        this.angularVelocityVector[0]
-                                        )
-                                );
+                      mat.mul4(
+                            mat.rotation4(
+                                  [0, 1, 0],
+                                  this.angularVelocityVector[1]
+                                  ),
+                            mat.rotation4(
+                                  [1, 0, 0],
+                                  this.angularVelocityVector[0]
+                                  )
+                            );
                 this.rotateByMatrix(rotationMatrix);
             } else {
                 rotationMatrix =
-                        Mat.mul4(
-                                Mat.rotation4(
-                                        [0, 0, 1],
-                                        this.angularVelocityVector[1]
-                                        ),
-                                Mat.rotation4(
-                                        [1, 0, 0],
-                                        this.angularVelocityVector[0]
-                                        )
-                                );
-                this.followOrientationMatrix = Mat.mul4(this.followOrientationMatrix, rotationMatrix);
+                      mat.mul4(
+                            mat.rotation4(
+                                  [0, 0, 1],
+                                  this.angularVelocityVector[1]
+                                  ),
+                            mat.rotation4(
+                                  [1, 0, 0],
+                                  this.angularVelocityVector[0]
+                                  )
+                            );
+                this.followOrientationMatrix = mat.mul4(this.followOrientationMatrix, rotationMatrix);
             }
         }
         if (this.followedObject) {
             // look in direction y instead of z:
             this.setOrientationMatrix(
-                    Mat.mul4(
-                            Mat.mul4(
-                                    Mat.inverseOfRotation4(this.followedObject.getOrientationMatrix()),
-                                    this.followOrientationMatrix
-                                    ),
-                            Mat.rotation4([1, 0, 0], 3.1415 / 2)
-                            )
-                    );
+                  mat.mul4(
+                        mat.mul4(
+                              mat.inverseOfRotation4(this.followedObject.getOrientationMatrix()),
+                              this.followOrientationMatrix
+                              ),
+                        mat.rotation4([1, 0, 0], 3.1415 / 2)
+                        )
+                  );
         }
     };
 
@@ -2291,8 +2294,8 @@ define([], function () {
 
     SceneCamera.prototype.setScene = function (scene) {
         !this._scene ?
-                this._scene = scene :
-                Application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
+              this._scene = scene :
+              Application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
     };
 
     SceneCamera.prototype.changeToNextView = function () {
@@ -2312,9 +2315,9 @@ define([], function () {
                 this.followCamera(firstObject.getFirstCamera(), 4000);
             } else {
                 for (
-                        var currentObject = this._scene.getNextObject(firstObject);
-                        currentObject !== firstObject;
-                        currentObject = this._scene.getNextObject(currentObject)) {
+                      var currentObject = this._scene.getNextObject(firstObject);
+                      currentObject !== firstObject;
+                      currentObject = this._scene.getNextObject(currentObject)) {
                     if (currentObject.getFirstCamera()) {
                         this.followCamera(currentObject.getFirstCamera(), 4000);
                         break;
@@ -2335,9 +2338,9 @@ define([], function () {
                 this.followCamera(firstObject.getFirstView(), 4000);
             } else {
                 for (
-                        var currentObject = this._scene.getNextObject(firstObject);
-                        currentObject !== firstObject;
-                        currentObject = this._scene.getNextObject(currentObject)) {
+                      var currentObject = this._scene.getNextObject(firstObject);
+                      currentObject !== firstObject;
+                      currentObject = this._scene.getNextObject(currentObject)) {
                     if (currentObject.getFirstView()) {
                         this.followCamera(currentObject.getFirstView(), 4000);
                         break;
@@ -2385,22 +2388,22 @@ define([], function () {
                 var currentTime = new Date().getTime();
                 var adaptationProgress = Math.min(1.0, (currentTime - this.adaptationStartTime) / this.adaptationTime);
                 this.adaptationTimeLeft = this.adaptationTime - (currentTime - this.adaptationStartTime);
-                var trans = Mat.translation4(
-                        (this.followedCamera._positionMatrix[12] - this.adaptationStartPositionMatrix[12]) * adaptationProgress,
-                        (this.followedCamera._positionMatrix[13] - this.adaptationStartPositionMatrix[13]) * adaptationProgress,
-                        (this.followedCamera._positionMatrix[14] - this.adaptationStartPositionMatrix[14]) * adaptationProgress
-                        );
-                var newPositionMatrix = Mat.translatedByM4(this.adaptationStartPositionMatrix, trans);
-                var velocityMatrix = Mat.mul4(Mat.translation4(
-                        newPositionMatrix[12] - this._positionMatrix[12],
-                        newPositionMatrix[13] - this._positionMatrix[13],
-                        newPositionMatrix[14] - this._positionMatrix[14]), this._orientationMatrix);
+                var trans = mat.translation4(
+                      (this.followedCamera._positionMatrix[12] - this.adaptationStartPositionMatrix[12]) * adaptationProgress,
+                      (this.followedCamera._positionMatrix[13] - this.adaptationStartPositionMatrix[13]) * adaptationProgress,
+                      (this.followedCamera._positionMatrix[14] - this.adaptationStartPositionMatrix[14]) * adaptationProgress
+                      );
+                var newPositionMatrix = mat.translatedByM4(this.adaptationStartPositionMatrix, trans);
+                var velocityMatrix = mat.mul4(mat.translation4(
+                      newPositionMatrix[12] - this._positionMatrix[12],
+                      newPositionMatrix[13] - this._positionMatrix[13],
+                      newPositionMatrix[14] - this._positionMatrix[14]), this._orientationMatrix);
                 this.velocityVector = [velocityMatrix[12], velocityMatrix[13], velocityMatrix[14]];
                 this._positionMatrix = newPositionMatrix;
-                this._orientationMatrix = Mat.correctedOrthogonal4(Mat.add4(
-                        Mat.scaled4(this.adaptationStartOrientationMatrix, 1.0 - adaptationProgress),
-                        Mat.scaled4(this.followedCamera._orientationMatrix, adaptationProgress)
-                        ));
+                this._orientationMatrix = mat.correctedOrthogonal4(mat.add4(
+                      mat.scaled4(this.adaptationStartOrientationMatrix, 1.0 - adaptationProgress),
+                      mat.scaled4(this.followedCamera._orientationMatrix, adaptationProgress)
+                      ));
                 this.setFOV(this.adaptationStartFOV + (this.followedCamera._fov - this.adaptationStartFOV) * adaptationProgress);
                 this._previousFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
             } else {
@@ -2408,10 +2411,10 @@ define([], function () {
                 this._orientationMatrix = this.followedCamera._orientationMatrix;
                 this._perspectiveMatrix = this.followedCamera._perspectiveMatrix;
                 var newFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
-                var velocityMatrix = Mat.mul4(Mat.translation4(
-                        -newFollowedPosition[12] + this._previousFollowedPosition[12],
-                        -newFollowedPosition[13] + this._previousFollowedPosition[13],
-                        -newFollowedPosition[14] + this._previousFollowedPosition[14]), this._orientationMatrix);
+                var velocityMatrix = mat.mul4(mat.translation4(
+                      -newFollowedPosition[12] + this._previousFollowedPosition[12],
+                      -newFollowedPosition[13] + this._previousFollowedPosition[13],
+                      -newFollowedPosition[14] + this._previousFollowedPosition[14]), this._orientationMatrix);
                 this.velocityVector = [velocityMatrix[12], velocityMatrix[13], velocityMatrix[14]];
                 this._previousFollowedPosition = newFollowedPosition;
             }
@@ -2428,7 +2431,7 @@ define([], function () {
             // to make this part transparent)
             i = 0;
             while ((i < logicContext.level._spacecrafts.length) &&
-                    (logicContext.level._spacecrafts[i].visualModel !== this.followedCamera.followedObject)) {
+                  (logicContext.level._spacecrafts[i].visualModel !== this.followedCamera.followedObject)) {
                 i++;
             }
             // if we found it, set the proper controller
@@ -2447,20 +2450,20 @@ define([], function () {
      */
     function LightSource(color, direction) {
         this.color = color;
-        this.direction = Vec.normal3(direction);
+        this.direction = vec.normal3(direction);
         this.castsShadows = true;
-        this._orientationMatrix = Mat.identity4();
+        this._orientationMatrix = mat.identity4();
         this.matrix = null;
         this._index = null;
         var vx, vy, vz;
         vz = this.direction;
         vy = (vz[1] < -0.995) ? [1, 0, 0] : ((vz[1] > 0.995) ? [1, 0, 0] : [0, 1, 0]);
-        vx = Vec.normal3(Vec.cross3(vy, vz));
-        vy = Vec.normal3(Vec.cross3(vz, vx));
-        this._orientationMatrix = Mat.correctedOrthogonal4(Mat.fromVectorsTo4(vx, vy, vz));
-        this._orientationMatrix = Mat.inverseOfRotation4(this._orientationMatrix);
+        vx = vec.normal3(vec.cross3(vy, vz));
+        vy = vec.normal3(vec.cross3(vz, vx));
+        this._orientationMatrix = mat.correctedOrthogonal4(mat.fromVectorsTo4(vx, vy, vz));
+        this._orientationMatrix = mat.inverseOfRotation4(this._orientationMatrix);
         this.matrix = this._orientationMatrix;
-        this.translationVector = new Float32Array(Vec.mulVec3Mat4([0, 0, 1], this._orientationMatrix));
+        this.translationVector = new Float32Array(vec.mulVec3Mat4([0, 0, 1], this._orientationMatrix));
     }
 
     /**
@@ -2497,9 +2500,9 @@ define([], function () {
     LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
 
-        var matrix = Mat.mul4(Mat.mul4(camera.getPositionMatrix(), Mat.translation4v(Vec.scaled3(cameraZ, range))), this._orientationMatrix);
-        this.matrix = this.matrix || Mat.mul4(camera.getPositionMatrix(), this._orientationMatrix);
-        this.translationVector = this.translationVector || new Float32Array(Vec.normal3(Vec.add3(Mat.translationVector3(matrix), Vec.scaled3(Mat.translationVector3(this.matrix), -1))));
+        var matrix = mat.mul4(mat.mul4(camera.getPositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
+        this.matrix = this.matrix || mat.mul4(camera.getPositionMatrix(), this._orientationMatrix);
+        this.translationVector = this.translationVector || new Float32Array(vec.normal3(vec.add3(mat.translationVector3(matrix), vec.scaled3(mat.translationVector3(this.matrix), -1))));
         context.getCurrentShader().assignUniforms(context, {
             "u_lightMatrix": function () {
                 return matrix;
@@ -2508,7 +2511,7 @@ define([], function () {
                 return depth;
             },
             "u_projMatrix": function () {
-                return Mat.orthographic4(range, range, -depth, depth);
+                return mat.orthographic4(range, range, -depth, depth);
             }
         });
     };
@@ -2593,7 +2596,7 @@ define([], function () {
             return self.activeCamera.getPerspectiveMatrix();
         };
         this.uniformValueFunctions['u_eyePos'] = function () {
-            return new Float32Array(Vec.scaled3(self.activeCamera.getPositionVector(), -1));
+            return new Float32Array(vec.scaled3(self.activeCamera.getPositionVector(), -1));
         };
         this.uniformValueFunctions["u_shadows"] = function () {
             return self._shadowMappingEnabled;
@@ -2674,8 +2677,8 @@ define([], function () {
         for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === (this.objects.length - 1)) ?
-                        this.objects[0] :
-                        this.objects[i + 1]);
+                      this.objects[0] :
+                      this.objects[i + 1]);
             }
         }
         return this.objects[0];
@@ -2689,8 +2692,8 @@ define([], function () {
         for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === 0) ?
-                        this.objects[this.objects.length - 1] :
-                        this.objects[i - 1]);
+                      this.objects[this.objects.length - 1] :
+                      this.objects[i - 1]);
             }
         }
         return this.objects[0];
@@ -2844,8 +2847,8 @@ define([], function () {
     Scene.prototype.toggleShadowMapping = function () {
         this._shadowMappingEnabled = !this._shadowMappingEnabled;
         this._shadowMappingEnabled ?
-                this.enableShadowMapping()
-                : this.disableShadowMapping();
+              this.enableShadowMapping()
+              : this.disableShadowMapping();
     };
 
     Scene.prototype.renderShadowMap = function (context) {
@@ -2885,7 +2888,7 @@ define([], function () {
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
-            var camOri = Mat.inverseOfRotation4(this.activeCamera.getOrientationMatrix());
+            var camOri = mat.inverseOfRotation4(this.activeCamera.getOrientationMatrix());
             var cameraZ = [camOri[8], camOri[9], camOri[10]];
             for (var i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {

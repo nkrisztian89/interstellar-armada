@@ -1,40 +1,19 @@
-"use strict";
-
 /**
- * @fileOverview This file contains the classes that listen to and interpret
- * user input coming from different devices and translates them into actions
- * to be performed by the classes of the model or view parts of the game.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, white: true */
+/*global define */
 
-Application.createModule({name: "Control",
-    dependencies: [
-        {module: "Resource", from: "resource.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Resource = Application.Resource.Resource;
-    // a reference to this module which will be returned in the end
-    var Module;
+define([
+    "modules/application",
+    "modules/async-resource"
+], function (application, asyncResource) {
+    "use strict";
     /**
      * @class Represents a key (combination) - action association.
      * @param {Element|String} [xmlTagOrActionName] If a string is given, it will
@@ -57,8 +36,8 @@ Application.createModule({name: "Control",
          * @type String
          */
         this._actionName = (typeof (xmlTagOrActionName) === "string" ?
-                xmlTagOrActionName :
-                null);
+              xmlTagOrActionName :
+              null);
         /**
          * The string representation of the key. 
          * @see KeyboardInputInterpreter#getKeyCodeTable
@@ -96,7 +75,7 @@ Application.createModule({name: "Control",
             this.loadFromXMLTag(xmlTagOrActionName);
         }
         this.updateKeyString();
-        Application.log("Created key binding: " + this._actionName + " - " + this._keyString, 3);
+        application.log("Created key binding: " + this._actionName + " - " + this._keyString, 3);
     }
     ;
 
@@ -242,9 +221,9 @@ Application.createModule({name: "Control",
      */
     KeyBinding.prototype.isTriggered = function (currentlyPressedKeys) {
         return (currentlyPressedKeys[this._keyCode] &&
-                (currentlyPressedKeys[16] === this._shiftState) &&
-                (currentlyPressedKeys[17] === this._ctrlState) &&
-                (currentlyPressedKeys[18] === this._altState));
+              (currentlyPressedKeys[16] === this._shiftState) &&
+              (currentlyPressedKeys[17] === this._ctrlState) &&
+              (currentlyPressedKeys[18] === this._altState));
     };
 
     /**
@@ -344,10 +323,10 @@ Application.createModule({name: "Control",
      */
     KeyboardInputInterpreter.prototype.getKeyCodeOf = function (key) {
         return key ?
-                (key[0] === "#" ?
-                        parseInt(key.slice(1)) :
-                        this.getKeyCodeTable()[key]) :
-                null;
+              (key[0] === "#" ?
+                    parseInt(key.slice(1)) :
+                    this.getKeyCodeTable()[key]) :
+              null;
     };
 
     /**
@@ -536,7 +515,7 @@ Application.createModule({name: "Control",
             }
             return result;
         } else {
-            Application.showError("Cannot query the triggered action when the " + this.getDeviceName() + " interpreter is not listening for user input!");
+            application.showError("Cannot query the triggered action when the " + this.getDeviceName() + " interpreter is not listening for user input!");
         }
     };
 
@@ -1078,12 +1057,12 @@ Application.createModule({name: "Control",
         var result = new Array();
         for (var bindingActionName in this._bindings) {
             var actionIntensity =
-                    this._bindings[bindingActionName].getTriggeredIntensity(
-                    this._currentlyPressedButtons,
-                    this._mousePosition[0] - this._screenCenter[0],
-                    this._mousePosition[1] - this._screenCenter[1],
-                    this._mousePositionChange[0],
-                    this._mousePositionChange[1]);
+                  this._bindings[bindingActionName].getTriggeredIntensity(
+                  this._currentlyPressedButtons,
+                  this._mousePosition[0] - this._screenCenter[0],
+                  this._mousePosition[1] - this._screenCenter[1],
+                  this._mousePositionChange[0],
+                  this._mousePositionChange[1]);
             if (this._bindings[bindingActionName].isMeasuredFromCenter() === true) {
                 if (actionIntensity > this._displacementDeadzone) {
                     result.push({
@@ -1197,7 +1176,7 @@ Application.createModule({name: "Control",
         // gamepad button
         if (this._button !== null) {
             return (gamepad.buttons[this._button] === 1.0 ||
-                    ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
+                  ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
         }
         if (this._axisIndex !== null) {
             return Math.max((0.0075 * gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
@@ -1572,7 +1551,7 @@ Application.createModule({name: "Control",
      * @returns {String}
      */
     Controller.prototype.getType = function () {
-        Application.showError("Attempting to get the type of a generic controller object!");
+        application.showError("Attempting to get the type of a generic controller object!");
         return "none (generic)";
     };
 
@@ -1620,11 +1599,11 @@ Application.createModule({name: "Control",
                 this._actions[actionName].setExecuteNonTriggered(actionFunction);
             }
         } else {
-            Application.showError("Attempting to initialize action '" + actionName + "', but no such action was defined " +
-                    "for '" + this.getType() + "' type controllers.", "severe", "The action definition might be missing from the " +
-                    "settings file, or the settings file has not been loaded properly. The game is still playable, " +
-                    "but this action will not work until the error with the settings file is corrected and the game " +
-                    "is restarted.");
+            application.showError("Attempting to initialize action '" + actionName + "', but no such action was defined " +
+                  "for '" + this.getType() + "' type controllers.", "severe", "The action definition might be missing from the " +
+                  "settings file, or the settings file has not been loaded properly. The game is still playable, " +
+                  "but this action will not work until the error with the settings file is corrected and the game " +
+                  "is restarted.");
         }
     };
 
@@ -2011,11 +1990,11 @@ Application.createModule({name: "Control",
      * input coming from different devices (such as keyboard or mouse) into actions,
      * and the controllers that can process those actions and execute the appropriate
      * methods of in-game entities they control.
-     * @extends Resource
+     * @extends asyncResource.Resource
      * @returns {ControlContext}
      */
     function ControlContext() {
-        Resource.call(this);
+        asyncResource.Resource.call(this);
         /**
          * The XML tag wich stores the control settings.
          * @name ControlContext#_xmlTag
@@ -2090,7 +2069,7 @@ Application.createModule({name: "Control",
         this._disabledActions = new Object();
     }
 
-    ControlContext.prototype = new Resource();
+    ControlContext.prototype = new asyncResource.Resource();
     ControlContext.prototype.constructor = ControlContext;
 
     /**
@@ -2131,7 +2110,7 @@ Application.createModule({name: "Control",
         if (this["_" + interpreterType + "Interpreter"]) {
             return this["_" + interpreterType + "Interpreter"];
         } else {
-            Application.showError("Asked for a interpreter of type '" + interpreterType + "', which does not exist!");
+            application.showError("Asked for a interpreter of type '" + interpreterType + "', which does not exist!");
         }
     };
 
@@ -2174,7 +2153,7 @@ Application.createModule({name: "Control",
         if (this["_" + controllerType + "Controller"]) {
             return this["_" + controllerType + "Controller"];
         } else {
-            Application.showError("Asked for a controller of type '" + controllerType + "', which does not exist!");
+            application.showError("Asked for a controller of type '" + controllerType + "', which does not exist!");
         }
     };
 
@@ -2248,9 +2227,9 @@ Application.createModule({name: "Control",
                         this.addController(new CameraController(controllerTags[i]));
                         break;
                     default:
-                        Application.showError("Unrecognized controller type: '" + controllerTags[i].getAttribute("type") + "'!",
-                                "severe", "Every controller defined in the settings file must be of one of the following types: " +
-                                "general, fighter, camera.");
+                        application.showError("Unrecognized controller type: '" + controllerTags[i].getAttribute("type") + "'!",
+                              "severe", "Every controller defined in the settings file must be of one of the following types: " +
+                              "general, fighter, camera.");
                 }
             }
 
@@ -2268,9 +2247,9 @@ Application.createModule({name: "Control",
                         this.addInputInterpreter(new GamepadInputInterpreter(interpreterTags[i]));
                         break;
                     default:
-                        Application.showError("Unrecognized input device type: '" + interpreterTags[i].getAttribute("type") + "'!",
-                                "severe", "Every input device defined in the settings file must be of one of the following types: " +
-                                "keyboard, mouse.");
+                        application.showError("Unrecognized input device type: '" + interpreterTags[i].getAttribute("type") + "'!",
+                              "severe", "Every input device defined in the settings file must be of one of the following types: " +
+                              "keyboard, mouse.");
                 }
             }
             // if only the defaults need to be restored, go through the stored interpreters 
@@ -2398,10 +2377,9 @@ Application.createModule({name: "Control",
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
-    Module = {
+    return {
         KeyBinding: KeyBinding,
         KeyboardInputInterpreter: KeyboardInputInterpreter,
         ControlContext: ControlContext
     };
-    return Module;
 });

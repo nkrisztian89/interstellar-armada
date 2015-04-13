@@ -241,7 +241,7 @@ Application.createModule({name: "Egom",
          * @name Triangle#_normals
          * @type Number[][3]
          */
-        this._normals = normals || Vec.normal3(Vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
+        this._normals = normals || vec.normal3(vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
         /**
          * The index of the group this triangle belongs to. (for setting different
          * uniform values for certain triangle groups of the model while rendering)
@@ -1123,7 +1123,7 @@ Application.createModule({name: "Egom",
             params.normals = [normals[i]];
             this.addQuad(i0 + (i * 4) + 0, i0 + (i * 4) + 1, i0 + (i * 4) + 2, i0 + (i * 4) + 3, params);
             if (!cullFace) {
-                params.normals = [Vec.scaled3(normals[i], -1)];
+                params.normals = [vec.scaled3(normals[i], -1)];
                 this.addQuad(i0 + (i * 4) + 2, i0 + (i * 4) + 1, i0 + (i * 4) + 0, i0 + (i * 4) + 3, params);
             }
         }
@@ -1200,7 +1200,7 @@ Application.createModule({name: "Egom",
             if (cullFace !== true) {
                 this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                     texCoords: [uv1, uv3, uv2],
-                    normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
+                    normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
             }
             // triangles connected to the bottom
             if ((angles % 2) === 0) {
@@ -1220,7 +1220,7 @@ Application.createModule({name: "Egom",
             if (cullFace !== true) {
                 this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                     texCoords: [uv1, uv3, uv2],
-                    normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
+                    normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
             }
             // quads between the two subsequent circles
             for (var j = 1; j < angles / 2 - 1; j++) {
@@ -1237,7 +1237,7 @@ Application.createModule({name: "Egom",
                 if (cullFace !== true) {
                     this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                         texCoords: [uv1, uv3, uv2],
-                        normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
+                        normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
                 }
                 v = [i0 + (((i + 1) % angles) * angles) + j + 1, i0 + (i * angles) + j, i0 + (((i + 1) % angles) * angles) + j];
                 uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 * (j + 1) / angles);
@@ -1252,7 +1252,7 @@ Application.createModule({name: "Egom",
                 if (cullFace !== true) {
                     this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
                         texCoords: [uv1, uv3, uv2],
-                        normals: [Vec.scaled3(n1, -1), Vec.scaled3(n3, -1), Vec.scaled3(n2, -1)]});
+                        normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
                 }
             }
         }

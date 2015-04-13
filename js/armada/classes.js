@@ -1,44 +1,22 @@
-"use strict";
-/*jslint plusplus: true */
-/*jslint nomen: true */
-
 /**
- * @fileOverview This file contains the declatations of all classes of in-game
- * entities. These classes are used via composition (as members of the instances 
- * that implement these entities)
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, white: true */
+/*global define */
 
-Application.createModule({name: "Classes",
-    dependencies: [
-        {script: "matrices.js"},
-        {script: "utils.js"},
-        {module: "Physics", from: "physics.js"},
-        {module: "Scene", from: "scene.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Physics = Application.Physics;
-    var Scene = Application.Scene;
+define([
+    "utils/utils",
+    "utils/vectors",
+    "utils/matrices",
+    "modules/physics",
+    "armada/armada"
+], function (utils, vec, mat, physics, armada) {
+    "use strict";
     /**
      * Creates a skybox class and loads its properties from the passed XML tag, if any.
      * @class A skybox represents the background picture rendered for the 
@@ -196,7 +174,7 @@ Application.createModule({name: "Classes",
         }
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
         this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
-        this.color = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
+        this.color = utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
         Object.freeze(this);
     };
 
@@ -245,7 +223,7 @@ Application.createModule({name: "Classes",
     BackgroundObjectClass.prototype.loadFromXMLTag = function (xmlTag) {
         var i, tags;
         this.name = xmlTag.getAttribute("name");
-        this.lightColor = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
+        this.lightColor = utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
         this.layers = [];
         tags = xmlTag.getElementsByTagName("layer");
         for (i = 0; i < tags.length; i++) {
@@ -316,7 +294,7 @@ Application.createModule({name: "Classes",
         this.name = xmlTag.getAttribute("name");
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
         this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"), 10);
-        this.color = Utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
+        this.color = utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
         this.range = parseFloat(xmlTag.getAttribute("range"));
         Object.freeze(this);
     };
@@ -528,7 +506,7 @@ Application.createModule({name: "Classes",
      */
     ClassWithModel.prototype.addModelToResourceManager = function (name, lod) {
         var i, bestLOD, bestIndex, result;
-        console.log("Adding "+ ((lod === undefined) ? "all LODs" : ("LOD " +lod)) + " of model with name: '"+name+"' to resource manager...");
+        console.log("Adding " + ((lod === undefined) ? "all LODs" : ("LOD " + lod)) + " of model with name: '" + name + "' to resource manager...");
         // if no specific LOD was requested, add all from 0 to the max loaded
         // LOD (according to the graphics settings)
         if (lod === undefined) {
@@ -536,7 +514,7 @@ Application.createModule({name: "Classes",
             bestIndex = -1;
             bestLOD = -1;
             for (i = 0; i < this.modelDescriptors.length; i++) {
-                if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD <= Armada.graphics().getMaxLoadedLOD())) {
+                if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD <= armada.graphics().getMaxLoadedLOD())) {
                     if ((bestIndex === -1) || (this.modelDescriptors[i].maxLOD > bestLOD)) {
                         bestIndex = i;
                         bestLOD = this.modelDescriptors[i].maxLOD;
@@ -544,14 +522,14 @@ Application.createModule({name: "Classes",
                 }
             }
             if (bestIndex > -1) {
-                result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
+                result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
             }
             // if the multi-LOD file didn't cover all needed LODs, try to fill
             // the gap from single LOD files
             for (i = 0; i < this.modelDescriptors.length; i++) {
-                if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod <= Armada.graphics().getMaxLoadedLOD())) {
+                if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod <= armada.graphics().getMaxLoadedLOD())) {
                     if (this.modelDescriptors[i].lod > bestLOD) {
-                        result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[i].path, false, this.modelDescriptors[i].lod);
+                        result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[i].path, false, this.modelDescriptors[i].lod);
                     }
                 }
             }
@@ -563,12 +541,12 @@ Application.createModule({name: "Classes",
                 for (i = 0; i < this.modelDescriptors.length; i++) {
                     if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod === bestLOD)) {
                         bestIndex = i;
-                        result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, false, bestLOD);
+                        result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, false, bestLOD);
                         break;
                     }
                     if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD === bestLOD)) {
                         bestIndex = i;
-                        result = Armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
+                        result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
                         break;
                     }
                 }
@@ -620,9 +598,9 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     Barrel.prototype.loadFromXMLTag = function (xmlTag) {
-        this.projectileClass = Armada.logic().getProjectileClass(xmlTag.getAttribute("projectile"));
+        this.projectileClass = armada.logic().getProjectileClass(xmlTag.getAttribute("projectile"));
         this.force = parseFloat(xmlTag.getAttribute("force"));
-        this.positionVector = Vec.fromXMLTag3(xmlTag);
+        this.positionVector = vec.fromXMLTag3(xmlTag);
         Object.freeze(this);
     };
 
@@ -738,9 +716,9 @@ Application.createModule({name: "Classes",
         this.name = xmlTag.getAttribute("name");
         this.thrusterBurnParticle = new ParticleDescriptor(xmlTag);
         // convert from kilonewtons (ton*m/s^2) to newtons
-        this.thrust = Utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust")) * 1000;
+        this.thrust = utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust")) * 1000;
         // convert the given, ton*degrees/s^2 value to kg*rad/s^2
-        this.angularThrust = Utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust")) / 180 * Math.PI * 1000;
+        this.angularThrust = utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust")) / 180 * Math.PI * 1000;
         Object.freeze(this);
     };
 
@@ -779,8 +757,8 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     WeaponSlot.prototype.loadFromXMLTag = function (xmlTag) {
-        this.positionMatrix = Mat.translationFromXMLTag(xmlTag);
-        this.orientationMatrix = Mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("direction"));
+        this.positionMatrix = mat.translationFromXMLTag(xmlTag);
+        this.orientationMatrix = mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("direction"));
         Object.freeze(this);
     };
 
@@ -837,7 +815,7 @@ Application.createModule({name: "Classes",
      * @param {Element} xmlTag
      */
     ThrusterSlot.prototype.loadFromXMLTag = function (xmlTag) {
-        this.positionVector = Vec.fromXMLTag3(xmlTag);
+        this.positionVector = vec.fromXMLTag3(xmlTag);
         this.positionVector.push(1.0);
         this.size = parseFloat(xmlTag.getAttribute("size"));
         this.uses = xmlTag.getAttribute("use").split(',');
@@ -1138,8 +1116,8 @@ Application.createModule({name: "Classes",
         this.fov = parseFloat(xmlTag.getAttribute("fov"));
         this.controllablePosition = (xmlTag.getAttribute("movable") === "true");
         this.controllableDirection = (xmlTag.getAttribute("turnable") === "true");
-        this.followPositionMatrix = Mat.translationFromXMLTag(xmlTag);
-        this.followOrientationMatrix = Mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn"));
+        this.followPositionMatrix = mat.translationFromXMLTag(xmlTag);
+        this.followOrientationMatrix = mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn"));
         this.rotationCenterIsObject = (xmlTag.getAttribute("rotationCenterIsObject") === "true");
         Object.freeze(this);
     };
@@ -1273,7 +1251,7 @@ Application.createModule({name: "Classes",
         ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
 
         this.name = xmlTag.getAttribute("name");
-        this.spacecraftType = Armada.logic().getSpacecraftType(xmlTag.getAttribute("type"));
+        this.spacecraftType = armada.logic().getSpacecraftType(xmlTag.getAttribute("type"));
 
         // initializing informational properties
         if (xmlTag.getElementsByTagName("information").length > 0) {
@@ -1293,8 +1271,8 @@ Application.createModule({name: "Classes",
         }
 
         // initializing model geometry information
-        tag = xmlTag.getElementsByTagName("models")[0];
-        this.modelSize = parseFloat(tag.getAttribute("size"));
+        tag = xmlTag.getElementsByTagName("model")[0];
+        this.modelSize = parseFloat(tag.getAttribute("scale"));
 
         // reading the textures into an object, where the texture types are the
         // names of the properties
@@ -1310,10 +1288,10 @@ Application.createModule({name: "Classes",
         this.bodies = [];
         tags = xmlTag.getElementsByTagName("body");
         for (i = 0; i < tags.length; i++) {
-            this.bodies.push(new Physics.Body(
-                    Mat.translationFromXMLTag(tags[i]),
-                    Mat.rotation4FromXMLTags(tags[i].getElementsByTagName("turn")),
-                    Utils.getDimensionsFromXMLTag(tags[i])));
+            this.bodies.push(new physics.Body(
+                  mat.translationFromXMLTag(tags[i]),
+                  mat.rotation4FromXMLTags(tags[i].getElementsByTagName("turn")),
+                  utils.getDimensionsFromXMLTag(tags[i])));
         }
 
         // initializing equipment properties

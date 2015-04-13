@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Classes>
     <SkyboxClass name="deepspace">
-        <shader name="skybox" samplerName="skybox" />
+        <shader name="skybox" />
         <cubemap name="deepspace" />
     </SkyboxClass>
         
@@ -11,12 +11,12 @@
         </light>
         <layer size="300">
             <shader name="backgroundBillboard" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="1.0" g="1.0" b="0.0" />
         </layer>
         <layer size="250">
             <shader name="backgroundBillboard" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="1.0" g="1.0" b="1.0" />
         </layer>
     </BackgroundObjectClass>
@@ -27,12 +27,12 @@
         </light>
         <layer size="150">
             <shader name="backgroundBillboard" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="0.1" g="1.0" b="1.0" />
         </layer>
         <layer size="50">
             <shader name="backgroundBillboard" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="1.0" g="1.0" b="1.0" />
         </layer>
     </BackgroundObjectClass>
@@ -48,13 +48,13 @@
                 <intersection position="0" />
             </billboard>
             <shader name="billboard" />
-            <texture filename="textures/plasma_full.png" useMipmap="false" />
+            <texture name="plasma" />
         </graphics>
         <physics mass="1" />
         <logic duration="5000" />
         <muzzleFlash>
             <shader name="particle" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="0.0" g="1.0" b="0.0" />
         </muzzleFlash> 
     </ProjectileClass>
@@ -65,13 +65,13 @@
                 <intersection position="0.35" />
             </billboard>
             <shader name="billboard" />
-            <texture filename="textures/proton_full.png" useMipmap="false" />
+            <texture name="proton" />
         </graphics>
         <physics mass="5" />
         <logic duration="5000" />
         <muzzleFlash>
             <shader name="particle" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="1.0" g="1.0" b="0.0" />
         </muzzleFlash> 
     </ProjectileClass>
@@ -82,23 +82,19 @@
                 <intersection position="0" />
             </billboard>
             <shader name="billboard" />
-            <texture filename="textures/ion_full.png" useMipmap="false" />
+            <texture name="ion" />
         </graphics>
         <physics mass="15" />
         <logic duration="5000" />
         <muzzleFlash>
             <shader name="particle" />
-            <texture filename="textures/flare.png" />
+            <texture name="flare" />
             <color r="0.0" g="0.6" b="1.0" />
         </muzzleFlash> 
     </ProjectileClass>
 	
     <WeaponClass name="plasma">
-        <model path="weapons/plasma_lod0-0.egm" maxLOD="0" />
-        <model path="weapons/plasma_lod0-1.egm" maxLOD="1" />
-        <model path="weapons/plasma_lod0-2.egm" maxLOD="2" />
-        <model path="weapons/plasma_lod0-3.egm" maxLOD="3" />
-        <model path="weapons/plasma_lod0-4.egm" maxLOD="4" />
+        <model name="plasma" />
         <logic cooldown="250" />
         <barrels>
             <barrel projectile="plasma" force="1200" x="0" y="10" z="0" />
@@ -106,11 +102,7 @@
     </WeaponClass>
 	
     <WeaponClass name="turret">
-        <model path="weapons/turret_lod0-0.egm" maxLOD="0" />
-        <model path="weapons/turret_lod0-1.egm" maxLOD="1" />
-        <model path="weapons/turret_lod0-2.egm" maxLOD="2" />
-        <model path="weapons/turret_lod0-3.egm" maxLOD="3" />
-        <model path="weapons/turret_lod0-4.egm" maxLOD="4" />
+        <model name="turret" />
         <logic cooldown="250" />
         <barrels>
             <barrel projectile="plasma" force="1500" x="2" y="25" z="10" />
@@ -121,11 +113,7 @@
     </WeaponClass>
 	
     <WeaponClass name="cannon">
-        <model path="weapons/cannon_lod0-0.egm" maxLOD="0" />
-        <model path="weapons/cannon_lod0-1.egm" maxLOD="1" />
-        <model path="weapons/cannon_lod0-2.egm" maxLOD="2" />
-        <model path="weapons/cannon_lod0-3.egm" maxLOD="3" />
-        <model path="weapons/cannon_lod0-4.egm" maxLOD="4" />
+        <model name="cannon" />
         <logic cooldown="1500" />
         <barrels>
             <barrel projectile="proton" force="8000" x="0" y="100" z="0" />
@@ -133,11 +121,7 @@
     </WeaponClass>
 	
     <WeaponClass name="largeCannon">
-        <model path="weapons/ion_cannon_lod0-0.egm" maxLOD="0" />
-        <model path="weapons/ion_cannon_lod0-1.egm" maxLOD="1" />
-        <model path="weapons/ion_cannon_lod0-2.egm" maxLOD="2" />
-        <model path="weapons/ion_cannon_lod0-3.egm" maxLOD="3" />
-        <model path="weapons/ion_cannon_lod0-4.egm" maxLOD="4" />
+        <model name="ion_cannon" />
         <logic cooldown="5000" />
         <barrels>
             <barrel projectile="ion" force="50000" x="0" y="320" z="0" />
@@ -146,35 +130,35 @@
 	
     <PropulsionClass name="fighter">
         <shader name="permanentParticle" />
-        <texture filename="textures/flare.png" />
+        <texture name="flare" />
         <color r="0.0" g="0.8" b="1.0" />
         <power thrust="50 * 10" angularThrust="180 * 10" />
     </PropulsionClass>
         
     <PropulsionClass name="bomber">
         <shader name="permanentParticle" />
-        <texture filename="textures/flare.png" />
+        <texture name="flare" />
         <color r="0.0" g="0.8" b="1.0" />
         <power thrust="30 * 35" angularThrust="75 * 35" />
     </PropulsionClass>
 	
     <PropulsionClass name="corvette">
         <shader name="permanentParticle" />
-        <texture filename="textures/flare.png" />
+        <texture name="flare" />
         <color r="0.0" g="0.8" b="1.0" />
         <power thrust="15 * 800" angularThrust="30 * 800" />
     </PropulsionClass>
 	
     <PropulsionClass name="frigate">
         <shader name="permanentParticle" />
-        <texture filename="textures/flare.png" />
+        <texture name="flare" />
         <color r="0.0" g="0.8" b="1.0" />
         <power thrust="10 * 2200" angularThrust="20 * 2200" />
     </PropulsionClass>
 	
     <PropulsionClass name="cruiser">
         <shader name="permanentParticle" />
-        <texture filename="textures/flare.png" />
+        <texture name="flare" />
         <color r="0.0" g="0.8" b="1.0" />
         <power thrust="5 * 25000" angularThrust="10 * 25000" />
     </PropulsionClass>
@@ -208,16 +192,8 @@
                 it can carry and a uniquely effective jammer arrangement.
             </description>
         </information>
-        <models size ="0.2">
-            <model path="falcon_lod0-0.egm" maxLOD="0"/>
-            <model path="falcon_lod0-1.egm" maxLOD="1"/>
-            <model path="falcon_lod0-2.egm" maxLOD="2"/>
-            <model path="falcon_lod0-3.egm" maxLOD="3"/>
-            <model path="falcon_lod0-4.egm" maxLOD="4"/>
-        </models>
-        <texture filename="textures/falcon.png" type="color" />
-        <texture filename="textures/falcon_specular.png" type="specular" />
-        <texture filename="textures/falcon_luminosity.png" type="luminosity" />
+        <model name="falcon" scale ="0.2" />
+        <texture name="falcon" />
         <shader name="ship" />
         <physics mass="10000">
             <body x="0" y="0" z="5" w="80" h="20" d="10" />
@@ -318,16 +294,8 @@
                 and its relatively heavy armor and shielding.
             </description>
         </information>
-        <models size ="0.2">
-            <model path="viper_lod0-0.egm" maxLOD="0"/>
-            <model path="viper_lod0-1.egm" maxLOD="1"/>
-            <model path="viper_lod0-2.egm" maxLOD="2"/>
-            <model path="viper_lod0-3.egm" maxLOD="3"/>
-            <model path="viper_lod0-4.egm" maxLOD="4"/>
-        </models>
-        <texture filename="textures/falcon.png" type="color" />
-        <texture filename="textures/falcon_specular.png" type="specular" />
-        <texture filename="textures/falcon_luminosity.png" type="luminosity" />
+        <model name="viper" scale ="0.2" />
+        <texture name="falcon" />
         <shader name="ship" />
         <physics mass="35000">
             <body x="0" y="30" z="5" w="30" h="70" d="10" />
@@ -421,16 +389,8 @@
                 good maneuverability its main protection against larger ships. 
             </description>
         </information>
-        <models size ="0.2">
-            <model path="aries_lod0-0.egm" maxLOD="0" />
-            <model path="aries_lod0-1.egm" maxLOD="1" />
-            <model path="aries_lod0-2.egm" maxLOD="2" />
-            <model path="aries_lod0-3.egm" maxLOD="3" />
-            <model path="aries_lod0-4.egm" maxLOD="4" />
-        </models>
-        <texture filename="textures/falcon.png" type="color" />
-        <texture filename="textures/falcon_specular.png" type="specular" />
-        <texture filename="textures/falcon_luminosity.png" type="luminosity" />
+        <model name="aries" scale ="0.2" />
+        <texture name="falcon" />
         <shader name="ship" />
         <physics mass="800000">
             <body x="0" y="70" z="0" w="130" h="300" d="80" />
@@ -510,16 +470,8 @@
                 and more vulnerable units.
             </description>
         </information>
-        <models size ="0.2">
-            <model path="taurus_lod0-0.egm" maxLOD="0"/>
-            <model path="taurus_lod0-1.egm" maxLOD="1"/>
-            <model path="taurus_lod0-2.egm" maxLOD="2"/>
-            <model path="taurus_lod0-3.egm" maxLOD="3"/>
-            <model path="taurus_lod0-4.egm" maxLOD="4"/>
-        </models>
-        <texture filename="textures/falcon.png" type="color" />
-        <texture filename="textures/falcon_specular.png" type="specular" />
-        <texture filename="textures/falcon_luminosity.png" type="luminosity" />
+        <model name="taurus" scale ="0.2" />
+        <texture name="falcon" />
         <shader name="ship" />
         <physics mass="2200000">
             <body x="0" y="65" z="55" w="140" h="160" d="75" />
@@ -651,16 +603,8 @@
                 the cruiser, as well as state-of-the-art countermeasure and jammer systems.
             </description>
         </information>
-        <models size ="0.2">
-            <model path="libra_lod0-0.egm" maxLOD="0"/>
-            <model path="libra_lod0-1.egm" maxLOD="1"/>
-            <model path="libra_lod0-2.egm" maxLOD="2"/>
-            <model path="libra_lod0-3.egm" maxLOD="3"/>
-            <model path="libra_lod0-4.egm" maxLOD="4"/>
-        </models>
-        <texture filename="textures/libra.png" type="color" />
-        <texture filename="textures/libra_specular.png" type="specular" />
-        <texture filename="textures/libra_luminosity.png" type="luminosity" />
+        <model name="libra" scale ="0.2" />
+        <texture name="libra" />
         <shader name="ship" />
         <physics mass="25000000">
             <body x="0" y="250" z="0" w="700" h="1700" d="800" />

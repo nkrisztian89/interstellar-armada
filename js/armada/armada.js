@@ -7,14 +7,16 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, location, document */
+/*global define, require, location, document, JSON */
 
-define(["modules/application"], function (Application) {
+define([
+    "modules/application"
+], function (application) {
     "use strict";
 
     // first set up the general properties provided by application.js
 
-    Application.setFolders({
+    application.setFolders({
         screen: "screens/",
         component: "components/",
         css: "css/",
@@ -25,13 +27,18 @@ define(["modules/application"], function (Application) {
         level: "levels/",
         environment: "levels/"
     });
-    Application.setLogVerbosity(2);
+    application.setLogVerbosity(2);
 
-    Application.setVersion("0.1.0:106+refactoring-10");
+    application.setVersion("0.1.0:106+refactoring-12 (2015.04.13.)");
 
     // add private variables specific to Interstellar Armada
 
     var
+          /**
+           * Manages the texture, cubemap, shader and model resources of the game.
+           * @type ResourceManager
+           */
+          _resourceManager = null,
           /**
            * Manages the HTML screens of the game (such as menu, battle, database...)
            * @type ScreenManager
@@ -40,19 +47,19 @@ define(["modules/application"], function (Application) {
           /**
            * The graphics context of the game, that can be used to access and 
            * manipulate graphical resources.
-           * @type graphics.GraphicsContext
+           * @type GraphicsContext
            */
           _graphicsContext = null,
           /**
            * The logic context of the game, containing the domain specific model (e.g.
            * what classes of spaceships are there)
-           * @type logic.LogicContext
+           * @type LogicContext
            */
           _logicContext = null,
           /**
            * The control context of the game, that can be used to bind input controls
            * to in-game actions.
-           * @type control.ControlContext
+           * @type ControlContext
            */
           _controlContext = null;
 
@@ -62,10 +69,11 @@ define(["modules/application"], function (Application) {
     /**
      * Sends an asynchronous request to get the XML file describing the game
      * settings and sets the callback function to set them.
+     * @param {String} settingsFileURL
      */
-    Application.requestSettingsLoad = function () {
-        Application.requestXMLFile("config", "settings.xml", function (settingsXML) {
-            Application.log("Loading game settings...", 1);
+    application.requestSettingsLoad = function (settingsFileURL) {
+        application.requestXMLFile("config", settingsFileURL, function (settingsXML) {
+            application.log("Loading game settings...", 1);
             _graphicsContext.loadFromXMLTag(settingsXML.getElementsByTagName("graphics")[0]);
             _graphicsContext.loadFromLocalStorage();
             _logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
@@ -74,8 +82,24 @@ define(["modules/application"], function (Application) {
         });
     };
 
-    Application.buildScreens = function () {
-        require(["modules/screens"], function (screens) {
+    application.requestConfigLoad = function (resourceManager) {
+        application.requestTextFile("config", "config.json", function (configText) {
+            var configJSON = JSON.parse(configText);
+            application.log("Loading game configuration...", 1);
+            _resourceManager.requestConfigLoad(configJSON.configFileURLs.resources, {
+                "textures": resourceManager.TextureResource,
+                "cubemaps": resourceManager.CubemapResource,
+                "shaders": resourceManager.ShaderResource,
+                "models": resourceManager.ModelResource
+            });
+            _logicContext.setClassesSourceFileName(configJSON.configFileURLs.classes);
+            _logicContext.setEnvironmentsSourceFileName(configJSON.configFileURLs.environments);
+            application.requestSettingsLoad(configJSON.configFileURLs.settings);
+        });
+    };
+
+    application.buildScreens = function () {
+        require(["modules/screens", "armada/screens"], function (screens, armadaScreens) {
             _screenManager.addScreen(new screens.MenuScreen("mainMenu", "menu.html", [{
                     caption: "New game",
                     action: function () {
@@ -98,8 +122,8 @@ define(["modules/application"], function (Application) {
                         _screenManager.setCurrentScreen("about");
                     }
                 }], "menuContainer"));
-            _screenManager.addScreen(new screens.BattleScreen("battle", "battle.html"));
-            _screenManager.addScreen(new screens.DatabaseScreen("database", "database.html"));
+            _screenManager.addScreen(new armadaScreens.BattleScreen("battle", "battle.html"));
+            _screenManager.addScreen(new armadaScreens.DatabaseScreen("database", "database.html"));
             _screenManager.addScreen(new screens.MenuScreen("settings", "menu.html", [{
                     caption: "Graphics settings",
                     action: function () {
@@ -116,9 +140,9 @@ define(["modules/application"], function (Application) {
                         _screenManager.setCurrentScreen("mainMenu");
                     }
                 }], "menuContainer"));
-            _screenManager.addScreen(new screens.GraphicsScreen("graphics", "graphics.html"));
-            _screenManager.addScreen(new screens.ControlsScreen("controls", "controls.html"));
-            _screenManager.addScreen(new screens.AboutScreen("about", "about.html"));
+            _screenManager.addScreen(new armadaScreens.GraphicsScreen("graphics", "graphics.html"));
+            _screenManager.addScreen(new armadaScreens.ControlsScreen("controls", "controls.html"));
+            _screenManager.addScreen(new armadaScreens.AboutScreen("about", "about.html"));
             _screenManager.addScreen(new screens.MenuScreen("ingameMenu", "ingame-menu.html", [{
                     caption: "Resume game",
                     action: function () {
@@ -136,6 +160,10 @@ define(["modules/application"], function (Application) {
                         _screenManager.setCurrentScreen("mainMenu");
                     }
                 }], "menuContainer"));
+
+            // hide the splash screen
+            document.body.firstElementChild.style.display = "none";
+            _screenManager.setCurrentScreen("mainMenu");
         });
     };
 
@@ -152,12 +180,12 @@ define(["modules/application"], function (Application) {
      * @param {WebGLRenderingContext} gl The WebGL context the error happened in
      * relation with.
      */
-    Application.showGraphicsError = function (message, severity, details, gl) {
+    application.showGraphicsError = function (message, severity, details, gl) {
         if (!gl) {
-            Application.showError(message, severity, details + "\n\nThis is a graphics related error. There is " +
+            application.showError(message, severity, details + "\n\nThis is a graphics related error. There is " +
                   "no information available about your graphics support.");
         } else {
-            Application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
+            application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
                   "Information about your graphics support:\n" +
                   "WebGL version: " + gl.getParameter(gl.VERSION) + "\n" +
                   "Shading language version: " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION) + "\n" +
@@ -168,8 +196,8 @@ define(["modules/application"], function (Application) {
     /** 
      * Initializes the game: builds up the screens, loads settings and displays the main menu.
      */
-    Application.initialize = function () {
-        Application.log("Initializing Interstellar Armada (version: " + Application.getVersion() + ")...", 1);
+    application.initialize = function () {
+        application.log("Initializing Interstellar Armada (version: " + application.getVersion() + ")...", 1);
         if (location.protocol === "file:") {
             this.showError("Trying to run the game from the local filesystem!", "critical",
                   "This application can only be run through a web server. " +
@@ -179,19 +207,22 @@ define(["modules/application"], function (Application) {
                   "you can start the game by entering 'localhost/armada' in your browser's address bar.");
             return;
         }
-        require(["modules/screen-manager", "armada/graphics", "armada/logic", "armada/control"], function (screenManager, graphics, logic, control) {
+        require([
+            "modules/resource-manager",
+            "modules/screen-manager",
+            "armada/graphics",
+            "armada/logic",
+            "armada/control"
+        ], function (resourceManager, screenManager, graphics, logic, control) {
+            _resourceManager = new resourceManager.ResourceManager();
             _screenManager = new screenManager.ScreenManager();
             _graphicsContext = new graphics.GraphicsContext();
             _logicContext = new logic.LogicContext();
             _controlContext = new control.ControlContext();
 
-            Application.requestSettingsLoad();
+            application.requestConfigLoad(resourceManager);
 
-            Application.buildScreens();
-
-            // hide the splash screen
-            document.body.firstElementChild.style.display = "none";
-            _screenManager.setCurrentScreen("mainMenu");
+            application.buildScreens();
         });
     };
     // Shortcuts
@@ -199,28 +230,28 @@ define(["modules/application"], function (Application) {
      * A shortcut to the graphics context of the game.
      * @returns {GraphicsContext}
      */
-    Application.graphics = function () {
+    application.graphics = function () {
         return _graphicsContext;
     };
     /**
      * A shortcut to the graphics resource manager of the game.
      * @returns {ResourceManager}
      */
-    Application.resources = function () {
-        return _graphicsContext.getResourceManager();
+    application.resources = function () {
+        return _resourceManager();
     };
     /**
      * A shortcut to the control context of the game.
      * @returns {ControlContext}
      */
-    Application.control = function () {
+    application.control = function () {
         return _controlContext;
     };
     /**
      * A shortcut to the logic context of the game.
      * @returns {LogicContext}
      */
-    Application.logic = function () {
+    application.logic = function () {
         return _logicContext;
     };
     // globally available functions
@@ -230,7 +261,7 @@ define(["modules/application"], function (Application) {
      * screen having this name. If omitted the function returns the current screen.
      * @returns {screens.GameScreen}
      */
-    Application.getScreen = function (screenName) {
+    application.getScreen = function (screenName) {
         return screenName ?
               _screenManager.getScreen(screenName) :
               _screenManager.getCurrentScreen();
@@ -247,9 +278,9 @@ define(["modules/application"], function (Application) {
      * will be used for the background. A real number, 0.0 is completely
      * transparent, 1.0 is completely opaque.
      */
-    Application.setScreen = function (screenName, superimpose, backgroundColor, backgroundOpacity) {
+    application.setScreen = function (screenName, superimpose, backgroundColor, backgroundOpacity) {
         _screenManager.setCurrentScreen(screenName, superimpose, backgroundColor, backgroundOpacity);
     };
 
-    return Application;
+    return application;
 });

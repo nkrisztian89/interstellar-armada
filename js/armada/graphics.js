@@ -9,7 +9,11 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, parseFloat, window, localStorage */
 
-define(["modules/application", "modules/async-resource", "modules/resource-manager", "modules/buda-scene"], function (Application, asyncResource, resourceManager, budaScene) {
+define([
+    "modules/application",
+    "modules/async-resource",
+    "modules/buda-scene"
+], function (application, asyncResource, budaScene) {
     "use strict";
     /**
      * @class A graphics context for other modules, to be used to pass the 
@@ -19,13 +23,6 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
      */
     function GraphicsContext() {
         asyncResource.Resource.call(this);
-        /**
-         * The resource manager holding and managing all the games graphical
-         * resources e.g. shader, models or textures.
-         * @name GraphicsContext#_resourceManager
-         * @type GL.ResourceManager
-         */
-        this._resourceManager = new resourceManager.ResourceManager();
         /**
          * The XML tag storing the default graphics settings.
          * @name GraphicsContext#_xmlSource
@@ -103,13 +100,6 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
     GraphicsContext.prototype = new asyncResource.Resource();
     GraphicsContext.prototype.constructor = GraphicsContext;
     /**
-     * Returns the resource manager managing the graphical resources of the game.
-     * @returns {GL.ResourceManager}
-     */
-    GraphicsContext.prototype.getResourceManager = function () {
-        return this._resourceManager;
-    };
-    /**
      * Loads the graphics setting from the data stored in the passed XML document.
      * @param {Document} xmlTag The XML tag storing the game settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
@@ -127,7 +117,6 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
         // cube map descriptions
         if (!onlyRestoreSettings) {
             this._xmlTag = xmlTag;
-            this._resourceManager.requestShaderAndCubemapObjectLoad(shadersTag.getAttribute("source"));
         }
         // set the default settings
         this._antialiasing = false;
@@ -141,7 +130,6 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
         // overwrite with the settings from the XML tag, if present
         if (shadersTag.hasAttribute("complexity")) {
             this._shaderComplexity = shadersTag.getAttribute("complexity");
-            this._resourceManager.useFallbackShaders(shadersTag.getAttribute("complexity") !== "normal");
         }
         contextTag = xmlTag.getElementsByTagName("context")[0];
         if (contextTag !== null) {
@@ -186,7 +174,7 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
         for (i = 0; i < lodDisplayLimitTags.length; i++) {
             lodDisplayLimits[parseInt(lodDisplayLimitTags[i].getAttribute("level"), 10) + 1] = parseInt(lodDisplayLimitTags[i].getAttribute("objectSizeLessThan"), 10);
         }
-        this._lodContext = new budaScene.Scene.LODContext(
+        this._lodContext = new budaScene.LODContext(
               parseInt(lodDisplayProfileTag.getAttribute("maxLevel"), 10),
               lodDisplayLimits,
               (lodDisplayProfileTag.getAttribute("compensateForObjectSize") === "true"),
@@ -268,7 +256,7 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
                 this._filtering = value;
                 break;
             default:
-                Application.showError("Attempting to set texture filtering to: '" + value + "', which is not a supported option.",
+                application.showError("Attempting to set texture filtering to: '" + value + "', which is not a supported option.",
                       "minor", "Filtering has been instead set to bilinear.");
                 this._filtering = "bilinear";
         }
@@ -316,11 +304,10 @@ define(["modules/application", "modules/async-resource", "modules/resource-manag
                 this._shaderComplexity = value;
                 break;
             default:
-                Application.showError("Attempting to set complexity to: '" + value + "', which is not a supported option.",
+                application.showError("Attempting to set complexity to: '" + value + "', which is not a supported option.",
                       "minor", "Shader complexity has been instead set to normal.");
                 this._shaderComplexity = "normal";
         }
-        this._resourceManager.useFallbackShaders(this._shaderComplexity === "simple");
         localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;
     };
     /**

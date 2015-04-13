@@ -9,7 +9,14 @@
 /*jslint nomen: true, white: true */
 /*global define */
 
-define([], function () {
+define([
+    "utils/matrices",
+    "modules/application",
+    "modules/async-resource",
+    "modules/physics",
+    "armada/armada",
+    "armada/classes"
+], function (mat, application, asyncResource, physics, armada, classes) {
     "use strict";
     /**
      * The length of impulse-like events in milliseconds (such as thruster bursts or 
@@ -50,10 +57,10 @@ define([], function () {
      */
     Skybox.prototype.addToScene = function (scene) {
         scene.addBackgroundObject(new Scene.CubemapSampledFVQ(
-              Armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
-              Armada.resources().getShader(this._class.shaderName),
+              armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
+              armada.resources().getShader(this._class.shaderName),
               this._class.samplerName,
-              Armada.resources().getCubemappedTexture(this._class.cubemap),
+              armada.resources().getCubemappedTexture(this._class.cubemap),
               scene.activeCamera));
     };
     /**
@@ -96,12 +103,12 @@ define([], function () {
         scene.addLightSource(new Scene.LightSource(this._class.lightColor, this._position));
         for (i = 0; i < this._class.layers.length; i++) {
             layerParticle = new Scene.StaticParticle(
-                  Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-                  Armada.resources().getShader(this._class.layers[i].shaderName),
-                  Armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
+                  armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+                  armada.resources().getShader(this._class.layers[i].shaderName),
+                  armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
                   this._class.layers[i].color,
                   this._class.layers[i].size,
-                  Mat.translation4v(Vec.scaled3(this._position, 4500)));
+                  mat.translation4v(vec.scaled3(this._position, 4500)));
             layerParticle.setRelSize(1.0);
             scene.addBackgroundObject(layerParticle);
         }
@@ -123,7 +130,7 @@ define([], function () {
          * @type PointParticle
          */
         this._visualModel = new Scene.PointParticle(
-              Armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], cloud.getColor())),
+              armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], cloud.getColor())),
               shader,
               positionMatrix);
         /**
@@ -208,7 +215,7 @@ define([], function () {
     DustCloud.prototype.addToScene = function (scene) {
         var i;
         this._visualModel = new Scene.PointCloud(
-              Armada.resources().getShader(this._class.shaderName),
+              armada.resources().getShader(this._class.shaderName),
               this._class.color,
               this._class.range);
         var node = scene.addObject(this._visualModel);
@@ -216,8 +223,8 @@ define([], function () {
         for (i = 0; i < this._class.numberOfParticles; i++) {
             var particle = new DustParticle(
                   this,
-                  Armada.resources().getShader(this._class.shaderName),
-                  Mat.translation4(
+                  armada.resources().getShader(this._class.shaderName),
+                  mat.translation4(
                         (Math.random() - 0.5) * 2 * this._class.range,
                         (Math.random() - 0.5) * 2 * this._class.range,
                         (Math.random() - 0.5) * 2 * this._class.range));
@@ -267,12 +274,12 @@ define([], function () {
          * @name Projectile#_physicalModel
          * @type PhysicalObject
          */
-        this._physicalModel = new Physics.PhysicalObject(
+        this._physicalModel = new physics.PhysicalObject(
               projectileClass.mass,
-              positionMatrix || Mat.identity4(),
-              orientationMatrix || Mat.identity4(),
-              Mat.scaling4(projectileClass.size),
-              spacecraft ? spacecraft.getVelocityMatrix() : Mat.null4(),
+              positionMatrix || mat.identity4(),
+              orientationMatrix || mat.identity4(),
+              mat.scaling4(projectileClass.size),
+              spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
               []);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
@@ -307,9 +314,9 @@ define([], function () {
      */
     Projectile.prototype._createVisualModel = function () {
         this._visualModel = this._visualModel || new Scene.Billboard(
-              Armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
-              Armada.resources().getShader(this._class.shaderName),
-              Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
+              armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
+              armada.resources().getShader(this._class.shaderName),
+              armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
               this._class.size,
               this._physicalModel.getPositionMatrix(),
               this._physicalModel.getOrientationMatrix());
@@ -357,7 +364,7 @@ define([], function () {
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
-            var positionVector = Mat.translationVector3(this._physicalModel.getPositionMatrix());
+            var positionVector = mat.translationVector3(this._physicalModel.getPositionMatrix());
             for (var i = 0; i < hitObjects.length; i++) {
                 if ((hitObjects[i] !== this._origin) && (hitObjects[i].checkHit(positionVector, [], 0))) {
                     this.destroy();
@@ -422,11 +429,11 @@ define([], function () {
         console.log("Adding weapon (" + this._class.name + ") to scene...");
         this._visualModel = new Scene.ShadedLODMesh(
               this._class.addModelToResourceManager(this._class.name, lod),
-              Armada.resources().getShader(this._spacecraft.getClass().shaderName),
+              armada.resources().getShader(this._spacecraft.getClass().shaderName),
               this._spacecraft.getTextures(),
               this._slot.positionMatrix,
               this._slot.orientationMatrix,
-              Mat.identity4(),
+              mat.identity4(),
               (wireframe === true),
               lod);
         parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
@@ -439,11 +446,11 @@ define([], function () {
      */
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex) {
         var projectileClass = this._class.barrels[barrelIndex].projectileClass;
-        var muzzleFlashPosMatrix = Mat.translation4v(this._class.barrels[barrelIndex].positionVector);
+        var muzzleFlashPosMatrix = mat.translation4v(this._class.barrels[barrelIndex].positionVector);
         return new Scene.DynamicParticle(
-              Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-              Armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
-              Armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
+              armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+              armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
+              armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
               projectileClass.muzzleFlash.color,
               projectileClass.size,
               muzzleFlashPosMatrix,
@@ -474,25 +481,25 @@ define([], function () {
             this._lastFireTime = curTime;
             // cache the matrices valid for the whole weapon
             var orientationMatrix = this._spacecraft.getOrientationMatrix();
-            var scaledOriMatrix = Mat.mul4(this._spacecraft.getScalingMatrix(), orientationMatrix);
-            var weaponSlotPosVector = Vec.mulVec4Mat4(Mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
-            var projectilePosMatrix = Mat.mul4(this._spacecraft.getPositionMatrix(), Mat.translation4v(weaponSlotPosVector));
-            var projectileOriMatrix = Mat.mul4(this._slot.orientationMatrix, orientationMatrix);
+            var scaledOriMatrix = mat.mul4(this._spacecraft.getScalingMatrix(), orientationMatrix);
+            var weaponSlotPosVector = vec.mulVec4Mat4(mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
+            var projectilePosMatrix = mat.mul4(this._spacecraft.getPositionMatrix(), mat.translation4v(weaponSlotPosVector));
+            var projectileOriMatrix = mat.mul4(this._slot.orientationMatrix, orientationMatrix);
             // generate the muzzle flashes and projectiles for each barrel
             for (var i = 0; i < this._class.barrels.length; i++) {
                 // cache variables
                 var projectileClass = this._class.barrels[i].projectileClass;
-                var barrelPosVector = Vec.mulVec3Mat3(this._class.barrels[i].positionVector, Mat.matrix3from4(Mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
+                var barrelPosVector = vec.mulVec3Mat3(this._class.barrels[i].positionVector, mat.matrix3from4(mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
                 // add the muzzle flash of this barrel
                 var muzzleFlash = this._getMuzzleFlashForBarrel(i);
                 this._visualModel.getNode().addSubnode(new Scene.RenderableNode(muzzleFlash));
                 // add the projectile of this barrel
                 var p = new Projectile(
                       projectileClass,
-                      Mat.mul4(projectilePosMatrix, Mat.translation4v(barrelPosVector)),
+                      mat.mul4(projectilePosMatrix, mat.translation4v(barrelPosVector)),
                       projectileOriMatrix,
                       this._spacecraft,
-                      new Physics.Force("", this._class.barrels[i].force, [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
+                      new physics.Force("", this._class.barrels[i].force, [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
             }
@@ -542,12 +549,12 @@ define([], function () {
      */
     Thruster.prototype.addToScene = function (parentNode, particleDescriptor) {
         this._visualModel = new Scene.StaticParticle(
-              Armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
-              Armada.resources().getShader(particleDescriptor.shaderName),
-              Armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
+              armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
+              armada.resources().getShader(particleDescriptor.shaderName),
+              armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
               particleDescriptor.color,
               this._slot.size,
-              Mat.translation4v(this._slot.positionVector));
+              mat.translation4v(this._slot.positionVector));
         parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
         this._shipModel = parentNode.getRenderableObject();
     };
@@ -697,9 +704,9 @@ define([], function () {
      * to the physical object it drives.
      */
     Propulsion.prototype.simulate = function () {
-        var directionVector = Mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
-        var yawAxis = Mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
-        var pitchAxis = Mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
+        var directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
+        var yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
+        var pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
         if (this._thrusterUses["forward"].burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses["forward"].burn, directionVector, timeBurstLength);
         }
@@ -876,7 +883,7 @@ define([], function () {
     ManeuveringComputer.prototype.changeFlightMode = function () {
         if (!this._compensated) {
             this._compensated = true;
-            this._speedTarget = Mat.translationLength(this._spacecraft.getVelocityMatrix());
+            this._speedTarget = mat.translationLength(this._spacecraft.getVelocityMatrix());
         } else if (!this._restricted) {
             this._restricted = true;
         } else {
@@ -1128,7 +1135,7 @@ define([], function () {
             pitchTarget = Math.min(Math.max(pitchTarget, -turningLimit), turningLimit);
         }
         // controlling yaw
-        var yawAngle = Math.sign(turningMatrix[4]) * Vec.angle2u([0, 1], Vec.normal2([turningMatrix[4], turningMatrix[5]]));
+        var yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]]));
         if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("yawRight",
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
@@ -1137,7 +1144,7 @@ define([], function () {
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
         }
         // controlling pitch
-        var pitchAngle = Math.sign(turningMatrix[6]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[5], turningMatrix[6]]));
+        var pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]]));
         if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchUp",
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
@@ -1146,7 +1153,7 @@ define([], function () {
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
         }
         // controlling roll
-        var rollAngle = Math.sign(-turningMatrix[2]) * Vec.angle2u([1, 0], Vec.normal2([turningMatrix[0], turningMatrix[2]]));
+        var rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]]));
         if ((this._rollTarget - rollAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("rollRight",
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
@@ -1282,12 +1289,12 @@ define([], function () {
      */
     Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
         this._class = spacecraftClass;
-        this._physicalModel = new Physics.PhysicalObject(
+        this._physicalModel = new physics.PhysicalObject(
               this._class.mass,
-              positionMatrix || Mat.identity4(),
-              orientationMatrix || Mat.identity4(),
-              Mat.scaling4(this._class.modelSize),
-              Mat.identity4(),
+              positionMatrix || mat.identity4(),
+              orientationMatrix || mat.identity4(),
+              mat.scaling4(this._class.modelSize),
+              mat.identity4(),
               this._class.bodies);
         this._weapons = new Array();
         this._maneuveringComputer = new ManeuveringComputer(this);
@@ -1383,9 +1390,9 @@ define([], function () {
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
-        return Mat.mul4(
+        return mat.mul4(
               this._physicalModel.getVelocityMatrix(),
-              Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+              mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the 4x4 rotation matrix describing the current rotation of this
@@ -1393,11 +1400,11 @@ define([], function () {
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getTurningMatrix = function () {
-        return Mat.mul4(
-              Mat.mul4(
+        return mat.mul4(
+              mat.mul4(
                     this._physicalModel.getOrientationMatrix(),
                     this._physicalModel.getAngularVelocityMatrix()),
-              Mat.matrix4from3(Mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+              mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the maximum acceleration the spacecraft can achieve using its
@@ -1440,7 +1447,7 @@ define([], function () {
     Spacecraft.prototype.getTextures = function () {
         var result = new Object();
         for (var textureType in this._class.textureDescriptors) {
-            result[textureType] = Armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptors[textureType]);
+            result[textureType] = armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptors[textureType]);
         }
         return result;
     };
@@ -1486,9 +1493,9 @@ define([], function () {
      */
     Spacecraft.prototype.loadFromXMLTag = function (xmlTag, projectileArray) {
         this._init(
-              Armada.logic().getSpacecraftClass(xmlTag.getAttribute("class")),
-              Mat.translationFromXMLTag(xmlTag.getElementsByTagName("position")[0]),
-              Mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn")),
+              armada.logic().getSpacecraftClass(xmlTag.getAttribute("class")),
+              mat.translationFromXMLTag(xmlTag.getElementsByTagName("position")[0]),
+              mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn")),
               projectileArray);
         // equipping the created spacecraft
         // if there is an quipment tag...
@@ -1501,7 +1508,7 @@ define([], function () {
                 // if no profile is referenced, simply create a custom profile from the tags inside
                 // the equipment tag, and equip that
             } else {
-                var equipmentProfile = new Classes.EquipmentProfile(equipmentTag);
+                var equipmentProfile = new classes.EquipmentProfile(equipmentTag);
                 this.equipProfile(equipmentProfile);
             }
             // if there is no equipment tag, attempt to load the profile named "default"    
@@ -1669,7 +1676,7 @@ define([], function () {
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
         var phyModel =
-              Armada.resources().getOrAddModelByName(
+              armada.resources().getOrAddModelByName(
               Egom.cuboidModel(
                     this._class.name + "-body" + index,
                     this._class.bodies[index].getWidth(),
@@ -1678,15 +1685,15 @@ define([], function () {
                     [0.0, 1.0, 1.0, 0.5]));
         var hitZoneMesh = new Scene.ShadedLODMesh(
               phyModel,
-              Armada.resources().getShader(this._class.shaderName),
+              armada.resources().getShader(this._class.shaderName),
               {
-                  color: Armada.resources().getOrAddTexture("textures/white.png"),
-                  specular: Armada.resources().getOrAddTexture("textures/white.png"),
-                  luminosity: Armada.resources().getOrAddTexture("textures/white.png")
+                  color: armada.resources().getOrAddTexture("textures/white.png"),
+                  specular: armada.resources().getOrAddTexture("textures/white.png"),
+                  luminosity: armada.resources().getOrAddTexture("textures/white.png")
               },
-        Mat.translation4v(Mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
+        mat.translation4v(mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
               this._class.bodies[index].getOrientationMatrix(),
-              Mat.identity4(),
+              mat.identity4(),
               false);
         this._hitbox.addSubnode(new Scene.RenderableNode(hitZoneMesh));
     };
@@ -1720,11 +1727,11 @@ define([], function () {
         // add the main model of the spacecraft
         this._visualModel = new Scene.ParameterizedMesh(
               this._class.addModelToResourceManager(this._class.name, lod),
-              Armada.resources().getShader(this._class.shaderName),
+              armada.resources().getShader(this._class.shaderName),
               textures,
               this._physicalModel.getPositionMatrix(),
               this._physicalModel.getOrientationMatrix(),
-              Mat.scaling4(this._class.modelSize),
+              mat.scaling4(this._class.modelSize),
               (wireframe === true),
               lod,
               [{name: "luminosityFactors", length: 20}]);
@@ -1732,7 +1739,7 @@ define([], function () {
         // visualize physical model (hitboxes)
         if ((addSupplements) && (addSupplements.hitboxes === true)) {
             // add the parent objects for the hitboxes
-            this._hitbox = new Scene.RenderableNode(new Scene.RenderableObject3D(Armada.resources().getShader(this._class.shaderName), false, false));
+            this._hitbox = new Scene.RenderableNode(new Scene.RenderableObject3D(armada.resources().getShader(this._class.shaderName), false, false));
             // add the models for the hitboxes themselves
             for (i = 0; i < this._class.bodies.length; i++) {
                 this._addHitboxModel(i);
@@ -1798,10 +1805,10 @@ define([], function () {
     Spacecraft.prototype.equipProfile = function (equipmentProfile) {
         var i;
         for (i = 0; i < equipmentProfile.getWeaponDescriptors().length; i++) {
-            this.addWeapon(Armada.logic().getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
+            this.addWeapon(armada.logic().getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
         }
         if (equipmentProfile.propulsionDescriptor !== null) {
-            this.addPropulsion(Armada.logic().getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+            this.addPropulsion(armada.logic().getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
         }
     };
     /**
@@ -1902,14 +1909,14 @@ define([], function () {
         this._skyboxes = new Array();
         var skyboxTags = xmlTag.getElementsByTagName("Skybox");
         for (i = 0; i < skyboxTags.length; i++) {
-            this._skyboxes.push(new Skybox(Armada.logic().getSkyboxClass(skyboxTags[i].getAttribute("class"))));
+            this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(skyboxTags[i].getAttribute("class"))));
         }
 
         this._backgroundObjects = new Array();
         var backgroundObjectTags = xmlTag.getElementsByTagName("BackgroundObject");
         for (i = 0; i < backgroundObjectTags.length; i++) {
             this._backgroundObjects.push(new BackgroundObject(
-                  Armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
+                  armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
                   backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
                   backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
                   ));
@@ -1918,7 +1925,7 @@ define([], function () {
         this._dustClouds = new Array();
         var dustCloudTags = xmlTag.getElementsByTagName("DustCloud");
         for (i = 0; i < dustCloudTags.length; i++) {
-            this._dustClouds.push(new DustCloud(Armada.logic().getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
+            this._dustClouds.push(new DustCloud(armada.logic().getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
         }
     };
     /**
@@ -2024,7 +2031,7 @@ define([], function () {
      */
     Level.prototype.requestLoadFromFile = function (filename, callback) {
         var self = this;
-        Application.requestXMLFile("level", filename, function (xmlDoc) {
+        application.requestXMLFile("level", filename, function (xmlDoc) {
             self.loadFromXML(xmlDoc);
             if (callback) {
                 callback();
@@ -2039,22 +2046,22 @@ define([], function () {
         Module.log("Loading level from XML file...", 2);
 
         this._environment = new Environment();
-        var environmentTag = Application.getFirstXMLElement(xmlDoc, "Environment");
+        var environmentTag = application.getFirstXMLElement(xmlDoc, "Environment");
         if (environmentTag.hasAttribute("createFrom")) {
-            this._environment = Armada.logic().getEnvironment(environmentTag.getAttribute("createFrom"));
+            this._environment = armada.logic().getEnvironment(environmentTag.getAttribute("createFrom"));
         } else {
             this._environment.loadFromXMLTag(environmentTag);
         }
 
-        this._cameraStartPositionMatrix = Mat.identity4();
-        this._cameraStartOrientationMatrix = Mat.identity4();
+        this._cameraStartPositionMatrix = mat.identity4();
+        this._cameraStartOrientationMatrix = mat.identity4();
         var cameraTags = xmlDoc.getElementsByTagName("Camera");
         if (cameraTags.length > 0) {
             if (cameraTags[0].getElementsByTagName("position").length > 0) {
-                this._cameraStartPositionMatrix = Mat.translation4v(Vec.scaled3(Vec.fromXMLTag3(cameraTags[0].getElementsByTagName("position")[0]), -1));
+                this._cameraStartPositionMatrix = mat.translation4v(vec.scaled3(vec.fromXMLTag3(cameraTags[0].getElementsByTagName("position")[0]), -1));
             }
             if (cameraTags[0].getElementsByTagName("orientation").length > 0) {
-                this._cameraStartOrientationMatrix = Mat.rotation4FromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
+                this._cameraStartOrientationMatrix = mat.rotation4FromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
             }
         }
 
@@ -2094,20 +2101,20 @@ define([], function () {
         for (var shipClass in shipNumbersPerClass) {
             for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
                 var orientation = orientationMatrix ?
-                      Mat.matrix4(orientationMatrix) : Mat.identity4();
+                      mat.matrix4(orientationMatrix) : mat.identity4();
                 if (randomTurnAroundZ) {
-                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowC4(orientation), random() * Math.PI * 2));
+                    orientation = mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
                 }
                 if (randomTurnAroundX) {
-                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowA4(orientationMatrix || Mat.identity4()), random() * Math.PI * 2));
+                    orientation = mat.mul4(orientation, mat.rotation4(mat.getRowA4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
                 }
                 if (randomTurnAroundY) {
-                    orientation = Mat.mul4(orientation, Mat.rotation4(Mat.getRowB4(orientationMatrix || Mat.identity4()), random() * Math.PI * 2));
+                    orientation = mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
                 }
                 this._spacecrafts.push(
                       new Spacecraft(
-                            Armada.logic().getSpacecraftClass(shipClass),
-                            Mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
+                            armada.logic().getSpacecraftClass(shipClass),
+                            mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                             orientation,
                             this._projectiles,
                             "default"));
@@ -2183,7 +2190,7 @@ define([], function () {
      * @returns {LogicContext}
      */
     function LogicContext() {
-        Resource.call(this);
+        asyncResource.Resource.call(this);
         /**
          * The name of the file (without path) that contains the descriptions
          * of the in-game classes.
@@ -2278,10 +2285,26 @@ define([], function () {
          */
         this._databaseModelRotation = null;
     }
-    LogicContext.prototype = new Resource();
+    LogicContext.prototype = new asyncResource.Resource();
     LogicContext.prototype.constructor = LogicContext;
     // #########################################################################
     // direct getters and setters
+    /**
+     * The game classes will be loaded from the file set here. Give the path to the file relative
+     * to the configuration folder.
+     * @param {String} value
+     */
+    LogicContext.prototype.setClassesSourceFileName = function (value) {
+        this._classesSourceFileName = value;
+    };
+    /**
+     * The game environments will be loaded from the file set here. Give the path to the file relative
+     * to the environment folder.
+     * @param {String} value
+     */
+    LogicContext.prototype.setEnvironmentsSourceFileName = function (value) {
+        this._environmentsSourceFileName = value;
+    };
     /**
      * Returns whether the rotation (both automatic and manual) of models on the
      * database screen is currently turned on.
@@ -2407,7 +2430,7 @@ define([], function () {
         entityClassName = entityClassName[0].toUpperCase() + entityClassName.substring(1, entityClassName.length);
         var classTags = xmlDoc.getElementsByTagName(entityClassName + "Class");
         for (var i = 0; i < classTags.length; i++) {
-            this.addClass(entityClassName, new Classes[entityClassName + "Class"](classTags[i]));
+            this.addClass(entityClassName, new classes[entityClassName + "Class"](classTags[i]));
         }
     };
     /**
@@ -2420,7 +2443,7 @@ define([], function () {
         this._spacecraftTypes = new Object();
         var typeTags = xmlDoc.getElementsByTagName("SpacecraftType");
         for (var i = 0; i < typeTags.length; i++) {
-            var spacecraftType = new Classes.SpacecraftType(typeTags[i]);
+            var spacecraftType = new classes.SpacecraftType(typeTags[i]);
             this._spacecraftTypes[spacecraftType.name] = spacecraftType;
         }
     };
@@ -2431,7 +2454,7 @@ define([], function () {
      */
     LogicContext.prototype.requestClassesLoad = function () {
         var self = this;
-        Application.requestXMLFile("config", this._classesSourceFileName, function (xmlDoc) {
+        application.requestXMLFile("config", this._classesSourceFileName, function (xmlDoc) {
             self.loadClassesFromXML(xmlDoc);
             self.requestEnvironmentsLoad();
         });
@@ -2458,7 +2481,7 @@ define([], function () {
      */
     LogicContext.prototype.requestEnvironmentsLoad = function () {
         var self = this;
-        Application.requestXMLFile("environment", this._environmentsSourceFileName, function (xmlDoc) {
+        application.requestXMLFile("environment", this._environmentsSourceFileName, function (xmlDoc) {
             self.loadEnvironmentsFromXML(xmlDoc);
             self.setToReady();
         });
@@ -2484,8 +2507,6 @@ define([], function () {
      */
     LogicContext.prototype.loadFromXML = function (xmlDoc) {
         this._databaseModelRotation = (xmlDoc.getElementsByTagName("database")[0].getAttribute("modelRotation") === "true");
-        this._classesSourceFileName = xmlDoc.getElementsByTagName("classes")[0].getAttribute("source");
-        this._environmentsSourceFileName = xmlDoc.getElementsByTagName("environments")[0].getAttribute("source");
         this.requestClassesLoad();
     };
     // -------------------------------------------------------------------------
