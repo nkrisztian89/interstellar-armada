@@ -9,7 +9,7 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true */
+/*jslint nomen: true, plusplus: true, white: true */
 /*global define, Image */
 
 define([
@@ -17,54 +17,181 @@ define([
     "modules/async-resource"
 ], function (application, asyncResource) {
     "use strict";
+    function Resource(name) {
+        asyncResource.Resource.call(this);
+        this._name = name;
+        this._requested = false;
+        this._requestParams = {};
+    }
+    Resource.prototype = new asyncResource.Resource();
+    Resource.prototype.constructor = Resource;
+    Resource.prototype.getName = function () {
+        return this._name;
+    };
+    Resource.prototype.isRequested = function () {
+        return this._requested;
+    };
+    Resource.prototype.request = function (params) {
+        this._requested = true;
+        this._requestParams = params;
+    };
+    Resource.prototype.requiresReload = function () {
+        application.showError("Resource class does not implement requiresReload!");
+    };
+    Resource.prototype.isLoaded = function () {
+        return this.isReadyToUse();
+    };
+    Resource.prototype.requestFiles = function () {
+        application.showError("Attempting to request files for a resource type that has no file request function implemented!");
+    };
+    Resource.prototype.loadData = function () {
+        application.showError("Attempting to load data for a resource type that has no data loading function implemented!");
+    };
+    Resource.prototype.onFilesLoaded = function (final, params) {
+        this.loadData(params);
+        if (final === true) {
+            this.setToReady();
+            this._requested = false;
+        }
+    };
+    Resource.prototype.requestLoadFromFile = function () {
+        if ((this.isReadyToUse() === false) && (this._requested === true)) {
+            this.requestFiles(this._requestParams);
+        }
+    };
+    // ############################################################################################x
     /**
      * The constructor sets the path but does not initiate the loading of the
      * image file.
      * @class Represents a texture resource stored in an image file.
-     * @extends AsyncResource.Resource
+     * @extends Resource
      * @param {String} path The relative path or absolute URL pointing to the
      * texture image file. The path needs to conform to the same origin policy,
      * and include the name of the file which has to be in a supported format.
      */
-    function TextureResource(path) {
-        asyncResource.Resource.call(this);
+    function TextureResource(dataJSON) {
+        Resource.call(this, dataJSON.name);
         /**
          * The relative path or absolute URL pointing to the texture image file.
          * @type String
          */
-        this._path = path;
+        this._basepath = dataJSON.basepath;
+        this._format = dataJSON.format;
+        this._useMipmap = dataJSON.useMipmap;
+        this._typeSuffixes = dataJSON.typeSuffixes;
+        this._qualitySuffixes = dataJSON.qualitySuffixes;
+        this._loadedImages = 0;
+        this._imagesToLoad = 0;
         /**
          * An Image object to manage the loading of the texture from file.
          * @type Image
          */
-        this._image = new Image();
+        this._images = {};
     }
-    TextureResource.prototype = new asyncResource.Resource();
+    TextureResource.prototype = new Resource();
     TextureResource.prototype.constructor = TextureResource;
     /**
      * The relative path or absolute URL pointing to the texture image file.
      * @returns {String}
      */
-    TextureResource.prototype.getPath = function () {
-        return this._path;
+    TextureResource.prototype.getPath = function (type, quality) {
+        return this._basepath + this._typeSuffixes[type] + this._qualitySuffixes[quality] + "." + this._format;
+    };
+    TextureResource.prototype.getOnLoadImageFunction = function (type, quality) {
+        var path = this.getPath(type, quality);
+        return function () {
+            this._loadedImages++;
+            this.onFilesLoaded(this._loadedImages === this._imagesToLoad, {path: path});
+        }.bind(this);
+    };
+    TextureResource.prototype.requiresReload = function (params) {
+        var requestedTypes, type, requestedQualities, quality;
+        if (this.isRequested()) {
+            return false;
+        }
+        params = params || {};
+        requestedTypes = params.types || this._typeSuffixes;
+        requestedQualities = params.qualities || this._qualitySuffixes;
+        for (type in requestedTypes) {
+            if (requestedTypes.hasOwnProperty(type)) {
+                if (!this._images[type]) {
+                    return true;
+                }
+                for (quality in requestedQualities) {
+                    if (requestedQualities.hasOwnProperty(quality)) {
+                        if (!this._images[type][quality]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     };
     /**
      * Initiates an asynchronous request to load the texture from file. When the
      * loading finishes, the texture is marked ready to use and the potentially 
      * queued actions are executed.
      */
-    TextureResource.prototype.requestLoadFromFile = function () {
-        if (this.isReadyToUse() === false) {
-            // when loaded, set the resource to ready and execute queued functions
-            this._image.onload = function () {
-                this.setToReady();
-            }.bind(this);
-            // setting the src property will automatically result in an asynchronous
-            // request to grab the texture file
-            this._image.src = this._path;
+    TextureResource.prototype.requestFiles = function (params) {
+        var requestedTypes, type, requestedQualities, quality;
+        params = params || {};
+        requestedTypes = params.types || this._typeSuffixes;
+        requestedQualities = params.qualities || this._qualitySuffixes;
+        for (type in requestedTypes) {
+            if (requestedTypes.hasOwnProperty(type)) {
+                this._images[type] = this._images[type] || {};
+                for (quality in requestedQualities) {
+                    if (requestedQualities.hasOwnProperty(quality)) {
+                        if (!this._images[type][quality]) {
+                            this._imagesToLoad++;
+                            this._images[type][quality] = new Image();
+                            this._images[type][quality].onload = this.getOnLoadImageFunction(type, quality).bind(this);
+                        }
+                    }
+                }
+            }
+        }
+        // setting the src property of an Image object will automatically result in an asynchronous
+        // request to grab the image source file
+        for (type in requestedTypes) {
+            if (requestedTypes.hasOwnProperty(type)) {
+                for (quality in requestedQualities) {
+                    if (requestedQualities.hasOwnProperty(quality)) {
+                        if (!this._images[type][quality].src) {
+                            this._images[type][quality].src = application.getFileURL("texture", this.getPath(type, quality));
+                        }
+                    }
+                }
+            }
         }
     };
+    TextureResource.prototype.loadData = function (params) {
+        application.log("Texture from file: " + params.path + " has been loaded.", 2);
+    };
+    TextureResource.prototype.getImage = function (type, quality) {
+        return this._images[type] || this._images[type][quality];
+    };
+    TextureResource.prototype.getTypes = function () {
+        var type, types = [];
+        for (type in this._typeSuffixes) {
+            if (this._typeSuffixes.hasOwnProperty(type)) {
+                types.push(type);
+            }
+        }
+        return types;
+    };
+    TextureResource.prototype.getQualities = function () {
+        var quality, qualitities = [];
+        for (quality in this._qualitySuffixes) {
+            if (this._qualitySuffixes.hasOwnProperty(quality)) {
+                qualitities.push(quality);
+            }
+        }
+        return qualitities;
+    };
 
+    // ############################################################################################x
     /**
      * Creates a new Cubemap object.
      * @class Represents a cube mapped texture resource.
@@ -74,70 +201,187 @@ define([
      * the cubemapped texture. The order of the pictures has to be X,Y,Z and within
      * that, always positive first.
      */
-    function CubemapResource(name, imageURLs) {
-        var i;
-        asyncResource.Resource.call(this);
-        /**
-         * The name by wich this resource will be referred to. (has to be unique for
-         * each instance)
-         * @name Cubemap#_name
-         * @type String
-         */
-        this._name = name;
-        /**
-         * The URLs for each texture image of the 6 faces of the cubemap. Order:
-         * X+,X-,Y+,Y-,Z+,Z-. The path is relative to the site root.
-         * @name Cubemap#_imageURLs
-         * @type String[6]
-         */
-        this._imageURLs = imageURLs;
+    function CubemapResource(dataJSON) {
+        Resource.call(this, dataJSON.name);
+        this._basepath = dataJSON.basepath;
+        this._imageNames = dataJSON.imageNames;
         /**
          * 6 Image objects to manage the loading of the 6 textures of the faces from
          * their source files.
          * @name Cubemap#_images
-         * @type Image[6]
+         * @type Image
          */
-        this._images = new Array(6);
-        for (i = 0; i < 6; i++) {
-            this._images[i] = new Image();
-        }
+        this._images = {};
     }
     // as it is an asynchronously loaded resource, we set the Resource as parent
     // class to make handling easier
-    CubemapResource.prototype = new asyncResource.Resource();
+    CubemapResource.prototype = new Resource();
     CubemapResource.prototype.constructor = CubemapResource;
-    /**
-     * Getter for the property _name.
-     * @returns {String}
-     */
-    CubemapResource.prototype.getName = function () {
-        return this._name;
+
+    CubemapResource.prototype.requiresReload = function () {
+        if (this.isRequested()) {
+            return false;
+        }
+        return !this.isLoaded();
     };
     /**
      * Initiates asynchronous requests to load the face textures from their source
      * files. When the loading finishes, the cubemap {@link Resource} is marked 
      * ready to use and the potentially queued actions are executed.
      */
-    CubemapResource.prototype.requestLoadFromFile = function () {
-        var facesLoaded, i, onImageLoadFunction;
-        if (this.isReadyToUse() === false) {
-            facesLoaded = 0;
-            onImageLoadFunction = function () {
-                facesLoaded += 1;
-                if (facesLoaded === 6) {
-                    this.setToReady();
-                }
-            }.bind(this);
-            for (i = 0; i < 6; i++) {
+    CubemapResource.prototype.requestFiles = function () {
+        var facesLoaded, face, onImageLoadFunction;
+        facesLoaded = 0;
+        onImageLoadFunction = function () {
+            facesLoaded += 1;
+            if (facesLoaded === 6) {
+                this.onFilesLoaded(true);
+            }
+        }.bind(this);
+        for (face in this._imageNames) {
+            if (this._imageNames.hasOwnProperty(face)) {
+                this._images[face] = new Image();
                 // when all faces loaded, set the resource to ready and execute queued functions
-                this._images[i].onload = onImageLoadFunction;
+                this._images[face].onload = onImageLoadFunction;
                 // setting the src property will automatically result in an asynchronous
                 // request to grab the texture file
-                this._images[i].src = this._imageURLs[i];
+                this._images[face].src = application.getFileURL("texture", this._basepath + this._imageNames[face]);
+            }
+        }
+    };
+    CubemapResource.prototype.loadData = function () {
+        application.log("Cubemap named '" + this.getName() + "' has been loaded.", 2);
+    };
+
+    // ############################################################################################x
+
+    function ShaderResource(dataJSON) {
+        Resource.call(this, dataJSON.name);
+
+        this._fallbackShaderName = dataJSON.fallback || null;
+
+        this._vertexShaderSourcePath = dataJSON.vertexShaderSource;
+        this._fragmentShaderSourcePath = dataJSON.fragmentShaderSource;
+
+        this._blendType = dataJSON.blendType;
+
+        this._attributeMapping = dataJSON.attributeMapping;
+
+        this._vertexShaderSource = null;
+        this._fragmentShaderSource = null;
+    }
+    ShaderResource.prototype = new Resource();
+    ShaderResource.prototype.constructor = ShaderResource;
+
+    ShaderResource.prototype.requiresReload = function () {
+        if (this.isRequested()) {
+            return false;
+        }
+        return !this.isLoaded();
+    };
+
+    ShaderResource.prototype.requestFiles = function () {
+        application.requestTextFile("shader", this._vertexShaderSourcePath, function (responseText) {
+            this.onFilesLoaded(this._fragmentShaderSource !== null, {shaderType: "vertex", text: responseText});
+            // override the mime type to avoid error messages in Firefox developer
+            // consol when it tries to parse as XML
+        }.bind(this), 'text/plain; charset=utf-8');
+        application.requestTextFile("shader", this._fragmentShaderSourcePath, function (responseText) {
+            this.onFilesLoaded(this._vertexShaderSource !== null, {shaderType: "fragment", text: responseText});
+            // override the mime type to avoid error messages in Firefox developer
+            // consol when it tries to parse as XML    
+        }.bind(this), 'text/plain; charset=utf-8');
+    };
+
+    ShaderResource.prototype.loadData = function (params) {
+        switch (params.shaderType) {
+            case "vertex":
+                this._vertexShaderSource = params.text;
+                break;
+            case "fragment":
+                this._fragmentShaderSource = params.text;
+                break;
+        }
+    };
+
+    // ############################################################################################x
+
+    function ModelResource(dataJSON) {
+        Resource.call(this, dataJSON.name);
+    }
+    ModelResource.prototype = new Resource();
+    ModelResource.prototype.constructor = ModelResource;
+
+    ModelResource.prototype.requiresReload = function () {
+        if (this.isRequested()) {
+            return false;
+        }
+        return !this.isLoaded();
+    };
+
+    ModelResource.prototype.requestFiles = function () {
+
+    };
+
+    ModelResource.prototype.loadData = function () {
+        application.log("Model named '" + this.getName() + "' has been loaded.", 2);
+    };
+
+    // ############################################################################################x
+
+    function ResourceHolder(resourceType) {
+        asyncResource.Resource.call(this);
+
+        this._resourceType = resourceType;
+
+        this._resources = {};
+
+        this._numLoadedResources = 0;
+        this._numRequestedResources = 0;
+
+    }
+    ;
+    ResourceHolder.prototype = new asyncResource.Resource();
+    ResourceHolder.prototype.constructor = ResourceHolder;
+
+    ResourceHolder.prototype.allResourcesLoaded = function () {
+        return this._numLoadedResources === this._numRequestedResources;
+    };
+
+    ResourceHolder.prototype.addResource = function (resource) {
+        this._resources[resource.getName()] = resource;
+    };
+
+    ResourceHolder.prototype.getResource = function (resourceName, params) {
+        var resource;
+        if (!this._resources[resourceName]) {
+            application.showError("Requested a resource named '" + resourceName + "' from " + this._resourceType + ", which does not exist.");
+        }
+        resource = this._resources[resourceName];
+
+        if (resource.requiresReload(params)) {
+            this._numRequestedResources++;
+            this.resetReadyState();
+            resource.executeWhenReady(function () {
+                this._numLoadedResources++;
+                if (this.allResourcesLoaded()) {
+                    this.setToReady();
+                }
+            }.bind(this));
+        }
+        return resource;
+    };
+
+    ResourceHolder.prototype.requestResourceLoad = function () {
+        var resourceName;
+        for (resourceName in this._resources) {
+            if (this._resources.hasOwnProperty(resourceName)) {
+                this._resources[resourceName].requestLoadFromFile();
             }
         }
     };
 
+    // ############################################################################################x
     /**
      * Creates a new Resource Manager object.
      * @class This class holds and manages all the various resources and their 
@@ -145,6 +389,16 @@ define([
      */
     function ResourceManager() {
         asyncResource.Resource.call(this);
+
+        this._resourceHolders = {};
+
+        this._numLoadedResources = 0;
+        this._numRequestedResources = 0;
+
+        this.onAllResourcesOfTypeLoad = function (resourceType) {
+            application.log("All " + resourceType + " have been loaded.", 2);
+        };
+
         /**
          * The associative array of cube mapped textures. The keys are the names of 
          * the textures. The values are instances of {@link CubemappedTexture}.
@@ -301,113 +555,57 @@ define([
     // manage for when all resources have been loaded
     ResourceManager.prototype = new asyncResource.Resource();
     ResourceManager.prototype.constructor = ResourceManager;
-    /**
-     * Sets whether to use the fallback shaders instead of the regular ones.
-     * After this is set to true, calling getShader will mark the fallback of
-     * the passed shader to be loaded.
-     * @param {Boolean} value
-     */
-    ResourceManager.prototype.useFallbackShaders = function (value) {
-        this._useFallbackShaders = value;
+
+    ResourceManager.prototype.addResource = function (resourceType, resource) {
+        this._resourceHolders[resourceType] = this._resourceHolders[resourceType] || new ResourceHolder(resourceType);
+        this._resourceHolders[resourceType].addResource(resource);
     };
-    /**
-     * Tells if all added cubemapped textures have been already loaded.
-     * @returns {Boolean}
-     */
-    ResourceManager.prototype.allCubemappedTexturesLoaded = function () {
-        return (this._numRequestedCubemappedTextures === this._numCubemappedTexturesLoaded);
+
+    ResourceManager.prototype.getResource = function (resourceType, resourceName, params) {
+        var resource;
+        if (!this._resourceHolders[resourceType]) {
+            application.showError("Requested a resource named '" + resourceName + "' of type '" + resourceType + "', which does not exist.");
+        }
+        resource = this._resourceHolders[resourceType].getResource(resourceName, params);
+
+        if (resource.requiresReload(params)) {
+            this._numRequestedResources++;
+            this.resetReadyState();
+            resource.request(params);
+            resource.executeWhenReady(function () {
+                this._numLoadedResources++;
+                this.onResourceLoad(resourceName, this._numRequestedResources, this._numLoadedResources);
+                if (this.allResourcesOfTypeLoaded(resourceType)) {
+                    this.onAllResourcesOfTypeLoad(resourceType);
+                }
+                if (this.allResourcesLoaded()) {
+                    this.setToReady();
+                }
+            }.bind(this));
+        }
+        return resource;
     };
-    /**
-     * Tells if all requested shaders have been already loaded.
-     * @returns {Boolean}
-     */
-    ResourceManager.prototype.allShadersLoaded = function () {
-        return (this._numRequestedShaders === this._numShadersLoaded);
-    };
-    /**
-     * Tells if all added 2D textures have been already loaded.
-     * @returns {Boolean}
-     */
-    ResourceManager.prototype.allTexturesLoaded = function () {
-        return (this._numTextures === this._numTexturesLoaded);
-    };
+
     /**
      * Tells if all added models have been already loaded.
      * @returns {Boolean}
      */
-    ResourceManager.prototype.allModelsLoaded = function () {
-        return (this._numModels === this._numModelsLoaded);
+    ResourceManager.prototype.allResourcesOfTypeLoaded = function (resourceType) {
+        return (this._resourceHolders[resourceType].isReadyToUse());
     };
     /**
      * Tells if all added resources have been already loaded.
      * @returns {Boolean}
      */
     ResourceManager.prototype.allResourcesLoaded = function () {
-        return (
-              this.allCubemappedTexturesLoaded() &&
-              this.allShadersLoaded() &&
-              this.allTexturesLoaded() &&
-              this.allModelsLoaded()
-              );
-    };
-    /**
-     * Returns the total number of resources requested for loading.
-     * @returns {Number}
-     */
-    ResourceManager.prototype.getNumberOfResources = function () {
-        return this._numRequestedCubemappedTextures + this._numRequestedShaders + this._numTextures + this._numModels;
-    };
-    /**
-     * Returns the number of resources stored by the manager that already have been
-     * loaded and are ready to use.
-     * @returns {Number}
-     */
-    ResourceManager.prototype.getNumberOfLoadedResources = function () {
-        return this._numCubemappedTexturesLoaded + this._numShadersLoaded + this._numTexturesLoaded + this._numModelsLoaded;
-    };
-    /**
-     * If a texture with the given filename is stored by the manager, returns a
-     * reference to it, otherwise adds a new texture with this filename.
-     * @param {String} filename
-     * @param {Boolean} [useMipmap=true]
-     * @returns {ManagedTexture}
-     */
-    ResourceManager.prototype.getOrAddTexture = function (filename, useMipmap) {
-        var textureName = filename;
-        if (useMipmap === false) {
-            textureName += "_noMipmap";
-        }
-        if (this._textures[textureName] === undefined) {
-            this._numTextures += 1;
-            this.resetReadyState();
-            this._textures[textureName] = new ManagedTexture(filename, useMipmap);
-            var self = this;
-            this._textures[textureName].executeWhenReady(function () {
-                self._numTexturesLoaded += 1;
-                self.onResourceLoad(filename, self.getNumberOfResources(), self.getNumberOfLoadedResources());
-                if (self.allTexturesLoaded()) {
-                    self.onAllTexturesLoad();
-                }
-                if (self.allResourcesLoaded()) {
-                    self.setToReady();
-                }
-            });
-        }
-        return this._textures[textureName];
+        return this._numLoadedResources === this._numRequestedResources;
     };
     /**
      * Performs a getOrAddTexture() using the properties of the texture descriptor.
      * @param {TextureDescriptor} descriptor
      */
     ResourceManager.prototype.getOrAddTextureFromDescriptor = function (descriptor) {
-        return this.getOrAddTexture(descriptor.filename, descriptor.useMipmap);
-    };
-    /**
-     * Adds the passed cubemapped texture to the stored resources.
-     * @param {CubemapResource} cubemappedTexture
-     */
-    ResourceManager.prototype.addCubemappedTexture = function (cubemappedTexture) {
-        this._cubemappedTextures[cubemappedTexture.getName()] = cubemappedTexture;
+        return this.getResource("textures", descriptor.name);
     };
     /**
      * Returns the stored cubemapped texture that has the given name, if such 
@@ -416,35 +614,7 @@ define([
      * @returns {CubemapResource}
      */
     ResourceManager.prototype.getCubemappedTexture = function (name) {
-        if (this._cubemappedTextures[name] === undefined) {
-            application.showError("Asked for a cube mapped texture named '" + name + "', which does not exist.");
-            return null;
-        } else {
-            if (this._requestedCubemappedTextures[name] === undefined) {
-                this._numRequestedCubemappedTextures += 1;
-                this.resetReadyState();
-                this._requestedCubemappedTextures[name] = this._cubemappedTextures[name];
-                var self = this;
-                this._requestedCubemappedTextures[name].executeWhenReady(function () {
-                    self._numCubemappedTexturesLoaded += 1;
-                    self.onResourceLoad(name, self.getNumberOfResources(), self.getNumberOfLoadedResources());
-                    if (self.allCubemappedTexturesLoaded()) {
-                        self.onAllCubemappedTexturesLoad();
-                    }
-                    if (self.allResourcesLoaded()) {
-                        self.setToReady();
-                    }
-                });
-            }
-            return this._cubemappedTextures[name];
-        }
-    };
-    /**
-     * Adds the passed shader to the stored resources.
-     * @param {Shader} shader
-     */
-    ResourceManager.prototype.addShader = function (shader) {
-        this._shaders[shader.getName()] = shader;
+        return this.getResource("cubemaps", name);
     };
     /**
      * Returns the stored shader that has the given name, if such exists.
@@ -452,31 +622,7 @@ define([
      * @returns {Shader}
      */
     ResourceManager.prototype.getShader = function (name) {
-        if (this._shaders[name] === undefined) {
-            application.showError("Asked for a shader named '" + name + "', which does not exist.");
-            return null;
-        } else {
-            if (this._useFallbackShaders && this._shaders[name].getFallbackShaderName()) {
-                name = this._shaders[name].getFallbackShaderName();
-            }
-            if (this._requestedShaders[name] === undefined) {
-                this._numRequestedShaders += 1;
-                this.resetReadyState();
-                this._requestedShaders[name] = this._shaders[name];
-                var self = this;
-                this._requestedShaders[name].executeWhenReady(function () {
-                    self._numShadersLoaded += 1;
-                    self.onResourceLoad(name, self.getNumberOfResources(), self.getNumberOfLoadedResources());
-                    if (self.allShadersLoaded()) {
-                        self.onAllShadersLoad();
-                    }
-                    if (self.allResourcesLoaded()) {
-                        self.setToReady();
-                    }
-                });
-            }
-            return this._requestedShaders[name];
-        }
+        return this.getResource("shaders", name);
     };
 
     /**
@@ -544,42 +690,6 @@ define([
         }
         return this._models[model.getName()];
     };
-    /**
-     * Initiates the requests to load all the stored 2D texture resources from their 
-     * associated files.
-     */
-    ResourceManager.prototype.requestTextureLoadFromFile = function () {
-        for (var texture in this._textures) {
-            this._textures[texture].requestLoadFromFile();
-        }
-    };
-    /**
-     * Initiates the requests to load all the stored cubemapped texture resources 
-     * from their associated files.
-     */
-    ResourceManager.prototype.requestCubemappedTextureLoadFromFile = function () {
-        for (var texture in this._requestedCubemappedTextures) {
-            this._requestedCubemappedTextures[texture].requestLoadFromFile();
-        }
-    };
-    /**
-     * Initiates the requests to load all the shader resources that have been
-     * requested for loading from their associated files.
-     */
-    ResourceManager.prototype.requestShaderLoadFromFile = function () {
-        for (var shader in this._requestedShaders) {
-            this._requestedShaders[shader].requestLoadFromFile();
-        }
-    };
-    /**
-     * Initiates the requests to load all the stored model resources from their 
-     * associated files.
-     */
-    ResourceManager.prototype.requestModelLoadFromFile = function () {
-        for (var model in this._models) {
-            this._models[model].requestLoadFromFiles();
-        }
-    };
 
     ResourceManager.prototype.requestConfigLoad = function (filename, resourceTypes) {
         application.requestTextFile("config", filename, function (responseText) {
@@ -593,24 +703,10 @@ define([
             if (resourceClasses.hasOwnProperty(resourceType)) {
                 resourceArray = configJSON[resourceType];
                 for (i = 0; i < resourceArray.length; i++) {
-                    this.addResource(new resourceClasses[resourceType](resourceArray[i]));
+                    this.addResource(resourceType, new resourceClasses[resourceType](resourceArray[i]));
                 }
             }
         }
-    };
-
-    /**
-     * Initiates the request to load the shader and cubemap configuration (what are
-     * the available cubemaps and shaders and their source files) from the XML file
-     * of the passed name.
-     * @param {String} filename The name of the XML file where the configuration
-     * is stored (relative to the config file folder)
-     */
-    ResourceManager.prototype.requestShaderAndCubemapObjectLoad = function (filename) {
-        var self = this;
-        application.requestXMLFile("config", filename, function (responseXML) {
-            self.loadShaderAndCubemapObjectsFromXML(responseXML);
-        });
     };
     /**
      * Loads the cubemap and shader configuration (not the resources, just their
@@ -704,19 +800,18 @@ define([
      * the action queue set for when all resources get loaded.
      */
     ResourceManager.prototype.requestResourceLoad = function () {
-        console.log("Requesting loading of resources contained in the resource manager...");
+        var resourceType;
+        application.log("Requesting loading of resources contained in the resource manager...", 2);
         if (this.allResourcesLoaded() === true) {
-            console.log("There are no resources to load, executing set up callback queue right away...");
+            application.log("There are no resources to load, executing set up callback queue right away...", 2);
             this.executeOnReadyQueue();
         } else {
-            console.log("Requesting the loading of textures from files...");
-            this.requestTextureLoadFromFile();
-            console.log("Requesting the loading of cubemaps from files...");
-            this.requestCubemappedTextureLoadFromFile();
-            console.log("Requesting the loading of shaders from files...");
-            this.requestShaderLoadFromFile();
-            console.log("Requesting the loading of models from files...");
-            this.requestModelLoadFromFile();
+            for (resourceType in this._resourceHolders) {
+                if (this._resourceHolders.hasOwnProperty(resourceType)) {
+                    application.log("Requesting the loading of " + resourceType + " from files...", 2);
+                    this._resourceHolders[resourceType].requestResourceLoad();
+                }
+            }
         }
     };
     /**
@@ -742,6 +837,8 @@ define([
     return {
         TextureResource: TextureResource,
         CubemapResource: CubemapResource,
+        ShaderResource: ShaderResource,
+        ModelResource: ModelResource,
         ResourceManager: ResourceManager
     };
 

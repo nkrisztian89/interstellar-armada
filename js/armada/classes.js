@@ -89,13 +89,7 @@ define([
          * @name TextureDescriptor#filename
          * @type String
          */
-        this.filename = null;
-        /**
-         * Wether bitmaps should be created for this texture.
-         * @name TextureDescriptor#useMipmap
-         * @type Boolean
-         */
-        this.useMipmap = null;
+        this.name = null;
         // if an XML tag was specified, initialize the properties from there    
         if (xmlTag !== undefined) {
             this.loadFromXMLTag(xmlTag);
@@ -109,12 +103,7 @@ define([
      * @param {Element} xmlTag
      */
     TextureDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
-        this.filename = xmlTag.getAttribute("filename");
-        if (xmlTag.hasAttribute("useMipmap")) {
-            this.useMipmap = (xmlTag.getAttribute("useMipmap") === "true");
-        } else {
-            this.useMipmap = true;
-        }
+        this.name = xmlTag.getAttribute("name");
         Object.freeze(this);
     };
 
@@ -1180,10 +1169,10 @@ define([
         /**
          * The associative array containing the texture  descriptors for different 
          * uses (such as color, luminosity map) in the form of { use: descriptor, ... }
-         * @name SpacecraftClass#textureDescriptors
-         * @type Object
+         * @name SpacecraftClass#textureDescriptor
+         * @type TextureDescriptor
          */
-        this.textureDescriptors = null;
+        this.textureDescriptor = null;
         /**
          * The name of the shader to be used for rendering these ships (as defined 
          * in shaders.xml)
@@ -1276,10 +1265,10 @@ define([
 
         // reading the textures into an object, where the texture types are the
         // names of the properties
-        this.textureDescriptors = {};
+        this.textureDescriptor = null;
         tags = xmlTag.getElementsByTagName("texture");
         for (i = 0; i < tags.length; i++) {
-            this.textureDescriptors[tags[i].getAttribute("type")] = new TextureDescriptor(tags[i]);
+            this.textureDescriptor = new TextureDescriptor(tags[i]);
         }
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
 

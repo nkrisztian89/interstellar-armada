@@ -14,9 +14,10 @@ define([
     "modules/application",
     "modules/async-resource",
     "modules/physics",
+    "modules/buda-scene",
     "armada/armada",
     "armada/classes"
-], function (mat, application, asyncResource, physics, armada, classes) {
+], function (mat, application, asyncResource, physics, budaScene, armada, classes) {
     "use strict";
     /**
      * The length of impulse-like events in milliseconds (such as thruster bursts or 
@@ -53,10 +54,10 @@ define([
     /**
      * Adds a background FVQ object to the passed scene and sets it up according
      * the properties of this skybox.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     Skybox.prototype.addToScene = function (scene) {
-        scene.addBackgroundObject(new Scene.CubemapSampledFVQ(
+        scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
               armada.resources().getOrAddModelByName(Egom.fvqModel("fvqModel")),
               armada.resources().getShader(this._class.shaderName),
               this._class.samplerName,
@@ -95,14 +96,14 @@ define([
     /**
      * Adds the layered texture object and the light source belonging to this
      * object to the passed scene.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     BackgroundObject.prototype.addToScene = function (scene) {
         var i;
         var layerParticle;
-        scene.addLightSource(new Scene.LightSource(this._class.lightColor, this._position));
+        scene.addLightSource(new budaScene.LightSource(this._class.lightColor, this._position));
         for (i = 0; i < this._class.layers.length; i++) {
-            layerParticle = new Scene.StaticParticle(
+            layerParticle = new budaScene.StaticParticle(
                   armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
                   armada.resources().getShader(this._class.layers[i].shaderName),
                   armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
@@ -129,7 +130,7 @@ define([
          * @name DustParticle#_visualModel
          * @type PointParticle
          */
-        this._visualModel = new Scene.PointParticle(
+        this._visualModel = new budaScene.PointParticle(
               armada.resources().getOrAddModelByName(Egom.lineModel("dust", [1.0, 1.0, 1.0], cloud.getColor())),
               shader,
               positionMatrix);
@@ -146,7 +147,7 @@ define([
      * @param {PointCloud} cloudNode
      */
     DustParticle.prototype.addToScene = function (cloudNode) {
-        cloudNode.addSubnode(new Scene.RenderableNode(this._visualModel));
+        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
     };
     /**
      * Updates the position of the particle to be acound the camera within proper
@@ -210,11 +211,11 @@ define([
     };
     /**
      * Adds the needed objects to the scene to render this dust cloud.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     DustCloud.prototype.addToScene = function (scene) {
         var i;
-        this._visualModel = new Scene.PointCloud(
+        this._visualModel = new budaScene.PointCloud(
               armada.resources().getShader(this._class.shaderName),
               this._class.color,
               this._class.range);
@@ -313,7 +314,7 @@ define([
      * in a visual scene, if it has not been created yet.
      */
     Projectile.prototype._createVisualModel = function () {
-        this._visualModel = this._visualModel || new Scene.Billboard(
+        this._visualModel = this._visualModel || new budaScene.Billboard(
               armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
               armada.resources().getShader(this._class.shaderName),
               armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
@@ -323,7 +324,7 @@ define([
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
-     * @param {Scene} scene The scene to which to add the renderable object
+     * @param {budaScene} scene The scene to which to add the renderable object
      * presenting the projectile.
      */
     Projectile.prototype.addToScene = function (scene) {
@@ -334,7 +335,7 @@ define([
      * Adds the resources required to render this projectile to the passed scene,
      * so they get loaded at the next resource load as well as added to any context
      * the scene is added to.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     Projectile.prototype.addResourcesToScene = function (scene) {
         this._createVisualModel();
@@ -427,7 +428,7 @@ define([
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
         console.log("Adding weapon (" + this._class.name + ") to scene...");
-        this._visualModel = new Scene.ShadedLODMesh(
+        this._visualModel = new budaScene.ShadedLODMesh(
               this._class.addModelToResourceManager(this._class.name, lod),
               armada.resources().getShader(this._spacecraft.getClass().shaderName),
               this._spacecraft.getTextures(),
@@ -436,7 +437,7 @@ define([
               mat.identity4(),
               (wireframe === true),
               lod);
-        parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
+        parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
     };
     /**
      * Returns the renderable object representing the muzzle flash that is visible
@@ -447,7 +448,7 @@ define([
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex) {
         var projectileClass = this._class.barrels[barrelIndex].projectileClass;
         var muzzleFlashPosMatrix = mat.translation4v(this._class.barrels[barrelIndex].positionVector);
-        return new Scene.DynamicParticle(
+        return new budaScene.DynamicParticle(
               armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
               armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
               armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
@@ -460,7 +461,7 @@ define([
      * Adds the resources required to render the projeciles fired by this weapon
      * to the passed scene, so they get loaded at the next resource load as well 
      * as added to any context the scene is added to.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     Weapon.prototype.addProjectileResourcesToScene = function (scene) {
         for (var i = 0; i < this._class.barrels.length; i++) {
@@ -492,7 +493,7 @@ define([
                 var barrelPosVector = vec.mulVec3Mat3(this._class.barrels[i].positionVector, mat.matrix3from4(mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
                 // add the muzzle flash of this barrel
                 var muzzleFlash = this._getMuzzleFlashForBarrel(i);
-                this._visualModel.getNode().addSubnode(new Scene.RenderableNode(muzzleFlash));
+                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash));
                 // add the projectile of this barrel
                 var p = new Projectile(
                       projectileClass,
@@ -548,14 +549,14 @@ define([
      * particle that will be rendered to represent the thruster burn level.
      */
     Thruster.prototype.addToScene = function (parentNode, particleDescriptor) {
-        this._visualModel = new Scene.StaticParticle(
+        this._visualModel = new budaScene.StaticParticle(
               armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
               armada.resources().getShader(particleDescriptor.shaderName),
               armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
               particleDescriptor.color,
               this._slot.size,
               mat.translation4v(this._slot.positionVector));
-        parentNode.addSubnode(new Scene.RenderableNode(this._visualModel));
+        parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
         this._shipModel = parentNode.getRenderableObject();
     };
     /**
@@ -1446,9 +1447,7 @@ define([
      */
     Spacecraft.prototype.getTextures = function () {
         var result = new Object();
-        for (var textureType in this._class.textureDescriptors) {
-            result[textureType] = armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptors[textureType]);
-        }
+        result["color"] = armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor);
         return result;
     };
     /**
@@ -1683,7 +1682,7 @@ define([
                     this._class.bodies[index].getHeight(),
                     this._class.bodies[index].getDepth(),
                     [0.0, 1.0, 1.0, 0.5]));
-        var hitZoneMesh = new Scene.ShadedLODMesh(
+        var hitZoneMesh = new budaScene.ShadedLODMesh(
               phyModel,
               armada.resources().getShader(this._class.shaderName),
               {
@@ -1695,12 +1694,12 @@ define([
               this._class.bodies[index].getOrientationMatrix(),
               mat.identity4(),
               false);
-        this._hitbox.addSubnode(new Scene.RenderableNode(hitZoneMesh));
+        this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
     /**
      * Creates and adds the renderable objects to represent this spacecraft to
      * the passed scene.
-     * @param {Scene} scene The scene to which the objects will be added.
+     * @param {budaScene} scene The scene to which the objects will be added.
      * @param {Number} [lod] The level of detail to use for adding the models.
      * If not given, all available LODs will be added for dynamic LOD rendering.
      * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
@@ -1725,7 +1724,7 @@ define([
         var textures = this.getTextures();
         console.log("Adding spacecraft (" + this._class.fullName + ") to scene...");
         // add the main model of the spacecraft
-        this._visualModel = new Scene.ParameterizedMesh(
+        this._visualModel = new budaScene.ParameterizedMesh(
               this._class.addModelToResourceManager(this._class.name, lod),
               armada.resources().getShader(this._class.shaderName),
               textures,
@@ -1739,7 +1738,7 @@ define([
         // visualize physical model (hitboxes)
         if ((addSupplements) && (addSupplements.hitboxes === true)) {
             // add the parent objects for the hitboxes
-            this._hitbox = new Scene.RenderableNode(new Scene.RenderableObject3D(armada.resources().getShader(this._class.shaderName), false, false));
+            this._hitbox = new budaScene.RenderableNode(new budaScene.RenderableObject3D(armada.resources().getShader(this._class.shaderName), false, false));
             // add the models for the hitboxes themselves
             for (i = 0; i < this._class.bodies.length; i++) {
                 this._addHitboxModel(i);
@@ -1769,7 +1768,7 @@ define([
     /**
      * Adds camera objects that correspond to the views defined for this 
      * spacecraft type and follow this specific spacecraft.
-     * @param {Scene} scene The scene to add the cameras to.
+     * @param {budaScene} scene The scene to add the cameras to.
      */
     Spacecraft.prototype.addCamerasForViews = function (scene) {
         for (var i = 0; i < this._class.views.length; i++) {
@@ -1931,7 +1930,7 @@ define([
     /**
      * Adds renderable objects representing all visual elements of the 
      * environment to the passed scene.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     Environment.prototype.addToScene = function (scene) {
         var i;
@@ -2124,7 +2123,7 @@ define([
     /**
      * Adds renderable objects representing all visual elements of the level to
      * the passed scene.
-     * @param {Scene} scene
+     * @param {budaScene} scene
      */
     Level.prototype.addToScene = function (scene) {
         var i;

@@ -29,7 +29,7 @@ define([
     });
     application.setLogVerbosity(2);
 
-    application.setVersion("0.1.0:106+refactoring-12 (2015.04.13.)");
+    application.setVersion("0.1.0:106+refactoring-13 (2015.04.17.)");
 
     // add private variables specific to Interstellar Armada
 
@@ -238,7 +238,7 @@ define([
      * @returns {ResourceManager}
      */
     application.resources = function () {
-        return _resourceManager();
+        return _resourceManager;
     };
     /**
      * A shortcut to the control context of the game.

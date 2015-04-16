@@ -5,10 +5,10 @@
             "basepath": "flare",
             "format": "png",
             "useMipmap": true,
-            "type_suffixes": {
+            "typeSuffixes": {
                 "emissive": ""
             },
-            "quality_suffixes": {
+            "qualitySuffixes": {
                 "normal": ""
             }
         },
@@ -17,10 +17,10 @@
             "basepath": "plasma_full",
             "format": "png",
             "useMipmap": false,
-            "type_suffixes": {
+            "typeSuffixes": {
                 "emissive": ""
             },
-            "quality_suffixes": {
+            "qualitySuffixes": {
                 "normal": ""
             }
         },
@@ -29,10 +29,10 @@
             "basepath": "proton_full",
             "format": "png",
             "useMipmap": false,
-            "type_suffixes": {
+            "typeSuffixes": {
                 "emissive": ""
             },
-            "quality_suffixes": {
+            "qualitySuffixes": {
                 "normal": ""
             }
         },
@@ -41,10 +41,10 @@
             "basepath": "ion_full",
             "format": "png",
             "useMipmap": false,
-            "type_suffixes": {
+            "typeSuffixes": {
                 "emissive": ""
             },
-            "quality_suffixes": {
+            "qualitySuffixes": {
                 "normal": ""
             }
         },
@@ -53,12 +53,12 @@
             "basepath": "falcon",
             "format": "png",
             "useMipmap": true,
-            "type_suffixes": {
+            "typeSuffixes": {
                 "diffuse": "",
                 "specular": "_specular",
                 "emissive": "_luminosity"
             },
-            "quality_suffixes": {
+            "qualitySuffixes": {
                 "normal": ""
             }
         },
@@ -67,12 +67,12 @@
             "basepath": "libra",
             "format": "png",
             "useMipmap": true,
-            "type_suffixes": {
+            "typeSuffixes": {
                 "diffuse": "",
                 "specular": "_specular",
                 "emissive": "_luminosity"
             },
-            "quality_suffixes": {
+            "qualitySuffixes": {
                 "normal": ""
             }
         }
@@ -81,13 +81,13 @@
         {
             "name": "deepspace",
             "basepath": "cube/",
-            "images": {
-                "pos_x": "cm_1c2.jpg",
-                "neg_x": "cm_1c2.jpg",
-                "pos_y": "cm_1c2.jpg",
-                "neg_y": "cm_1c2.jpg",
-                "pos_z": "cm_1c2.jpg",
-                "neg_z": "cm_1c2.jpg"
+            "imageNames": {
+                "posX": "cm_1c2.jpg",
+                "negX": "cm_1c2.jpg",
+                "posY": "cm_1c2.jpg",
+                "negY": "cm_1c2.jpg",
+                "posZ": "cm_1c2.jpg",
+                "negZ": "cm_1c2.jpg"
             }
         }
     ],
