@@ -1990,11 +1990,11 @@ define([
      * input coming from different devices (such as keyboard or mouse) into actions,
      * and the controllers that can process those actions and execute the appropriate
      * methods of in-game entities they control.
-     * @extends asyncResource.Resource
+     * @extends asyncResource.AsyncResource
      * @returns {ControlContext}
      */
     function ControlContext() {
-        asyncResource.Resource.call(this);
+        asyncResource.AsyncResource.call(this);
         /**
          * The XML tag wich stores the control settings.
          * @name ControlContext#_xmlTag
@@ -2069,7 +2069,7 @@ define([
         this._disabledActions = new Object();
     }
 
-    ControlContext.prototype = new asyncResource.Resource();
+    ControlContext.prototype = new asyncResource.AsyncResource();
     ControlContext.prototype.constructor = ControlContext;
 
     /**

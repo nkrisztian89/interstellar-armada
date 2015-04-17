@@ -117,7 +117,7 @@ define([
      * HTML document, stored in an external file, hence the name) and can be appended 
      * to {@link GameScreen}s. Specific components can be the descendants of this 
      * class, and implement their own various methods.
-     * @extends asyncResource.Resource
+     * @extends asyncResource.AsyncResource
      * @param {String} name The name of the component to be identified by. Names
      * must be unique within one {@link GameScreen}.
      * @param {String} htmlFilename The filename of the HTML document where the structure
@@ -128,7 +128,7 @@ define([
      * @returns {ExternalComponent}
      */
     function ExternalComponent(name, htmlFilename, cssFilename) {
-        asyncResource.Resource.call(this);
+        asyncResource.AsyncResource.call(this);
         /**
          * The name of the component to be identified by.
          * @name ExternalComponent#name
@@ -196,7 +196,7 @@ define([
         }
     }
 
-    ExternalComponent.prototype = new asyncResource.Resource();
+    ExternalComponent.prototype = new asyncResource.AsyncResource();
     ExternalComponent.prototype.constructor = ExternalComponent;
 
     /**

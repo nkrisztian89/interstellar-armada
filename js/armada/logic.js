@@ -106,7 +106,7 @@ define([
             layerParticle = new budaScene.StaticParticle(
                   armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
                   armada.resources().getShader(this._class.layers[i].shaderName),
-                  armada.resources().getOrAddTextureFromDescriptor(this._class.layers[i].textureDescriptor),
+                  armada.resources().getTexture(this._class.layers[i].textureDescriptor.name),
                   this._class.layers[i].color,
                   this._class.layers[i].size,
                   mat.translation4v(vec.scaled3(this._position, 4500)));
@@ -317,7 +317,7 @@ define([
         this._visualModel = this._visualModel || new budaScene.Billboard(
               armada.resources().getOrAddModelByName(Egom.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)),
               armada.resources().getShader(this._class.shaderName),
-              armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor),
+              armada.resources().getTexture(this._class.textureDescriptor.name),
               this._class.size,
               this._physicalModel.getPositionMatrix(),
               this._physicalModel.getOrientationMatrix());
@@ -451,7 +451,7 @@ define([
         return new budaScene.DynamicParticle(
               armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
               armada.resources().getShader(projectileClass.muzzleFlash.shaderName),
-              armada.resources().getOrAddTextureFromDescriptor(projectileClass.muzzleFlash.textureDescriptor),
+              armada.resources().getTexture(projectileClass.muzzleFlash.textureDescriptor.name),
               projectileClass.muzzleFlash.color,
               projectileClass.size,
               muzzleFlashPosMatrix,
@@ -552,7 +552,7 @@ define([
         this._visualModel = new budaScene.StaticParticle(
               armada.resources().getOrAddModelByName(Egom.squareModel("squareModel")),
               armada.resources().getShader(particleDescriptor.shaderName),
-              armada.resources().getOrAddTextureFromDescriptor(particleDescriptor.textureDescriptor),
+              armada.resources().getTexture(particleDescriptor.textureDescriptor.name),
               particleDescriptor.color,
               this._slot.size,
               mat.translation4v(this._slot.positionVector));
@@ -1447,7 +1447,7 @@ define([
      */
     Spacecraft.prototype.getTextures = function () {
         var result = new Object();
-        result["color"] = armada.resources().getOrAddTextureFromDescriptor(this._class.textureDescriptor);
+        result["color"] = armada.resources().getTexture(this._class.textureDescriptor.name);
         return result;
     };
     /**
@@ -2189,7 +2189,7 @@ define([
      * @returns {LogicContext}
      */
     function LogicContext() {
-        asyncResource.Resource.call(this);
+        asyncResource.AsyncResource.call(this);
         /**
          * The name of the file (without path) that contains the descriptions
          * of the in-game classes.
@@ -2284,7 +2284,7 @@ define([
          */
         this._databaseModelRotation = null;
     }
-    LogicContext.prototype = new asyncResource.Resource();
+    LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
     // #########################################################################
     // direct getters and setters

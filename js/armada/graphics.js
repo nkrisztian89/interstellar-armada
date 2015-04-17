@@ -19,10 +19,10 @@ define([
      * @class A graphics context for other modules, to be used to pass the 
      * important properties of the current graphics environment to functions that
      * can manipulate it.
-     * @extends asyncResource.Resource
+     * @extends asyncResource.AsyncResource
      */
     function GraphicsContext() {
-        asyncResource.Resource.call(this);
+        asyncResource.AsyncResource.call(this);
         /**
          * The XML tag storing the default graphics settings.
          * @name GraphicsContext#_xmlSource
@@ -97,7 +97,7 @@ define([
          */
         this._shadowDepthRatio = null;
     }
-    GraphicsContext.prototype = new asyncResource.Resource();
+    GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
     /**
      * Loads the graphics setting from the data stored in the passed XML document.

@@ -397,7 +397,7 @@
         },
         {
             "name": "falcon",
-            "basepath": "weapons/falcon",
+            "basepath": "falcon",
             "format": "egm",
             "files": [
                 {
@@ -420,7 +420,7 @@
         },
         {
             "name": "viper",
-            "basepath": "weapons/viper",
+            "basepath": "viper",
             "format": "egm",
             "files": [
                 {
@@ -443,7 +443,7 @@
         },
         {
             "name": "aries",
-            "basepath": "weapons/aries",
+            "basepath": "aries",
             "format": "egm",
             "files": [
                 {
@@ -466,7 +466,7 @@
         },
         {
             "name": "taurus",
-            "basepath": "weapons/taurus",
+            "basepath": "taurus",
             "format": "egm",
             "files": [
                 {
@@ -489,7 +489,7 @@
         },
         {
             "name": "libra",
-            "basepath": "weapons/libra",
+            "basepath": "libra",
             "format": "egm",
             "files": [
                 {

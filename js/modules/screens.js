@@ -19,13 +19,13 @@ define([
     /**
      * @class Holds the logical model of a screen of the game. The different
      * screens should be defined as descendants of this class.
-     * @extends asyncResource.Resource
+     * @extends asyncResource.AsyncResource
      * @param {String} name The name by which this screen can be identified.
      * @param {String} source The name of the HTML file where the structure of this
      * screen is defined.
      */
     function HTMLScreen(name, source) {
-        asyncResource.Resource.call(this);
+        asyncResource.AsyncResource.call(this);
         // general properties
         this._name = name;
         this._source = source;
@@ -48,7 +48,7 @@ define([
         }
     }
 
-    HTMLScreen.prototype = new asyncResource.Resource();
+    HTMLScreen.prototype = new asyncResource.AsyncResource();
     HTMLScreen.prototype.constructor = HTMLScreen;
 
     HTMLScreen.prototype.setGame = function (game) {

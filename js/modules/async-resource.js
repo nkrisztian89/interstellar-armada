@@ -25,13 +25,11 @@ define(function () {
      * As the loading happends asynchronously in many cases, this class provides 
      * a safe way to interact with the objects at any time, queuing the actions 
      * if the resource is not ready yet to use.
-     * @returns {Resource}
      */
-    function Resource() {
+    function AsyncResource() {
         /**
          * Whether the resource is ready to be used (its members can be 
          * accessed) or not
-         * @name Resource#_readyToUse
          * @type Boolean
          * @default false
          */
@@ -39,7 +37,6 @@ define(function () {
         /**
          * The queue of actions that will be performed when the resource will 
          * next be set ready
-         * @name Resource#_onReadyQueue
          * @type Function[]
          * @default []
          */
@@ -50,7 +47,7 @@ define(function () {
      * gets ready.
      * @param {Function} onReadyFunction
      */
-    Resource.prototype.addOnReadyFunction = function (onReadyFunction) {
+    AsyncResource.prototype.addOnReadyFunction = function (onReadyFunction) {
         this._onReadyQueue.push(onReadyFunction);
     };
     /**
@@ -58,27 +55,27 @@ define(function () {
      * properties are initialized)
      * @returns {Boolean}
      */
-    Resource.prototype.isReadyToUse = function () {
+    AsyncResource.prototype.isReadyToUse = function () {
         return this._readyToUse;
     };
     /**
      * Sets the ready state to false, but does not erase the queued actions.
      */
-    Resource.prototype.resetReadyState = function () {
+    AsyncResource.prototype.resetReadyState = function () {
         this._readyToUse = false;
     };
     /**
      * Resets the state of the resource to be not ready, resetting the queued 
      * actions as well.
      */
-    Resource.prototype.resetResource = function () {
+    AsyncResource.prototype.resetResource = function () {
         this._readyToUse = false;
         this._onReadyQueue = [];
     };
     /**
      * Executes the onReady queue then erases it.
      */
-    Resource.prototype.executeOnReadyQueue = function () {
+    AsyncResource.prototype.executeOnReadyQueue = function () {
         var i;
         for (i = 0; i < this._onReadyQueue.length; i++) {
             this._onReadyQueue[i].call(this);
@@ -89,7 +86,7 @@ define(function () {
      * Sets the ready state of the resource and executes the queued actions that
      * were requested in advance. Also erases the queue.
      */
-    Resource.prototype.setToReady = function () {
+    AsyncResource.prototype.setToReady = function () {
         if (this._readyToUse === false) {
             this._readyToUse = true;
             this.executeOnReadyQueue();
@@ -107,7 +104,7 @@ define(function () {
      * @returns {Boolean} True if the first function got executed, false if it 
      * got queued.
      */
-    Resource.prototype.executeWhenReady = function (functionToExecute, functionToExecuteIfNotReady) {
+    AsyncResource.prototype.executeWhenReady = function (functionToExecute, functionToExecuteIfNotReady) {
         if (this._readyToUse) {
             functionToExecute.call(this);
             return true;
@@ -121,6 +118,6 @@ define(function () {
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        Resource: Resource
+        AsyncResource: AsyncResource
     };
 });

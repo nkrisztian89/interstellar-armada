@@ -286,9 +286,9 @@ define([
             armada.control().getController("camera").setControlledCamera(self._battleScene.activeCamera);
 
             self.updateStatus("loading graphical resources...", 15);
-            armada.resources().onResourceLoad = function (resourceName, totalResources, loadedResources) {
+            armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
                 self.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
-            };
+            });
             var freq = 60;
             armada.resources().executeWhenReady(function () {
                 self.updateStatus("initializing WebGL...", 75);
@@ -498,9 +498,9 @@ define([
               });
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
-        armada.resources().onResourceLoad = function (resourceName, totalResources, loadedResources) {
+        armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
             this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
-        }.bind(this);
+        }.bind(this));
         armada.resources().executeWhenReady(function () {
             this.updateStatus("", 100);
             this._loadingBox.hide();
