@@ -20,8 +20,35 @@
 /*jslint nomen: true */
 /*global define, Image */
 
-define(function () {
+define([
+    "modules/application",
+    "modules/async-resource"
+], function (application, asyncResource) {
     "use strict";
+    /**
+     * Displays information about an error that has occured in relation with WebGL,
+     * adding some basic WebGL support info for easier troubleshooting.
+     * @param {String} message A brief error message to show.
+     * @param {String} [severity] The severity level of the error. Possible
+     * values: "critical", "severe", "minor".
+     * @param {String} [details] Additional details to show about the error,
+     * with possible explanations or tips how to correct this error.
+     * @param {WebGLRenderingContext} gl The WebGL context the error happened in
+     * relation with.
+     */
+    application.showGraphicsError = function (message, severity, details, gl) {
+        if (!gl) {
+            application.showError(message, severity, details + "\n\nThis is a graphics related error. There is " +
+                  "no information available about your graphics support.");
+        } else {
+            application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
+                  "Information about your graphics support:\n" +
+                  "WebGL version: " + gl.getParameter(gl.VERSION) + "\n" +
+                  "Shading language version: " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION) + "\n" +
+                  "WebGL vendor: " + gl.getParameter(gl.VENDOR) + "\n" +
+                  "WebGL renderer: " + gl.getParameter(gl.RENDERER));
+        }
+    };
     /**
      * @class Represents a managed WebGL texture.
      * @param {Image} image The Image object that contains the data of the
@@ -130,14 +157,13 @@ define(function () {
     /**
      * Creates a new Cubemap object.
      * @class Represents a cube mapped texture resource.
-     * @extends Resource
+     * @extends asyncResource.AsyncResource
      * @param {String} name The name of cubemap resource
      * @param {String[6]} imageURLs An array containing the URLs of the 6 faces of
      * the cubemapped texture. The order of the pictures has to be X,Y,Z and within
      * that, always positive first.
      */
-    function Cubemap(name, imageURLs) {
-        Resource.call(this);
+    function Cubemap(name, images) {
         // properties for file resource management
         /**
          * The name by wich this resource will be referred to. (has to be unique for
@@ -147,22 +173,12 @@ define(function () {
          */
         this._name = name;
         /**
-         * The URLs for each texture image of the 6 faces of the cubemap. Order:
-         * X+,X-,Y+,Y-,Z+,Z-. The path is relative to the site root.
-         * @name Cubemap#_imageURLs
-         * @type String[6]
-         */
-        this._imageURLs = imageURLs;
-        /**
          * 6 Image objects to manage the loading of the 6 textures of the faces from
          * their source files.
          * @name Cubemap#_images
          * @type Image[6]
          */
-        this._images = new Array(6);
-        for (var i = 0; i < 6; i++) {
-            this._images[i] = new Image();
-        }
+        this._images = images;
         // properties for WebGL resource management
         /**
          * The associative array of WebGL cubemap IDs belonging to managed contexts 
@@ -171,7 +187,7 @@ define(function () {
          * @name Cubemap#_ids
          * @type Object
          */
-        this._ids = new Object();
+        this._ids = {};
         /**
          * The associative array of bound WebGL texture locations (texture unit indices)
          * belonging to managed contexts which this cubemap has been associated with. 
@@ -180,12 +196,8 @@ define(function () {
          * @name Cubemap#_locations
          * @type Object
          */
-        this._locations = new Object();
+        this._locations = {};
     }
-    // as it is an asynchronously loaded resource, we set the Resource as parent
-    // class to make handling easier
-    Cubemap.prototype = new Resource();
-    Cubemap.prototype.constructor = Cubemap;
     /**
      * Getter for the property _name.
      * @returns {String}
@@ -220,29 +232,6 @@ define(function () {
      */
     Cubemap.prototype.setTextureBindLocation = function (context, location) {
         this._locations[context.getName()] = location;
-    };
-    /**
-     * Initiates asynchronous requests to load the face textures from their source
-     * files. When the loading finishes, the cubemap {@link Resource} is marked 
-     * ready to use and the potentially queued actions are executed.
-     */
-    Cubemap.prototype.requestLoadFromFile = function () {
-        if (this.isReadyToUse() === false) {
-            var facesLoaded = 0;
-            var self = this;
-            for (var i = 0; i < 6; i++) {
-                // when all faces loaded, set the resource to ready and execute queued functions
-                this._images[i].onload = function () {
-                    facesLoaded += 1;
-                    if (facesLoaded === 6) {
-                        self.setToReady();
-                    }
-                };
-                // setting the src property will automatically result in an asynchronous
-                // request to grab the texture file
-                this._images[i].src = this._imageURLs[i];
-            }
-        }
     };
     /**
      * Adds the cubemap resource to be available for the provided managed WebGL
@@ -363,18 +352,19 @@ define(function () {
      * @name ShaderUniform#VariableTypes
      */
     ShaderUniform.prototype.VariableTypes = Object.freeze(
-        {
-            none: 0,
-            float: 1,
-            mat4: 2,
-            mat3: 3,
-            vec3: 4,
-            vec4: 5,
-            sampler2D: 6,
-            samplerCube: 7,
-            int: 8,
-            bool: 9
-        });
+          {
+              none: 0,
+              float: 1,
+              mat4: 2,
+              mat3: 3,
+              vec3: 4,
+              vec4: 5,
+              sampler2D: 6,
+              samplerCube: 7,
+              int: 8,
+              bool: 9,
+              struct: 10
+          });
     /**
      * Determining the enumeration value of a shader variable type from the string
      * containing the name of the variable type so that a faster hash table switch 
@@ -633,9 +623,9 @@ define(function () {
         this._id = context.gl.createBuffer();
         context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
         context.gl.bufferData(
-            context.gl.ARRAY_BUFFER,
-            this._data,
-            context.gl.STATIC_DRAW);
+              context.gl.ARRAY_BUFFER,
+              this._data,
+              context.gl.STATIC_DRAW);
         this.freeData();
     };
     /**
@@ -797,24 +787,14 @@ define(function () {
         this._id = null;
     };
     /**
-     * Creates a new Shader object.
-     * @class A wrapper class representing a WebGL shader program.
-     * @param {string} name The name of the shader program it can be referred to 
-     * with later.
-     * @param {string} vertexShaderFileName The name of the file containing the 
-     * vertex shader code.
-     * @param {string} fragmentShaderFileName The name of the file containing the
-     * fragment shader code.
-     * @param {string} blendType What kind of blending function should be used
-     * while rendering with this shader.
-     * @param {ShaderAttribute[]} attributes The list of attributes this shader
-     * has as an input.
-     * @param {ShaderUniform[]} uniforms The list of uniform variables this shader
-     * contains.
-     * @param {String} [fallback] Name of a fallback shader to use.
-     * */
-    function Shader(name, vertexShaderFileName, fragmentShaderFileName, blendType, attributes, uniforms, fallback) {
-        Resource.call(this);
+     * @class
+     * @param {String} name
+     * @param {String} vertexShaderSource
+     * @param {String} fragmentShaderSource
+     * @param {String} blendType
+     * @param {Object.<String, String>} attributeRoles
+     */
+    function Shader(name, vertexShaderSource, fragmentShaderSource, blendType, attributeRoles) {
         // properties for file resource management
         /**
          * The name of the shader program it can be referred to with later. Has to
@@ -823,18 +803,6 @@ define(function () {
          * @type String
          */
         this._name = name;
-        /**
-         * The URL of the vertex shader source file, relative to the site root.
-         * @name Shader#_vertexShaderFileName
-         * @type String
-         */
-        this._vertexShaderFileName = vertexShaderFileName;
-        /**
-         * The URL of the fragment shader source file, relative to the site root.
-         * @name Shader#_fragmentShaderFileName
-         * @type String
-         */
-        this._fragmentShaderFileName = fragmentShaderFileName;
         /**
          * The type of blending to be used with this shader. Options:
          * "mix": will overwrite the existing color up to the proportion of the 
@@ -849,32 +817,25 @@ define(function () {
          * @name Shader#_attributes
          * @type ShaderAttribute[]
          */
-        this._attributes = attributes;
+        this._attributes = [];
         /**
          * The list of shader uniforms of this shader.
          * @name Shader#_uniforms
          * @type ShaderUniform[]
          */
-        this._uniforms = uniforms;
-        /**
-         * The name of a fallback shader that can be used if this shader can not
-         * (e.g. its complexity exceeds the limitations of the current implementation)
-         * @name Shader#_fallback
-         * @type String
-         */
-        this._fallback = fallback || null;
+        this._uniforms = [];
         /**
          * The source code of the vertex shader.
          * @name Shader#_vertexShaderSource
          * @type String
          */
-        this._vertexShaderSource = null;
+        this._vertexShaderSource = vertexShaderSource;
         /**
          * The source code of the fragment shader.
          * @name Shader#_fragmentShaderSource
          * @type String
          */
-        this._fragmentShaderSource = null;
+        this._fragmentShaderSource = fragmentShaderSource;
         // properties for WebGL resource management
         /**
          * The associative array of WebGL program IDs belonging to managed contexts 
@@ -883,13 +844,108 @@ define(function () {
          * @name Shader#_ids
          * @type Object
          */
-        this._ids = new Object();
+        this._ids = {};
+        this._loadAttributesAndUniforms(attributeRoles);
     }
-
-// as it is an asynchronously loaded resource, we set the Resource as parent
-// class to make handling easier
-    Shader.prototype = new Resource();
-    Shader.prototype.constructor = Shader;
+    /**
+     * @param {String} name
+     * @returns {Boolean}
+     */
+    Shader.prototype._hasUniform = function (name) {
+        var i;
+        for (i = 0; i < this._uniforms.length; i++) {
+            if (this._uniforms[i].getName() === name) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * @param {Object} attributeRoles
+     */
+    Shader.prototype._loadAttributesAndUniforms = function (attributeRoles) {
+        var
+              i, j, shaderType,
+              sourceLines, words,
+              attributeName, attributeSize, attributeRole,
+              uniform, uniformNameElements, uniformName, uniformType, uniformArraySize, structFound;
+        for (shaderType = 0; shaderType < 2; shaderType++) {
+            switch (shaderType) {
+                case 0:
+                    sourceLines = this._vertexShaderSource.split("\n");
+                    break;
+                case 1:
+                    sourceLines = this._fragmentShaderSource.split("\n");
+                    break;
+            }
+            for (i = 0; i < sourceLines.length; i++) {
+                words = sourceLines[i].split(" ");
+                if ((shaderType === 0) && (words[0] === "attribute")) {
+                    attributeName = words[2].split(";")[0];
+                    switch (words[1]) {
+                        case "float":
+                            attributeSize = 1;
+                            break;
+                        case "vec2":
+                            attributeSize = 2;
+                            break;
+                        case "vec3":
+                            attributeSize = 3;
+                            break;
+                        case "vec4":
+                            attributeSize = 4;
+                            break;
+                        default:
+                            application.showError("Unknown attribute type: '" + words[1] + "' found in the source of shader: '" + this._name + "'!");
+                            return;
+                    }
+                    attributeRole = attributeRoles[attributeName];
+                    if (attributeRole === undefined) {
+                        application.showError("Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
+                        return;
+                    }
+                    this._attributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
+                }
+                if (words[0] === "uniform") {
+                    uniformNameElements = words[2].split(";")[0].split("[");
+                    uniformName = uniformNameElements[0];
+                    if (this._hasUniform(uniformName) === false) {
+                        if (uniformNameElements.length > 1) {
+                            uniformArraySize = parseInt(uniformNameElements[1].split("]")[0]);
+                        } else {
+                            uniformArraySize = 0;
+                        }
+                        uniformType = words[1];
+                        if (ShaderUniform.prototype.getVariableTypeFromString(uniformType) === ShaderUniform.prototype.VariableTypes.none) {
+                            uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
+                            structFound = false;
+                            for (j = 0; j < sourceLines.length; j++) {
+                                words = sourceLines[j].split(" ");
+                                if (!structFound) {
+                                    if ((words[0] === "struct") && (words[1].split("{")[0] === uniformType)) {
+                                        structFound = true;
+                                    }
+                                } else {
+                                    words = words.filter(function (element) {
+                                        return element !== "";
+                                    });
+                                    if ((words.length > 0) && (words[words.length - 1].split(";")[0] === "}")) {
+                                        break;
+                                    }
+                                    if (words.length >= 2) {
+                                        uniform.addMember(new ShaderUniform(words[1].split(";")[0], words[0], 0));
+                                    }
+                                }
+                            }
+                            this._uniforms.push(uniform);
+                        } else {
+                            this._uniforms.push(new ShaderUniform(uniformName, uniformType, uniformArraySize));
+                        }
+                    }
+                }
+            }
+        }
+    };
     /**
      * Getter for the _name property.
      * @returns {String}
@@ -922,32 +978,6 @@ define(function () {
         return this._fallback;
     };
     /**
-     * Initiates asynchronous requests to load the vertex and fragment shader source
-     * codes from files. When the loading finishes, the shader {@link Resource} 
-     * is marked ready to use and the potentially queued actions are executed.
-     */
-    Shader.prototype.requestLoadFromFile = function () {
-        if (this.isReadyToUse() === false) {
-            var self = this;
-            Application.requestTextFile("shader", this._vertexShaderFileName, function (responseText) {
-                self._vertexShaderSource = responseText;
-                if (self._fragmentShaderSource !== null) {
-                    self.setToReady();
-                }
-                // override the mime type to avoid error messages in Firefox developer
-                // consol when it tries to parse as XML
-            }, 'text/plain; charset=utf-8');
-            Application.requestTextFile("shader", this._fragmentShaderFileName, function (responseText) {
-                self._fragmentShaderSource = responseText;
-                if (self._vertexShaderSource !== null) {
-                    self.setToReady();
-                }
-                // override the mime type to avoid error messages in Firefox developer
-                // consol when it tries to parse as XML    
-            }, 'text/plain; charset=utf-8');
-        }
-    };
-    /**
      * Adds the shader resource to be available for the provided managed WebGL
      * context. If it has already been added, does nothing. (as typically this
      * will be called many times, with different {@link RenderableObject}s containing 
@@ -956,59 +986,57 @@ define(function () {
      * @param {ManagedGLContext} context
      */
     Shader.prototype.addToContext = function (context) {
-        this.executeWhenReady(function () {
-            if (this._ids[context.getName()] === undefined) {
-                var gl = context.gl;
-                // create and compile vertex shader
-                var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-                gl.shaderSource(vertexShader, this._vertexShaderSource);
-                gl.compileShader(vertexShader);
-                // detect and display compilation errors
-                if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-                    var infoLog = gl.getShaderInfoLog(vertexShader);
-                    Application.showGraphicsError("Compiling GLSL vertex shader '" + this._vertexShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
-                    this._ids[context.getName()] = null;
-                    return;
-                }
-                // create and compile fragment shader
-                var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-                gl.shaderSource(fragmentShader, this._fragmentShaderSource);
-                gl.compileShader(fragmentShader);
-                // detect and display compilation errors
-                if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-                    var infoLog = gl.getShaderInfoLog(fragmentShader);
-                    Application.showGraphicsError("Compiling GLSL fragment shader '" + this._fragmentShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
-                    this._ids[context.getName()] = null;
-                    return;
-                }
-                // create and link shader program
-                this._ids[context.getName()] = gl.createProgram();
-                var prog = this._ids[context.getName()];
-                gl.attachShader(prog, vertexShader);
-                gl.attachShader(prog, fragmentShader);
-                gl.linkProgram(prog);
-                // detect and display linking errors
-                if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-                    var infoLog = gl.getProgramInfoLog(prog);
-                    Application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog, gl);
-                    gl.deleteProgram(prog);
-                    this._ids[context.getName()] = null;
-                    return;
-                }
-                // cache uniform locations
-                for (var i = 0; i < this._uniforms.length; i++) {
-                    this._uniforms[i].setLocation(context, this);
-                }
-                // add the created shader to the context's managed resources list
-                context.addShader(this);
+        if (this._ids[context.getName()] === undefined) {
+            var gl = context.gl;
+            // create and compile vertex shader
+            var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertexShader, this._vertexShaderSource);
+            gl.compileShader(vertexShader);
+            // detect and display compilation errors
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                var infoLog = gl.getShaderInfoLog(vertexShader);
+                application.showGraphicsError("Compiling GLSL vertex shader '" + this._vertexShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
+                this._ids[context.getName()] = null;
+                return;
             }
-        });
+            // create and compile fragment shader
+            var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragmentShader, this._fragmentShaderSource);
+            gl.compileShader(fragmentShader);
+            // detect and display compilation errors
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                var infoLog = gl.getShaderInfoLog(fragmentShader);
+                application.showGraphicsError("Compiling GLSL fragment shader '" + this._fragmentShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
+                this._ids[context.getName()] = null;
+                return;
+            }
+            // create and link shader program
+            this._ids[context.getName()] = gl.createProgram();
+            var prog = this._ids[context.getName()];
+            gl.attachShader(prog, vertexShader);
+            gl.attachShader(prog, fragmentShader);
+            gl.linkProgram(prog);
+            // detect and display linking errors
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                var infoLog = gl.getProgramInfoLog(prog);
+                application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog, gl);
+                gl.deleteProgram(prog);
+                this._ids[context.getName()] = null;
+                return;
+            }
+            // cache uniform locations
+            for (var i = 0; i < this._uniforms.length; i++) {
+                this._uniforms[i].setLocation(context, this);
+            }
+            // add the created shader to the context's managed resources list
+            context.addShader(this);
+        }
     };
     /**
      * Clears all previous bindings to managed WebGL contexts.
      */
     Shader.prototype.clearContextBindings = function () {
-        this._ids = new Object();
+        this._ids = {};
     };
     /**
      * Sets the blending function in the supplied managed context according to the
@@ -1067,7 +1095,7 @@ define(function () {
      * @returns {ManagedGLContext}
      */
     function ManagedGLContext(name, canvas, antialiasing, filtering) {
-        Resource.call(this);
+        asyncResource.AsyncResource.call(this);
         /**
          * The name of the context by which it can be referred to.
          * @name ManagedGLContext#_name
@@ -1246,27 +1274,27 @@ define(function () {
             }
             if (!this.gl) {
                 Application.showError("Unable to initialize WebGL.", "critical",
-                    "It looks like your device, browser or graphics drivers do not " +
-                    "support web 3D graphics. Make sure your browser and graphics " +
-                    "drivers are updated to the latest version, and you are using " +
-                    "a modern web browser (Firefox or Chrome are recommended).\n" +
-                    "Please note that some phones or handheld devices do not have 3D " +
-                    "web capabilities, even if you use the latest software.");
+                      "It looks like your device, browser or graphics drivers do not " +
+                      "support web 3D graphics. Make sure your browser and graphics " +
+                      "drivers are updated to the latest version, and you are using " +
+                      "a modern web browser (Firefox or Chrome are recommended).\n" +
+                      "Please note that some phones or handheld devices do not have 3D " +
+                      "web capabilities, even if you use the latest software.");
                 return;
             } else {
                 Application.showError("Your device appears to only have experimental WebGL (web based 3D) support.",
-                    undefined, "This application relies on 3D web features, and without full support, " +
-                    "the graphics of the application might be displayed with glitches or not at all. " +
-                    "If you experience problems, it is recommended to use lower graphics quality settings.");
+                      undefined, "This application relies on 3D web features, and without full support, " +
+                      "the graphics of the application might be displayed with glitches or not at all. " +
+                      "If you experience problems, it is recommended to use lower graphics quality settings.");
             }
         }
         var gl = this.gl;
         if (Armada.graphics().getAntialiasing() && !gl.getContextAttributes().antialias) {
             Application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
-                "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
-                "this error message showing up again, disable antialiasing in the graphics settings or try " +
-                "running the application in a different browser. Antialiasing will not work, but otherwise this " +
-                "error will have no consequences.", gl);
+                  "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
+                  "this error message showing up again, disable antialiasing in the graphics settings or try " +
+                  "running the application in a different browser. Antialiasing will not work, but otherwise this " +
+                  "error will have no consequences.", gl);
         }
         // save the information about WebGL limits
         this._maxBoundTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
@@ -1278,14 +1306,14 @@ define(function () {
         this._maxFragmentShaderUniforms = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
         this._maxVaryings = gl.getParameter(gl.MAX_VARYING_VECTORS);
         Application.log("WebGL context successfully created.\n" +
-            " Available texture units: " + this._maxBoundTextures + "\n" +
-            " Maximum texture size: " + this._maxTextureSize + "\n" +
-            " Maximum cubemap size: " + this._maxCubemapSize + "\n" +
-            " Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
-            " Available vertex attributes: " + this._maxVertexAttributes + "\n" +
-            " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
-            " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
-            " Available varying vectors: " + this._maxVaryings, 1);
+              " Available texture units: " + this._maxBoundTextures + "\n" +
+              " Maximum texture size: " + this._maxTextureSize + "\n" +
+              " Maximum cubemap size: " + this._maxCubemapSize + "\n" +
+              " Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
+              " Available vertex attributes: " + this._maxVertexAttributes + "\n" +
+              " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
+              " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
+              " Available varying vectors: " + this._maxVaryings, 1);
         // is filtering is set to anisotropic, try to grab the needed extension. If that fails,
         // fall back to trilinear filtering.
         if (this._filtering === "anisotropic") {
@@ -1307,7 +1335,7 @@ define(function () {
         gl.cullFace(gl.BACK);
         gl.frontFace(gl.CCW);
     }
-    ManagedGLContext.prototype = new Resource();
+    ManagedGLContext.prototype = new asyncResource.AsyncResource();
     ManagedGLContext.prototype.constructor = ManagedGLContext;
     /**
      * Returns the name of this managed context.
@@ -1612,7 +1640,7 @@ define(function () {
         }
         return place;
     };
-    
+
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

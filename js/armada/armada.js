@@ -29,7 +29,7 @@ define([
     });
     application.setLogVerbosity(2);
 
-    application.setVersion("0.1.0:106+refactoring-14 (2015.04.17.)");
+    application.setVersion("0.1.0:106+refactoring-16 (2015.04.19.)");
 
     // add private variables specific to Interstellar Armada
 
@@ -169,30 +169,6 @@ define([
 
     // -------------------------------------------------------------------------
     // Public methods
-    /**
-     * Displays information about an error that has occured in relation with WebGL,
-     * adding some basic WebGL support info for easier troubleshooting.
-     * @param {String} message A brief error message to show.
-     * @param {String} [severity] The severity level of the error. Possible
-     * values: "critical", "severe", "minor".
-     * @param {String} [details] Additional details to show about the error,
-     * with possible explanations or tips how to correct this error.
-     * @param {WebGLRenderingContext} gl The WebGL context the error happened in
-     * relation with.
-     */
-    application.showGraphicsError = function (message, severity, details, gl) {
-        if (!gl) {
-            application.showError(message, severity, details + "\n\nThis is a graphics related error. There is " +
-                  "no information available about your graphics support.");
-        } else {
-            application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
-                  "Information about your graphics support:\n" +
-                  "WebGL version: " + gl.getParameter(gl.VERSION) + "\n" +
-                  "Shading language version: " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION) + "\n" +
-                  "WebGL vendor: " + gl.getParameter(gl.VENDOR) + "\n" +
-                  "WebGL renderer: " + gl.getParameter(gl.RENDERER));
-        }
-    };
     /** 
      * Initializes the game: builds up the screens, loads settings and displays the main menu.
      */

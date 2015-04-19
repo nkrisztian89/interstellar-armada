@@ -97,8 +97,8 @@
             "vertexShaderSource": "mesh/oneColor.vert",
             "fragmentShaderSource": "mesh/oneColor.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position"
+            "attributeRoles": {
+                "a_position": "position"
             }
         },
         {
@@ -106,9 +106,9 @@
             "vertexShaderSource": "mesh/colored.vert",
             "fragmentShaderSource": "mesh/colored.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "color": "a_color"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_color": "color"
             }
         },
         {
@@ -117,10 +117,10 @@
             "vertexShaderSource": "mesh/textured.vert",
             "fragmentShaderSource": "mesh/textured.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "color": "a_color"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_color": "color"
             }
         },
         {
@@ -129,11 +129,11 @@
             "vertexShaderSource": "mesh/lambert.vert",
             "fragmentShaderSource": "mesh/lambert.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "normal": "a_normal",
-                "color": "a_color"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color"
             }
         },
         {
@@ -142,12 +142,12 @@
             "vertexShaderSource": "mesh/lambert-with-luminosity.vert",
             "fragmentShaderSource": "mesh/lambert-with-luminosity.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "normal": "a_normal",
-                "color": "a_color",
-                "luminosity": "a_luminosity"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity"
             }
         },
         {
@@ -156,13 +156,13 @@
             "vertexShaderSource": "mesh/simple.vert",
             "fragmentShaderSource": "mesh/simple.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "normal": "a_normal",
-                "color": "a_color",
-                "luminosity": "a_luminosity",
-                "shininess": "a_shininess"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess"
             }
         },
         {
@@ -171,13 +171,13 @@
             "vertexShaderSource": "mesh/simpleWithModelPos.vert",
             "fragmentShaderSource": "mesh/simpleReveal.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "normal": "a_normal",
-                "color": "a_color",
-                "luminosity": "a_luminosity",
-                "shininess": "a_shininess"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess"
             }
         },
         {
@@ -186,8 +186,8 @@
             "vertexShaderSource": "mesh/simpleWithModelPos.vert",
             "fragmentShaderSource": "mesh/oneColorReveal.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position"
+            "attributeRoles": {
+                "a_position": "position"
             }
         },
         {
@@ -196,15 +196,15 @@
             "vertexShaderSource": "mesh/ship.vert",
             "fragmentShaderSource": "mesh/ship.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "normal": "a_normal",
-                "color": "a_color",
-                "luminosity": "a_luminosity",
-                "shininess": "a_shininess",
-                "groupIndex": "a_groupIndex",
-                "triangleIndex": "a_index"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
             }
         },
         {
@@ -213,14 +213,14 @@
             "vertexShaderSource": "mesh/modelPosShadowMapping.vert",
             "fragmentShaderSource": "mesh/shadowMapReveal.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord",
-                "normal": "a_normal",
-                "color": "a_color",
-                "luminosity": "a_luminosity",
-                "shininess": "a_shininess",
-                "triangleIndex": "a_index"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_index": "triangleIndex"
             }
         },
         {
@@ -228,8 +228,8 @@
             "vertexShaderSource": "billboard/skybox.vert",
             "fragmentShaderSource": "billboard/skybox.frag",
             "blendType": "none",
-            "attributeMapping": {
-                "position": "a_position"
+            "attributeRoles": {
+                "a_position": "position"
             }
         },
         {
@@ -237,9 +237,9 @@
             "vertexShaderSource": "billboard/billboard.vert",
             "fragmentShaderSource": "billboard/billboard.frag",
             "blendType": "add",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
             }
         },
         {
@@ -247,9 +247,9 @@
             "vertexShaderSource": "billboard/particle.vert",
             "fragmentShaderSource": "billboard/particle.frag",
             "blendType": "add",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
             }
         },
         {
@@ -257,9 +257,9 @@
             "vertexShaderSource": "billboard/linearSizeParticle.vert",
             "fragmentShaderSource": "billboard/particle.frag",
             "blendType": "add",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
             }
         },
         {
@@ -267,9 +267,9 @@
             "vertexShaderSource": "billboard/linearSizeParticle.vert",
             "fragmentShaderSource": "billboard/particle.frag",
             "blendType": "add",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
             }
         },
         {
@@ -277,9 +277,9 @@
             "vertexShaderSource": "billboard/backgroundBillboard.vert",
             "fragmentShaderSource": "billboard/particle.frag",
             "blendType": "add",
-            "attributeMapping": {
-                "position": "a_position",
-                "texCoord": "a_texCoord"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
             }
         },
         {
@@ -287,8 +287,8 @@
             "vertexShaderSource": "dust.vert",
             "fragmentShaderSource": "dust.frag",
             "blendType": "none",
-            "attributeMapping": {
-                "position": "a_position"
+            "attributeRoles": {
+                "a_position": "position"
             }
         },
         {
@@ -296,9 +296,9 @@
             "vertexShaderSource": "shadow-mapping.vert",
             "fragmentShaderSource": "shadow-mapping.frag",
             "blendType": "mix",
-            "attributeMapping": {
-                "position": "a_position",
-                "triangleIndex": "a_triangleIndex"
+            "attributeRoles": {
+                "a_position": "position",
+                "a_triangleIndex": "triangleIndex"
             }
         }
     ],

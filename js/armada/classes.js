@@ -494,54 +494,56 @@ define([
      * @returns {Model}
      */
     ClassWithModel.prototype.addModelToResourceManager = function (name, lod) {
-        var i, bestLOD, bestIndex, result;
-        console.log("Adding " + ((lod === undefined) ? "all LODs" : ("LOD " + lod)) + " of model with name: '" + name + "' to resource manager...");
-        // if no specific LOD was requested, add all from 0 to the max loaded
-        // LOD (according to the graphics settings)
-        if (lod === undefined) {
-            // first, find the best multi-LOD file and add it
-            bestIndex = -1;
-            bestLOD = -1;
-            for (i = 0; i < this.modelDescriptors.length; i++) {
-                if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD <= armada.graphics().getMaxLoadedLOD())) {
-                    if ((bestIndex === -1) || (this.modelDescriptors[i].maxLOD > bestLOD)) {
-                        bestIndex = i;
-                        bestLOD = this.modelDescriptors[i].maxLOD;
-                    }
-                }
-            }
-            if (bestIndex > -1) {
-                result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
-            }
-            // if the multi-LOD file didn't cover all needed LODs, try to fill
-            // the gap from single LOD files
-            for (i = 0; i < this.modelDescriptors.length; i++) {
-                if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod <= armada.graphics().getMaxLoadedLOD())) {
-                    if (this.modelDescriptors[i].lod > bestLOD) {
-                        result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[i].path, false, this.modelDescriptors[i].lod);
-                    }
-                }
-            }
-        } else {
-            // if a specific LOD was requested, try to add the closest (less or 
-            // equal) LOD, of possible, from single LOD file
-            bestIndex = -1;
-            for (bestLOD = lod; (bestLOD > -1) && (bestIndex === -1); bestLOD--) {
-                for (i = 0; i < this.modelDescriptors.length; i++) {
-                    if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod === bestLOD)) {
-                        bestIndex = i;
-                        result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, false, bestLOD);
-                        break;
-                    }
-                    if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD === bestLOD)) {
-                        bestIndex = i;
-                        result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
-                        break;
-                    }
-                }
-            }
-        }
-        return result;
+        var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
+        return armada.resources().getModel(name, params);
+        /*var i, bestLOD, bestIndex, result;
+         console.log("Adding " + ((lod === undefined) ? "all LODs" : ("LOD " + lod)) + " of model with name: '" + name + "' to resource manager...");
+         // if no specific LOD was requested, add all from 0 to the max loaded
+         // LOD (according to the graphics settings)
+         if (lod === undefined) {
+         // first, find the best multi-LOD file and add it
+         bestIndex = -1;
+         bestLOD = -1;
+         for (i = 0; i < this.modelDescriptors.length; i++) {
+         if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD <= armada.graphics().getMaxLoadedLOD())) {
+         if ((bestIndex === -1) || (this.modelDescriptors[i].maxLOD > bestLOD)) {
+         bestIndex = i;
+         bestLOD = this.modelDescriptors[i].maxLOD;
+         }
+         }
+         }
+         if (bestIndex > -1) {
+         result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
+         }
+         // if the multi-LOD file didn't cover all needed LODs, try to fill
+         // the gap from single LOD files
+         for (i = 0; i < this.modelDescriptors.length; i++) {
+         if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod <= armada.graphics().getMaxLoadedLOD())) {
+         if (this.modelDescriptors[i].lod > bestLOD) {
+         result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[i].path, false, this.modelDescriptors[i].lod);
+         }
+         }
+         }
+         } else {
+         // if a specific LOD was requested, try to add the closest (less or 
+         // equal) LOD, of possible, from single LOD file
+         bestIndex = -1;
+         for (bestLOD = lod; (bestLOD > -1) && (bestIndex === -1); bestLOD--) {
+         for (i = 0; i < this.modelDescriptors.length; i++) {
+         if ((this.modelDescriptors[i].containsSingleLOD()) && (this.modelDescriptors[i].lod === bestLOD)) {
+         bestIndex = i;
+         result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, false, bestLOD);
+         break;
+         }
+         if ((this.modelDescriptors[i].containsMultipleLOD()) && (this.modelDescriptors[i].maxLOD === bestLOD)) {
+         bestIndex = i;
+         result = armada.resources().getOrAddModelFromFile(name, this.modelDescriptors[bestIndex].path, true, bestLOD);
+         break;
+         }
+         }
+         }
+         }
+         return result;*/
     };
 
     /**

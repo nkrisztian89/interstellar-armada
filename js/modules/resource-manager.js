@@ -268,7 +268,7 @@ define([
             }
         }
         return qualitities;
-    }; 
+    };
     // ############################################################################################x
     /**
      * @class Represents a cube mapped texture resource.
@@ -358,7 +358,7 @@ define([
         /**
          * @type Object.<String, String>
          */
-        this._attributeMapping = dataJSON.attributeMapping;
+        this._attributeRoles = dataJSON.attributeRoles;
         /**
          * @type String
          */
@@ -407,7 +407,37 @@ define([
                 break;
         }
     };
+    /**
+     * @returns {String}
+     */
+    ShaderResource.prototype.getVertexShaderSource = function () {
+        return this._vertexShaderSource;
+    };
+    /**
+     * @returns {String}
+     */
+    ShaderResource.prototype.getFragmentShaderSource = function () {
+        return  this._fragmentShaderSource;
+    };
+    /**
+     * @returns {String}
+     */
+    ShaderResource.prototype.getBlendType = function () {
+        return this._blendType;
+    };
+    /**
+     * @returns {Object.<String, String>}
+     */
+    ShaderResource.prototype.getAttributeRoles = function () {
+        return this._attributeRoles;
+    };
     // ############################################################################################x
+    /**
+     * @typedef {Object} ModelResource~FileDescriptor
+     * @property {String} suffix
+     * @property {Number} lod
+     * @property {Number} maxLOD
+     */
     /**
      * @class
      * @augments GenericResource
@@ -423,30 +453,173 @@ define([
          * @type String
          */
         this._format = dataJSON.format;
+        /**
+         * @type Array.<ModelResource~FileDescriptor>
+         */
+        this._singleLODFiles = null;
+        /**
+         * @type Array.<ModelResource~FileDescriptor>
+         */
+        this._multiLODFiles = null;
+        /**
+         * @type Number
+         */
+        this._loadedFiles = 0;
+        /**
+         * @type Number
+         */
+        this._filesToLoad = 0;
+        this._singleLODFiles = dataJSON.files.filter(
+              function (element) {
+                  return (element.lod !== undefined);
+              });
+        this._multiLODFiles = dataJSON.files.filter(
+              function (element) {
+                  return (element.maxLOD !== undefined);
+              });
     }
     ModelResource.prototype = new GenericResource();
     ModelResource.prototype.constructor = ModelResource;
+    /**
+     * @param {Boolean} multiLOD
+     * @param {Number} lod
+     * @returns {String}
+     */
+    ModelResource.prototype.getPath = function (multiLOD, lod) {
+        var i;
+        if (multiLOD === true) {
+            for (i = 0; i < this._multiLODFiles.length; i++) {
+                if (this._multiLODFiles[i].maxLOD === lod) {
+                    return this._basepath + this._multiLODFiles[i].suffix + "." + this._format;
+                }
+            }
+        } else {
+            for (i = 0; i < this._singleLODFiles.length; i++) {
+                if (this._multiLODFiles[i].lod === lod) {
+                    return this._basepath + this._singleLODFiles[i].suffix + "." + this._format;
+                }
+            }
+        }
+        return null;
+    };
     /**
      * @override
      * @returns {Boolean}
      */
     ModelResource.prototype.requiresReload = function () {
+        // TODO: implement
         if (this.isRequested()) {
             return false;
         }
         return !this.isLoaded();
     };
     /**
-     * @override
+     * @param {Boolean} multiLOD
+     * @returns {Number|null}
      */
-    ModelResource.prototype._requestFiles = function () {
-
+    ModelResource.prototype.getMaxLOD = function (multiLOD) {
+        var i, result = null;
+        if (multiLOD === true) {
+            for (i = 0; i < this._multiLODFiles.length; i++) {
+                if ((result === null) || (this._multiLODFiles[i].maxLOD > result)) {
+                    result = this._multiLODFiles[i].maxLOD;
+                }
+            }
+            return result;
+        }
+        if (multiLOD === false) {
+            for (i = 0; i < this._singleLODFiles.length; i++) {
+                if ((result === null) || (this._singleLODFiles[i].lod > result)) {
+                    result = this._singleLODFiles[i].lod;
+                }
+            }
+            return result;
+        }
+        return Math.max(this.getMaxLOD(true), this.getMaxLOD(false));
+    };
+    /**
+     * @param {Boolean} multiLOD
+     * @param {Number} lod
+     */
+    ModelResource.prototype._requestFile = function (multiLOD, lod) {
+        this._filesToLoad++;
+        application.requestTextFile("model", this.getPath(multiLOD, lod), function (responseText) {
+            this._loadedFiles++;
+            this._onFilesLoad(this._filesToLoad === this._loadedFiles, {multiLOD: multiLOD, lod: lod, text: responseText});
+        }.bind(this));
     };
     /**
      * @override
+     * @param {Object} params
      */
-    ModelResource.prototype._loadData = function () {
-        application.log("Model named '" + this.getName() + "' has been loaded.", 2);
+    ModelResource.prototype._requestFiles = function (params) {
+        var lod, maxLOD, atLeastOneFileRequested = false;
+        params = params || {};
+        // if multi LOD files were requested
+        if (params.maxLOD !== undefined) {
+            // first look for the highest quality multi LOD at or below the requested level
+            for (lod = params.maxLOD; lod >= 0; lod--) {
+                if (this.getPath(true, lod) !== null) {
+                    this._requestFile(true, lod);
+                    atLeastOneFileRequested = true;
+                    break;
+                }
+            }
+            // if no multi LODs are available at all at or below the requested level, check for higher quality ones
+            if ((lod < 0) && (this._multiLODFiles.length > 0)) {
+                maxLOD = this.getMaxLOD(true);
+                for (lod = params.maxLOD + 1; lod <= maxLOD; lod++) {
+                    if (this.getPath(true, lod) !== null) {
+                        this._requestFile(true, lod);
+                        atLeastOneFileRequested = true;
+                        break;
+                    }
+                }
+            }
+            // if no multi LODs were found at all, or only lower quality than requested, try to fill the gap with single LODs
+            if ((this._multiLODFiles.length === 0) || (lod < params.maxLOD)) {
+                for (lod = lod < 0 ? 0 : lod; lod <= params.maxLOD; lod++) {
+                    if (this.getPath(false, lod) !== null) {
+                        this._requestFile(false, lod);
+                        atLeastOneFileRequested = true;
+                    }
+                }
+                // if there is no other option, try higher quality single LODs
+                if (atLeastOneFileRequested === false) {
+                    if (this._singleLODFiles.length > 0) {
+                        for (lod = params.maxLOD + 1; lod < this.getMaxLOD(false); lod++) {
+                            if (this.getPath(false, lod) !== null) {
+                                this._requestFile(false, lod);
+                                return;
+                            }
+                        }
+                    } else {
+                        application.showError("Could not find any files to load for model: '" + this._name + "'!");
+                    }
+                }
+            }
+            // if single LOD files were requested
+        } else if (params.lod !== undefined) {
+            // first try to load a single LOD at or below the requested level
+            for (lod = params.lod; lod >= 0; lod--) {
+                if (this.getPath(false, lod) !== null) {
+                    this._requestFile(false, lod);
+                    return;
+                }
+            }
+            // if there wasn't any single LOD found, try the same strategy as with multi LODs
+            this._requestFiles({maxLOD: params.lod});
+        } else {
+            // if no LOD was specified at all, request files to cover all available LODs
+            this._requestFiles({maxLOD: this.getMaxLOD()});
+        }
+    };
+    /**
+     * @override
+     * @param {Object} params
+     */
+    ModelResource.prototype._loadData = function (params) {
+        application.log((params.multiLOD ? "Multi-LOD " : "Single-LOD ") + " model file of level " + params.lod + " has been loaded for model '" + this.getName() + "'");
     };
     // ############################################################################################x
     /**
@@ -559,6 +732,15 @@ define([
     ResourceManager.prototype = new asyncResource.AsyncResource();
     ResourceManager.prototype.constructor = ResourceManager;
     /**
+     * @override
+     */
+    ResourceManager.prototype.setToReady = function () {
+        asyncResource.AsyncResource.prototype.setToReady.call(this);
+        this._onResourceTypeLoadFunctionQueues = {};
+        this._onAnyResourceTypeLoadFunctionQueue = [];
+        this._onResourceLoadFunctionQueue = [];
+    };
+    /**
      * @param {String} resourceType
      * @param {Function} callback
      */
@@ -670,6 +852,14 @@ define([
         return this.getResource("shaders", name);
     };
     /**
+     * @param {String} name
+     * @param {Object} params
+     * @returns {ModelResource}
+     */
+    ResourceManager.prototype.getModel = function (name, params) {
+        return this.getResource("models", name, params);
+    };
+    /**
      * @param {String} filename
      * @param {Object.<String, Function>} resourceTypes
      */
@@ -711,118 +901,6 @@ define([
                     this._resourceHolders[resourceType].requestResourceLoad();
                 }
             }
-        }
-    };
-
-
-    /**
-     * Automatically called when a model has finished loading. Do not call 
-     * directly, set the onResourceLoad() ad onAllModelsLoad() methods instead
-     * to handle the loading events.
-     * @param {String} modelName The name of the model that has been loaded.
-     */
-    ResourceManager.prototype.modelDidLoad = function (modelName) {
-        this._numModelsLoaded += 1;
-        this.onResourceLoad(modelName, this.getNumberOfResources(), this.getNumberOfLoadedResources());
-        if (this.allModelsLoaded()) {
-            this.onAllModelsLoad();
-        }
-        if (this.allResourcesAreLoaded()) {
-            this.setToReady();
-        }
-    };
-    /**
-     * Looks for a model with the given filename in the resource manager, if not
-     * present yet, adds it, then returns it.
-     * @param {String} modelName
-     * @param {String} path The path to the file of the model resource we are looking for. (relative to the model folder)
-     * @param {Boolean} fileIsMultiLOD
-     * @param {Number} [lod]
-     * @returns {EgomModel} The found or added model object in the resource manager.
-     */
-    ResourceManager.prototype.getOrAddModelFromFile = function (modelName, path, fileIsMultiLOD, lod) {
-        if (this._models[modelName] === undefined) {
-            this._numModels += 1;
-            this.resetReadyState();
-            this._models[modelName] = new Egom.Model();
-            console.log("Setting path of model '" + modelName + "' for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + path);
-            this._models[modelName].setSourcePathForLOD(path, fileIsMultiLOD, lod);
-            this._models[modelName].executeWhenReady(function () {
-                this.modelDidLoad(modelName);
-            }.bind(this));
-        } else {
-            console.log("Setting filename of " + modelName + " for LOD: " + lod + " (multi: " + fileIsMultiLOD + ") -> " + path);
-            if (this._models[modelName].setSourcePathForLOD(path, fileIsMultiLOD, lod)) {
-                this._numModelsLoaded -= 1;
-                this.resetReadyState();
-                this._models[modelName].executeWhenReady(function () {
-                    this.modelDidLoad(modelName);
-                }.bind(this));
-            }
-        }
-        return this._models[modelName];
-    };
-    /**
-     * Gets the model stored in the resource manager, searching for it by its name, 
-     * or if it does not exist yet, adds it.
-     * @param {Egom.Model} model The model resource we are looking for in the 
-     * resource manager.
-     * @returns {Egom.Model} The found or added model object in the resource manager.
-     */
-    ResourceManager.prototype.getOrAddModelByName = function (model) {
-        if (!model.getName()) {
-            application.showError("Trying to search for a model without a name among the resources!");
-            return null;
-        }
-        if (!this._models[model.getName()]) {
-            this._models[model.getName()] = model;
-        }
-        return this._models[model.getName()];
-    };    
-    /**
-     * Loads the cubemap and shader configuration (not the resources, just their
-     * meta-data) from the passed XML document.
-     * @param {XMLDocument} xmlSource
-     */
-    ResourceManager.prototype.loadShaderAndCubemapObjectsFromXML = function (xmlSource) {
-        
-        var shaderTags = xmlSource.getElementsByTagName("Shader");
-        for (i = 0; i < shaderTags.length; i++) {
-            var attributes = new Array();
-            var attributeTags = shaderTags[i].getElementsByTagName("attribute");
-            for (j = 0; j < attributeTags.length; j++) {
-                attributes.push(new ShaderAttribute(
-                      attributeTags[j].getAttribute("name"),
-                      parseInt(attributeTags[j].getAttribute("size")),
-                      attributeTags[j].getAttribute("role"))
-                      );
-            }
-            var uniforms = new Array();
-            var uniformTags = shaderTags[i].getElementsByTagName("uniform");
-            for (j = 0; j < uniformTags.length; j++) {
-                uniforms.push(new ShaderUniform(
-                      uniformTags[j].getAttribute("name"),
-                      uniformTags[j].getAttribute("type"),
-                      uniformTags[j].hasAttribute("arraySize") ? uniformTags[j].getAttribute("arraySize") : 0)
-                      );
-                if (uniformTags[j].hasAttribute("memberOf")) {
-                    var parent = uniformTags[j].getAttribute("memberOf");
-                    for (k = 0; k < uniforms.length; k++) {
-                        if (uniforms[k].getName() === parent) {
-                            uniforms[k].addMember(uniforms[uniforms.length - 1]);
-                        }
-                    }
-                }
-            }
-            this.addShader(new Shader(
-                  shaderTags[i].getAttribute("name"),
-                  shaderTags[i].getElementsByTagName("vertex")[0].getAttribute("filename"),
-                  shaderTags[i].getElementsByTagName("fragment")[0].getAttribute("filename"),
-                  shaderTags[i].getElementsByTagName("blendType")[0].getAttribute("value"),
-                  attributes,
-                  uniforms,
-                  (shaderTags[i].hasAttribute("fallback") ? shaderTags[i].getAttribute("fallback") : null)
-                  ));
         }
     };
 

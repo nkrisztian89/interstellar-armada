@@ -13,11 +13,12 @@ define([
     "utils/matrices",
     "modules/application",
     "modules/async-resource",
+    "modules/managed-gl",
     "modules/physics",
     "modules/buda-scene",
     "armada/armada",
     "armada/classes"
-], function (mat, application, asyncResource, physics, budaScene, armada, classes) {
+], function (mat, application, asyncResource, managedGL, physics, budaScene, armada, classes) {
     "use strict";
     /**
      * The length of impulse-like events in milliseconds (such as thruster bursts or 
@@ -427,17 +428,29 @@ define([
      * mode.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
+        /**
+         * @type ShaderResource
+         */
+        var shader;
         console.log("Adding weapon (" + this._class.name + ") to scene...");
-        this._visualModel = new budaScene.ShadedLODMesh(
-              this._class.addModelToResourceManager(this._class.name, lod),
-              armada.resources().getShader(this._spacecraft.getClass().shaderName),
-              this._spacecraft.getTextures(),
-              this._slot.positionMatrix,
-              this._slot.orientationMatrix,
-              mat.identity4(),
-              (wireframe === true),
-              lod);
-        parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+        shader = armada.resources().getShader(this._spacecraft.getClass().shaderName);
+        shader.executeWhenReady(function () {
+            this._visualModel = new budaScene.ShadedLODMesh(
+                  this._class.addModelToResourceManager(this._class.name, lod),
+                  new managedGL.Shader(
+                        shader.getName(),
+                        shader.getVertexShaderSource(),
+                        shader.getFragmentShaderSource(),
+                        shader.getBlendType(),
+                        shader.getAttributeRoles()),
+                  this._spacecraft.getTextures(),
+                  this._slot.positionMatrix,
+                  this._slot.orientationMatrix,
+                  mat.identity4(),
+                  (wireframe === true),
+                  lod);
+            parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+        }.bind(this));
     };
     /**
      * Returns the renderable object representing the muzzle flash that is visible
