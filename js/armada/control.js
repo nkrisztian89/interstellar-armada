@@ -11,8 +11,9 @@
 
 define([
     "modules/application",
-    "modules/async-resource"
-], function (application, asyncResource) {
+    "modules/async-resource",
+    "armada/armada"
+], function (application, asyncResource, armada) {
     "use strict";
     /**
      * @class Represents a key (combination) - action association.
@@ -1671,22 +1672,22 @@ define([
 
         // quitting to the menu
         this.setActionFunction("quit", true, function () {
-            Armada.getScreen().pauseBattle();
-            Armada.setScreen("ingameMenu", true, [64, 64, 64], 0.5);
+            armada.getScreen().pauseBattle();
+            armada.setScreen("ingameMenu", true, [64, 64, 64], 0.5);
         });
         // pausing the game
         this.setActionFunction("pause", true, function () {
             // showing an info box automatically pauses the game as implemented in
             // the BattleScreen class
-            Armada.getScreen().showMessage("Game paused.");
+            armada.getScreen().showMessage("Game paused.");
         });
         // switching to pilot mode
         this.setActionFunction("switchToPilotMode", true, function () {
-            Armada.control().switchToPilotMode(self._level.getPilotedSpacecraft());
+            armada.control().switchToPilotMode(self._level.getPilotedSpacecraft());
         });
         // switching to spectator mode
         this.setActionFunction("switchToSpectatorMode", true, function () {
-            Armada.control().switchToSpectatorMode();
+            armada.control().switchToSpectatorMode();
         });
         // toggling the visibility of hitboxes
         this.setActionFunction("toggleHitboxVisibility", true, function () {
@@ -1694,7 +1695,7 @@ define([
         });
         // toggling the visibility of texts on screen
         this.setActionFunction("toggleTextVisibility", true, function () {
-            Armada.getScreen().toggleTextVisibility();
+            armada.getScreen().toggleTextVisibility();
         });
     }
 
@@ -2345,9 +2346,9 @@ define([
         this.disableAction("cameraTurnRight");
         this.disableAction("cameraTurnUp");
         this.disableAction("cameraTurnDown");
-        Armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
-        Armada.getScreen().showCrosshair();
-        Armada.getScreen().showUI();
+        armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
+        armada.getScreen().showCrosshair();
+        armada.getScreen().showUI();
         document.body.style.cursor = 'crosshair';
     };
 
@@ -2370,9 +2371,9 @@ define([
         this.enableAction("cameraTurnRight");
         this.enableAction("cameraTurnUp");
         this.enableAction("cameraTurnDown");
-        Armada.getScreen().setHeaderContent("Spectator mode");
-        Armada.getScreen().hideCrosshair();
-        Armada.getScreen().hideUI();
+        armada.getScreen().setHeaderContent("Spectator mode");
+        armada.getScreen().hideCrosshair();
+        armada.getScreen().hideUI();
         document.body.style.cursor = 'default';
     };
     // -------------------------------------------------------------------------

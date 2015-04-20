@@ -8,7 +8,7 @@
 
 /**********************************************************************
  Copyright 2014 Krisztián Nagy
-  
+ 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -42,8 +42,8 @@ Math.sign = Math.sign || function (x) {
  * @param {Number} x
  * @returns {Number}
  */
-Math.log10 = Math.log10 || function(x) {
-  return Math.log(x) / Math.LN10;
+Math.log10 = Math.log10 || function (x) {
+    return Math.log(x) / Math.LN10;
 };
 
 /**
@@ -55,8 +55,9 @@ Math.log10 = Math.log10 || function(x) {
  * @returns {Function} A PRNG that returns pseudo random numbers between 0.0
  * and 1.0 with each call, and uses the supplied seed.
  */
-Math.seed = function(s) {
-    return function() {
-        s = Math.sin(s) * 10000; return s - Math.floor(s);
+Math.seed = function (s) {
+    return function () {
+        s = Math.sin(s) * 10000;
+        return s - Math.floor(s);
     };
 };

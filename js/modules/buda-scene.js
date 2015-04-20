@@ -12,8 +12,10 @@
 
 define([
     "utils/vectors",
-    "utils/matrices"
-], function (vec, mat) {
+    "utils/matrices",
+    "modules/application",
+    "modules/managed-gl"
+], function (vec, mat, application, managedGL) {
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -533,7 +535,7 @@ define([
          * @name RenderableObject#_textures
          * @type Object.<String, Texture|Cubemap>
          */
-        this._textures = new Object();
+        this._textures = {};
         /**
          * The functions to call when calculating the values of uniform 
          * variables before assigning them, ordered by the names of the 
@@ -641,15 +643,18 @@ define([
      * @param {ManagedGLContext} context
      */
     RenderableObject.prototype.addToContext = function (context) {
+        var role;
         this._shader.addToContext(context);
-        for (var role in this._textures) {
-            this._textures[role].addToContext(context);
-            if (this._textures[role] instanceof GL.Texture) {
-                this.setUniformValueFunction("u_" + role + "Texture", this.createTextureLocationGetter(role, context));
-            } else if (this._textures[role] instanceof GL.Cubemap) {
-                this.setUniformValueFunction("u_" + role + "Cubemap", this.createTextureLocationGetter(role, context));
-            } else {
-                Application.showError("Attemtping to add a texture of unknown type to the GL context.");
+        for (role in this._textures) {
+            if (this._textures.hasOwnProperty(role)) {
+                this._textures[role].addToContext(context);
+                if (this._textures[role] instanceof managedGL.ManagedTexture) {
+                    this.setUniformValueFunction("u_" + role + "Texture", this.createTextureLocationGetter(role, context));
+                } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
+                    this.setUniformValueFunction("u_" + role + "Cubemap", this.createTextureLocationGetter(role, context));
+                } else {
+                    application.showError("Attemtping to add a texture of unknown type to the GL context.");
+                }
             }
         }
     };
@@ -658,7 +663,8 @@ define([
      * @param {ManagedGLContext} context
      */
     RenderableObject.prototype.bindTextures = function (context) {
-        for (var role in this._textures) {
+        var role;
+        for (role in this._textures) {
             context.bindTexture(this._textures[role]);
         }
     };
@@ -1160,7 +1166,7 @@ define([
     RenderableObject3D.prototype.getSizeInPixels = function (renderParameters) {
         this.getVisibleSize(renderParameters);
         if (this._visibleSize.width < 0) {
-            Application.showError("Attempting to access the size of an object on the screen in pixels, before the size has been calculated.");
+            application.showError("Attempting to access the size of an object on the screen in pixels, before the size has been calculated.");
         }
         return Math.max(this._visibleSize.width * renderParameters.viewportWidth / 2, this._visibleSize.height * renderParameters.viewportHeight / 2);
     };
@@ -2295,7 +2301,7 @@ define([
     SceneCamera.prototype.setScene = function (scene) {
         !this._scene ?
               this._scene = scene :
-              Application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
+              application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
     };
 
     SceneCamera.prototype.changeToNextView = function () {
@@ -2478,7 +2484,7 @@ define([
         this._index = index;
         if (shadowMappingEnabled && this.castsShadows) {
             for (var i = 0; i < nRanges; i++) {
-                context.addFrameBuffer(new GL.FrameBuffer("shadow-map-buffer-" + this._index + "-" + i, shadowMapTextureSize, shadowMapTextureSize));
+                context.addFrameBuffer(new managedGL.FrameBuffer("shadow-map-buffer-" + this._index + "-" + i, shadowMapTextureSize, shadowMapTextureSize));
             }
         }
     };
@@ -2554,19 +2560,11 @@ define([
 
         this.lodContext = lodContext;
 
-        if (shadowMapping) {
-            this._shadowMappingEnabled = shadowMapping.enable;
-            this._shadowMappingShader = shadowMapping.shader || null;
-            this._shadowMapTextureSize = shadowMapping.textureSize || 2048;
-            this._shadowMapRanges = shadowMapping.ranges || [];
-            this._shadowMapDepthRatio = shadowMapping.depthRatio || 1.5;
-        } else {
-            this._shadowMappingEnabled = false;
-            this._shadowMappingShader = null;
-            this._shadowMapTextureSize = null;
-            this._shadowMapRanges = [];
-            this._shadowMapDepthRatio = null;
-        }
+        this._shadowMappingEnabled = false;
+        this._shadowMappingShader = null;
+        this._shadowMapTextureSize = null;
+        this._shadowMapRanges = [];
+        this._shadowMapDepthRatio = null;
 
         this.uniformValueFunctions = new Object();
 
@@ -2601,18 +2599,34 @@ define([
         this.uniformValueFunctions["u_shadows"] = function () {
             return self._shadowMappingEnabled;
         };
+    }
+
+    Scene.prototype.setShadowMapping = function (params) {
+        if (params) {
+            this._shadowMappingEnabled = params.enable;
+            this._shadowMappingShader = params.shader || null;
+            this._shadowMapTextureSize = params.textureSize || 2048;
+            this._shadowMapRanges = params.ranges || [];
+            this._shadowMapDepthRatio = params.depthRatio || 1.5;
+        } else {
+            this._shadowMappingEnabled = false;
+            this._shadowMappingShader = null;
+            this._shadowMapTextureSize = null;
+            this._shadowMapRanges = [];
+            this._shadowMapDepthRatio = null;
+        }
         if (this._shadowMappingShader) {
             this.uniformValueFunctions["u_numRanges"] = function () {
-                return self._shadowMapRanges.length;
-            };
+                return this._shadowMapRanges.length;
+            }.bind(this);
             this.uniformValueFunctions["u_shadowMapRanges"] = function () {
-                return new Float32Array(self._shadowMapRanges);
-            };
+                return new Float32Array(this._shadowMapRanges);
+            }.bind(this);
             this.uniformValueFunctions["u_shadowMapDepthRatio"] = function () {
-                return self._shadowMapDepthRatio;
-            };
+                return this._shadowMapDepthRatio;
+            }.bind(this);
         }
-    }
+    };
 
     Scene.prototype.setShadowMapRanges = function (ranges) {
         this._shadowMapRanges = ranges;
@@ -2836,7 +2850,7 @@ define([
                 }
             }
         } else {
-            Application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
+            application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
         }
     };
 
@@ -2874,7 +2888,7 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype.render = function (context) {
-        Module.log("Rendering scene...", 3);
+        application.log("Rendering scene...", 3);
         this._drawnTriangles = 0;
 
         var gl = context.gl;
@@ -2948,20 +2962,20 @@ define([
 
         // first rendering pass: rendering the non-transparent triangles with 
         // Z buffer writing turned on
-        Module.log("Rendering transparent phase...", 4);
+        application.log("Rendering transparent phase...", 4);
         gl.disable(gl.BLEND);
         for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            Module.log("Rendering object " + i + "...", 4);
+            application.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, true);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
         }
         // second rendering pass: rendering the transparent triangles with 
         // Z buffer writing turned off
-        Module.log("Rendering opaque phase...", 4);
+        application.log("Rendering opaque phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
         for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            Module.log("Rendering object " + i + "...", 4);
+            application.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
         }

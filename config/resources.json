@@ -1,6 +1,20 @@
 {
     "textures": [
         {
+            "name": "white",
+            "basepath": "white",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
             "name": "flare",
             "basepath": "flare",
             "format": "png",
@@ -177,13 +191,14 @@
                 "a_normal": "normal",
                 "a_color": "color",
                 "a_luminosity": "luminosity",
-                "a_shininess": "shininess"
+                "a_shininess": "shininess",
+                "a_index": "triangleIndex"
             }
         },
         {
             "name": "oneColorReveal",
             "fallback": "oneColor",
-            "vertexShaderSource": "mesh/simpleWithModelPos.vert",
+            "vertexShaderSource": "mesh/oneColorReveal.vert",
             "fragmentShaderSource": "mesh/oneColorReveal.frag",
             "blendType": "mix",
             "attributeRoles": {
@@ -373,7 +388,7 @@
             ]
         },
         {
-            "name": "ion_cannon",
+            "name": "largeCannon",
             "basepath": "weapons/ion_cannon",
             "format": "egm",
             "files": [

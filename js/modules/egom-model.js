@@ -1,42 +1,21 @@
-"use strict";
-
 /**
- * @fileOverview This file provides limited functionality to interact with
- * EgomModel 3D models, including loading the data from EgomModel XML files.
- * EgomModel is a simple 3D modeling library written in object pascal.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * Copyright 2014-2015 Krisztián Nagy
+ * @file 
+ * Usage:
+ * TODO: explain usage
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 1.0
  */
 
-/**********************************************************************
- Copyright 2014 Krisztián Nagy
- 
- This file is part of Interstellar Armada.
- 
- Interstellar Armada is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- Interstellar Armada is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with Interstellar Armada.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+/*jslint nomen: true, plusplus: true, white: true */
+/*global define, Float32Array, parseFloat, Document */
 
-/**
- * @namespace A namespace the provides a model class and several functions for
- * returning 3D models with simple structures.
- */
-Application.createModule({name: "Egom",
-    dependencies: [
-        {module: "Resource", from: "resource.js"}]}, function () {
-    // create a reference to the used modules in the local scope for cleaner and
-    // faster access
-    var Resource = Application.Resource.Resource;
+define([
+    "utils/vectors",
+    "modules/application"
+], function (vec, application) {
+    "use strict";
     /**
      * The list of EgomModel versions that can be loaded from file.
      * @type String[]
@@ -257,9 +236,7 @@ Application.createModule({name: "Egom",
      * @returns {Number[3]}
      */
     Triangle.prototype.getNormal = function (index) {
-        return (this._normals[index] ?
-                this._normals[index] :
-                this._normals[0]);
+        return (this._normals[index] || this._normals[0]);
     };
 
     /**
@@ -305,19 +282,19 @@ Application.createModule({name: "Egom",
          * @name Mesh#_vertices
          * @type Vertex[]
          */
-        this._vertices = new Array();
+        this._vertices = [];
         /**
          * The array of lines of the model for wireframe rendering.
          * @name Mesh#_lines
          * @type Line[]
          */
-        this._lines = new Array();
+        this._lines = [];
         /**
          * The array of triangles of the model for solid rendering.
          * @name Mesh#_triangles
          * @type Triangle[]
          */
-        this._triangles = new Array();
+        this._triangles = [];
         /**
          * The size of the model. It is the double of the (absolute) largest coordinate
          * found among the vertices.
@@ -380,7 +357,7 @@ Application.createModule({name: "Egom",
          * @name Mesh#_contextProperties
          * @type Object.<String, MeshContextProperties>
          */
-        this._contextProperties = new Object();
+        this._contextProperties = {};
         /**
          * The default texture coordinates for newly added triangles and quads.
          * @name Mesh#_texCoords
@@ -483,10 +460,11 @@ Application.createModule({name: "Egom",
      * @param {Vertex} vertex
      */
     Mesh.prototype.setVertex = function (index, vertex) {
+        var i;
         // if we are setting a vertex with a higher index than the currently stored
         // ones, create new vertices in between
         if (this._vertices.length < index) {
-            for (var i = this._vertices.length; i < index; i++) {
+            for (i = this._vertices.length; i < index; i++) {
                 this._vertices[i] = this._nullVertex;
             }
         }
@@ -560,7 +538,7 @@ Application.createModule({name: "Egom",
      * Deletes the triangles of the mesh and resets related properties.
      */
     Mesh.prototype.resetTriangles = function () {
-        this._triangles = new Array();
+        this._triangles = [];
         this._nOpaqueTriangles = 0;
         this._nTransparentTriangles = 0;
     };
@@ -596,9 +574,11 @@ Application.createModule({name: "Egom",
             this._lines.push(new Line(triangle.c, triangle.a, triangle.color, triangle.luminosity, triangle.getNormal(0)));
         }
         // important to update the appropriate count
-        (triangle.color[3] < 1.0) ?
-                this._nTransparentTriangles++ :
-                this._nOpaqueTriangles++;
+        if (triangle.color[3] < 1.0) {
+            this._nTransparentTriangles++;
+        } else {
+            this._nOpaqueTriangles++;
+        }
     };
 
     /**
@@ -625,24 +605,23 @@ Application.createModule({name: "Egom",
      * @returns {Triangle} The added triangle
      */
     Mesh.prototype.addTriangleWithParams = function (a, b, c, params) {
+        var color, luminosity, shininess, texCoords, normals, groupIndex, triangle;
         // the default color is opaque white
-        var color = params.color || [1.0, 1.0, 1.0, 1.0];
+        color = params.color || [1.0, 1.0, 1.0, 1.0];
         // if not specified, use the model's default luminosity/shininess
-        var luminosity = params.luminosity || this._luminosity;
-        var shininess = params.shininess || this._shininess;
+        luminosity = params.luminosity || this._luminosity;
+        shininess = params.shininess || this._shininess;
         // texture coordinates may be taken from the vertices, from the parameters
         // passed to this function or from the default coordinates set for the model
-        var texCoords = params.useVertexTexCoords ?
-                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-                (params.texCoords ?
-                        params.texCoords :
-                        [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+        texCoords = params.useVertexTexCoords ?
+              [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+              (params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
         // normals are taken from the parameters - can be 1 or 3 element long
-        var normals = params.normals;
+        normals = params.normals;
         // if not specified, use the model's default group index
-        var groupIndex = params.groupIndex || this._currentGroupIndex;
+        groupIndex = params.groupIndex || this._currentGroupIndex;
         // create and add the new triangle
-        var triangle = new Triangle(this, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex);
+        triangle = new Triangle(this, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex);
         this.addTriangle(triangle, params.withoutLines);
         return triangle;
     };
@@ -658,44 +637,45 @@ Application.createModule({name: "Egom",
      * @see Mesh#addTriangle
      */
     Mesh.prototype.addQuad = function (a, b, c, d, params) {
+        var triangle1Params, triangle2Params, color, luminosity, normals;
         params = params || {};
         // adding the first triangle
         // first, create the approrpiate parameters for the triangle based on the
         // parameters given for the quad
-        var triangle1Params = Object.create(params);
+        triangle1Params = Object.create(params);
         // no lines should be added, as we will add the 4 lines for the whole quad
         // in the end
         triangle1Params.withoutLines = true;
         // for texture coordinates and normals, the first 3 values need to be used
         triangle1Params.texCoords = params.useVertexTexCoords ?
-                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-                (params.texCoords ?
-                        [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
-                        [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+              [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+              (params.texCoords ?
+                    [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
+                    [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
         triangle1Params.normals = params.normals ?
-                (params.normals.length === 4 ?
-                        [params.normals[0], params.normals[1], params.normals[2]] :
-                        params.normals) :
-                null;
+              (params.normals.length === 4 ?
+                    [params.normals[0], params.normals[1], params.normals[2]] :
+                    params.normals) :
+              null;
         this.addTriangleWithParams(a, b, c, triangle1Params);
         // adding the first triangle
-        var triangle2Params = Object.create(params);
+        triangle2Params = Object.create(params);
         triangle2Params.texCoords = params.useVertexTexCoords ?
-                [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
-                (params.texCoords ?
-                        [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
-                        [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
+              [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
+              (params.texCoords ?
+                    [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
+                    [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
         triangle2Params.normals = params.normals ?
-                (params.normals.length === 4 ?
-                        [params.normals[2], params.normals[3], params.normals[0]] :
-                        params.normals) :
-                null;
+              (params.normals.length === 4 ?
+                    [params.normals[2], params.normals[3], params.normals[0]] :
+                    params.normals) :
+              null;
         this.addTriangleWithParams(c, d, a, triangle2Params);
         // adding the 4 lines around the quad
         if (!params.withoutLines) {
-            var color = params.color || [1.0, 1.0, 1.0, 1.0];
-            var luminosity = params.luminosity || this._luminosity;
-            var normals = params.normals ? params.normals[0] : null;
+            color = params.color || [1.0, 1.0, 1.0, 1.0];
+            luminosity = params.luminosity || this._luminosity;
+            normals = params.normals ? params.normals[0] : null;
             this._lines.push(new Line(a, b, color, luminosity, normals));
             this._lines.push(new Line(b, c, color, luminosity, normals));
             this._lines.push(new Line(c, d, color, luminosity, normals));
@@ -803,14 +783,15 @@ Application.createModule({name: "Egom",
      * The dataSize property contains the number of vertices.
      */
     Mesh.prototype.getBufferData = function (wireframe, startIndex) {
-        var vertexData, texCoordData, normalData, colorData, luminosityData,
-                shininessData, groupIndexData, triangleIndexData;
+        var i, j, nLines, nTriangles, ix, index,
+              vertexData, texCoordData, normalData, colorData, luminosityData,
+              shininessData, groupIndexData, triangleIndexData;
         startIndex = startIndex || 0;
         if (wireframe === true) {
-            var nLines = this._lines.length;
+            nLines = this._lines.length;
             vertexData = new Float32Array(nLines * 6);
-            for (var i = 0; i < nLines; i++) {
-                vertexData[i * 6 + 0] = this._vertices[this._lines[i].a].x;
+            for (i = 0; i < nLines; i++) {
+                vertexData[i * 6] = this._vertices[this._lines[i].a].x;
                 vertexData[i * 6 + 1] = this._vertices[this._lines[i].a].y;
                 vertexData[i * 6 + 2] = this._vertices[this._lines[i].a].z;
                 vertexData[i * 6 + 3] = this._vertices[this._lines[i].b].x;
@@ -818,15 +799,15 @@ Application.createModule({name: "Egom",
                 vertexData[i * 6 + 5] = this._vertices[this._lines[i].b].z;
             }
             texCoordData = new Float32Array(nLines * 4);
-            for (var i = 0; i < nLines; i++) {
-                texCoordData[i * 4 + 0] = 0.0;
+            for (i = 0; i < nLines; i++) {
+                texCoordData[i * 4] = 0.0;
                 texCoordData[i * 4 + 1] = 1.0;
                 texCoordData[i * 4 + 2] = 1.0;
                 texCoordData[i * 4 + 3] = 1.0;
             }
             normalData = new Float32Array(nLines * 6);
-            for (var i = 0; i < nLines; i++) {
-                normalData[i * 6 + 0] = this._lines[i].normal[0];
+            for (i = 0; i < nLines; i++) {
+                normalData[i * 6] = this._lines[i].normal[0];
                 normalData[i * 6 + 1] = this._lines[i].normal[1];
                 normalData[i * 6 + 2] = this._lines[i].normal[2];
                 normalData[i * 6 + 3] = this._lines[i].normal[0];
@@ -834,8 +815,8 @@ Application.createModule({name: "Egom",
                 normalData[i * 6 + 5] = this._lines[i].normal[2];
             }
             colorData = new Float32Array(nLines * 8);
-            for (var i = 0; i < nLines; i++) {
-                colorData[i * 8 + 0] = this._lines[i].color[0];
+            for (i = 0; i < nLines; i++) {
+                colorData[i * 8] = this._lines[i].color[0];
                 colorData[i * 8 + 1] = this._lines[i].color[1];
                 colorData[i * 8 + 2] = this._lines[i].color[2];
                 colorData[i * 8 + 3] = 1.0;
@@ -845,24 +826,24 @@ Application.createModule({name: "Egom",
                 colorData[i * 8 + 7] = 1.0;
             }
             luminosityData = new Float32Array(nLines * 2);
-            for (var i = 0; i < nLines; i++) {
+            for (i = 0; i < nLines; i++) {
                 luminosityData[i * 2] = this._lines[i].luminosity;
                 luminosityData[i * 2 + 1] = this._lines[i].luminosity;
             }
             shininessData = new Float32Array(nLines * 2);
-            for (var i = 0; i < nLines; i++) {
-                shininessData[i * 2 + 0] = 0;
+            for (i = 0; i < nLines; i++) {
+                shininessData[i * 2] = 0;
                 shininessData[i * 2 + 1] = 0;
             }
             groupIndexData = new Float32Array(nLines * 2);
-            for (var i = 0; i < nLines; i++) {
-                groupIndexData[i * 2 + 0] = 0;
+            for (i = 0; i < nLines; i++) {
+                groupIndexData[i * 2] = 0;
                 groupIndexData[i * 2 + 1] = 0;
             }
-            var nTriangles = this._triangles.length;
+            nTriangles = this._triangles.length;
             triangleIndexData = new Float32Array(nTriangles * 3);
-            for (var i = 0; i < nTriangles; i++) {
-                triangleIndexData[i * 12 + 0] = 0;
+            for (i = 0; i < nTriangles; i++) {
+                triangleIndexData[i * 12] = 0;
                 triangleIndexData[i * 12 + 1] = 0;
                 triangleIndexData[i * 12 + 2] = 0;
                 triangleIndexData[i * 12 + 3] = 0;
@@ -876,10 +857,10 @@ Application.createModule({name: "Egom",
                 triangleIndexData[i * 12 + 11] = 0;
             }
         } else {
-            var nTriangles = this._triangles.length;
+            nTriangles = this._triangles.length;
             vertexData = new Float32Array(nTriangles * 9);
-            for (var i = 0; i < nTriangles; i++) {
-                vertexData[i * 9 + 0] = this._vertices[this._triangles[i].a].x;
+            for (i = 0; i < nTriangles; i++) {
+                vertexData[i * 9] = this._vertices[this._triangles[i].a].x;
                 vertexData[i * 9 + 1] = this._vertices[this._triangles[i].a].y;
                 vertexData[i * 9 + 2] = this._vertices[this._triangles[i].a].z;
                 vertexData[i * 9 + 3] = this._vertices[this._triangles[i].b].x;
@@ -890,8 +871,8 @@ Application.createModule({name: "Egom",
                 vertexData[i * 9 + 8] = this._vertices[this._triangles[i].c].z;
             }
             texCoordData = new Float32Array(nTriangles * 6);
-            for (var i = 0; i < nTriangles; i++) {
-                texCoordData[i * 6 + 0] = this._triangles[i].texCoords[0][0];
+            for (i = 0; i < nTriangles; i++) {
+                texCoordData[i * 6] = this._triangles[i].texCoords[0][0];
                 texCoordData[i * 6 + 1] = this._triangles[i].texCoords[0][1];
                 texCoordData[i * 6 + 2] = this._triangles[i].texCoords[1][0];
                 texCoordData[i * 6 + 3] = this._triangles[i].texCoords[1][1];
@@ -899,8 +880,8 @@ Application.createModule({name: "Egom",
                 texCoordData[i * 6 + 5] = this._triangles[i].texCoords[2][1];
             }
             normalData = new Float32Array(nTriangles * 9);
-            for (var i = 0; i < nTriangles; i++) {
-                normalData[i * 9 + 0] = this._triangles[i].getNormal(0)[0];
+            for (i = 0; i < nTriangles; i++) {
+                normalData[i * 9] = this._triangles[i].getNormal(0)[0];
                 normalData[i * 9 + 1] = this._triangles[i].getNormal(0)[1];
                 normalData[i * 9 + 2] = this._triangles[i].getNormal(0)[2];
                 normalData[i * 9 + 3] = this._triangles[i].getNormal(1)[0];
@@ -911,8 +892,8 @@ Application.createModule({name: "Egom",
                 normalData[i * 9 + 8] = this._triangles[i].getNormal(2)[2];
             }
             colorData = new Float32Array(nTriangles * 12);
-            for (var i = 0; i < nTriangles; i++) {
-                colorData[i * 12 + 0] = this._triangles[i].color[0];
+            for (i = 0; i < nTriangles; i++) {
+                colorData[i * 12] = this._triangles[i].color[0];
                 colorData[i * 12 + 1] = this._triangles[i].color[1];
                 colorData[i * 12 + 2] = this._triangles[i].color[2];
                 colorData[i * 12 + 3] = this._triangles[i].color[3];
@@ -926,32 +907,32 @@ Application.createModule({name: "Egom",
                 colorData[i * 12 + 11] = this._triangles[i].color[3];
             }
             luminosityData = new Float32Array(nTriangles * 3);
-            for (var i = 0; i < nTriangles; i++) {
+            for (i = 0; i < nTriangles; i++) {
                 luminosityData[i * 3] = this._triangles[i].luminosity;
                 luminosityData[i * 3 + 1] = this._triangles[i].luminosity;
                 luminosityData[i * 3 + 2] = this._triangles[i].luminosity;
             }
             shininessData = new Float32Array(nTriangles * 3);
-            for (var i = 0; i < nTriangles; i++) {
+            for (i = 0; i < nTriangles; i++) {
                 shininessData[i * 3] = this._triangles[i].shininess;
                 shininessData[i * 3 + 1] = this._triangles[i].shininess;
                 shininessData[i * 3 + 2] = this._triangles[i].shininess;
             }
             groupIndexData = new Float32Array(nTriangles * 3);
-            for (var i = 0; i < nTriangles; i++) {
+            for (i = 0; i < nTriangles; i++) {
                 groupIndexData[i * 3] = this._triangles[i].groupIndex;
                 groupIndexData[i * 3 + 1] = this._triangles[i].groupIndex;
                 groupIndexData[i * 3 + 2] = this._triangles[i].groupIndex;
             }
             triangleIndexData = new Float32Array(nTriangles * 12);
-            for (var i = 0; i < nTriangles; i++) {
-                var ix = startIndex + i;
-                var index = new Array();
-                for (var j = 0; j < 4; j++) {
+            for (i = 0; i < nTriangles; i++) {
+                ix = startIndex + i;
+                index = [];
+                for (j = 0; j < 4; j++) {
                     index[j] = (ix % 256) / 255.0;
                     ix = Math.floor(ix / 256.0);
                 }
-                triangleIndexData[i * 12 + 0] = index[0];
+                triangleIndexData[i * 12] = index[0];
                 triangleIndexData[i * 12 + 1] = index[1];
                 triangleIndexData[i * 12 + 2] = index[2];
                 triangleIndexData[i * 12 + 3] = index[3];
@@ -1002,9 +983,9 @@ Application.createModule({name: "Egom",
      * @returns {Number} The number of vertices for which data has been added.
      */
     Mesh.prototype.loadToVertexBuffers = function (context, startIndex, wireframe, solid) {
-        var bufferData = null;
-        var dataSize = 0;
-        var props = this._contextProperties[context.getName()] || new MeshContextProperties();
+        var bufferData = null,
+              dataSize = 0,
+              props = this._contextProperties[context.getName()] || new MeshContextProperties();
         if (wireframe) {
             bufferData = this.getBufferData(true, startIndex);
             props.bufferStartWireframe = startIndex;
@@ -1079,7 +1060,8 @@ Application.createModule({name: "Egom",
      * should be culled (omitted)
      */
     Mesh.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
-        var i0 = +this._vertices.length;
+        var i, i0, normals, params;
+        i0 = +this._vertices.length;
 
         // front
         this.appendVertex([x - width / 2, y - height / 2, z + depth / 2]);
@@ -1112,19 +1094,19 @@ Application.createModule({name: "Egom",
         this.appendVertex([x - width / 2, y - height / 2, z + depth / 2]);
         this.appendVertex([x - width / 2, y + height / 2, z + depth / 2]);
 
-        var normals = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]];
-        var params = {
+        normals = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]];
+        params = {
             color: color,
             luminosity: luminosity,
             texCoords: textureCoordinates
         };
 
-        for (var i = 0; i < 6; i++) {
+        for (i = 0; i < 6; i++) {
             params.normals = [normals[i]];
-            this.addQuad(i0 + (i * 4) + 0, i0 + (i * 4) + 1, i0 + (i * 4) + 2, i0 + (i * 4) + 3, params);
+            this.addQuad(i0 + (i * 4), i0 + (i * 4) + 1, i0 + (i * 4) + 2, i0 + (i * 4) + 3, params);
             if (!cullFace) {
                 params.normals = [vec.scaled3(normals[i], -1)];
-                this.addQuad(i0 + (i * 4) + 2, i0 + (i * 4) + 1, i0 + (i * 4) + 0, i0 + (i * 4) + 3, params);
+                this.addQuad(i0 + (i * 4) + 2, i0 + (i * 4) + 1, i0 + (i * 4), i0 + (i * 4) + 3, params);
             }
         }
 
@@ -1168,32 +1150,33 @@ Application.createModule({name: "Egom",
      * of the sphere.
      */
     Mesh.prototype.addSphere = function (x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace) {
+        var i, i0, j, v, uv1, uv2, uv3, n1, n2, n3;
         // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
-        for (var i = 0; i < angles; i++) {
-            for (var j = 0; j < angles; j++) {
+        for (i = 0; i < angles; i++) {
+            for (j = 0; j < angles; j++) {
                 this.appendVertex([x + radius * Math.sin(j * 2 * 3.1415 / angles) * Math.cos(i * 2 * 3.1415 / angles), y + radius * Math.cos(j * 2 * 3.1415 / angles), z + radius * Math.sin(i * 2 * 3.1415 / angles) * Math.sin(j * 2 * 3.1415 / angles)]);
             }
         }
 
-        var i0 = this._vertices.length - angles * angles;
+        i0 = this._vertices.length - angles * angles;
 
         if ((angles % 2) === 1) {
             this._vertices[i0 + (angles + 1) / 2].setX(x);
             this._vertices[i0 + (angles + 1) / 2].setZ(z);
         }
 
-        for (var i = 0; i < angles; i++) {
+        for (i = 0; i < angles; i++) {
             // adding triangles connected to the top
             // the vertex indices:
-            var v = [i0 + (i * angles), i0 + (((i + 1) % angles) * angles) + 1, i0 + (i * angles) + 1];
+            v = [i0 + (i * angles), i0 + (((i + 1) % angles) * angles) + 1, i0 + (i * angles) + 1];
             // the UV texture coordinates:
-            var uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], 1 / (2 * angles) + (i / angles), 1);
-            var uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 / angles);
-            var uv3 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 / angles);
+            uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], 1 / (2 * angles) + (i / angles), 1);
+            uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 / angles);
+            uv3 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 / angles);
             // the normal vectors:
-            var n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
-            var n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
-            var n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
+            n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
+            n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
+            n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
             this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
                 texCoords: [uv1, uv2, uv3],
                 normals: [n1, n2, n3]});
@@ -1223,7 +1206,7 @@ Application.createModule({name: "Egom",
                     normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
             }
             // quads between the two subsequent circles
-            for (var j = 1; j < angles / 2 - 1; j++) {
+            for (j = 1; j < angles / 2 - 1; j++) {
                 v = [i0 + (i * angles) + j, i0 + (((i + 1) % angles) * angles) + j + 1, i0 + (i * angles) + j + 1];
                 uv1 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], i / angles, 1 - 2 * j / angles);
                 uv2 = uvCoordsOnTexture(textureCoordinates[0][0], textureCoordinates[0][1], textureCoordinates[2][0], textureCoordinates[2][1], (i + 1) / angles, 1 - 2 * (j + 1) / angles);
@@ -1295,39 +1278,12 @@ Application.createModule({name: "Egom",
     }
 
     /**
-     * @struct The data associtated with a file storing a single or multiple 
-     * LODs of a model.
-     * @param {String} path The path where this file is located relative to the
-     * models folder.
-     * @returns {ModelFile}
-     * 
-     */
-    function ModelFile(path) {
-        /**
-         * The path where this file is located relative to the models folder.
-         * @name ModelFile#path
-         * @type String
-         */
-        this.path = path;
-        /**
-         * Whether the data from this file has been loaded to a Model instance.
-         * Currently not used anywhere, as simply the min and max LOD info is
-         * to decide if a file needs to be loaded or not.
-         * @name ModelFile#loaded
-         * @type Boolean
-         */
-        this.loaded = false;
-    }
-
-    /**
      * @name Model
      * @class Combines different Mesh object into one, multi-LOD 3D model and
      * provides functionality for loading these different LODs from a single or
      * multiple files.
-     * @extends Resource
      */
     function Model() {
-        Resource.call(this);
         /**
          * The mesh ordered by their LOD (the index corresponds to the LOD of
          * the mesh)
@@ -1376,25 +1332,11 @@ Application.createModule({name: "Egom",
          */
         this._name = null;
         /**
-         * The the files that hold single-LOD meshes for this model. The index
-         * indicates the LOD of the mesh stored in the file.
-         * @name Model#_singleLODFiles
-         * @type Array.<ModelFile>
-         */
-        this._singleLODFiles = [];
-        /**
-         * The the files that hold multi-LOD meshes for this model. The index
-         * indicates the maximum LOD of the mesh stored in the file.
-         * @name Model#_multiLODFiles
-         * @type Array.<ModelFile>
-         */
-        this._multiLODFiles = [];
-        /**
          * The object storing the info (meta) properties of the model.
          * @name Model#_infoProperties
          * @type Object
          */
-        this._infoProperties = new Object();
+        this._infoProperties = {};
         /**
          * The length of one model-space unit in meters.
          * @name Model#_scale
@@ -1409,27 +1351,7 @@ Application.createModule({name: "Egom",
          * @type Object.<String, ModelContextProperties>
          */
         this._contextProperties = {};
-        /**
-         * When the model is requested to be loaded from files, it is counted
-         * in this property, how many file requests need to be sent.
-         * @name Model#_numFilesToLoad
-         * @type Number
-         */
-        this._numFilesToLoad = 0;
-        /**
-         * The amount of files that already has finished loading (to decide
-         * whether the loading of the model as a whole resource has finished).
-         * @name Model#_numLoadedFiles
-         * @type Number
-         */
-        this._numLoadedFiles = 0;
-        // by default, no files are added and therefore the model as a resource
-        // is considered ready
-        this.setToReady();
     }
-
-    Model.prototype = new Resource();
-    Model.prototype.constructor = Model;
 
     /**
      * Returns the name of the model. (not the same as the filename - a name can be
@@ -1449,30 +1371,6 @@ Application.createModule({name: "Egom",
     };
 
     /**
-     * Sets or overwrites the path of a the file containing meshes for this 
-     * model.
-     * @param {String} path The path of the model file.
-     * @param {Boolean} fileIsMultiLOD Whether the file contains multiple-LODs
-     * of the model or only a single one.
-     * @param {Number} [lod=0] For single-LOD meshes, they will be loaded for
-     * this LOD, if LOD info is not provided in the file.
-     * @returns {Boolean} Whether a new path has been set.
-     */
-    Model.prototype.setSourcePathForLOD = function (path, fileIsMultiLOD, lod) {
-        var i, files = fileIsMultiLOD ? this._multiLODFiles : this._singleLODFiles;
-        lod = lod || 0;
-        for (i = files.length; i <= lod; i++) {
-            files.push(new ModelFile(""));
-        }
-        if (files[lod].path !== path) {
-            files[lod] = new ModelFile(path);
-            this.resetReadyState();
-            return true;
-        }
-        return false;
-    };
-
-    /**
      * Sets the default properties for newly added lines and triangles.
      * @param {Number} luminosity The default luminosity value (0.0-1.0) to use
      * from now on.
@@ -1480,78 +1378,10 @@ Application.createModule({name: "Egom",
      * now on.
      */
     Model.prototype.setDefaultProperties = function (luminosity, shininess) {
-        for (var i = 0; i < this._meshes.length; i++) {
+        var i;
+        for (i = 0; i < this._meshes.length; i++) {
             this._meshes[i].setDefaultProperties(luminosity, shininess);
         }
-    };
-
-    /**
-     * A helper function that creates a callback function to be used to load
-     * the model data from an XML object. Do not use directly.
-     * @param {Number} lod
-     * @param {Boolean} multi
-     * @returns {Function}
-     */
-    Model.prototype.createXMLLoaderFunctionForLOD = function (lod, multi) {
-        return function (responseXML) {
-            var modelFile = multi ? this._multiLODFiles[lod] : this._singleLODFiles[lod];
-            this._loadFromXML(modelFile.path, responseXML, lod);
-            modelFile.loaded = true;
-            this._numLoadedFiles++;
-            if (this._numLoadedFiles === this._numFilesToLoad) {
-                this.setToReady();
-            }
-        }.bind(this);
-    };
-
-    /**
-     * Issues asynchronous requests to grab the minimum number of files
-     * containing mesh data covering all the LODs for this model.
-     * Sets callbacks to load the data once the files has been downloaded.
-     * @returns {Boolean} Whether request were actually issued. (if no files are
-     * specified for the model, or it has already been loaded in all LODs,
-     * no request will be issued)
-     */
-    Model.prototype.requestLoadFromFiles = function () {
-        var i, lod;
-        console.log("Requesting the loading of model from files...");
-        // only issue the request if the model is not already loaded
-        if (!this.isReadyToUse()) {
-            if ((this._singleLODFiles.length === 0) && (this._multiLODFiles.length === 0)) {
-                Application.showError(
-                        "Attempting to load a model from file, but no files were specified.",
-                        null,
-                        this._name ? "Name of the model: " + this._name : "The model has no name either.");
-                return false;
-            }
-            this._numFilesToLoad = 0;
-            this._numLoadedFiles = 0;
-            // loading the highest LOD multi-LOD file
-            Application.log("Choosing highest LOD multi-LOD file for model...");
-            lod = -1;
-            for (i = 0; i < this._multiLODFiles.length; i++) {
-                Application.log("LOD " + i + ": " + this._multiLODFiles[i].path);
-                if (this._multiLODFiles[i].path.length > 0) {
-                    lod = i;
-                }
-            }
-            if (lod >= 0) {
-                this._numFilesToLoad++;
-                console.log("Found multi-LOD file of level " + lod + ": " + this._multiLODFiles[lod].path + ". Requesting...");
-                Application.requestXMLFile("model", this._multiLODFiles[lod].path, this.createXMLLoaderFunctionForLOD(lod, true));
-            }
-            // loading any requested single LOD files with higher LOD than the
-            // highest multi-LOD one
-            for (i = 0; i < this._singleLODFiles.length; i++) {
-                if ((this._singleLODFiles[i].length > 0) && (i > lod)) {
-                    this._numFilesToLoad++;
-                    console.log("Requesting single-LOD file of level " + i + ": " + this._singleLODFiles[i].path + " ...");
-                    Application.requestXMLFile("model", this._singleLODFiles[i].path, this.createXMLLoaderFunctionForLOD(i, false));
-                }
-            }
-            return true;
-        }
-        return false;
     };
 
     /**
@@ -1569,7 +1399,7 @@ Application.createModule({name: "Egom",
     Model.prototype.getMaxLOD = function () {
         return this._maxLOD;
     };
-    
+
     /**
      * Returns the LOD closest to the specified level this model has a mesh for.
      * @param {Number} lod
@@ -1595,7 +1425,8 @@ Application.createModule({name: "Egom",
      * @returns {Mesh}
      */
     Model.prototype.getMeshWithLOD = function (lod) {
-        for (var i = this._meshes.length; i <= lod; i++) {
+        var i;
+        for (i = this._meshes.length; i <= lod; i++) {
             this._meshes.push(new Mesh());
         }
         return this._meshes[lod];
@@ -1647,69 +1478,79 @@ Application.createModule({name: "Egom",
      * @param {Number} defaultLOD
      * @returns {Boolean} Whether the loading has been successful.
      */
-    Model.prototype._loadFromXML = function (filename, xmlDoc, defaultLOD) {
-        var resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
-            if (minLoadedLOD === null) {
-                for (var i = newMinLoadedLOD; i <= newMaxLoadedLOD; i++) {
-                    this.getMeshWithLOD(i).resetMesh();
-                }
-                minLoadedLOD = newMinLoadedLOD;
-                maxLoadedLOD = newMaxLoadedLOD;
-            } else {
-                for (var i = newMinLoadedLOD; i < minLoadedLOD; i++) {
-                    this.getMeshWithLOD(i).resetMesh();
-                }
-                for (var i = maxLoadedLOD + 1; i <= newMaxLoadedLOD; i++) {
-                    this.getMeshWithLOD(i).resetMesh();
-                }
-                minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
-                maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
-            }
-        }.bind(this);
+    Model.prototype.loadFromXML = function (filename, xmlDoc, defaultLOD) {
+        var i, j, str,
+              minLoadedLOD = null,
+              maxLoadedLOD = null,
+              defaultMinLOD = null,
+              defaultMaxLOD = null,
+              minLOD, maxLOD, minMaxLOD,
+              version, defaultShininess, colorPalette, propertyTags, propName, defLOD,
+              vertexTagName, lineTagName, triangleTagName,
+              params,
+              vertexTags, nVertices, lineTags, nLines, triangleTags, nTriangles,
+              index, vertex, line, triangle,
+              resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
+                  var lod;
+                  if (minLoadedLOD === null) {
+                      for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
+                          this.getMeshWithLOD(lod).resetMesh();
+                      }
+                      minLoadedLOD = newMinLoadedLOD;
+                      maxLoadedLOD = newMaxLoadedLOD;
+                  } else {
+                      for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
+                          this.getMeshWithLOD(lod).resetMesh();
+                      }
+                      for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
+                          this.getMeshWithLOD(lod).resetMesh();
+                      }
+                      minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
+                      maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
+                  }
+              }.bind(this),
+              parseFloatList = function (s) {
+                  return s.split(",").map(parseFloat);
+              };
         defaultLOD = defaultLOD || 0;
-        var minLoadedLOD = null;
-        var maxLoadedLOD = null;
-        var defaultMinLOD = null;
-        var defaultMaxLOD = null;
-        var i;
-        Application.log("Loading EgomModel data from file: " + filename + " ...", 2);
+        application.log("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed XML document
         if (!(xmlDoc instanceof Document)) {
-            Application.showError("'" + filename + "' does not appear to be an XML document.",
-                    "severe",
-                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
+            application.showError("'" + filename + "' does not appear to be an XML document.",
+                  "severe",
+                  "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                  "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
             return false;
         }
         if (xmlDoc.documentElement.nodeName !== "EgomModel") {
-            Application.showError("'" + filename + "' does not appear to be an EgomModel file.",
-                    "severe",
-                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                    "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
-                    "'" + xmlDoc.documentElement.nodeName + "' instead.");
+            application.showError("'" + filename + "' does not appear to be an EgomModel file.",
+                  "severe",
+                  "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                  "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
+                  "'" + xmlDoc.documentElement.nodeName + "' instead.");
             return false;
         }
         // checking EgomModel version
-        var version = xmlDoc.documentElement.getAttribute("version");
+        version = xmlDoc.documentElement.getAttribute("version");
         if (!version) {
-            Application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
             return false;
         }
         if (_supportedVersions.indexOf(version) < 0) {
-            Application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
-                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
+                  "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }
         // loading info properties
         this._name = null;
         this._scale = 1;
-        var defaultShininess = 0;
-        var colorPalette = null;
-        this._infoProperties = new Object();
+        defaultShininess = 0;
+        colorPalette = null;
+        this._infoProperties = {};
         if (xmlDoc.getElementsByTagName("info").length > 0) {
-            var propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
-            for (var i = 0; i < propertyTags.length; i++) {
-                var propName = propertyTags[i].getAttribute("name");
+            propertyTags = xmlDoc.getElementsByTagName("info")[0].getElementsByTagName("property");
+            for (i = 0; i < propertyTags.length; i++) {
+                propName = propertyTags[i].getAttribute("name");
                 switch (propName) {
                     case "name":
                         this._name = propertyTags[i].getAttribute("value");
@@ -1718,17 +1559,15 @@ Application.createModule({name: "Egom",
                         this._scale = propertyTags[i].getAttribute("value");
                         break;
                     case "defaultLOD":
-                        var defLOD = propertyTags[i].getAttribute("value").split("-");
-                        defaultMinLOD = defLOD[0];
-                        defaultMaxLOD = defLOD[1];
+                        defLOD = propertyTags[i].getAttribute("value").split("-");
+                        defaultMinLOD = parseInt(defLOD[0], 10);
+                        defaultMaxLOD = parseInt(defLOD[1], 10);
                         break;
                     case "defaultShininess":
-                        defaultShininess = parseInt(propertyTags[i].getAttribute("value"));
+                        defaultShininess = parseInt(propertyTags[i].getAttribute("value"), 10);
                         break;
                     case "colorPalette":
-                        colorPalette = propertyTags[i].getAttribute("value").split(" ").map(function (s) {
-                            return s.split(",").map(parseFloat);
-                        });
+                        colorPalette = propertyTags[i].getAttribute("value").split(" ").map(parseFloatList);
                         break;
                     default:
                         this._infoProperties[propName] = propertyTags[i].getAttribute("value");
@@ -1739,9 +1578,9 @@ Application.createModule({name: "Egom",
             this._scale = parseFloat(this._infoProperties["size of one unit in mm"]) * 10;
         }
         // setting up some variables for version-specific loading
-        var vertexTagName = null;
-        var lineTagName = null;
-        var triangleTagName = null;
+        vertexTagName = null;
+        lineTagName = null;
+        triangleTagName = null;
         switch (version) {
             case "2.0":
                 vertexTagName = "vertex";
@@ -1756,167 +1595,167 @@ Application.createModule({name: "Egom",
                 break;
         }
         // loading vertices
-        var vertexTags = xmlDoc.getElementsByTagName(vertexTagName);
-        var nVertices = vertexTags.length;
+        vertexTags = xmlDoc.getElementsByTagName(vertexTagName);
+        nVertices = vertexTags.length;
         for (i = 0; i < nVertices; i++) {
-            var index = parseInt(vertexTags[i].getAttribute("i"));
-            var minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
-            var maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            index = parseInt(vertexTags[i].getAttribute("i"), 10);
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
             if (vertexTags[i].hasAttribute("lod")) {
-                var minMaxLOD = vertexTags[i].getAttribute("lod").split("-");
-                minLOD = parseInt(minMaxLOD[0]);
-                maxLOD = parseInt(minMaxLOD[1]);
+                minMaxLOD = vertexTags[i].getAttribute("lod").split("-");
+                minLOD = parseInt(minMaxLOD[0], 10);
+                maxLOD = parseInt(minMaxLOD[1], 10);
             }
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
-            var vertex = new Vertex(
-                    (parseFloat(version) >= 2.1 ?
-                            [
-                                parseFloat(vertexTags[i].getAttribute("x")),
-                                parseFloat(vertexTags[i].getAttribute("y")),
-                                parseFloat(vertexTags[i].getAttribute("z"))
-                            ]
-                            // version 2.0
-                            : [
-                                parseFloat(vertexTags[i].getAttribute("x")) / 10000,
-                                parseFloat(vertexTags[i].getAttribute("y")) / -10000,
-                                parseFloat(vertexTags[i].getAttribute("z")) / -10000
-                            ]));
-            for (var j = minLOD; j <= maxLOD; j++) {
+            vertex = new Vertex(
+                  (parseFloat(version) >= 2.1 ?
+                        [
+                            parseFloat(vertexTags[i].getAttribute("x")),
+                            parseFloat(vertexTags[i].getAttribute("y")),
+                            parseFloat(vertexTags[i].getAttribute("z"))
+                        ]
+                        // version 2.0
+                        : [
+                            parseFloat(vertexTags[i].getAttribute("x")) / 10000,
+                            parseFloat(vertexTags[i].getAttribute("y")) / -10000,
+                            parseFloat(vertexTags[i].getAttribute("z")) / -10000
+                        ]));
+            for (j = minLOD; j <= maxLOD; j++) {
                 this.getMeshWithLOD(j).setVertex(index, vertex);
             }
         }
-        Application.log("Loaded " + nVertices + " vertices.", 3);
+        application.log("Loaded " + nVertices + " vertices.", 3);
         // loading lines
-        var lineTags = xmlDoc.getElementsByTagName(lineTagName);
-        var nLines = lineTags.length;
+        lineTags = xmlDoc.getElementsByTagName(lineTagName);
+        nLines = lineTags.length;
         for (i = 0; i < nLines; i++) {
-            var minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
-            var maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
             if (lineTags[i].hasAttribute("lod")) {
-                var minMaxLOD = lineTags[i].getAttribute("lod").split("-");
-                minLOD = parseInt(minMaxLOD[0]);
-                maxLOD = parseInt(minMaxLOD[1]);
+                minMaxLOD = lineTags[i].getAttribute("lod").split("-");
+                minLOD = parseInt(minMaxLOD[0], 10);
+                maxLOD = parseInt(minMaxLOD[1], 10);
             }
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
-            var line = new Line(
-                    parseInt(lineTags[i].getAttribute("a")),
-                    parseInt(lineTags[i].getAttribute("b")),
-                    (parseFloat(version) >= 2.1 ?
-                            (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"))] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
-                            // version 2.0
-                            : [
-                                parseInt(lineTags[i].getAttribute("red")) / 255,
-                                parseInt(lineTags[i].getAttribute("green")) / 255,
-                                parseInt(lineTags[i].getAttribute("blue")) / 255]),
-                    (parseFloat(version) >= 2.1 ?
-                            (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
-                            // version 2.0
-                            : parseInt(lineTags[i].getAttribute("luminosity")) / 255),
-                    (parseFloat(version) >= 2.1 ?
-                            lineTags[i].getAttribute("n").split(",").map(parseFloat)
-                            // version 2.0
-                            : [
-                                parseFloat(lineTags[i].getAttribute("nx")),
-                                -parseFloat(lineTags[i].getAttribute("ny")),
-                                -parseFloat(lineTags[i].getAttribute("nz"))]));
-            for (var j = minLOD; j <= maxLOD; j++) {
+            line = new Line(
+                  parseInt(lineTags[i].getAttribute("a"), 10),
+                  parseInt(lineTags[i].getAttribute("b"), 10),
+                  (parseFloat(version) >= 2.1 ?
+                        (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"), 10)] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
+                        // version 2.0
+                        : [
+                            parseInt(lineTags[i].getAttribute("red"), 10) / 255,
+                            parseInt(lineTags[i].getAttribute("green"), 10) / 255,
+                            parseInt(lineTags[i].getAttribute("blue"), 10) / 255]),
+                  (parseFloat(version) >= 2.1 ?
+                        (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
+                        // version 2.0
+                        : parseInt(lineTags[i].getAttribute("luminosity"), 10) / 255),
+                  (parseFloat(version) >= 2.1 ?
+                        lineTags[i].getAttribute("n").split(",").map(parseFloat)
+                        // version 2.0
+                        : [
+                            parseFloat(lineTags[i].getAttribute("nx")),
+                            -parseFloat(lineTags[i].getAttribute("ny")),
+                            -parseFloat(lineTags[i].getAttribute("nz"))]));
+            for (j = minLOD; j <= maxLOD; j++) {
                 this.getMeshWithLOD(j).addLine(line);
             }
         }
-        Application.log("Loaded " + nLines + " lines.", 3);
+        application.log("Loaded " + nLines + " lines.", 3);
         // loading triangles
-        var triangleTags = xmlDoc.getElementsByTagName(triangleTagName);
-        var nTriangles = triangleTags.length;
-        var params = {};
-        for (var i = 0; i < nTriangles; i++) {
-            var minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
-            var maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+        triangleTags = xmlDoc.getElementsByTagName(triangleTagName);
+        nTriangles = triangleTags.length;
+        params = {};
+        for (i = 0; i < nTriangles; i++) {
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
             if (triangleTags[i].hasAttribute("lod")) {
-                var minMaxLOD = triangleTags[i].getAttribute("lod").split("-");
-                minLOD = parseInt(minMaxLOD[0]);
-                maxLOD = parseInt(minMaxLOD[1]);
+                minMaxLOD = triangleTags[i].getAttribute("lod").split("-");
+                minLOD = parseInt(minMaxLOD[0], 10);
+                maxLOD = parseInt(minMaxLOD[1], 10);
             }
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             params.color = parseFloat(version) >= 2.1 ?
-                    (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"))] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
-                    // version 2.0
-                    : [
-                        parseInt(triangleTags[i].getAttribute("red")) / 255,
-                        parseInt(triangleTags[i].getAttribute("green")) / 255,
-                        parseInt(triangleTags[i].getAttribute("blue")) / 255,
-                        (255 - parseInt(triangleTags[i].getAttribute("alpha"))) / 255];
+                  (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"), 10)] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
+                  // version 2.0
+                  : [
+                      parseInt(triangleTags[i].getAttribute("red"), 10) / 255,
+                      parseInt(triangleTags[i].getAttribute("green"), 10) / 255,
+                      parseInt(triangleTags[i].getAttribute("blue"), 10) / 255,
+                      (255 - parseInt(triangleTags[i].getAttribute("alpha"), 10)) / 255];
             params.luminosity = parseFloat(version) >= 2.1 ?
-                    (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
-                    // version 2.0
-                    : parseInt(triangleTags[i].getAttribute("luminosity")) / 255;
+                  (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
+                  // version 2.0
+                  : parseInt(triangleTags[i].getAttribute("luminosity"), 10) / 255;
             params.shininess = parseFloat(version) >= 2.1 ?
-                    (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi")) : defaultShininess)
-                    // version 2.0
-                    : parseInt(triangleTags[i].getAttribute("shininess"));
+                  (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi"), 10) : defaultShininess)
+                  // version 2.0
+                  : parseInt(triangleTags[i].getAttribute("shininess"), 10);
             params.texCoords = parseFloat(version) >= 2.1 ?
-                    [
-                        triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
-                        triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
-                        triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
-                    ]
-                    // version 2.0
-                    : [
-                        [
-                            parseFloat(triangleTags[i].getAttribute("tax")),
-                            parseFloat(triangleTags[i].getAttribute("tay"))],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("tbx")),
-                            parseFloat(triangleTags[i].getAttribute("tby"))],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("tcx")),
-                            parseFloat(triangleTags[i].getAttribute("tcy"))]];
+                  [
+                      triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
+                      triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
+                      triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
+                  ]
+                  // version 2.0
+                  : [
+                      [
+                          parseFloat(triangleTags[i].getAttribute("tax")),
+                          parseFloat(triangleTags[i].getAttribute("tay"))],
+                      [
+                          parseFloat(triangleTags[i].getAttribute("tbx")),
+                          parseFloat(triangleTags[i].getAttribute("tby"))],
+                      [
+                          parseFloat(triangleTags[i].getAttribute("tcx")),
+                          parseFloat(triangleTags[i].getAttribute("tcy"))]];
             params.normals = parseFloat(version) >= 2.1 ?
-                    (triangleTags[i].hasAttribute("n") ?
-                            [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
-                            [
-                                triangleTags[i].getAttribute("na").split(",").map(parseFloat),
-                                triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
-                                triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
-                            ])
-                    // version 2.0
-                    : [
+                  (triangleTags[i].hasAttribute("n") ?
+                        [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
                         [
-                            parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
-                            -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
-                            -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
-                            -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
-                            -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
-                        [
-                            parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
-                            -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
-                            -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
+                            triangleTags[i].getAttribute("na").split(",").map(parseFloat),
+                            triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
+                            triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
+                        ])
+                  // version 2.0
+                  : [
+                      [
+                          parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
+                          -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
+                          -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
+                      [
+                          parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
+                          -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
+                          -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
+                      [
+                          parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
+                          -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
+                          -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
             params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
             params.withoutLines = true;
-            var triangle = null;
-            for (var j = minLOD; j <= maxLOD; j++) {
+            triangle = null;
+            for (j = minLOD; j <= maxLOD; j++) {
                 if (!triangle) {
                     triangle = this.getMeshWithLOD(j).addTriangleWithParams(
-                            triangleTags[i].getAttribute("a"),
-                            triangleTags[i].getAttribute("b"),
-                            triangleTags[i].getAttribute("c"),
-                            params);
+                          triangleTags[i].getAttribute("a"),
+                          triangleTags[i].getAttribute("b"),
+                          triangleTags[i].getAttribute("c"),
+                          params);
                 } else {
                     this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
                 }
             }
         }
-        Application.log("Loaded " + triangleTags.length + " triangles.", 3);
-        Application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
-        var str = "Number of triangles per LOD for " + this._name + ": ";
+        application.log("Loaded " + triangleTags.length + " triangles.", 3);
+        application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
+        str = "Number of triangles per LOD for " + this._name + ": ";
         for (i = this._minLOD; i <= this._maxLOD; i++) {
             str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
-        Application.log(str, 2);
+        application.log(str, 2);
     };
 
     /**
@@ -2101,7 +1940,7 @@ Application.createModule({name: "Egom",
      * functions.
      */
     Model.prototype.addToContext = function (context, wireframe) {
-        console.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") +" mode)...");
+        application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
         this._minLOD = this._minLOD || 0;
         this._maxLOD = this._maxLOD || 0;
         // get the already stored properties for easier access
@@ -2147,8 +1986,11 @@ Application.createModule({name: "Egom",
      * them.
      */
     Model.prototype.clearContextBindings = function () {
-        for (var contextName in this._contextProperties) {
-            delete this._contextProperties[contextName];
+        var contextName;
+        for (contextName in this._contextProperties) {
+            if (this._contextProperties.hasOwnProperty(contextName)) {
+                delete this._contextProperties[contextName];
+            }
         }
     };
 
@@ -2176,9 +2018,10 @@ Application.createModule({name: "Egom",
      * @returns {Number}
      */
     Model.prototype.getBufferSize = function (context) {
-        var props = this._contextProperties[context.getName()];
-        var result = 0;
-        for (var i = props.minLOD; i <= props.maxLOD; i++) {
+        var i,
+              props = this._contextProperties[context.getName()],
+              result = 0;
+        for (i = props.minLOD; i <= props.maxLOD; i++) {
             result += this.getMeshWithLOD(i).getBufferSize(props.wireframe, props.solid);
         }
         return result;
@@ -2225,10 +2068,11 @@ Application.createModule({name: "Egom",
      * @param {Number[2]} [texCoords]
      */
     Model.prototype.appendVertex = function (position, texCoords) {
+        var i;
         if (this._editedMesh) {
             this._editedMesh.appendVertex(position, texCoords);
         } else {
-            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
                 this.getMeshWithLOD(i).appendVertex(position, texCoords);
             }
         }
@@ -2239,10 +2083,11 @@ Application.createModule({name: "Egom",
      * @param {Line} line
      */
     Model.prototype.addLine = function (line) {
+        var i;
         if (this._editedMesh) {
             this._editedMesh.addLine(line);
         } else {
-            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
                 this.getMeshWithLOD(i).addLine(line);
             }
         }
@@ -2259,10 +2104,11 @@ Application.createModule({name: "Egom",
      * @see Model#addTriangle
      */
     Model.prototype.addQuad = function (a, b, c, d, params) {
+        var i;
         if (this._editedMesh) {
             this._editedMesh.addQuad(a, b, c, d, params);
         } else {
-            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
                 this.getMeshWithLOD(i).addQuad(a, b, c, d, params);
             }
         }
@@ -2287,10 +2133,11 @@ Application.createModule({name: "Egom",
      * should be culled (omitted)
      */
     Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
+        var i;
         if (this._editedMesh) {
             this._editedMesh.addCuboid(x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace);
         } else {
-            for (var i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
+            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
                 this.getMeshWithLOD(i).addCuboid(x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace);
             }
         }
@@ -2308,7 +2155,9 @@ Application.createModule({name: "Egom",
          */
         fvqModel: function (name) {
             var result = new Model();
-            name && result.setName(name);
+            if (name) {
+                result.setName(name);
+            }
 
             result.appendVertex([-1, -1, 0]);
             result.appendVertex([1, -1, 0]);
@@ -2326,7 +2175,9 @@ Application.createModule({name: "Egom",
          */
         squareModel: function (name) {
             var result = new Model();
-            name && result.setName(name);
+            if (name) {
+                result.setName(name);
+            }
 
             result.appendVertex([-1, -1, 0]);
             result.appendVertex([1, -1, 0]);
@@ -2354,8 +2205,10 @@ Application.createModule({name: "Egom",
          * @returns {Model}
          */
         turningBillboardModel: function (name, intersections) {
-            var result = new Model();
-            name && result.setName(name);
+            var i, result = new Model();
+            if (name) {
+                result.setName(name);
+            }
 
             result.appendVertex([-1, -1, 0]);
             result.appendVertex([1, -1, 0]);
@@ -2365,14 +2218,14 @@ Application.createModule({name: "Egom",
             result.addQuad(0, 1, 2, 3, {texCoords: [[0.0, 0.5], [1.0, 0.5], [1.0, 0.0], [0.0, 0.0]]});
 
             if (intersections) {
-                for (var i = 0; i < intersections.length; i++) {
+                for (i = 0; i < intersections.length; i++) {
                     result.appendVertex([1, intersections[i], -1]);
                     result.appendVertex([-1, intersections[i], -1]);
                     result.appendVertex([-1, intersections[i], 1]);
                     result.appendVertex([1, intersections[i], 1]);
 
-                    result.addQuad(((i + 1) * 4) + 0, ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
-                    result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4) + 0, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+                    result.addQuad(((i + 1) * 4), ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+                    result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4), {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
                 }
             }
 
@@ -2391,7 +2244,9 @@ Application.createModule({name: "Egom",
          */
         cuboidModel: function (name, width, height, depth, color) {
             var result = new Model();
-            name && result.setName(name);
+            if (name) {
+                result.setName(name);
+            }
             result.addCuboid(0, 0, 0, width, height, depth, color, 128, [[0, 1], [1, 1], [1, 0], [0, 0]], false);
             return result;
         },
@@ -2407,7 +2262,9 @@ Application.createModule({name: "Egom",
          */
         lineModel: function (name, vector, color) {
             var result = new Model();
-            name && result.setName(name);
+            if (name) {
+                result.setName(name);
+            }
             result.appendVertex([0.0, 0.0, 0.0]);
             result.appendVertex(vector);
             result.addLine(new Line(0, 1, color, 1, vector));

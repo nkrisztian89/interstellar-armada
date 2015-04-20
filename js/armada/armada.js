@@ -82,15 +82,15 @@ define([
         });
     };
 
-    application.requestConfigLoad = function (resourceManager) {
+    application.requestConfigLoad = function (graphicsResourceManager) {
         application.requestTextFile("config", "config.json", function (configText) {
             var configJSON = JSON.parse(configText);
             application.log("Loading game configuration...", 1);
             _resourceManager.requestConfigLoad(configJSON.configFileURLs.resources, {
-                "textures": resourceManager.TextureResource,
-                "cubemaps": resourceManager.CubemapResource,
-                "shaders": resourceManager.ShaderResource,
-                "models": resourceManager.ModelResource
+                "textures": graphicsResourceManager.TextureResource,
+                "cubemaps": graphicsResourceManager.CubemapResource,
+                "shaders": graphicsResourceManager.ShaderResource,
+                "models": graphicsResourceManager.ModelResource
             });
             _logicContext.setClassesSourceFileName(configJSON.configFileURLs.classes);
             _logicContext.setEnvironmentsSourceFileName(configJSON.configFileURLs.environments);
@@ -184,19 +184,19 @@ define([
             return;
         }
         require([
-            "modules/resource-manager",
+            "modules/graphics-resources",
             "modules/screen-manager",
             "armada/graphics",
             "armada/logic",
             "armada/control"
-        ], function (resourceManager, screenManager, graphics, logic, control) {
-            _resourceManager = new resourceManager.ResourceManager();
+        ], function (graphicsResources, screenManager, graphics, logic, control) {
+            _resourceManager = new graphicsResources.GraphicsResourceManager();
             _screenManager = new screenManager.ScreenManager();
             _graphicsContext = new graphics.GraphicsContext();
             _logicContext = new logic.LogicContext();
             _controlContext = new control.ControlContext();
 
-            application.requestConfigLoad(resourceManager);
+            application.requestConfigLoad(graphicsResources);
 
             application.buildScreens();
         });

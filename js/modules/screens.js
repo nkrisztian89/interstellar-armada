@@ -12,8 +12,10 @@
 define([
     "modules/application",
     "modules/async-resource",
-    "modules/components"
-], function (application, asyncResource, components) {
+    "modules/components",
+    "modules/managed-gl",
+    "armada/armada"
+], function (application, asyncResource, components, managedGL, armada) {
     "use strict";
 
     /**
@@ -268,7 +270,7 @@ define([
      */
     ScreenCanvas.prototype.getManagedContext = function () {
         if (this._context === null) {
-            this._context = new GL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, Armada.graphics().getAntialiasing(), Armada.graphics().getFiltering());
+            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, armada.graphics().getAntialiasing(), armada.graphics().getFiltering());
         }
         return this._context;
     };
@@ -314,7 +316,7 @@ define([
 
         this._sceneCanvasBindings = new Array();
 
-        Armada.resources().clearResourceContextBindings();
+        armada.resources().clearResourceContextBindings();
     };
 
     HTMLScreenWithCanvases.prototype.hide = function () {

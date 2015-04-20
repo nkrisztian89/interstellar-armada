@@ -1,9 +1,16 @@
 /**
  * Copyright 2014-2015 Krisztián Nagy
- * @file Provides a class that can hold and manage asynchronously loaded 
- * resources.
+ * @file Provides a class that can hold and manage asynchronously loaded resources.
  * Usage:
- * TODO: explain usage
+ * - subclass GenericResource to implement a kind of resource you want to manage e.g. TextFileResource (see the class description for details)
+ * - create a JSON file containing a named list of objects that contain the init info for the TextFileResources you want to manage
+ *   e.g. "textFiles": [ { "name": "first", "path": "textiles/first.txt" } ] in resources.json
+ * - create a ResourceManager instance
+ * - call requestConfigLoad("resources.json", [{"textFiles", TextFileResource}]) on the instance
+ * - alternatively, you can use addResource("textFiles", new TextFileResource(...)) to add the resources manually
+ * - after the config has been loaded, use getResource("textFiles", "first") to request one of the resources, then
+ * - use ResourceManager.executeWhenReady() to run code after the resources have been loaded from file
+ * - use requestResourceLoad() to initiate the loading of resources from files
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -101,526 +108,6 @@ define([
             this._requestFiles(this._requestParams);
         }
     };
-    // ############################################################################################
-    /**
-     * @class
-     * @augments GenericResource
-     * @param {Object} dataJSON
-     */
-    function TextureResource(dataJSON) {
-        GenericResource.call(this, dataJSON.name);
-        /**
-         * @type String
-         */
-        this._basepath = dataJSON.basepath;
-        /**
-         * @type String
-         */
-        this._format = dataJSON.format;
-        /**
-         * @type Boolean
-         */
-        this._useMipmap = dataJSON.useMipmap;
-        /**
-         * @type Object.<String, String>
-         */
-        this._typeSuffixes = dataJSON.typeSuffixes;
-        /**
-         * @type Object.<String, String>
-         */
-        this._qualitySuffixes = dataJSON.qualitySuffixes;
-        /**
-         * @type Number
-         */
-        this._loadedImages = 0;
-        /**
-         * @type Number
-         */
-        this._imagesToLoad = 0;
-        /**
-         * @type Object<String, Object<String, Image>>
-         */
-        this._images = {};
-    }
-    TextureResource.prototype = new GenericResource();
-    TextureResource.prototype.constructor = TextureResource;
-    /**
-     * @param {String} type
-     * @param {String} quality
-     * @returns {String}
-     */
-    TextureResource.prototype.getPath = function (type, quality) {
-        return this._basepath + this._typeSuffixes[type] + this._qualitySuffixes[quality] + "." + this._format;
-    };
-    /**
-     * @param {String} type
-     * @param {String} quality
-     * @returns {Function}
-     */
-    TextureResource.prototype._getOnLoadImageFunction = function (type, quality) {
-        var path = this.getPath(type, quality);
-        return function () {
-            this._loadedImages++;
-            this._onFilesLoad(this._loadedImages === this._imagesToLoad, {path: path});
-        }.bind(this);
-    };
-    /**
-     * @override
-     * @param {Object} params
-     * @returns {Boolean}
-     */
-    TextureResource.prototype.requiresReload = function (params) {
-        var requestedTypes, type, requestedQualities, quality;
-        if (this.isRequested()) {
-            return false;
-        }
-        params = params || {};
-        requestedTypes = params.types || this._typeSuffixes;
-        requestedQualities = params.qualities || this._qualitySuffixes;
-        for (type in requestedTypes) {
-            if (requestedTypes.hasOwnProperty(type)) {
-                if (!this._images[type]) {
-                    return true;
-                }
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
-                        if (!this._images[type][quality]) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    };
-    /**
-     * @override
-     * @param {Object} params
-     */
-    TextureResource.prototype._requestFiles = function (params) {
-        var requestedTypes, type, requestedQualities, quality;
-        params = params || {};
-        requestedTypes = params.types || this._typeSuffixes;
-        requestedQualities = params.qualities || this._qualitySuffixes;
-        for (type in requestedTypes) {
-            if (requestedTypes.hasOwnProperty(type)) {
-                this._images[type] = this._images[type] || {};
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
-                        if (!this._images[type][quality]) {
-                            this._imagesToLoad++;
-                            this._images[type][quality] = new Image();
-                            this._images[type][quality].onload = this._getOnLoadImageFunction(type, quality).bind(this);
-                        }
-                    }
-                }
-            }
-        }
-        // setting the src property of an Image object will automatically result in an asynchronous
-        // request to grab the image source file
-        for (type in requestedTypes) {
-            if (requestedTypes.hasOwnProperty(type)) {
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
-                        if (!this._images[type][quality].src) {
-                            this._images[type][quality].src = application.getFileURL("texture", this.getPath(type, quality));
-                        }
-                    }
-                }
-            }
-        }
-    };
-    /**
-     * @override
-     * @param {Object} params
-     */
-    TextureResource.prototype._loadData = function (params) {
-        application.log("Texture from file: " + params.path + " has been loaded.", 2);
-    };
-    /**
-     * @param {String} type
-     * @param {String} quality
-     * @returns {Image}
-     */
-    TextureResource.prototype.getImage = function (type, quality) {
-        return this._images[type] || this._images[type][quality];
-    };
-    /**
-     * @returns {Array.<String>}
-     */
-    TextureResource.prototype.getTypes = function () {
-        var type, types = [];
-        for (type in this._typeSuffixes) {
-            if (this._typeSuffixes.hasOwnProperty(type)) {
-                types.push(type);
-            }
-        }
-        return types;
-    };
-    /**
-     * @returns {Array.<String>}
-     */
-    TextureResource.prototype.getQualities = function () {
-        var quality, qualitities = [];
-        for (quality in this._qualitySuffixes) {
-            if (this._qualitySuffixes.hasOwnProperty(quality)) {
-                qualitities.push(quality);
-            }
-        }
-        return qualitities;
-    };
-    // ############################################################################################x
-    /**
-     * @class Represents a cube mapped texture resource.
-     * @augments GenericResource
-     * @param {Object} dataJSON
-     */
-    function CubemapResource(dataJSON) {
-        GenericResource.call(this, dataJSON.name);
-        /**
-         * @type String
-         */
-        this._basepath = dataJSON.basepath;
-        /**
-         * @type Array.<String>
-         */
-        this._imageNames = dataJSON.imageNames;
-        /**
-         * @type Object.<String, Image>
-         */
-        this._images = {};
-    }
-    CubemapResource.prototype = new GenericResource();
-    CubemapResource.prototype.constructor = CubemapResource;
-    /**
-     * @override
-     * @returns {Boolean}
-     */
-    CubemapResource.prototype.requiresReload = function () {
-        if (this.isRequested()) {
-            return false;
-        }
-        return !this.isLoaded();
-    };
-    /**
-     * @override
-     */
-    CubemapResource.prototype._requestFiles = function () {
-        var facesLoaded, face, onImageLoadFunction;
-        facesLoaded = 0;
-        onImageLoadFunction = function () {
-            facesLoaded += 1;
-            if (facesLoaded === 6) {
-                this._onFilesLoad(true);
-            }
-        }.bind(this);
-        for (face in this._imageNames) {
-            if (this._imageNames.hasOwnProperty(face)) {
-                this._images[face] = new Image();
-                // when all faces loaded, set the resource to ready and execute queued functions
-                this._images[face].onload = onImageLoadFunction;
-                // setting the src property will automatically result in an asynchronous
-                // request to grab the texture file
-                this._images[face].src = application.getFileURL("texture", this._basepath + this._imageNames[face]);
-            }
-        }
-    };
-    /**
-     * @override
-     */
-    CubemapResource.prototype._loadData = function () {
-        application.log("Cubemap named '" + this.getName() + "' has been loaded.", 2);
-    };
-    // ############################################################################################x
-    /**
-     * @class 
-     * @augments GenericResource
-     * @param {Object} dataJSON
-     */
-    function ShaderResource(dataJSON) {
-        GenericResource.call(this, dataJSON.name);
-        /**
-         * @type String
-         */
-        this._fallbackShaderName = dataJSON.fallback || null;
-        /**
-         * @type String
-         */
-        this._vertexShaderSourcePath = dataJSON.vertexShaderSource;
-        /**
-         * @type String
-         */
-        this._fragmentShaderSourcePath = dataJSON.fragmentShaderSource;
-        /**
-         * @type String
-         */
-        this._blendType = dataJSON.blendType;
-        /**
-         * @type Object.<String, String>
-         */
-        this._attributeRoles = dataJSON.attributeRoles;
-        /**
-         * @type String
-         */
-        this._vertexShaderSource = null;
-        /**
-         * @type String
-         */
-        this._fragmentShaderSource = null;
-    }
-    ShaderResource.prototype = new GenericResource();
-    ShaderResource.prototype.constructor = ShaderResource;
-    /**
-     * @override
-     * @returns {Boolean}
-     */
-    ShaderResource.prototype.requiresReload = function () {
-        if (this.isRequested()) {
-            return false;
-        }
-        return !this.isLoaded();
-    };
-    /**
-     * @override
-     */
-    ShaderResource.prototype._requestFiles = function () {
-        application.requestTextFile("shader", this._vertexShaderSourcePath, function (responseText) {
-            this._onFilesLoad(this._fragmentShaderSource !== null, {shaderType: "vertex", text: responseText});
-            // override the mime type to avoid error messages in Firefox developer
-            // consol when it tries to parse as XML
-        }.bind(this), 'text/plain; charset=utf-8');
-        application.requestTextFile("shader", this._fragmentShaderSourcePath, function (responseText) {
-            this._onFilesLoad(this._vertexShaderSource !== null, {shaderType: "fragment", text: responseText});
-        }.bind(this), 'text/plain; charset=utf-8');
-    };
-    /**
-     * @override
-     * @param {Object} params
-     */
-    ShaderResource.prototype._loadData = function (params) {
-        switch (params.shaderType) {
-            case "vertex":
-                this._vertexShaderSource = params.text;
-                break;
-            case "fragment":
-                this._fragmentShaderSource = params.text;
-                break;
-        }
-    };
-    /**
-     * @returns {String}
-     */
-    ShaderResource.prototype.getVertexShaderSource = function () {
-        return this._vertexShaderSource;
-    };
-    /**
-     * @returns {String}
-     */
-    ShaderResource.prototype.getFragmentShaderSource = function () {
-        return  this._fragmentShaderSource;
-    };
-    /**
-     * @returns {String}
-     */
-    ShaderResource.prototype.getBlendType = function () {
-        return this._blendType;
-    };
-    /**
-     * @returns {Object.<String, String>}
-     */
-    ShaderResource.prototype.getAttributeRoles = function () {
-        return this._attributeRoles;
-    };
-    // ############################################################################################x
-    /**
-     * @typedef {Object} ModelResource~FileDescriptor
-     * @property {String} suffix
-     * @property {Number} lod
-     * @property {Number} maxLOD
-     */
-    /**
-     * @class
-     * @augments GenericResource
-     * @param {Object} dataJSON
-     */
-    function ModelResource(dataJSON) {
-        GenericResource.call(this, dataJSON.name);
-        /**
-         * @type String
-         */
-        this._basepath = dataJSON.basepath;
-        /**
-         * @type String
-         */
-        this._format = dataJSON.format;
-        /**
-         * @type Array.<ModelResource~FileDescriptor>
-         */
-        this._singleLODFiles = null;
-        /**
-         * @type Array.<ModelResource~FileDescriptor>
-         */
-        this._multiLODFiles = null;
-        /**
-         * @type Number
-         */
-        this._loadedFiles = 0;
-        /**
-         * @type Number
-         */
-        this._filesToLoad = 0;
-        this._singleLODFiles = dataJSON.files.filter(
-              function (element) {
-                  return (element.lod !== undefined);
-              });
-        this._multiLODFiles = dataJSON.files.filter(
-              function (element) {
-                  return (element.maxLOD !== undefined);
-              });
-    }
-    ModelResource.prototype = new GenericResource();
-    ModelResource.prototype.constructor = ModelResource;
-    /**
-     * @param {Boolean} multiLOD
-     * @param {Number} lod
-     * @returns {String}
-     */
-    ModelResource.prototype.getPath = function (multiLOD, lod) {
-        var i;
-        if (multiLOD === true) {
-            for (i = 0; i < this._multiLODFiles.length; i++) {
-                if (this._multiLODFiles[i].maxLOD === lod) {
-                    return this._basepath + this._multiLODFiles[i].suffix + "." + this._format;
-                }
-            }
-        } else {
-            for (i = 0; i < this._singleLODFiles.length; i++) {
-                if (this._multiLODFiles[i].lod === lod) {
-                    return this._basepath + this._singleLODFiles[i].suffix + "." + this._format;
-                }
-            }
-        }
-        return null;
-    };
-    /**
-     * @override
-     * @returns {Boolean}
-     */
-    ModelResource.prototype.requiresReload = function () {
-        // TODO: implement
-        if (this.isRequested()) {
-            return false;
-        }
-        return !this.isLoaded();
-    };
-    /**
-     * @param {Boolean} multiLOD
-     * @returns {Number|null}
-     */
-    ModelResource.prototype.getMaxLOD = function (multiLOD) {
-        var i, result = null;
-        if (multiLOD === true) {
-            for (i = 0; i < this._multiLODFiles.length; i++) {
-                if ((result === null) || (this._multiLODFiles[i].maxLOD > result)) {
-                    result = this._multiLODFiles[i].maxLOD;
-                }
-            }
-            return result;
-        }
-        if (multiLOD === false) {
-            for (i = 0; i < this._singleLODFiles.length; i++) {
-                if ((result === null) || (this._singleLODFiles[i].lod > result)) {
-                    result = this._singleLODFiles[i].lod;
-                }
-            }
-            return result;
-        }
-        return Math.max(this.getMaxLOD(true), this.getMaxLOD(false));
-    };
-    /**
-     * @param {Boolean} multiLOD
-     * @param {Number} lod
-     */
-    ModelResource.prototype._requestFile = function (multiLOD, lod) {
-        this._filesToLoad++;
-        application.requestTextFile("model", this.getPath(multiLOD, lod), function (responseText) {
-            this._loadedFiles++;
-            this._onFilesLoad(this._filesToLoad === this._loadedFiles, {multiLOD: multiLOD, lod: lod, text: responseText});
-        }.bind(this));
-    };
-    /**
-     * @override
-     * @param {Object} params
-     */
-    ModelResource.prototype._requestFiles = function (params) {
-        var lod, maxLOD, atLeastOneFileRequested = false;
-        params = params || {};
-        // if multi LOD files were requested
-        if (params.maxLOD !== undefined) {
-            // first look for the highest quality multi LOD at or below the requested level
-            for (lod = params.maxLOD; lod >= 0; lod--) {
-                if (this.getPath(true, lod) !== null) {
-                    this._requestFile(true, lod);
-                    atLeastOneFileRequested = true;
-                    break;
-                }
-            }
-            // if no multi LODs are available at all at or below the requested level, check for higher quality ones
-            if ((lod < 0) && (this._multiLODFiles.length > 0)) {
-                maxLOD = this.getMaxLOD(true);
-                for (lod = params.maxLOD + 1; lod <= maxLOD; lod++) {
-                    if (this.getPath(true, lod) !== null) {
-                        this._requestFile(true, lod);
-                        atLeastOneFileRequested = true;
-                        break;
-                    }
-                }
-            }
-            // if no multi LODs were found at all, or only lower quality than requested, try to fill the gap with single LODs
-            if ((this._multiLODFiles.length === 0) || (lod < params.maxLOD)) {
-                for (lod = lod < 0 ? 0 : lod; lod <= params.maxLOD; lod++) {
-                    if (this.getPath(false, lod) !== null) {
-                        this._requestFile(false, lod);
-                        atLeastOneFileRequested = true;
-                    }
-                }
-                // if there is no other option, try higher quality single LODs
-                if (atLeastOneFileRequested === false) {
-                    if (this._singleLODFiles.length > 0) {
-                        for (lod = params.maxLOD + 1; lod < this.getMaxLOD(false); lod++) {
-                            if (this.getPath(false, lod) !== null) {
-                                this._requestFile(false, lod);
-                                return;
-                            }
-                        }
-                    } else {
-                        application.showError("Could not find any files to load for model: '" + this._name + "'!");
-                    }
-                }
-            }
-            // if single LOD files were requested
-        } else if (params.lod !== undefined) {
-            // first try to load a single LOD at or below the requested level
-            for (lod = params.lod; lod >= 0; lod--) {
-                if (this.getPath(false, lod) !== null) {
-                    this._requestFile(false, lod);
-                    return;
-                }
-            }
-            // if there wasn't any single LOD found, try the same strategy as with multi LODs
-            this._requestFiles({maxLOD: params.lod});
-        } else {
-            // if no LOD was specified at all, request files to cover all available LODs
-            this._requestFiles({maxLOD: this.getMaxLOD()});
-        }
-    };
-    /**
-     * @override
-     * @param {Object} params
-     */
-    ModelResource.prototype._loadData = function (params) {
-        application.log((params.multiLOD ? "Multi-LOD " : "Single-LOD ") + " model file of level " + params.lod + " has been loaded for model '" + this.getName() + "'");
-    };
     // ############################################################################################x
     /**
      * @class
@@ -656,9 +143,11 @@ define([
     };
     /**
      * @param {GenericResource} resource
+     * @returns {GenericResource}
      */
     ResourceHolder.prototype.addResource = function (resource) {
         this._resources[resource.getName()] = resource;
+        return this._resources[resource.getName()];
     };
     /**
      * @param {String} resourceName
@@ -763,10 +252,11 @@ define([
     /**
      * @param {String} resourceType
      * @param {GenericResource} resource
+     * @returns {GenericResource}
      */
     ResourceManager.prototype.addResource = function (resourceType, resource) {
         this._resourceHolders[resourceType] = this._resourceHolders[resourceType] || new ResourceHolder(resourceType);
-        this._resourceHolders[resourceType].addResource(resource);
+        return this._resourceHolders[resourceType].addResource(resource);
     };
     /**
      * @param {String} resourceType
@@ -827,45 +317,16 @@ define([
         return this._numLoadedResources === this._numRequestedResources;
     };
     /**
-     * Performs a getOrAddTexture() using the properties of the texture descriptor.
-     * @param {String} name
-     * @returns {TextureResource}
-     */
-    ResourceManager.prototype.getTexture = function (name) {
-        return this.getResource("textures", name);
-    };
-    /**
-     * Returns the stored cubemapped texture that has the given name, if such 
-     * exists.
-     * @param {String} name
-     * @returns {CubemapResource}
-     */
-    ResourceManager.prototype.getCubemap = function (name) {
-        return this.getResource("cubemaps", name);
-    };
-    /**
-     * Returns the stored shader that has the given name, if such exists.
-     * @param {String} name
-     * @returns {ShaderResource}
-     */
-    ResourceManager.prototype.getShader = function (name) {
-        return this.getResource("shaders", name);
-    };
-    /**
-     * @param {String} name
-     * @param {Object} params
-     * @returns {ModelResource}
-     */
-    ResourceManager.prototype.getModel = function (name, params) {
-        return this.getResource("models", name, params);
-    };
-    /**
      * @param {String} filename
      * @param {Object.<String, Function>} resourceTypes
+     * @param {Function} callback
      */
-    ResourceManager.prototype.requestConfigLoad = function (filename, resourceTypes) {
+    ResourceManager.prototype.requestConfigLoad = function (filename, resourceTypes, callback) {
         application.requestTextFile("config", filename, function (responseText) {
             this._loadConfigFromJSON(JSON.parse(responseText), resourceTypes);
+            if (callback) {
+                callback();
+            }
         }.bind(this));
     };
     /**
@@ -905,11 +366,7 @@ define([
     };
 
     return {
-        TextureResource: TextureResource,
-        CubemapResource: CubemapResource,
-        ShaderResource: ShaderResource,
-        ModelResource: ModelResource,
+        GenericResource: GenericResource,
         ResourceManager: ResourceManager
     };
-
 });
