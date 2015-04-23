@@ -48,7 +48,6 @@ define([
      * background using a cube mapped texture defined by the passed class of the
      * skybox.
      * @param {SkyboxClass} skyboxClass
-     * @returns {Skybox}
      */
     function Skybox(skyboxClass) {
         /**
@@ -56,39 +55,20 @@ define([
          * @type SkyboxClass
          */
         this._class = skyboxClass;
-        /**
-         * @type ModelResource
-         */
-        this._model = null;
-        /**
-         * @type ShaderResource
-         */
-        this._shader = null;
-        /**
-         * @type CubemapResource
-         */
-        this._cubemap = null;
     }
-    Skybox.prototype.getResources = function () {
-        this._model = armada.resources().getOrAddModel(
-              "fvqModel",
-              egomModel.fvqModel("fvqModel"));
-        this._shader = armada.resources().getShader(this._class.shaderName);
-        this._cubemap = armada.resources().getCubemap(this._class.cubemap);
-    };
     /**
      * Adds a background FVQ object to the passed scene and sets it up according
      * the properties of this skybox.
-     * @param {budaScene} scene
+     * @param {Scene} scene
      */
     Skybox.prototype.addToScene = function (scene) {
-        this.getResources();
+        this._class.getResources();
         armada.resources().executeWhenReady(function () {
             scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
-                  this._model.getEgomModel(),
-                  this._shader.getManagedShader(),
-                  this._class.samplerName,
-                  this._cubemap.getManagedCubemap(),
+                  this._class.getModel(),
+                  this._class.getShader(),
+                  "skybox",
+                  this._class.getCubemap(),
                   scene.activeCamera));
         }.bind(this));
     };
@@ -101,7 +81,6 @@ define([
      * direction in which this object is positioned on the XZ plane in degrees.
      * @param {Number} degreesBeta The angle between the XZ plane and the
      * direction in which this object is positioned.
-     * @returns {BackgroundObject}
      */
     function BackgroundObject(backgroundObjectClass, degreesAlpha, degreesBeta) {
         /**
@@ -120,46 +99,25 @@ define([
             Math.sin(degreesAlpha / 180 * Math.PI) * Math.cos(degreesBeta / 180 * Math.PI),
             Math.sin(degreesBeta / 180 * Math.PI)
         ];
-        /**
-         * @type ModelResource
-         */
-        this._model = null;
-        /**
-         * @type ShaderResource[]
-         */
-        this._shaders = [];
-        /**
-         * @type TextureResource[]
-         */
-        this._textures = [];
     }
-    BackgroundObject.prototype.getResources = function () {
-        var i;
-        this._model = armada.resources().getOrAddModel(
-              "squareModel",
-              egomModel.squareModel("squareModel"));
-        for (i = 0; i < this._class.layers.length; i++) {
-            this._shaders.push(armada.resources().getShader(this._class.layers[i].shaderName));
-            this._textures.push(armada.resources().getTexture(this._class.layers[i].textureDescriptor.name));
-        }
-    };
     /**
      * Adds the layered texture object and the light source belonging to this
      * object to the passed scene.
-     * @param {budaScene} scene
+     * @param {Scene} scene
      */
     BackgroundObject.prototype.addToScene = function (scene) {
-        scene.addLightSource(new budaScene.LightSource(this._class.lightColor, this._position));
-        this.getResources();
+        scene.addLightSource(new budaScene.LightSource(this._class.getLightColor(), this._position));
+        this._class.getResources();
         armada.resources().executeWhenReady(function () {
-            var i, layerParticle;
-            for (i = 0; i < this._class.layers.length; i++) {
+            var i, layers, layerParticle;
+            layers = this._class.getLayers();
+            for (i = 0; i < layers.length; i++) {
                 layerParticle = new budaScene.StaticParticle(
-                      this._model.getEgomModel(),
-                      this._shaders[i].getManagedShader(),
-                      this._textures[i].getManagedTexture("emissive", "normal"),
-                      this._class.layers[i].color,
-                      this._class.layers[i].size,
+                      layers[i].getModel(),
+                      layers[i].getShader(),
+                      layers[i].getTexture("emissive", "normal"),
+                      layers[i].getColor(),
+                      layers[i].getSize(),
                       mat.translation4v(vec.scaled3(this._position, 4500)));
                 layerParticle.setRelSize(1.0);
                 scene.addBackgroundObject(layerParticle);
@@ -172,19 +130,9 @@ define([
      * @class A tiny piece of dust that is rendered as passing line to indicate the
      * direction and speed of movement to the player.
      * @param {DustCloud} cloud The cloud to which this dust particle belongs.
-     * @param {Shader} shader
      * @param {Float32Array} positionMatrix
-     * @returns {DustParticle}
      */
-    function DustParticle(cloud, shader, positionMatrix) {
-        /**
-         * @type ShaderResource
-         */
-        this._shader = shader;
-        /**
-         * @type ModelResource
-         */
-        this._model = null;
+    function DustParticle(cloud, positionMatrix) {
         /**
          * @type Float32Array
          */
@@ -204,25 +152,17 @@ define([
          */
         this._range = cloud.getRange();
     }
-    DustParticle.prototype.getResources = function () {
-        this._model = armada.resources().getOrAddModel(
-              "dust",
-              new egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._cloud.getColor()));
-    };
     /**
      * Adds the visual model of this particle to a scene, using the passed node
      * as its rendering parent.
      * @param {PointCloud} cloudNode
      */
     DustParticle.prototype.addToScene = function (cloudNode) {
-        this.getResources();
-        armada.resources().executeWhenReady(function () {
-            this._visualModel = new budaScene.PointParticle(
-                  this._model.getEgomModel(),
-                  this._shader.getManagedShader(),
-                  this._positionMatrix);
-            cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
-        }.bind(this));
+        this._visualModel = new budaScene.PointParticle(
+              this._cloud.getClass().getModel(),
+              this._cloud.getClass().getShader(),
+              this._positionMatrix);
+        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
     };
     /**
      * Updates the position of the particle to be acound the camera within proper
@@ -269,11 +209,13 @@ define([
          * @type PointCloud
          */
         this._visualModel = null;
-        /**
-         * @type ShaderResource
-         */
-        this._shader = null;
     }
+    /**
+     * @returns {DustCloudClass}
+     */
+    DustCloud.prototype.getClass = function () {
+        return this._class;
+    };
     /**
      * Return the color of particles of this cloud. 
      * @returns {Number[4]}
@@ -289,37 +231,33 @@ define([
     DustCloud.prototype.getRange = function () {
         return this._class.range;
     };
-    DustCloud.prototype.getResources = function () {
-        this._shader = armada.resources().getShader(this._class.shaderName);
-    };
     /**
      * Adds the needed objects to the scene to render this dust cloud.
      * @param {budaScene} scene
      */
     DustCloud.prototype.addToScene = function (scene) {
-        var i, particle;
-        this.getResources();
+        var i, n, particle;
+        this._class.getResources();
         this._particles = [];
-        for (i = 0; i < this._class.numberOfParticles; i++) {
+        n = this._class.getNumberOfParticles();
+        for (i = 0; i < n; i++) {
             particle = new DustParticle(
                   this,
-                  this._shader,
                   mat.translation4(
                         (Math.random() - 0.5) * 2 * this._class.range,
                         (Math.random() - 0.5) * 2 * this._class.range,
                         (Math.random() - 0.5) * 2 * this._class.range));
-            particle.getResources();
             this._particles.push(particle);
 
         }
         armada.resources().executeWhenReady(function () {
             var j, node;
             this._visualModel = new budaScene.PointCloud(
-                  this._shader.getManagedShader(),
-                  this._class.color,
-                  this._class.range);
+                  this._class.getShader(),
+                  this._class.getColor(),
+                  this._class.getRange());
             node = scene.addObject(this._visualModel);
-            for (j = 0; j < this._class.numberOfParticles; j++) {
+            for (j = 0; j < n; j++) {
                 this._particles[j].addToScene(node);
             }
         }.bind(this));
@@ -329,9 +267,9 @@ define([
      * @param {Camera} camera The camera around which the cloud should be rendered.
      */
     DustCloud.prototype.simulate = function (camera) {
-        var i;
+        var i, n = this._class.getNumberOfParticles();
         this._visualModel.shift = [-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2];
-        for (i = 0; i < this._class.numberOfParticles; i++) {
+        for (i = 0; i < n; i++) {
             this._particles[i].simulate(camera);
         }
     };

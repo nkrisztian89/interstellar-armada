@@ -6,287 +6,355 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
+/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 define([
     "utils/utils",
     "utils/vectors",
     "utils/matrices",
+    "modules/application",
+    "modules/egom-model",
     "modules/physics",
     "modules/buda-scene",
     "armada/armada"
-], function (utils, vec, mat, physics, budaScene, armada) {
+], function (utils, vec, mat, application, egomModel, physics, budaScene, armada) {
     "use strict";
     /**
-     * Creates a skybox class and loads its properties from the passed XML tag, if any.
+     * @class
+     * @param {object} dataJSON
+     */
+    function GenericClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        /**
+         * A string identifier that needs to be unique among the instances of the same type of class.
+         * @type String
+         */
+        this._name = dataJSON.name || null;
+    }
+    /**
+     * @returns {String}
+     */
+    GenericClass.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * @param {String} resourceType
+     * @param {String} resourceName
+     */
+    GenericClass.prototype.showResourceAccessError = function (resourceType, resourceName) {
+        application.showError("Attempting to access " + resourceType + " ('" + resourceName + "') of class '" + this._name + "' before it has been loaded!");
+    };
+    /**
+     * @class
+     * @augments GenericClass
+     * @param {Object} dataJSON
+     */
+    function ShadedClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        GenericClass.call(this, dataJSON);
+        /**
+         * @type String
+         */
+        this._shaderName = dataJSON.shader || null;
+        /**
+         * @type ShaderResource
+         */
+        this._shader = null;
+    }
+    ShadedClass.prototype = new GenericClass();
+    ShadedClass.prototype.constructor = ShadedClass;
+    /**
+     * 
+     */
+    ShadedClass.prototype.getResources = function () {
+        if (this._shader === null) {
+            this._shader = armada.resources().getShader(this._shaderName);
+        }
+    };
+    /**
+     * 
+     * @returns {ManagedShader}
+     */
+    ShadedClass.prototype.getShader = function () {
+        if (this._shader === null) {
+            this.showResourceAccessError("shader", this._shaderName);
+            return null;
+        }
+        return this._shader.getManagedShader();
+    };
+    /**
+     * @class
+     * @augments ShadedClass
+     * @param {Object} dataJSON
+     */
+    function ShadedModelClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        ShadedClass.call(this, dataJSON);
+        /**
+         * @type String
+         */
+        this._modelName = dataJSON.model || null;
+        /**
+         * @type ModelResource
+         */
+        this._model = null;
+    }
+    ShadedModelClass.prototype = new ShadedClass();
+    ShadedModelClass.prototype.constructor = ShadedModelClass;
+    /**
+     * @override
+     * @param {Object} params
+     */
+    ShadedModelClass.prototype.getResources = function (params) {
+        ShadedClass.prototype.getResources.call(this);
+        if (this._model === null) {
+            if (params.model) {
+                this._model = armada.resources().getOrAddModel(params.model);
+                this._modelName = this._model.getName();
+            } else {
+                this._model = armada.resources().getModel(this._modelName);
+            }
+        }
+    };
+    /**
+     * 
+     * @returns {Model}
+     */
+    ShadedModelClass.prototype.getModel = function () {
+        if (this._model === null) {
+            this.showResourceAccessError("model", this._modelName);
+            return null;
+        }
+        return this._model.getEgomModel();
+    };
+    /**
      * @class A skybox represents the background picture rendered for the 
      * environment using a cubemap sampler and a full viewport quad. Skybox classes 
-     * can be defined with different properties (in classes.xml) for different 
-     * backgrounds, and then the right one can be instantiated for each level 
-     * ({@link Skybox} class).
-     * @param {Element} [xmlTag] A reference to an XML tag from which the skybox
-     * class properties can be initialized.
-     * @returns {SkyboxClass}
+     * can be defined with different properties (in classes.json) for different 
+     * backgrounds, and then the right one can be instantiated for each level.
+     * @augments ShadedModelClass
+     * @param {Object} [dataJSON] 
      */
-    function SkyboxClass(xmlTag) {
+    function SkyboxClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        ShadedModelClass.call(this, dataJSON);
         /**
-         * The name that identifies the skybox class (unique for each skybox class
-         * in the game.
-         * @name SkyboxClass#name
          * @type String
          */
-        this.name = null;
+        this._cubemapName = dataJSON.cubemap || null;
         /**
-         * The name of the shader object to be used for rendering this skybox. (as 
-         * defined in shaders.xml)
-         * @name SkyboxClass#shaderName
-         * @type String
+         * @type CubemapResource
          */
-        this.shaderName = null;
-        /**
-         * The name of the uniform cube map sampler variable in the shader to be set.
-         * @name SkyboxClass#samplerName
-         * @type String
-         */
-        this.samplerName = null;
-        /**
-         * The cubemap resource to be used.
-         * @name SkyboxClass#cubemap
-         * @type String
-         */
-        this.cubemap = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._cubemap = null;
     }
-
+    SkyboxClass.prototype = new ShadedModelClass();
+    SkyboxClass.prototype.constructor = SkyboxClass;
     /**
-     * Loads the values for the properties of this skybox class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @override
      */
-    SkyboxClass.prototype.loadFromXMLTag = function (xmlTag) {
-        this.name = xmlTag.getAttribute("name");
-        this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
-        this.samplerName = xmlTag.getElementsByTagName("shader")[0].getAttribute("samplerName");
-        this.cubemap = xmlTag.getElementsByTagName("cubemap")[0].getAttribute("name");
-        Object.freeze(this);
+    SkyboxClass.prototype.getResources = function () {
+        ShadedModelClass.prototype.getResources.call(this, {model: egomModel.fvqModel("fvqModel")});
+        if (this._cubemap === null) {
+            this._cubemap = armada.resources().getCubemap(this._cubemapName);
+        }
     };
-
     /**
-     * Creates a TextureDescriptor object, and loads its properties from the passed
-     * XML tag, if any.
-     * @class A simple class capable of loading the descriptor of a texture resource
-     * from an XML tag.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {TextureDescriptor}
+     * 
+     * @returns {ManagedCubemap}
      */
-    function TextureDescriptor(xmlTag) {
+    SkyboxClass.prototype.getCubemap = function () {
+        if (this._cubemap === null) {
+            this.showResourceAccessError("cubemap", this._cubemapName);
+            return null;
+        }
+        return this._cubemap.getManagedCubemap();
+    };
+    /**
+     * @class
+     * @augments ShadedModelClass
+     * @param {Object} dataJSON
+     */
+    function TexturedModelClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        ShadedModelClass.call(this, dataJSON);
         /**
-         * The filename path of the texture file, relative to the site root.
-         * @name TextureDescriptor#filename
          * @type String
          */
-        this.name = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._textureName = dataJSON.texture || null;
+        /**
+         * @type TextureResource
+         */
+        this._texture = null;
     }
-
+    TexturedModelClass.prototype = new ShadedModelClass();
+    TexturedModelClass.prototype.constructor = TexturedModelClass;
     /**
-     * Loads the values for the properties of the texture descriptor from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @override
+     * @param {Object} params
      */
-    TextureDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
-        this.name = xmlTag.getAttribute("name");
-        Object.freeze(this);
+    TexturedModelClass.prototype.getResources = function (params) {
+        ShadedModelClass.prototype.getResources.call(this, params);
+        if (this._texture === null) {
+            this._texture = armada.resources().getTexture(this._textureName);
+        }
     };
-
-
     /**
-     * Creates a ParticleDescriptor object, and loads its properties from the passed
-     * XML tag, if any.
+     * @param {String} type
+     * @param {String} quality
+     * @returns {ManagedTexture}
+     */
+    TexturedModelClass.prototype.getTexture = function (type, quality) {
+        if (this._texture === null) {
+            this.showResourceAccessError("texture", this._textureName);
+            return null;
+        }
+        return this._texture.getManagedTexture(type, quality);
+    };
+    /**
      * @class A simple class capable of loading the descriptor of a particle (a simple
      * 2D billboard rendered with a suitable shader)
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {ParticleDescriptor}
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON] 
      */
-    function ParticleDescriptor(xmlTag) {
+    function ParticleDescriptor(dataJSON) {
+        dataJSON = dataJSON || {};
+        TexturedModelClass.call(this, dataJSON);
         /**
          * The size to scale the particle with when rendering.
-         * @name ParticleDescriptor#size
          * @type Number
          */
-        this.size = null;
-        /**
-         * The name of the shader to use when rendering this particle (as defined
-         * in shader.xml).
-         * @name ParticleDescriptor#shaderName
-         * @type String
-         */
-        this.shaderName = null;
-        /**
-         * The descriptor of the texture to use when rendering this particle.
-         * @name ParticleDescriptor#textureDescriptor
-         * @type TextureDescriptor
-         */
-        this.textureDescriptor = null;
+        this._size = dataJSON.size = null;
         /**
          * The color that can be passed to the shader to modulate the texture with
          * while rendering. [red,green,blue]
-         * @name ParticleDescriptor#color
          * @type Number[3]
          */
-        this.color = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._color = dataJSON.color || null;
     }
-
     /**
-     * Loads the values for the properties of the patricle descriptor from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @override
      */
-    ParticleDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
-        if (xmlTag.hasAttribute("size")) {
-            this.size = parseFloat(xmlTag.getAttribute("size"));
-        } else {
-            this.size = 1.0;
-        }
-        this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
-        this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
-        this.color = utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
-        Object.freeze(this);
+    ParticleDescriptor.prototype.getResources = function () {
+        TexturedModelClass.prototype.getResources.call(this, {model: egomModel.squareModel("squareModel")});
     };
-
     /**
-     * Creates a background object class and loads its properties from the passed
-     * XML tag, if any.
+     * @returns {Number}
+     */
+    ParticleDescriptor.prototype.getSize = function () {
+        return this._size;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    ParticleDescriptor.prototype.getColor = function () {
+        return this._color;
+    };
+    /**
      * @class Environments (levels) in the game can have several background objects,
      * like stars or nebulae, which provide the lighting for the environment.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {BackgroundObjectClass}
+     * @augments GenericClass
+     * @param {Object} [dataJSON] 
      */
-    function BackgroundObjectClass(xmlTag) {
-        /**
-         * The unique name of the background object.
-         * @name BackgroundObjectClass#name
-         * @type String
-         */
-        this.name = null;
+    function BackgroundObjectClass(dataJSON) {
+        var i;
+        dataJSON = dataJSON || {};
+        GenericClass.call(this, dataJSON);
         /**
          * The color of the light this object emits. A directional light source with
          * this color will be added to levels where this object it present, coming
          * from the object's direction.
-         * @name BackgroundObjectClass#lightColor
          * @type Number[3]
          */
-        this.lightColor = null;
+        this._lightColor = dataJSON.lightColor || null;
         /**
          * To draw the object on the background, the layers defined in this array
          * will be rendered on top of each other in order.
-         * @name BackgroundObjectClass#layers
          * @type ParticleDescriptor[]
          */
-        this.layers = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        this._layers = [];
+        if (dataJSON.layers) {
+            for (i = 0; i < dataJSON.layers.length; i++) {
+                this._layers.push(new ParticleDescriptor(dataJSON.layers[i]));
+            }
         }
     }
-
     /**
-     * Loads the values for the properties of the background object class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * 
      */
-    BackgroundObjectClass.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, tags;
-        this.name = xmlTag.getAttribute("name");
-        this.lightColor = utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("light")[0].getElementsByTagName("color")[0]);
-        this.layers = [];
-        tags = xmlTag.getElementsByTagName("layer");
-        for (i = 0; i < tags.length; i++) {
-            this.layers.push(new ParticleDescriptor(tags[i]));
+    BackgroundObjectClass.prototype.getResources = function () {
+        var i;
+        for (i = 0; i < this._layers.length; i++) {
+            this._layers[i].getResources();
         }
-        Object.freeze(this);
     };
-
     /**
-     * Creates a dust cloud class and loads its properties from the passed
-     * XML tag, if any.
+     * @returns {Number[3]}
+     */
+    BackgroundObjectClass.prototype.getLightColor = function () {
+        return this._lightColor;
+    };
+    /**
+     * @returns {ParticleDescriptor[]}
+     */
+    BackgroundObjectClass.prototype.getLayers = function () {
+        return this._layers;
+    };
+    /**
      * @class Dust clouds represent a big group of tiny dust particles that are
      * rendered when the camera (the player) is moving around of space, to give a
      * visual clue about the velocity. Dust cloud classes can be defined (in 
      * classes.xml) for different environments (such as denser in an asteroid field 
      * or the rings of a planet, or having different color), and then the right one 
      * instantiated (with the DustCloud class) for the level.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {DustCloudClass}
+     * @param {Object} [dataJSON]
      */
-    function DustCloudClass(xmlTag) {
-        /**
-         * The name to identify the class of dust cloud.
-         * @name DustCloudClass#name
-         * @type String
-         */
-        this.name = null;
-        /**
-         * The name of the shader used for rendering this dust cloud. (as defined in 
-         * shaders.xml)
-         * @name DustCloudClass#shaderName
-         * @type String
-         */
-        this.shaderName = null;
+    function DustCloudClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        ShadedModelClass.call(this, dataJSON);
         /**
          * The number of dust particles that should be created when such a dust 
          * class is instantiated.
-         * @name DustCloudClass#numberOfParticles
          * @type Number
          */
-        this.numberOfParticles = null;
+        this._numberOfParticles = dataJSON.numberOfParticles || null;
         /**
          * The color of the particles in the dust clouds of this class.
-         * @name DustCloudClass#color
          * @type Number[3]
          */
-        this.color = null;
+        this._color = dataJSON.color || null;
         /**
          * The maximum distance of the particles in the dust clouds of this class
          * from the camera along any axis.
-         * @name DustCloudClass#range
          * @type Number
          */
-        this.range = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._range = dataJSON.range || null;
     }
-
+    DustCloudClass.prototype = new ShadedModelClass();
+    DustCloudClass.prototype.constructor = DustCloudClass;
     /**
-     * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @override
      */
-    DustCloudClass.prototype.loadFromXMLTag = function (xmlTag) {
-        this.name = xmlTag.getAttribute("name");
-        this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
-        this.numberOfParticles = parseInt(xmlTag.getAttribute("numberOfParticles"), 10);
-        this.color = utils.getRGBColorFromXMLTag(xmlTag.getElementsByTagName("color")[0]);
-        this.range = parseFloat(xmlTag.getAttribute("range"));
-        Object.freeze(this);
+    DustCloudClass.prototype.getResources = function () {
+        ShadedModelClass.prototype.getResources.call(this, {model: egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._color)});
+    };
+    /**
+     * @returns {Number}
+     */
+    DustCloudClass.prototype.getNumberOfParticles = function () {
+        return this._numberOfParticles;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    DustCloudClass.prototype.getColor = function () {
+        return this._color;
+    };
+    /**
+     * @returns {Number}
+     */
+    DustCloudClass.prototype.getRange = function () {
+        return this._range;
     };
 
     /**

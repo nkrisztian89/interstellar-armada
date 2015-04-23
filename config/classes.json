@@ -1,0 +1,56 @@
+{
+    "skyboxClasses": [
+        {
+            "name": "deepspace",
+            "shader": "skybox",
+            "cubemap": "deepspace"
+        }
+    ],
+    "backgroundObjectClasses": [
+        {
+            "name": "standardSun",
+            "lightColor": [1.0, 1.0, 1.0],
+            "layers": [
+                {
+                    "size": 300,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 0.0]
+                },
+                {
+                    "size": 250,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "smallBlueStar",
+            "lightColor": [0.02, 0.2, 0.2],
+            "layers": [
+                {
+                    "size": 150,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [0.1, 1.0, 0.0]
+                },
+                {
+                    "size": 50,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0]
+                }
+            ]
+        }
+    ],
+    "dustCloudClasses": [
+        {
+            "name": "standard",
+            "shader": "dust",
+            "numberOfParticles": 300,
+            "range": 25,
+            "color": [0.6, 0.6, 0.6]
+        }
+    ]
+}

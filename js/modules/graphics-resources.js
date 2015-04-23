@@ -628,16 +628,14 @@ define([
         return this.getResource("models", name, params);
     };
     /**
-     * 
-     * @param {String} name
      * @param {Model} model
      * @returns {ModelResource}
      */
-    GraphicsResourceManager.prototype.getOrAddModel = function (name, model) {
-        var result = this.getResource("models", name, {allowNullResult: true});
+    GraphicsResourceManager.prototype.getOrAddModel = function (model) {
+        var result = this.getResource("models", model.getName(), {allowNullResult: true});
         if (!result) {
             result = this.addResource("models", new ModelResource({
-                "name": name,
+                "name": model.getName(),
                 "model": model
             }));
         }
