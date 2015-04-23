@@ -269,18 +269,14 @@ define([
 
             self.updateStatus("building scene...", 10);
             var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
+            if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
+                armada.resources().getShader("shadowMapping");
+            }
             self._battleScene = new budaScene.Scene(
                   0, 0, canvas.width, canvas.height,
                   true, [true, true, true, true],
                   [0, 0, 0, 1], true,
-                  armada.graphics().getLODContext(),
-                  {
-                      enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
-                      shader: armada.resources().getShader("shadowMapping"),
-                      textureSize: armada.graphics().getShadowQuality(),
-                      ranges: armada.graphics().getShadowRanges(),
-                      depthRatio: armada.graphics().getShadowDepthRatio()
-                  });
+                  armada.graphics().getLODContext());
             self._level.addToScene(self._battleScene);
 
             armada.control().getController("general").setLevel(self._level);
@@ -292,6 +288,13 @@ define([
             });
             var freq = 60;
             armada.resources().executeWhenReady(function () {
+                self._battleScene.setShadowMapping({
+                    enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
+                    shader: armada.resources().getShader("shadowMapping").getManagedShader(),
+                    textureSize: armada.graphics().getShadowQuality(),
+                    ranges: armada.graphics().getShadowRanges(),
+                    depthRatio: armada.graphics().getShadowDepthRatio()
+                });
                 self.updateStatus("initializing WebGL...", 75);
                 self.bindSceneToCanvas(self._battleScene, self.getScreenCanvas("battleCanvas"));
                 self.updateStatus("", 100);

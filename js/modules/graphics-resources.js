@@ -574,7 +574,7 @@ define([
      * @param {Object} params
      */
     ModelResource.prototype._loadData = function (params) {
-        application.log((params.multiLOD ? "Multi-LOD " : "Single-LOD ") + " model file of level " + params.lod + " has been loaded for model '" + this.getName() + "'");
+        application.log((params.multiLOD ? "Multi-LOD " : "Single-LOD ") + " model file of level " + params.lod + " has been loaded for model '" + this.getName() + "'", 2);
         this._model = new egomModel.Model();
         this._model.loadFromXML(this._getPath(params.multiLOD, params.lod), new window.DOMParser().parseFromString(params.text, "text/xml"), params.lod);
     };
@@ -626,6 +626,22 @@ define([
      */
     GraphicsResourceManager.prototype.getModel = function (name, params) {
         return this.getResource("models", name, params);
+    };
+    /**
+     * 
+     * @param {String} name
+     * @param {Model} model
+     * @returns {ModelResource}
+     */
+    GraphicsResourceManager.prototype.getOrAddModel = function (name, model) {
+        var result = this.getResource("models", name, {allowNullResult: true});
+        if (!result) {
+            result = this.addResource("models", new ModelResource({
+                "name": name,
+                "model": model
+            }));
+        }
+        return result;
     };
     return {
         TextureResource: TextureResource,

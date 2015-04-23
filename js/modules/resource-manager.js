@@ -157,7 +157,10 @@ define([
     ResourceHolder.prototype.getResource = function (resourceName, params) {
         var resource;
         if (!this._resources[resourceName]) {
-            application.showError("Requested a resource named '" + resourceName + "' from " + this._resourceType + ", which does not exist.");
+            if (params.allowNullResult !== true) {
+                application.showError("Requested a resource named '" + resourceName + "' from " + this._resourceType + ", which does not exist.");
+            }
+            return null;
         }
         resource = this._resources[resourceName];
 
@@ -286,10 +289,13 @@ define([
      */
     ResourceManager.prototype.getResource = function (resourceType, resourceName, params) {
         var resource;
-        if (!this._resourceHolders[resourceType]) {
-            application.showError("Requested a resource named '" + resourceName + "' of type '" + resourceType + "', which does not exist.");
+        resource = this._resourceHolders[resourceType] ? this._resourceHolders[resourceType].getResource(resourceName, params) : null;
+        if (!resource) {
+            if (params.allowNullResult !== true) {
+                application.showError("Requested a resource named '" + resourceName + "' of type '" + resourceType + "', which does not exist.");
+            }
+            return null;
         }
-        resource = this._resourceHolders[resourceType].getResource(resourceName, params);
 
         if (resource.requiresReload(params)) {
             this._numRequestedResources++;

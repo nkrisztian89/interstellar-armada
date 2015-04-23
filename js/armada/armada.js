@@ -27,9 +27,9 @@ define([
         level: "levels/",
         environment: "levels/"
     });
-    application.setLogVerbosity(2);
+    application.setLogVerbosity(0);
 
-    application.setVersion("0.1.0:106+refactoring-16 (2015.04.19.)");
+    application.setVersion("0.1.0:106+refactoring-17 (2015.04.23.)");
 
     // add private variables specific to Interstellar Armada
 

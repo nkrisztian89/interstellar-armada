@@ -11,14 +11,14 @@ struct Light
     };
 
 // phong shading
-uniform sampler2D u_colorTexture;
+uniform sampler2D u_diffuseTexture;
 uniform sampler2D u_specularTexture;
 uniform vec3 u_eyePos;
 uniform Light u_lights[2];
 uniform int u_numLights;
 
 // luminosity mapping
-uniform sampler2D u_luminosityTexture;
+uniform sampler2D u_emissiveTexture;
 
 // shadow mapping
 uniform mat4 u_modelMatrix;
@@ -48,9 +48,9 @@ void main() {
     vec3 viewDir = normalize(v_worldPos.xyz - u_eyePos);
     vec3 reflDir = reflect (viewDir, normal);
 
-    vec4 texCol = texture2D(u_colorTexture, v_texCoord);
+    vec4 texCol = texture2D(u_diffuseTexture, v_texCoord);
     vec4 texSpec = texture2D(u_specularTexture, v_texCoord);
-    vec4 texLum = texture2D(u_luminosityTexture, v_texCoord);
+    vec4 texLum = texture2D(u_emissiveTexture, v_texCoord);
 
     gl_FragColor.rgb = 
         // add normal texture lighted by luminosity factor

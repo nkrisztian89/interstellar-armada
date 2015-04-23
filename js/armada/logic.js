@@ -70,9 +70,9 @@ define([
         this._cubemap = null;
     }
     Skybox.prototype.getResources = function () {
-        this._model = armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": "fvqModel",
-            "model": egomModel.fvqModel("fvqModel")}));
+        this._model = armada.resources().getOrAddModel(
+              "fvqModel",
+              egomModel.fvqModel("fvqModel"));
         this._shader = armada.resources().getShader(this._class.shaderName);
         this._cubemap = armada.resources().getCubemap(this._class.cubemap);
     };
@@ -135,9 +135,9 @@ define([
     }
     BackgroundObject.prototype.getResources = function () {
         var i;
-        this._model = armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": "squareModel",
-            "model": egomModel.squareModel("squareModel")}));
+        this._model = armada.resources().getOrAddModel(
+              "squareModel",
+              egomModel.squareModel("squareModel"));
         for (i = 0; i < this._class.layers.length; i++) {
             this._shaders.push(armada.resources().getShader(this._class.layers[i].shaderName));
             this._textures.push(armada.resources().getTexture(this._class.layers[i].textureDescriptor.name));
@@ -205,10 +205,9 @@ define([
         this._range = cloud.getRange();
     }
     DustParticle.prototype.getResources = function () {
-        this._model = armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": "dust",
-            "model": new egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._cloud.getColor())
-        }));
+        this._model = armada.resources().getOrAddModel(
+              "dust",
+              new egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._cloud.getColor()));
     };
     /**
      * Adds the visual model of this particle to a scene, using the passed node
@@ -415,10 +414,9 @@ define([
         return (this._timeLeft <= 0);
     };
     Projectile.prototype.getResources = function () {
-        this._model = armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": "projectileModel-" + this._class.name,
-            "model": egomModel.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections)
-        }));
+        this._model = armada.resources().getOrAddModel(
+              "projectileModel-" + this._class.name,
+              egomModel.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections));
         this._shader = armada.resources().getShader(this._class.shaderName);
         this._texture = armada.resources().getTexture(this._class.textureDescriptor.name);
     };
@@ -547,19 +545,25 @@ define([
          */
         this._muzzleFlashTextures = [];
     }
-    Weapon.prototype.getResources = function (lod) {
+    Weapon.prototype.getResources = function (lod, getProjectileResources) {
         application.log("Requesting resources for weapon (" + this._class.name + ")...", 2);
         var i, projectileClass, params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
-        this._muzzleFlashModel = armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": "squareModel",
-            "model": new egomModel.squareModel("squareModel")
-        }));
-        this._muzzleFlashShaders = [];
-        this._muzzleFlashTextures = [];
-        for (i = 0; i < this._class.barrels.length; i++) {
-            projectileClass = this._class.barrels[i].projectileClass;
-            this._muzzleFlashShaders.push(armada.resources().getShader(projectileClass.muzzleFlash.shaderName));
-            this._muzzleFlashTextures.push(armada.resources().getTexture(projectileClass.muzzleFlash.textureDescriptor.name));
+        if (getProjectileResources === true) {
+            this._muzzleFlashShaders = [];
+            this._muzzleFlashTextures = [];
+            this._muzzleFlashModel = armada.resources().getOrAddModel(
+                  "squareModel",
+                  new egomModel.squareModel("squareModel"));
+            for (i = 0; i < this._class.barrels.length; i++) {
+                projectileClass = this._class.barrels[i].projectileClass;
+                this._muzzleFlashShaders.push(armada.resources().getShader(projectileClass.muzzleFlash.shaderName));
+                this._muzzleFlashTextures.push(armada.resources().getTexture(projectileClass.muzzleFlash.textureDescriptor.name));
+                armada.resources().getOrAddModel(
+                      "projectileModel-" + projectileClass.name,
+                      egomModel.turningBillboardModel("projectileModel-" + projectileClass.name, projectileClass.intersections));
+                armada.resources().getShader(projectileClass.shaderName);
+                armada.resources().getTexture(projectileClass.textureDescriptor.name);
+            }
         }
         return {
             shader: armada.resources().getShader(this._spacecraft.getClass().shaderName),
@@ -612,6 +616,11 @@ define([
               muzzleFlashPosMatrix,
               muzzleFlashTimeLength);
     };
+    Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
+        return function () {
+            scene.addResourcesOfObject(this._getMuzzleFlashForBarrel(barrelIndex));
+        }.bind(this);
+    };
     /**
      * Adds the resources required to render the projeciles fired by this weapon
      * to the passed scene, so they get loaded at the next resource load as well 
@@ -621,9 +630,9 @@ define([
     Weapon.prototype.addProjectileResourcesToScene = function (scene) {
         var i, projectile;
         for (i = 0; i < this._class.barrels.length; i++) {
-            scene.addResourcesOfObject(this._getMuzzleFlashForBarrel(i));
             projectile = new Projectile(this._class.barrels[i].projectileClass);
             projectile.addResourcesToScene(scene);
+            armada.resources().executeWhenReady(this.getResourceAdderFunction(scene, i).bind(this));
         }
     };
     /**
@@ -711,10 +720,9 @@ define([
         this._texture = null;
     }
     Thruster.prototype.getResources = function (particleDescriptor) {
-        this._model = armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": "squareModel",
-            "model": new egomModel.squareModel("squareModel")
-        }));
+        this._model = armada.resources().getOrAddModel(
+              "squareModel",
+              new egomModel.squareModel("squareModel"));
         this._shader = armada.resources().getShader(particleDescriptor.shaderName);
         this._texture = armada.resources().getTexture(particleDescriptor.textureDescriptor.name);
     };
@@ -1883,15 +1891,14 @@ define([
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
         var phyModel =
-              armada.resources().addResource("models", new graphicsResources.ModelResource({
-            "name": this._class.name + "-body" + index,
-            "model": egomModel.cuboidModel(
-                  this._class.name + "-body" + index,
-                  this._class.bodies[index].getWidth(),
-                  this._class.bodies[index].getHeight(),
-                  this._class.bodies[index].getDepth(),
-                  [0.0, 1.0, 1.0, 0.5])
-        }));
+              armada.resources().getOrAddModel(
+              this._class.name + "-body" + index,
+              egomModel.cuboidModel(
+                    this._class.name + "-body" + index,
+                    this._class.bodies[index].getWidth(),
+                    this._class.bodies[index].getHeight(),
+                    this._class.bodies[index].getDepth(),
+                    [0.0, 1.0, 1.0, 0.5]));
         var hitZoneMesh = new budaScene.ShadedLODMesh(
               phyModel.getEgomModel(),
               armada.resources().getShader(this._class.shaderName).getManagedShader(),
@@ -1939,15 +1946,16 @@ define([
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, callback) {
         var i, resources;
+        addSupplements = addSupplements || {};
         // getting resources
         resources = this.getResources(lod, (addSupplements) && (addSupplements.hitboxes === true));
-        if ((addSupplements) && (addSupplements.weapons === true)) {
+        if (addSupplements.weapons === true) {
             for (i = 0; i < this._weapons.length; i++) {
-                this._weapons[i].getResources(lod);
+                this._weapons[i].getResources(lod, addSupplements.projectileResources);
             }
         }
         // add the thruster particles
-        if ((addSupplements) && (addSupplements.thrusterParticles === true)) {
+        if (addSupplements.thrusterParticles === true) {
             this._propulsion.addThrusters(this._class.thrusterSlots);
             this._propulsion.getResources();
         }
@@ -1967,7 +1975,7 @@ define([
                   [{name: "luminosityFactors", length: 20}]);
             node = scene.addObject(this._visualModel);
             // visualize physical model (hitboxes)
-            if ((addSupplements) && (addSupplements.hitboxes === true)) {
+            if (addSupplements.hitboxes === true) {
                 // add the parent objects for the hitboxes
                 this._hitbox = new budaScene.RenderableNode(new budaScene.RenderableObject3D(
                       resources.shader.getManagedShader(),
@@ -1981,17 +1989,17 @@ define([
                 node.addSubnode(this._hitbox);
             }
             // add the weapons
-            if ((addSupplements) && (addSupplements.weapons === true)) {
+            if (addSupplements.weapons === true) {
                 for (i = 0; i < this._weapons.length; i++) {
                     this._weapons[i].addToScene(node, lod, wireframe);
                 }
             }
             // add the thruster particles
-            if ((addSupplements) && (addSupplements.thrusterParticles === true)) {
+            if (addSupplements.thrusterParticles === true) {
                 this._propulsion.addToScene(node);
             }
             // add projectile resources
-            if ((addSupplements) && (addSupplements.projectileResources === true)) {
+            if (addSupplements.projectileResources === true) {
                 for (i = 0; i < this._weapons.length; i++) {
                     this._weapons[i].addProjectileResourcesToScene(scene);
                 }

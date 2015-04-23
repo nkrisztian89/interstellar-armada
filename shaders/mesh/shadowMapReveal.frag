@@ -12,7 +12,7 @@ struct Light
     };
 	
 // phong shading
-uniform sampler2D u_colorTexture;
+uniform sampler2D u_diffuseTexture;
 uniform sampler2D u_specularTexture;
 uniform vec3 u_eyePos;
 uniform Light u_lights[2];
@@ -61,7 +61,7 @@ void main() {
         vec3 viewDir = normalize(v_worldPos.xyz - u_eyePos);
         vec3 reflDir = reflect (viewDir, normal);
 
-        vec4 texCol = texture2D(u_colorTexture, v_texCoord);
+        vec4 texCol = texture2D(u_diffuseTexture, v_texCoord);
         vec4 texSpec = texture2D(u_specularTexture, v_texCoord);
 
         vec4 color;

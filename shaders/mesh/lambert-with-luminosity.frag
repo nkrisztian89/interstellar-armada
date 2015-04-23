@@ -8,7 +8,7 @@ struct Light
         vec3 direction;
     };
 
-uniform sampler2D u_colorTexture;
+uniform sampler2D u_diffuseTexture;
 uniform Light u_lights[1];
 	
 varying vec2 v_texCoord;
@@ -17,7 +17,7 @@ varying vec4 v_color;
 varying float v_luminosity;
 
 void main() {
-    vec4 texCol = texture2D(u_colorTexture, v_texCoord);
+    vec4 texCol = texture2D(u_diffuseTexture, v_texCoord);
     // interpolated normals can have different then unit length
     vec3 normal = normalize(v_normal);
     gl_FragColor.rgb = v_luminosity * v_color.rgb * texCol.rgb;

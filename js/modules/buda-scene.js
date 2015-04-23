@@ -1585,7 +1585,7 @@ define([
      */
     function Billboard(model, shader, texture, size, positionMatrix, orientationMatrix) {
         RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
-        this.setTexture("color", texture);
+        this.setTexture("emissive", texture);
         /**
          * @name Billboard#_model
          * @type Model
@@ -1648,7 +1648,7 @@ define([
         RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.scaling4(size));
         this.setSmallestSizeWhenDrawn(4);
         this.model = model;
-        this.setTexture("color", texture);
+        this.setTexture("emissive", texture);
         this.color = color;
 
         this.creationTime = new Date().getTime();
