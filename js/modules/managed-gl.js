@@ -51,6 +51,7 @@ define([
     };
     /**
      * @class Represents a managed WebGL texture.
+     * @param {String} name
      * @param {Image} image The Image object that contains the data of the
      * texture and can be passed to WebGL. It has to already contain the data
      * when you add this texture to any context.

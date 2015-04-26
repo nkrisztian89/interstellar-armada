@@ -284,60 +284,42 @@ define([
      * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
      * @param {Force} [startingForce] A force that will be applied to the (physical
      * model of) projectile to kick off its movement.
-     * @returns {Projectile}
      */
     function Projectile(projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce) {
         /**
          * The class storing the general characteristics of this projectile.
-         * @name Projectile#_class
          * @type ProjectileClass
          */
         this._class = projectileClass;
         /**
          * The renderable node that represents this projectile in a scene.
-         * @name Projectile#_visualModel
          * @type RenderableObject
          */
         this._visualModel = null;
         /**
          * The object that represents and simulates the physical behaviour of
          * this projectile.
-         * @name Projectile#_physicalModel
          * @type PhysicalObject
          */
         this._physicalModel = new physics.PhysicalObject(
-              projectileClass.mass,
+              projectileClass.getMass(),
               positionMatrix || mat.identity4(),
               orientationMatrix || mat.identity4(),
-              mat.scaling4(projectileClass.size),
+              mat.scaling4(projectileClass.getSize()),
               spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
               []);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
-         * @name Porjectile#_timeLeft
          * @type Number
          */
-        this._timeLeft = projectileClass.duration;
+        this._timeLeft = projectileClass.getDuration();
         /**
          * The spacecraft that originally fired this projectile. It will be 
          * excluded from hit check so that a projectile cannot hit the same craft
          * it was fired from.
-         * @name Projectile#_origin
          * @type Spacecraft
          */
         this._origin = spacecraft;
-        /**
-         * @type ModelResource
-         */
-        this._model = null;
-        /**
-         * @type ShaderResource
-         */
-        this._shader = null;
-        /**
-         * @type TextureResource
-         */
-        this._texture = null;
         // kick off the movement of the projectile with the supplied force
         if (startingForce) {
             this._physicalModel.addForce(startingForce);
@@ -351,23 +333,16 @@ define([
     Projectile.prototype.canBeReused = function () {
         return (this._timeLeft <= 0);
     };
-    Projectile.prototype.getResources = function () {
-        this._model = armada.resources().getOrAddModel(
-              "projectileModel-" + this._class.name,
-              egomModel.turningBillboardModel("projectileModel-" + this._class.name, this._class.intersections));
-        this._shader = armada.resources().getShader(this._class.shaderName);
-        this._texture = armada.resources().getTexture(this._class.textureDescriptor.name);
-    };
     /**
      * Creates the renderable object that can be used to represent this projectile
      * in a visual scene, if it has not been created yet.
      */
     Projectile.prototype._createVisualModel = function () {
         this._visualModel = this._visualModel || new budaScene.Billboard(
-              this._model.getEgomModel(),
-              this._shader.getManagedShader(),
-              this._texture.getManagedTexture("emissive", "normal"),
-              this._class.size,
+              this._class.getModel(),
+              this._class.getShader(),
+              this._class.getTexture("emissive", "normal"),
+              this._class.getSize(),
               this._physicalModel.getPositionMatrix(),
               this._physicalModel.getOrientationMatrix());
     };
@@ -377,7 +352,7 @@ define([
      * presenting the projectile.
      */
     Projectile.prototype.addToScene = function (scene) {
-        this.getResources();
+        this._class.getResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addObject(this._visualModel);
@@ -390,7 +365,7 @@ define([
      * @param {budaScene} scene
      */
     Projectile.prototype.addResourcesToScene = function (scene) {
-        this.getResources();
+        this._class.getResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
@@ -470,44 +445,7 @@ define([
          * @type RenderableObject
          */
         this._visualModel = null;
-        /**
-         * @type ModelResource
-         */
-        this._muzzleFlashModel = null;
-        /**
-         * @type ShaderResource
-         */
-        this._muzzleFlashShaders = [];
-        /**
-         * @type TextureResource
-         */
-        this._muzzleFlashTextures = [];
     }
-    Weapon.prototype.getResources = function (lod, getProjectileResources) {
-        application.log("Requesting resources for weapon (" + this._class.name + ")...", 2);
-        var i, projectileClass, params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
-        if (getProjectileResources === true) {
-            this._muzzleFlashShaders = [];
-            this._muzzleFlashTextures = [];
-            this._muzzleFlashModel = armada.resources().getOrAddModel(
-                  "squareModel",
-                  new egomModel.squareModel("squareModel"));
-            for (i = 0; i < this._class.barrels.length; i++) {
-                projectileClass = this._class.barrels[i].projectileClass;
-                this._muzzleFlashShaders.push(armada.resources().getShader(projectileClass.muzzleFlash.shaderName));
-                this._muzzleFlashTextures.push(armada.resources().getTexture(projectileClass.muzzleFlash.textureDescriptor.name));
-                armada.resources().getOrAddModel(
-                      "projectileModel-" + projectileClass.name,
-                      egomModel.turningBillboardModel("projectileModel-" + projectileClass.name, projectileClass.intersections));
-                armada.resources().getShader(projectileClass.shaderName);
-                armada.resources().getTexture(projectileClass.textureDescriptor.name);
-            }
-        }
-        return {
-            shader: armada.resources().getShader(this._spacecraft.getClass().shaderName),
-            model: armada.resources().getModel(this._class.name, params)
-        };
-    };
     /**
      * Adds a renderable node representing this weapon to the scene under the
      * passed parent node.
@@ -520,13 +458,13 @@ define([
      * mode.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
-        var resources = this.getResources(lod);
+        this._class.getResources();
         armada.resources().executeWhenReady(function () {
-            application.log("Adding weapon (" + this._class.name + ") to scene...", 2);
+            application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             this._visualModel = new budaScene.ShadedLODMesh(
-                  resources.model.getEgomModel(),
-                  resources.shader.getManagedShader(),
-                  this._spacecraft.getTextures(),
+                  this._class.getModel(),
+                  this._class.getShader(),
+                  this._class.getTextures(["normal"]),
                   this._slot.positionMatrix,
                   this._slot.orientationMatrix,
                   mat.identity4(),
@@ -543,14 +481,14 @@ define([
      */
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex) {
         var
-              projectileClass = this._class.barrels[barrelIndex].projectileClass,
-              muzzleFlashPosMatrix = mat.translation4v(this._class.barrels[barrelIndex].positionVector);
+              projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
+              muzzleFlashPosMatrix = mat.translation4v(this._class.getBarrel(barrelIndex).getPositionVector());
         return new budaScene.DynamicParticle(
-              this._muzzleFlashModel.getEgomModel(),
-              this._muzzleFlashShaders[barrelIndex].getManagedShader(),
-              this._muzzleFlashTextures[barrelIndex].getManagedTexture("emissive", "normal"),
-              projectileClass.muzzleFlash.color,
-              projectileClass.size,
+              projectileClass.getMuzzleFlash().getModel(),
+              projectileClass.getMuzzleFlash().getShader(),
+              projectileClass.getMuzzleFlash().getTexture("emissive", "normal"),
+              projectileClass.getMuzzleFlash().getColor(),
+              projectileClass.getSize(),
               muzzleFlashPosMatrix,
               muzzleFlashTimeLength);
     };
@@ -566,9 +504,10 @@ define([
      * @param {budaScene} scene
      */
     Weapon.prototype.addProjectileResourcesToScene = function (scene) {
-        var i, projectile;
-        for (i = 0; i < this._class.barrels.length; i++) {
-            projectile = new Projectile(this._class.barrels[i].projectileClass);
+        var i, projectile, barrels;
+        barrels = this._class.getBarrels();
+        for (i = 0; i < barrels.length; i++) {
+            projectile = new Projectile(barrels[i].getProjectileClass());
             projectile.addResourcesToScene(scene);
             armada.resources().executeWhenReady(this.getResourceAdderFunction(scene, i).bind(this));
         }
@@ -581,10 +520,10 @@ define([
     Weapon.prototype.fire = function (projectiles) {
         var i, curTime, p,
               orientationMatrix, scaledOriMatrix, weaponSlotPosVector, projectilePosMatrix, projectileOriMatrix,
-              projectileClass, barrelPosVector, muzzleFlash;
+              projectileClass, barrelPosVector, muzzleFlash, barrels;
         // check cooldown
         curTime = new Date();
-        if ((curTime - this._lastFireTime) > this._class.cooldown) {
+        if ((curTime - this._lastFireTime) > this._class.getCooldown()) {
             this._lastFireTime = curTime;
             // cache the matrices valid for the whole weapon
             orientationMatrix = this._spacecraft.getOrientationMatrix();
@@ -592,11 +531,12 @@ define([
             weaponSlotPosVector = vec.mulVec4Mat4(mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
             projectilePosMatrix = mat.mul4(this._spacecraft.getPositionMatrix(), mat.translation4v(weaponSlotPosVector));
             projectileOriMatrix = mat.mul4(this._slot.orientationMatrix, orientationMatrix);
+            barrels = this._class.getBarrels();
             // generate the muzzle flashes and projectiles for each barrel
-            for (i = 0; i < this._class.barrels.length; i++) {
+            for (i = 0; i < barrels.length; i++) {
                 // cache variables
-                projectileClass = this._class.barrels[i].projectileClass;
-                barrelPosVector = vec.mulVec3Mat3(this._class.barrels[i].positionVector, mat.matrix3from4(mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
+                projectileClass = barrels[i].getProjectileClass();
+                barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.matrix3from4(mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i);
                 this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash));
@@ -606,7 +546,7 @@ define([
                       mat.mul4(projectilePosMatrix, mat.translation4v(barrelPosVector)),
                       projectileOriMatrix,
                       this._spacecraft,
-                      new physics.Force("", this._class.barrels[i].force, [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
+                      new physics.Force("", barrels[i].getForce(), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
             }

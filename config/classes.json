@@ -52,5 +52,122 @@
             "range": 25,
             "color": [0.6, 0.6, 0.6]
         }
+    ],
+    "projectileClasses": [
+        {
+            "name": "plasma",
+            "shader": "billboard",
+            "texture": "plasma",
+            "size": 2.5,
+            "mass": 1,
+            "duration": 5000,
+            "intersectionPositions": [0],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [0.0, 1.0, 0.0]
+            }
+        },
+        {
+            "name": "proton",
+            "shader": "billboard",
+            "texture": "proton",
+            "size": 8,
+            "mass": 5,
+            "duration": 5000,
+            "intersectionPositions": [0.35],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1.0, 1.0, 0.0]
+            }
+        },
+        {
+            "name": "ion",
+            "shader": "billboard",
+            "texture": "ion",
+            "size": 18,
+            "mass": 15,
+            "duration": 5000,
+            "intersectionPositions": [0],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [0.0, 0.6, 1.0]
+            }
+        }
+    ],
+    "weaponClasses": [
+        {
+            "name": "plasma",
+            "shader": "ship",
+            "model": "plasma",
+            "texture": "falcon",
+            "cooldown": 250,
+            "barrels": [
+                {
+                    "projectile": "plasma",
+                    "force": 1200,
+                    "position": [0, 10, 0]
+                }
+            ]
+        },
+        {
+            "name": "turret",
+            "shader": "ship",
+            "model": "turret",
+            "texture": "falcon",
+            "cooldown": 250,
+            "barrels": [
+                {
+                    "projectile": "plasma",
+                    "force": 1500,
+                    "position": [2, 25, 10]
+                },
+                {
+                    "projectile": "plasma",
+                    "force": 1500,
+                    "position": [-2, 25, 10]
+                },
+                {
+                    "projectile": "plasma",
+                    "force": 1500,
+                    "position": [2, 25, 14]
+                },
+                {
+                    "projectile": "plasma",
+                    "force": 1500,
+                    "position": [-2, 25, 14]
+                }
+            ]
+        },
+        {
+            "name": "cannon",
+            "shader": "ship",
+            "model": "cannon",
+            "texture": "falcon",
+            "cooldown": 1500,
+            "barrels": [
+                {
+                    "projectile": "proton",
+                    "force": 8000,
+                    "position": [0, 100, 0]
+                }
+            ]
+        },
+        {
+            "name": "largeCannon",
+            "shader": "ship",
+            "model": "ion_cannon",
+            "texture": "libra",
+            "cooldown": 5000,
+            "barrels": [
+                {
+                    "projectile": "ion",
+                    "force": 50000,
+                    "position": [0, 320, 0]
+                }
+            ]
+        }
     ]
 }

@@ -212,6 +212,34 @@ define([
         return this._texture.getManagedTexture(type, quality);
     };
     /**
+     * @param {String[]} qualityPreferenceList
+     */
+    TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
+        var type, types, quality, qualities, mostFittingQuality, mostFittingQualityIndex, result;
+        result = {};
+        types = this._texture.getTypes();
+        qualities = this._texture.getQualities();
+        mostFittingQualityIndex = -1;
+        for (quality in qualities) {
+            if (qualities.hasOwnProperty(quality)) {
+                if ((mostFittingQualityIndex === -1) || (qualityPreferenceList.indexOf(quality) < mostFittingQualityIndex)) {
+                    mostFittingQualityIndex = qualityPreferenceList.indexOf(quality);
+                    mostFittingQuality = quality;
+                }
+            }
+        }
+        if (mostFittingQualityIndex === -1) {
+            application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            return null;
+        }
+        for (type in types) {
+            if (types.hasOwnProperty(type)) {
+                result[type] = this._texture.getManagedTexture(type, mostFittingQuality);
+            }
+        }
+        return result;
+    };
+    /**
      * @class A simple class capable of loading the descriptor of a particle (a simple
      * 2D billboard rendered with a suitable shader)
      * @augments TexturedModelClass
@@ -224,7 +252,7 @@ define([
          * The size to scale the particle with when rendering.
          * @type Number
          */
-        this._size = dataJSON.size = null;
+        this._size = dataJSON.size || 1;
         /**
          * The color that can be passed to the shader to modulate the texture with
          * while rendering. [red,green,blue]
@@ -232,6 +260,8 @@ define([
          */
         this._color = dataJSON.color || null;
     }
+    ParticleDescriptor.prototype = new TexturedModelClass();
+    ParticleDescriptor.prototype.constructor = ParticleDescriptor;
     /**
      * @override
      */
@@ -279,6 +309,8 @@ define([
             }
         }
     }
+    BackgroundObjectClass.prototype = new GenericClass();
+    BackgroundObjectClass.prototype.constructor = BackgroundObjectClass;
     /**
      * 
      */
@@ -356,312 +388,183 @@ define([
     DustCloudClass.prototype.getRange = function () {
         return this._range;
     };
-
     /**
-     * Creates a projectile class and loads its properties from the passed XML tag, if any.
      * @class Projectiles such as bullets or plasma bursts can belong to different
      * classes that can be described in classes.xml. This class represents such a 
      * projectile class, defining the common properties of the projectiles belonging
      * to the class.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {ProjectileClass}
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON]
      */
-    function ProjectileClass(xmlTag) {
-        /**
-         * The name by which the class goes by, for example to refer to when 
-         * describing what projectiles does a certain weapon class fire. 
-         * @name ProjectileClass#name
-         * @type String
-         */
-        this.name = null;
+    function ProjectileClass(dataJSON) {
+        dataJSON = dataJSON || {};
+        TexturedModelClass.call(this, dataJSON);
         /**
          * The size by which the model representing the projectile will be scaled.
-         * @see turningBillboardModel
-         * @name ProjectileClass#size
          * @type Number
          */
-        this.size = null;
+        this._size = dataJSON.size || 1;
         /**
          * How many perpendicular planes should be part of the projectile model, and 
          * where are they positioned. (the array of positions)
-         * @name ProjectileClass#intersections
          * @type Number[]
          */
-        this.intersections = null;
-        /**
-         * The name of the shader to be used with the projectile. (as defined in 
-         * shaders.xml)
-         * @name ProjectileClass#shaderName
-         * @type String
-         */
-        this.shaderName = null;
-        /**
-         * The descriptor of the texture to be used on the projectile model.
-         * @name ProjectileClass#textureDescriptor
-         * @type TextureDescriptor
-         */
-        this.textureDescriptor = null;
+        this._intersectionPositions = dataJSON.intersectionPositions || null;
         /**
          * Mass of the projectile in kilograms. Determines how fast will it fly when 
          * shot from weapons.
-         * @name ProjectileClass#mass
          * @type Number
          */
-        this.mass = null;
+        this._mass = dataJSON.mass || null;
         /**
          * The length of life of the projectile in milliseconds, after which it will 
          * disappear.
-         * @name ProjectileClass#duration
          * @type Number
          */
-        this.duration = null;
+        this._duration = dataJSON.duration || null;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
-         * @name ProjectileClass#muzzleFlash
          * @type ParticleDescriptor
          */
-        this.muzzleFlash = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        this._muzzleFlash = null;
+        if (dataJSON.muzzleFlash) {
+            this._muzzleFlash = new ParticleDescriptor(dataJSON.muzzleFlash);
         }
     }
-
+    ProjectileClass.prototype = new TexturedModelClass();
+    ProjectileClass.prototype.constructor = ProjectileClass;
     /**
-     * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @override
      */
-    ProjectileClass.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, tags;
-        this.name = xmlTag.getAttribute("name");
-        this.size = parseFloat(xmlTag.getElementsByTagName("billboard")[0].getAttribute("size"));
-        this.intersections = [];
-        tags = xmlTag.getElementsByTagName("intersection");
-        for (i = 0; i < tags.length; i++) {
-            this.intersections.push(parseFloat(tags[i].getAttribute("position")));
-        }
-        this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
-        this.textureDescriptor = new TextureDescriptor(xmlTag.getElementsByTagName("texture")[0]);
-        this.mass = parseFloat(xmlTag.getElementsByTagName("physics")[0].getAttribute("mass"));
-        this.duration = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("duration"), 10);
-        this.muzzleFlash = new ParticleDescriptor(xmlTag.getElementsByTagName("muzzleFlash")[0]);
-        Object.freeze(this);
+    ProjectileClass.prototype.getResources = function () {
+        TexturedModelClass.prototype.getResources.call(this, {model: egomModel.turningBillboardModel("projectileModel-" + this.getName(), this._intersectionPositions)});
+        this._muzzleFlash.getResources();
     };
-
     /**
-     * Initializes the class from the specified XML tag, if given.
-     * @class Represents a reference to a particular model file with some 
-     * additional associated information:<br/>
-     * - LOD, maximum LOD: using this info, the resource management
-     * system can decide, which model files to request for download to satisfy
-     * LOD settings
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {ModelDescriptor}
+     * @returns {Number}
      */
-    function ModelDescriptor(xmlTag) {
-        /**
-         * The path of the model file, relative to the models folder.
-         * @name ModelDescriptor#path
-         * @type String
-         */
-        this.path = null;
-        /**
-         * The level of detail the model file contains for single-LOD files.
-         * @name ModelDescriptor#lod
-         * @type Number
-         */
-        this.lod = null;
-        /**
-         * The maximum level of detail the model file contains, for multi-LOD
-         * files.
-         * @name ModelDescriptor#maxLOD
-         * @type Number
-         */
-        this.maxLOD = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
-    }
-
-    /**
-     * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class 
-     * cannot be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    ModelDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
-        this.path = xmlTag.getAttribute("path");
-        this.lod = xmlTag.hasAttribute("lod") ? parseInt(xmlTag.getAttribute("lod"), 10) : null;
-        this.maxLOD = xmlTag.hasAttribute("maxLOD") ? parseInt(xmlTag.getAttribute("maxLOD"), 10) : null;
-        Object.freeze(this);
+    ProjectileClass.prototype.getSize = function () {
+        return this._size;
     };
-
     /**
-     * Returns whether the referenced model file contains the model with the 
-     * given LOD.
-     * @param {Number} lod Level Of Detail
-     * @returns {Boolean}
+     * @returns {Number}
      */
-    ModelDescriptor.prototype.containsLOD = function (lod) {
-        return (this.lod === lod) || ((this.maxLOD !== null) && (this.maxLOD >= lod));
+    ProjectileClass.prototype.getMass = function () {
+        return this._mass;
     };
-
     /**
-     * Returns whether this is a descriptor for a model file that contains more
-     * than one LOD of a model.
-     * @returns {Boolean}
+     * @returns {Number}
      */
-    ModelDescriptor.prototype.containsMultipleLOD = function () {
-        return this.maxLOD !== null;
+    ProjectileClass.prototype.getDuration = function () {
+        return this._duration;
     };
-
     /**
-     * Returns whether this is a descriptor for a model file that contains a
-     * single LOD of a model.
-     * @returns {Boolean}
+     * @returns {ParticleDescriptor}
      */
-    ModelDescriptor.prototype.containsSingleLOD = function () {
-        return this.lod !== null;
+    ProjectileClass.prototype.getMuzzleFlash = function () {
+        return this._muzzleFlash;
     };
-
     /**
-     * @class The base class for classes that have an associated 3D model (such
-     * as weapon or spacecraft class classes). Handles the loading of 
-     * descriptors of the model.
-     * @returns {ClassWithModel}
-     */
-    function ClassWithModel() {
-        /**
-         * The file names and associated LODs (Levels Of Detail) for the models 
-         * of this class.
-         * @name ClassWithModel#modelDescriptors
-         * @type ModelDescriptor[]
-         */
-        this.modelDescriptors = null;
-    }
-
-    /**
-     * Loads the model descriptors for this class from a parent XML tag.
-     * @param {Element} xmlTag
-     */
-    ClassWithModel.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, tags;
-        this.modelDescriptors = [];
-        tags = xmlTag.getElementsByTagName("model");
-        for (i = 0; i < tags.length; i++) {
-            this.modelDescriptors.push(new ModelDescriptor(tags[i]));
-        }
-    };
-
-    /**
-     * Creates a weapon class's barrel and loads its data from the passed
-     * XML tag, if any.
      * @class Every weapon can have multiple barrels, each of which shoot one 
      * projectile. Barrels are defined for each weapon class.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {Barrel}
+     * @param {Object} [dataJSON]
      */
-    function Barrel(xmlTag) {
+    function Barrel(dataJSON) {
         /**
          * The class of the projectile being shot from this barrel.
-         * @name Barrel#projectileClass
          * @type ProjectileClass
          */
-        this.projectileClass = null;
+        this._projectileClass = armada.logic().getProjectileClass(dataJSON.projectile) || null;
         /**
          * The force with which the barrel shoots the projectile (used for initial 
          * acceleration, resulting in the speed of the projectile)
          * The force is applied on the projectile for burst time (TIME_UNIT), and is
          * measured in newtons.
-         * @name Barrel#force
          * @type Number
          */
-        this.force = null;
+        this._force = null;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
-         * @name Barrel#positionVector
          * @type Number[3]
          */
-        this.positionVector = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._positionVector = null;
     }
-
     /**
-     * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @returns {ProjectileClass}
      */
-    Barrel.prototype.loadFromXMLTag = function (xmlTag) {
-        this.projectileClass = armada.logic().getProjectileClass(xmlTag.getAttribute("projectile"));
-        this.force = parseFloat(xmlTag.getAttribute("force"));
-        this.positionVector = vec.fromXMLTag3(xmlTag);
-        Object.freeze(this);
+    Barrel.prototype.getProjectileClass = function () {
+        return this._projectileClass;
     };
-
     /**
-     * Creates a weapon class and loads its data from the passed XML tag, if any.
+     * @returns {Number}
+     */
+    Barrel.prototype.getForce = function () {
+        return this._force;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    Barrel.prototype.getPositionVector = function () {
+        return this._positionVector;
+    };
+    /**
      * @class Each spacecraft can have weapons, all of which belong to a certain
      * weapon class. This class represent one of such classes, describing the 
      * general properties of all weapons in that class.
-     * @extends ClassWithModel
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {WeaponClass}
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON] 
      */
-    function WeaponClass(xmlTag) {
-        ClassWithModel.call(this);
-        /**
-         * The name by which the weapon class can be referred to, such as when 
-         * describing what weapons are a certain ship equipped with.
-         * @name WeaponClass#name
-         * @type String
-         */
-        this.name = null;
+    function WeaponClass(dataJSON) {
+        var i;
+        dataJSON = dataJSON || {};
+        TexturedModelClass.call(this, dataJSON);
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
-         * @name WeaponClass#cooldown
          * @type Number
          */
-        this.cooldown = null;
+        this._cooldown = dataJSON.cooldown || null;
         /**
          * The list of barrels of this weapon.
-         * @name WeaponClass#barrels
          * @type Barrel[]
          */
-        this.barrels = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        this._barrels = [];
+        if (dataJSON.barrels) {
+            for (i = 0; i < dataJSON.barrels.length; i++) {
+                this._barrels.push(new Barrel(dataJSON.barrels[i]));
+            }
         }
     }
-
-    WeaponClass.prototype = new ClassWithModel();
+    WeaponClass.prototype = new TexturedModelClass();
     WeaponClass.prototype.constructor = WeaponClass;
-
     /**
-     * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * @override
      */
-    WeaponClass.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, tags;
-        ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
-        this.name = xmlTag.getAttribute("name");
-        this.cooldown = parseInt(xmlTag.getElementsByTagName("logic")[0].getAttribute("cooldown"), 10);
-        this.barrels = [];
-        tags = xmlTag.getElementsByTagName("barrel");
-        for (i = 0; i < tags.length; i++) {
-            this.barrels.push(new Barrel(tags[i]));
+    WeaponClass.prototype.getResources = function () {
+        var i;
+        TexturedModelClass.prototype.getResources.call(this);
+        for (i = 0; i < this._barrels.length; i++) {
+            this._barrels[i].getResources();
         }
-        Object.freeze(this);
+    };
+    /**
+     * @returns {Number}
+     */
+    WeaponClass.getCooldown = function () {
+        return this._cooldown;
+    };
+    /**
+     * @param {Number} index
+     * @returns {Barrel}
+     */
+    WeaponClass.getBarrel = function (index) {
+        return this._barrels[index];
+    };
+    /**
+     * @returns {Barrel[]}
+     */
+    WeaponClass.getBarrels = function () {
+        return this._barrels;
     };
 
     /**
@@ -1148,7 +1051,7 @@ define([
      * @returns {SpacecraftClass}
      */
     function SpacecraftClass(xmlTag) {
-        ClassWithModel.call(this);
+        //ClassWithModel.call(this);
         /**
          * The name by which the class can be referred to.
          * @name SpacecraftClass#name
@@ -1238,8 +1141,8 @@ define([
         }
     }
 
-    SpacecraftClass.prototype = new ClassWithModel();
-    SpacecraftClass.prototype.constructor = SpacecraftClass;
+    //SpacecraftClass.prototype = new ClassWithModel();
+    //SpacecraftClass.prototype.constructor = SpacecraftClass;
 
     /**
      * Loads the values for the properties of the spacecraft class from the passed XML 
@@ -1250,7 +1153,7 @@ define([
     SpacecraftClass.prototype.loadFromXMLTag = function (xmlTag) {
         var i, tag, tags;
 
-        ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
+        //ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
 
         this.name = xmlTag.getAttribute("name");
         this.spacecraftType = armada.logic().getSpacecraftType(xmlTag.getAttribute("type"));
@@ -1281,7 +1184,7 @@ define([
         this.textureDescriptor = null;
         tags = xmlTag.getElementsByTagName("texture");
         for (i = 0; i < tags.length; i++) {
-            this.textureDescriptor = new TextureDescriptor(tags[i]);
+            //this.textureDescriptor = new TextureDescriptor(tags[i]);
         }
         this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
 
