@@ -267,7 +267,8 @@ define([
      * @param {Camera} camera The camera around which the cloud should be rendered.
      */
     DustCloud.prototype.simulate = function (camera) {
-        var i, n = this._class.getNumberOfParticles();
+        var i, n;
+        n = this._class.getNumberOfParticles();
         this._visualModel.shift = [-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2];
         for (i = 0; i < n; i++) {
             this._particles[i].simulate(camera);
@@ -554,73 +555,52 @@ define([
     };
     /**
      * @class Represents a thruster on a spacecraft.
+     * @param {PropulsionClass} propulsionClass
      * @param {ThusterSlot} slot The thruster slot to which this thruster is
      * equipped.
-     * @returns {Thruster}
      */
-    function Thruster(slot) {
+    function Thruster(propulsionClass, slot) {
+        /**
+         * @type PropulsionClass
+         */
+        this._propulsionClass = propulsionClass;
         /**
          * The thruster slot to which this thruster is equipped.
-         * @name Thruster#_slot
          * @type ThrusterSlot
          */
         this._slot = slot;
         /**
          * The renderable object that is used to render the thruster burn particle.
-         * @name Thruster#_visualModel
          * @type RenderableObject
          */
         this._visualModel = null;
         /**
          * The renderable object corresponding to the ship this thruster is located on.
-         * @name Thruster#_shipModel
          * @type RenderableObject
          */
         this._shipModel = null;
         /**
          * The level of intensity this thuster is currently used with. (0 is off,
          * 1 is maximum)
-         * @name Thruster#_burnLevel
          * @type Number
          */
         this._burnLevel = 0;
-        /**
-         * @type ModelResource
-         */
-        this._model = null;
-        /**
-         * @type ShaderResource
-         */
-        this._shader = null;
-        /**
-         * @type TextureResource
-         */
-        this._texture = null;
     }
-    Thruster.prototype.getResources = function (particleDescriptor) {
-        this._model = armada.resources().getOrAddModel(
-              "squareModel",
-              new egomModel.squareModel("squareModel"));
-        this._shader = armada.resources().getShader(particleDescriptor.shaderName);
-        this._texture = armada.resources().getTexture(particleDescriptor.textureDescriptor.name);
-    };
     /**
      * Adds a renderable node representing the particle that is rendered to show
      * the burn level of this thruster to the scene under the passed parent node.
      * @param {ParameterizedMesh} parentNode The parent node to which to attach the
      * particle in the scene. (normally the renderable node of the spacecraft
      * that has this thruster)
-     * @param {ParticleDescriptor} particleDescriptor The descriptor of the 
-     * particle that will be rendered to represent the thruster burn level.
      */
-    Thruster.prototype.addToScene = function (parentNode, particleDescriptor) {
-        this.getResources(particleDescriptor);
+    Thruster.prototype.addToScene = function (parentNode) {
+        this._propulsionClass.getResources();
         armada.resources().executeWhenReady(function () {
             this._visualModel = new budaScene.StaticParticle(
-                  this._model.getEgomModel(),
-                  this._shader.getManagedShader(),
-                  this._texture.getManagedTexture("emissive", "normal"),
-                  particleDescriptor.color,
+                  this._propulsionClass.getThrusterBurnParticle().getModel(),
+                  this._propulsionClass.getThrusterBurnParticle().getShader(),
+                  this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", "normal"),
+                  this._propulsionClass.getThrusterBurnParticle().getColor(),
                   this._slot.size,
                   mat.translation4v(this._slot.positionVector));
             parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
@@ -658,26 +638,22 @@ define([
      * properties of this propulsion.
      * @param {PhysicalObject} drivenPhysicalObject The physical object that is
      * driven by this propulsion (the physical model of the spacecraft)
-     * @returns {Propulsion}
      */
     function Propulsion(propulsionClass, drivenPhysicalObject) {
         /**
          * The class describing the general properties of this propulsion.
-         * @name Propulsion#_class
          * @type PropulsionClass
          */
         this._class = propulsionClass;
         /**
          * The physical object that is driven by this propulsion (the physical 
          * model of the spacecraft)
-         * @name Propulsion#_drivenPhysicalObject
          * @type PhysicalObject
          */
         this._drivenPhysicalObject = drivenPhysicalObject;
         /**
          * An associative array containing the burn level and nozzles associated
          * with each thruster use command.
-         * @name Propulsion#_thrusterUses
          * @type Object
          */
         this._thrusterUses = {
@@ -700,7 +676,7 @@ define([
      * @returns {Number}
      */
     Propulsion.prototype.getThrust = function () {
-        return this._class.thrust;
+        return this._class.getThrust();
     };
     /**
      * Returns the angular thrust power of this propulsion system, measured in
@@ -708,7 +684,7 @@ define([
      * @returns {Number}
      */
     Propulsion.prototype.getAngularThrust = function () {
-        return this._class.angularThrust;
+        return this._class.getAngularThrust();
     };
     /**
      * Creates and adds thruster objects to all the thruster slots in the passed
@@ -718,19 +694,9 @@ define([
     Propulsion.prototype.addThrusters = function (slots) {
         var i, j, thruster;
         for (i = 0; i < slots.length; i++) {
-            thruster = new Thruster(slots[i]);
+            thruster = new Thruster(this._class, slots[i]);
             for (j = 0; j < slots[i].uses.length; j++) {
                 this._thrusterUses[slots[i].uses[j]].thrusters.push(thruster);
-            }
-        }
-    };
-    Propulsion.prototype.getResources = function () {
-        var use, i;
-        for (use in this._thrusterUses) {
-            if (this._thrusterUses.hasOwnProperty(use)) {
-                for (i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
-                    this._thrusterUses[use].thrusters[i].getResources(this._class.thrusterBurnParticle);
-                }
             }
         }
     };
@@ -744,7 +710,7 @@ define([
         for (use in this._thrusterUses) {
             if (this._thrusterUses.hasOwnProperty(use)) {
                 for (i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
-                    this._thrusterUses[use].thrusters[i].addToScene(parentNode, this._class.thrusterBurnParticle);
+                    this._thrusterUses[use].thrusters[i].addToScene(parentNode);
                 }
             }
         }
@@ -791,44 +757,45 @@ define([
      * to the physical object it drives.
      */
     Propulsion.prototype.simulate = function () {
-        var directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
-        var yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
-        var pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
-        if (this._thrusterUses["forward"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses["forward"].burn, directionVector, timeBurstLength);
+        var
+              directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix()),
+              yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
+              pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
+        if (this._thrusterUses.forward.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses.forward.burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["reverse"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.thrust * this._thrusterUses["reverse"].burn, directionVector, timeBurstLength);
+        if (this._thrusterUses.reverse.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.thrust * this._thrusterUses.reverse.burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["strafeRight"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", 2 * this._class.thrust * this._thrusterUses["strafeRight"].burn, pitchAxis, timeBurstLength);
+        if (this._thrusterUses.strafeRight.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", 2 * this._class.thrust * this._thrusterUses.strafeRight.burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["strafeLeft"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -2 * this._class.thrust * this._thrusterUses["strafeLeft"].burn, pitchAxis, timeBurstLength);
+        if (this._thrusterUses.strafeLeft.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -2 * this._class.thrust * this._thrusterUses.strafeLeft.burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["raise"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.thrust * this._thrusterUses["raise"].burn, yawAxis, timeBurstLength);
+        if (this._thrusterUses.raise.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.thrust * this._thrusterUses.raise.burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["lower"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -2 * this._class.thrust * this._thrusterUses["lower"].burn, yawAxis, timeBurstLength);
+        if (this._thrusterUses.lower.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -2 * this._class.thrust * this._thrusterUses.lower.burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["yawRight"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", 2 * this._class.angularThrust * this._thrusterUses["yawRight"].burn, yawAxis, timeBurstLength);
+        if (this._thrusterUses.yawRight.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", 2 * this._class.angularThrust * this._thrusterUses.yawRight.burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["yawLeft"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -2 * this._class.angularThrust * this._thrusterUses["yawLeft"].burn, yawAxis, timeBurstLength);
+        if (this._thrusterUses.yawLeft.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -2 * this._class.angularThrust * this._thrusterUses.yawLeft.burn, yawAxis, timeBurstLength);
         }
-        if (this._thrusterUses["pitchUp"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -2 * this._class.angularThrust * this._thrusterUses["pitchUp"].burn, pitchAxis, timeBurstLength);
+        if (this._thrusterUses.pitchUp.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -2 * this._class.angularThrust * this._thrusterUses.pitchUp.burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["pitchDown"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", 2 * this._class.angularThrust * this._thrusterUses["pitchDown"].burn, pitchAxis, timeBurstLength);
+        if (this._thrusterUses.pitchDown.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", 2 * this._class.angularThrust * this._thrusterUses.pitchDown.burn, pitchAxis, timeBurstLength);
         }
-        if (this._thrusterUses["rollRight"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -2 * this._class.angularThrust * this._thrusterUses["rollRight"].burn, directionVector, timeBurstLength);
+        if (this._thrusterUses.rollRight.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -2 * this._class.angularThrust * this._thrusterUses.rollRight.burn, directionVector, timeBurstLength);
         }
-        if (this._thrusterUses["rollLeft"].burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.angularThrust * this._thrusterUses["rollLeft"].burn, directionVector, timeBurstLength);
+        if (this._thrusterUses.rollLeft.burn > 0) {
+            this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.angularThrust * this._thrusterUses.rollLeft.burn, directionVector, timeBurstLength);
         }
     };
     /**
@@ -984,9 +951,9 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
-        this._compensated ?
-              this._speedTarget += (intensity || this._speedIncrement) :
-              this._speedTarget = Number.MAX_VALUE;
+        this._speedTarget = this._compensated ?
+              this._speedTarget + (intensity || this._speedIncrement) :
+              Number.MAX_VALUE;
     };
     /**
      * Sets the target speed to the current speed if it is bigger. Only works 
@@ -995,7 +962,9 @@ define([
     ManeuveringComputer.prototype.stopForward = function () {
         if (!this._compensated) {
             var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
-            (this._speedTarget > speed) && (this._speedTarget = speed);
+            if (this._speedTarget > speed) {
+                this._speedTarget = speed;
+            }
         }
     };
     /**
@@ -1004,9 +973,9 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
-        this._compensated ?
-              this._speedTarget -= (intensity || this._speedIncrement) :
-              this._speedTarget = -Number.MAX_VALUE;
+        this._speedTarget = this._compensated ?
+              this._speedTarget - (intensity || this._speedIncrement) :
+              -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed to the current speed if it is smaller. Only works 
@@ -1016,7 +985,9 @@ define([
         var speed;
         if (!this._compensated) {
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
-            (this._speedTarget < speed) && (this._speedTarget = speed);
+            if (this._speedTarget < speed) {
+                this._speedTarget = speed;
+            }
         }
     };
     /**
@@ -1033,7 +1004,9 @@ define([
      * left.
      */
     ManeuveringComputer.prototype.stopLeftStrafe = function () {
-        (this._strafeTarget < 0) && (this._strafeTarget = 0);
+        if (this._strafeTarget < 0) {
+            this._strafeTarget = 0;
+        }
     };
     /**
      * Sets the target speed for strafing to the right to intensity, or if not
@@ -1049,7 +1022,9 @@ define([
      * right.
      */
     ManeuveringComputer.prototype.stopRightStrafe = function () {
-        (this._strafeTarget > 0) && (this._strafeTarget = 0);
+        if (this._strafeTarget > 0) {
+            this._strafeTarget = 0;
+        }
     };
     /**
      * Sets the target speed for lifting downwards to intensity, or if not
@@ -1065,7 +1040,9 @@ define([
      * downwards
      */
     ManeuveringComputer.prototype.stopLower = function () {
-        (this._liftTarget < 0) && (this._liftTarget = 0);
+        if (this._liftTarget < 0) {
+            this._liftTarget = 0;
+        }
     };
     /**
      * Sets the target speed for lifting upwards to intensity, or if not
@@ -1081,14 +1058,18 @@ define([
      * upwards.
      */
     ManeuveringComputer.prototype.stopRaise = function () {
-        (this._liftTarget > 0) && (this._liftTarget = 0);
+        if (this._liftTarget > 0) {
+            this._liftTarget = 0;
+        }
     };
     /**
      * Resets the target (forward/reverse) speed to zero. (except in free flight 
      * mode)
      */
     ManeuveringComputer.prototype.resetSpeed = function () {
-        this._compensated && (this._speedTarget = 0);
+        if (this._compensated) {
+            this._speedTarget = 0;
+        }
     };
     /**
      * Sets the target angular velocity to yaw to the left with intensity (maxed
@@ -1193,19 +1174,21 @@ define([
      * pilot.
      */
     ManeuveringComputer.prototype.controlThrusters = function () {
+        var
+              // grab flight parameters for velocity control
+              relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix(),
+              speed = relativeVelocityMatrix[13],
+              speedThreshold = 0.01,
+              // grab flight parameters for turning control
+              turningMatrix = this._spacecraft.getTurningMatrix(),
+              turnThreshold = 0.00002,
+              // cash possibly restricted turn parameters (in rad/5ms)
+              turningLimit = this._turningLimit,
+              yawTarget = this._yawTarget,
+              pitchTarget = this._pitchTarget,
+              yawAngle, pitchAngle, rollAngle;
         // we will add the needed burn levels together, so start from zero
         this._spacecraft.resetThrusterBurn();
-        // grab flight parameters for velocity control
-        var relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
-        var speed = relativeVelocityMatrix[13];
-        var speedThreshold = 0.01;
-        // grab flight parameters for turning control
-        var turningMatrix = this._spacecraft.getTurningMatrix();
-        var turnThreshold = 0.00002;
-        // cash possibly restricted turn parameters (in rad/5ms)
-        var turningLimit = this._turningLimit;
-        var yawTarget = this._yawTarget;
-        var pitchTarget = this._pitchTarget;
         // restrict turning according to current speed in restricted mode
         if (this._restricted && (speed !== 0.0)) {
             // restrict the limit if needed (convert from rad/sec to rad/5ms)
@@ -1215,7 +1198,7 @@ define([
             pitchTarget = Math.min(Math.max(pitchTarget, -turningLimit), turningLimit);
         }
         // controlling yaw
-        var yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]]));
+        yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]]));
         if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("yawRight",
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
@@ -1224,7 +1207,7 @@ define([
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
         }
         // controlling pitch
-        var pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]]));
+        pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]]));
         if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchUp",
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
@@ -1233,7 +1216,7 @@ define([
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
         }
         // controlling roll
-        var rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]]));
+        rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]]));
         if ((this._rollTarget - rollAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("rollRight",
                   Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
@@ -1376,7 +1359,7 @@ define([
               mat.scaling4(this._class.modelSize),
               mat.identity4(),
               this._class.bodies);
-        this._weapons = new Array();
+        this._weapons = [];
         this._maneuveringComputer = new ManeuveringComputer(this);
         this._projectileArray = projectileArray || null;
         // equipping the craft if a profile name was given
@@ -1768,7 +1751,8 @@ define([
      * @param {Number} index The index of the body to represent.
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
-        var phyModel =
+        var
+              phyModel =
               armada.resources().getOrAddModel(
               this._class.name + "-body" + index,
               egomModel.cuboidModel(
@@ -1776,15 +1760,15 @@ define([
                     this._class.bodies[index].getWidth(),
                     this._class.bodies[index].getHeight(),
                     this._class.bodies[index].getDepth(),
-                    [0.0, 1.0, 1.0, 0.5]));
-        var hitZoneMesh = new budaScene.ShadedLODMesh(
-              phyModel.getEgomModel(),
-              armada.resources().getShader(this._class.shaderName).getManagedShader(),
-              this.getHitboxTextures(),
-              mat.translation4v(mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
-              this._class.bodies[index].getOrientationMatrix(),
-              mat.identity4(),
-              false);
+                    [0.0, 1.0, 1.0, 0.5])),
+              hitZoneMesh = new budaScene.ShadedLODMesh(
+                    phyModel.getEgomModel(),
+                    armada.resources().getShader(this._class.shaderName).getManagedShader(),
+                    this.getHitboxTextures(),
+                    mat.translation4v(mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
+                    this._class.bodies[index].getOrientationMatrix(),
+                    mat.identity4(),
+                    false);
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
     Spacecraft.prototype.getResources = function (lod, hitbox) {
@@ -1826,7 +1810,7 @@ define([
         var i, resources;
         addSupplements = addSupplements || {};
         // getting resources
-        resources = this.getResources(lod, (addSupplements) && (addSupplements.hitboxes === true));
+        resources = this.getResources(lod, addSupplements && (addSupplements.hitboxes === true));
         if (addSupplements.weapons === true) {
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].getResources(lod, addSupplements.projectileResources);
@@ -1893,7 +1877,8 @@ define([
      * @param {budaScene} scene The scene to add the cameras to.
      */
     Spacecraft.prototype.addCamerasForViews = function (scene) {
-        for (var i = 0; i < this._class.views.length; i++) {
+        var i;
+        for (i = 0; i < this._class.views.length; i++) {
             scene.addCamera(this._class.views[i].createCameraForObject(scene.width / scene.height, this._visualModel));
         }
     };
@@ -1936,7 +1921,8 @@ define([
      * Fires all of the ship's weapons.
      */
     Spacecraft.prototype.fire = function () {
-        for (var i = 0; i < this._weapons.length; i++) {
+        var i;
+        for (i = 0; i < this._weapons.length; i++) {
             this._weapons[i].fire(this._projectileArray);
         }
     };
@@ -2071,7 +2057,8 @@ define([
      * Performs a simulation step to update the state of the environment.
      */
     Environment.prototype.simulate = function () {
-        for (var i = 0; i < this._dustClouds.length; i++) {
+        var i;
+        for (i = 0; i < this._dustClouds.length; i++) {
             this._dustClouds[i].simulate(this._camera);
         }
     };

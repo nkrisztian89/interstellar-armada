@@ -99,10 +99,11 @@
     ],
     "weaponClasses": [
         {
-            "name": "plasma",
+            "name": "plasmaGun",
             "shader": "ship",
             "model": "plasma",
             "texture": "falcon",
+            "grade": 1,
             "cooldown": 250,
             "barrels": [
                 {
@@ -113,10 +114,11 @@
             ]
         },
         {
-            "name": "turret",
+            "name": "smallPlasmaTurret",
             "shader": "ship",
             "model": "turret",
             "texture": "falcon",
+            "grade": 1,
             "cooldown": 250,
             "barrels": [
                 {
@@ -142,10 +144,11 @@
             ]
         },
         {
-            "name": "cannon",
+            "name": "smallProtonCannon",
             "shader": "ship",
             "model": "cannon",
             "texture": "falcon",
+            "grade": 1,
             "cooldown": 1500,
             "barrels": [
                 {
@@ -156,16 +159,251 @@
             ]
         },
         {
-            "name": "largeCannon",
+            "name": "largeIonCannon",
             "shader": "ship",
             "model": "ion_cannon",
             "texture": "libra",
+            "grade": 1,
             "cooldown": 5000,
             "barrels": [
                 {
                     "projectile": "ion",
                     "force": 50000,
                     "position": [0, 320, 0]
+                }
+            ]
+        }
+    ],
+    "propulsionClasses": [
+        {
+            "name": "imperialFighterMk1",
+            "shader": "permanentParticle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0],
+            "grade": 1,
+            "referenceMass": 10,
+            "thrust": 50,
+            "angularThrust": 180
+        },
+        {
+            "name": "imperialBomberMk1",
+            "shader": "permanentParticle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0],
+            "grade": 1,
+            "referenceMass": 35,
+            "thrust": 30,
+            "angularThrust": 75
+        },
+        {
+            "name": "imperialCorvetteMk1",
+            "shader": "permanentParticle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0],
+            "grade": 1,
+            "referenceMass": 800,
+            "thrust": 15,
+            "angularThrust": 30
+        },
+        {
+            "name": "imperialFrigateMk1",
+            "shader": "permanentParticle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0],
+            "grade": 1,
+            "referenceMass": 2200,
+            "thrust": 10,
+            "angularThrust": 20
+        },
+        {
+            "name": "imperialCruiserMk1",
+            "shader": "permanentParticle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0],
+            "grade": 1,
+            "referenceMass": 25000,
+            "thrust": 5,
+            "angularThrust": 10
+        }
+    ],
+    "spacecraftTypes": [
+        {
+            "name": "lightFighter",
+            "fullName": "Light fighter",
+            "description": "",
+            "goodAgainst": [
+                "heavyFighter", "bomber", "torpedoBoat"
+            ],
+            "badAgainst": [
+                "interceptor", "corvette", "destroyer"
+            ]
+        },
+        {
+            "name": "heavyFighter",
+            "fullName": "Heavy fighter",
+            "description": "",
+            "goodAgainst": [
+                "bomber", "torpedoBoat", "frigate"
+            ],
+            "badAgainst": [
+                "interceptor", "corvette", "destroyer"
+            ]
+        },
+        {
+            "name": "interceptor",
+            "fullName": "Interceptor",
+            "description": "Interceptors are fighters designed to counter enemy fighters and bombers. They are fast and maneuverable with light armor but often considerable firepower, which allows them to take out more heavily armed bombers. Interceptor designers utilize different approaches in their models to offer protection for them in the vicinity of larger enemy ships. However, it is generally highly recommended to stay out of range of enemy ships that are designed against fighters.",
+            "goodAgainst": [
+                "lightFighter", "heavyFighter", "bomber"
+            ],
+            "badAgainst": [
+                "corvette", "destroyer", "cruiser"
+            ]
+        },
+        {
+            "name": "bomber",
+            "fullName": "Bomber",
+            "description": "Bombers are small spacecraft usually manned by one or two pilots, designed as a cost effective solution against small and medium size warships. Their heavy armor and shielding enables them to survive enough to deliver their large payload, either taking out critical systems or causing significant shield and hull damage to their target. The additional mass makes them less maneuverable and thus more vulnerable against enemy fighters.",
+            "goodAgainst": [
+                "corvette", "frigate", "destroyer"
+            ],
+            "badAgainst": [
+                "lightFighter", "heavyFighter", "interceptor"
+            ]
+        },
+        {
+            "name": "torpedoBoat",
+            "fullName": "Torpedo boat",
+            "description": "",
+            "goodAgainst": [
+                "corvette", "frigate", "cruiser"
+            ],
+            "badAgainst": [
+                "lightFighter", "heavyFighter", "destroyer"
+            ]
+        },
+        {
+            "name": "corvette",
+            "fullName": "Corvette",
+            "description": "",
+            "goodAgainst": [
+                "lightFighter", "heavyFighter", "interceptor"
+            ],
+            "badAgainst": [
+                "frigate", "destroyer", "cruiser", "battleship"
+            ]
+        },
+        {
+            "name": "frigate",
+            "fullName": "Frigate",
+            "description": "",
+            "goodAgainst": [
+                "corvette", "destroyer", "cruiser"
+            ],
+            "badAgainst": [
+                "heavyFighter", "bomber", "torpedoBoat"
+            ]
+        },
+        {
+            "name": "destroyer",
+            "fullName": "Destroyer",
+            "description": "",
+            "goodAgainst": [
+                "heavyFighter", "torpedoBoat", "corvette"
+            ],
+            "badAgainst": [
+                "bomber", "frigate", "cruiser", "battleship"
+            ]
+        },
+        {
+            "name": "cruiser",
+            "fullName": "Cruiser",
+            "description": "",
+            "goodAgainst": [
+                "corvette", "destroyer"
+            ],
+            "badAgainst": [
+                "torpedoBoat", "frigate", "battleship"
+            ]
+        },
+        {
+            "name": "battleship",
+            "fullName": "Battleship",
+            "description": "",
+            "goodAgainst": [
+                "corvette", "destroyer", "cruiser"
+            ],
+            "badAgainst": [
+            ]
+        }
+    ],
+    "spacecraftClasses": [
+        {
+            "name": "falcon",
+            "type": "interceptor",
+            "fullName": "Falcon",
+            "description": "The latest generation of interceptors, which recently became the new standard in the fleets of the Galactic Empire. Excellent for dogfighting, with a thin cross-section making it difficult to hit, a good variety of battle equipment it can carry and an effective jammer arrangement.",
+            "model": "falcon",
+            "shader": "ship",
+            "texture": "falcon",
+            "mass": 10000,
+            "bodies": [
+                {
+                    "position": [0, 0, 5],
+                    "size": [80, 20, 10]
+                },
+                {
+                    "position": [0, 15, 5],
+                    "size": [50, 10, 10]
+                },
+                {
+                    "position": [0, 10, 0],
+                    "size": [20, 40, 10]
+                }
+            ],
+            "weaponSlots": [
+                {
+                    "position": [14, 15, 1],
+                    "maxGrade": 3
+                },
+                {
+                    "position": [-14, 15, 1],
+                    "maxGrade": 3
+                },
+                {
+                    "position": [22, 11, 1],
+                    "maxGrade": 3
+                },
+                {
+                    "position": [-22, 11, 1],
+                    "maxGrade": 3
+                }
+            ],
+            "maxPropulsionGrade": 3,
+            "thrusterSlots": [
+                {
+                    "position": [14, -7, 2.5],
+                    "size": 1.8,
+                    "uses": ["forward", "yawLeft"],
+                    "group": 3
+                },
+                {
+                    "position": [22, -7, 2.5],
+                    "size": 1.8,
+                    "uses": ["forward", "yawLeft"],
+                    "group": 3
+                },
+                {
+                    "position": [-14, -7, 2.5],
+                    "size": 1.8,
+                    "uses": ["forward", "yawRight"],
+                    "group": 4
+                },
+                {
+                    "position": [-22, -7, 2.5],
+                    "size": 1.8,
+                    "uses": ["forward", "yawRight"],
+                    "group": 4
                 }
             ]
         }

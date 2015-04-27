@@ -520,6 +520,10 @@ define([
         dataJSON = dataJSON || {};
         TexturedModelClass.call(this, dataJSON);
         /**
+         * @type Number
+         */
+        this._grade = dataJSON.grade || null;
+        /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
@@ -550,81 +554,155 @@ define([
     /**
      * @returns {Number}
      */
-    WeaponClass.getCooldown = function () {
+    WeaponClass.prototype.getGrade = function () {
+        return this._grade;
+    };
+    /**
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getCooldown = function () {
         return this._cooldown;
     };
     /**
      * @param {Number} index
      * @returns {Barrel}
      */
-    WeaponClass.getBarrel = function (index) {
+    WeaponClass.prototype.getBarrel = function (index) {
         return this._barrels[index];
     };
     /**
      * @returns {Barrel[]}
      */
-    WeaponClass.getBarrels = function () {
+    WeaponClass.prototype.getBarrels = function () {
         return this._barrels;
     };
-
     /**
-     * Creates a propulsion class and loads its data from the passed XML tag, if any.
      * @class Each spacecraft can be equipped with a propulsion system. This class
      * represents one of the classes to which such a system can belong, describing
      * the properties of such a propulsion system.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {PropulsionClass}
+     * @augments GenericClass
+     * @param {Object} [dataJSON]
      */
-    function PropulsionClass(xmlTag) {
-        /**
-         * When describing the equipped propulsion system, it's class has to be 
-         * referred to by this name.
-         * @name PropulsionClass#name
-         * @type String
-         */
-        this.name = null;
+    function PropulsionClass(dataJSON) {
+        var referenceMass;
+        dataJSON = dataJSON || {};
+        GenericClass.call(this, dataJSON);
+        referenceMass = dataJSON.referenceMass || 1;
         /**
          * A descriptor for rendering the particles shown when thrusters of the ship 
          * fire.
-         * @name PropulsionClass#thrusterBurnParticle
          * @type ParticleDescriptor
          */
-        this.thrusterBurnParticle = null;
+        this._thrusterBurnParticle = new ParticleDescriptor(dataJSON);
+        /**
+         * @type Number
+         */
+        this._grade = dataJSON.grade || null;
         /**
          * The strength of the force applied to the ship when the thrusters are 
          * fired in one direction, measured in newtons.
-         * @name PropulsionClass#thrust
          * @type Number
          */
-        this.thrust = null;
+        this._thrust = (referenceMass * dataJSON.thrust) || null;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
          * used to turn it, in kg*rad/s^2 (mass is considered instead of a
          * calculated coefficient based on shape, for simplicity)
-         * @name PropulsionClass#angularThrust
          * @type Number
          */
-        this.angularThrust = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._angularThrust = (referenceMass * dataJSON.angularThrust) || null;
     }
-
+    PropulsionClass.prototype = new GenericClass();
+    PropulsionClass.prototype.constructor = PropulsionClass;
     /**
-     * Loads the values for the properties of the class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
+     * 
      */
-    PropulsionClass.prototype.loadFromXMLTag = function (xmlTag) {
-        this.name = xmlTag.getAttribute("name");
-        this.thrusterBurnParticle = new ParticleDescriptor(xmlTag);
-        // convert from kilonewtons (ton*m/s^2) to newtons
-        this.thrust = utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("thrust")) * 1000;
-        // convert the given, ton*degrees/s^2 value to kg*rad/s^2
-        this.angularThrust = utils.evaluateProduct(xmlTag.getElementsByTagName("power")[0].getAttribute("angularThrust")) / 180 * Math.PI * 1000;
-        Object.freeze(this);
+    PropulsionClass.prototype.getResources = function () {
+        this._thrusterBurnParticle.getResources();
+    };
+    /**
+     * @returns {ParticleDescriptor}
+     */
+    PropulsionClass.prototype.getThrusterBurnParticle = function () {
+        return this._thrusterBurnParticle;
+    };
+    /**
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getGrade = function () {
+        return this._grade;
+    };
+    /**
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getThrust = function () {
+        return this._thrust;
+    };
+    /**
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getAngularThrust = function () {
+        return this._angularThrust;
+    };
+    /**
+     * @class A type of spacecraft. This a more general classification of 
+     * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
+     * space station or freighter.
+     * @param {Object} [dataJSON]
+     */
+    function SpacecraftType(dataJSON) {
+        GenericClass.call(this, dataJSON);
+        /**
+         * The full name of this type as displayed in the game.
+         * @type String
+         */
+        this._fullName = dataJSON.fullName || null;
+        /**
+         * @type String
+         */
+        this._description = dataJSON.description || null;
+        /**
+         * @type String[]
+         */
+        this._goodAgainstTypeNames = dataJSON.goodAgainst || [];
+        /**
+         * @type String[]
+         */
+        this._badAgainstTypeNames = dataJSON.badAgainst || [];
+    }
+    SpacecraftType.prototype = new GenericClass();
+    SpacecraftType.prototype.constructor = SpacecraftType;
+    /**
+     * @returns {String}
+     */
+    SpacecraftType.prototype.getFullName = function () {
+        return this._fullName;
+    };
+    /**
+     * @returns {String}
+     */
+    SpacecraftType.prototype.getDescription = function () {
+        return this._description;
+    };
+    /**
+     * @returns {SpacecraftType[]}
+     */
+    SpacecraftType.prototype.getGoodAgainstTypes = function () {
+        var i, result;
+        result = [];
+        for (i = 0; i < this._goodAgainstTypeNames.length; i++) {
+            result.push(armada.logic().getSpacecraftType(this._goodAgainstTypeNames[i]));
+        }
+    };
+    /**
+     * @returns {SpacecraftType[]}
+     */
+    SpacecraftType.prototype.getBadAgainstTypes = function () {
+        var i, result;
+        result = [];
+        for (i = 0; i < this._badAgainstTypeNames.length; i++) {
+            result.push(armada.logic().getSpacecraftType(this._badAgainstTypeNames[i]));
+        }
     };
 
     /**
@@ -633,7 +711,6 @@ define([
      * equipped. The weapons are rendered and shot from these slots. This class 
      * represents such a slot.
      * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {WeaponSlot}
      */
     function WeaponSlot(xmlTag) {
         /**
@@ -907,50 +984,6 @@ define([
         if (xmlTag.getElementsByTagName("propulsion").length > 0) {
             this.setPropulsionDescriptor(new PropulsionDescriptor(xmlTag.getElementsByTagName("propulsion")[0]));
         }
-    };
-
-    /**
-     * Creates an spacecraft type and loads its data from the passed XML tag, if any.
-     * @class A type of spacecraft. This a more general classification of 
-     * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
-     * space station or freighter.
-     * @param {Element} [xmlTag] The XML tag which contains the description of
-     * this spacecraft type.
-     * @returns {SpacecraftType}
-     */
-    function SpacecraftType(xmlTag) {
-        /**
-         * The name by which the type can be referred to.
-         * @name SpacecraftType#name
-         * @type String
-         */
-        this.name = null;
-        /**
-         * The full name of this type as displayed in the game.
-         * @name SpacecraftType#fullName
-         * @type String
-         */
-        this.fullName = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
-    }
-
-    /**
-     * Loads the values for the properties of the spacecraft type from the passed XML 
-     * tag, and then freezes the object to make sure properties of this type cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    SpacecraftType.prototype.loadFromXMLTag = function (xmlTag) {
-        this.name = xmlTag.getAttribute("name");
-        if (xmlTag.getElementsByTagName("fullName").length > 0) {
-            this.fullName = xmlTag.getElementsByTagName("fullName")[0].textContent;
-        } else {
-            this.fullName = this.name;
-        }
-        Object.freeze(this);
     };
 
     /**
