@@ -10,6 +10,7 @@
 /*global define */
 
 define([
+    "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/resource-manager",
@@ -17,7 +18,7 @@ define([
     "modules/physics",
     "modules/buda-scene",
     "armada/armada"
-], function (mat, application, resourceManager, egomModel, physics, budaScene, armada) {
+], function (vec, mat, application, resourceManager, egomModel, physics, budaScene, armada) {
     "use strict";
     // ##############################################################################
     /**
@@ -574,12 +575,12 @@ define([
          * measured in newtons.
          * @type Number
          */
-        this._force = null;
+        this._force = dataJSON ? (dataJSON.force || application.crash()) : null;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
          * @type Number[3]
          */
-        this._positionVector = null;
+        this._positionVector = dataJSON ? (dataJSON.position || application.crash()) : null;
     }
     /**
      * @returns {ProjectileClass}
@@ -727,7 +728,7 @@ define([
          * calculated coefficient based on shape, for simplicity)
          * @type Number
          */
-        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust) || application.crash()) : null;
+        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || application.crash()) : null;
     };
     /**
      * 
@@ -882,7 +883,7 @@ define([
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
          * @type String[]
          */
-        this.uses = uses;
+        this.uses = uses || application.crash();
         /**
          * The index of the thruster group this slot belongs to.
          * Members of the same group should have the same uses list. The parts of the
@@ -890,7 +891,7 @@ define([
          * index, allowing to manipulate their appearance using uniform arrays.
          * @type Number
          */
-        this.group = groupIndex;
+        this.group = (typeof groupIndex) === "number" ? groupIndex : application.crash();
     }
     // ##############################################################################
     /**
@@ -1049,7 +1050,7 @@ define([
      * @param {Object} dataJSON
      */
     SpacecraftClass.prototype._loadData = function (dataJSON) {
-        var i, j, groupIndex, uses;
+        var i, j, groupIndex, uses, startPosition, translationVector, rotations, maxGrade, count;
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
@@ -1093,7 +1094,22 @@ define([
         this._weaponSlots = [];
         if (dataJSON.weaponSlots) {
             for (i = 0; i < dataJSON.weaponSlots.length; i++) {
-                this._weaponSlots.push(new WeaponSlot(dataJSON.weaponSlots[i]));
+                if (dataJSON.weaponSlots[i].array) {
+                    startPosition = dataJSON.weaponSlots[i].startPosition || application.crash();
+                    translationVector = dataJSON.weaponSlots[i].translationVector || application.crash();
+                    rotations = dataJSON.weaponSlots[i].rotations;
+                    maxGrade = dataJSON.weaponSlots[i].maxGrade || application.crash();
+                    count = dataJSON.weaponSlots[i].count || application.crash();
+                    for (j = 0; j < count; j++) {
+                        this._weaponSlots.push(new WeaponSlot({
+                            position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
+                            rotations: rotations,
+                            maxGrade: maxGrade
+                        }));
+                    }
+                } else {
+                    this._weaponSlots.push(new WeaponSlot(dataJSON.weaponSlots[i]));
+                }
             }
         }
         /**
@@ -1107,8 +1123,8 @@ define([
         this._thrusterSlots = [];
         if (dataJSON.thrusterSlots) {
             for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
-                groupIndex = dataJSON.thrusterSlots.group;
-                uses = dataJSON.thrusterSlots.uses;
+                groupIndex = dataJSON.thrusterSlots[i].group;
+                uses = dataJSON.thrusterSlots[i].uses;
                 for (j = 0; j < dataJSON.thrusterSlots[i].thrusters.length; j++) {
                     this._thrusterSlots.push(new ThrusterSlot(dataJSON.thrusterSlots[i].thrusters[j], groupIndex, uses));
                 }
@@ -1187,6 +1203,12 @@ define([
      */
     SpacecraftClass.prototype.getEquipmentProfile = function (name) {
         return this._equipmentProfiles[name];
+    };
+    /**
+     * @returns {ObjectView[]}
+     */
+    SpacecraftClass.prototype.getViews = function () {
+        return this._views;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

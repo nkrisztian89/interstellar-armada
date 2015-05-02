@@ -222,7 +222,7 @@ define([
      * @returns {Number[4]}
      */
     DustCloud.prototype.getColor = function () {
-        return this._class.color.concat(1.0);
+        return this._class.getColor().concat(1.0);
     };
     /**
      * Returns the range this cloud spans. (the maximum distance of particles
@@ -230,7 +230,7 @@ define([
      * @returns {Number}
      */
     DustCloud.prototype.getRange = function () {
-        return this._class.range;
+        return this._class.getRange();
     };
     /**
      * Adds the needed objects to the scene to render this dust cloud.
@@ -245,9 +245,9 @@ define([
             particle = new DustParticle(
                   this,
                   mat.translation4(
-                        (Math.random() - 0.5) * 2 * this._class.range,
-                        (Math.random() - 0.5) * 2 * this._class.range,
-                        (Math.random() - 0.5) * 2 * this._class.range));
+                        (Math.random() - 0.5) * 2 * this._class.getRange(),
+                        (Math.random() - 0.5) * 2 * this._class.getRange(),
+                        (Math.random() - 0.5) * 2 * this._class.getRange()));
             this._particles.push(particle);
 
         }
@@ -679,6 +679,12 @@ define([
         };
     }
     /**
+     * 
+     */
+    Propulsion.prototype.getResources = function () {
+        this._class.getResources();
+    };
+    /**
      * Returns the thrust power of this propulsion system, in newtowns.
      * @returns {Number}
      */
@@ -769,40 +775,40 @@ define([
               yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
               pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
         if (this._thrusterUses.forward.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.thrust * this._thrusterUses.forward.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.getThrust() * this._thrusterUses.forward.burn, directionVector, timeBurstLength);
         }
         if (this._thrusterUses.reverse.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.thrust * this._thrusterUses.reverse.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.getThrust() * this._thrusterUses.reverse.burn, directionVector, timeBurstLength);
         }
         if (this._thrusterUses.strafeRight.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", 2 * this._class.thrust * this._thrusterUses.strafeRight.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", 2 * this._class.getThrust() * this._thrusterUses.strafeRight.burn, pitchAxis, timeBurstLength);
         }
         if (this._thrusterUses.strafeLeft.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -2 * this._class.thrust * this._thrusterUses.strafeLeft.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -2 * this._class.getThrust() * this._thrusterUses.strafeLeft.burn, pitchAxis, timeBurstLength);
         }
         if (this._thrusterUses.raise.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.thrust * this._thrusterUses.raise.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.getThrust() * this._thrusterUses.raise.burn, yawAxis, timeBurstLength);
         }
         if (this._thrusterUses.lower.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -2 * this._class.thrust * this._thrusterUses.lower.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -2 * this._class.getThrust() * this._thrusterUses.lower.burn, yawAxis, timeBurstLength);
         }
         if (this._thrusterUses.yawRight.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", 2 * this._class.angularThrust * this._thrusterUses.yawRight.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", 2 * this._class.getAngularThrust() * this._thrusterUses.yawRight.burn, yawAxis, timeBurstLength);
         }
         if (this._thrusterUses.yawLeft.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -2 * this._class.angularThrust * this._thrusterUses.yawLeft.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -2 * this._class.getAngularThrust() * this._thrusterUses.yawLeft.burn, yawAxis, timeBurstLength);
         }
         if (this._thrusterUses.pitchUp.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -2 * this._class.angularThrust * this._thrusterUses.pitchUp.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -2 * this._class.getAngularThrust() * this._thrusterUses.pitchUp.burn, pitchAxis, timeBurstLength);
         }
         if (this._thrusterUses.pitchDown.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", 2 * this._class.angularThrust * this._thrusterUses.pitchDown.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", 2 * this._class.getAngularThrust() * this._thrusterUses.pitchDown.burn, pitchAxis, timeBurstLength);
         }
         if (this._thrusterUses.rollRight.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -2 * this._class.angularThrust * this._thrusterUses.rollRight.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -2 * this._class.getAngularThrust() * this._thrusterUses.rollRight.burn, directionVector, timeBurstLength);
         }
         if (this._thrusterUses.rollLeft.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.angularThrust * this._thrusterUses.rollLeft.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.getAngularThrust() * this._thrusterUses.rollLeft.burn, directionVector, timeBurstLength);
         }
     };
     /**
@@ -1571,7 +1577,7 @@ define([
             // if a profile is referenced in the equipment tag, look up that profile 
             // and equip according to that
             if (equipmentTag.hasAttribute("profile")) {
-                this.equipProfile(this._class.equipmentProfiles[equipmentTag.getAttribute("profile")]);
+                this.equipProfile(this._class.getEquipmentProfile(equipmentTag.getAttribute("profile")));
                 // if no profile is referenced, simply create a custom profile from the tags inside
                 // the equipment tag, and equip that
             } else {
@@ -1579,8 +1585,8 @@ define([
                 this.equipProfile(equipmentProfile);
             }
             // if there is no equipment tag, attempt to load the profile named "default"    
-        } else if (this._class.equipmentProfiles["default"] !== undefined) {
-            this.equipProfile(this._class.equipmentProfiles["default"]);
+        } else if (this._class.getEquipmentProfile("default") !== undefined) {
+            this.equipProfile(this._class.getEquipmentProfile("default"));
         }
     };
     /**
@@ -1745,19 +1751,18 @@ define([
         var
               phyModel =
               armada.resources().getOrAddModel(
-              this._class.name + "-body" + index,
               egomModel.cuboidModel(
-                    this._class.name + "-body" + index,
-                    this._class.bodies[index].getWidth(),
-                    this._class.bodies[index].getHeight(),
-                    this._class.bodies[index].getDepth(),
+                    this._class.getName() + "-body" + index,
+                    this._class.getBodies()[index].getWidth(),
+                    this._class.getBodies()[index].getHeight(),
+                    this._class.getBodies()[index].getDepth(),
                     [0.0, 1.0, 1.0, 0.5])),
               hitZoneMesh = new budaScene.ShadedLODMesh(
                     phyModel.getEgomModel(),
-                    armada.resources().getShader(this._class.shaderName).getManagedShader(),
+                    this._class.getShader(),
                     this.getHitboxTextures(),
-                    mat.translation4v(mat.translationVector3(this._class.bodies[index].getPositionMatrix())),
-                    this._class.bodies[index].getOrientationMatrix(),
+                    mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
+                    this._class.getBodies()[index].getOrientationMatrix(),
                     mat.identity4(),
                     false);
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
@@ -1805,8 +1810,10 @@ define([
         }
         // add the thruster particles
         if (addSupplements.thrusterParticles === true) {
-            this._propulsion.addThrusters(this._class.thrusterSlots);
-            this._propulsion.getResources();
+            if (this._propulsion) {
+                this._propulsion.addThrusters(this._class.getThrusterSlots());
+                this._propulsion.getResources();
+            }
         }
         armada.resources().executeWhenReady(function () {
             var node;
@@ -1830,7 +1837,7 @@ define([
                       false,
                       false));
                 // add the models for the hitboxes themselves
-                for (i = 0; i < this._class.bodies.length; i++) {
+                for (i = 0; i < this._class.getBodies().length; i++) {
                     this._addHitboxModel(i);
                 }
                 this._hitbox.hide();
@@ -1844,7 +1851,9 @@ define([
             }
             // add the thruster particles
             if (addSupplements.thrusterParticles === true) {
-                this._propulsion.addToScene(node);
+                if (this._propulsion) {
+                    this._propulsion.addToScene(node);
+                }
             }
             // add projectile resources
             if (addSupplements.projectileResources === true) {
@@ -1864,8 +1873,8 @@ define([
      */
     Spacecraft.prototype.addCamerasForViews = function (scene) {
         var i;
-        for (i = 0; i < this._class.views.length; i++) {
-            scene.addCamera(this._class.views[i].createCameraForObject(scene.width / scene.height, this._visualModel));
+        for (i = 0; i < this._class.getViews().length; i++) {
+            scene.addCamera(this._class.getViews()[i].createCameraForObject(scene.width / scene.height, this._visualModel));
         }
     };
     /**
@@ -1900,7 +1909,7 @@ define([
         for (i = 0; i < equipmentProfile.getWeaponDescriptors().length; i++) {
             this.addWeapon(armada.logic().getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
         }
-        if (equipmentProfile.propulsionDescriptor !== null) {
+        if (equipmentProfile.getPropulsionDescriptor() !== null) {
             this.addPropulsion(armada.logic().getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
         }
     };
@@ -1948,12 +1957,16 @@ define([
      * milliseconds.
      */
     Spacecraft.prototype.simulate = function (dt) {
-        this._maneuveringComputer.controlThrusters();
-        this._propulsion.simulate(dt);
+        if (this._propulsion) {
+            this._maneuveringComputer.controlThrusters();
+            this._propulsion.simulate(dt);
+        }
         this._physicalModel.simulate(dt);
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
-        this._maneuveringComputer.updateSpeedIncrement(dt);
+        if (this._propulsion) {
+            this._maneuveringComputer.updateSpeedIncrement(dt);
+        }
     };
     // #########################################################################
     /**

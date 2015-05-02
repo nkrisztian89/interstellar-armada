@@ -1,0 +1,131 @@
+{
+    "name": "aries",
+    "type": "corvette",
+    "fullName": "Aries",
+    "description": "The most common patrol ship of the Empire. Equipped with two rapid fire precision turrets, it is very efficient at taking out enemy fighters and light bombers. It is only lightly armored, which leaves good maneuverability its main protection against larger ships. ",
+    "model": "aries",
+    "shader": "ship",
+    "texture": "falcon",
+    "mass": 800000,
+    "bodies": [
+        {
+            "position": [0, 0, 5],
+            "size": [80, 20, 10]
+        }
+    ],
+    "weaponSlots": [
+        {
+            "position": [55, -10, 45],
+            "maxGrade": 3
+        },
+        {
+            "position": [-55, -10, 45],
+            "maxGrade": 3
+        }
+    ],
+    "maxPropulsionGrade": 3,
+    "thrusterSlots": [
+        {
+            "group": 1,
+            "uses": ["lower", "pitchDown"],
+            "thrusters": [
+                {
+                    "position": [2.6, 10, 7],
+                    "size": 0.9
+                },
+                {
+                    "position": [-2.6, 10, 7],
+                    "size": 0.9
+                }
+            ]
+        }
+    ],
+    "views": [
+        {
+            "name": "near",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 6.5]
+        },
+        {
+            "name": "far",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -80, 13.5]
+        },
+        {
+            "name": "top",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [0, 32, 165],
+            "rotations": [
+                {
+                    "axis": "X",
+                    "degrees": -90
+                }
+            ]
+        },
+        {
+            "name": "cockpit",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "position": [0, 3.7, 1]
+        },
+        {
+            "name": "front",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [0, 36, 13.5],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 180
+                },
+                {
+                    "axis": "X",
+                    "degrees": -10
+                }
+            ]
+        },
+        {
+            "name": "free",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 0]
+        }
+    ],
+    "equipmentProfiles": [
+        {
+            "name": "default",
+            "weapons": [
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialCorvetteMk1"
+            }
+        }
+    ]
+}

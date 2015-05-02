@@ -334,16 +334,16 @@
             <slot x="-11.9" y="30.6" z="-18" size="1.8" use="rollLeft,strafeRight,yawRight" group="8" />
             <slot x="-11.9" y="23.4" z="-18" size="1.8" use="rollLeft,strafeRight" group="10" />
                         
-            <slot x="30.05" y="-4,2" z="40.3" size="1.8" use="rollRight,lower" group="11" />
+            <slot x="30.05" y="-4.2" z="40.3" size="1.8" use="rollRight,lower" group="11" />
             <slot x="30.05" y="-11.4" z="40.3" size="1.8" use="rollRight,lower" group="11" />
                         
-            <slot x="41.95" y="-4,2" z="19.7" size="1.8" use="rollLeft,raise,strafeLeft,pitchDown" group="12" />
+            <slot x="41.95" y="-4.2" z="19.7" size="1.8" use="rollLeft,raise,strafeLeft,pitchDown" group="12" />
             <slot x="41.95" y="-11.4" z="19.7" size="1.8" use="rollLeft,raise,strafeLeft,pitchDown" group="12" />
                         
-            <slot x="-41.95" y="-4,2" z="19.7" size="1.8" use="rollRight,raise,strafeRight,pitchDown" group="13" />
+            <slot x="-41.95" y="-4.2" z="19.7" size="1.8" use="rollRight,raise,strafeRight,pitchDown" group="13" />
             <slot x="-41.95" y="-11.4" z="19.7" size="1.8" use="rollRight,raise,strafeRight,pitchDown" group="13" />
                         
-            <slot x="-30.05" y="-4,2" z="40.3" size="1.8" use="rollLeft,lower" group="14" />
+            <slot x="-30.05" y="-4.2" z="40.3" size="1.8" use="rollLeft,lower" group="14" />
             <slot x="-30.05" y="-11.4" z="40.3" size="1.8" use="rollLeft,lower" group="14" />
                         
             <slot x="6.4" y="33.6" z="10.44" size="1.8" use="pitchDown,lower,strafeLeft" group="15" />

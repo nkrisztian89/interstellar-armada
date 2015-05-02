@@ -388,7 +388,7 @@
             ]
         },
         {
-            "name": "largeCannon",
+            "name": "ion_cannon",
             "basepath": "weapons/ion_cannon",
             "format": "egm",
             "files": [

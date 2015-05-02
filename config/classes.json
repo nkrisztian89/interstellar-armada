@@ -33,7 +33,7 @@
                     "size": 150,
                     "shader": "backgroundBillboard",
                     "texture": "flare",
-                    "color": [0.1, 1.0, 0.0]
+                    "color": [0.1, 1.0, 1.0]
                 },
                 {
                     "size": 50,
@@ -181,7 +181,7 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0],
             "grade": 1,
-            "referenceMass": 10,
+            "referenceMass": 10000,
             "thrust": 50,
             "angularThrust": 180
         },
@@ -341,6 +341,22 @@
         {
             "name": "falcon",
             "source": "spacecraft-classes/falcon.json"
+        },
+        {
+            "name": "viper",
+            "source": "spacecraft-classes/viper.json"
+        },
+        {
+            "name": "aries",
+            "source": "spacecraft-classes/aries.json"
+        },
+        {
+            "name": "taurus",
+            "source": "spacecraft-classes/taurus.json"
+        },
+        {
+            "name": "libra",
+            "source": "spacecraft-classes/libra.json"
         }
     ]
 }

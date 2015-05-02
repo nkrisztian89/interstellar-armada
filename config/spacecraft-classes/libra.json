@@ -1,0 +1,237 @@
+{
+    "name": "libra",
+    "type": "cruiser",
+    "fullName": "Libra",
+    "description": "The main capital ship of the imperial armada. This class is equipped with protection against various threats. It sports heavy armor, both large caliber and small, precision turrets, two battle hangars that can house up to 48 fighters to battle off more maneuverable enemies if needed or bombers to support the already significant firepower of the cruiser, as well as state-of-the-art countermeasure and jammer systems.",
+    "model": "libra",
+    "shader": "ship",
+    "texture": "libra",
+    "mass": 25000000,
+    "bodies": [
+        {
+            "position": [0, 0, 5],
+            "size": [80, 20, 10]
+        }
+    ],
+    "weaponSlots": [
+        {
+            "array": true,
+            "count": 3,
+            "startPosition": [720, -150, 0],
+            "translationVector": [0, 400, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 90
+                }
+            ],
+            "maxGrade": 3
+        },
+        {
+            "array": true,
+            "count": 3,
+            "startPosition": [-720, -150, 0],
+            "translationVector": [0, 400, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -90
+                }
+            ],
+            "maxGrade": 3
+        },
+        {
+            "array": true,
+            "count": 3,
+            "startPosition": [60, -150, 410],
+            "translationVector": [0, 400, 0],
+            "maxGrade": 3
+        },
+        {
+            "array": true,
+            "count": 3,
+            "startPosition": [-60, -150, 410],
+            "translationVector": [0, 400, 0],
+            "maxGrade": 3
+        },
+        {
+            "array": true,
+            "count": 3,
+            "startPosition": [60, -150, -410],
+            "translationVector": [0, 400, 0],
+            "rotations": [
+                {
+                    "axis": "Y",
+                    "degrees": 180
+                }
+            ],
+            "maxGrade": 3
+        },
+        {
+            "array": true,
+            "count": 3,
+            "startPosition": [-60, -150, -410],
+            "translationVector": [0, 400, 0],
+            "rotations": [
+                {
+                    "axis": "Y",
+                    "degrees": 180
+                }
+            ],
+            "maxGrade": 3
+        }
+    ],
+    "maxPropulsionGrade": 3,
+    "thrusterSlots": [
+        {
+            "group": 1,
+            "uses": ["lower", "pitchDown"],
+            "thrusters": [
+                {
+                    "position": [2.6, 10, 7],
+                    "size": 0.9
+                },
+                {
+                    "position": [-2.6, 10, 7],
+                    "size": 0.9
+                }
+            ]
+        }
+    ],
+    "views": [
+        {
+            "name": "near",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 6.5]
+        },
+        {
+            "name": "far",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -80, 13.5]
+        },
+        {
+            "name": "top",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [0, 32, 165],
+            "rotations": [
+                {
+                    "axis": "X",
+                    "degrees": -90
+                }
+            ]
+        },
+        {
+            "name": "cockpit",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "position": [0, 3.7, 1]
+        },
+        {
+            "name": "front",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [0, 36, 13.5],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 180
+                },
+                {
+                    "axis": "X",
+                    "degrees": -10
+                }
+            ]
+        },
+        {
+            "name": "free",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 0]
+        }
+    ],
+    "equipmentProfiles": [
+        {
+            "name": "default",
+            "weapons": [
+                {
+                    "class": "largeIonCannon"
+                },
+                {
+                    "class": "largeIonCannon"
+                },
+                {
+                    "class": "largeIonCannon"
+                },
+                {
+                    "class": "largeIonCannon"
+                },
+                {
+                    "class": "largeIonCannon"
+                },
+                {
+                    "class": "largeIonCannon"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialCruiserMk1"
+            }
+        }
+    ]
+}

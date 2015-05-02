@@ -158,7 +158,7 @@ define([
     ResourceHolder.prototype.getResource = function (resourceName, params) {
         var resource;
         if (!this._resources[resourceName]) {
-            if (params.allowNullResult !== true) {
+            if (!params || params.allowNullResult !== true) {
                 application.showError("Requested a resource named '" + resourceName + "' from " + this._resourceType + ", which does not exist.");
             }
             return null;
