@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
+/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 define(function () {
@@ -47,9 +47,10 @@ define(function () {
      * @returns {Number}
      */
     exports.evaluateProduct = function (productExpression) {
-        var operands = productExpression.split("*");
-        var result = 1;
-        for (var i = 0; i < operands.length; i++) {
+        var operands, result, i;
+        operands = productExpression.split("*");
+        result = 1;
+        for (i = 0; i < operands.length; i++) {
             result *= parseFloat(operands[i]);
         }
         return result;

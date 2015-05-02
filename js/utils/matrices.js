@@ -6,8 +6,8 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
-/*global define */
+/*jslint nomen: true, white: true, plusplus: true */
+/*global define, Float32Array */
 
 define([
     "utils/vectors"
@@ -134,8 +134,9 @@ define([
      * @param {Number} angle The angle of rotation in radian
      */
     mat.rotation4 = function (axis, angle) {
-        var cosAngle = Math.cos(angle);
-        var sinAngle = Math.sin(angle);
+        var
+              cosAngle = Math.cos(angle),
+              sinAngle = Math.sin(angle);
         return new Float32Array([
             cosAngle + (1 - cosAngle) * axis[0] * axis[0], (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2], (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1], 0.0,
             (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2], cosAngle + (1 - cosAngle) * axis[1] * axis[1], (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0], 0.0,
@@ -215,9 +216,9 @@ define([
      * @returns {Float32Array} The costructed rotation matrix.
      */
     mat.rotation4FromXMLTags = function (tags) {
-        var result = mat.identity4();
-        for (var i = 0; i < tags.length; i++) {
-            var axis = [0, 0, 0];
+        var i, axis, result = mat.identity4();
+        for (i = 0; i < tags.length; i++) {
+            axis = [0, 0, 0];
             if (tags[i].getAttribute("axis") === "x") {
                 axis = [1, 0, 0];
             } else
@@ -235,6 +236,44 @@ define([
                               parseFloat(tags[i].getAttribute("degree")) / 180 * 3.1415
                               )
                         );
+        }
+        return result;
+    };
+
+    /**
+     * @param {Object[]} jsonArray
+     */
+    mat.rotation4FromJSON = function (jsonArray) {
+        var i, axis, result = mat.identity4();
+        if (jsonArray) {
+            for (i = 0; i < jsonArray.length; i++) {
+                if (typeof jsonArray[i].axis === "string") {
+                    switch (jsonArray[i].axis) {
+                        case "x":
+                        case "X":
+                            axis = [1, 0, 0];
+                            break;
+                        case "y":
+                        case "Y":
+                            axis = [0, 1, 0];
+                            break;
+                        case "z":
+                        case "Z":
+                            axis = [0, 0, 1];
+                            break;
+                    }
+                } else if (typeof jsonArray[i].axis === "array") {
+                    axis = jsonArray[i].axis;
+                }
+                result =
+                      mat.mul4(
+                            result,
+                            mat.rotation4(
+                                  axis,
+                                  parseFloat(jsonArray[i].degrees) / 180 * 3.1415
+                                  )
+                            );
+            }
         }
         return result;
     };
@@ -464,65 +503,62 @@ define([
      * @returns {Float32Array} The inverse of m.
      */
     mat.inverse3 = function (m) {
-        var i, j, k;
-        var t, u;
-        var m2 = new Float32Array(m);
+        var i, j, k, t, u, m2, result, swap;
+        m2 = new Float32Array(m);
         // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
         // the right of the original matrix
-        var result = mat.identity3();
-        var swap;
+        result = mat.identity3();
         // check by the determinant, if the matrix is invertible
         if (mat.determinant3(m2) === 0) {
             return mat.null3();
-        } else {
-            // calculate the inverse by Gaussian-Jordan elimination
-            // first part: forward elimination
-            // for each row...
-            for (i = 0; i < 3; i++) {
-                // first swap the row to have a non-zero element at the diagonal
-                // position, if needed
-                if (Math.abs(m2[i * 4]) <= 0.0001) {
-                    // first, find a non-zero element in the same (i) column
-                    j = i + 1;
-                    while (Math.abs(m2[j * 3 + i]) <= 0.0001) {
-                        j++;
-                    }
-                    // when found it in row 'j' swap the 'i'th and 'j'th rows
-                    for (k = 0; k < 3; k++) {
-                        swap = m2[i * 3 + k];
-                        m2[i * 3 + k] = m2[j * 3 + k];
-                        m2[j * 3 + k] = swap;
-                        swap = result[i * 3 + k];
-                        result[i * 3 + k] = result[j * 3 + k];
-                        result[j * 3 + k] = swap;
-                    }
+        }
+        // calculate the inverse by Gaussian-Jordan elimination
+        // first part: forward elimination
+        // for each row...
+        for (i = 0; i < 3; i++) {
+            // first swap the row to have a non-zero element at the diagonal
+            // position, if needed
+            if (Math.abs(m2[i * 4]) <= 0.0001) {
+                // first, find a non-zero element in the same (i) column
+                j = i + 1;
+                while (Math.abs(m2[j * 3 + i]) <= 0.0001) {
+                    j++;
                 }
-                // divide all elements of the row by the value of the element in the
-                // main diagonal (within that row), to make it equal one
-                t = m2[i * 4];
-                for (j = 0; j < 3; j++) {
-                    m2[i * 3 + j] = m2[i * 3 + j] / t;
-                    result[i * 3 + j] = result[i * 3 + j] / t;
-                }
-                // subtract the row from all rows below it, multiplied accordingly
-                // to null out the elements below the main diagonal element
-                for (j = i + 1; j < 3; j++) {
-                    u = m2[j * 3 + i] / m2[i * 4];
-                    for (k = 0; k < 3; k++) {
-                        m2[j * 3 + k] = m2[j * 3 + k] - u * m2[i * 3 + k];
-                        result[j * 3 + k] = result[j * 3 + k] - u * result[i * 3 + k];
-                    }
+                // when found it in row 'j' swap the 'i'th and 'j'th rows
+                for (k = 0; k < 3; k++) {
+                    swap = m2[i * 3 + k];
+                    m2[i * 3 + k] = m2[j * 3 + k];
+                    m2[j * 3 + k] = swap;
+                    swap = result[i * 3 + k];
+                    result[i * 3 + k] = result[j * 3 + k];
+                    result[j * 3 + k] = swap;
                 }
             }
-            // back-substitution phase: eliminate the upper part of the original
-            // matrix - however, these final values hold no additional information
-            // for the calculations, so the operations are only done on the right
-            // matrix, which will hold the inverse in the end
-            for (i = 2; i >= 1; i--) {
-                for (j = i - 1; j >= 0; j--) {
-                    for (k = 0; k < 3; k++) {
-                        result[j * 3 + k] = result[j * 3 + k] - m2[j * 3 + i] * result[i * 3 + k];
-                    }
+            // divide all elements of the row by the value of the element in the
+            // main diagonal (within that row), to make it equal one
+            t = m2[i * 4];
+            for (j = 0; j < 3; j++) {
+                m2[i * 3 + j] = m2[i * 3 + j] / t;
+                result[i * 3 + j] = result[i * 3 + j] / t;
+            }
+            // subtract the row from all rows below it, multiplied accordingly
+            // to null out the elements below the main diagonal element
+            for (j = i + 1; j < 3; j++) {
+                u = m2[j * 3 + i] / m2[i * 4];
+                for (k = 0; k < 3; k++) {
+                    m2[j * 3 + k] = m2[j * 3 + k] - u * m2[i * 3 + k];
+                    result[j * 3 + k] = result[j * 3 + k] - u * result[i * 3 + k];
+                }
+            }
+        }
+        // back-substitution phase: eliminate the upper part of the original
+        // matrix - however, these final values hold no additional information
+        // for the calculations, so the operations are only done on the right
+        // matrix, which will hold the inverse in the end
+        for (i = 2; i >= 1; i--) {
+            for (j = i - 1; j >= 0; j--) {
+                for (k = 0; k < 3; k++) {
+                    result[j * 3 + k] = result[j * 3 + k] - m2[j * 3 + i] * result[i * 3 + k];
                 }
             }
         }
@@ -535,13 +571,11 @@ define([
      * @returns {Float32Array} The inverse of m.
      */
     mat.inverse4 = function (m) {
-        var i, j, k;
-        var t, u;
-        var m2 = new Float32Array(m);
+        var i, j, k, t, u, m2, result, swap;
+        m2 = new Float32Array(m);
         // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
         // the right of the original matrix
-        var result = mat.identity4();
-        var swap;
+        result = mat.identity4();
         // we assume that the matrix is invertible (for efficiency, and since in all
         // uses cases it should be)
         // calculate the inverse by Gaussian-Jordan elimination
@@ -668,9 +702,10 @@ define([
      * @returns {Float32Array} An orthogonal 4x4 matrix.
      */
     mat.correctedOrthogonal4 = function (m) {
-        var vx = vec.normal3([m[0], m[1], m[2]]);
-        var vy = vec.normal3([m[4], m[5], m[6]]);
-        var vz = vec.cross3(vx, vy);
+        var
+              vx = vec.normal3([m[0], m[1], m[2]]),
+              vy = vec.normal3([m[4], m[5], m[6]]),
+              vz = vec.cross3(vx, vy);
         vy = vec.cross3(vz, vx);
         return new Float32Array([
             vx[0], vx[1], vx[2], 0.0,
@@ -689,8 +724,8 @@ define([
      * @returns {Float32Array}
      */
     mat.straightened = function (m, epsilon) {
-        var result = new Float32Array(m);
-        for (var i = 0; i < result.length; i++) {
+        var i, result = new Float32Array(m);
+        for (i = 0; i < result.length; i++) {
             result[i] = (Math.abs(m[i]) < epsilon) ?
                   0.0 :
                   ((Math.abs(1 - m[i]) < epsilon) ?

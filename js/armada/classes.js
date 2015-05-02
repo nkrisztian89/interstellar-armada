@@ -10,33 +10,59 @@
 /*global define */
 
 define([
-    "utils/utils",
-    "utils/vectors",
     "utils/matrices",
     "modules/application",
+    "modules/resource-manager",
     "modules/egom-model",
     "modules/physics",
     "modules/buda-scene",
     "armada/armada"
-], function (utils, vec, mat, application, egomModel, physics, budaScene, armada) {
+], function (mat, application, resourceManager, egomModel, physics, budaScene, armada) {
     "use strict";
+    // ##############################################################################
     /**
      * @class
+     * @augments GenericResource
      * @param {object} dataJSON
      */
     function GenericClass(dataJSON) {
-        dataJSON = dataJSON || {};
+        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || application.crash()) : null);
         /**
-         * A string identifier that needs to be unique among the instances of the same type of class.
          * @type String
          */
-        this._name = dataJSON.name || null;
+        this._source = dataJSON ? (dataJSON.source || null) : null;
+        if (dataJSON) {
+            if (!this._source) {
+                this._loadData(dataJSON);
+                this.setToReady();
+            }
+        }
     }
+    GenericClass.prototype = new resourceManager.GenericResource();
+    GenericClass.prototype.constructor = GenericClass;
     /**
-     * @returns {String}
+     * @override
+     * @returns {Boolean}
      */
-    GenericClass.prototype.getName = function () {
-        return this._name;
+    GenericClass.prototype.requiresReload = function () {
+        if (this.isRequested()) {
+            return false;
+        }
+        return !this.isLoaded();
+    };
+    /**
+     * @override
+     */
+    GenericClass.prototype._requestFiles = function () {
+        application.requestTextFile("config", this._source, function (responseText) {
+            this._onFilesLoad(true, JSON.parse(responseText));
+        }.bind(this), 'text/plain; charset=utf-8');
+    };
+    /**
+     * @override
+     */
+    GenericClass.prototype._loadData = function () {
+        this._source = this._source || "";
     };
     /**
      * @param {String} resourceType
@@ -45,25 +71,32 @@ define([
     GenericClass.prototype.showResourceAccessError = function (resourceType, resourceName) {
         application.showError("Attempting to access " + resourceType + " ('" + resourceName + "') of class '" + this._name + "' before it has been loaded!");
     };
+    // ##############################################################################
     /**
      * @class
      * @augments GenericClass
      * @param {Object} dataJSON
      */
     function ShadedClass(dataJSON) {
-        dataJSON = dataJSON || {};
         GenericClass.call(this, dataJSON);
+    }
+    ShadedClass.prototype = new GenericClass();
+    ShadedClass.prototype.constructor = ShadedClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ShadedClass.prototype._loadData = function (dataJSON) {
+        GenericClass.prototype._loadData.call(this, dataJSON);
         /**
          * @type String
          */
-        this._shaderName = dataJSON.shader || null;
+        this._shaderName = dataJSON ? (dataJSON.shader || application.crash()) : null;
         /**
          * @type ShaderResource
          */
         this._shader = null;
-    }
-    ShadedClass.prototype = new GenericClass();
-    ShadedClass.prototype.constructor = ShadedClass;
+    };
     /**
      * 
      */
@@ -83,25 +116,32 @@ define([
         }
         return this._shader.getManagedShader();
     };
+    // ##############################################################################
     /**
      * @class
      * @augments ShadedClass
      * @param {Object} dataJSON
      */
     function ShadedModelClass(dataJSON) {
-        dataJSON = dataJSON || {};
         ShadedClass.call(this, dataJSON);
+    }
+    ShadedModelClass.prototype = new ShadedClass();
+    ShadedModelClass.prototype.constructor = ShadedModelClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ShadedModelClass.prototype._loadData = function (dataJSON) {
+        ShadedClass.prototype._loadData.call(this, dataJSON);
         /**
          * @type String
          */
-        this._modelName = dataJSON.model || null;
+        this._modelName = dataJSON ? (dataJSON.model || null) : null;
         /**
          * @type ModelResource
          */
         this._model = null;
-    }
-    ShadedModelClass.prototype = new ShadedClass();
-    ShadedModelClass.prototype.constructor = ShadedModelClass;
+    };
     /**
      * @override
      * @param {Object} params
@@ -109,7 +149,7 @@ define([
     ShadedModelClass.prototype.getResources = function (params) {
         ShadedClass.prototype.getResources.call(this);
         if (this._model === null) {
-            if (params.model) {
+            if (params && params.model) {
                 this._model = armada.resources().getOrAddModel(params.model);
                 this._modelName = this._model.getName();
             } else {
@@ -128,6 +168,7 @@ define([
         }
         return this._model.getEgomModel();
     };
+    // ##############################################################################
     /**
      * @class A skybox represents the background picture rendered for the 
      * environment using a cubemap sampler and a full viewport quad. Skybox classes 
@@ -137,19 +178,25 @@ define([
      * @param {Object} [dataJSON] 
      */
     function SkyboxClass(dataJSON) {
-        dataJSON = dataJSON || {};
         ShadedModelClass.call(this, dataJSON);
+    }
+    SkyboxClass.prototype = new ShadedModelClass();
+    SkyboxClass.prototype.constructor = SkyboxClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    SkyboxClass.prototype._loadData = function (dataJSON) {
+        ShadedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * @type String
          */
-        this._cubemapName = dataJSON.cubemap || null;
+        this._cubemapName = dataJSON ? (dataJSON.cubemap || application.crash()) : null;
         /**
          * @type CubemapResource
          */
         this._cubemap = null;
-    }
-    SkyboxClass.prototype = new ShadedModelClass();
-    SkyboxClass.prototype.constructor = SkyboxClass;
+    };
     /**
      * @override
      */
@@ -170,25 +217,32 @@ define([
         }
         return this._cubemap.getManagedCubemap();
     };
+    // ##############################################################################
     /**
      * @class
      * @augments ShadedModelClass
      * @param {Object} dataJSON
      */
     function TexturedModelClass(dataJSON) {
-        dataJSON = dataJSON || {};
         ShadedModelClass.call(this, dataJSON);
+    }
+    TexturedModelClass.prototype = new ShadedModelClass();
+    TexturedModelClass.prototype.constructor = TexturedModelClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    TexturedModelClass.prototype._loadData = function (dataJSON) {
+        ShadedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * @type String
          */
-        this._textureName = dataJSON.texture || null;
+        this._textureName = dataJSON ? (dataJSON.texture || application.crash()) : null;
         /**
          * @type TextureResource
          */
         this._texture = null;
-    }
-    TexturedModelClass.prototype = new ShadedModelClass();
-    TexturedModelClass.prototype.constructor = TexturedModelClass;
+    };
     /**
      * @override
      * @param {Object} params
@@ -213,32 +267,30 @@ define([
     };
     /**
      * @param {String[]} qualityPreferenceList
+     * @returns {Object.<String, ManagedTexture>} 
      */
     TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
-        var type, types, quality, qualities, mostFittingQuality, mostFittingQualityIndex, result;
+        var i, types, qualities, mostFittingQuality, mostFittingQualityIndex, result;
         result = {};
         types = this._texture.getTypes();
         qualities = this._texture.getQualities();
         mostFittingQualityIndex = -1;
-        for (quality in qualities) {
-            if (qualities.hasOwnProperty(quality)) {
-                if ((mostFittingQualityIndex === -1) || (qualityPreferenceList.indexOf(quality) < mostFittingQualityIndex)) {
-                    mostFittingQualityIndex = qualityPreferenceList.indexOf(quality);
-                    mostFittingQuality = quality;
-                }
+        for (i = 0; i < qualities.length; i++) {
+            if ((mostFittingQualityIndex === -1) || (i < mostFittingQualityIndex)) {
+                mostFittingQualityIndex = i;
+                mostFittingQuality = qualities[i];
             }
         }
         if (mostFittingQualityIndex === -1) {
             application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
             return null;
         }
-        for (type in types) {
-            if (types.hasOwnProperty(type)) {
-                result[type] = this._texture.getManagedTexture(type, mostFittingQuality);
-            }
+        for (i = 0; i < types.length; i++) {
+            result[types[i]] = this._texture.getManagedTexture(types[i], mostFittingQuality);
         }
         return result;
     };
+    // ##############################################################################
     /**
      * @class A simple class capable of loading the descriptor of a particle (a simple
      * 2D billboard rendered with a suitable shader)
@@ -246,22 +298,28 @@ define([
      * @param {Object} [dataJSON] 
      */
     function ParticleDescriptor(dataJSON) {
-        dataJSON = dataJSON || {};
         TexturedModelClass.call(this, dataJSON);
+    }
+    ParticleDescriptor.prototype = new TexturedModelClass();
+    ParticleDescriptor.prototype.constructor = ParticleDescriptor;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ParticleDescriptor.prototype._loadData = function (dataJSON) {
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The size to scale the particle with when rendering.
          * @type Number
          */
-        this._size = dataJSON.size || 1;
+        this._size = dataJSON ? (dataJSON.size || 1) : null;
         /**
          * The color that can be passed to the shader to modulate the texture with
          * while rendering. [red,green,blue]
          * @type Number[3]
          */
-        this._color = dataJSON.color || null;
-    }
-    ParticleDescriptor.prototype = new TexturedModelClass();
-    ParticleDescriptor.prototype.constructor = ParticleDescriptor;
+        this._color = dataJSON ? (dataJSON.color || [1, 1, 1]) : null;
+    };
     /**
      * @override
      */
@@ -280,6 +338,7 @@ define([
     ParticleDescriptor.prototype.getColor = function () {
         return this._color;
     };
+    // ##############################################################################
     /**
      * @class Environments (levels) in the game can have several background objects,
      * like stars or nebulae, which provide the lighting for the environment.
@@ -287,30 +346,42 @@ define([
      * @param {Object} [dataJSON] 
      */
     function BackgroundObjectClass(dataJSON) {
-        var i;
-        dataJSON = dataJSON || {};
         GenericClass.call(this, dataJSON);
+    }
+    BackgroundObjectClass.prototype = new GenericClass();
+    BackgroundObjectClass.prototype.constructor = BackgroundObjectClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    BackgroundObjectClass.prototype._loadData = function (dataJSON) {
+        var i, descriptorJSON;
+        GenericClass.prototype._loadData.call(this, dataJSON);
         /**
          * The color of the light this object emits. A directional light source with
          * this color will be added to levels where this object it present, coming
          * from the object's direction.
          * @type Number[3]
          */
-        this._lightColor = dataJSON.lightColor || null;
+        this._lightColor = dataJSON ? (dataJSON.lightColor || [1, 1, 1]) : null;
         /**
          * To draw the object on the background, the layers defined in this array
          * will be rendered on top of each other in order.
          * @type ParticleDescriptor[]
          */
         this._layers = [];
-        if (dataJSON.layers) {
-            for (i = 0; i < dataJSON.layers.length; i++) {
-                this._layers.push(new ParticleDescriptor(dataJSON.layers[i]));
+        if (dataJSON) {
+            if (dataJSON.layers) {
+                for (i = 0; i < dataJSON.layers.length; i++) {
+                    descriptorJSON = dataJSON.layers[i];
+                    descriptorJSON.name = "-";
+                    this._layers.push(new ParticleDescriptor(descriptorJSON));
+                }
+            } else {
+                application.crash();
             }
         }
-    }
-    BackgroundObjectClass.prototype = new GenericClass();
-    BackgroundObjectClass.prototype.constructor = BackgroundObjectClass;
+    };
     /**
      * 
      */
@@ -332,6 +403,7 @@ define([
     BackgroundObjectClass.prototype.getLayers = function () {
         return this._layers;
     };
+    // ##############################################################################
     /**
      * @class Dust clouds represent a big group of tiny dust particles that are
      * rendered when the camera (the player) is moving around of space, to give a
@@ -342,28 +414,34 @@ define([
      * @param {Object} [dataJSON]
      */
     function DustCloudClass(dataJSON) {
-        dataJSON = dataJSON || {};
         ShadedModelClass.call(this, dataJSON);
+    }
+    DustCloudClass.prototype = new ShadedModelClass();
+    DustCloudClass.prototype.constructor = DustCloudClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    DustCloudClass.prototype._loadData = function (dataJSON) {
+        ShadedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The number of dust particles that should be created when such a dust 
          * class is instantiated.
          * @type Number
          */
-        this._numberOfParticles = dataJSON.numberOfParticles || null;
+        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || application.crash()) : null;
         /**
          * The color of the particles in the dust clouds of this class.
          * @type Number[3]
          */
-        this._color = dataJSON.color || null;
+        this._color = dataJSON ? (dataJSON.color || [1, 1, 1]) : null;
         /**
          * The maximum distance of the particles in the dust clouds of this class
          * from the camera along any axis.
          * @type Number
          */
-        this._range = dataJSON.range || null;
-    }
-    DustCloudClass.prototype = new ShadedModelClass();
-    DustCloudClass.prototype.constructor = DustCloudClass;
+        this._range = dataJSON ? (dataJSON.range || application.crash()) : null;
+    };
     /**
      * @override
      */
@@ -388,6 +466,7 @@ define([
     DustCloudClass.prototype.getRange = function () {
         return this._range;
     };
+    // ##############################################################################
     /**
      * @class Projectiles such as bullets or plasma bursts can belong to different
      * classes that can be described in classes.xml. This class represents such a 
@@ -397,43 +476,54 @@ define([
      * @param {Object} [dataJSON]
      */
     function ProjectileClass(dataJSON) {
-        dataJSON = dataJSON || {};
         TexturedModelClass.call(this, dataJSON);
+    }
+    ProjectileClass.prototype = new TexturedModelClass();
+    ProjectileClass.prototype.constructor = ProjectileClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ProjectileClass.prototype._loadData = function (dataJSON) {
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The size by which the model representing the projectile will be scaled.
          * @type Number
          */
-        this._size = dataJSON.size || 1;
+        this._size = dataJSON ? (dataJSON.size || 1) : null;
         /**
          * How many perpendicular planes should be part of the projectile model, and 
          * where are they positioned. (the array of positions)
          * @type Number[]
          */
-        this._intersectionPositions = dataJSON.intersectionPositions || null;
+        this._intersectionPositions = dataJSON ? (dataJSON.intersectionPositions || []) : null;
         /**
          * Mass of the projectile in kilograms. Determines how fast will it fly when 
          * shot from weapons.
          * @type Number
          */
-        this._mass = dataJSON.mass || null;
+        this._mass = dataJSON ? (dataJSON.mass || application.crash()) : null;
         /**
          * The length of life of the projectile in milliseconds, after which it will 
          * disappear.
          * @type Number
          */
-        this._duration = dataJSON.duration || null;
+        this._duration = dataJSON ? (dataJSON.duration || application.crash()) : null;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
          * @type ParticleDescriptor
          */
         this._muzzleFlash = null;
-        if (dataJSON.muzzleFlash) {
-            this._muzzleFlash = new ParticleDescriptor(dataJSON.muzzleFlash);
+        if (dataJSON) {
+            if (dataJSON.muzzleFlash) {
+                dataJSON.muzzleFlash.name = "-";
+                this._muzzleFlash = new ParticleDescriptor(dataJSON.muzzleFlash);
+            } else {
+                application.crash();
+            }
         }
-    }
-    ProjectileClass.prototype = new TexturedModelClass();
-    ProjectileClass.prototype.constructor = ProjectileClass;
+    };
     /**
      * @override
      */
@@ -465,6 +555,7 @@ define([
     ProjectileClass.prototype.getMuzzleFlash = function () {
         return this._muzzleFlash;
     };
+    // ##############################################################################
     /**
      * @class Every weapon can have multiple barrels, each of which shoot one 
      * projectile. Barrels are defined for each weapon class.
@@ -475,7 +566,7 @@ define([
          * The class of the projectile being shot from this barrel.
          * @type ProjectileClass
          */
-        this._projectileClass = armada.logic().getProjectileClass(dataJSON.projectile) || null;
+        this._projectileClass = dataJSON ? (armada.logic().getProjectileClass(dataJSON.projectile || application.crash()) || application.crash()) : null;
         /**
          * The force with which the barrel shoots the projectile (used for initial 
          * acceleration, resulting in the speed of the projectile)
@@ -509,6 +600,13 @@ define([
         return this._positionVector;
     };
     /**
+     *
+     */
+    Barrel.prototype.getResources = function () {
+        this._projectileClass.getResources();
+    };
+    // ##############################################################################
+    /**
      * @class Each spacecraft can have weapons, all of which belong to a certain
      * weapon class. This class represent one of such classes, describing the 
      * general properties of all weapons in that class.
@@ -516,31 +614,41 @@ define([
      * @param {Object} [dataJSON] 
      */
     function WeaponClass(dataJSON) {
-        var i;
-        dataJSON = dataJSON || {};
         TexturedModelClass.call(this, dataJSON);
+    }
+    WeaponClass.prototype = new TexturedModelClass();
+    WeaponClass.prototype.constructor = WeaponClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    WeaponClass.prototype._loadData = function (dataJSON) {
+        var i;
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * @type Number
          */
-        this._grade = dataJSON.grade || null;
+        this._grade = dataJSON ? (dataJSON.grade || application.crash()) : null;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
-        this._cooldown = dataJSON.cooldown || null;
+        this._cooldown = dataJSON ? (dataJSON.cooldown || application.crash()) : null;
         /**
          * The list of barrels of this weapon.
          * @type Barrel[]
          */
         this._barrels = [];
-        if (dataJSON.barrels) {
-            for (i = 0; i < dataJSON.barrels.length; i++) {
-                this._barrels.push(new Barrel(dataJSON.barrels[i]));
+        if (dataJSON) {
+            if (dataJSON.barrels) {
+                for (i = 0; i < dataJSON.barrels.length; i++) {
+                    this._barrels.push(new Barrel(dataJSON.barrels[i]));
+                }
+            } else {
+                application.crash();
             }
         }
-    }
-    WeaponClass.prototype = new TexturedModelClass();
-    WeaponClass.prototype.constructor = WeaponClass;
+    };
     /**
      * @override
      */
@@ -576,6 +684,7 @@ define([
     WeaponClass.prototype.getBarrels = function () {
         return this._barrels;
     };
+    // ##############################################################################
     /**
      * @class Each spacecraft can be equipped with a propulsion system. This class
      * represents one of the classes to which such a system can belong, describing
@@ -584,10 +693,18 @@ define([
      * @param {Object} [dataJSON]
      */
     function PropulsionClass(dataJSON) {
-        var referenceMass;
-        dataJSON = dataJSON || {};
         GenericClass.call(this, dataJSON);
-        referenceMass = dataJSON.referenceMass || 1;
+    }
+    PropulsionClass.prototype = new GenericClass();
+    PropulsionClass.prototype.constructor = PropulsionClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    PropulsionClass.prototype._loadData = function (dataJSON) {
+        var referenceMass;
+        GenericClass.prototype._loadData.call(this, dataJSON);
+        referenceMass = dataJSON ? (dataJSON.referenceMass || 1) : null;
         /**
          * A descriptor for rendering the particles shown when thrusters of the ship 
          * fire.
@@ -597,23 +714,21 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON.grade || null;
+        this._grade = dataJSON ? (dataJSON.grade || application.crash()) : null;
         /**
          * The strength of the force applied to the ship when the thrusters are 
          * fired in one direction, measured in newtons.
          * @type Number
          */
-        this._thrust = (referenceMass * dataJSON.thrust) || null;
+        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || application.crash()) : null;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
          * used to turn it, in kg*rad/s^2 (mass is considered instead of a
          * calculated coefficient based on shape, for simplicity)
          * @type Number
          */
-        this._angularThrust = (referenceMass * dataJSON.angularThrust) || null;
-    }
-    PropulsionClass.prototype = new GenericClass();
-    PropulsionClass.prototype.constructor = PropulsionClass;
+        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust) || application.crash()) : null;
+    };
     /**
      * 
      */
@@ -644,6 +759,7 @@ define([
     PropulsionClass.prototype.getAngularThrust = function () {
         return this._angularThrust;
     };
+    // ##############################################################################
     /**
      * @class A type of spacecraft. This a more general classification of 
      * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
@@ -652,26 +768,33 @@ define([
      */
     function SpacecraftType(dataJSON) {
         GenericClass.call(this, dataJSON);
+    }
+    SpacecraftType.prototype = new GenericClass();
+    SpacecraftType.prototype.constructor = SpacecraftType;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    SpacecraftType.prototype._loadData = function (dataJSON) {
+        GenericClass.prototype._loadData.call(this, dataJSON);
         /**
          * The full name of this type as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON.fullName || null;
+        this._fullName = dataJSON ? (dataJSON.fullName || application.crash()) : null;
         /**
          * @type String
          */
-        this._description = dataJSON.description || null;
+        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : application.crash()) : null;
         /**
          * @type String[]
          */
-        this._goodAgainstTypeNames = dataJSON.goodAgainst || [];
+        this._goodAgainstTypeNames = dataJSON ? (dataJSON.goodAgainst || []) : null;
         /**
          * @type String[]
          */
-        this._badAgainstTypeNames = dataJSON.badAgainst || [];
-    }
-    SpacecraftType.prototype = new GenericClass();
-    SpacecraftType.prototype.constructor = SpacecraftType;
+        this._badAgainstTypeNames = dataJSON ? (dataJSON.badAgainst || []) : null;
+    };
     /**
      * @returns {String}
      */
@@ -704,208 +827,129 @@ define([
             result.push(armada.logic().getSpacecraftType(this._badAgainstTypeNames[i]));
         }
     };
-
+    // ##############################################################################
     /**
-     * Creates a weapon slot and loads its data from the passed XML tag, if any.
-     * @class Every ship (class) can have several slots where it's weapons can be
+     * @struct Every ship (class) can have several slots where it's weapons can be
      * equipped. The weapons are rendered and shot from these slots. This class 
      * represents such a slot.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
+     * @param {Object} [dataJSON]
      */
-    function WeaponSlot(xmlTag) {
+    function WeaponSlot(dataJSON) {
         /**
          * The translation matrix for the position of the slot relative to the ship.
-         * @name WeaponSlot#positionMatrix
          * @type Float32Array
          */
-        this.positionMatrix = null;
+        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || application.crash())) : null;
         /**
          * The rotation matrix describing the orientation of the weapon slot 
          * relative to the ship.
-         * @name WeaponSlot#orientationMatrix
          * @type Float32Array
          */
-        this.orientationMatrix = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
-    }
-
-    /**
-     * Loads the values for the properties of the slot from the passed XML 
-     * tag, and then freezes the object to make sure properties of this slot cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    WeaponSlot.prototype.loadFromXMLTag = function (xmlTag) {
-        this.positionMatrix = mat.translationFromXMLTag(xmlTag);
-        this.orientationMatrix = mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("direction"));
-        Object.freeze(this);
-    };
-
-    /**
-     * Creates a thruster slot and loads its data from the passed XML tag, if any.
-     * @class Every ship (class) has slots for its thrusters. The fire of the
-     * thrusters is represented by showing particles at these thruster slots with
-     * a size proportional to the thruster burn.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {ThrusterSlot}
-     */
-    function ThrusterSlot(xmlTag) {
+        this.orientationMatrix = dataJSON ? (mat.rotation4FromJSON(dataJSON.rotations || [])) : null;
         /**
-         * The coordinates of the position of the slot relative to the ship.
-         * @name ThrusterSlot#positionVector
-         * @type Number[4]
-         */
-        this.positionVector = null;
-        /**
-         * The thruster particle at this slot will be shown scaled to this size.
-         * @name ThrusterSlot#size
          * @type Number
          */
-        this.size = null;
+        this.maxGrade = dataJSON ? (dataJSON.maxGrade || application.crash()) : null;
+    }
+    // ##############################################################################
+    /**
+     * @struct Every ship (class) has slots for its thrusters. The fire of the
+     * thrusters is represented by showing particles at these thruster slots with
+     * a size proportional to the thruster burn.
+     * @param {Object} [dataJSON]
+     * @param {Number} groupIndex
+     * @param {String[]} uses 
+     */
+    function ThrusterSlot(dataJSON, groupIndex, uses) {
+        /**
+         * The coordinates of the position of the slot relative to the ship.
+         * @type Number[4]
+         */
+        this.positionVector = dataJSON ? (dataJSON.position || application.crash()) : null;
+        if (this.positionVector) {
+            this.positionVector.push(1.0);
+        }
+        /**
+         * The thruster particle at this slot will be shown scaled to this size.
+         * @type Number
+         */
+        this.size = dataJSON ? (dataJSON.size || 1.0) : null;
         /**
          * The list of uses this thruster has. Possible uses are: 
          * (direction:) 
          * forward,reverse,strafeLeft,strafeRight,raise,lower;
          * (turn:)
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
-         * @name ThrusterSlot#uses
          * @type String[]
          */
-        this.uses = null;
+        this.uses = uses;
         /**
          * The index of the thruster group this slot belongs to.
          * Members of the same group should have the same uses list. The parts of the
          * ship model representing thrusters of a group should bear the same group 
          * index, allowing to manipulate their appearance using uniform arrays.
-         * @name ThrusterSlot#group
          * @type Number
          */
-        this.group = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this.group = groupIndex;
     }
-
+    // ##############################################################################
     /**
-     * Loads the values for the properties of the slot from the passed XML 
-     * tag, and then freezes the object to make sure properties of this slot cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    ThrusterSlot.prototype.loadFromXMLTag = function (xmlTag) {
-        this.positionVector = vec.fromXMLTag3(xmlTag);
-        this.positionVector.push(1.0);
-        this.size = parseFloat(xmlTag.getAttribute("size"));
-        this.uses = xmlTag.getAttribute("use").split(',');
-        this.group = xmlTag.hasAttribute("group") ? parseInt(xmlTag.getAttribute("group"), 10) : 0;
-        Object.freeze(this);
-    };
-
-    /**
-     * Creates a weapon descriptor and loads its data from the passed XML tag, if any.
-     * @class A weapon descriptor can be used to equip a weapon on a spacecraft, by
+     * @struct A weapon descriptor can be used to equip a weapon on a spacecraft, by
      * describing the parameters of the equipment. (such as ammunition, targeting
      * mechanics)
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {WeaponDescriptor}
+     * @param {Object} [dataJSON]
      */
-    function WeaponDescriptor(xmlTag) {
+    function WeaponDescriptor(dataJSON) {
         /**
          * The name of the class of the weapon to be equipped.
-         * @name WeaponDescriptor#className
          * @type String
          */
-        this.className = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this.className = dataJSON ? (dataJSON.class || application.crash()) : null;
     }
-
+    // ##############################################################################
     /**
-     * Loads the values for the properties of the descriptor from the passed XML 
-     * tag, and then freezes the object to make sure properties of this descriptor cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    WeaponDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
-        this.className = xmlTag.getAttribute("class");
-        Object.freeze(this);
-    };
-
-    /**
-     * Creates a propulsion descriptor and loads its data from the passed XML tag, if any.
-     * @class A propulsion descriptor can be used to equip a propulsion system on a 
+     * @struct A propulsion descriptor can be used to equip a propulsion system on a 
      * spacecraft, by describing the parameters of the equipment. (such as fuel, 
      * integrity)
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {WeaponDescriptor}
+     * @param {Object} [dataJSON]
      */
-    function PropulsionDescriptor(xmlTag) {
+    function PropulsionDescriptor(dataJSON) {
         /**
          * The name of the class of the propulsion to be equipped.
-         * @name PropulsionDescriptor#className
          * @type String
          */
-        this.className = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this.className = dataJSON ? (dataJSON.class || application.crash()) : null;
     }
-
+    // ##############################################################################
     /**
-     * Loads the values for the properties of the descriptor from the passed XML 
-     * tag, and then freezes the object to make sure properties of this descriptor cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    PropulsionDescriptor.prototype.loadFromXMLTag = function (xmlTag) {
-        this.className = xmlTag.getAttribute("class");
-        Object.freeze(this);
-    };
-
-    /**
-     * Creates an equipment profile and loads its data from the passed XML tag, if any.
      * @class Every ship (class) can have several equipment profiles, each defining a 
      * specific set of equipment. These can then be used to more easily equip the
      * ships, by only referencing the profile to equip all the different pieces of
      * equipment stored in it.
-     * @param {Element} [xmlTag] The XML tag to load the data from.
-     * @returns {EquipmentProfile}
+     * @param {Object} [dataJSON]
      */
-    function EquipmentProfile(xmlTag) {
+    function EquipmentProfile(dataJSON) {
+        var i;
         /**
-         * The name of the profile by which it can be referenced to when it is to be
-         * equipped. The names must be unique among the profiles of the same ship 
-         * class, but different classes can have profiles with the same name, each
-         * referring to the specific equipment for that specific ship.
-         * @name EquipmentProfile#_name
          * @type String
          */
-        this._name = null;
+        this._name = dataJSON.name || "custom";
         /**
          * The list of descriptors of the weapons in this profile to be equipped.
-         * @name EquipmentProfile#_weaponDescriptors
          * @type WeaponDescriptor[]
          */
-        this._weaponDescriptors = null;
+        this._weaponDescriptors = [];
+        if (dataJSON.weapons) {
+            for (i = 0; i < dataJSON.weapons.length; i++) {
+                this._weaponDescriptors.push(new WeaponDescriptor(dataJSON.weapons[i]));
+            }
+        }
         /**
          * The descriptor of the propulsion system for this profile to be equipped.
-         * @name EquipmentProfile#_propulsionDescriptor
          * @type PropulsionDescriptor
          */
-        this._propulsionDescriptor = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._propulsionDescriptor = dataJSON.propulsion ? new PropulsionDescriptor(dataJSON.propulsion) : null;
     }
-
     /**
      * Returns the name of this equipment profile.
      * @returns {String}
@@ -913,15 +957,6 @@ define([
     EquipmentProfile.prototype.getName = function () {
         return this._name;
     };
-
-    /**
-     * Sets a new name for the equipment profile.
-     * @param {String} newName
-     */
-    EquipmentProfile.prototype.setName = function (newName) {
-        this._name = newName;
-    };
-
     /**
      * Returns the list of the descriptors for the weapons to be equipped with this
      * profile.
@@ -930,23 +965,6 @@ define([
     EquipmentProfile.prototype.getWeaponDescriptors = function () {
         return this._weaponDescriptors;
     };
-
-    /**
-     * Clears the list of weapon descriptors.
-     */
-    EquipmentProfile.prototype.clearWeaponDescriptors = function () {
-        this._weaponDescriptors = [];
-    };
-
-    /**
-     * Adds a new weapon descriptor to the list of weapon descriptors describing
-     * what weapons and how should be equipped when applying this profile.
-     * @param {WeaponDescriptor} newWeaponDescriptor
-     */
-    EquipmentProfile.prototype.addWeaponDescriptor = function (newWeaponDescriptor) {
-        this._weaponDescriptors.push(newWeaponDescriptor);
-    };
-
     /**
      * Returns the propulsion descriptor of this profile.
      * @returns {PropulsionDescriptor}
@@ -954,112 +972,53 @@ define([
     EquipmentProfile.prototype.getPropulsionDescriptor = function () {
         return this._propulsionDescriptor;
     };
-
+    // ##############################################################################
     /**
-     * Sets a new propulsion descriptor for this profile.
-     * @param {PropulsionDescriptor} newPropulsionDescriptor
-     */
-    EquipmentProfile.prototype.setPropulsionDescriptor = function (newPropulsionDescriptor) {
-        this._propulsionDescriptor = newPropulsionDescriptor;
-    };
-
-    /**
-     * Loads the values for the properties of the profile from the passed XML tag.
-     * @param {Element} xmlTag
-     */
-    EquipmentProfile.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, tags;
-        if (xmlTag.hasAttribute("name")) {
-            this.setName(xmlTag.getAttribute("name"));
-        } else {
-            this.setName("custom");
-        }
-        this.clearWeaponDescriptors();
-        if (xmlTag.getElementsByTagName("weapons").length > 0) {
-            tags = xmlTag.getElementsByTagName("weapons")[0].getElementsByTagName("weapon");
-            for (i = 0; i < tags.length; i++) {
-                this.addWeaponDescriptor(new WeaponDescriptor(tags[i]));
-            }
-        }
-        if (xmlTag.getElementsByTagName("propulsion").length > 0) {
-            this.setPropulsionDescriptor(new PropulsionDescriptor(xmlTag.getElementsByTagName("propulsion")[0]));
-        }
-    };
-
-    /**
-     * Creates a new object view object and loads its data from the passed XML tag, 
-     * if any.
      * @class Describes the parameters of a certain view of an object, based on which
      * a camera can be created if that object is deployed in a scene.
-     * @param {Element} [xmlTag] The XML tag which contains the description of
-     * this object view.
+     * @param {Object} [dataJSON]
      */
-    function ObjectView(xmlTag) {
+    function ObjectView(dataJSON) {
         /**
          * A desciptive name for the view, e.g. "cockpit"
-         * @name ObjectView#name
          * @type String
          */
-        this.name = null;
+        this._name = dataJSON.name || application.crash();
         /**
          * The Field Of View of the view in degrees.
-         * @name ObjectView#fov
          * @type Number
          */
-        this.fov = null;
+        this._fov = dataJSON.fov || application.crash();
+        /**
+         * @type Boolean
+         */
+        this._followsPosition = dataJSON.followsPosition || application.crash();
         /**
          * Whether the position of the view is changeable by the player.
-         * @name ObjectView#controllablePosition
          * @type Boolean
          */
-        this.controllablePosition = null;
+        this._movable = (typeof dataJSON.movable) === "boolean" ? dataJSON.movable : application.crash();
         /**
          * Whether the direction of the view is changeable by the player.
-         * @name ObjectView#controllableDirection
          * @type Boolean
          */
-        this.controllableDirection = null;
+        this._turnable = (typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : application.crash();
         /**
          * The translation matrix describing the relative position to the object.
-         * @name ObjectView#followPositionMatrix
          * @type Float32Array
          */
-        this.followPositionMatrix = null;
+        this._followPositionMatrix = mat.translation4v(dataJSON.position || application.crash());
         /**
          * The rotation matrix describing the relative orientation to the object. 
-         * @name ObjectView#followOrientationMatrix
          * @type Float32Array
          */
-        this.followOrientationMatrix = null;
+        this._followOrientationMatrix = mat.rotation4FromJSON(dataJSON.rotations);
         /**
          * Whether the rotation of the camera has to be executed around the followed object.
-         * @name ObjectView#rotationCenterIsObject
          * @type Boolean
          */
-        this.rotationCenterIsObject = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
+        this._rotationCenterIsObject = (typeof dataJSON.rotationCenterIsObject) === "boolean" ? dataJSON.rotationCenterIsObject : application.crash();
     }
-
-    /**
-     * Loads the values for the properties of the view from the passed XML 
-     * tag, and then freezes the object to make sure properties of this view cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    ObjectView.prototype.loadFromXMLTag = function (xmlTag) {
-        this.name = xmlTag.getAttribute("name");
-        this.fov = parseFloat(xmlTag.getAttribute("fov"));
-        this.controllablePosition = (xmlTag.getAttribute("movable") === "true");
-        this.controllableDirection = (xmlTag.getAttribute("turnable") === "true");
-        this.followPositionMatrix = mat.translationFromXMLTag(xmlTag);
-        this.followOrientationMatrix = mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn"));
-        this.rotationCenterIsObject = (xmlTag.getAttribute("rotationCenterIsObject") === "true");
-        Object.freeze(this);
-    };
-
     /**
      * Creates a virtual camera following the given object according to the view's
      * parameters.
@@ -1069,200 +1028,166 @@ define([
      * @returns {Camera} The created camera.
      */
     ObjectView.prototype.createCameraForObject = function (aspect, followedObject) {
-        return new budaScene.Camera(aspect, this.fov, this.controllablePosition, this.controllableDirection, followedObject, this.followPositionMatrix, this.followOrientationMatrix, this.rotationCenterIsObject);
+        return new budaScene.Camera(aspect, this._fov, this._movable, this._turnable, followedObject, this._followPositionMatrix, this._followOrientationMatrix, this._rotationCenterIsObject);
     };
-
+    // ##############################################################################
     /**
-     * Creates a spacecraft class and loads its data from the passed XML tag, if any.
      * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
      * ship or a space station all belong to a certain class that determines their
      * general properties such as appearance, mass and so on. This class represent
      * such a spacecraft class.
-     * @extends ClassWithModel
-     * @param {Element} [xmlTag] The XML tag which contains the description of
-     * this spacecraft class.
-     * @returns {SpacecraftClass}
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON]
      */
-    function SpacecraftClass(xmlTag) {
-        //ClassWithModel.call(this);
-        /**
-         * The name by which the class can be referred to.
-         * @name SpacecraftClass#name
-         * @type String
-         */
-        this.name = null;
+    function SpacecraftClass(dataJSON) {
+        TexturedModelClass.call(this, dataJSON);
+    }
+    SpacecraftClass.prototype = new TexturedModelClass();
+    SpacecraftClass.prototype.constructor = SpacecraftClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    SpacecraftClass.prototype._loadData = function (dataJSON) {
+        var i, j, groupIndex, uses;
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
-         * @name SpacecraftClass#spacecraftType
          * @type SpacecraftType
          */
-        this.spacecraftType = null;
+        this._spacecraftType = armada.logic().getSpacecraftType(dataJSON.type || application.crash());
         /**
          * The full name of this class as displayed in the game.
-         * @name SpacecraftClass#fullName
          * @type String
          */
-        this.fullName = null;
+        this._fullName = dataJSON.fullName || application.crash();
         /**
          * The description of this class as can be viewed in the game.
-         * @name SpacecraftClass#description
          * @type String
          */
-        this.description = null;
-        /**
-         * The model will be scaled by this number (on all 3 axes)
-         * @name SpacecraftClass#modelSize
-         * @type Number
-         */
-        this.modelSize = null;
-        /**
-         * The associative array containing the texture  descriptors for different 
-         * uses (such as color, luminosity map) in the form of { use: descriptor, ... }
-         * @name SpacecraftClass#textureDescriptor
-         * @type TextureDescriptor
-         */
-        this.textureDescriptor = null;
-        /**
-         * The name of the shader to be used for rendering these ships (as defined 
-         * in shaders.xml)
-         * @name SpacecraftClass#shaderName
-         * @type String
-         */
-        this.shaderName = null;
+        this._description = dataJSON.description || application.crash();
         /**
          * The mass of the spacecraft in kilograms.
-         * @name SpacecraftClass#mass
          * @type Number
          */
-        this.mass = null;
+        this._mass = dataJSON.mass || application.crash();
         /**
          * The physical bodies that model the spacecraft's shape for hit checks.
-         * @name SpacecraftClass#bodies
          * @type Body[]
          */
-        this.bodies = null;
+        this._bodies = [];
+        if (dataJSON.bodies) {
+            for (i = 0; i < dataJSON.bodies.length; i++) {
+                this._bodies.push(new physics.Body(
+                      mat.translation4v(dataJSON.bodies[i].position || application.crash()),
+                      mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
+                      dataJSON.bodies[i].size));
+            }
+        } else {
+            application.crash();
+        }
         /**
          * The slots where weapons can be equipped on the ship.
-         * @name SpacecraftClass#weaponSlots
          * @type WeaponSlot[]
          */
-        this.weaponSlots = null;
+        this._weaponSlots = [];
+        if (dataJSON.weaponSlots) {
+            for (i = 0; i < dataJSON.weaponSlots.length; i++) {
+                this._weaponSlots.push(new WeaponSlot(dataJSON.weaponSlots[i]));
+            }
+        }
+        /**
+         * @type Number
+         */
+        this._maxPropulsionGrade = dataJSON.maxPropulsionGrade || application.crash();
         /**
          * The slots where the thrusters are located on the ship.
-         * @name SpacecraftClass#thrusterSlots
          * @type ThrusterSlot[]
          */
-        this.thrusterSlots = null;
+        this._thrusterSlots = [];
+        if (dataJSON.thrusterSlots) {
+            for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
+                groupIndex = dataJSON.thrusterSlots.group;
+                uses = dataJSON.thrusterSlots.uses;
+                for (j = 0; j < dataJSON.thrusterSlots[i].thrusters.length; j++) {
+                    this._thrusterSlots.push(new ThrusterSlot(dataJSON.thrusterSlots[i].thrusters[j], groupIndex, uses));
+                }
+            }
+        }
         /**
          * The available views of the ship (e.g. front, cockpit) where cameras can
          * be positioned.
-         * @name SpacecraftClass#views
          * @type ObjectView[]
          */
-        this.views = null;
+        this._views = [];
+        if (dataJSON.views) {
+            for (i = 0; i < dataJSON.views.length; i++) {
+                this._views.push(new ObjectView(dataJSON.views[i]));
+            }
+        } else {
+            application.crash();
+        }
         /**
          * The available equipment profiles (possible sets of equipment that can be
          * equipped by default, referring to this profile) for this ship, stored in
          * an associative array (the profile names are keys)
-         * @name SpacecraftClass#equipmentProfiles
          * @type Object
          */
-        this.equipmentProfiles = null;
-        // if an XML tag was specified, initialize the properties from there    
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
-        }
-    }
-
-    //SpacecraftClass.prototype = new ClassWithModel();
-    //SpacecraftClass.prototype.constructor = SpacecraftClass;
-
-    /**
-     * Loads the values for the properties of the spacecraft class from the passed XML 
-     * tag, and then freezes the object to make sure properties of this class cannot
-     * be accidentally altered.
-     * @param {Element} xmlTag
-     */
-    SpacecraftClass.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, tag, tags;
-
-        //ClassWithModel.prototype.loadFromXMLTag.call(this, xmlTag);
-
-        this.name = xmlTag.getAttribute("name");
-        this.spacecraftType = armada.logic().getSpacecraftType(xmlTag.getAttribute("type"));
-
-        // initializing informational properties
-        if (xmlTag.getElementsByTagName("information").length > 0) {
-            tag = xmlTag.getElementsByTagName("information")[0];
-            if (tag.getElementsByTagName("fullName").length > 0) {
-                this.fullName = tag.getElementsByTagName("fullName")[0].textContent;
-            }
-            if (tag.getElementsByTagName("description").length > 0) {
-                this.description = tag.getElementsByTagName("description")[0].textContent;
-            }
-        }
-        if (this.fullName === null) {
-            this.fullName = this.name;
-        }
-        if (this.description === null) {
-            this.description = "Description not available.";
-        }
-
-        // initializing model geometry information
-        tag = xmlTag.getElementsByTagName("model")[0];
-        this.modelSize = parseFloat(tag.getAttribute("scale"));
-
-        // reading the textures into an object, where the texture types are the
-        // names of the properties
-        this.textureDescriptor = null;
-        tags = xmlTag.getElementsByTagName("texture");
-        for (i = 0; i < tags.length; i++) {
-            //this.textureDescriptor = new TextureDescriptor(tags[i]);
-        }
-        this.shaderName = xmlTag.getElementsByTagName("shader")[0].getAttribute("name");
-
-        // initializing physics properties
-        this.mass = xmlTag.getElementsByTagName("physics")[0].getAttribute("mass");
-        this.bodies = [];
-        tags = xmlTag.getElementsByTagName("body");
-        for (i = 0; i < tags.length; i++) {
-            this.bodies.push(new physics.Body(
-                  mat.translationFromXMLTag(tags[i]),
-                  mat.rotation4FromXMLTags(tags[i].getElementsByTagName("turn")),
-                  utils.getDimensionsFromXMLTag(tags[i])));
-        }
-
-        // initializing equipment properties
-        this.weaponSlots = [];
-        if (xmlTag.getElementsByTagName("weaponSlots").length > 0) {
-            tags = xmlTag.getElementsByTagName("weaponSlots")[0].getElementsByTagName("slot");
-            for (i = 0; i < tags.length; i++) {
-                this.weaponSlots.push(new WeaponSlot(tags[i]));
-            }
-        }
-        this.thrusterSlots = [];
-        if (xmlTag.getElementsByTagName("thrusterSlots").length > 0) {
-            tags = xmlTag.getElementsByTagName("thrusterSlots")[0].getElementsByTagName("slot");
-            for (i = 0; i < tags.length; i++) {
-                this.thrusterSlots.push(new ThrusterSlot(tags[i]));
-            }
-        }
-        this.equipmentProfiles = {};
-        tags = xmlTag.getElementsByTagName("equipmentProfile");
-        for (i = 0; i < tags.length; i++) {
-            this.equipmentProfiles[tags[i].getAttribute("name")] = new EquipmentProfile(tags[i]);
-        }
-
-        // initializing views
-        this.views = [];
-        if (xmlTag.getElementsByTagName("views").length > 0) {
-            tags = xmlTag.getElementsByTagName("views")[0].getElementsByTagName("view");
-            for (i = 0; i < tags.length; i++) {
-                this.views.push(new ObjectView(tags[i]));
+        this._equipmentProfiles = {};
+        if (dataJSON.equipmentProfiles) {
+            for (i = 0; i < dataJSON.equipmentProfiles.length; i++) {
+                this._equipmentProfiles[dataJSON.equipmentProfiles[i].name] = new EquipmentProfile(dataJSON.equipmentProfiles[i]);
             }
         }
     };
-
+    /**
+     * @returns {SpacecraftType}
+     */
+    SpacecraftClass.prototype.getSpacecraftType = function () {
+        return this._spacecraftType;
+    };
+    /**
+     * @returns {String}
+     */
+    SpacecraftClass.prototype.getFullName = function () {
+        return this._fullName;
+    };
+    /**
+     * @returns {String}
+     */
+    SpacecraftClass.prototype.getDescription = function () {
+        return this._description;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getMass = function () {
+        return this._mass;
+    };
+    /**
+     * @returns {Body[]}
+     */
+    SpacecraftClass.prototype.getBodies = function () {
+        return this._bodies;
+    };
+    /**
+     * @returns {WeaponSlot[]}
+     */
+    SpacecraftClass.prototype.getWeaponSlots = function () {
+        return this._weaponSlots;
+    };
+    /**
+     * @returns {ThrusterSlot[]}
+     */
+    SpacecraftClass.prototype.getThrusterSlots = function () {
+        return this._thrusterSlots;
+    };
+    /**
+     * @param {String} name
+     */
+    SpacecraftClass.prototype.getEquipmentProfile = function (name) {
+        return this._equipmentProfiles[name];
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

@@ -1,7 +1,7 @@
 {
     "configFileURLs": {
         "resources": "resources.json",
-        "classes": "classes.xml",
+        "classes": "classes.json",
         "settings": "settings.xml",
         "environments": "environments.xml"
     },

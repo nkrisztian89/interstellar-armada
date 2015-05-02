@@ -17,13 +17,14 @@ define([
     "modules/async-resource",
     "modules/managed-gl",
     "modules/egom-model",
+    "modules/resource-manager",
     "modules/graphics-resources",
     "modules/physics",
     "modules/buda-scene",
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, graphicsResources, physics, budaScene, armada, classes) {
+], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, resourceManager, graphicsResources, physics, budaScene, armada, classes) {
     "use strict";
     var
           /**
@@ -448,6 +449,12 @@ define([
         this._visualModel = null;
     }
     /**
+     * 
+     */
+    Weapon.prototype.getResources = function () {
+        this._class.getResources();
+    };
+    /**
      * Adds a renderable node representing this weapon to the scene under the
      * passed parent node.
      * @param {ParameterizedMesh} parentNode The parent node to which to attach this
@@ -459,7 +466,7 @@ define([
      * mode.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
-        this._class.getResources();
+        this.getResources();
         armada.resources().executeWhenReady(function () {
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             this._visualModel = new budaScene.ShadedLODMesh(
@@ -1338,7 +1345,6 @@ define([
             this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName);
         }
     }
-    // #########################################################################
     // initializer
     /**
      * Initializes the properties of the spacecraft. Used by the constructor
@@ -1353,21 +1359,24 @@ define([
     Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
         this._class = spacecraftClass;
         this._physicalModel = new physics.PhysicalObject(
-              this._class.mass,
+              this._class.getMass(),
               positionMatrix || mat.identity4(),
               orientationMatrix || mat.identity4(),
-              mat.scaling4(this._class.modelSize),
               mat.identity4(),
-              this._class.bodies);
+              mat.identity4(),
+              this._class.getBodies());
+        this._class.getResources();
+        armada.resources().executeWhenReady(function () {
+            this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
+        }.bind(this));
         this._weapons = [];
         this._maneuveringComputer = new ManeuveringComputer(this);
         this._projectileArray = projectileArray || null;
         // equipping the craft if a profile name was given
         if (equipmentProfileName !== undefined) {
-            this.equipProfile(this._class.equipmentProfiles[equipmentProfileName]);
+            this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
         }
     };
-    // #########################################################################
     // direct getters and setters
     /**
      * Returns the object describing class of this spacecraft.
@@ -1390,14 +1399,13 @@ define([
     Spacecraft.prototype.getPhysicalModel = function () {
         return this._physicalModel;
     };
-    // #########################################################################
     // indirect getters and setters
     /**
      * Returns the name of the class of this spacecraft. (e.g. Falcon or Aries)
      * @returns {String}
      */
     Spacecraft.prototype.getClassName = function () {
-        return this._class.fullName;
+        return this._class.getFullName();
     };
     /**
      * Returns the name of the type of this spacecraft. (e.g. Interceptor or
@@ -1405,7 +1413,7 @@ define([
      * @returns {String}
      */
     Spacecraft.prototype.getTypeName = function () {
-        return this._class.spacecraftType.fullName;
+        return this._class.getSpacecraftType().getFullName();
     };
     /**
      * Returns whether this spacecraft object can be reused to represent a new
@@ -1496,26 +1504,10 @@ define([
      * speed while providing the needed centripetal force with its thrusters
      * to keep itself on a circular path.
      * @param {Number} speed The speed in m/s.
-     * @returns {Number} Thre turning rate in rad/s.
+     * @returns {Number} The turning rate in rad/s.
      */
     Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
         return Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed));
-    };
-    /**
-     * Returns an associative array containing the texture resources that this
-     * spacecraft uses for rendering, organized by the texture roles (types),
-     * e.g. "specular".
-     * @returns {Object}
-     */
-    Spacecraft.prototype.getTextures = function () {
-        var i, textureTypes,
-              textureResource = armada.resources().getTexture(this._class.textureDescriptor.name),
-              result = {};
-        textureTypes = textureResource.getTypes();
-        for (i = 0; i < textureTypes.length; i++) {
-            result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], "normal");
-        }
-        return result;
     };
     Spacecraft.prototype.getHitboxTextures = function () {
         var i, textureTypes,
@@ -1558,7 +1550,6 @@ define([
         // one second (as units of measurement are SI aligned)
         return angularVelocityDifference * 200 * this._physicalModel.getMass() / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
     };
-    // #########################################################################
     // methods
     /**
      * Initializes the properties of this spacecraft based on the data stored
@@ -1772,16 +1763,12 @@ define([
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
     Spacecraft.prototype.getResources = function (lod, hitbox) {
-        application.log("Requesting resources for spacecraft (" + this._class.fullName + ")...", 2);
+        application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             armada.resources().getTexture("white");
         }
-        return {
-            shader: armada.resources().getShader(this._class.shaderName),
-            model: armada.resources().getModel(this._class.name, params),
-            texture: armada.resources().getTexture(this._class.textureDescriptor.name)
-        };
+        this._class.getResources(params);
     };
     /**
      * Creates and adds the renderable objects to represent this spacecraft to
@@ -1807,10 +1794,10 @@ define([
      * spacecraft.
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, callback) {
-        var i, resources;
+        var i;
         addSupplements = addSupplements || {};
         // getting resources
-        resources = this.getResources(lod, addSupplements && (addSupplements.hitboxes === true));
+        this.getResources(lod, addSupplements && (addSupplements.hitboxes === true));
         if (addSupplements.weapons === true) {
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].getResources(lod, addSupplements.projectileResources);
@@ -1822,16 +1809,15 @@ define([
             this._propulsion.getResources();
         }
         armada.resources().executeWhenReady(function () {
-            var node, textures;
-            application.log("Adding spacecraft (" + this._class.fullName + ") to scene...", 2);
-            textures = this.getTextures();
+            var node;
+            application.log("Adding spacecraft (" + this._class.getFullName() + ") to scene...", 2);
             this._visualModel = new budaScene.ParameterizedMesh(
-                  resources.model.getEgomModel(),
-                  resources.shader.getManagedShader(),
-                  textures,
+                  this._class.getModel(),
+                  this._class.getShader(),
+                  this._class.getTextures(["normal"]),
                   this._physicalModel.getPositionMatrix(),
                   this._physicalModel.getOrientationMatrix(),
-                  mat.scaling4(this._class.modelSize),
+                  mat.scaling4(this._class.getModel().getScale()),
                   (wireframe === true),
                   lod,
                   [{name: "luminosityFactors", length: 20}]);
@@ -1840,7 +1826,7 @@ define([
             if (addSupplements.hitboxes === true) {
                 // add the parent objects for the hitboxes
                 this._hitbox = new budaScene.RenderableNode(new budaScene.RenderableObject3D(
-                      resources.shader.getManagedShader(),
+                      this._class.getShader(),
                       false,
                       false));
                 // add the models for the hitboxes themselves
@@ -1888,8 +1874,9 @@ define([
      * @param {WeaponClass} weaponClass
      */
     Spacecraft.prototype.addWeapon = function (weaponClass) {
-        if (this._weapons.length < this._class.weaponSlots.length) {
-            var slot = this._class.weaponSlots[this._weapons.length];
+        var slot, weaponSlots = this._class.getWeaponSlots();
+        if (this._weapons.length < weaponSlots.length) {
+            slot = weaponSlots[this._weapons.length];
             this._weapons.push(new Weapon(weaponClass, this, slot));
         }
     };
@@ -2302,81 +2289,19 @@ define([
         /**
          * The name of the file (without path) that contains the descriptions
          * of the in-game classes.
-         * @name LogicContext#_classesSourceFileName
          * @type String
          */
         this._classesSourceFileName = null;
         /**
          * The name of the file (without path) that contains the descriptions
          * of the reusable environments.
-         * @name LogicContext#_environmentsSourceFileName
          * @type String
          */
         this._environmentsSourceFileName = null;
         /**
-         * An associative array storing the SkyboxClass objects that describe
-         * the available Skybox classes in the game. The keys are the name
-         * properties of the stored class objects.
-         * @name LogicContext#_skyboxClasses
-         * @type Object
+         * @type ResourceManagerF
          */
-        this._skyboxClasses = null;
-        /**
-         * An associative array storing the BackgroundObjectClass objects that 
-         * describe the available BackgroundObject classes in the game. The keys 
-         * are the name properties of the stored class objects.
-         * @name LogicContext#_backgroundObjectClasses
-         * @type Object
-         */
-        this._backgroundObjectClasses = null;
-        /**
-         * An associative array storing the DustCloudClass objects that describe
-         * the available DustCloud classes in the game. The keys are the name
-         * properties of the stored class objects.
-         * @name LogicContext#_dustCloudClasses
-         * @type Object
-         */
-        this._dustCloudClasses = null;
-        /**
-         * An associative array storing the WeaponClass objects that describe
-         * the available Weapon classes in the game. The keys are the name
-         * properties of the stored class objects.
-         * @name LogicContext#_weaponClasses
-         * @type Object
-         */
-        this._weaponClasses = null;
-        /**
-         * An associative array storing the SpacecraftClass objects that describe
-         * the available Spacecraft classes in the game. The keys are the name
-         * properties of the stored class objects.
-         * @name LogicContext#_spacecraftClasses
-         * @type Object
-         */
-        this._spacecraftClasses = null;
-        /**
-         * An associative array storing the SpacecraftType objects that describe
-         * the available Spacecraft types in the game. The keys are the name
-         * properties of the stored type objects.
-         * @name LogicContext#_spacecraftTypes
-         * @type Object
-         */
-        this._spacecraftTypes = null;
-        /**
-         * An associative array storing the ProjectileClass objects that describe
-         * the available Projectile classes in the game. The keys are the name
-         * properties of the stored class objects.
-         * @name LogicContext#_projectileClasses
-         * @type Object
-         */
-        this._projectileClasses = null;
-        /**
-         * An associative array storing the PropulsionClass objects that describe
-         * the available Propulsion classes in the game. The keys are the name
-         * properties of the stored class objects.
-         * @name LogicContext#_propulsionClasses
-         * @type Object
-         */
-        this._propulsionClasses = null;
+        this._classResourceManager = new resourceManager.ResourceManager();
         /**
          * An associative array storing the reusable Environment objects that 
          * describe possible environments for levels. The keys are the names
@@ -2427,7 +2352,7 @@ define([
      * @returns {SkyboxClass}
      */
     LogicContext.prototype.getSkyboxClass = function (name) {
-        return this._skyboxClasses[name] || null;
+        return this._classResourceManager.getResource("skyboxClasses", name);
     };
     /**
      * Return the background object class with the given name if it exists, otherwise null.
@@ -2435,7 +2360,7 @@ define([
      * @returns {BackgroundObjectClass}
      */
     LogicContext.prototype.getBackgroundObjectClass = function (name) {
-        return this._backgroundObjectClasses[name] || null;
+        return this._classResourceManager.getResource("backgroundObjectClasses", name);
     };
     /**
      * Return the dust cloud class with the given name if it exists, otherwise null.
@@ -2443,7 +2368,7 @@ define([
      * @returns {DustCloudClass}
      */
     LogicContext.prototype.getDustCloudClass = function (name) {
-        return this._dustCloudClasses[name] || null;
+        return this._classResourceManager.getResource("dustCloudClasses", name);
     };
     /**
      * Return the projectile class with the given name if it exists, otherwise null.
@@ -2451,7 +2376,7 @@ define([
      * @returns {ProjectileClass}
      */
     LogicContext.prototype.getProjectileClass = function (name) {
-        return this._projectileClasses[name] || null;
+        return this._classResourceManager.getResource("projectileClasses", name);
     };
     /**
      * Return the weapon class with the given name if it exists, otherwise null.
@@ -2459,7 +2384,7 @@ define([
      * @returns {WeaponClass}
      */
     LogicContext.prototype.getWeaponClass = function (name) {
-        return this._weaponClasses[name] || null;
+        return this._classResourceManager.getResource("weaponClasses", name);
     };
     /**
      * Return the propulsion class with the given name if it exists, otherwise null.
@@ -2467,7 +2392,7 @@ define([
      * @returns {PropulsionClass}
      */
     LogicContext.prototype.getPropulsionClass = function (name) {
-        return this._propulsionClasses[name] || null;
+        return this._classResourceManager.getResource("propulsionClasses", name);
     };
     /**
      * Return the spacecraft type with the given name if it exists, otherwise null.
@@ -2475,7 +2400,7 @@ define([
      * @returns {SpacecraftType}
      */
     LogicContext.prototype.getSpacecraftType = function (name) {
-        return this._spacecraftTypes[name] || null;
+        return this._classResourceManager.getResource("spacecraftTypes", name);
     };
     /**
      * Return the spacecraft class with the given name if it exists, otherwise null.
@@ -2483,7 +2408,7 @@ define([
      * @returns {SpacecraftClass}
      */
     LogicContext.prototype.getSpacecraftClass = function (name) {
-        return this._spacecraftClasses[name] || null;
+        return this._classResourceManager.getResource("spacecraftClasses", name);
     };
     /**
      * Return the reusable environment with the given name if it exists, otherwise null.
@@ -2500,9 +2425,12 @@ define([
      * @returns {SpacecraftClass[]}
      */
     LogicContext.prototype.getSpacecraftClassesInArray = function () {
-        var result = new Array();
-        for (var p in this._spacecraftClasses) {
-            result.push(this._spacecraftClasses[p]);
+        var
+              i,
+              result = [],
+              names = this._classResourceManager.getResourceNames("spacecraftClasses");
+        for (i = 0; i < names.length; i++) {
+            result.push(this.getSpacecraftClass(names[i]));
         }
         return result;
     };
@@ -2542,45 +2470,25 @@ define([
         }
     };
     /**
-     * Loads the available spacecraft types from the XML tags residing below the 
-     * passed tag / document.
-     * @param {Element|Document} xmlDoc The parent of the elements which store
-     * the type descriptions.
-     */
-    LogicContext.prototype.loadSpacecraftTypes = function (xmlDoc) {
-        this._spacecraftTypes = new Object();
-        var typeTags = xmlDoc.getElementsByTagName("SpacecraftType");
-        for (var i = 0; i < typeTags.length; i++) {
-            var spacecraftType = new classes.SpacecraftType(typeTags[i]);
-            this._spacecraftTypes[spacecraftType.name] = spacecraftType;
-        }
-    };
-    /**
      * Sends an asynchronous request to grab the file containing the in-game
      * class descriptions and sets a callback to load those descriptions and
      * initiate the loading of reusable environments when ready.
      */
     LogicContext.prototype.requestClassesLoad = function () {
-        var self = this;
-        application.requestXMLFile("config", this._classesSourceFileName, function (xmlDoc) {
-            self.loadClassesFromXML(xmlDoc);
-            self.requestEnvironmentsLoad();
-        });
-    };
-    /**
-     * Loads the desciptions of all in-game classes from the passed XML document,
-     * creates and stores all the appropriate in-game class objects for them.
-     * @param {Document} xmlDoc
-     */
-    LogicContext.prototype.loadClassesFromXML = function (xmlDoc) {
-        this.addClassesFromXML(xmlDoc, "Skybox");
-        this.addClassesFromXML(xmlDoc, "BackgroundObject");
-        this.addClassesFromXML(xmlDoc, "DustCloud");
-        this.addClassesFromXML(xmlDoc, "Projectile");
-        this.addClassesFromXML(xmlDoc, "Weapon");
-        this.addClassesFromXML(xmlDoc, "Propulsion");
-        this.loadSpacecraftTypes(xmlDoc);
-        this.addClassesFromXML(xmlDoc, "Spacecraft");
+        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, {
+            "skyboxClasses": classes.SkyboxClass,
+            "backgroundObjectClasses": classes.BackgroundObjectClass,
+            "dustCloudClasses": classes.DustCloudClass,
+            "projectileClasses": classes.ProjectileClass,
+            "weaponClasses": classes.WeaponClass,
+            "propulsionClasses": classes.PropulsionClass,
+            "spacecraftTypes": classes.SpacecraftType,
+            "spacecraftClasses": classes.SpacecraftClass
+        }, function () {
+            this._classResourceManager.requestAllResources();
+            this._classResourceManager.requestResourceLoad();
+            this.requestEnvironmentsLoad();
+        }.bind(this));
     };
     /**
      * Sends an asynchronous request to grab the file containing the reusable

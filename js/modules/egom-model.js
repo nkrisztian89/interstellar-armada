@@ -1757,7 +1757,14 @@ define([
         }
         application.log(str, 2);
     };
-
+    /**
+     * Returns the scale factor of this model i.e. what is the meaning of 1 coordinate
+     * unit in meters.
+     * @returns {Number}
+     */
+    Model.prototype.getScale = function () {
+        return this._scale;
+    };
     /**
      * Returns the size of the model, which is calculated as the double of the
      * farthest (X,Y or Z) vertex coordinate to be found in the model.

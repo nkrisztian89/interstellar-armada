@@ -26,6 +26,7 @@ define([
     "use strict";
     /**
      * @class
+     * To subclass, implement requiresReload(), _requestFiles() and _loadData() methods.
      * @augments AsyncResource
      * @param {String} name
      */
@@ -187,6 +188,18 @@ define([
             }
         }
     };
+    /**
+     * @returns {String[]}
+     */
+    ResourceHolder.prototype.getResourceNames = function () {
+        var result = [], name;
+        for (name in this._resources) {
+            if (this._resources.hasOwnProperty(name)) {
+                result.push(name);
+            }
+        }
+        return result;
+    };
     // ############################################################################################x
     /**
      * @class
@@ -309,6 +322,21 @@ define([
         return resource;
     };
     /**
+     * 
+     */
+    ResourceManager.prototype.requestAllResources = function () {
+        var resourceType, resourceNames, i;
+        for (resourceType in this._resourceHolders) {
+            if (this._resourceHolders.hasOwnProperty(resourceType)) {
+                resourceNames = this._resourceHolders[resourceType].getResourceNames();
+                for (i = 0; i < resourceNames.length; i++) {
+                    this.getResource(resourceType, resourceNames[i]);
+                }
+            }
+        }
+    };
+
+    /**
      * @param {String} resourceType
      * @returns {Boolean}
      */
@@ -369,6 +397,19 @@ define([
                 }
             }
         }
+    };
+
+    /**
+     * 
+     * @param {String} resourceType
+     * @returns {String[]}
+     */
+    ResourceManager.prototype.getResourceNames = function (resourceType) {
+        if (!this._resourceHolders[resourceType]) {
+            application.showError("Asked for the names of resources of type: '" + resourceType + "', but no such resource type exists!");
+            return null;
+        }
+        return this._resourceHolders[resourceType].getResourceNames();
     };
 
     return {

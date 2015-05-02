@@ -340,72 +340,7 @@
     "spacecraftClasses": [
         {
             "name": "falcon",
-            "type": "interceptor",
-            "fullName": "Falcon",
-            "description": "The latest generation of interceptors, which recently became the new standard in the fleets of the Galactic Empire. Excellent for dogfighting, with a thin cross-section making it difficult to hit, a good variety of battle equipment it can carry and an effective jammer arrangement.",
-            "model": "falcon",
-            "shader": "ship",
-            "texture": "falcon",
-            "mass": 10000,
-            "bodies": [
-                {
-                    "position": [0, 0, 5],
-                    "size": [80, 20, 10]
-                },
-                {
-                    "position": [0, 15, 5],
-                    "size": [50, 10, 10]
-                },
-                {
-                    "position": [0, 10, 0],
-                    "size": [20, 40, 10]
-                }
-            ],
-            "weaponSlots": [
-                {
-                    "position": [14, 15, 1],
-                    "maxGrade": 3
-                },
-                {
-                    "position": [-14, 15, 1],
-                    "maxGrade": 3
-                },
-                {
-                    "position": [22, 11, 1],
-                    "maxGrade": 3
-                },
-                {
-                    "position": [-22, 11, 1],
-                    "maxGrade": 3
-                }
-            ],
-            "maxPropulsionGrade": 3,
-            "thrusterSlots": [
-                {
-                    "position": [14, -7, 2.5],
-                    "size": 1.8,
-                    "uses": ["forward", "yawLeft"],
-                    "group": 3
-                },
-                {
-                    "position": [22, -7, 2.5],
-                    "size": 1.8,
-                    "uses": ["forward", "yawLeft"],
-                    "group": 3
-                },
-                {
-                    "position": [-14, -7, 2.5],
-                    "size": 1.8,
-                    "uses": ["forward", "yawRight"],
-                    "group": 4
-                },
-                {
-                    "position": [-22, -7, 2.5],
-                    "size": 1.8,
-                    "uses": ["forward", "yawRight"],
-                    "group": 4
-                }
-            ]
+            "source": "spacecraft-classes/falcon.json"
         }
     ]
 }

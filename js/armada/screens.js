@@ -596,8 +596,8 @@ define([
             // display the data that can be displayed right away, and show loading
             // for the rest
             var shipClass = armada.logic().getSpacecraftClassesInArray()[this._itemIndex];
-            this._itemName.setContent(shipClass.fullName);
-            this._itemType.setContent(shipClass.spacecraftType.fullName);
+            this._itemName.setContent(shipClass.getFullName());
+            this._itemType.setContent(shipClass.getSpacecraftType().getFullName());
             this._itemDescription.setContent("Loading...");
 
             // create a ship that can be used to add the models (ship with default weapons
@@ -663,14 +663,14 @@ define([
                 this._itemLengthInMeters = this._item.getVisualModel()._model.getHeightInMeters();
                 this._itemFront = this._item.getVisualModel()._model.getMaxY();
                 this._itemDescription.setContent(
-                      shipClass.description + "<br/>" +
+                      shipClass.getDescription() + "<br/>" +
                       "<br/>" +
                       "Length: " + (((this._itemLengthInMeters) < 100) ?
                             (this._itemLengthInMeters).toPrecision(3)
                             : Math.round(this._itemLengthInMeters)) +
                       " m<br/>" +
-                      "Weapon slots: " + shipClass.weaponSlots.length + "<br/>" +
-                      "Thrusters: " + shipClass.thrusterSlots.length);
+                      "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
+                      "Thrusters: " + shipClass.getThrusterSlots().length);
                 // this will create the GL context if needed or update it with the new
                 // data if it already exists
                 this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));

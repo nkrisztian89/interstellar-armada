@@ -497,6 +497,14 @@ define([
         this._modelMatrixInverse = null;
     };
     /**
+     * Sets the scaling for this object to the passed matrix.
+     * @param {Float32Array} value
+     */
+    PhysicalObject.prototype.setScalingMatrix = function (value) {
+        this._scalingMatrix = value;
+        this._modelMatrixInverse = null;
+    };
+    /**
      * Returns the inverse of the rotation matrix and stores it in a cache to
      * make sure it is only calculated again if the rotation matrix changes.
      * @returns {Float32Array}
