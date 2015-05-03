@@ -29,7 +29,7 @@ define([
     });
     application.setLogVerbosity(1);
 
-    application.setVersion("0.1.0:106+refactoring-22 (2015.05.02.)");
+    application.setVersion("0.1.0:106+refactoring-23 (2015.05.03.)");
 
     // add private variables specific to Interstellar Armada
 

@@ -9,8 +9,44 @@
     "mass": 25000000,
     "bodies": [
         {
-            "position": [0, 0, 5],
-            "size": [80, 20, 10]
+            "position": [0, 250, 0],
+            "size": [700, 1700, 800]
+        },
+        {
+            "position": [0, 250, 0],
+            "size": [1400, 1700, 400]
+        },
+        {
+            "position": [0, 300, 0],
+            "size": [525, 2400, 600]
+        },
+        {
+            "position": [0, 300, 0],
+            "size": [1050, 2400, 300]
+        },
+        {
+            "position": [0, 2175, 0],
+            "size": [400, 1350, 530]
+        },
+        {
+            "position": [0, 2175, 0],
+            "size": [740, 1000, 230]
+        },
+        {
+            "position": [0, -1350, 0],
+            "size": [800, 900, 1700]
+        },
+        {
+            "position": [0, -1530, 750],
+            "size": [2200, 400, 50]
+        },
+        {
+            "position": [0, -1530, -750],
+            "size": [2200, 400, 50]
+        },
+        {
+            "position": [0, -2250, 0],
+            "size": [1650, 900, 300]
         }
     ],
     "weaponSlots": [
@@ -85,17 +121,347 @@
     "thrusterSlots": [
         {
             "group": 1,
-            "uses": ["lower", "pitchDown"],
-            "thrusters": [
+            "uses": ["yawRight", "strafeLeft", "rollLeft"],
+            "array": true,
+            "count": 4,
+            "startPosition": [309, -1335, 641],
+            "translationVector": [0, -80, 0],
+            "size": 14.6
+        },
+        {
+            "group": 2,
+            "uses": ["yawRight", "strafeLeft", "rollRight"],
+            "array": true,
+            "count": 4,
+            "startPosition": [309, -1335, -641],
+            "translationVector": [0, -80, 0],
+            "size": 14.6
+        },
+        {
+            "group": 3,
+            "uses": ["yawLeft", "strafeRight", "rollRight"],
+            "array": true,
+            "count": 4,
+            "startPosition": [-309, -1335, 641],
+            "translationVector": [0, -80, 0],
+            "size": 14.6
+        },
+        {
+            "group": 4,
+            "uses": ["yawLeft", "strafeRight", "rollLeft"],
+            "array": true,
+            "count": 4,
+            "startPosition": [-309, -1335, -641],
+            "translationVector": [0, -80, 0],
+            "size": 14.6
+        },
+        {
+            "group": 5,
+            "uses": ["reverse"],
+            "array": true,
+            "count": 3,
+            "startPosition": [172.88, -1032, 445],
+            "translationVector": [-5, -30, 80],
+            "size": 23.3
+        },
+        {
+            "group": 5,
+            "uses": ["reverse"],
+            "array": true,
+            "count": 3,
+            "startPosition": [-172.88, -1032, 445],
+            "translationVector": [5, -30, 80],
+            "size": 23.3
+        },
+        {
+            "group": 5,
+            "uses": ["reverse"],
+            "array": true,
+            "count": 3,
+            "startPosition": [172.88, -1032, -445],
+            "translationVector": [-5, -30, -80],
+            "size": 23.3
+        },
+        {
+            "group": 5,
+            "uses": ["reverse"],
+            "array": true,
+            "count": 3,
+            "startPosition": [-172.88, -1032, -445],
+            "translationVector": [5, -30, -80],
+            "size": 23.3
+        },
+        {
+            "group": 6,
+            "uses": ["forward", "pitchUp", "lower"],
+            "array": true,
+            "count": 10,
+            "startPosition": [-315, -2620, 135],
+            "translationVector": [70, 0, 0],
+            "size": 16.6
+        },
+        {
+            "group": 7,
+            "uses": ["forward", "pitchDown", "raise"],
+            "array": true,
+            "count": 10,
+            "startPosition": [-315, -2620, -135],
+            "translationVector": [70, 0, 0],
+            "size": 16.6
+        },
+        {
+            "group": 8,
+            "uses": ["forward"],
+            "array": true,
+            "count": 4,
+            "startPosition": [100, -2795, 0],
+            "translationVector": [110, 20, 0],
+            "size": 30
+        },
+        {
+            "group": 8,
+            "uses": ["forward"],
+            "array": true,
+            "count": 4,
+            "startPosition": [-100, -2795, 0],
+            "translationVector": [-110, 20, 0],
+            "size": 30
+        },
+        {
+            "group": 9,
+            "uses": ["pitchDown", "rollRight", "lower"],
+            "array": true,
+            "count": 4,
+            "startPosition": [300, 1830, 150],
+            "translationVector": [0, 80, -5.3],
+            "size": 21.3
+        },
+        {
+            "group": 10,
+            "uses": ["pitchUp", "rollLeft", "raise"],
+            "array": true,
+            "count": 4,
+            "startPosition": [300, 1830, -150],
+            "translationVector": [0, 80, 5.3],
+            "size": 21.3
+        },
+        {
+            "group": 11,
+            "uses": ["yawLeft", "strafeLeft"],
+            "array": true,
+            "count": 6,
+            "startPosition": [395, 2205, 0],
+            "translationVector": [-18, 70, 0],
+            "size": 16.6
+        },
+        {
+            "group": 12,
+            "uses": ["pitchDown", "rollLeft", "lower"],
+            "array": true,
+            "count": 4,
+            "startPosition": [-300, 1830, 150],
+            "translationVector": [0, 80, -5.3],
+            "size": 21.3
+        },
+        {
+            "group": 13,
+            "uses": ["pitchUp", "rollRight", "raise"],
+            "array": true,
+            "count": 4,
+            "startPosition": [-300, 1830, -150],
+            "translationVector": [0, 80, 5.3],
+            "size": 21.3
+        },
+        {
+            "group": 14,
+            "uses": ["yawRight", "strafeRight"],
+            "array": true,
+            "count": 6,
+            "startPosition": [-395, 2205, 0],
+            "translationVector": [18, 70, 0],
+            "size": 16.6
+        }
+    ],
+    "dockingSpaces": [
+        {
+            "name": "fighter_1_1",
+            "size": "small",
+            "positions": [
                 {
-                    "position": [2.6, 10, 7],
-                    "size": 0.9
+                    "phases": ["docked"],
+                    "position": [290, 150, 45],
+                    "rotations": [
+                        {
+                            "axis": "Z",
+                            "degrees": 90
+                        }
+                    ]
                 },
                 {
-                    "position": [-2.6, 10, 7],
-                    "size": 0.9
+                    "phases": ["launchBegin", "dockEnd"],
+                    "position": [290, 150, 35],
+                    "rotations": [
+                        {
+                            "axis": "Z",
+                            "degrees": 90
+                        }
+                    ]
+                },
+                {
+                    "phases": ["launchEnd", "dockBegin"],
+                    "position": [690, 150, 35],
+                    "rotations": [
+                        {
+                            "axis": "Z",
+                            "degrees": 90
+                        }
+                    ]
                 }
             ]
+        },
+        {
+            "name": "fighter_1_2",
+            "size": "small",
+            "copyOf": "fighter_1_1",
+            "translationVector": [0, -100, 0]
+        },
+        {
+            "name": "fighter_1_3",
+            "size": "small",
+            "copyOf": "fighter_1_1",
+            "translationVector": [-100, 0, 0]
+        },
+        {
+            "name": "fighter_1_4",
+            "size": "small",
+            "copyOf": "fighter_1_1",
+            "translationVector": [-100, -100, 0]
+        },
+        {
+            "name": "fighter_2_1",
+            "size": "small",
+            "copyOf": "fighter_1_1",
+            "translationVector": [0, 0, 45]
+        },
+        {
+            "name": "fighter_2_2",
+            "size": "small",
+            "copyOf": "fighter_2_1",
+            "translationVector": [0, -100, 0]
+        },
+        {
+            "name": "fighter_2_3",
+            "size": "small",
+            "copyOf": "fighter_2_1",
+            "translationVector": [-100, 0, 0]
+        },
+        {
+            "name": "fighter_2_4",
+            "size": "small",
+            "copyOf": "fighter_2_1",
+            "translationVector": [-100, -100, 0]
+        },
+        {
+            "name": "fighter_3_1",
+            "size": "small",
+            "copyOf": "fighter_2_1",
+            "translationVector": [0, 0, 45]
+        },
+        {
+            "name": "fighter_3_2",
+            "size": "small",
+            "copyOf": "fighter_3_1",
+            "translationVector": [0, -100, 0]
+        },
+        {
+            "name": "fighter_3_3",
+            "size": "small",
+            "copyOf": "fighter_3_1",
+            "translationVector": [-100, 0, 0]
+        },
+        {
+            "name": "fighter_3_4",
+            "size": "small",
+            "copyOf": "fighter_3_1",
+            "translationVector": [-100, -100, 0]
+        },
+        {
+            "name": "fighter_4_1",
+            "size": "small",
+            "copyOf": "fighter_1_1",
+            "translationVector": [0, -200, 0]
+        },
+        {
+            "name": "fighter_4_2",
+            "size": "small",
+            "copyOf": "fighter_4_1",
+            "translationVector": [0, -100, 0]
+        },
+        {
+            "name": "fighter_4_3",
+            "size": "small",
+            "copyOf": "fighter_4_1",
+            "translationVector": [-100, 0, 0]
+        },
+        {
+            "name": "fighter_4_4",
+            "size": "small",
+            "copyOf": "fighter_4_1",
+            "translationVector": [-100, -100, 0]
+        },
+        {
+            "name": "bomber_1_1",
+            "size": "large",
+            "positions": [
+                {
+                    "phases": ["docked"],
+                    "position": [269, -50, -25],
+                    "rotations": [
+                        {
+                            "axis": "Z",
+                            "degrees": 90
+                        }
+                    ]
+                },
+                {
+                    "phases": ["launchBegin", "dockEnd"],
+                    "position": [269, -50, -35],
+                    "rotations": [
+                        {
+                            "axis": "Z",
+                            "degrees": 90
+                        }
+                    ]
+                },
+                {
+                    "phases": ["launchEnd", "dockBegin"],
+                    "position": [669, -50, -35],
+                    "rotations": [
+                        {
+                            "axis": "Z",
+                            "degrees": 90
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "bomber_1_2",
+            "size": "large",
+            "copyOf": "bomber_1_1",
+            "translationVector": [0, -100, 0]
+        },
+        {
+            "name": "bomber_1_3",
+            "size": "large",
+            "copyOf": "bomber_1_1",
+            "translationVector": [-100, 0, 0]
+        },
+        {
+            "name": "bomber_1_4",
+            "size": "large",
+            "copyOf": "bomber_1_1",
+            "translationVector": [-100, -100, 0]
         }
     ],
     "views": [
@@ -106,7 +472,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -40, 6.5]
+            "position": [0, -165, 135]
         },
         {
             "name": "far",
@@ -115,7 +481,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -80, 13.5]
+            "position": [0, -1350, 235]
         },
         {
             "name": "top",
@@ -124,7 +490,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 32, 165],
+            "position": [0, 165, 2335],
             "rotations": [
                 {
                     "axis": "X",
@@ -133,13 +499,13 @@
             ]
         },
         {
-            "name": "cockpit",
+            "name": "front-hangar",
             "fov": 60,
             "followsPosition": true,
             "movable": false,
             "turnable": true,
             "rotationCenterIsObject": false,
-            "position": [0, 3.7, 1]
+            "position": [0, 400, -30]
         },
         {
             "name": "front",
@@ -148,7 +514,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 36, 13.5],
+            "position": [0, 850, 100],
             "rotations": [
                 {
                     "axis": "Z",
@@ -161,13 +527,28 @@
             ]
         },
         {
+            "name": "back-hangar",
+            "fov": 60,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "position": [30, -280, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -90
+                }
+            ]
+        },
+        {
             "name": "free",
             "fov": 60,
             "followsPosition": true,
             "movable": false,
             "turnable": true,
             "rotationCenterIsObject": true,
-            "position": [0, -40, 0]
+            "position": [0, -1050, 0]
         }
     ],
     "equipmentProfiles": [

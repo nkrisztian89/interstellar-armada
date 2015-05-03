@@ -10,26 +10,66 @@
     "bodies": [
         {
             "position": [0, 30, 5],
-            "size": [30, 70, 10]
+            "size": [25, 70, 10]
         },
         {
             "position": [0, 30, -5],
             "size": [30, 40, 10]
         },
         {
-            "position": [0, -5, 15],
-            "size": [60, 30, 10]
+            "position": [0, 20, 0],
+            "size": [50, 30, 10]
+        },
+        {
+            "position": [20, 5, 18],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 20
+                },
+                {
+                    "axis": "Y",
+                    "degrees": 40
+                }
+            ],
+            "size": [30, 25, 10]
+        },
+        {
+            "position": [-20, 5, 18],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -20
+                },
+                {
+                    "axis": "Y",
+                    "degrees": -40
+                }
+            ],
+            "size": [30, 25, 10]
         },
         {
             "position": [0, 30, -18],
             "size": [23, 35, 17]
         },
         {
-            "position": [37, -10, 30],
+            "position": [37, -6, 30],
+            "rotations": [
+                {
+                    "axis": "Y",
+                    "degrees": -60
+                }
+            ],
             "size": [23, 35, 17]
         },
         {
-            "position": [-37, -10, 30],
+            "position": [-37, -6, 30],
+            "rotations": [
+                {
+                    "axis": "Y",
+                    "degrees": 60
+                }
+            ],
             "size": [23, 35, 17]
         }
     ],

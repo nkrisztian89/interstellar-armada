@@ -108,7 +108,7 @@
             "barrels": [
                 {
                     "projectile": "plasma",
-                    "force": 1200,
+                    "force": 4000,
                     "position": [0, 10, 0]
                 }
             ]
@@ -123,22 +123,22 @@
             "barrels": [
                 {
                     "projectile": "plasma",
-                    "force": 1500,
+                    "force": 5000,
                     "position": [2, 25, 10]
                 },
                 {
                     "projectile": "plasma",
-                    "force": 1500,
+                    "force": 5000,
                     "position": [-2, 25, 10]
                 },
                 {
                     "projectile": "plasma",
-                    "force": 1500,
+                    "force": 5000,
                     "position": [2, 25, 14]
                 },
                 {
                     "projectile": "plasma",
-                    "force": 1500,
+                    "force": 5000,
                     "position": [-2, 25, 14]
                 }
             ]
@@ -153,7 +153,7 @@
             "barrels": [
                 {
                     "projectile": "proton",
-                    "force": 8000,
+                    "force": 30000,
                     "position": [0, 100, 0]
                 }
             ]
@@ -168,7 +168,7 @@
             "barrels": [
                 {
                     "projectile": "ion",
-                    "force": 50000,
+                    "force": 100000,
                     "position": [0, 320, 0]
                 }
             ]
@@ -191,9 +191,9 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0],
             "grade": 1,
-            "referenceMass": 35,
+            "referenceMass": 35000,
             "thrust": 30,
-            "angularThrust": 75
+            "angularThrust": 150
         },
         {
             "name": "imperialCorvetteMk1",
@@ -201,9 +201,9 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0],
             "grade": 1,
-            "referenceMass": 800,
+            "referenceMass": 800000,
             "thrust": 15,
-            "angularThrust": 30
+            "angularThrust": 40
         },
         {
             "name": "imperialFrigateMk1",
@@ -211,9 +211,9 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0],
             "grade": 1,
-            "referenceMass": 2200,
+            "referenceMass": 2200000,
             "thrust": 10,
-            "angularThrust": 20
+            "angularThrust": 30
         },
         {
             "name": "imperialCruiserMk1",
@@ -221,9 +221,9 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0],
             "grade": 1,
-            "referenceMass": 25000,
+            "referenceMass": 25000000,
             "thrust": 5,
-            "angularThrust": 10
+            "angularThrust": 5
         }
     ],
     "spacecraftTypes": [

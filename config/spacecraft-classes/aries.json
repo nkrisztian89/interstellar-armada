@@ -9,8 +9,44 @@
     "mass": 800000,
     "bodies": [
         {
-            "position": [0, 0, 5],
-            "size": [80, 20, 10]
+            "position": [0, 70, 0],
+            "size": [130, 300, 80]
+        },
+        {
+            "position": [0, 315, 0],
+            "size": [70, 150, 40]
+        },
+        {
+            "position": [0, -20, 0],
+            "size": [210, 120, 80]
+        },
+        {
+            "position": [-77.5, -175, 0],
+            "size": [35, 270, 35]
+        },
+        {
+            "position": [77.5, -175, 0],
+            "size": [35, 270, 35]
+        },
+        {
+            "position": [165, -70, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 20
+                }
+            ],
+            "size": [135, 30, 5]
+        },
+        {
+            "position": [-165, -70, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -20
+                }
+            ],
+            "size": [135, 30, 5]
         }
     ],
     "weaponSlots": [
@@ -27,15 +63,157 @@
     "thrusterSlots": [
         {
             "group": 1,
-            "uses": ["lower", "pitchDown"],
+            "uses": ["yawLeft", "strafeLeft"],
             "thrusters": [
                 {
-                    "position": [2.6, 10, 7],
-                    "size": 0.9
+                    "position": [56, 285, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 2,
+            "uses": ["yawRight", "strafeRight"],
+            "thrusters": [
+                {
+                    "position": [-56, 285, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 3,
+            "uses": ["pitchUp", "rollLeft", "raise"],
+            "thrusters": [
+                {
+                    "position": [14, 285, -28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 4,
+            "uses": ["pitchUp", "rollRight", "raise"],
+            "thrusters": [
+                {
+                    "position": [-14, 285, -28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 5,
+            "uses": ["pitchDown", "rollRight", "lower"],
+            "thrusters": [
+                {
+                    "position": [14, 285, 28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 6,
+            "uses": ["pitchDown", "rollLeft", "lower"],
+            "thrusters": [
+                {
+                    "position": [-14, 285, 28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 7,
+            "uses": ["reverse"],
+            "thrusters": [
+                {
+                    "position": [75, 53, 20],
+                    "size": 8.5
                 },
                 {
-                    "position": [-2.6, 10, 7],
-                    "size": 0.9
+                    "position": [-75, 53, 20],
+                    "size": 8.5
+                },
+                {
+                    "position": [75, 53, -20],
+                    "size": 8.5
+                },
+                {
+                    "position": [-75, 53, -20],
+                    "size": 8.5
+                }
+            ]
+        },
+        {
+            "group": 8,
+            "uses": ["forward"],
+            "thrusters": [
+                {
+                    "position": [77.5, -311, 0],
+                    "size": 13.4
+                },
+                {
+                    "position": [-77.5, -311, 0],
+                    "size": 13.4
+                }
+            ]
+        },
+        {
+            "group": 9,
+            "uses": ["yawRight", "strafeLeft"],
+            "thrusters": [
+                {
+                    "position": [109, -273, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 10,
+            "uses": ["pitchDown", "rollLeft", "raise"],
+            "thrusters": [
+                {
+                    "position": [77.5, -273, -31.5],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 11,
+            "uses": ["pitchUp", "rollRight", "lower"],
+            "thrusters": [
+                {
+                    "position": [77.5, -273, 31.5],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 12,
+            "uses": ["yawLeft", "strafeRight"],
+            "thrusters": [
+                {
+                    "position": [-109, -273, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 13,
+            "uses": ["pitchDown", "rollRight", "raise"],
+            "thrusters": [
+                {
+                    "position": [-77.5, -273, -31.5],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 14,
+            "uses": ["pitchUp", "rollLeft", "lower"],
+            "thrusters": [
+                {
+                    "position": [-77.5, -273, 31.5],
+                    "size": 5.0
                 }
             ]
         }
@@ -48,7 +226,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -40, 6.5]
+            "position": [0, -40, 20]
         },
         {
             "name": "far",
@@ -57,7 +235,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -80, 13.5]
+            "position": [0, -160, 26]
         },
         {
             "name": "top",
@@ -66,7 +244,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 32, 165],
+            "position": [0, 40, 400],
             "rotations": [
                 {
                     "axis": "X",
@@ -75,13 +253,13 @@
             ]
         },
         {
-            "name": "cockpit",
+            "name": "bridge",
             "fov": 60,
             "followsPosition": true,
             "movable": false,
             "turnable": true,
             "rotationCenterIsObject": false,
-            "position": [0, 3.7, 1]
+            "position": [0, 40, 6.7]
         },
         {
             "name": "front",
@@ -90,7 +268,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 36, 13.5],
+            "position": [0, 106, 14.5],
             "rotations": [
                 {
                     "axis": "Z",
@@ -98,7 +276,7 @@
                 },
                 {
                     "axis": "X",
-                    "degrees": -10
+                    "degrees": -12
                 }
             ]
         },
@@ -109,7 +287,7 @@
             "movable": false,
             "turnable": true,
             "rotationCenterIsObject": true,
-            "position": [0, -40, 0]
+            "position": [0, -140, 0]
         }
     ],
     "equipmentProfiles": [

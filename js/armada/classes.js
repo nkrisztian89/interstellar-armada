@@ -858,10 +858,8 @@ define([
      * thrusters is represented by showing particles at these thruster slots with
      * a size proportional to the thruster burn.
      * @param {Object} [dataJSON]
-     * @param {Number} groupIndex
-     * @param {String[]} uses 
      */
-    function ThrusterSlot(dataJSON, groupIndex, uses) {
+    function ThrusterSlot(dataJSON) {
         /**
          * The coordinates of the position of the slot relative to the ship.
          * @type Number[4]
@@ -883,7 +881,7 @@ define([
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
          * @type String[]
          */
-        this.uses = uses || application.crash();
+        this.uses = dataJSON ? (dataJSON.uses || application.crash()) : null;
         /**
          * The index of the thruster group this slot belongs to.
          * Members of the same group should have the same uses list. The parts of the
@@ -891,7 +889,7 @@ define([
          * index, allowing to manipulate their appearance using uniform arrays.
          * @type Number
          */
-        this.group = (typeof groupIndex) === "number" ? groupIndex : application.crash();
+        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : application.crash()) : null;
     }
     // ##############################################################################
     /**
@@ -1050,7 +1048,7 @@ define([
      * @param {Object} dataJSON
      */
     SpacecraftClass.prototype._loadData = function (dataJSON) {
-        var i, j, groupIndex, uses, startPosition, translationVector, rotations, maxGrade, count;
+        var i, j, groupIndex, uses, startPosition, translationVector, rotations, maxGrade, count, size, jsonObject;
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
@@ -1125,8 +1123,27 @@ define([
             for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
                 groupIndex = dataJSON.thrusterSlots[i].group;
                 uses = dataJSON.thrusterSlots[i].uses;
-                for (j = 0; j < dataJSON.thrusterSlots[i].thrusters.length; j++) {
-                    this._thrusterSlots.push(new ThrusterSlot(dataJSON.thrusterSlots[i].thrusters[j], groupIndex, uses));
+                if (dataJSON.thrusterSlots[i].array) {
+                    startPosition = dataJSON.thrusterSlots[i].startPosition || application.crash();
+                    translationVector = dataJSON.thrusterSlots[i].translationVector || application.crash();
+                    size = dataJSON.thrusterSlots[i].size || application.crash();
+                    count = dataJSON.thrusterSlots[i].count || application.crash();
+                    for (j = 0; j < count; j++) {
+                        this._thrusterSlots.push(new ThrusterSlot({
+                            position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
+                            size: size,
+                            groupIndex: groupIndex,
+                            uses: uses
+                        }));
+                    }
+                }
+                if (dataJSON.thrusterSlots[i].thrusters) {
+                    for (j = 0; j < dataJSON.thrusterSlots[i].thrusters.length; j++) {
+                        jsonObject = dataJSON.thrusterSlots[i].thrusters[j];
+                        jsonObject.groupIndex = groupIndex;
+                        jsonObject.uses = uses;
+                        this._thrusterSlots.push(new ThrusterSlot(jsonObject));
+                    }
                 }
             }
         }
