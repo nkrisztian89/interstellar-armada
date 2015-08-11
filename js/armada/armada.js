@@ -14,23 +14,6 @@ define([
 ], function (application) {
     "use strict";
 
-    // first set up the general properties provided by application.js
-
-    application.setFolders({
-        screen: "screens/",
-        component: "components/",
-        css: "css/",
-        model: "models/",
-        shader: "shaders/",
-        texture: "textures/",
-        config: "config/",
-        level: "levels/",
-        environment: "levels/"
-    });
-    application.setLogVerbosity(1);
-
-    application.setVersion("0.1.0:106+refactoring-23 (2015.05.03.)");
-
     // add private variables specific to Interstellar Armada
 
     var
@@ -83,9 +66,15 @@ define([
     };
 
     application.requestConfigLoad = function (graphicsResourceManager) {
-        application.requestTextFile("config", "config.json", function (configText) {
+        application.requestTextFile("config/", "config.json", function (configText) {
             var configJSON = JSON.parse(configText);
-            application.log("Loading game configuration...", 1);
+            application.log("Loading game configuration...");
+            application.setFolders(configJSON.folders);
+            application.setLogVerbosity(configJSON.logVerbosity);
+            application.setVersion(configJSON.version);
+
+            application.log("Game version is: " + application.getVersion(), 1);
+
             _resourceManager.requestConfigLoad(configJSON.configFileURLs.resources, {
                 "textures": graphicsResourceManager.TextureResource,
                 "cubemaps": graphicsResourceManager.CubemapResource,
@@ -173,7 +162,7 @@ define([
      * Initializes the game: builds up the screens, loads settings and displays the main menu.
      */
     application.initialize = function () {
-        application.log("Initializing Interstellar Armada (version: " + application.getVersion() + ")...", 1);
+        application.log("Initializing Interstellar Armada...");
         if (location.protocol === "file:") {
             this.showError("Trying to run the game from the local filesystem!", "critical",
                   "This application can only be run through a web server. " +

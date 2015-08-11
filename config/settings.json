@@ -1,0 +1,81 @@
+{
+    "graphics": {
+        "context": {
+            "antialiasing": true,
+            "filtering": "trilinear",
+            "shadowMapping": true,
+            "shadows": {
+                "quality": 2048,
+                "ranges": [10, 30, 90, 200, 400, 1000],
+                "numRanges": 4,
+                "depthRatio": 1.5
+            }
+        },
+        "shaders": {
+            "complexity": "normal"
+        },
+        "levelOfDetailSettings": {
+            "lodLoadProfile": {
+                "maxLevel": 4,
+                "autoLimitByScreenWidth": true,
+                "limits": [
+                    {
+                        "screenSizeLessThan": 60,
+                        "level": 0
+                    }, {
+                        "screenSizeLessThan": 120,
+                        "level": 1
+                    }, {
+                        "screenSizeLessThan": 500,
+                        "level": 2
+                    }, {
+                        "screenSizeLessThan": 800,
+                        "level": 3
+                    }
+                ]
+            },
+            "lodDisplayProfile": {
+                "maxLevel": 4,
+                "compensateForObjectSize": true,
+                "referenceSize": 100,
+                "minimumRelativeSize": 0.05,
+                "limits": [
+                    {
+                        "screenSizeLessThan": 30,
+                        "level": 0
+                    }, {
+                        "screenSizeLessThan": 60,
+                        "level": 1
+                    }, {
+                        "screenSizeLessThan": 250,
+                        "level": 2
+                    }, {
+                        "screenSizeLessThan": 400,
+                        "level": 3
+                    }
+                ]
+            }
+        }
+    },
+    "logic": {
+        "database": {
+            "modelRotation": true
+        }
+    },
+    "control": {
+        "controllers": [
+            {
+                "type": "general",
+                "actions": [
+                    {
+                        "name": "quit",
+                        "description": "Quit to menu"
+                    }, {
+                        "name": "pause",
+                        "description": "Pause the game"
+                    }
+                ]
+            }
+        ]
+    }
+}

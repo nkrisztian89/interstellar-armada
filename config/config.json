@@ -1,4 +1,17 @@
 {
+    "version": "0.1.0:106+refactoring-24 (2015.08.11.)",
+    "logVerbosity": 1,
+    "folders": {
+        "screen": "screens/",
+        "component": "components/",
+        "css": "css/",
+        "model": "models/",
+        "shader": "shaders/",
+        "texture": "textures/",
+        "config": "config/",
+        "level": "levels/",
+        "environment": "levels/"
+    },
     "configFileURLs": {
         "resources": "resources.json",
         "classes": "classes.json",

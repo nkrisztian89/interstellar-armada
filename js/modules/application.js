@@ -26,49 +26,57 @@ define(function () {
     // -------------------------------------------------------------------------
     //Private members
     var
-        /**
-         * The associative array storing the names of the folders of the application, 
-         * indexed by the types of files they contain.
-         * @name Application#_folders
-         * @type Object.<String,String>
-         */
-        _folders = null,
-        /**
-         * A flag to indicate that file caching should be bypassed (disabled) when
-         * grabbing resource files for the program. This property is used for
-         * development as setting it to true makes sure that all changes in any of the
-         * files always take effect when refreshing the game page. It causes all
-         * files to be grabbed every time even if no changes occured, so it is 
-         * important to set it to false for releases.
-         * @name Application#_bypassFileCaching
-         * @type Boolean
-         */
-        _fileCacheBypassEnabled = true,
-        /**
-         * The level of verbosity the program should consider while logging. Only
-         * messages with this is lower verbosity level will be displayed, and
-         * therefore level 0 is the lowest (logging off) verbosity level. This
-         * property is used for debugging, and should be set to 0 for releases.
-         * @name Application#_logVerbosity
-         * @type Number
-         */
-        _logVerbosity = 0,
-        /**
-         * The string identifying the version of the program. Might be any arbitraty
-         * string with no restrictions, no specific convention is enforced.
-         * @type String
-         */
-        _version = "";
+          /**
+           * The associative array storing the names of the folders of the application, 
+           * indexed by the types of files they contain.
+           * @name Application#_folders
+           * @type Object.<String,String>
+           */
+          _folders = null,
+          /**
+           * A flag to indicate that file caching should be bypassed (disabled) when
+           * grabbing resource files for the program. This property is used for
+           * development as setting it to true makes sure that all changes in any of the
+           * files always take effect when refreshing the game page. It causes all
+           * files to be grabbed every time even if no changes occured, so it is 
+           * important to set it to false for releases.
+           * @name Application#_bypassFileCaching
+           * @type Boolean
+           */
+          _fileCacheBypassEnabled = true,
+          /**
+           * The level of verbosity the program should consider while logging. Only
+           * messages with this is lower verbosity level will be displayed, and
+           * therefore level 0 is the lowest (logging off) verbosity level. This
+           * property is used for debugging, and should be set to 0 for releases.
+           * @name Application#_logVerbosity
+           * @type Number
+           */
+          _logVerbosity = 0,
+          /**
+           * The string identifying the version of the program. Might be any arbitraty
+           * string with no restrictions, no specific convention is enforced.
+           * @type String
+           */
+          _version = "";
     // -------------------------------------------------------------------------
     // Public methods
     return {
         /**
          * Returns the path of the folder where the files of the passed type are stored,
          * relative to the site root.
-         * @param {String} fileType
+         * @param {String} fileType If the last character is a slash '/', the method
+         * will assume the folder name was specified directly, and will simply return it.
          * @returns {String}
          */
         getFolder: function (fileType) {
+            if ((fileType.length > 0) && (fileType[fileType.length - 1] === "/")) {
+                return fileType;
+            }
+            if (!_folders) {
+                this.log("Looking for the folder assigned to file type '" + fileType + "', but there are no folders specified in the application configuration. Will use the folder with the same name as the file type.");
+                return fileType + "/";
+            }
             if (_folders[fileType] !== undefined) {
                 return _folders[fileType];
             }
@@ -138,22 +146,22 @@ define(function () {
             switch (severity) {
                 case "critical":
                     errorString += "Unfortunately this is a critical error.\n" +
-                        "The application is not functional until this error is resolved.";
+                          "The application is not functional until this error is resolved.";
                     break;
                 case "severe":
                     errorString += "This is a severe error.\n" +
-                        "The application might produce unexpected behaviour from this point on. " +
-                        "It is recommended that you restart the application by refreshing the page in your browser.";
+                          "The application might produce unexpected behaviour from this point on. " +
+                          "It is recommended that you restart the application by refreshing the page in your browser.";
                     break;
                 case "minor":
                     errorString += "This is a minor error.\n" +
-                        "The application might be fully functional, but you might need to readjust some settings or take " +
-                        "some other actions depending on the explanation of the error.";
+                          "The application might be fully functional, but you might need to readjust some settings or take " +
+                          "some other actions depending on the explanation of the error.";
                     break;
                 default:
                     errorString += "The severity of this error cannot be determined.\n" +
-                        "The application might produce unexpected behaviour from this point on. " +
-                        "It is recommended that you restart the application by refreshing the page in your browser.";
+                          "The application might produce unexpected behaviour from this point on. " +
+                          "It is recommended that you restart the application by refreshing the page in your browser.";
                     break;
             }
             alert(errorString);
@@ -187,12 +195,12 @@ define(function () {
          */
         requestFile: function (filetype, filename, onload, customMimeType) {
             this.log("Requesting file: '" + filename + "' from " + (this.getFolder(filetype) !== ""
-                ?
-                "folder: '" + this.getFolder(filetype) :
-                "root folder")
-                + "'...", 2);
+                  ?
+                  "folder: '" + this.getFolder(filetype) :
+                  "root folder")
+                  + "'...", 2);
             var self = this,
-                request = new XMLHttpRequest();
+                  request = new XMLHttpRequest();
             request.onload = function () {
                 self.log("File: '" + filename + "' successfully loaded.", 2);
                 onload(request);
@@ -243,18 +251,18 @@ define(function () {
             var self = this;
             this.requestFile(filetype, filename, function (request) {
                 var responseXML = (request.responseXML === null) ?
-                    new DOMParser().parseFromString(request.responseText, "application/xml") :
-                    request.responseXML;
+                      new DOMParser().parseFromString(request.responseText, "application/xml") :
+                      request.responseXML;
                 if (responseXML.documentElement.nodeName !== "parsererror") {
                     onload(responseXML);
                 } else {
                     self.showError("Could not parse XML file: '" + filename + "'.",
-                        "severe", "The file could be loaded, but for some reason the parsing of it has failed. \n" +
-                        "The status of the request was: '" + request.statusText + "' when the error happened.\n" +
-                        "The text content of the file:\n" +
-                        (request.responseText.length > 120 ?
-                            request.responseText.slice(0, 120) + "..." :
-                            request.responseText));
+                          "severe", "The file could be loaded, but for some reason the parsing of it has failed. \n" +
+                          "The status of the request was: '" + request.statusText + "' when the error happened.\n" +
+                          "The text content of the file:\n" +
+                          (request.responseText.length > 120 ?
+                                request.responseText.slice(0, 120) + "..." :
+                                request.responseText));
                 }
             }, "application/xml");
         }
