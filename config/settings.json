@@ -73,6 +73,355 @@
                     }, {
                         "name": "pause",
                         "description": "Pause the game"
+                    }, {
+                        "name": "switchToPilotMode",
+                        "description": "Switch to pilot mode"
+                    }, {
+                        "name": "switchToSpectatorMode",
+                        "description": "Switch to spectator mode"
+                    }, {
+                        "name": "toggleHitboxVisibility",
+                        "description": "Toggle the visibility of hitboxes"
+                    }, {
+                        "name": "toggleTextVisibility",
+                        "description": "Toggle the visibility of the texts on screen"
+                    }
+                ]
+            },
+            {
+                "type": "fighter",
+                "actions": [
+                    {
+                        "name": "changeFlightMode",
+                        "description": "Change flight mode"
+                    }, {
+                        "name": "fire",
+                        "description": "Fire primary weapons",
+                        "continuous": true
+                    }, {
+                        "name": "forward",
+                        "description": "Forward thrust (free mode) or increase speed",
+                        "continuous": true
+                    }, {
+                        "name": "reverse",
+                        "description": "Reverse thrust (free mode) or decrease speed",
+                        "continuous": true
+                    }, {
+                        "name": "strafeLeft",
+                        "description": "Strafe left",
+                        "continuous": true
+                    }, {
+                        "name": "strafeRight",
+                        "description": "Strafe right",
+                        "continuous": true
+                    }, {
+                        "name": "raise",
+                        "description": "Strafe upwards",
+                        "continuous": true
+                    }, {
+                        "name": "lower",
+                        "description": "Strafe downwards",
+                        "continuous": true
+                    }, {
+                        "name": "resetSpeed",
+                        "description": "Reset speed to zero (compensated mode)"
+                    }, {
+                        "name": "yawLeft",
+                        "description": "Turn to the left",
+                        "continuous": true
+                    }, {
+                        "name": "yawRight",
+                        "description": "Turn to the right",
+                        "continuous": true
+                    }, {
+                        "name": "pitchUp",
+                        "description": "Turn upwards",
+                        "continuous": true
+                    }, {
+                        "name": "pitchDown",
+                        "description": "Turn downwards",
+                        "continuous": true
+                    }, {
+                        "name": "rollLeft",
+                        "description": "Roll to the left",
+                        "continuous": true
+                    }, {
+                        "name": "rollRight",
+                        "description": "Roll to the right",
+                        "continuous": true
+                    }
+                ]
+            },
+            {
+                "type": "camera",
+                "actions": [
+                    {
+                        "name": "cameraMoveLeft",
+                        "description": "Move the camera to the left (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveRight",
+                        "description": "Move the camera to the right (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveUp",
+                        "description": "Move the camera upwards (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveDown",
+                        "description": "Move the camera downwards (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveForward",
+                        "description": "Move the camera forward (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveBackward",
+                        "description": "Move the camera backward (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnLeft",
+                        "description": "Turn the camera to the left",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnRight",
+                        "description": "Turn the camera to the right",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnUp",
+                        "description": "Turn the camera upwards",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnDown",
+                        "description": "Turn the camera downwards",
+                        "continuous": true
+                    }, {
+                        "name": "cameraDecreaseFOV",
+                        "description": "Zoom in",
+                        "continuous": true
+                    }, {
+                        "name": "cameraIncreaseFOV",
+                        "description": "Zoom out",
+                        "continuous": true
+                    }, {
+                        "name": "followNext",
+                        "description": "Follow next spacecraft. (in spectator mode)"
+                    }, {
+                        "name": "followPrevious",
+                        "description": "Follow previous spacecraft. (in spectator mode)"
+                    }, {
+                        "name": "changeView",
+                        "description": "Change view of currently followed spacecraft"
+                    }
+                ]
+            }
+        ],
+        "inputDevices": [
+            {
+                "type": "keyboard",
+                "bindings": [
+                    {
+                        "action": "fire",
+                        "key": "space"
+                    }, {
+                        "action": "changeFlightMode",
+                        "key": "tab"
+                    }, {
+                        "action": "forward",
+                        "key": "w"
+                    }, {
+                        "action": "reverse",
+                        "key": "s"
+                    }, {
+                        "action": "strafeLeft",
+                        "key": "a"
+                    }, {
+                        "action": "strafeRight",
+                        "key": "d"
+                    }, {
+                        "action": "raise",
+                        "key": "r"
+                    }, {
+                        "action": "lower",
+                        "key": "f"
+                    }, {
+                        "action": "resetSpeed",
+                        "key": "0"
+                    }, {
+                        "action": "yawLeft",
+                        "key": "left"
+                    }, {
+                        "action": "yawRight",
+                        "key": "right"
+                    }, {
+                        "action": "pitchDown",
+                        "key": "up"
+                    }, {
+                        "action": "pitchUp",
+                        "key": "down"
+                    }, {
+                        "action": "rollRight",
+                        "key": "e"
+                    }, {
+                        "action": "rollLeft",
+                        "key": "q"
+                    }, {
+                        "action": "cameraTurnLeft",
+                        "key": "left",
+                        "ctrl": true
+                    }, {
+                        "action": "cameraTurnRight",
+                        "key": "right",
+                        "ctrl": true
+                    }, {
+                        "action": "cameraTurnUp",
+                        "key": "up",
+                        "ctrl": true
+                    }, {
+                        "action": "cameraTurnDown",
+                        "key": "down",
+                        "ctrl": true
+                    }, {
+                        "action": "cameraMoveLeft",
+                        "key": "left"
+                    }, {
+                        "action": "cameraMoveRight",
+                        "key": "right"
+                    }, {
+                        "action": "cameraMoveUp",
+                        "key": "page up"
+                    }, {
+                        "action": "cameraMoveDown",
+                        "key": "page down"
+                    }, {
+                        "action": "cameraMoveForward",
+                        "key": "up"
+                    }, {
+                        "action": "cameraMoveBackward",
+                        "key": "down"
+                    }, {
+                        "action": "cameraDecreaseFOV",
+                        "key": "z"
+                    }, {
+                        "action": "cameraIncreaseFOV",
+                        "key": "u"
+                    }, {
+                        "action": "changeView",
+                        "key": "v"
+                    }, {
+                        "action": "followNext",
+                        "key": "c"
+                    }, {
+                        "action": "followPrevious",
+                        "key": "x"
+                    }, {
+                        "action": "pause",
+                        "key": "p"
+                    }, {
+                        "action": "switchToPilotMode",
+                        "key": "m"
+                    }, {
+                        "action": "switchToSpectatorMode",
+                        "key": "n"
+                    }, {
+                        "action": "toggleHitboxVisibility",
+                        "key": "h"
+                    }, {
+                        "action": "quit",
+                        "key": "escape"
+                    }, {
+                        "action": "toggleTextVisibility",
+                        "key": "t"
+                    }
+                ]
+            },
+            {
+                "type": "mouse",
+                "sensitivityProfile": {
+                    "moveSensitivity": 0.005,
+                    "displacementSensitivity": 0.00002,
+                    "displacementDeadzone": 6
+                },
+                "bindings": [
+                    {
+                        "action": "cameraTurnLeft",
+                        "move": "left"
+                    }, {
+                        "action": "cameraTurnRight",
+                        "move": "right"
+                    }, {
+                        "action": "cameraTurnUp",
+                        "move": "up"
+                    }, {
+                        "action": "cameraTurnDown",
+                        "move": "down"
+                    }, {
+                        "action": "fire",
+                        "button": "left"
+                    }, {
+                        "action": "yawLeft",
+                        "move": "left",
+                        "fromCenter": true
+                    }, {
+                        "action": "yawRight",
+                        "move": "right",
+                        "fromCenter": true
+                    }, {
+                        "action": "pitchDown",
+                        "move": "down",
+                        "fromCenter": true
+                    }, {
+                        "action": "pitchUp",
+                        "move": "up",
+                        "fromCenter": true
+                    }
+                ]
+            },
+            {
+                "type": "joystick",
+                "bindings": [
+                    {
+                        "action": "fire",
+                        "button": 0
+                    }, {
+                        "action": "yawLeft",
+                        "axis": "-2"
+                    }, {
+                        "action": "yawRight",
+                        "axis": "+2"
+                    }, {
+                        "action": "pitchDown",
+                        "axis": "-1"
+                    }, {
+                        "action": "pitchUp",
+                        "axis": "+1"
+                    }, {
+                        "action": "rollLeft",
+                        "axis": "-0"
+                    }, {
+                        "action": "rollRight",
+                        "axis": "+0"
+                    }, {
+                        "action": "forward",
+                        "axis": "+3"
+                    }, {
+                        "action": "reverse",
+                        "axis": "-3"
+                    }, {
+                        "action": "cameraTurnUp",
+                        "axis": "+4"
+                    }, {
+                        "action": "cameraTurnDown",
+                        "axis": "-4"
+                    }, {
+                        "action": "cameraTurnLeft",
+                        "axis": "-5"
+                    }, {
+                        "action": "cameraTurnRight",
+                        "axis": "+5"
+                    }, {
+                        "action": "resetSpeed",
+                        "button": 4
                     }
                 ]
             }

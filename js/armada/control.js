@@ -6,8 +6,8 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
-/*global define */
+/*jslint nomen: true, white: true, plusplus: true */
+/*global define, Element, localStorage, document, window */
 
 define([
     "modules/application",
@@ -36,7 +36,7 @@ define([
          * @name KeyBinding#_actionName
          * @type String
          */
-        this._actionName = (typeof (xmlTagOrActionName) === "string" ?
+        this._actionName = ((typeof xmlTagOrActionName) === "string" ?
               xmlTagOrActionName :
               null);
         /**
@@ -78,7 +78,6 @@ define([
         this.updateKeyString();
         application.log("Created key binding: " + this._actionName + " - " + this._keyString, 3);
     }
-    ;
 
     /**
      * Loads the properties of the key binding as stored in the passed XML tag.
@@ -228,14 +227,12 @@ define([
     };
 
     /**
-     * Creates a keyboard interpreter object.
      * @class Monitors the keyboard inputs and stores the current state of which
      * keys are pressed. Can load and store key bindings and based on the current
      * state and the key bindings, determine the list of currently triggered actions
      * that controllers can/should execute.
      * @param {Element} [xmlTag] Upon initialization, it can load the key bindings from
      * this XML tag if specified.
-     * @returns {KeyboardInputInterpreter}
      */
     function KeyboardInputInterpreter(xmlTag) {
         /**
@@ -252,7 +249,7 @@ define([
          * @name KeyboardInputInterpreter#_bindings
          * @type Object
          */
-        this._bindings = new Object();
+        this._bindings = {};
         /**
          * Whether the interpreter is currently listening for input (the event  handlers
          * are set).
@@ -325,7 +322,7 @@ define([
     KeyboardInputInterpreter.prototype.getKeyCodeOf = function (key) {
         return key ?
               (key[0] === "#" ?
-                    parseInt(key.slice(1)) :
+                    parseInt(key.slice(1), 10) :
                     this.getKeyCodeTable()[key]) :
               null;
     };
@@ -338,7 +335,8 @@ define([
      * @returns {String}
      */
     KeyboardInputInterpreter.prototype.getKeyOfCode = function (keyCode) {
-        for (var key in this.getKeyCodeTable()) {
+        var key;
+        for (key in this.getKeyCodeTable()) {
             if (this.getKeyCodeTable()[key] === keyCode) {
                 return key;
             }
@@ -389,9 +387,8 @@ define([
     KeyboardInputInterpreter.prototype.getControlStringForAction = function (actionName) {
         if (this._bindings[actionName] !== undefined) {
             return this._bindings[actionName].getKeyString();
-        } else {
-            return "";
         }
+        return "";
     };
 
     /**
@@ -400,8 +397,7 @@ define([
      * @param {Element} xmlTag
      */
     KeyboardInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
-        var keyBindingTags = xmlTag.getElementsByTagName("binding");
+        var i, keyBindingTags = xmlTag.getElementsByTagName("binding");
         for (i = 0; i < keyBindingTags.length; i++) {
             this.setKeyBinding(new KeyBinding(keyBindingTags[i]));
         }
@@ -412,8 +408,11 @@ define([
      * from HTML5 local storage.
      */
     KeyboardInputInterpreter.prototype.loadFromLocalStorage = function () {
-        for (var actionName in this._bindings) {
-            this._bindings[actionName].loadFromLocalStorage();
+        var actionName;
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].loadFromLocalStorage();
+            }
         }
     };
 
@@ -421,8 +420,11 @@ define([
      * Removes custom key bindings stored in HTML5 local storage.
      */
     KeyboardInputInterpreter.prototype.removeFromLocalStorage = function () {
-        for (var actionName in this._bindings) {
-            this._bindings[actionName].removeFromLocalStorage();
+        var actionName;
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].removeFromLocalStorage();
+            }
         }
     };
 
@@ -505,19 +507,21 @@ define([
      * objects in the array.
      */
     KeyboardInputInterpreter.prototype.getTriggeredActions = function () {
+        var result, keyBindingActionName;
         if (this._listening) {
-            var result = new Array();
-            for (var keyBindingActionName in this._bindings) {
-                if (this._bindings[keyBindingActionName].isTriggered(this._currentlyPressedKeys)) {
-                    result.push({
-                        name: keyBindingActionName
-                    });
+            result = [];
+            for (keyBindingActionName in this._bindings) {
+                if (this._bindings.hasOwnProperty(keyBindingActionName)) {
+                    if (this._bindings[keyBindingActionName].isTriggered(this._currentlyPressedKeys)) {
+                        result.push({
+                            name: keyBindingActionName
+                        });
+                    }
                 }
             }
             return result;
-        } else {
-            application.showError("Cannot query the triggered action when the " + this.getDeviceName() + " interpreter is not listening for user input!");
         }
+        application.showError("Cannot query the triggered action when the " + this.getDeviceName() + " interpreter is not listening for user input!");
     };
 
     /**
@@ -636,9 +640,9 @@ define([
      */
     MouseBinding.prototype.loadFromLocalStorage = function () {
         if (localStorage['interstellarArmada_control_' + this._actionName + '_button'] !== undefined) {
-            this._button = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_button']);
-            this._moveX = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_moveX']);
-            this._moveY = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_moveY']);
+            this._button = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_button'], 10);
+            this._moveX = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_moveX'], 10);
+            this._moveY = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_moveY'], 10);
             this._measuredFromCenter = (localStorage['interstellarArmada_control_' + this._actionName + '_measuredFromCenter'] === "true");
         }
     };
@@ -691,6 +695,7 @@ define([
      * intensity.
      */
     MouseBinding.prototype.getTriggeredIntensity = function (currentlyPressedButtons, xFromCenter, yFromCenter, deltaX, deltaY) {
+        var relativeX, relativeY;
         // first if this is a button assignment, check the state of the appropriate
         // mouse button
         if (this._button > 0) {
@@ -700,11 +705,11 @@ define([
         // movement in the negative direction is represented by '-1' value of _moveX/Y,
         // therefore multiplying with the actual movement will be positive if it was
         // in the same direction
-        var relativeX = this._measuredFromCenter ? xFromCenter : deltaX;
+        relativeX = this._measuredFromCenter ? xFromCenter : deltaX;
         if (this._moveX !== 0) {
             return ((relativeX * this._moveX) > 0) ? (relativeX * this._moveX) : 0;
         }
-        var relativeY = this._measuredFromCenter ? yFromCenter : deltaY;
+        relativeY = this._measuredFromCenter ? yFromCenter : deltaY;
         if (this._moveY !== 0) {
             return ((relativeY * this._moveY) > 0) ? (relativeY * this._moveY) : 0;
         }
@@ -719,13 +724,10 @@ define([
         switch (this._button) {
             case 1:
                 return "left click";
-                break;
             case 2:
                 return "middle click";
-                break;
             case 3:
                 return "right click";
-                break;
         }
         var result = this._measuredFromCenter ? " from center" : "";
         if (this._moveX < 0) {
@@ -807,7 +809,7 @@ define([
          * @name MouseInputInterpreter#_bindings
          * @type Object
          */
-        this._bindings = new Object();
+        this._bindings = {};
         /**
          * Whether the interpreter is currently listening for input (the event  handlers
          * are set).
@@ -871,7 +873,7 @@ define([
      */
     MouseInputInterpreter.prototype.setAndStoreMoveSensitivity = function (moveSensitivity) {
         this._moveSensitivity = moveSensitivity;
-        localStorage["interstellarArmada_control_mouse_moveSensitivity"] = this._moveSensitivity;
+        localStorage.interstellarArmada_control_mouse_moveSensitivity = this._moveSensitivity;
     };
 
     /**
@@ -880,7 +882,7 @@ define([
      */
     MouseInputInterpreter.prototype.setAndStoreDisplacementSensitivity = function (displacementSensitivity) {
         this._displacementSensitivity = displacementSensitivity;
-        localStorage["interstellarArmada_control_mouse_displacementSensitivity"] = this._displacementSensitivity;
+        localStorage.interstellarArmada_control_mouse_displacementSensitivity = this._displacementSensitivity;
     };
 
     /**
@@ -889,7 +891,7 @@ define([
      */
     MouseInputInterpreter.prototype.setAndStoreDisplacementDeadzone = function (displacementDeadzone) {
         this._displacementDeadzone = displacementDeadzone;
-        localStorage["interstellarArmada_control_mouse_displacementDeadzone"] = this._displacementDeadzone;
+        localStorage.interstellarArmada_control_mouse_displacementDeadzone = this._displacementDeadzone;
     };
 
     /**
@@ -901,9 +903,8 @@ define([
     MouseInputInterpreter.prototype.getControlStringForAction = function (actionName) {
         if (this._bindings[actionName] !== undefined) {
             return this._bindings[actionName].getControlString();
-        } else {
-            return "";
         }
+        return "";
     };
 
     /**
@@ -912,12 +913,12 @@ define([
      * @param {Element} xmlTag
      */
     MouseInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
-        var sensitivityTag = xmlTag.getElementsByTagName("sensitivityProfile")[0];
+        var i, bindingTags,
+              sensitivityTag = xmlTag.getElementsByTagName("sensitivityProfile")[0];
         this._moveSensitivity = parseFloat(sensitivityTag.getAttribute("moveSensitivity"));
         this._displacementSensitivity = parseFloat(sensitivityTag.getAttribute("displacementSensitivity"));
-        this._displacementDeadzone = parseInt(sensitivityTag.getAttribute("displacementDeadzone"));
-        var bindingTags = xmlTag.getElementsByTagName("binding");
+        this._displacementDeadzone = parseInt(sensitivityTag.getAttribute("displacementDeadzone"), 10);
+        bindingTags = xmlTag.getElementsByTagName("binding");
         for (i = 0; i < bindingTags.length; i++) {
             this.setBinding(new MouseBinding(bindingTags[i]));
         }
@@ -928,17 +929,20 @@ define([
      * from HTML5 local storage.
      */
     MouseInputInterpreter.prototype.loadFromLocalStorage = function () {
-        if (localStorage["interstellarArmada_control_mouse_moveSensitivity"] !== undefined) {
-            this._moveSensitivity = parseFloat(localStorage["interstellarArmada_control_mouse_moveSensitivity"]);
+        var actionName;
+        if (localStorage.interstellarArmada_control_mouse_moveSensitivity !== undefined) {
+            this._moveSensitivity = parseFloat(localStorage.interstellarArmada_control_mouse_moveSensitivity);
         }
-        if (localStorage["interstellarArmada_control_mouse_displacementSensitivity"] !== undefined) {
-            this._displacementSensitivity = parseFloat(localStorage["interstellarArmada_control_mouse_displacementSensitivity"]);
+        if (localStorage.interstellarArmada_control_mouse_displacementSensitivity !== undefined) {
+            this._displacementSensitivity = parseFloat(localStorage.interstellarArmada_control_mouse_displacementSensitivity);
         }
-        if (localStorage["interstellarArmada_control_mouse_displacementDeadzone"] !== undefined) {
-            this._displacementDeadzone = parseInt(localStorage["interstellarArmada_control_mouse_displacementDeadzone"]);
+        if (localStorage.interstellarArmada_control_mouse_displacementDeadzone !== undefined) {
+            this._displacementDeadzone = parseInt(localStorage.interstellarArmada_control_mouse_displacementDeadzone, 10);
         }
-        for (var actionName in this._bindings) {
-            this._bindings[actionName].loadFromLocalStorage();
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].loadFromLocalStorage();
+            }
         }
     };
 
@@ -946,11 +950,14 @@ define([
      * Removes custom mouse bindings stored in HTML5 local storage.
      */
     MouseInputInterpreter.prototype.removeFromLocalStorage = function () {
+        var actionName;
         localStorage.removeItem("interstellarArmada_control_mouse_moveSensitivity");
         localStorage.removeItem("interstellarArmada_control_mouse_displacementSensitivity");
         localStorage.removeItem("interstellarArmada_control_mouse_displacementDeadzone");
-        for (var actionName in this._bindings) {
-            this._bindings[actionName].removeFromLocalStorage();
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].removeFromLocalStorage();
+            }
         }
     };
 
@@ -959,7 +966,8 @@ define([
      * as non-pressed.
      */
     MouseInputInterpreter.prototype.cancelPressedButtons = function () {
-        for (var i = 0; i < this._currentlyPressedButtons.length; i++) {
+        var i;
+        for (i = 0; i < this._currentlyPressedButtons.length; i++) {
             this._currentlyPressedButtons[i] = false;
         }
     };
@@ -1055,28 +1063,30 @@ define([
      * the intensity.
      */
     MouseInputInterpreter.prototype.getTriggeredActions = function () {
-        var result = new Array();
-        for (var bindingActionName in this._bindings) {
-            var actionIntensity =
-                  this._bindings[bindingActionName].getTriggeredIntensity(
-                  this._currentlyPressedButtons,
-                  this._mousePosition[0] - this._screenCenter[0],
-                  this._mousePosition[1] - this._screenCenter[1],
-                  this._mousePositionChange[0],
-                  this._mousePositionChange[1]);
-            if (this._bindings[bindingActionName].isMeasuredFromCenter() === true) {
-                if (actionIntensity > this._displacementDeadzone) {
-                    result.push({
-                        name: bindingActionName,
-                        intensity: (actionIntensity - this._displacementDeadzone) * this._displacementSensitivity
-                    });
-                }
-            } else {
-                if (actionIntensity > 0) {
-                    result.push({
-                        name: bindingActionName,
-                        intensity: actionIntensity * this._moveSensitivity
-                    });
+        var result = [], bindingActionName, actionIntensity;
+        for (bindingActionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(bindingActionName)) {
+                actionIntensity =
+                      this._bindings[bindingActionName].getTriggeredIntensity(
+                      this._currentlyPressedButtons,
+                      this._mousePosition[0] - this._screenCenter[0],
+                      this._mousePosition[1] - this._screenCenter[1],
+                      this._mousePositionChange[0],
+                      this._mousePositionChange[1]);
+                if (this._bindings[bindingActionName].isMeasuredFromCenter() === true) {
+                    if (actionIntensity > this._displacementDeadzone) {
+                        result.push({
+                            name: bindingActionName,
+                            intensity: (actionIntensity - this._displacementDeadzone) * this._displacementSensitivity
+                        });
+                    }
+                } else {
+                    if (actionIntensity > 0) {
+                        result.push({
+                            name: bindingActionName,
+                            intensity: actionIntensity * this._moveSensitivity
+                        });
+                    }
                 }
             }
         }
@@ -1116,10 +1126,10 @@ define([
     GamepadBinding.prototype.loadFromXMLTag = function (xmlTag) {
         this._actionName = xmlTag.getAttribute("action");
         if (xmlTag.hasAttribute("button")) {
-            this._button = parseInt(xmlTag.getAttribute("button"));
+            this._button = parseInt(xmlTag.getAttribute("button"), 10);
         }
         if (xmlTag.hasAttribute("axis")) {
-            this._axisIndex = Math.abs(parseInt(xmlTag.getAttribute("axis")));
+            this._axisIndex = Math.abs(parseInt(xmlTag.getAttribute("axis"), 10));
             this._axisPositive = (xmlTag.getAttribute("axis")[0] !== "-");
         }
     };
@@ -1137,8 +1147,8 @@ define([
      */
     GamepadBinding.prototype.loadFromLocalStorage = function () {
         if (localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_button'] !== undefined) {
-            this._button = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisIndex']);
-            this._axisIndex = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_button']);
+            this._button = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisIndex'], 10);
+            this._axisIndex = parseInt(localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_button'], 10);
             this._axisPositive = (localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisPositive'] === "true");
         }
     };
@@ -1217,7 +1227,7 @@ define([
          * @name GamepadInputInterpreter#_bindings
          * @type Object
          */
-        this._bindings = new Object();
+        this._bindings = {};
         /**
          * Whether the interpreter is currently listening for input.
          * @name GamepadInputInterpreter#_listening
@@ -1268,9 +1278,8 @@ define([
     GamepadInputInterpreter.prototype.getControlStringForAction = function (actionName) {
         if (this._bindings[actionName] !== undefined) {
             return this._bindings[actionName].getControlString();
-        } else {
-            return "";
         }
+        return "";
     };
     /**
      * Loads the properties of the interpreter such as the (default) gamepad bindings
@@ -1278,8 +1287,7 @@ define([
      * @param {Element} xmlTag
      */
     GamepadInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
-        var bindingTags = xmlTag.getElementsByTagName("binding");
+        var i, bindingTags = xmlTag.getElementsByTagName("binding");
         for (i = 0; i < bindingTags.length; i++) {
             this.setBinding(new GamepadBinding(bindingTags[i]));
         }
@@ -1289,16 +1297,22 @@ define([
      * from HTML5 local storage.
      */
     GamepadInputInterpreter.prototype.loadFromLocalStorage = function () {
-        for (var actionName in this._bindings) {
-            this._bindings[actionName].loadFromLocalStorage();
+        var actionName;
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].loadFromLocalStorage();
+            }
         }
     };
     /**
      * Removes custom mouse bindings stored in HTML5 local storage.
      */
     GamepadInputInterpreter.prototype.removeFromLocalStorage = function () {
-        for (var actionName in this._bindings) {
-            this._bindings[actionName].removeFromLocalStorage();
+        var actionName;
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].removeFromLocalStorage();
+            }
         }
     };
     GamepadInputInterpreter.prototype.handleGamepadConnected = function (event) {
@@ -1335,14 +1349,16 @@ define([
      * the intensity.
      */
     GamepadInputInterpreter.prototype.getTriggeredActions = function () {
-        var result = new Array();
-        for (var bindingActionName in this._bindings) {
-            var actionIntensity = this._bindings[bindingActionName].getTriggeredIntensity(this._gamepad);
-            if (actionIntensity > 0) {
-                result.push({
-                    name: bindingActionName,
-                    intensity: actionIntensity
-                });
+        var result = [], bindingActionName, actionIntensity;
+        for (bindingActionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(bindingActionName)) {
+                actionIntensity = this._bindings[bindingActionName].getTriggeredIntensity(this._gamepad);
+                if (actionIntensity > 0) {
+                    result.push({
+                        name: bindingActionName,
+                        intensity: actionIntensity
+                    });
+                }
             }
         }
         return result;
@@ -1539,7 +1555,7 @@ define([
          * @name Controller#_actions
          * @type Object
          */
-        this._actions = new Object();
+        this._actions = {};
         // if an xmlTag was specified, initialize the properties from there
         if (xmlTag !== undefined) {
             this.loadFromXMLTag(xmlTag);
@@ -1561,9 +1577,11 @@ define([
      * @returns {Action[]}
      */
     Controller.prototype.getActions = function () {
-        var result = new Array();
-        for (var actionName in this._actions) {
-            result.push(this._actions[actionName]);
+        var result = [], actionName;
+        for (actionName in this._actions) {
+            if (this._actions.hasOwnProperty(actionName)) {
+                result.push(this._actions[actionName]);
+            }
         }
         return result;
     };
@@ -1573,8 +1591,7 @@ define([
      * @param {Element} xmlTag
      */
     Controller.prototype.loadFromXMLTag = function (xmlTag) {
-        var i;
-        var actionTags = xmlTag.getElementsByTagName("action");
+        var i, actionTags = xmlTag.getElementsByTagName("action");
         for (i = 0; i < actionTags.length; i++) {
             this._actions[actionTags[i].getAttribute("name")] = new Action(actionTags[i]);
         }
@@ -1632,17 +1649,20 @@ define([
      * the action is to be executed.
      */
     Controller.prototype.executeActions = function (triggeredActions) {
+        var i, actionName;
         // First set the triggers for the stored action. If the same action is in
         // the list several times, setting the trigger will have no new effect,
         // unless an intensity is added.
-        for (var i = 0; i < triggeredActions.length; i++) {
+        for (i = 0; i < triggeredActions.length; i++) {
             if (this._actions[triggeredActions[i].name] !== undefined) {
                 this._actions[triggeredActions[i].name].setTriggered(true, triggeredActions[i].intensity);
             }
         }
         // Execute all the stored actions, each exactly once.
-        for (var actionName in this._actions) {
-            this._actions[actionName].execute();
+        for (actionName in this._actions) {
+            if (this._actions.hasOwnProperty(actionName)) {
+                this._actions[actionName].execute();
+            }
         }
     };
 
@@ -2067,7 +2087,7 @@ define([
          * @name ControlContext#_disabledActions
          * @type Object
          */
-        this._disabledActions = new Object();
+        this._disabledActions = {};
     }
 
     ControlContext.prototype = new asyncResource.AsyncResource();
@@ -2110,9 +2130,8 @@ define([
     ControlContext.prototype.getInterpreter = function (interpreterType) {
         if (this["_" + interpreterType + "Interpreter"]) {
             return this["_" + interpreterType + "Interpreter"];
-        } else {
-            application.showError("Asked for a interpreter of type '" + interpreterType + "', which does not exist!");
         }
+        application.showError("Asked for a interpreter of type '" + interpreterType + "', which does not exist!");
     };
 
     /**
@@ -2153,9 +2172,8 @@ define([
     ControlContext.prototype.getController = function (controllerType) {
         if (this["_" + controllerType + "Controller"]) {
             return this["_" + controllerType + "Controller"];
-        } else {
-            application.showError("Asked for a controller of type '" + controllerType + "', which does not exist!");
         }
+        application.showError("Asked for a controller of type '" + controllerType + "', which does not exist!");
     };
 
     /**
@@ -2182,15 +2200,17 @@ define([
      * all stored controllers.
      */
     ControlContext.prototype.control = function () {
-        var self = this;
+        var
+              i,
+              triggeredActions,
+              actionFilterFunction = function (action) {
+                  return !this._disabledActions[action.name];
+              }.bind(this);
         if (this._listening) {
-            var i;
-            var triggeredActions = new Array();
+            triggeredActions = [];
 
             for (i = 0; i < this._inputInterpreters.length; i++) {
-                triggeredActions = triggeredActions.concat(this._inputInterpreters[i].getTriggeredActions().filter(function (action) {
-                    return !self._disabledActions[action.name];
-                }));
+                triggeredActions = triggeredActions.concat(this._inputInterpreters[i].getTriggeredActions().filter(actionFilterFunction));
             }
             for (i = 0; i < this._controllers.length; i++) {
                 this._controllers[i].executeActions(triggeredActions);
@@ -2207,15 +2227,14 @@ define([
      * objects.
      */
     ControlContext.prototype.loadFromXML = function (xmlTag, onlyRestoreSettings) {
-        var i;
-
+        var i, controllerTags, interpreterTags;
         // if a whole new initialization is needed, create and load all controllers
         // and interpreters from the XML
         if (!onlyRestoreSettings) {
             this._xmlTag = xmlTag;
 
-            this._controllers = new Array();
-            var controllerTags = xmlTag.getElementsByTagName("controllers")[0].getElementsByTagName("controller");
+            this._controllers = [];
+            controllerTags = xmlTag.getElementsByTagName("controllers")[0].getElementsByTagName("controller");
             for (i = 0; i < controllerTags.length; i++) {
                 switch (controllerTags[i].getAttribute("type")) {
                     case "general":
@@ -2234,8 +2253,8 @@ define([
                 }
             }
 
-            this._inputInterpreters = new Array();
-            var interpreterTags = xmlTag.getElementsByTagName("input")[0].getElementsByTagName("inputDevice");
+            this._inputInterpreters = [];
+            interpreterTags = xmlTag.getElementsByTagName("input")[0].getElementsByTagName("inputDevice");
             for (i = 0; i < interpreterTags.length; i++) {
                 switch (interpreterTags[i].getAttribute("type")) {
                     case "keyboard":
@@ -2256,7 +2275,7 @@ define([
             // if only the defaults need to be restored, go through the stored interpreters 
             // and delete their custom bindings as well as reload their default from the XML
         } else {
-            var interpreterTags = xmlTag.getElementsByTagName("input")[0].getElementsByTagName("inputDevice");
+            interpreterTags = xmlTag.getElementsByTagName("input")[0].getElementsByTagName("inputDevice");
             for (i = 0; i < interpreterTags.length; i++) {
                 this._inputInterpreters[i].removeFromLocalStorage();
                 this._inputInterpreters[i].loadFromXMLTag(interpreterTags[i]);
@@ -2268,7 +2287,8 @@ define([
      * Load custom settings for the stored input interpreters from HTML5 local storage.
      */
     ControlContext.prototype.loadFromLocalStorage = function () {
-        for (var i = 0; i < this._inputInterpreters.length; i++) {
+        var i;
+        for (i = 0; i < this._inputInterpreters.length; i++) {
             this._inputInterpreters[i].loadFromLocalStorage();
         }
         this.setToReady();
@@ -2288,7 +2308,8 @@ define([
      */
     ControlContext.prototype.startListening = function () {
         this.executeWhenReady(function () {
-            for (var i = 0; i < this._inputInterpreters.length; i++) {
+            var i;
+            for (i = 0; i < this._inputInterpreters.length; i++) {
                 this._inputInterpreters[i].startListening();
             }
             this._listening = true;
@@ -2301,7 +2322,8 @@ define([
      */
     ControlContext.prototype.stopListening = function () {
         this.executeWhenReady(function () {
-            for (var i = 0; i < this._inputInterpreters.length; i++) {
+            var i;
+            for (i = 0; i < this._inputInterpreters.length; i++) {
                 this._inputInterpreters[i].stopListening();
             }
             this._listening = false;
@@ -2317,7 +2339,8 @@ define([
      */
     ControlContext.prototype.setScreenCenter = function (x, y) {
         this.executeWhenReady(function () {
-            for (var i = 0; i < this._inputInterpreters.length; i++) {
+            var i;
+            for (i = 0; i < this._inputInterpreters.length; i++) {
                 if (this._inputInterpreters[i].setScreenCenter) {
                     this._inputInterpreters[i].setScreenCenter(x, y);
                 }
