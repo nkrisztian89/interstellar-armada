@@ -24,11 +24,11 @@ define([
     function GraphicsContext() {
         asyncResource.AsyncResource.call(this);
         /**
-         * The XML tag storing the default graphics settings.
-         * @name GraphicsContext#_xmlSource
-         * @type Element
+         * The JSON object storing the default graphics settings.
+         * @name GraphicsContext#_dataJSON
+         * @type Object
          */
-        this._xmlTag = null;
+        this._dataJSON = null;
         /**
          * The current antialiasing setting.
          * @name GraphicsContext#_antialiasing
@@ -101,22 +101,17 @@ define([
     GraphicsContext.prototype.constructor = GraphicsContext;
     /**
      * Loads the graphics setting from the data stored in the passed XML document.
-     * @param {Document} xmlTag The XML tag storing the game settings.
+     * @param {Object} dataJSON The JSON object storing the game settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
      * settings should be restored or completely new settings should be initialized.
      */
-    GraphicsContext.prototype.loadFromXMLTag = function (xmlTag, onlyRestoreSettings) {
-        var i,
-              shadersTag,
-              contextTag, shadowTag,
-              lodLoadProfileTag, loadLoadLimitTags,
-              lodDisplayProfileTag, lodDisplayLimitTags, lodDisplayLimits;
+    GraphicsContext.prototype.loadFromJSON = function (dataJSON, onlyRestoreSettings) {
+        var i, n, limit, lodDisplayLimits;
         onlyRestoreSettings = onlyRestoreSettings || false;
-        shadersTag = xmlTag.getElementsByTagName("shaders")[0];
         // if new settings are to be initialized, we need to load the shader and
         // cube map descriptions
         if (!onlyRestoreSettings) {
-            this._xmlTag = xmlTag;
+            this._dataJSON = dataJSON;
         }
         // set the default settings
         this._antialiasing = false;
@@ -127,59 +122,55 @@ define([
         this._shadowRanges = [40, 125, 250, 500, 1000, 2000];
         this._shadowDistance = 3;
         this._shadowDepthRatio = 1.5;
-        // overwrite with the settings from the XML tag, if present
-        if (shadersTag.hasAttribute("complexity")) {
-            this._shaderComplexity = shadersTag.getAttribute("complexity");
+        // overwrite with the settings from the data JSON, if present
+        if (typeof dataJSON.shaders.complexity === "string") {
+            this._shaderComplexity = dataJSON.shaders.complexity;
         }
-        contextTag = xmlTag.getElementsByTagName("context")[0];
-        if (contextTag !== null) {
-            if (contextTag.hasAttribute("antialiasing")) {
-                this._antialiasing = (contextTag.getAttribute("antialiasing") === "true");
+        if (typeof dataJSON.context === "object") {
+            if (typeof dataJSON.context.antialiasing === "boolean") {
+                this._antialiasing = dataJSON.context.antialiasing;
             }
-            if (contextTag.hasAttribute("filtering")) {
-                this._filtering = contextTag.getAttribute("filtering");
+            if (typeof dataJSON.context.filtering === "string") {
+                this._filtering = dataJSON.context.filtering;
             }
-            if (contextTag.hasAttribute("shadowMapping")) {
-                this._shadowMapping = (contextTag.getAttribute("shadowMapping") === "true");
-                shadowTag = contextTag.getElementsByTagName("shadows")[0];
-                if (shadowTag !== null) {
-                    this._shadowQuality = (parseInt(shadowTag.getAttribute("quality"), 10));
-                    this._shadowRanges = shadowTag.getAttribute("ranges").split(",").map(parseFloat);
-                    this._shadowDistance = (parseInt(shadowTag.getAttribute("numRanges"), 10));
-                    this._shadowDepthRatio = parseFloat(shadowTag.getAttribute("depthRatio"));
+            if (typeof dataJSON.context.shadowMapping === "boolean") {
+                this._shadowMapping = dataJSON.context.shadowMapping;
+                if (typeof dataJSON.context.shadows === "object") {
+                    this._shadowQuality = dataJSON.context.shadows.quality;
+                    this._shadowRanges = dataJSON.context.shadows.ranges;
+                    this._shadowDistance = dataJSON.context.shadows.numRanges;
+                    this._shadowDepthRatio = dataJSON.context.shadows.depthRatio;
                 }
             }
         }
         // load the LOD load settings (maximum loaded LOD)
-        lodLoadProfileTag = xmlTag.getElementsByTagName("lodLoadProfile")[0];
-        this._maxLoadedLOD = parseInt(lodLoadProfileTag.getAttribute("maxLevel"), 10);
+        this._maxLoadedLOD = dataJSON.levelOfDetailSettings.lodLoadProfile.maxLevel;
         // if the maximum loaded LOD is limited by screen width, check the current width
         // and apply the limit
-        if (lodLoadProfileTag.getAttribute("autoLimitByScreenWidth") === "true") {
-            loadLoadLimitTags = lodLoadProfileTag.getElementsByTagName("limit");
-            for (i = 0; i < loadLoadLimitTags.length; i++) {
+        if (dataJSON.levelOfDetailSettings.lodLoadProfile.autoLimitByScreenWidth === true) {
+            for (i = 0, n = dataJSON.levelOfDetailSettings.lodLoadProfile.limits.length; i < n; i++) {
                 // take the width of the window, therefore playing in a small window
                 // will not use unnecesarily high detail, even if the screen is big
-                if ((window.innerWidth < loadLoadLimitTags[i].getAttribute("screenSizeLessThan")) &&
-                      (this._maxLoadedLOD > loadLoadLimitTags[i].getAttribute("level"))) {
-                    this._maxLoadedLOD = parseInt(loadLoadLimitTags[i].getAttribute("level"), 10);
+                limit = dataJSON.levelOfDetailSettings.lodLoadProfile.limits[i];
+                if ((window.innerWidth < limit.screenSizeLessThan) &&
+                      (this._maxLoadedLOD > limit.level)) {
+                    this._maxLoadedLOD = limit.level;
                 }
             }
         }
         // load the LOD display settings (maximum displayed LOD, thresholds)
-        lodDisplayProfileTag = xmlTag.getElementsByTagName("lodDisplayProfile")[0];
-        lodDisplayLimitTags = lodDisplayProfileTag.getElementsByTagName("limit");
-        lodDisplayLimits = new Array(lodDisplayLimitTags.length + 1);
+        lodDisplayLimits = new Array(dataJSON.levelOfDetailSettings.lodDisplayProfile.limits.length + 1);
         lodDisplayLimits[0] = 0;
-        for (i = 0; i < lodDisplayLimitTags.length; i++) {
-            lodDisplayLimits[parseInt(lodDisplayLimitTags[i].getAttribute("level"), 10) + 1] = parseInt(lodDisplayLimitTags[i].getAttribute("objectSizeLessThan"), 10);
+        for (i = 0, n = dataJSON.levelOfDetailSettings.lodDisplayProfile.limits.length; i < n; i++) {
+            limit = dataJSON.levelOfDetailSettings.lodDisplayProfile.limits[i];
+            lodDisplayLimits[limit.level + 1] = limit.objectSizeLessThan;
         }
         this._lodContext = new budaScene.LODContext(
-              parseInt(lodDisplayProfileTag.getAttribute("maxLevel"), 10),
+              dataJSON.levelOfDetailSettings.lodDisplayProfile.maxLevel,
               lodDisplayLimits,
-              (lodDisplayProfileTag.getAttribute("compensateForObjectSize") === "true"),
-              parseInt(lodDisplayProfileTag.getAttribute("referenceSize"), 10),
-              parseFloat(lodDisplayProfileTag.getAttribute("minimumRelativeSize")));
+              dataJSON.levelOfDetailSettings.lodDisplayProfile.compensateForObjectSize,
+              dataJSON.levelOfDetailSettings.lodDisplayProfile.referenceSize,
+              dataJSON.levelOfDetailSettings.lodDisplayProfile.minimumRelativeSize);
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
@@ -213,7 +204,7 @@ define([
      * custom changes that are stored in HTML5 local storage.
      */
     GraphicsContext.prototype.restoreDefaults = function () {
-        this.loadFromXMLTag(this._xmlTag, true);
+        this.loadFromJSON(this._dataJSON, true);
         localStorage.removeItem("interstellarArmada_graphics_antialiasing");
         localStorage.removeItem("interstellarArmada_graphics_filtering");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");

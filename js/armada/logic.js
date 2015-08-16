@@ -964,6 +964,7 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
+        console.log("forward: " + intensity);
         this._speedTarget = this._compensated ?
               this._speedTarget + (intensity || this._speedIncrement) :
               Number.MAX_VALUE;
@@ -973,6 +974,7 @@ define([
      * in free flight mode.
      */
     ManeuveringComputer.prototype.stopForward = function () {
+        console.log("stopforward");
         if (!this._compensated) {
             var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             if (this._speedTarget > speed) {
@@ -2330,6 +2332,12 @@ define([
          * @type Boolean
          */
         this._databaseModelRotation = null;
+        /**
+         * A descriptor object of how many random ships of each class should be added to the test 
+         * scene
+         * @type Object
+         */
+        this._randomShips = null;
     }
     LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
@@ -2358,6 +2366,13 @@ define([
      */
     LogicContext.prototype.getDatabaseModelRotation = function () {
         return this._databaseModelRotation;
+    };
+    /**
+     * Returns how many random ships of each class should be added to the test battle scene
+     * @returns {Object}
+     */
+    LogicContext.prototype.getRandomShips = function () {
+        return this._randomShips;
     };
     /**
      * Return the skybox class with the given name if it exists, otherwise null.
@@ -2450,39 +2465,6 @@ define([
     // #########################################################################
     // methods
     /**
-     * Adds a class of a the given type of entity to the stored classes.
-     * @param {String} entityClassName e.g. "Skybox", "BackgroundObject"
-     * @param {SkyboxClass|BackgroundObjectClass|WeaponClass|...} entityClass
-     */
-    LogicContext.prototype.addClass = function (entityClassName, entityClass) {
-        entityClassName = entityClassName[0].toLowerCase() + entityClassName.substring(1, entityClassName.length);
-        this["_" + entityClassName + "Classes"][entityClass.name] = entityClass;
-    };
-    /**
-     * Loads the available classes for the objects with the given class name from
-     * the XML tags residing below the passed tag / document which have the
-     * proper tag name.
-     * @param {Element|Document} xmlDoc The parent of the elements which store
-     * the class descriptions.
-     * @param {String} entityClassName The name of the (JS) class of objects for which
-     * the available in-game classes are to be loaded. e.g. "Skybox", "Weapon".
-     * An in-game class has to exist for this kind of objects (with a JS class named
-     * "SkyboxClass" for example) that has a constructor taking an XML element
-     * as parameter to initialize the properties of the class from.
-     */
-    LogicContext.prototype.addClassesFromXML = function (xmlDoc, entityClassName) {
-        // set first letter to lowercase to find and initialize the property storing these classes
-        entityClassName = entityClassName[0].toLowerCase() + entityClassName.substring(1, entityClassName.length);
-        this["_" + entityClassName + "Classes"] = new Object();
-        // set the first letter to uppercase to find the XML tags by name and add the
-        // class object themselves
-        entityClassName = entityClassName[0].toUpperCase() + entityClassName.substring(1, entityClassName.length);
-        var classTags = xmlDoc.getElementsByTagName(entityClassName + "Class");
-        for (var i = 0; i < classTags.length; i++) {
-            this.addClass(entityClassName, new classes[entityClassName + "Class"](classTags[i]));
-        }
-    };
-    /**
      * Sends an asynchronous request to grab the file containing the in-game
      * class descriptions and sets a callback to load those descriptions and
      * initiate the loading of reusable environments when ready.
@@ -2532,10 +2514,11 @@ define([
      * Loads all the setting and references from the passed XML document and
      * initiates the request(s) necessary to load additional configuration from
      * referenced files.
-     * @param {Document} xmlDoc
+     * @param {Object} dataJSON
      */
-    LogicContext.prototype.loadFromXML = function (xmlDoc) {
-        this._databaseModelRotation = (xmlDoc.getElementsByTagName("database")[0].getAttribute("modelRotation") === "true");
+    LogicContext.prototype.loadFromJSON = function (dataJSON) {
+        this._databaseModelRotation = dataJSON.database.modelRotation;
+        this._randomShips = dataJSON.battle.randomShips;
         this.requestClassesLoad();
     };
     // -------------------------------------------------------------------------

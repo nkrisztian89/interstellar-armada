@@ -10,16 +10,17 @@
 /*global define, Element, localStorage, document, window */
 
 define([
+    "utils/utils",
     "modules/application",
     "modules/async-resource",
     "armada/armada"
-], function (application, asyncResource, armada) {
+], function (utils, application, asyncResource, armada) {
     "use strict";
     /**
      * @class Represents a key (combination) - action association.
-     * @param {Element|String} [xmlTagOrActionName] If a string is given, it will
+     * @param {Object|String} [dataJSONOrActionName] If a string is given, it will
      * be taken as the name of the action to be assigned. Otherwise it is taken as
-     * an XML tag storing all the properties.
+     * a JSON object storing all the properties.
      * @param {String} [key] The string representation of the key associated in this
      * binding.
      * @param {Boolean} [shiftState] Whether shift should be pressed in this key 
@@ -29,15 +30,15 @@ define([
      * @param {Boolean} [altState] Whether alt should be pressed in this key 
      * combination (next to the primary key being pressed).
      */
-    function KeyBinding(xmlTagOrActionName, key, shiftState, ctrlState, altState) {
+    function KeyBinding(dataJSONOrActionName, key, shiftState, ctrlState, altState) {
         /**
          * Name of the action that is assigned to the key (combination). {@link Controller}s
          * will process this name and execute the appropriate action.
          * @name KeyBinding#_actionName
          * @type String
          */
-        this._actionName = ((typeof xmlTagOrActionName) === "string" ?
-              xmlTagOrActionName :
+        this._actionName = ((typeof dataJSONOrActionName) === "string" ?
+              dataJSONOrActionName :
               null);
         /**
          * The string representation of the key. 
@@ -52,7 +53,7 @@ define([
          * @name KeyBinding#_keyCode
          * @type Number
          */
-        this._keyCode = KeyboardInputInterpreter.prototype.getKeyCodeOf(key);
+        this._keyCode = utils.getKeyCodeOf(key);
         /**
          * Whether shift should be pressed in this key combination (next to _key being pressed).
          * @name KeyBinding#_shiftState
@@ -71,24 +72,24 @@ define([
          * @type Boolean
          */
         this._altState = (altState === undefined) ? null : altState;
-        // if an xmlTag was specified, initialize the properties from there
-        if (xmlTagOrActionName instanceof Element) {
-            this.loadFromXMLTag(xmlTagOrActionName);
+        // if a JSON object was specified, initialize the properties from there
+        if ((typeof dataJSONOrActionName) === "object") {
+            this.loadFromJSON(dataJSONOrActionName);
         }
         this.updateKeyString();
         application.log("Created key binding: " + this._actionName + " - " + this._keyString, 3);
     }
 
     /**
-     * Loads the properties of the key binding as stored in the passed XML tag.
-     * @param {Element} xmlTag
+     * Loads the properties of the key binding as stored in the passed JSON object.
+     * @param {Object} dataJSON
      */
-    KeyBinding.prototype.loadFromXMLTag = function (xmlTag) {
-        this._actionName = xmlTag.getAttribute("action");
-        this.setKey(xmlTag.getAttribute("key"));
-        this._shiftState = (xmlTag.getAttribute("shift") === "true");
-        this._ctrlState = (xmlTag.getAttribute("ctrl") === "true");
-        this._altState = (xmlTag.getAttribute("alt") === "true");
+    KeyBinding.prototype.loadFromJSON = function (dataJSON) {
+        this._actionName = dataJSON.action;
+        this.setKey(dataJSON.key);
+        this._shiftState = (dataJSON.shift === true);
+        this._ctrlState = (dataJSON.ctrl === true);
+        this._altState = (dataJSON.alt === true);
         this.updateKeyString();
     };
 
@@ -151,7 +152,7 @@ define([
      */
     KeyBinding.prototype.setKey = function (key) {
         this._key = key;
-        this._keyCode = KeyboardInputInterpreter.prototype.getKeyCodeOf(this._key);
+        this._keyCode = utils.getKeyCodeOf(this._key);
     };
 
     /**
@@ -231,10 +232,10 @@ define([
      * keys are pressed. Can load and store key bindings and based on the current
      * state and the key bindings, determine the list of currently triggered actions
      * that controllers can/should execute.
-     * @param {Element} [xmlTag] Upon initialization, it can load the key bindings from
-     * this XML tag if specified.
+     * @param {Object} [dataJSON] Upon initialization, it can load the key bindings from
+     * this JSON object if specified.
      */
-    function KeyboardInputInterpreter(xmlTag) {
+    function KeyboardInputInterpreter(dataJSON) {
         /**
          * An array indicating the current pressed state of each key on the keyboard. 
          * The index in the array corresponds to the keyCode property of the event 
@@ -257,9 +258,9 @@ define([
          * @type Boolean
          */
         this._listening = false;
-        // if an xmlTag was specified, initialize the bindings from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        // if a JSON was specified, initialize the bindings from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
 
@@ -273,85 +274,13 @@ define([
     };
 
     /**
-     * Returns an associative array storing the key codes (as in the keyCode property
-     * of key events) by strings representing the keys in human readable form.
-     * @returns {Object}
-     */
-    KeyboardInputInterpreter.prototype.getKeyCodeTable = function () {
-        return {
-            "backspace": 8,
-            "tab": 9,
-            "enter": 13,
-            "shift": 16,
-            "ctrl": 17,
-            "alt": 18,
-            "pause": 19,
-            "caps lock": 20,
-            "escape": 27,
-            "space": 32,
-            "page up": 33,
-            "page down": 34,
-            "end": 35,
-            "home": 36,
-            "left": 37,
-            "up": 38,
-            "right": 39,
-            "down": 40,
-            "insert": 45,
-            "delete": 46,
-            "0": 48, "1": 49, "2": 50, "3": 51, "4": 52, "5": 53, "6": 54, "7": 55, "8": 56, "9": 57,
-            "a": 65, "b": 66, "c": 67, "d": 68, "e": 69, "f": 70, "g": 71, "h": 72, "i": 73, "j": 74,
-            "k": 75, "l": 76, "m": 77, "n": 78, "o": 79, "p": 80, "q": 81, "r": 82, "s": 83, "t": 84,
-            "u": 85, "v": 86, "w": 87, "x": 88, "y": 89, "z": 90,
-            "left window": 91, "right window": 92, "select": 93,
-            "numpad 0": 96, "numpad 1": 97, "numpad 2": 98, "numpad 3": 99, "numpad 4": 100,
-            "numpad 5": 101, "numpad 6": 102, "numpad 7": 103, "numpad 8": 104, "numpad 9": 105,
-            "*": 106, "numpad '+'": 107, "numpad '-'": 109, "/": 111,
-            "f1": 112, "f2": 113, "f3": 114, "f4": 115, "f5": 116, "f6": 117, "f7": 118, "f8": 119, "f9": 120,
-            "f10": 121, "f11": 122, "f12": 123,
-            "-": 173, ",": 188, ".": 190
-        };
-    };
-
-    /**
-     * Returns the key code of the key passed in human readable string form.
-     * @see KeyboardInputInterpreter#getKeyCodeTable
-     * @param {String} key
-     * @returns {Number}
-     */
-    KeyboardInputInterpreter.prototype.getKeyCodeOf = function (key) {
-        return key ?
-              (key[0] === "#" ?
-                    parseInt(key.slice(1), 10) :
-                    this.getKeyCodeTable()[key]) :
-              null;
-    };
-
-    /**
-     * Returns the key in human readable string form corresponding to the key code
-     * passed as parameter.
-     * @see KeyboardInputInterpreter#getKeyCodeTable
-     * @param {Number} keyCode
-     * @returns {String}
-     */
-    KeyboardInputInterpreter.prototype.getKeyOfCode = function (keyCode) {
-        var key;
-        for (key in this.getKeyCodeTable()) {
-            if (this.getKeyCodeTable()[key] === keyCode) {
-                return key;
-            }
-        }
-        return "#" + keyCode;
-    };
-
-    /**
      * Returns whether the default browser actions for the key of the passed code
      * should be enabled while this interpreter is active.
      * @param {Number} keyCode
      * @returns {Boolean}
      */
     KeyboardInputInterpreter.prototype.defaultActionEnabledForKey = function (keyCode) {
-        return ["f5", "f11", 'escape'].indexOf(this.getKeyOfCode(keyCode)) >= 0;
+        return ["f5", "f11", 'escape'].indexOf(utils.getKeyOfCode(keyCode)) >= 0;
     };
 
     /**
@@ -393,13 +322,13 @@ define([
 
     /**
      * Loads the properties of the interpreter such as the (default) key bindings
-     * from the passed XML tag.
-     * @param {Element} xmlTag
+     * from the passed JSON object.
+     * @param {Object} dataJSON
      */
-    KeyboardInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, keyBindingTags = xmlTag.getElementsByTagName("binding");
-        for (i = 0; i < keyBindingTags.length; i++) {
-            this.setKeyBinding(new KeyBinding(keyBindingTags[i]));
+    KeyboardInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
+        var i;
+        for (i = 0; i < dataJSON.bindings.length; i++) {
+            this.setKeyBinding(new KeyBinding(dataJSON.bindings[i]));
         }
     };
 
@@ -527,10 +456,10 @@ define([
     /**
      * @class Represents the assignment of a mouse action (such as move, click...) 
      * to an in-game action. (such as fire)
-     * @param {Element} [xmlTag] If given, the properties will be initialized from
-     * the data stored in this XML tag.
+     * @param {Object} [dataJSON] If given, the properties will be initialized from
+     * the data stored in this JSON object.
      */
-    function MouseBinding(xmlTag) {
+    function MouseBinding(dataJSON) {
         /**
          * Name of the in-game action the mouse action is bound to.
          * @name MouseBinding#_actionName
@@ -581,18 +510,18 @@ define([
          * @default false
          */
         this._measuredFromCenter = null;
-        // if an xmlTag was specified, initialize the properties from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        // if a JSON object was specified, initialize the properties from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
     /**
-     * Loads the properties of the key binding as stored in the passed XML tag.
-     * @param {Element} xmlTag
+     * Loads the properties of the key binding as stored in the passed JSON object.
+     * @param {Object} dataJSON
      */
-    MouseBinding.prototype.loadFromXMLTag = function (xmlTag) {
-        this._actionName = xmlTag.getAttribute("action");
-        switch (xmlTag.getAttribute("button")) {
+    MouseBinding.prototype.loadFromJSON = function (dataJSON) {
+        this._actionName = dataJSON.action;
+        switch (dataJSON.button) {
             case "left":
                 this._button = 1;
                 break;
@@ -607,7 +536,7 @@ define([
         }
         this._moveX = 0;
         this._moveY = 0;
-        switch (xmlTag.getAttribute("move")) {
+        switch (dataJSON.move) {
             case "left":
                 this._moveX = -1;
                 break;
@@ -621,7 +550,7 @@ define([
                 this._moveY = 1;
                 break;
         }
-        this._measuredFromCenter = (xmlTag.getAttribute("fromCenter") === "true");
+        this._measuredFromCenter = (dataJSON.fromCenter === true);
     };
 
     /**
@@ -748,11 +677,11 @@ define([
      * Can load and store mouse bindings and based on the current state and the 
      * bindings, determine the list of currently triggered actions that controllers 
      * can/should execute.
-     * @param {Element} [xmlTag] Upon initialization, it can load the mouse bindings from
-     * this XML tag if specified.
+     * @param {Object} [dataJSON] Upon initialization, it can load the mouse bindings from
+     * this JSON object if specified.
      * @returns {MouseInputInterpreter}
      */
-    function MouseInputInterpreter(xmlTag) {
+    function MouseInputInterpreter(dataJSON) {
         /**
          * An array storing the press state of mouse buttons.
          * Arrangement: [left,middle,right]
@@ -817,9 +746,9 @@ define([
          * @type Boolean
          */
         this._listening = false;
-        // if an xmlTag was specified, initialize the bindings from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        // if a JSON object was specified, initialize the bindings from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
 
@@ -909,18 +838,16 @@ define([
 
     /**
      * Loads the properties of the interpreter such as the (default) mouse bindings
-     * from the passed XML tag.
-     * @param {Element} xmlTag
+     * from the passed JSON object.
+     * @param {Object} dataJSON
      */
-    MouseInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, bindingTags,
-              sensitivityTag = xmlTag.getElementsByTagName("sensitivityProfile")[0];
-        this._moveSensitivity = parseFloat(sensitivityTag.getAttribute("moveSensitivity"));
-        this._displacementSensitivity = parseFloat(sensitivityTag.getAttribute("displacementSensitivity"));
-        this._displacementDeadzone = parseInt(sensitivityTag.getAttribute("displacementDeadzone"), 10);
-        bindingTags = xmlTag.getElementsByTagName("binding");
-        for (i = 0; i < bindingTags.length; i++) {
-            this.setBinding(new MouseBinding(bindingTags[i]));
+    MouseInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
+        var i;
+        this._moveSensitivity = dataJSON.sensitivityProfile.moveSensitivity;
+        this._displacementSensitivity = dataJSON.sensitivityProfile.displacementSensitivity;
+        this._displacementDeadzone = dataJSON.sensitivityProfile.displacementDeadzone;
+        for (i = 0; i < dataJSON.bindings.length; i++) {
+            this.setBinding(new MouseBinding(dataJSON.bindings[i]));
         }
     };
 
@@ -1096,10 +1023,10 @@ define([
     /**
      * @class Represents the assignment of a gamepad/joystick action (moving an 
      * axis or pressing a button) to an in-game action. (such as fire)
-     * @param {Element} [xmlTag] If given, the properties will be initialized from
-     * the data stored in this XML tag.
+     * @param {Object} [dataJSON] If given, the properties will be initialized from
+     * the data stored in this JSON object.
      */
-    function GamepadBinding(xmlTag) {
+    function GamepadBinding(dataJSON) {
         /**
          * Name of the in-game action the gamepad action is bound to.
          * @name GamepadBinding#_actionName
@@ -1114,23 +1041,23 @@ define([
         this._button = null;
         this._axisIndex = null;
         this._axisPositive = null;
-        // if an xmlTag was specified, initialize the properties from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        // if a JSON object was specified, initialize the properties from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
     /**
-     * Loads the properties of the binding as stored in the passed XML tag.
-     * @param {Element} xmlTag
+     * Loads the properties of the binding as stored in the passed JSON object.
+     * @param {Object} dataJSON
      */
-    GamepadBinding.prototype.loadFromXMLTag = function (xmlTag) {
-        this._actionName = xmlTag.getAttribute("action");
-        if (xmlTag.hasAttribute("button")) {
-            this._button = parseInt(xmlTag.getAttribute("button"), 10);
+    GamepadBinding.prototype.loadFromJSON = function (dataJSON) {
+        this._actionName = dataJSON.action;
+        if ((typeof dataJSON.button) === "number") {
+            this._button = dataJSON.button;
         }
-        if (xmlTag.hasAttribute("axis")) {
-            this._axisIndex = Math.abs(parseInt(xmlTag.getAttribute("axis"), 10));
-            this._axisPositive = (xmlTag.getAttribute("axis")[0] !== "-");
+        if ((typeof dataJSON.axis) === "string") {
+            this._axisIndex = Math.abs(parseInt(dataJSON.axis, 10));
+            this._axisPositive = (dataJSON.axis[0] !== "-");
         }
     };
     /**
@@ -1190,7 +1117,7 @@ define([
                   ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
         }
         if (this._axisIndex !== null) {
-            return Math.max((0.0075 * gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
+            return Math.max((gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
         }
         return 0;
     };
@@ -1214,11 +1141,11 @@ define([
      * Can load and store gamepad bindings and based on the current state and the 
      * bindings, determine the list of currently triggered actions that controllers 
      * can/should execute.
-     * @param {Element} [xmlTag] Upon initialization, it can load the bindings from
-     * this XML tag if specified.
+     * @param {Object} [dataJSON] Upon initialization, it can load the bindings from
+     * this JSON object if specified.
      * @returns {GamepadInputInterpreter}
      */
-    function GamepadInputInterpreter(xmlTag) {
+    function GamepadInputInterpreter(dataJSON) {
         this._deviceType = "Joystick";
         this._gamepad = null;
         /**
@@ -1234,9 +1161,14 @@ define([
          * @type Boolean
          */
         this._listening = false;
-        // if an xmlTag was specified, initialize the bindings from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        /**
+         * Used for yaw, pitch, roll
+         * @type Number
+         */
+        this._turnSensitivity = 1;
+        // if a JSON object was specified, initialize the bindings from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
     /**
@@ -1283,13 +1215,14 @@ define([
     };
     /**
      * Loads the properties of the interpreter such as the (default) gamepad bindings
-     * from the passed XML tag.
-     * @param {Element} xmlTag
+     * from the passed JSON object.
+     * @param {Object} dataJSON
      */
-    GamepadInputInterpreter.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, bindingTags = xmlTag.getElementsByTagName("binding");
-        for (i = 0; i < bindingTags.length; i++) {
-            this.setBinding(new GamepadBinding(bindingTags[i]));
+    GamepadInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
+        var i;
+        this._turnSensitivity = dataJSON.sensitivityProfile.turnSensitivity;
+        for (i = 0; i < dataJSON.bindings.length; i++) {
+            this.setBinding(new GamepadBinding(dataJSON.bindings[i]));
         }
     };
     /**
@@ -1349,14 +1282,20 @@ define([
      * the intensity.
      */
     GamepadInputInterpreter.prototype.getTriggeredActions = function () {
-        var result = [], bindingActionName, actionIntensity;
+        var result = [], bindingActionName, actionIntensity, isTurnAction;
         for (bindingActionName in this._bindings) {
             if (this._bindings.hasOwnProperty(bindingActionName)) {
                 actionIntensity = this._bindings[bindingActionName].getTriggeredIntensity(this._gamepad);
                 if (actionIntensity > 0) {
+                    isTurnAction =
+                          (bindingActionName === "yawLeft" || bindingActionName === "yawRight" ||
+                                bindingActionName === "pitchUp" || bindingActionName === "pitchDown" ||
+                                bindingActionName === "rollLeft" || bindingActionName === "rollRight" ||
+                                bindingActionName === "cameraTurnLeft" || bindingActionName === "cameraTurnRight" ||
+                                bindingActionName === "cameraTurnUp" || bindingActionName === "cameraTurnDown");
                     result.push({
                         name: bindingActionName,
-                        intensity: actionIntensity
+                        intensity: actionIntensity * (isTurnAction ? this._turnSensitivity : 1)
                     });
                 }
             }
@@ -1367,11 +1306,11 @@ define([
      * @class Represents an in-game action that can be triggered by the user and a 
      * controller can execute certain functions on methods on their controlled 
      * entities based on whether or not the action is currently triggered.
-     * @param {Element} [xmlTag] If given, the properties will be initialized from
-     * the data stored in this XML tag.
+     * @param {Object} [dataJSON] If given, the properties will be initialized from
+     * the data stored in this JSON object.
      * @returns {Action}
      */
-    function Action(xmlTag) {
+    function Action(dataJSON) {
         /**
          * The name of the action used to identify it. Has to be unique within the
          * game. Input interpreters generate a list of action names based on what
@@ -1429,9 +1368,9 @@ define([
          * @type Function
          */
         this._executeNonTriggered = null;
-        // if an xmlTag was specified, initialize the properties from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        // if a JSON was specified, initialize the properties from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
 
@@ -1453,13 +1392,13 @@ define([
     };
 
     /**
-     * Loads the properties of the action as stored in the passed XML tag.
-     * @param {Element} xmlTag
+     * Loads the properties of the action as stored in the passed JSON object.
+     * @param {Object} dataJSON
      */
-    Action.prototype.loadFromXMLTag = function (xmlTag) {
-        this._name = xmlTag.getAttribute("name");
-        this._description = xmlTag.getAttribute("description");
-        this._continuous = (xmlTag.getAttribute("continuous") === "true");
+    Action.prototype.loadFromJSON = function (dataJSON) {
+        this._name = dataJSON.name;
+        this._description = dataJSON.description;
+        this._continuous = dataJSON.continuous === true;
         this._triggered = false;
         this._intensity = null;
         this._executed = false;
@@ -1543,11 +1482,11 @@ define([
      * processing triggered actions sent by the input interpreters and applying
      * them to the domain (entity) it is controlling. Controllers for different
      * domains are implemented as the subclasses for this class.
-     * @param {Element} [xmlTag] If given, the properties will be initialized loading
-     * the data from this XML tag.
+     * @param {Object} [dataJSON] If given, the properties will be initialized loading
+     * the data from this JSON object
      * @returns {Controller}
      */
-    function Controller(xmlTag) {
+    function Controller(dataJSON) {
         /**
          * The associative array of the actions recognized by the controller. The keys
          * are the names of the actions, while the values are the {@link Action}s
@@ -1556,9 +1495,9 @@ define([
          * @type Object
          */
         this._actions = {};
-        // if an xmlTag was specified, initialize the properties from there
-        if (xmlTag !== undefined) {
-            this.loadFromXMLTag(xmlTag);
+        // if a JSON object was specified, initialize the properties from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
         }
     }
 
@@ -1587,13 +1526,13 @@ define([
     };
 
     /**
-     * Loads the properties of the controller as stored in the passed XML tag.
-     * @param {Element} xmlTag
+     * Loads the properties of the controller as stored in the passed JSON object.
+     * @param {Object} dataJSON
      */
-    Controller.prototype.loadFromXMLTag = function (xmlTag) {
-        var i, actionTags = xmlTag.getElementsByTagName("action");
-        for (i = 0; i < actionTags.length; i++) {
-            this._actions[actionTags[i].getAttribute("name")] = new Action(actionTags[i]);
+    Controller.prototype.loadFromJSON = function (dataJSON) {
+        var i;
+        for (i = 0; i < dataJSON.actions.length; i++) {
+            this._actions[dataJSON.actions[i].name] = new Action(dataJSON.actions[i]);
         }
     };
 
@@ -1671,12 +1610,12 @@ define([
      * @class The general controller processes and executes the actions that are related
      * to general game control during a battle, (such as 'pause' or 'quit') and not 
      * associated with any particular object.
-     * @param {Element} xmlTag The XML tag which contains the data to load the properties
+     * @param {Object} dataJSON The JSON object which contains the data to load the properties
      * of the recognized actions from.
      * @returns {GeneralController}
      */
-    function GeneralController(xmlTag) {
-        Controller.call(this, xmlTag);
+    function GeneralController(dataJSON) {
+        Controller.call(this, dataJSON);
 
         /**
          * The level which this controller controls.
@@ -1685,7 +1624,7 @@ define([
          */
         this._level = null;
 
-        // The superclass constructor above loads the data from the XML, so all action
+        // The superclass constructor above loads the data from the JSON, so all action
         // properties should be have been created by now.
 
         var self = this;
@@ -1745,12 +1684,12 @@ define([
      * @class The fighter controller pocesses and executes the actions with which
      * the user can control a space fighter.
      * @extends Controller
-     * @param {Element} xmlTag The XML tag which contains the data to load the properties
+     * @param {Object} dataJSON The JSON object which contains the data to load the properties
      * of the recognized actions from.
      * @returns {FighterController}
      */
-    function FighterController(xmlTag) {
-        Controller.call(this, xmlTag);
+    function FighterController(dataJSON) {
+        Controller.call(this, dataJSON);
         /**
          * A reference to the spacecraft (fighter) which this controller controls.
          * @name FighterController#_controlledSpacecraft
@@ -1758,7 +1697,7 @@ define([
          */
         this._controlledSpacecraft = null;
 
-        // The superclass constructor above loads the data from the XML, so all action
+        // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created
 
         var self = this;
@@ -1868,11 +1807,11 @@ define([
      * @class The camera controller pocesses and executes the actions with which
      * the user can control the camera that is used to render the battle scene.
      * @extends Controller
-     * @param {Element} xmlTag
+     * @param {Object} dataJSON
      * @returns {CameraController}
      */
-    function CameraController(xmlTag) {
-        Controller.call(this, xmlTag);
+    function CameraController(dataJSON) {
+        Controller.call(this, dataJSON);
         /**
          * A reference to the controlled camera object.
          * @name CameraController#_controlledCamera
@@ -1880,7 +1819,7 @@ define([
          */
         this._controlledCamera = null;
 
-        // The superclass constructor above loads the data from the XML, so all action
+        // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created
 
         var self = this;
@@ -2017,11 +1956,11 @@ define([
     function ControlContext() {
         asyncResource.AsyncResource.call(this);
         /**
-         * The XML tag wich stores the control settings.
-         * @name ControlContext#_xmlTag
-         * @type Element
+         * The JSON object wich stores the control settings.
+         * @name ControlContext#_dataJSON
+         * @type Object
          */
-        this._xmlTag = null;
+        this._dataJSON = null;
         /**
          * The array of input interpreters wich collect the user input from different
          * devices (each interpreter is capable of querying one device) and translate
@@ -2219,66 +2158,63 @@ define([
     };
 
     /**
-     * Loads the control settings stored in an XML tag.
-     * @param {Element} xmlTag The XML tag that stores the control settings.
+     * Loads the control settings stored in a JSON object.
+     * @param {Object} dataJSON The JSON object that stores the control settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether to only restore the
-     * default settings by overwriting the changed ones from the data in the XML,
+     * default settings by overwriting the changed ones from the data in the JSON,
      * or to initialize the whole context from zero, creating all the necessary
      * objects.
      */
-    ControlContext.prototype.loadFromXML = function (xmlTag, onlyRestoreSettings) {
-        var i, controllerTags, interpreterTags;
+    ControlContext.prototype.loadFromJSON = function (dataJSON, onlyRestoreSettings) {
+        var i, n;
         // if a whole new initialization is needed, create and load all controllers
-        // and interpreters from the XML
+        // and interpreters from the JSON
         if (!onlyRestoreSettings) {
-            this._xmlTag = xmlTag;
+            this._dataJSON = dataJSON;
 
             this._controllers = [];
-            controllerTags = xmlTag.getElementsByTagName("controllers")[0].getElementsByTagName("controller");
-            for (i = 0; i < controllerTags.length; i++) {
-                switch (controllerTags[i].getAttribute("type")) {
+            for (i = 0, n = dataJSON.controllers.length; i < n; i++) {
+                switch (dataJSON.controllers[i].type) {
                     case "general":
-                        this.addController(new GeneralController(controllerTags[i]));
+                        this.addController(new GeneralController(dataJSON.controllers[i]));
                         break;
                     case "fighter":
-                        this.addController(new FighterController(controllerTags[i]));
+                        this.addController(new FighterController(dataJSON.controllers[i]));
                         break;
                     case "camera":
-                        this.addController(new CameraController(controllerTags[i]));
+                        this.addController(new CameraController(dataJSON.controllers[i]));
                         break;
                     default:
-                        application.showError("Unrecognized controller type: '" + controllerTags[i].getAttribute("type") + "'!",
+                        application.showError("Unrecognized controller type: '" + dataJSON.controllers[i].type + "'!",
                               "severe", "Every controller defined in the settings file must be of one of the following types: " +
                               "general, fighter, camera.");
                 }
             }
 
             this._inputInterpreters = [];
-            interpreterTags = xmlTag.getElementsByTagName("input")[0].getElementsByTagName("inputDevice");
-            for (i = 0; i < interpreterTags.length; i++) {
-                switch (interpreterTags[i].getAttribute("type")) {
+            for (i = 0, n = dataJSON.inputDevices.length; i < n; i++) {
+                switch (dataJSON.inputDevices[i].type) {
                     case "keyboard":
-                        this.addInputInterpreter(new KeyboardInputInterpreter(interpreterTags[i]));
+                        this.addInputInterpreter(new KeyboardInputInterpreter(dataJSON.inputDevices[i]));
                         break;
                     case "mouse":
-                        this.addInputInterpreter(new MouseInputInterpreter(interpreterTags[i]));
+                        this.addInputInterpreter(new MouseInputInterpreter(dataJSON.inputDevices[i]));
                         break;
                     case "joystick":
-                        this.addInputInterpreter(new GamepadInputInterpreter(interpreterTags[i]));
+                        this.addInputInterpreter(new GamepadInputInterpreter(dataJSON.inputDevices[i]));
                         break;
                     default:
-                        application.showError("Unrecognized input device type: '" + interpreterTags[i].getAttribute("type") + "'!",
+                        application.showError("Unrecognized input device type: '" + dataJSON.inputDevices[i].type + "'!",
                               "severe", "Every input device defined in the settings file must be of one of the following types: " +
                               "keyboard, mouse.");
                 }
             }
             // if only the defaults need to be restored, go through the stored interpreters 
-            // and delete their custom bindings as well as reload their default from the XML
+            // and delete their custom bindings as well as reload their default from the JSON
         } else {
-            interpreterTags = xmlTag.getElementsByTagName("input")[0].getElementsByTagName("inputDevice");
-            for (i = 0; i < interpreterTags.length; i++) {
+            for (i = 0, n = dataJSON.inputDevices.length; i < n; i++) {
                 this._inputInterpreters[i].removeFromLocalStorage();
-                this._inputInterpreters[i].loadFromXMLTag(interpreterTags[i]);
+                this._inputInterpreters[i].loadFromJSON(dataJSON.inputDevices[i]);
             }
         }
     };
@@ -2295,11 +2231,11 @@ define([
     };
 
     /**
-     * Restore the default settings stored in the XML tag from where they were originally
+     * Restore the default settings stored in the JSON object from where they were originally
      * loaded.
      */
     ControlContext.prototype.restoreDefaults = function () {
-        this.loadFromXML(this._xmlTag, true);
+        this.loadFromJSON(this._dataJSON, true);
     };
 
     /**

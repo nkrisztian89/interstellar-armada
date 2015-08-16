@@ -55,12 +55,13 @@ define([
      * @param {String} settingsFileURL
      */
     application.requestSettingsLoad = function (settingsFileURL) {
-        application.requestXMLFile("config", settingsFileURL, function (settingsXML) {
+        application.requestTextFile("config", settingsFileURL, function (settingsText) {
+            var settingsJSON = JSON.parse(settingsText);
             application.log("Loading game settings...", 1);
-            _graphicsContext.loadFromXMLTag(settingsXML.getElementsByTagName("graphics")[0]);
+            _graphicsContext.loadFromJSON(settingsJSON.graphics);
             _graphicsContext.loadFromLocalStorage();
-            _logicContext.loadFromXML(settingsXML.getElementsByTagName("logic")[0]);
-            _controlContext.loadFromXML(settingsXML.getElementsByTagName("control")[0]);
+            _logicContext.loadFromJSON(settingsJSON.logic);
+            _controlContext.loadFromJSON(settingsJSON.control);
             _controlContext.loadFromLocalStorage();
         });
     };

@@ -10,6 +10,7 @@
 /*global define */
 
 define([
+    "utils/utils",
     "utils/matrices",
     "modules/application",
     "modules/components",
@@ -17,7 +18,7 @@ define([
     "modules/buda-scene",
     "armada/armada",
     "armada/logic"
-], function (mat, application, components, screens, budaScene, armada, logic) {
+], function (utils, mat, application, components, screens, budaScene, armada, logic) {
     "use strict";
 
     /**
@@ -265,7 +266,7 @@ define([
         self.updateStatus("loading level information...", 0);
         this._level.requestLoadFromFile(levelSourceFilename, function () {
             self.updateStatus("loading additional configuration...", 5);
-            self._level.addRandomShips({falcon: 30, viper: 10, aries: 5, taurus: 10}, 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true);
+            self._level.addRandomShips(armada.logic().getRandomShips(), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true);
 
             self.updateStatus("building scene...", 10);
             var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
@@ -942,7 +943,7 @@ define([
             var interpreter = armada.control().getInterpreter("keyboard");
             interpreter.setAndStoreKeyBinding(new Control.KeyBinding(
                   this._actionUnderSetting,
-                  Control.KeyboardInputInterpreter.prototype.getKeyOfCode(event.keyCode),
+                  utils.getKeyOfCode(event.keyCode),
                   this._settingShiftState,
                   this._settingCtrlState,
                   this._settingAltState

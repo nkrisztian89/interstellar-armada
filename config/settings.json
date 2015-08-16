@@ -41,16 +41,16 @@
                 "minimumRelativeSize": 0.05,
                 "limits": [
                     {
-                        "screenSizeLessThan": 30,
+                        "objectSizeLessThan": 30,
                         "level": 0
                     }, {
-                        "screenSizeLessThan": 60,
+                        "objectSizeLessThan": 60,
                         "level": 1
                     }, {
-                        "screenSizeLessThan": 250,
+                        "objectSizeLessThan": 250,
                         "level": 2
                     }, {
-                        "screenSizeLessThan": 400,
+                        "objectSizeLessThan": 400,
                         "level": 3
                     }
                 ]
@@ -60,6 +60,14 @@
     "logic": {
         "database": {
             "modelRotation": true
+        },
+        "battle": {
+            "randomShips": {
+                "falcon": 3,
+                "viper": 2,
+                "aries": 1,
+                "taurus": 1
+            }
         }
     },
     "control": {
@@ -379,6 +387,9 @@
             },
             {
                 "type": "joystick",
+                "sensitivityProfile": {
+                    "turnSensitivity": 0.0075
+                },
                 "bindings": [
                     {
                         "action": "fire",
@@ -403,22 +414,22 @@
                         "axis": "+0"
                     }, {
                         "action": "forward",
-                        "axis": "+3"
-                    }, {
-                        "action": "reverse",
                         "axis": "-3"
                     }, {
+                        "action": "reverse",
+                        "axis": "+3"
+                    }, {
                         "action": "cameraTurnUp",
-                        "axis": "+4"
-                    }, {
-                        "action": "cameraTurnDown",
-                        "axis": "-4"
-                    }, {
-                        "action": "cameraTurnLeft",
                         "axis": "-5"
                     }, {
-                        "action": "cameraTurnRight",
+                        "action": "cameraTurnDown",
                         "axis": "+5"
+                    }, {
+                        "action": "cameraTurnLeft",
+                        "axis": "-4"
+                    }, {
+                        "action": "cameraTurnRight",
+                        "axis": "+4"
                     }, {
                         "action": "resetSpeed",
                         "button": 4
