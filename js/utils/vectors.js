@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define */
+/*global define, Float32Array */
 
 define(function () {
     "use strict";
@@ -90,8 +90,9 @@ define(function () {
      * @returns {Number[2]} The normalized 3D vector.
      */
     vec.normal2 = function (v) {
-        var divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-        var factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        var
+              divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
+              factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor];
     };
     /**
@@ -100,8 +101,9 @@ define(function () {
      * @returns {Number[3]} The normalized 3D vector.
      */
     vec.normal3 = function (v) {
-        var divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-        var factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        var
+              divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+              factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor, v[2] * factor];
     };
     /**
@@ -138,6 +140,15 @@ define(function () {
      */
     vec.add3 = function (v1, v2) {
         return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
+    };
+    /**
+     * Returns the difference of two 3D vectors.
+     * @param {Number[3]} v1 The first 3D vector.
+     * @param {Number[3]} v2 The second 3D vector.
+     * @returns {Number[3]} The difference of v1 and v2.
+     */
+    vec.sub3 = function (v1, v2) {
+        return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
     };
     /**
      * Returns the dot product of the 2 given 3D vectors.

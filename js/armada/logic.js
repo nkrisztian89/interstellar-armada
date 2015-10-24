@@ -390,7 +390,7 @@ define([
      * the projectile to hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjects) {
-        var i, positionVector;
+        var i, positionVector, relPos, velocityVector, velocity, velocityDir;
         this._timeLeft -= dt;
         if (this._timeLeft <= 0) {
             this.destroy();
@@ -401,6 +401,11 @@ define([
             positionVector = mat.translationVector3(this._physicalModel.getPositionMatrix());
             for (i = 0; i < hitObjects.length; i++) {
                 if ((hitObjects[i] !== this._origin) && (hitObjects[i].checkHit(positionVector, [], 0))) {
+                    relPos = vec.sub3(positionVector, mat.translationVector3(hitObjects[i].getPositionMatrix()));
+                    velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
+                    velocity = vec.length3(velocityVector);
+                    velocityDir = vec.normal3(velocityVector);
+                    hitObjects[i].addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000, 1);
                     this.destroy();
                 }
             }
@@ -527,7 +532,8 @@ define([
      */
     Weapon.prototype.fire = function (projectiles) {
         var i, curTime, p,
-              orientationMatrix, scaledOriMatrix, weaponSlotPosVector, projectilePosMatrix, projectileOriMatrix,
+              orientationMatrix, scaledOriMatrix, weaponSlotPosVector, weaponSlotPosMatrix,
+              projectilePosMatrix, projectileOriMatrix,
               projectileClass, barrelPosVector, muzzleFlash, barrels;
         // check cooldown
         curTime = new Date();
@@ -537,7 +543,7 @@ define([
             orientationMatrix = this._spacecraft.getOrientationMatrix();
             scaledOriMatrix = mat.mul4(this._spacecraft.getScalingMatrix(), orientationMatrix);
             weaponSlotPosVector = vec.mulVec4Mat4(mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
-            projectilePosMatrix = mat.mul4(this._spacecraft.getPositionMatrix(), mat.translation4v(weaponSlotPosVector));
+            weaponSlotPosMatrix = mat.mul4(this._spacecraft.getPositionMatrix(), mat.translation4v(weaponSlotPosVector));
             projectileOriMatrix = mat.mul4(this._slot.orientationMatrix, orientationMatrix);
             barrels = this._class.getBarrels();
             // generate the muzzle flashes and projectiles for each barrel
@@ -545,18 +551,28 @@ define([
                 // cache variables
                 projectileClass = barrels[i].getProjectileClass();
                 barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.matrix3from4(mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
+                projectilePosMatrix = mat.mul4(weaponSlotPosMatrix, mat.translation4v(barrelPosVector));
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i);
                 this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash));
                 // add the projectile of this barrel
                 p = new Projectile(
                       projectileClass,
-                      mat.mul4(projectilePosMatrix, mat.translation4v(barrelPosVector)),
+                      projectilePosMatrix,
                       projectileOriMatrix,
                       this._spacecraft,
                       new physics.Force("", barrels[i].getForce(), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
+                // create the counter-force affecting the firing ship
+                this._spacecraft.getPhysicalModel().addForceAndTorque(
+                      vec.sub3(
+                            mat.translationVector3(projectilePosMatrix),
+                            mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
+                      mat.getRowB43Neg(projectileOriMatrix),
+                      barrels[i].getForce(),
+                      timeBurstLength
+                      );
             }
         }
     };

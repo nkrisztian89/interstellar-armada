@@ -317,12 +317,57 @@ define([
 // Functions of a single matrix
 
     /**
+     * Returns the first row vector of a 3x3 matrix.
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowA3 = function (m) {
+        return [m[0], m[1], m[2]];
+    };
+    
+    /**
+     * Returns the opposite of the first row vector of a 3x3 matrix.
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowA3Neg = function (m) {
+        return [-m[0], -m[1], -m[2]];
+    };
+
+    /**
      * Returns the first row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
      * @returns {Number[4]}
      */
     mat.getRowA4 = function (m) {
         return [m[0], m[1], m[2], m[3]];
+    };
+    
+    /**
+     * Returns the opposite of the first row vector of a 4x4 matrix.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[4]}
+     */
+    mat.getRowA4Neg = function (m) {
+        return [-m[0], -m[1], -m[2], -m[3]];
+    };
+    
+    /**
+     * Returns the second row vector of a 3x3 matrix.
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowB3 = function (m) {
+        return [m[3], m[4], m[5]];
+    };
+    
+    /**
+     * Returns the opposite of the second row vector of a 3x3 matrix.
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowB3Neg = function (m) {
+        return [-m[3], -m[4], -m[5]];
     };
 
     /**
@@ -332,6 +377,33 @@ define([
      */
     mat.getRowB4 = function (m) {
         return [m[4], m[5], m[6], m[7]];
+    };
+    
+    /**
+     * Returns the opposite of the second row vector of a 4x4 matrix.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[4]}
+     */
+    mat.getRowB4Neg = function (m) {
+        return [-m[4], -m[5], -m[6], -m[7]];
+    };
+    
+    /**
+     * Returns the first 3 elements of the second row vector of a 4x4 matrix.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowB43 = function (m) {
+        return [m[4], m[5], m[6]];
+    };
+    
+    /**
+     * Returns the first 3 elements of the opposite of the second row vector of a 4x4 matrix.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowB43Neg = function (m) {
+        return [-m[4], -m[5], -m[6]];
     };
 
     /**

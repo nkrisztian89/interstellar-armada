@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
+/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 define([
@@ -86,9 +86,8 @@ define([
             var t = Math.min(this._duration, dt);
             this._duration -= dt;
             return t;
-        } else {
-            return 0;
         }
+        return 0;
     };
     /**
      * Returns the vector corresponding to the acceleration this force causes on 
@@ -171,9 +170,8 @@ define([
             var t = Math.min(this._duration, dt);
             this._duration -= dt;
             return t;
-        } else {
-            return 0;
         }
+        return 0;
     };
     /**
      * Returns the rotation matrix corresponding to the angular acceleration 
@@ -393,20 +391,20 @@ define([
          * @name PhysicalObject#_forces
          * @type Force[]
          */
-        this._forces = new Array();
+        this._forces = [];
         /**
          * The list of torques affecting this object.
          * @name PhysicalObject#_torques
          * @type Torque[]
          */
-        this._torques = new Array();
+        this._torques = [];
         /**
          * The list of bodies the structure of this object is comprised of. (for
          * hit/collision check)
          * @name PhysicalObject#_bodies
          * @type Body[]
          */
-        this._bodies = bodies || new Array();
+        this._bodies = bodies || [];
         /**
          * The cached size of the whole srtucture (the distance between the
          * center of the object and the farthest point of its bodies)
@@ -539,8 +537,7 @@ define([
      * last for this duration.
      */
     PhysicalObject.prototype.addOrRenewForce = function (forceID, strength, direction, duration) {
-        var i;
-        var found = false;
+        var i, found = false;
         for (i = 0; i < this._forces.length; i++) {
             if (this._forces[i].getID() === forceID) {
                 this._forces[i].renew(strength, direction, duration);
@@ -563,8 +560,7 @@ define([
      * last for this duration.
      */
     PhysicalObject.prototype.addOrRenewTorque = function (torqueID, strength, axis, duration) {
-        var i;
-        var found = false;
+        var i, found = false;
         for (i = 0; i < this._torques.length; i++) {
             if (this._torques[i].getID() === torqueID) {
                 this._torques[i].renew(strength, axis, duration);
@@ -577,15 +573,39 @@ define([
         }
     };
     /**
+     * Simulates a force affecting the object that has an arbitrary point and direction
+     * of attack, potentially affecting both the linear and angular momentum of the object.
+     * @param {number[3]} position Point of attack relative to this object (meters)
+     * @param {number[3]} direction Unit vector of the direction of the force to apply
+     * @param {number} strength Overall strength of the force in newtons
+     * @param {number} duration The force and torque will be exterted for this duration (milliseconds)
+     */
+    PhysicalObject.prototype.addForceAndTorque = function (position, direction, strength, duration) {
+        var
+              leverDir = vec.normal3(position),
+              parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
+              perpendicularForce = vec.sub3(direction, parallelForce);
+        this.addForce(new Force(
+              "",
+              strength,
+              direction,
+              duration));
+        this.addTorque(new Torque(
+              "",
+              strength * vec.length3(perpendicularForce) * vec.length3(position),
+              vec.normal3(vec.cross3(perpendicularForce, leverDir)),
+              duration));
+    };
+    /**
      * Calculates the size of the structure of this physical object and stores 
      * it in a cache to speed up hit checks.
      */
     PhysicalObject.prototype._calculateBodySize = function () {
+        var i, bodyPos, halfDim;
         this._bodySize = 0;
-        var bodyPos;
-        for (var i = 0; i < this._bodies.length; i++) {
+        for (i = 0; i < this._bodies.length; i++) {
             bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
-            var halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.matrix3from4(mat.mul4(
+            halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.matrix3from4(mat.mul4(
                   this._orientationMatrix,
                   this._bodies[i].getOrientationMatrix())));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, halfDim)));
@@ -606,14 +626,14 @@ define([
      * @returns {Boolean} Whether the point is inside the structure or not.
      */
     PhysicalObject.prototype.checkHit = function (positionVector) {
-        var result = false;
+        var relativePos, i, result = false;
         // make the vector 4D for the matrix multiplication
         positionVector.push(1);
         // first, preliminary check based on position relative to the whole object
-        var relativePos = vec.mulVec4Mat4(positionVector, this.getModelMatrixInverse());
+        relativePos = vec.mulVec4Mat4(positionVector, this.getModelMatrixInverse());
         if ((Math.abs(relativePos[0]) < this._bodySize) && (Math.abs(relativePos[1]) < this._bodySize) && (Math.abs(relativePos[2]) < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
-            for (var i = 0; (result === false) && (i < this._bodies.length); i++) {
+            for (i = 0; (result === false) && (i < this._bodies.length); i++) {
                 result = this._bodies[i].checkHit(relativePos);
             }
         }
@@ -634,7 +654,7 @@ define([
      * milliseconds.
      */
     PhysicalObject.prototype.simulate = function (dt) {
-        var i, a, t;
+        var i, a, t, accelerationMatrix, angularAccMatrix;
         if (dt > 0) {
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
@@ -643,7 +663,7 @@ define([
             // calculate the movement that happened as a result of the acceleration
             // the affecting forces caused since the previous step
             // (s=1/2*a*t^2)
-            var accelerationMatrix = mat.identity4();
+            accelerationMatrix = mat.identity4();
             for (i = 0; i < this._forces.length; i++) {
                 t = this._forces[i].getExertionDuration(dt) / 1000; // t is in seconds
                 if (t > 0) {
@@ -668,7 +688,7 @@ define([
             }
             // calculate the rotation that happened as a result of the angular
             // acceleration the affecting torques caused since the previous step
-            var angularAccMatrix = mat.identity4();
+            angularAccMatrix = mat.identity4();
             for (i = 0; i < this._torques.length; i++) {
                 t = this._torques[i].getExertionDuration(dt) / 1000; // t is in seconds
                 if (t > 0) {
@@ -695,6 +715,7 @@ define([
     return {
         Body: Body,
         Force: Force,
+        Torque: Torque,
         PhysicalObject: PhysicalObject
     };
 });

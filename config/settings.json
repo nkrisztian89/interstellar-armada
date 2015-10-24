@@ -433,6 +433,9 @@
                     }, {
                         "action": "resetSpeed",
                         "button": 4
+                    }, {
+                        "action": "changeFlightMode",
+                        "button": 5
                     }
                 ]
             }
