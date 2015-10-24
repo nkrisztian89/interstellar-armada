@@ -409,7 +409,7 @@ define([
      * @class Dust clouds represent a big group of tiny dust particles that are
      * rendered when the camera (the player) is moving around of space, to give a
      * visual clue about the velocity. Dust cloud classes can be defined (in 
-     * classes.xml) for different environments (such as denser in an asteroid field 
+     * classes.json) for different environments (such as denser in an asteroid field 
      * or the rings of a planet, or having different color), and then the right one 
      * instantiated (with the DustCloud class) for the level.
      * @param {Object} [dataJSON]
@@ -470,7 +470,7 @@ define([
     // ##############################################################################
     /**
      * @class Projectiles such as bullets or plasma bursts can belong to different
-     * classes that can be described in classes.xml. This class represents such a 
+     * classes that can be described in classes.json. This class represents such a 
      * projectile class, defining the common properties of the projectiles belonging
      * to the class.
      * @augments TexturedModelClass

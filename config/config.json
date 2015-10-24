@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0:106+refactoring-27 (2015.10.24.)",
+    "version": "0.1.0:106+refactoring-28 (2015.10.24.)",
     "logVerbosity": 1,
     "folders": {
         "screen": "screens/",
@@ -16,9 +16,9 @@
         "resources": "resources.json",
         "classes": "classes.json",
         "settings": "settings.json",
-        "environments": "environments.xml"
+        "environments": "environments.json"
     },
     "levels": [
-        "level.xml"
+        "level.json"
     ]
 }

@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define */
+/*global define, document */
 
 define([
     "utils/utils",
@@ -241,15 +241,22 @@ define([
         screens.HTMLScreenWithCanvases.prototype.render.call(this);
         this._stats.setContent(this.getFPS() + "<br/>" + this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
         var craft = this._level.getPilotedSpacecraft();
-        this._ui.setContent(
-              craft.getFlightMode() + " flight mode<br/>" +
-              "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
-              ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+        if (craft) {
+            this._ui.setContent(
+                  craft.getFlightMode() + " flight mode<br/>" +
+                  "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
+                  ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+        }
     };
 
+    /**
+     * 
+     * @param {string} levelSourceFilename
+     */
     BattleScreen.prototype.startNewBattle = function (levelSourceFilename) {
+        var loadingStartTime;
         document.body.style.cursor = 'wait';
-        var loadingStartTime = new Date();
+        loadingStartTime = new Date();
         this.hideStats();
         this.hideUI();
         this.hideCrosshair();
@@ -261,56 +268,55 @@ define([
 
         this._level = new logic.Level();
 
-        var self = this;
-
-        self.updateStatus("loading level information...", 0);
+        this.updateStatus("loading level information...", 0);
         this._level.requestLoadFromFile(levelSourceFilename, function () {
-            self.updateStatus("loading additional configuration...", 5);
-            self._level.addRandomShips(armada.logic().getRandomShips(), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true);
+            var freq, canvas;
+            this.updateStatus("loading additional configuration...", 5);
+            this._level.addRandomShips(armada.logic().getRandomShips(), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true);
 
-            self.updateStatus("building scene...", 10);
-            var canvas = self.getScreenCanvas("battleCanvas").getCanvasElement();
+            this.updateStatus("building scene...", 10);
+            canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
             if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
                 armada.resources().getShader("shadowMapping");
             }
-            self._battleScene = new budaScene.Scene(
+            this._battleScene = new budaScene.Scene(
                   0, 0, canvas.width, canvas.height,
                   true, [true, true, true, true],
                   [0, 0, 0, 1], true,
                   armada.graphics().getLODContext());
-            self._level.addToScene(self._battleScene);
+            this._level.addToScene(this._battleScene);
 
-            armada.control().getController("general").setLevel(self._level);
-            armada.control().getController("camera").setControlledCamera(self._battleScene.activeCamera);
+            armada.control().getController("general").setLevel(this._level);
+            armada.control().getController("camera").setControlledCamera(this._battleScene.activeCamera);
 
-            self.updateStatus("loading graphical resources...", 15);
+            this.updateStatus("loading graphical resources...", 15);
             armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
-                self.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
-            });
-            var freq = 60;
+                this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
+            }.bind(this));
+            freq = 60;
             armada.resources().executeWhenReady(function () {
-                self._battleScene.setShadowMapping({
+                this._battleScene.setShadowMapping({
                     enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
                     shader: armada.resources().getShader("shadowMapping").getManagedShader(),
                     textureSize: armada.graphics().getShadowQuality(),
                     ranges: armada.graphics().getShadowRanges(),
                     depthRatio: armada.graphics().getShadowDepthRatio()
                 });
-                self.updateStatus("initializing WebGL...", 75);
-                self.bindSceneToCanvas(self._battleScene, self.getScreenCanvas("battleCanvas"));
-                self.updateStatus("", 100);
+                this.updateStatus("initializing WebGL...", 75);
+                this.bindSceneToCanvas(this._battleScene, this.getScreenCanvas("battleCanvas"));
+                this.updateStatus("", 100);
                 application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
-                self._smallHeader.setContent("running an early test of Interstellar Armada, version: " + armada.getVersion());
+                this._smallHeader.setContent("running an early test of Interstellar Armada, version: " + armada.getVersion());
                 armada.control().switchToSpectatorMode();
-                self._battleCursor = document.body.style.cursor;
-                self.showMessage("Ready!");
-                self.getLoadingBox().hide();
-                self.showStats();
-                self.startRenderLoop(1000 / freq);
-            });
+                this._battleCursor = document.body.style.cursor;
+                this.showMessage("Ready!");
+                this.getLoadingBox().hide();
+                this.showStats();
+                this.startRenderLoop(1000 / freq);
+            }.bind(this));
 
             armada.resources().requestResourceLoad();
-        });
+        }.bind(this));
     };
 
     /**

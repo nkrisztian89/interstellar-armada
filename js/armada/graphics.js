@@ -100,7 +100,7 @@ define([
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
     /**
-     * Loads the graphics setting from the data stored in the passed XML document.
+     * Loads the graphics setting from the data stored in the passed JSON object.
      * @param {Object} dataJSON The JSON object storing the game settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
      * settings should be restored or completely new settings should be initialized.
@@ -200,7 +200,7 @@ define([
         this.setToReady();
     };
     /**
-     * Restores the default settings that were loaded from XML, and erases the
+     * Restores the default settings that were loaded from file, and erases the
      * custom changes that are stored in HTML5 local storage.
      */
     GraphicsContext.prototype.restoreDefaults = function () {

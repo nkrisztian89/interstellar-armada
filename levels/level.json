@@ -1,0 +1,81 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceTwoStars"
+    },
+    "camera": {
+        "position": [0, -850, 300],
+        "rotations": [
+            {
+                "axis": "x",
+                "degrees": 60
+            }
+        ]
+    },
+    "spacecrafts": [
+        {
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, 0, -60],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "falcon",
+            "position": [-7.5, 20, -60]
+        },
+        {
+            "class": "falcon",
+            "position": [-1050, -150, -300]
+        },
+        {
+            "class": "viper",
+            "position": [50, -30, -170],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "viper",
+            "position": [50, 50, -160],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ]
+            }
+        },
+        {
+            "class": "viper",
+            "position": [50, 50, -1160]
+        },
+        {
+            "class": "aries",
+            "position": [-60, -50, -280]
+        },
+        {
+            "class": "taurus",
+            "position": [200, -80, -350],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "libra",
+            "position": [-100, 500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        }
+    ]
+}

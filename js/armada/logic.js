@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define */
+/*global define, Element, this */
 
 define([
     "utils/utils",
@@ -15,16 +15,14 @@ define([
     "utils/matrices",
     "modules/application",
     "modules/async-resource",
-    "modules/managed-gl",
     "modules/egom-model",
     "modules/resource-manager",
-    "modules/graphics-resources",
     "modules/physics",
     "modules/buda-scene",
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, resourceManager, graphicsResources, physics, budaScene, armada, classes) {
+], function (utils, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
     "use strict";
     var
           /**
@@ -980,7 +978,6 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
-        console.log("forward: " + intensity);
         this._speedTarget = this._compensated ?
               this._speedTarget + (intensity || this._speedIncrement) :
               Number.MAX_VALUE;
@@ -990,7 +987,6 @@ define([
      * in free flight mode.
      */
     ManeuveringComputer.prototype.stopForward = function () {
-        console.log("stopforward");
         if (!this._compensated) {
             var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             if (this._speedTarget > speed) {
@@ -1577,29 +1573,29 @@ define([
     // methods
     /**
      * Initializes the properties of this spacecraft based on the data stored
-     * in the passed XML tag.
-     * @param {Element} xmlTag
+     * in the passed JSON object.
+     * @param {Object} dataJSON
      * @param {Projectile[]} [projectileArray=null] The array to which the
      * spacecraft will add its fired projectiles.
      */
-    Spacecraft.prototype.loadFromXMLTag = function (xmlTag, projectileArray) {
+    Spacecraft.prototype.loadFromJSON = function (dataJSON, projectileArray) {
+        var equipmentProfile;
         this._init(
-              armada.logic().getSpacecraftClass(xmlTag.getAttribute("class")),
-              mat.translationFromXMLTag(xmlTag.getElementsByTagName("position")[0]),
-              mat.rotation4FromXMLTags(xmlTag.getElementsByTagName("turn")),
+              armada.logic().getSpacecraftClass(dataJSON.class),
+              mat.translation4v(dataJSON.position),
+              mat.rotation4FromJSON(dataJSON.rotations),
               projectileArray);
         // equipping the created spacecraft
         // if there is an quipment tag...
-        if (xmlTag.getElementsByTagName("equipment").length > 0) {
-            var equipmentTag = xmlTag.getElementsByTagName("equipment")[0];
+        if (dataJSON.equipment) {
             // if a profile is referenced in the equipment tag, look up that profile 
             // and equip according to that
-            if (equipmentTag.hasAttribute("profile")) {
-                this.equipProfile(this._class.getEquipmentProfile(equipmentTag.getAttribute("profile")));
+            if (dataJSON.equipment.profile) {
+                this.equipProfile(this._class.getEquipmentProfile(dataJSON.equipment.profile));
                 // if no profile is referenced, simply create a custom profile from the tags inside
                 // the equipment tag, and equip that
             } else {
-                var equipmentProfile = new classes.EquipmentProfile(equipmentTag);
+                equipmentProfile = new classes.EquipmentProfile(dataJSON.equipment);
                 this.equipProfile(equipmentProfile);
             }
             // if there is no equipment tag, attempt to load the profile named "default"    
@@ -1991,11 +1987,11 @@ define([
      * @class Represents an environment that can be used to build a visual 
      * representation and perform the game logic on a virtual environment where 
      * the game takes place.
-     * @param {Element} xmlTag If given, the data of the environment will be
-     * initialized from this XML tag.
+     * @param {Object} dataJSON If given, the data of the environment will be
+     * initialized from this JSON object.
      * @returns {Environment}
      */
-    function Environment(xmlTag) {
+    function Environment(dataJSON) {
         /**
          * The list of skyboxes this environment contains as background.
          * @name Environment#_skyboxes
@@ -2020,37 +2016,36 @@ define([
          * @type Camera
          */
         this._camera = null;
-        // if given, load the data from the XML tag
-        xmlTag && this.loadFromXMLTag(xmlTag);
+        // if given, load the data from the JSON object
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
+        }
     }
     // #########################################################################
     // methods
     /**
-     * Loads all the data about this environment stored in the passed XML tag.
-     * @param {Element} xmlTag
+     * Loads all the data about this environment stored in the passed JSON object.
+     * @param {Object} dataJSON
      */
-    Environment.prototype.loadFromXMLTag = function (xmlTag) {
+    Environment.prototype.loadFromJSON = function (dataJSON) {
         var i;
-        this._skyboxes = new Array();
-        var skyboxTags = xmlTag.getElementsByTagName("Skybox");
-        for (i = 0; i < skyboxTags.length; i++) {
-            this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(skyboxTags[i].getAttribute("class"))));
+        this._skyboxes = [];
+        for (i = 0; i < dataJSON.skyboxes.length; i++) {
+            this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(dataJSON.skyboxes[i].class)));
         }
-
-        this._backgroundObjects = new Array();
-        var backgroundObjectTags = xmlTag.getElementsByTagName("BackgroundObject");
-        for (i = 0; i < backgroundObjectTags.length; i++) {
+        
+        this._backgroundObjects = [];
+        for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
             this._backgroundObjects.push(new BackgroundObject(
-                  armada.logic().getBackgroundObjectClass(backgroundObjectTags[i].getAttribute("class")),
-                  backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleAlpha"),
-                  backgroundObjectTags[i].getElementsByTagName("position")[0].getAttribute("angleBeta")
+                  armada.logic().getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
+                  dataJSON.backgroundObjects[i].position.angleAlpha,
+                  dataJSON.backgroundObjects[i].position.angleBeta
                   ));
         }
 
-        this._dustClouds = new Array();
-        var dustCloudTags = xmlTag.getElementsByTagName("DustCloud");
-        for (i = 0; i < dustCloudTags.length; i++) {
-            this._dustClouds.push(new DustCloud(armada.logic().getDustCloudClass(dustCloudTags[i].getAttribute("class"))));
+        this._dustClouds = [];
+        for (i = 0; i < dataJSON.dustClouds.length; i++) {
+            this._dustClouds.push(new DustCloud(armada.logic().getDustCloudClass(dataJSON.dustClouds[i].class)));
         }
     };
     /**
@@ -2141,9 +2136,8 @@ define([
     Level.prototype.getPilotedSpacecraft = function () {
         if (this._pilotedCraftIndex !== null) {
             return this._spacecrafts[this._pilotedCraftIndex];
-        } else {
-            return null;
-        }
+        } 
+        return null;
     };
     // #########################################################################
     // methods
@@ -2156,52 +2150,50 @@ define([
      * level has been loaded.
      */
     Level.prototype.requestLoadFromFile = function (filename, callback) {
-        var self = this;
-        application.requestXMLFile("level", filename, function (xmlDoc) {
-            self.loadFromXML(xmlDoc);
+        application.requestTextFile("level", filename, function (responseText) {
+            this.loadFromJSON(JSON.parse(responseText));
             if (callback) {
                 callback();
             }
-        });
+        }.bind(this));
     };
     /**
-     * Loads all the data describing this level from the passed XML document.
-     * @param {Document} xmlDoc
+     * Loads all the data describing this level from the passed JSON object.
+     * @param {Object} dataJSON
      */
-    Level.prototype.loadFromXML = function (xmlDoc) {
-        application.log("Loading level from XML file...", 2);
-
-        this._environment = new Environment();
-        var environmentTag = utils.getFirstXMLElement(xmlDoc, "Environment");
-        if (environmentTag.hasAttribute("createFrom")) {
-            this._environment = armada.logic().getEnvironment(environmentTag.getAttribute("createFrom"));
+    Level.prototype.loadFromJSON = function (dataJSON) {
+        var i, spacecraft;
+        application.log("Loading level from JSON file...", 2);
+        
+        if (dataJSON.environment.createFrom) {
+            this._environment = armada.logic().getEnvironment(dataJSON.environment.createFrom);
         } else {
-            this._environment.loadFromXMLTag(environmentTag);
+            this._environment = new Environment(dataJSON.environment);
         }
-
+        
         this._cameraStartPositionMatrix = mat.identity4();
         this._cameraStartOrientationMatrix = mat.identity4();
-        var cameraTags = xmlDoc.getElementsByTagName("Camera");
-        if (cameraTags.length > 0) {
-            if (cameraTags[0].getElementsByTagName("position").length > 0) {
-                this._cameraStartPositionMatrix = mat.translation4v(vec.scaled3(vec.fromXMLTag3(cameraTags[0].getElementsByTagName("position")[0]), -1));
+        
+        if (dataJSON.camera) {
+            if (dataJSON.camera.position) {
+                this._cameraStartPositionMatrix = mat.translation4v(vec.scaled3(dataJSON.camera.position, -1));
             }
-            if (cameraTags[0].getElementsByTagName("orientation").length > 0) {
-                this._cameraStartOrientationMatrix = mat.rotation4FromXMLTags(cameraTags[0].getElementsByTagName("orientation")[0].getElementsByTagName("turn"));
+            if (dataJSON.camera.rotations) {
+                this._cameraStartOrientationMatrix = mat.rotation4FromJSON(dataJSON.camera.rotations);
             }
         }
 
-        this._projectiles = new Array();
-        this._spacecrafts = new Array();
-        var spacecraftTags = xmlDoc.getElementsByTagName("Spacecraft");
-        for (var i = 0; i < spacecraftTags.length; i++) {
-            var spacecraft = new Spacecraft();
-            spacecraft.loadFromXMLTag(spacecraftTags[i], this._projectiles);
-            if (spacecraftTags[i].getAttribute("piloted") === "true") {
+        this._projectiles = [];
+        this._spacecrafts = [];
+        for (i = 0; i < dataJSON.spacecrafts.length; i++) {
+            spacecraft = new Spacecraft();
+            spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectiles);
+            if (dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraftIndex = i;
             }
             this._spacecrafts.push(spacecraft);
         }
+        
         application.log("Level successfully loaded.", 2);
     };
     /**
@@ -2222,28 +2214,31 @@ define([
      * @param {Number} [randomSeed]
      */
     Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ, randomSeed) {
+        var random, shipClass, i, orientation;
         randomSeed = randomSeed || defaultRandomSeed;
-        var random = Math.seed(randomSeed);
-        for (var shipClass in shipNumbersPerClass) {
-            for (var i = 0; i < shipNumbersPerClass[shipClass]; i++) {
-                var orientation = orientationMatrix ?
-                      mat.matrix4(orientationMatrix) : mat.identity4();
-                if (randomTurnAroundZ) {
-                    orientation = mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
+        random = Math.seed(randomSeed);
+        for (shipClass in shipNumbersPerClass) {
+            if (shipNumbersPerClass.hasOwnProperty(shipClass)) {
+                for (i = 0; i < shipNumbersPerClass[shipClass]; i++) {
+                    orientation = orientationMatrix ?
+                          mat.matrix4(orientationMatrix) : mat.identity4();
+                    if (randomTurnAroundZ) {
+                        orientation = mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
+                    }
+                    if (randomTurnAroundX) {
+                        orientation = mat.mul4(orientation, mat.rotation4(mat.getRowA4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
+                    }
+                    if (randomTurnAroundY) {
+                        orientation = mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
+                    }
+                    this._spacecrafts.push(
+                          new Spacecraft(
+                                armada.logic().getSpacecraftClass(shipClass),
+                                mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
+                                orientation,
+                                this._projectiles,
+                                "default"));
                 }
-                if (randomTurnAroundX) {
-                    orientation = mat.mul4(orientation, mat.rotation4(mat.getRowA4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
-                }
-                if (randomTurnAroundY) {
-                    orientation = mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
-                }
-                this._spacecrafts.push(
-                      new Spacecraft(
-                            armada.logic().getSpacecraftClass(shipClass),
-                            mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
-                            orientation,
-                            this._projectiles,
-                            "default"));
             }
         }
     };
@@ -2255,7 +2250,7 @@ define([
     Level.prototype.addToScene = function (scene) {
         var i;
         this._environment.addToScene(scene);
-        this._hitObjects = new Array();
+        this._hitObjects = [];
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].addToScene(scene, undefined, false, {
                 hitboxes: true,
@@ -2277,7 +2272,8 @@ define([
      * Toggles the visibility of the hitboxes of all spacecrafts in the level.
      */
     Level.prototype.toggleHitboxVisibility = function () {
-        for (var i = 0; i < this._spacecrafts.length; i++) {
+        var i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].toggleHitboxVisibility();
         }
     };
@@ -2288,8 +2284,9 @@ define([
      * milliseconds.
      */
     Level.prototype.tick = function (dt) {
+        var i;
         this._environment.simulate();
-        for (var i = 0; i < this._spacecrafts.length; i++) {
+        for (i = 0; i < this._spacecrafts.length; i++) {
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
                 this._spacecrafts[i] = null;
                 this._spacecrafts.splice(i, 1);
@@ -2299,7 +2296,7 @@ define([
                 this._spacecrafts[i].simulate(dt);
             }
         }
-        for (var i = 0; i < this._projectiles.length; i++) {
+        for (i = 0; i < this._projectiles.length; i++) {
             if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
                 application.log("Projectile removed.", 2);
                 this._projectiles[i] = null;
@@ -2342,6 +2339,10 @@ define([
          */
         this._environments = null;
         /**
+         * @type Array<String>
+         */
+        this._levelFileNames = null;
+        /**
          * Whether the rotation of models (both automatic and manual) is enabled
          * on the database screen.
          * @name LogicContext#_databaseModelRotation
@@ -2374,6 +2375,14 @@ define([
      */
     LogicContext.prototype.setEnvironmentsSourceFileName = function (value) {
         this._environmentsSourceFileName = value;
+    };
+    /**
+     * Sets the array of strings that contains the names of the level descriptor JSON files.
+     * The path doesn't need to be included, the files will be looked for in the levels folder.
+     * @param {Array<String>} value
+     */
+    LogicContext.prototype.setLevelFileNames = function (value) {
+        this._levelFileNames = value;
     };
     /**
      * Returns whether the rotation (both automatic and manual) of models on the
@@ -2462,6 +2471,14 @@ define([
     LogicContext.prototype.getEnvironment = function (name) {
         return this._environments[name] || null;
     };
+    /**
+     * Returns the name of the level file (without path) of the given index.
+     * @param {number} index
+     * @returns {string}
+     */
+    LogicContext.prototype.getLevelFileName = function (index) {
+        return this._levelFileNames[index];
+    };
     // #########################################################################
     // indirect getters and setters
     /**
@@ -2507,27 +2524,26 @@ define([
      * and set the resource state of this context to ready when done.
      */
     LogicContext.prototype.requestEnvironmentsLoad = function () {
-        var self = this;
-        application.requestXMLFile("environment", this._environmentsSourceFileName, function (xmlDoc) {
-            self.loadEnvironmentsFromXML(xmlDoc);
-            self.setToReady();
-        });
+        application.requestTextFile("environment", this._environmentsSourceFileName, function (responseText) {
+            this.loadEnvironmentsFromJSON(JSON.parse(responseText));
+            this.setToReady();
+        }.bind(this));
     };
     /**
-     * Loads the desciptions of all reusable environments from the passed XML 
-     * document, creates and stores all the objects for them.
-     * @param {Document} xmlDoc
+     * Loads the desciptions of all reusable environments from the passed JSON object,
+     *  creates and stores all the objects for them.
+     * @param {Object} dataJSON
      */
-    LogicContext.prototype.loadEnvironmentsFromXML = function (xmlDoc) {
-        this._environments = new Object();
-        var environmentTags = xmlDoc.getElementsByTagName("Environment");
-        for (var i = 0; i < environmentTags.length; i++) {
-            var environment = new Environment(environmentTags[i]);
-            this._environments[environmentTags[i].getAttribute("name")] = environment;
+    LogicContext.prototype.loadEnvironmentsFromJSON = function (dataJSON) {
+        var i, environment;
+        this._environments = {};
+        for (i = 0; i < dataJSON.environments.length; i++) {
+            environment = new Environment(dataJSON.environments[i]);
+            this._environments[dataJSON.environments[i].name] = environment;
         }
     };
     /**
-     * Loads all the setting and references from the passed XML document and
+     * Loads all the setting and references from the passed JSON object and
      * initiates the request(s) necessary to load additional configuration from
      * referenced files.
      * @param {Object} dataJSON

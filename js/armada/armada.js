@@ -50,7 +50,7 @@ define([
     // Private methods
 
     /**
-     * Sends an asynchronous request to get the XML file describing the game
+     * Sends an asynchronous request to get the JSON file describing the game
      * settings and sets the callback function to set them.
      * @param {String} settingsFileURL
      */
@@ -84,6 +84,7 @@ define([
             });
             _logicContext.setClassesSourceFileName(configJSON.configFileURLs.classes);
             _logicContext.setEnvironmentsSourceFileName(configJSON.configFileURLs.environments);
+            _logicContext.setLevelFileNames(configJSON.levels);
             application.requestSettingsLoad(configJSON.configFileURLs.settings);
         });
     };
@@ -94,7 +95,7 @@ define([
                     caption: "New game",
                     action: function () {
                         _screenManager.setCurrentScreen("battle");
-                        _screenManager.getCurrentScreen().startNewBattle("level.xml");
+                        _screenManager.getCurrentScreen().startNewBattle(_logicContext.getLevelFileName(0));
                     }
                 }, {
                     caption: "Database",

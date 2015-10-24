@@ -1,0 +1,33 @@
+{
+    "environments": [
+        {
+            "name": "deepSpaceTwoStars",
+            "skyboxes": [
+                {
+                    "class": "deepspace"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": 20
+                    }
+                },
+                {
+                    "class": "smallBlueStar",
+                    "position": {
+                        "angleAlpha": -90,
+                        "angleBeta": -40
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
+        }
+    ]
+}

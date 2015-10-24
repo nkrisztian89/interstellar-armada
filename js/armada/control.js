@@ -2290,6 +2290,9 @@ define([
      * @param {Spacecraft} pilotedSpacecraft
      */
     ControlContext.prototype.switchToPilotMode = function (pilotedSpacecraft) {
+        if (!pilotedSpacecraft) {
+            return;
+        }
         this._fighterController.setControlledSpacecraft(pilotedSpacecraft);
         pilotedSpacecraft.resetViewCameras();
         this._cameraController.setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
