@@ -6,8 +6,8 @@
  * @version 1.0
  */
 
-/*jslint nomen: true */
-/*global define */
+/*jslint nomen: true, plusplus: true, bitwise: true */
+/*global define, Float32Array, Int32Array */
 
 
 define([
@@ -16,6 +16,8 @@ define([
     "modules/application",
     "modules/managed-gl"
 ], function (vec, mat, application, managedGL) {
+    "use strict";
+    var makeObject3DMixinClassFunction, makeObject3DMixinClass;
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -45,7 +47,7 @@ define([
          * @name LODContext#maxEnabledLOD
          * @type type Number
          */
-        this.maxEnabledLOD = parseInt(maxEnabledLOD);
+        this.maxEnabledLOD = maxEnabledLOD;
         /**
          * The threshold for each LOD that a renderable object must exceed (in 
          * size) to be drawn with that LOD.
@@ -124,8 +126,7 @@ define([
          * @name Object3D#_size
          * @type Number
          */
-        this._size = size !== undefined ? size : 1;
-        /**
+        this._size = size !== undefined ? size : 1;         /**
          * Cache value to store whether the object is situated within its 
          * parent's boundaries, as the parent's values can be used for certain 
          * calculations in this case.
@@ -150,7 +151,7 @@ define([
      * in a closure, and only add the references when it is used.
      * @type Function(this:Object3D)
      */
-    var makeObject3DMixinClass = (function () {
+    makeObject3DMixinClassFunction = function () {
         /**
          * Return the parent (might be null).
          * @returns {Object3D}
@@ -309,9 +310,9 @@ define([
          * @returns {Float32Array}
          */
         function getCascadeScalingMatrix() {
-            return  this._parent ?
-                  mat.mul4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
-                  this._scalingMatrix;
+            return this._parent ?
+                    mat.mul4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
+                    this._scalingMatrix;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -321,9 +322,9 @@ define([
          */
         function getModelMatrix() {
             this._modelMatrix = this._modelMatrix || mat.mul4(mat.mul4(this._scalingMatrix, this._orientationMatrix), this._positionMatrix);
-            return  this._parent ?
-                  mat.mul4(this._modelMatrix, this._parent.getModelMatrix()) :
-                  this._modelMatrix;
+            return this._parent ?
+                    mat.mul4(this._modelMatrix, this._parent.getModelMatrix()) :
+                    this._modelMatrix;
         }
         /**
          * Returns the size of this object.
@@ -348,10 +349,10 @@ define([
         function isInsideParent() {
             if (this._insideParent === null) {
                 this._insideParent = this._parent ?
-                      (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
-                      (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
-                      (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())
-                      : false;
+                        (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
+                        (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
+                        (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())
+                        : false;
             }
             return this._insideParent;
         }
@@ -364,55 +365,45 @@ define([
          * @returns {Object} 
          */
         function getSizeInsideViewFrustum(camera) {
+            var baseMatrix, fullMatrix, position, zOffsetPosition, zOffset, xOffsetPosition, yOffsetPosition, xOffset, yOffset;
             // scaling and orientation is lost here, since we create a new translation
             // matrix based on the original transformation
-            var baseMatrix =
-                  mat.translation4v(mat.translationVector4(
-                        mat.mul4(
-                              this.getModelMatrix(),
-                              camera.getCameraMatrix()
-                              )
-                        ));
+            baseMatrix =
+                    mat.translation4v(mat.translationVector4(mat.mul4(this.getModelMatrix(),
+                            camera.getCameraMatrix())));
             // we reintroduce appropriate scaling, but not the orientation, so 
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
-            var fullMatrix =
-                  mat.mul4(
-                        mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
-                        camera.getPerspectiveMatrix()
-                        );
+            fullMatrix =
+                    mat.mul4(mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
+                            camera.getPerspectiveMatrix());
 
-            var position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
+            position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
             position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
             position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
             position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
-            var zOffsetPosition = vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
-            var zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
+            zOffsetPosition = vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
+            zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
 
             // frustum culling: back and front
             if (((zOffset > -1.0) && (zOffset < 1.0)) || ((position[2] > -1.0) && (position[2] < 1.0))) {
                 // frustum culling: sides
-                var xOffsetPosition = vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
-                var yOffsetPosition = vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
-                var xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
-                var yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
-                if (
-                      !(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) &&
-                      !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))
-                      ) {
+                xOffsetPosition = vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
+                yOffsetPosition = vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
+                xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
+                yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
+                if (!(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) && !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))) {
                     this._lastSizeInsideViewFrustum.width = xOffset;
                     this._lastSizeInsideViewFrustum.height = yOffset;
                     return this._lastSizeInsideViewFrustum;
-                } else {
-                    this._lastSizeInsideViewFrustum.width = 0;
-                    this._lastSizeInsideViewFrustum.height = 0;
-                    return this._lastSizeInsideViewFrustum;
                 }
-            } else {
                 this._lastSizeInsideViewFrustum.width = 0;
                 this._lastSizeInsideViewFrustum.height = 0;
                 return this._lastSizeInsideViewFrustum;
             }
+            this._lastSizeInsideViewFrustum.width = 0;
+            this._lastSizeInsideViewFrustum.height = 0;
+            return this._lastSizeInsideViewFrustum;
         }
         return function () {
             this.prototype.getParent = getParent;
@@ -439,7 +430,8 @@ define([
             this.prototype.isInsideParent = isInsideParent;
             this.prototype.getSizeInsideViewFrustum = getSizeInsideViewFrustum;
         };
-    })();
+    };
+    makeObject3DMixinClass = makeObject3DMixinClassFunction();
     // #########################################################################
     /**
      * @constructor
@@ -474,13 +466,11 @@ define([
          * @name RenderParameters#parent
          * @type RenderableObject
          */
-        this.parent = parent;
-        /**
+        this.parent = parent;         /**
          * @name RenderParameters#camera
          * @type Camera
          */
-        this.camera = camera;
-        /**
+        this.camera = camera;         /**
          * @name RenderParameters#viewportWidth
          * @type Number
          */
@@ -496,6 +486,294 @@ define([
          */
         this.lodContext = lodContext;
     }
+    // #########################################################################
+    /**
+     * @class A node on the rendering tree, that can hold a renderable object as 
+     * well as references to children nodes.
+     * @constructor
+     * @param {RenderableObject} renderableObject
+     * @returns {RenderableNode}
+     */
+    function RenderableNode(renderableObject) {
+        /**
+         * The object this node holds that can be rendered.
+         * @name RenderableNode#_renderableObject
+         * @type RenderableObject
+         */
+        this._renderableObject = renderableObject;
+        renderableObject.setNode(this);
+        /**
+         * The scene this node is part of.
+         * @name RenderableNode#_scene
+         * @type Scene
+         */
+        this._scene = null;
+        /**
+         * A reference to the parent node of this node.
+         * @name RenderableNode#_parent
+         * @type RenderableNode
+         */
+        this._parent = null;
+        /**
+         * The list of subnodes (children) this node is connected to.
+         * @name RenderableNode#_subnodes
+         * @type Array.<RenderableNode>
+         */
+        this._subnodes = [];
+        /**
+         * A flag to mark whether this node and its subnodes should be rendered.
+         * @name RenderableNode#_visible
+         * @type Boolean
+         */
+        this._visible = true;
+        /**
+         * A reference to the fist camera of the scene that follows this object.
+         * @name RenderableNode#_firstCamera
+         * @type Camera
+         */
+        this._firstCamera = null;
+        /**
+         * A variable to hold the rendering parameters passed to the held object
+         * before each render, in order to avoid creating a new object to store
+         * these at each render.
+         * @name RenderableNode#_renderParameters
+         * @type RenderParameters
+         */
+        this._renderParameters = new RenderParameters();
+    }
+    /**
+     * Returns whether this node can be reused to hold a different object.
+     * @returns {Boolean}
+     */
+    RenderableNode.prototype.canBeReused = function () {
+        var i;
+        if (this._renderableObject.canBeReused()) {
+            for (i = 0; i < this._subnodes.length; i++) {
+                if (this._subnodes[i].canBeReused() === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+    /**
+     * Returns the scene this node is part of.
+     * @returns {Scene}
+     */
+    RenderableNode.prototype.getScene = function () {
+        return this._scene;
+    };
+    /**
+     * Sets up the node (and its subnodes) as part of the passed scene.
+     * @param {Scene} scene
+     */
+    RenderableNode.prototype.setScene = function (scene) {
+        var i;
+        this._scene = scene;
+        if (scene) {
+            scene.addObjectToContexts(this._renderableObject);
+        }
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].setScene(scene);
+        }
+    };
+    /**
+     * Returns the parent node of this node.
+     * @returns {RenderableNode}
+     */
+    RenderableNode.prototype.getParent = function () {
+        return this._parent;
+    };
+    /**
+     * Sets up the node to have a new parent.
+     * @param {RenderableNode} parent
+     */
+    RenderableNode.prototype.setParent = function (parent) {
+        this._parent = parent;
+        this.setScene(parent.getScene());
+        if (this._renderableObject.setParent) {
+            this._renderableObject.setParent(parent.getRenderableObject());
+        }
+    };
+    /**
+     * Returns the renderable object held by this node.
+     * @returns {RenderableObject}
+     */
+    RenderableNode.prototype.getRenderableObject = function () {
+        return this._renderableObject;
+    };
+    /**
+     * Sets the node (and its visible subnodes) to be rendered from now on.
+     */
+    RenderableNode.prototype.show = function () {
+        this._visible = true;
+    };
+    /**
+     * Sets the node and its subnodes not to be rendered from now on.
+     */
+    RenderableNode.prototype.hide = function () {
+        this._visible = false;
+    };
+    /**
+     * Switches the visibility of the node to the opposite.
+     */
+    RenderableNode.prototype.toggleVisibility = function () {
+        this._visible = !this._visible;
+    };
+    /**
+     * Adds a subnode to this node.
+     * @param {RenderableNode} subnode The subnode to be added to the rendering 
+     * tree. 
+     * It will be rendered relative to this object (transformation matrices 
+     * stack)
+     */
+    RenderableNode.prototype.addSubnode = function (subnode) {
+        this._subnodes.push(subnode);
+        subnode.setParent(this);
+    };
+    /**
+     * Resets the held object and all subnodes. Called at the beginning of each
+     * frame.
+     */
+    RenderableNode.prototype.resetForNewFrame = function () {
+        var i;
+        this._renderableObject.resetForNewFrame();
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].resetForNewFrame();
+        }
+    };
+    /**
+     * Sets up the stored render parameters that are passed to the held 
+     * renderable
+     * object for the next rendering.
+     * @param {ManagedGLContext} context
+     * @param {Number} screenWidth
+     * @param {Number} screenHeight
+     * @param {Boolean} depthMask
+     */
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask) {
+        this._renderParameters.context = context;
+        this._renderParameters.depthMask = depthMask;
+        this._renderParameters.scene = this._scene;
+        this._renderParameters.parent = this._parent ? this._parent.getRenderableObject() : null;
+        this._renderParameters.camera = this._scene.activeCamera;
+        this._renderParameters.viewportWidth = screenWidth;
+        this._renderParameters.viewportHeight = screenHeight;
+        this._renderParameters.lodContext = this._scene.getLODContext();
+    };
+    /**
+     * Renders the object at this node and all subnodes, if visible.
+     * @param {ManagedGLContext} context
+     * @param {Number} screenWidth
+     * @param {Number} screenHeight
+     * @param {Boolean} depthMask
+     */
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask) {
+        var i;
+        // the visible property determines visibility of all subnodes as well
+        if (this._visible) {
+            this.setRenderParameters(context, screenWidth, screenHeight, depthMask);
+            this._renderableObject.render(this._renderParameters);
+            for (i = 0; i < this._subnodes.length; i++) {
+                this._subnodes[i].render(context, screenWidth, screenHeight, depthMask);
+            }
+        }
+    };
+    /**
+     * Renders the object at this node and all subnodes to the shadow map, if 
+     * visible.
+     * @param {ManagedGLContext} context
+     * @param {Number} screenWidth
+     * @param {Number} screenHeight
+     */
+    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight) {
+        var i;
+        // the visible property determines visibility of all subnodes as well
+        if (this._visible) {
+            this.setRenderParameters(context, screenWidth, screenHeight, true);
+            this._renderableObject.renderToShadowMap(this._renderParameters);
+            // recursive rendering of all subnodes
+            for (i = 0; i < this._subnodes.length; i++) {
+                this._subnodes[i].renderToShadowMap(context, screenWidth, screenHeight);
+            }
+        }
+    };
+    /**
+     * Returns the first camera in the scene following this node.
+     * @returns {Camera}
+     */
+    RenderableNode.prototype.getFirstCamera = function () {
+        return this._firstCamera;
+    };
+    /**
+     * Sets the reference to the first camera following this node.
+     * @param {Camera} firstCamera
+     */
+    RenderableNode.prototype.setFirstCamera = function (firstCamera) {
+        this._firstCamera = firstCamera;
+    };
+    /**
+     * Resets the state of all cameras that follow this node.
+     */
+    RenderableNode.prototype.resetViewCameras = function () {
+        var camera;
+        for (camera = this._firstCamera;
+                camera !== null; camera = ((camera.getNextView() === this._firstCamera) ? null : camera.getNextView())) {
+            camera.reset();
+        }
+    };
+    /**
+     * Adds and sets up all resources needed to render the held object and all
+     * subnodes to the given context.
+     * @param {ManagedGLContext} context
+     */
+    RenderableNode.prototype.addToContext = function (context) {
+        var i;
+        this._renderableObject.addToContext(context);
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].addToContext(context);
+        }
+    };
+    /**
+     * Sets the shader to use for the held object and for all subnodes.
+     * @param {Shader} shader
+     */
+    RenderableNode.prototype.setShader = function (shader) {
+        var i;
+        this._renderableObject.setShader(shader);
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].setShader(shader);
+        }
+    };
+    /**
+     * Removes all subnodes from the subtree of this object that are deleted or
+     * are marked for deletion.
+     */
+    RenderableNode.prototype.cleanUp = function () {
+        var i;
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].cleanUp();
+            while ((i < this._subnodes.length) && ((!this._subnodes[i]) || (this._subnodes[i].canBeReused() === true))) {
+                this._subnodes.splice(i, 1);
+            }
+        }
+    };
+    /**
+     * Returns the number of triangles drawn on the screen to render this node
+     * and all its subnodes.
+     * @returns {Number}
+     */
+    RenderableNode.prototype.getNumberOfDrawnTriangles = function () {
+        var i, result = 0;
+        if (this._renderableObject.wasRendered()) {
+            result += this._renderableObject.getNumberOfDrawnTriangles();
+        }
+        for (i = 0; i < this._subnodes.length; i++) {
+            result += this._subnodes[i].getNumberOfDrawnTriangles();
+        }
+        return result;
+    };
     // #########################################################################
     /**
      * @class The superclass of all objects that can be rendered on the screen.
@@ -529,8 +807,7 @@ define([
          * @name RenderableObject#_shader
          * @type Shader
          */
-        this._shader = shader;
-        /**
+        this._shader = shader;         /**
          * The textures this object uses, ordered by their roles/types.
          * @name RenderableObject#_textures
          * @type Object.<String, Texture|Cubemap>
@@ -543,7 +820,7 @@ define([
          * @name RenderableObject#_uniformValueFunctions
          * @type Object.<String, Function>
          */
-        this._uniformValueFunctions = new Object();
+        this._uniformValueFunctions = {};
         /**
          * Flag, whether this object should be rendered when the depth mask is 
          * on.
@@ -622,7 +899,7 @@ define([
      * @param {Object} alternativeThis
      */
     RenderableObject.prototype.setUniformValueFunction = function (uniformName, valueFunction, alternativeThis) {
-        this._uniformValueFunctions[uniformName] = valueFunction.bind(alternativeThis ? alternativeThis : this);
+        this._uniformValueFunctions[uniformName] = valueFunction.bind(alternativeThis || this);
     };
     /**
      * Returns a function that obtains the texture location of the texture with
@@ -665,7 +942,9 @@ define([
     RenderableObject.prototype.bindTextures = function (context) {
         var role;
         for (role in this._textures) {
-            context.bindTexture(this._textures[role]);
+            if (this._textures.hasOwnProperty(role)) {
+                context.bindTexture(this._textures[role]);
+            }
         }
     };
     /**
@@ -731,6 +1010,7 @@ define([
      * for subclasses. Here it does nothing.
      */
     RenderableObject.prototype.performRender = function () {
+        return true;
     };
     /**
      * Called after a render has been finished. Additional cleanup/logging can
@@ -767,6 +1047,7 @@ define([
      * own preparation to this function.
      */
     RenderableObject.prototype.prepareForRenderToShadowMap = function () {
+        return true;
     };
     /**
      * The function actually performing the rendering to shadow map, after all 
@@ -774,6 +1055,7 @@ define([
      * functionality for subclasses. Here it does nothing.
      */
     RenderableObject.prototype.performRenderToShadowMap = function () {
+        return true;
     };
     /**
      * Handles the full shadow map render flow, with checks and preparations. 
@@ -802,287 +1084,6 @@ define([
      */
     RenderableObject.prototype.getNumberOfDrawnTriangles = function () {
         return 0;
-    };
-    // #########################################################################
-    /**
-     * @class A node on the rendering tree, that can hold a renderable object as 
-     * well as references to children nodes.
-     * @constructor
-     * @param {RenderableObject} renderableObject
-     * @returns {RenderableNode}
-     */
-    function RenderableNode(renderableObject) {
-        /**
-         * The object this node holds that can be rendered.
-         * @name RenderableNode#_renderableObject
-         * @type RenderableObject
-         */
-        this._renderableObject = renderableObject;
-        renderableObject.setNode(this);
-        /**
-         * The scene this node is part of.
-         * @name RenderableNode#_scene
-         * @type Scene
-         */
-        this._scene = null;
-        /**
-         * A reference to the parent node of this node.
-         * @name RenderableNode#_parent
-         * @type RenderableNode
-         */
-        this._parent = null;
-        /**
-         * The list of subnodes (children) this node is connected to.
-         * @name RenderableNode#_subnodes
-         * @type Array.<RenderableNode>
-         */
-        this._subnodes = new Array();
-        /**
-         * A flag to mark whether this node and its subnodes should be rendered.
-         * @name RenderableNode#_visible
-         * @type Boolean
-         */
-        this._visible = true;
-        /**
-         * A reference to the fist camera of the scene that follows this object.
-         * @name RenderableNode#_firstCamera
-         * @type Camera
-         */
-        this._firstCamera = null;
-        /**
-         * A variable to hold the rendering parameters passed to the held object
-         * before each render, in order to avoid creating a new object to store
-         * these at each render.
-         * @name RenderableNode#_renderParameters
-         * @type RenderParameters
-         */
-        this._renderParameters = new RenderParameters();
-    }
-    /**
-     * Returns whether this node can be reused to hold a different object.
-     * @returns {Boolean}
-     */
-    RenderableNode.prototype.canBeReused = function () {
-        if (this._renderableObject.canBeReused()) {
-            for (var i = 0; i < this._subnodes.length; i++) {
-                if (this._subnodes[i].canBeReused() === false) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    };
-    /**
-     * Returns the scene this node is part of.
-     * @returns {Scene}
-     */
-    RenderableNode.prototype.getScene = function () {
-        return this._scene;
-    };
-    /**
-     * Sets up the node (and its subnodes) as part of the passed scene.
-     * @param {Scene} scene
-     */
-    RenderableNode.prototype.setScene = function (scene) {
-        this._scene = scene;
-        if (scene) {
-            scene.addObjectToContexts(this._renderableObject);
-        }
-        for (var i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].setScene(scene);
-        }
-    };
-    /**
-     * Returns the parent node of this node.
-     * @returns {RenderableNode}
-     */
-    RenderableNode.prototype.getParent = function () {
-        return this._parent;
-    };
-    /**
-     * Sets up the node to have a new parent.
-     * @param {RenderableNode} parent
-     */
-    RenderableNode.prototype.setParent = function (parent) {
-        this._parent = parent;
-        this.setScene(parent.getScene());
-        if (this._renderableObject.setParent) {
-            this._renderableObject.setParent(parent.getRenderableObject());
-        }
-    };
-    /**
-     * Returns the renderable object held by this node.
-     * @returns {RenderableObject}
-     */
-    RenderableNode.prototype.getRenderableObject = function () {
-        return this._renderableObject;
-    };
-    /**
-     * Sets the node (and its visible subnodes) to be rendered from now on.
-     */
-    RenderableNode.prototype.show = function () {
-        this._visible = true;
-    };
-    /**
-     * Sets the node and its subnodes not to be rendered from now on.
-     */
-    RenderableNode.prototype.hide = function () {
-        this._visible = false;
-    };
-    /**
-     * Switches the visibility of the node to the opposite.
-     */
-    RenderableNode.prototype.toggleVisibility = function () {
-        this._visible = !this._visible;
-    };
-    /**
-     * Adds a subnode to this node.
-     * @param {RenderableNode} subnode The subnode to be added to the rendering 
-     * tree. 
-     * It will be rendered relative to this object (transformation matrices 
-     * stack)
-     */
-    RenderableNode.prototype.addSubnode = function (subnode) {
-        this._subnodes.push(subnode);
-        subnode.setParent(this);
-    };
-    /**
-     * Resets the held object and all subnodes. Called at the beginning of each
-     * frame.
-     */
-    RenderableNode.prototype.resetForNewFrame = function () {
-        this._renderableObject.resetForNewFrame();
-        for (var i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].resetForNewFrame();
-        }
-    };
-    /**
-     * Sets up the stored render parameters that are passed to the held 
-     * renderable
-     * object for the next rendering.
-     * @param {ManagedGLContext} context
-     * @param {Number} screenWidth
-     * @param {Number} screenHeight
-     * @param {Boolean} depthMask
-     */
-    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask) {
-        this._renderParameters.context = context;
-        this._renderParameters.depthMask = depthMask;
-        this._renderParameters.scene = this._scene;
-        this._renderParameters.parent = this._parent ? this._parent.getRenderableObject() : null;
-        this._renderParameters.camera = this._scene.activeCamera;
-        this._renderParameters.viewportWidth = screenWidth;
-        this._renderParameters.viewportHeight = screenHeight;
-        this._renderParameters.lodContext = this._scene.getLODContext();
-    };
-    /**
-     * Renders the object at this node and all subnodes, if visible.
-     * @param {ManagedGLContext} context
-     * @param {Number} screenWidth
-     * @param {Number} screenHeight
-     * @param {Boolean} depthMask
-     */
-    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask) {
-        // the visible property determines visibility of all subnodes as well
-        if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, depthMask);
-            this._renderableObject.render(this._renderParameters);
-            for (var i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].render(context, screenWidth, screenHeight, depthMask);
-            }
-        }
-    };
-    /**
-     * Renders the object at this node and all subnodes to the shadow map, if 
-     * visible.
-     * @param {ManagedGLContext} context
-     * @param {Number} screenWidth
-     * @param {Number} screenHeight
-     */
-    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight) {
-        // the visible property determines visibility of all subnodes as well
-        if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, true);
-            this._renderableObject.renderToShadowMap(this._renderParameters);
-            // recursive rendering of all subnodes
-            for (var i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].renderToShadowMap(context, screenWidth, screenHeight);
-            }
-        }
-    };
-    /**
-     * Returns the first camera in the scene following this node.
-     * @returns {Camera}
-     */
-    RenderableNode.prototype.getFirstCamera = function () {
-        return this._firstCamera;
-    };
-    /**
-     * Sets the reference to the first camera following this node.
-     * @param {Camera} firstCamera
-     */
-    RenderableNode.prototype.setFirstCamera = function (firstCamera) {
-        this._firstCamera = firstCamera;
-    };
-    /**
-     * Resets the state of all cameras that follow this node.
-     */
-    RenderableNode.prototype.resetViewCameras = function () {
-        for (
-              var camera = this._firstCamera;
-              camera !== null;
-              camera = ((camera.getNextView() === this._firstCamera) ? null : camera.getNextView())) {
-            camera.reset();
-        }
-    };
-    /**
-     * Adds and sets up all resources needed to render the held object and all
-     * subnodes to the given context.
-     * @param {ManagedGLContext} context
-     */
-    RenderableNode.prototype.addToContext = function (context) {
-        this._renderableObject.addToContext(context);
-        for (var i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].addToContext(context);
-        }
-    };
-    /**
-     * Sets the shader to use for the held object and for all subnodes.
-     * @param {Shader} shader
-     */
-    RenderableNode.prototype.setShader = function (shader) {
-        this._renderableObject.setShader(shader);
-        for (var i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].setShader(shader);
-        }
-    };
-    /**
-     * Removes all subnodes from the subtree of this object that are deleted or
-     * are marked for deletion.
-     */
-    RenderableNode.prototype.cleanUp = function () {
-        for (var i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].cleanUp();
-            while ((i < this._subnodes.length) && ((!this._subnodes[i]) || (this._subnodes[i].canBeReused() === true))) {
-                this._subnodes.splice(i, 1);
-            }
-        }
-    };
-    /**
-     * Returns the number of triangles drawn on the screen to render this node
-     * and all its subnodes.
-     * @returns {Number}
-     */
-    RenderableNode.prototype.getNumberOfDrawnTriangles = function () {
-        var result = 0;
-        if (this._renderableObject.wasRendered()) {
-            result += this._renderableObject.getNumberOfDrawnTriangles();
-        }
-        for (var i = 0; i < this._subnodes.length; i++) {
-            result += this._subnodes[i].getNumberOfDrawnTriangles();
-        }
-        return result;
     };
     // #########################################################################
     /**
@@ -1124,7 +1125,6 @@ define([
          */
         this._smallestSizeWhenDrawn = 0;
     }
-
     RenderableObject3D.prototype = new RenderableObject();
     makeObject3DMixinClass.call(RenderableObject3D);
     RenderableObject3D.prototype.constructor = RenderableObject;
@@ -1199,29 +1199,28 @@ define([
      * @returns {Boolean}
      */
     RenderableObject3D.prototype.shouldBeRendered = function (renderParameters) {
+        var visibleSize, relativeFactor;
         if (RenderableObject.prototype.shouldBeRendered.call(this, renderParameters)) {
             if (this.isInsideParent() === true) {
                 if ((renderParameters.parent.isInsideViewFrustum === undefined) || (renderParameters.parent.isInsideViewFrustum(renderParameters))) {
-                    var visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
-                    var relativeFactor = Math.max(this.getSize() / renderParameters.parent.getSize(), renderParameters.lodContext.minimumRelativeSize);
+                    visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
+                    relativeFactor = Math.max(this.getSize() / renderParameters.parent.getSize(), renderParameters.lodContext.minimumRelativeSize);
                     this._visibleSize.width = visibleSize.width * relativeFactor;
                     this._visibleSize.height = visibleSize.height * relativeFactor;
                     if (this.getSizeInPixels(renderParameters) < this._smallestSizeWhenDrawn) {
                         return false;
                     }
                     return true;
-                } else {
-                    this._visibleSize.width = 0;
-                    this._visibleSize.height = 0;
-                    return false;
                 }
-            } else {
-                var visibleSize = this.getVisibleSize(renderParameters);
-                if (this.getSizeInPixels(renderParameters) < this._smallestSizeWhenDrawn) {
-                    return false;
-                }
-                return this.isInsideViewFrustum(renderParameters);
+                this._visibleSize.width = 0;
+                this._visibleSize.height = 0;
+                return false;
             }
+            visibleSize = this.getVisibleSize(renderParameters);
+            if (this.getSizeInPixels(renderParameters) < this._smallestSizeWhenDrawn) {
+                return false;
+            }
+            return this.isInsideViewFrustum(renderParameters);
         }
     };
     // #########################################################################
@@ -1353,7 +1352,7 @@ define([
          * @name ShadedLODMesh#_lodSizeFactors
          * @type Object.<String, Number>
          */
-        this._lodSizeFactors = new Object();
+        this._lodSizeFactors = {};
         /**
          * If a static LOD is chosen, the model is always rendered using this 
          * LOD (or the closest available one)
@@ -1375,9 +1374,10 @@ define([
      * @param {ManagedGLContext} context
      */
     ShadedLODMesh.prototype.addToContext = function (context) {
+        var i;
         RenderableObject3D.prototype.addToContext.call(this, context);
         this._model.addToContext(context, this._wireframe);
-        for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
+        for (i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
             if (this._model.getSize(i) > this._modelSize) {
                 this._modelSize = this._model.getSize(i);
             }
@@ -1410,23 +1410,20 @@ define([
      * @returns {Number}
      */
     ShadedLODMesh.prototype.getCurrentLOD = function (renderParameters) {
+        var visibleSize, lodSize, i;
         if (this._currentLOD === null) {
             if (this._staticLOD !== null) {
                 this._currentLOD = this._model.getClosestAvailableLOD(this._staticLOD);
             } else {
-                var visibleSize = this.getSizeInPixels(renderParameters);
-                var lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
+                visibleSize = this.getSizeInPixels(renderParameters);
+                lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
                 this._currentLOD = -1;
-                for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
-                    if (
-                          (this._currentLOD === -1) ||
-                          (i <= renderParameters.lodContext.maxEnabledLOD) &&
-                          (
-                                (this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
-                                ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
-                                )) {
+                for (i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
+                    if ((this._currentLOD === -1) || ((i <= renderParameters.lodContext.maxEnabledLOD) && ((this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
+                            ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
+                            ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
+                            ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
+                            ))) {
                         this._currentLOD = i;
                     }
                 }
@@ -1452,14 +1449,13 @@ define([
         if (RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters)) {
             if (this._wireframe === true) {
                 return true;
-            } else {
-                if (renderParameters.depthMask === true) {
-                    if (this._model.getNumOpaqueTriangles(this.getCurrentLOD(renderParameters)) > 0) {
-                        return true;
-                    }
-                } else if ((renderParameters.depthMask === false) && (this._model.getNumTransparentTriangles(this.getCurrentLOD(renderParameters)) > 0)) {
+            }
+            if (renderParameters.depthMask === true) {
+                if (this._model.getNumOpaqueTriangles(this.getCurrentLOD(renderParameters)) > 0) {
                     return true;
                 }
+            } else if ((renderParameters.depthMask === false) && (this._model.getNumTransparentTriangles(this.getCurrentLOD(renderParameters)) > 0)) {
+                return true;
             }
             return false;
         }
@@ -1500,8 +1496,7 @@ define([
      */
     ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function () {
         return (this._wireframe === false) && (this._currentLOD) ? this._model.getNumTriangles(this._currentLOD) : 0;
-    };
-    // #########################################################################
+    };     // #########################################################################
     /**
      * @class A mesh that has associated float parameter arrays, which can be 
      * set through this object and are passed to WebGL through uniforms before
@@ -1531,16 +1526,17 @@ define([
      * @returns {ParameterizedMesh}
      */
     function ParameterizedMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, parameterArrays) {
+        var i, j;
         ShadedLODMesh.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod);
         /**
          * The values of the parameter arrays.
          * @name ParameterizedMesh#_parameterArrays
          * @type Object.<String, Float32Array>
          */
-        this._parameterArrays = new Object();
-        for (var i = 0; i < parameterArrays.length; i++) {
+        this._parameterArrays = {};
+        for (i = 0; i < parameterArrays.length; i++) {
             this._parameterArrays[parameterArrays[i].name] = new Float32Array(parameterArrays[i].length);
-            for (var j = 0; j < parameterArrays[i].length; j++) {
+            for (j = 0; j < parameterArrays[i].length; j++) {
                 this._parameterArrays[parameterArrays[i].name][j] = 0.0;
             }
             this.setUniformValueFunction("u_" + parameterArrays[i].name, this.createGetParameterArrayFunction(parameterArrays[i].name));
@@ -1585,8 +1581,7 @@ define([
      */
     function Billboard(model, shader, texture, size, positionMatrix, orientationMatrix) {
         RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
-        this.setTexture("emissive", texture);
-        /**
+        this.setTexture("emissive", texture);         /**
          * @name Billboard#_model
          * @type Model
          */
@@ -1650,10 +1645,8 @@ define([
         this.model = model;
         this.setTexture("emissive", texture);
         this.color = color;
-
         this.creationTime = new Date().getTime();
         this.duration = duration;
-
         this.setUniformValueFunction("u_modelMatrix", function () {
             return this.getModelMatrix();
         });
@@ -1803,7 +1796,6 @@ define([
         this.positionMatrix = positionMatrix;
 
         this.model = model;
-
         this.setUniformValueFunction("u_modelMatrix", function () {
             return this.getModelMatrix();
         });
@@ -2063,7 +2055,7 @@ define([
     Camera.prototype.stopLeftMove = function () {
         if (this.velocityVector[0] > 0) {
             this.velocityVector[0] -=
-                  Math.min(this.acceleration, this.velocityVector[0]);
+                    Math.min(this.acceleration, this.velocityVector[0]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopLeftMove();
@@ -2084,7 +2076,7 @@ define([
     Camera.prototype.stopRightMove = function () {
         if (this.velocityVector[0] < 0) {
             this.velocityVector[0] +=
-                  Math.min(this.acceleration, -this.velocityVector[0]);
+                    Math.min(this.acceleration, -this.velocityVector[0]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopRightMove();
@@ -2105,7 +2097,7 @@ define([
     Camera.prototype.stopUpMove = function () {
         if (this.velocityVector[1] < 0) {
             this.velocityVector[1] +=
-                  Math.min(this.acceleration, -this.velocityVector[1]);
+                    Math.min(this.acceleration, -this.velocityVector[1]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopUpMove();
@@ -2126,7 +2118,7 @@ define([
     Camera.prototype.stopDownMove = function () {
         if (this.velocityVector[1] > 0) {
             this.velocityVector[1] -=
-                  Math.min(this.acceleration, this.velocityVector[1]);
+                    Math.min(this.acceleration, this.velocityVector[1]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopDownMove();
@@ -2147,7 +2139,7 @@ define([
     Camera.prototype.stopForwardMove = function () {
         if (this.velocityVector[2] > 0) {
             this.velocityVector[2] -=
-                  Math.min(this.acceleration, this.velocityVector[2]);
+                    Math.min(this.acceleration, this.velocityVector[2]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopForwardMove();
@@ -2168,7 +2160,7 @@ define([
     Camera.prototype.stopBackwardMove = function () {
         if (this.velocityVector[2] < 0) {
             this.velocityVector[2] +=
-                  Math.min(this.acceleration, -this.velocityVector[2]);
+                    Math.min(this.acceleration, -this.velocityVector[2]);
         }
         if (this.followedCamera) {
             this.followedCamera.stopBackwardMove();
@@ -2176,47 +2168,29 @@ define([
     };
 
     Camera.prototype.updatePosition = function () {
+        var inverseOrientationMatrix, translationVector, camPositionMatrix, newPositionMatrix;
         if (this.controllablePosition) {
-            var inverseOrientationMatrix = mat.transposed3(mat.inverse3(mat.matrix3from4(this.getOrientationMatrix())));
-            var translationVector = vec.mulMat3Vec3(
-                  inverseOrientationMatrix,
-                  this.velocityVector
-                  );
+            inverseOrientationMatrix = mat.transposed3(mat.inverse3(mat.matrix3from4(this.getOrientationMatrix())));
+            translationVector = vec.mulMat3Vec3(inverseOrientationMatrix, this.velocityVector);
             if (this.followedObject === undefined) {
                 this.translatev(translationVector);
             } else {
                 this.followPositionMatrix =
-                      mat.mul4(
-                            this.followPositionMatrix,
-                            mat.translation4v(translationVector)
-                            );
+                        mat.mul4(this.followPositionMatrix, mat.translation4v(translationVector));
             }
         }
         if (this.followedObject) {
-            var camPositionMatrix =
-                  mat.mul4(
-                        mat.mul4(
-                              this.rotationCenterIsObject ?
-                              mat.translation4v(mat.translationVector4(mat.mul4(
-                                    this.followPositionMatrix,
-                                    mat.inverseOfRotation4(this.followOrientationMatrix)
-                                    )))
-                              :
-                              this.followPositionMatrix,
-                              this.followedObject.getOrientationMatrix()
-                              ),
-                        this.followedObject.getPositionMatrix()
-                        );
-            var newPositionMatrix =
-                  mat.translation4(
-                        -camPositionMatrix[12],
-                        -camPositionMatrix[13],
-                        -camPositionMatrix[14]
-                        );
-            var velocityMatrix = mat.mul4(mat.translation4(
-                  newPositionMatrix[12] - this.getPositionMatrix()[12],
-                  newPositionMatrix[13] - this.getPositionMatrix()[13],
-                  newPositionMatrix[14] - this.getPositionMatrix()[14]), this.getOrientationMatrix());
+            camPositionMatrix =
+                    mat.mul4(mat.mul4(this.rotationCenterIsObject ?
+                            mat.translation4v(mat.translationVector4(mat.mul4(this.followPositionMatrix, mat.inverseOfRotation4(this.followOrientationMatrix))))
+                            :
+                            this.followPositionMatrix,
+                            this.followedObject.getOrientationMatrix()
+                            ),
+                            this.followedObject.getPositionMatrix()
+                            );
+            newPositionMatrix =
+                    mat.translation4(-camPositionMatrix[12], -camPositionMatrix[13], -camPositionMatrix[14]);
             this.setPositionMatrix(newPositionMatrix);
         }
     };
@@ -2226,43 +2200,21 @@ define([
         if (this.controllableDirection) {
             if (this.followedObject === undefined) {
                 rotationMatrix =
-                      mat.mul4(
-                            mat.rotation4(
-                                  [0, 1, 0],
-                                  this.angularVelocityVector[1]
-                                  ),
-                            mat.rotation4(
-                                  [1, 0, 0],
-                                  this.angularVelocityVector[0]
-                                  )
-                            );
+                        mat.mul4(mat.rotation4([0, 1, 0], this.angularVelocityVector[1]),
+                                mat.rotation4([1, 0, 0], this.angularVelocityVector[0]));
                 this.rotateByMatrix(rotationMatrix);
             } else {
                 rotationMatrix =
-                      mat.mul4(
-                            mat.rotation4(
-                                  [0, 0, 1],
-                                  this.angularVelocityVector[1]
-                                  ),
-                            mat.rotation4(
-                                  [1, 0, 0],
-                                  this.angularVelocityVector[0]
-                                  )
-                            );
+                        mat.mul4(mat.rotation4([0, 0, 1], this.angularVelocityVector[1]),
+                                mat.rotation4([1, 0, 0], this.angularVelocityVector[0]));
                 this.followOrientationMatrix = mat.mul4(this.followOrientationMatrix, rotationMatrix);
             }
         }
         if (this.followedObject) {
             // look in direction y instead of z:
-            this.setOrientationMatrix(
-                  mat.mul4(
-                        mat.mul4(
-                              mat.inverseOfRotation4(this.followedObject.getOrientationMatrix()),
-                              this.followOrientationMatrix
-                              ),
-                        mat.rotation4([1, 0, 0], 3.1415 / 2)
-                        )
-                  );
+            this.setOrientationMatrix(mat.mul4(mat.mul4(mat.inverseOfRotation4(this.followedObject.getOrientationMatrix()),
+                    this.followOrientationMatrix),
+                    mat.rotation4([1, 0, 0], 3.1415 / 2)));
         }
     };
 
@@ -2299,9 +2251,11 @@ define([
     SceneCamera.prototype.constructor = SceneCamera;
 
     SceneCamera.prototype.setScene = function (scene) {
-        !this._scene ?
-              this._scene = scene :
-              application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
+        if (!this._scene) {
+            this._scene = scene;
+        } else {
+            application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
+        }
     };
 
     SceneCamera.prototype.changeToNextView = function () {
@@ -2311,19 +2265,19 @@ define([
     };
 
     SceneCamera.prototype.followNextObject = function () {
+        var currentlyFollowedObject, firstObject, currentObject;
         if (this.followedCamera && this.followedCamera.followedObject) {
-            var currentlyFollowedObject = this.followedCamera.followedObject.getNode();
+            currentlyFollowedObject = this.followedCamera.followedObject.getNode();
             this.followCamera(this._scene.getNextObject(currentlyFollowedObject).getFirstCamera(), 4000);
             // if we are currently not following any cameras, just start following the first one
         } else {
-            var firstObject = this._scene.getFirstObject();
+            firstObject = this._scene.getFirstObject();
             if (firstObject.getFirstCamera()) {
                 this.followCamera(firstObject.getFirstCamera(), 4000);
             } else {
-                for (
-                      var currentObject = this._scene.getNextObject(firstObject);
-                      currentObject !== firstObject;
-                      currentObject = this._scene.getNextObject(currentObject)) {
+                for (currentObject = this._scene.getNextObject(firstObject);
+                        currentObject !== firstObject;
+                        currentObject = this._scene.getNextObject(currentObject)) {
                     if (currentObject.getFirstCamera()) {
                         this.followCamera(currentObject.getFirstCamera(), 4000);
                         break;
@@ -2334,19 +2288,19 @@ define([
     };
 
     SceneCamera.prototype.followPreviousObject = function () {
+        var currentlyFollowedObject, firstObject, currentObject;
         if (this.followedCamera && this.followedCamera.followedObject) {
-            var currentlyFollowedObject = this.followedCamera.followedObject;
+            currentlyFollowedObject = this.followedCamera.followedObject;
             this.followCamera(this._scene.getPreviousObject(currentlyFollowedObject).getFirstView(), 4000);
             // if we are currently not following any cameras, just start following the first one
         } else {
-            var firstObject = this._scene.getFirstObject();
+            firstObject = this._scene.getFirstObject();
             if (firstObject.getFirstView()) {
                 this.followCamera(firstObject.getFirstView(), 4000);
             } else {
-                for (
-                      var currentObject = this._scene.getNextObject(firstObject);
-                      currentObject !== firstObject;
-                      currentObject = this._scene.getNextObject(currentObject)) {
+                for (currentObject = this._scene.getNextObject(firstObject);
+                        currentObject !== firstObject;
+                        currentObject = this._scene.getNextObject(currentObject)) {
                     if (currentObject.getFirstView()) {
                         this.followCamera(currentObject.getFirstView(), 4000);
                         break;
@@ -2387,40 +2341,35 @@ define([
      * new followed camera if it did not adapt to it fully yet.
      */
     SceneCamera.prototype.update = function () {
+        var currentTime, adaptationProgress, trans, newPositionMatrix, velocityMatrix, newFollowedPosition;
         if (this.followedCamera) {
             this.followedCamera.updateOrientation();
             this.followedCamera.updatePosition();
             if (this.adaptationTimeLeft > 0) {
-                var currentTime = new Date().getTime();
-                var adaptationProgress = Math.min(1.0, (currentTime - this.adaptationStartTime) / this.adaptationTime);
+                currentTime = new Date().getTime();
+                adaptationProgress = Math.min(1.0, (currentTime - this.adaptationStartTime) / this.adaptationTime);
                 this.adaptationTimeLeft = this.adaptationTime - (currentTime - this.adaptationStartTime);
-                var trans = mat.translation4(
-                      (this.followedCamera._positionMatrix[12] - this.adaptationStartPositionMatrix[12]) * adaptationProgress,
-                      (this.followedCamera._positionMatrix[13] - this.adaptationStartPositionMatrix[13]) * adaptationProgress,
-                      (this.followedCamera._positionMatrix[14] - this.adaptationStartPositionMatrix[14]) * adaptationProgress
-                      );
-                var newPositionMatrix = mat.translatedByM4(this.adaptationStartPositionMatrix, trans);
-                var velocityMatrix = mat.mul4(mat.translation4(
-                      newPositionMatrix[12] - this._positionMatrix[12],
-                      newPositionMatrix[13] - this._positionMatrix[13],
-                      newPositionMatrix[14] - this._positionMatrix[14]), this._orientationMatrix);
+                trans = mat.translation4((this.followedCamera._positionMatrix[12] - this.adaptationStartPositionMatrix[12]) * adaptationProgress,
+                        (this.followedCamera._positionMatrix[13] - this.adaptationStartPositionMatrix[13]) * adaptationProgress,
+                        (this.followedCamera._positionMatrix[14] - this.adaptationStartPositionMatrix[14]) * adaptationProgress);
+                newPositionMatrix = mat.translatedByM4(this.adaptationStartPositionMatrix, trans);
+                velocityMatrix = mat.mul4(mat.translation4(newPositionMatrix[12] - this._positionMatrix[12],
+                        newPositionMatrix[13] - this._positionMatrix[13],
+                        newPositionMatrix[14] - this._positionMatrix[14]), this._orientationMatrix);
                 this.velocityVector = [velocityMatrix[12], velocityMatrix[13], velocityMatrix[14]];
                 this._positionMatrix = newPositionMatrix;
-                this._orientationMatrix = mat.correctedOrthogonal4(mat.add4(
-                      mat.scaled4(this.adaptationStartOrientationMatrix, 1.0 - adaptationProgress),
-                      mat.scaled4(this.followedCamera._orientationMatrix, adaptationProgress)
-                      ));
+                this._orientationMatrix = mat.correctedOrthogonal4(mat.add4(mat.scaled4(this.adaptationStartOrientationMatrix, 1.0 - adaptationProgress),
+                        mat.scaled4(this.followedCamera._orientationMatrix, adaptationProgress)));
                 this.setFOV(this.adaptationStartFOV + (this.followedCamera._fov - this.adaptationStartFOV) * adaptationProgress);
                 this._previousFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
             } else {
                 this._positionMatrix = this.followedCamera._positionMatrix;
                 this._orientationMatrix = this.followedCamera._orientationMatrix;
                 this._perspectiveMatrix = this.followedCamera._perspectiveMatrix;
-                var newFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
-                var velocityMatrix = mat.mul4(mat.translation4(
-                      -newFollowedPosition[12] + this._previousFollowedPosition[12],
-                      -newFollowedPosition[13] + this._previousFollowedPosition[13],
-                      -newFollowedPosition[14] + this._previousFollowedPosition[14]), this._orientationMatrix);
+                newFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
+                velocityMatrix = mat.mul4(mat.translation4(-newFollowedPosition[12] + this._previousFollowedPosition[12],
+                        -newFollowedPosition[13] + this._previousFollowedPosition[13],
+                        -newFollowedPosition[14] + this._previousFollowedPosition[14]), this._orientationMatrix);
                 this.velocityVector = [velocityMatrix[12], velocityMatrix[13], velocityMatrix[14]];
                 this._previousFollowedPosition = newFollowedPosition;
             }
@@ -2437,7 +2386,7 @@ define([
             // to make this part transparent)
             i = 0;
             while ((i < logicContext.level._spacecrafts.length) &&
-                  (logicContext.level._spacecrafts[i].visualModel !== this.followedCamera.followedObject)) {
+                    (logicContext.level._spacecrafts[i].visualModel !== this.followedCamera.followedObject)) {
                 i++;
             }
             // if we found it, set the proper controller
@@ -2481,9 +2430,10 @@ define([
      * @param {Number} shadowMapTextureSize
      */
     LightSource.prototype.addToContext = function (context, index, shadowMappingEnabled, nRanges, shadowMapTextureSize) {
+        var i;
         this._index = index;
         if (shadowMappingEnabled && this.castsShadows) {
-            for (var i = 0; i < nRanges; i++) {
+            for (i = 0; i < nRanges; i++) {
                 context.addFrameBuffer(new managedGL.FrameBuffer("shadow-map-buffer-" + this._index + "-" + i, shadowMapTextureSize, shadowMapTextureSize));
             }
         }
@@ -2535,26 +2485,24 @@ define([
      * @param {boolean} clearDepthOnRender Whether to clear the depth buffer every time at the beginning of rendering the scene.
      * @param {LODContext} lodContext The LOD threshold and configuration to be used
      * for rendering object with the appropriate level of detail.
-     * @param {Object} [shadowMapping]
      */
-    function Scene(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext, shadowMapping) {
+    function Scene(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext) {
         this.left = left;
         this.top = top;
         this.width = width;
         this.height = height;
-
         this.clearColorOnRender = clearColorOnRender;
         this.colorMask = colorMask;
         this.clearColor = clearColor;
         this.clearDepthOnRender = clearDepthOnRender;
 
-        this._backgroundObjects = new Array();
-        this.objects = new Array();
-        this.cameras = new Array();
-        this.lights = new Array();
+        this._backgroundObjects = [];
+        this.objects = [];
+        this.cameras = [];
+        this.lights = [];
 
         // objects that will not be rendered, but their resources will be added
-        this._resourceHolderObjects = new Array();
+        this._resourceHolderObjects = [];
 
         this.setActiveCamera(new SceneCamera(width / height, 60, 1000));
 
@@ -2566,37 +2514,37 @@ define([
         this._shadowMapRanges = [];
         this._shadowMapDepthRatio = null;
 
-        this.uniformValueFunctions = new Object();
+        this.uniformValueFunctions = {};
 
         this.firstRender = true;
         this._drawnTriangles = 0;
 
-        this._contexts = new Array();
+        this._contexts = [];
 
         var self = this;
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
-        this.uniformValueFunctions['u_numLights'] = function () {
+        this.uniformValueFunctions.u_numLights = function () {
             return self.lights.length;
         };
-        this.uniformValueFunctions['u_lights'] = function () {
+        this.uniformValueFunctions.u_lights = function () {
             return self.lights;
         };
 
-        this.uniformValueFunctions['u_cameraMatrix'] = function () {
+        this.uniformValueFunctions.u_cameraMatrix = function () {
             return self.activeCamera.getCameraMatrix();
         };
-        this.uniformValueFunctions['u_cameraOrientationMatrix'] = function () {
+        this.uniformValueFunctions.u_cameraOrientationMatrix = function () {
             return self.activeCamera.getOrientationMatrix();
         };
-        this.uniformValueFunctions['u_projMatrix'] = function () {
+        this.uniformValueFunctions.u_projMatrix = function () {
             return self.activeCamera.getPerspectiveMatrix();
         };
-        this.uniformValueFunctions['u_eyePos'] = function () {
+        this.uniformValueFunctions.u_eyePos = function () {
             return new Float32Array(vec.scaled3(self.activeCamera.getPositionVector(), -1));
         };
-        this.uniformValueFunctions["u_shadows"] = function () {
+        this.uniformValueFunctions.u_shadows = function () {
             return self._shadowMappingEnabled;
         };
     }
@@ -2616,22 +2564,23 @@ define([
             this._shadowMapDepthRatio = null;
         }
         if (this._shadowMappingShader) {
-            this.uniformValueFunctions["u_numRanges"] = function () {
+            this.uniformValueFunctions.u_numRanges = function () {
                 return this._shadowMapRanges.length;
             }.bind(this);
-            this.uniformValueFunctions["u_shadowMapRanges"] = function () {
+            this.uniformValueFunctions.u_shadowMapRanges = function () {
                 return new Float32Array(this._shadowMapRanges);
             }.bind(this);
-            this.uniformValueFunctions["u_shadowMapDepthRatio"] = function () {
+            this.uniformValueFunctions.u_shadowMapDepthRatio = function () {
                 return this._shadowMapDepthRatio;
             }.bind(this);
         }
     };
 
     Scene.prototype.setShadowMapRanges = function (ranges) {
+        var i, j;
         this._shadowMapRanges = ranges;
-        for (var i = 0; i < this._contexts.length; i++) {
-            for (var j = 0; j < this.lights.length; j++) {
+        for (i = 0; i < this._contexts.length; i++) {
+            for (j = 0; j < this.lights.length; j++) {
                 this.lights[j].addToContext(this._contexts[i], j, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
             }
         }
@@ -2665,14 +2614,15 @@ define([
     };
 
     Scene.prototype.addObjectToContexts = function (newRenderableObject) {
-        for (var i = 0; i < this._contexts.length; i++) {
+        var i;
+        for (i = 0; i < this._contexts.length; i++) {
             newRenderableObject.addToContext(this._contexts[i]);
         }
     };
 
     Scene.prototype.clearObjects = function () {
-        this._backgroundObjects = new Array();
-        this.objects = new Array();
+        this._backgroundObjects = [];
+        this.objects = [];
     };
 
     /**
@@ -2688,11 +2638,12 @@ define([
      * @returns {RenderableObject}
      */
     Scene.prototype.getNextObject = function (currentObject) {
-        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
+        var i, _length_;
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === (this.objects.length - 1)) ?
-                      this.objects[0] :
-                      this.objects[i + 1]);
+                        this.objects[0] :
+                        this.objects[i + 1]);
             }
         }
         return this.objects[0];
@@ -2703,11 +2654,12 @@ define([
      * @returns {RenderableObject}
      */
     Scene.prototype.getPreviousObject = function (currentObject) {
-        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
+        var i, _length_;
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             if (this.objects[i] === currentObject) {
                 return ((i === 0) ?
-                      this.objects[this.objects.length - 1] :
-                      this.objects[i - 1]);
+                        this.objects[this.objects.length - 1] :
+                        this.objects[i - 1]);
             }
         }
         return this.objects[0];
@@ -2759,10 +2711,10 @@ define([
      * @param {Number} newHeight
      */
     Scene.prototype.resizeViewport = function (newWidth, newHeight) {
-        var i;
+        var i, _length_;
         this.width = newWidth;
         this.height = newHeight;
-        for (var i = 0, _length_ = this.cameras.length; i < _length_; i++) {
+        for (i = 0, _length_ = this.cameras.length; i < _length_; i++) {
             this.cameras[i].setAspect(this.width / this.height);
         }
         this.activeCamera.setAspect(this.width / this.height);
@@ -2784,7 +2736,8 @@ define([
      * marked for deletion.
      */
     Scene.prototype.cleanUp = function () {
-        for (var i = 0; i < this.objects.length; i++) {
+        var i;
+        for (i = 0; i < this.objects.length; i++) {
             this.objects[i].cleanUp();
             while ((i < this.objects.length) && ((!this.objects[i]) || (this.objects[i].canBeReused() === true))) {
                 this.objects[i] = null;
@@ -2801,16 +2754,15 @@ define([
         var i, _length_;
         if (this._shadowMappingEnabled) {
             this._shadowMappingShader.addToContext(context);
-            var self = this;
-            this.uniformValueFunctions['u_shadowMaps'] = function () {
-                var shadowMaps = new Array();
-                for (i = 0; i < self.lights.length; i++) {
-                    for (var j = 0; j < self._shadowMapRanges.length; j++) {
-                        shadowMaps.push(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j).getTextureBindLocation(context));
+            this.uniformValueFunctions.u_shadowMaps = function () {
+                var j, k, shadowMaps = [];
+                for (j = 0; j < this.lights.length; j++) {
+                    for (k = 0; k < this._shadowMapRanges.length; k++) {
+                        shadowMaps.push(context.getFrameBuffer("shadow-map-buffer-" + j + "-" + k).getTextureBindLocation(context));
                     }
                 }
                 return new Int32Array(shadowMaps);
-            };
+            }.bind(this);
         }
         for (i = 0; i < this.lights.length; i++) {
             this.lights[i].addToContext(context, i, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
@@ -2829,24 +2781,24 @@ define([
 
     Scene.prototype.enableShadowMapping = function () {
         if (this._shadowMappingShader && this._shadowMapRanges.length > 0) {
+            var i, l;
             this._shadowMappingEnabled = true;
+            this.uniformValueFunctions.u_shadowMaps = function () {
+                var j, k, shadowMaps = [];
+                for (j = 0; j < this.lights.length; j++) {
+                    for (k = 0; k < this._shadowMapRanges.length; k++) {
+                        shadowMaps.push(this._contexts[0].getFrameBuffer("shadow-map-buffer-" + j + "-" + k).getTextureBindLocation(this._contexts[0]));
+                    }
+                }
+                return new Int32Array(shadowMaps);
+            }.bind(this);
             // at the moment, actually only one shadow-mapped context is supported
             // because of how the uniform value functions work, but this code will
             // make it easier to change this later
-            for (var i = 0; i < this._contexts.length; i++) {
+            for (i = 0; i < this._contexts.length; i++) {
                 this._shadowMappingShader.addToContext(this._contexts[i]);
-                var self = this;
-                this.uniformValueFunctions['u_shadowMaps'] = function () {
-                    var shadowMaps = new Array();
-                    for (var j = 0; j < self.lights.length; j++) {
-                        for (var k = 0; k < self._shadowMapRanges.length; k++) {
-                            shadowMaps.push(self._contexts[0].getFrameBuffer("shadow-map-buffer-" + j + "-" + k).getTextureBindLocation(self._contexts[0]));
-                        }
-                    }
-                    return new Int32Array(shadowMaps);
-                };
-                for (var j = 0; j < this.lights.length; j++) {
-                    this.lights[j].addToContext(this._contexts[i], j, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
+                for (l = 0; l < this.lights.length; l++) {
+                    this.lights[l].addToContext(this._contexts[i], l, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
                 }
             }
         } else {
@@ -2860,13 +2812,15 @@ define([
 
     Scene.prototype.toggleShadowMapping = function () {
         this._shadowMappingEnabled = !this._shadowMappingEnabled;
-        this._shadowMappingEnabled ?
-              this.enableShadowMapping()
-              : this.disableShadowMapping();
+        if (this._shadowMappingEnabled) {
+            this.enableShadowMapping();
+        } else {
+            this.disableShadowMapping();
+        }
     };
 
     Scene.prototype.renderShadowMap = function (context) {
-        var gl = context.gl;
+        var i, _length_, gl = context.gl;
 
         gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
 
@@ -2877,7 +2831,7 @@ define([
         gl.depthMask(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             this.objects[i].renderToShadowMap(context, this.width, this.height);
         }
     };
@@ -2888,34 +2842,35 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype.render = function (context) {
+        var i, j, _length_, gl, camOri, cameraZ, clear;
         application.log("Rendering scene...", 3);
         this._drawnTriangles = 0;
 
-        var gl = context.gl;
+        gl = context.gl;
 
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
-        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             this.objects[i].resetForNewFrame();
         }
 
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
-            var camOri = mat.inverseOfRotation4(this.activeCamera.getOrientationMatrix());
-            var cameraZ = [camOri[8], camOri[9], camOri[10]];
-            for (var i = 0; i < this.lights.length; i++) {
+            camOri = mat.inverseOfRotation4(this.activeCamera.getOrientationMatrix());
+            cameraZ = [camOri[8], camOri[9], camOri[10]];
+            for (i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     this.lights[i].reset();
-                    for (var j = 0; j < this._shadowMapRanges.length; j++) {
+                    for (j = 0; j < this._shadowMapRanges.length; j++) {
                         this.lights[i].startShadowMap(context, this.activeCamera, cameraZ, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
                         this.renderShadowMap(context);
                     }
                 }
             }
-            for (var i = 0; i < this.lights.length; i++) {
+            for (i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
-                    for (var j = 0; j < this._shadowMapRanges.length; j++) {
+                    for (j = 0; j < this._shadowMapRanges.length; j++) {
                         context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), true);
                     }
                 }
@@ -2931,12 +2886,11 @@ define([
         }
 
         this.firstRender = false;
-
         // glClear is affected by the depth mask, so we need to turn it on here!
         // (it's disabled for the second (transparent) render pass)
         gl.depthMask(true);
         // clearing color and depth buffers as set for this scene
-        var clear = this.clearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
+        clear = this.clearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
         clear = this.clearDepthOnRender ? clear | gl.DEPTH_BUFFER_BIT : clear;
         gl.clear(clear);
 
@@ -2951,7 +2905,7 @@ define([
             this.assignUniforms(context, context.getCurrentShader());
         }
 
-        for (var i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
+        for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
             this._backgroundObjects[i].resetForNewFrame();
             this._backgroundObjects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this._backgroundObjects[i].getNumberOfDrawnTriangles();
@@ -2964,7 +2918,7 @@ define([
         // Z buffer writing turned on
         application.log("Rendering transparent phase...", 4);
         gl.disable(gl.BLEND);
-        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             application.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, true);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
@@ -2974,7 +2928,7 @@ define([
         application.log("Rendering opaque phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
-        for (var i = 0, _length_ = this.objects.length; i < _length_; i++) {
+        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             application.log("Rendering object " + i + "...", 4);
             this.objects[i].render(context, this.width, this.height, false);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
