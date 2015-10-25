@@ -27,6 +27,18 @@
             }
         },
         {
+            "name": "explosion",
+            "basepath": "explosion",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
             "name": "plasma",
             "basepath": "plasma_full",
             "format": "png",

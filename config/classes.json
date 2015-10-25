@@ -53,9 +53,296 @@
             "color": [0.6, 0.6, 0.6]
         }
     ],
+    "explosionClasses": [
+        {
+            "name": "smallHitExplosion",
+            "particleEmitters": [
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 25,
+                    "velocity": 30,
+                    "velocitySpread": 8,
+                    "initialNumber": 5,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0],
+                            "size": 0.35,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3],
+                            "size": 0.7,
+                            "timeToReach": 300
+                        },
+                        {
+                            "color": [1.0, 0.0, 0.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0],
+                            "size": 4.5,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.4],
+                            "size": 0,
+                            "timeToReach": 450
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "fighterExplosion",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0],
+                            "size": 40,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "velocity": 90,
+                    "velocitySpread": 20,
+                    "initialNumber": 7,
+                    "spawnNumber": 3,
+                    "spawnTime": 25,
+                    "duration": 25,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0],
+                            "size": 0.5,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 1.0],
+                            "size": 0.8,
+                            "timeToReach": 300
+                        },
+                        {
+                            "color": [1.0, 0.8, 0.0],
+                            "size": 0,
+                            "timeToReach": 300
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "velocity": 60,
+                    "velocitySpread": 20,
+                    "initialNumber": 9,
+                    "spawnNumber": 3,
+                    "spawnTime": 25,
+                    "duration": 25,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0],
+                            "size": 3.5,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3],
+                            "size": 7,
+                            "timeToReach": 200
+                        },
+                        {
+                            "color": [1.0, 0.5, 0.0],
+                            "size": 0,
+                            "timeToReach": 250
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [8, 8, 8],
+                    "velocity": 40,
+                    "velocitySpread": 10,
+                    "initialNumber": 12,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.8, 0.0],
+                            "size": 6,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.2, 0.0],
+                            "size": 0,
+                            "timeToReach": 450
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "smallShipExplosion",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [0.3, 0.9, 1.0],
+                            "size": 200,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [0.1, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 400
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [50, 150, 50],
+                    "initialNumber": 1,
+                    "spawnNumber": 1,
+                    "spawnTime": 300,
+                    "duration": 450,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0],
+                            "size": 140,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3],
+                            "size": 0,
+                            "timeToReach": 350
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [30, 90, 30],
+                    "velocity": 60,
+                    "velocitySpread": 20,
+                    "initialNumber": 15,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0],
+                            "size": 2.5,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 1.0],
+                            "size": 5,
+                            "timeToReach": 700
+                        },
+                        {
+                            "color": [1.0, 0.0, 0.0],
+                            "size": 0,
+                            "timeToReach": 700
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [40, 120, 40],
+                    "velocity": 50,
+                    "velocitySpread": 10,
+                    "initialNumber": 12,
+                    "spawnNumber": 5,
+                    "spawnTime": 100,
+                    "duration": 600,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0],
+                            "size": 25,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3],
+                            "size": 7,
+                            "timeToReach": 600
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0],
+                            "size": 0,
+                            "timeToReach": 200
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [10, 30, 10],
+                    "velocity": 100,
+                    "velocitySpread": 5,
+                    "initialNumber": 10,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0],
+                            "size": 1,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.0],
+                            "size": 0,
+                            "timeToReach": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     "projectileClasses": [
         {
             "name": "plasma",
+            "damage": 2,
             "shader": "billboard",
             "texture": "plasma",
             "size": 2.5,
@@ -66,10 +353,12 @@
                 "shader": "particle",
                 "texture": "flare",
                 "color": [0.0, 1.0, 0.0]
-            }
+            },
+            "explosion": "smallHitExplosion"
         },
         {
             "name": "proton",
+            "damage": 25,
             "shader": "billboard",
             "texture": "proton",
             "size": 8,
@@ -80,10 +369,12 @@
                 "shader": "particle",
                 "texture": "flare",
                 "color": [1.0, 1.0, 0.0]
-            }
+            },
+            "explosion": "smallHitExplosion"
         },
         {
             "name": "ion",
+            "damage": 85,
             "shader": "billboard",
             "texture": "ion",
             "size": 18,
@@ -94,7 +385,8 @@
                 "shader": "particle",
                 "texture": "flare",
                 "color": [0.0, 0.6, 1.0]
-            }
+            },
+            "explosion": "smallHitExplosion"
         }
     ],
     "weaponClasses": [

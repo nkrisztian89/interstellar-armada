@@ -10,7 +10,6 @@
 /*global define, Element, this */
 
 define([
-    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -22,26 +21,27 @@ define([
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (utils, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
+], function (vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
     "use strict";
     var
-          /**
-           * The length of impulse-like events in milliseconds (such as thruster bursts or 
-           * weapon shots)
-           * @type Number
-           */
-          timeBurstLength = 50,
-          /**
-           * The length of time while muzzle flashes are visible (and shrinking).
-           * @type Number
-           */
-          muzzleFlashTimeLength = 500,
-          /**
-           * Default seed to use for generating random numbers to alloc consistent
-           * and comparable testing.
-           * @type Number
-           */
-          defaultRandomSeed = 4718;
+            /**
+             * The length of impulse-like events in milliseconds (such as thruster bursts or 
+             * weapon shots)
+             * @type Number
+             */
+            timeBurstLength = 50,
+            /**
+             * The length of time while muzzle flashes are visible (and shrinking).
+             * @type Number
+             */
+            muzzleFlashTimeLength = 500,
+            /**
+             * Default seed to use for generating random numbers to alloc consistent
+             * and comparable testing.
+             * @type Number
+             */
+            defaultRandomSeed = 4718;
+    // ##############################################################################
     /**
      * @class Represents a skybox that can be added to a scene to render the
      * background using a cube mapped texture defined by the passed class of the
@@ -64,13 +64,14 @@ define([
         this._class.getResources();
         armada.resources().executeWhenReady(function () {
             scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
-                  this._class.getModel(),
-                  this._class.getShader(),
-                  "skybox",
-                  this._class.getCubemap(),
-                  scene.activeCamera));
+                    this._class.getModel(),
+                    this._class.getShader(),
+                    "skybox",
+                    this._class.getCubemap(),
+                    scene.activeCamera));
         }.bind(this));
     };
+    // ##############################################################################
     /**
      * Represents an "infinitely far away" object in space (typically a star)
      * that serves as a light source as well as is rendered as a set of 2D texture
@@ -111,18 +112,19 @@ define([
             var i, layers, layerParticle;
             layers = this._class.getLayers();
             for (i = 0; i < layers.length; i++) {
-                layerParticle = new budaScene.StaticParticle(
-                      layers[i].getModel(),
-                      layers[i].getShader(),
-                      layers[i].getTexture("emissive", "normal"),
-                      layers[i].getColor(),
-                      layers[i].getSize(),
-                      mat.translation4v(vec.scaled3(this._position, 4500)));
-                layerParticle.setRelSize(1.0);
+                layerParticle = budaScene.staticParticle(
+                        layers[i].getModel(),
+                        layers[i].getShader(),
+                        layers[i].getTexture("emissive", "normal"),
+                        layers[i].getColor(),
+                        layers[i].getSize(),
+                        mat.translation4v(vec.scaled3(this._position, 4500)));
+                layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);
             }
         }.bind(this));
     };
+    // ##############################################################################
     /**
      * Creates a dust particle object and adds it to the scene it's cloud it part
      * of right away.
@@ -158,9 +160,9 @@ define([
      */
     DustParticle.prototype.addToScene = function (cloudNode) {
         this._visualModel = new budaScene.PointParticle(
-              this._cloud.getClass().getModel(),
-              this._cloud.getClass().getShader(),
-              this._positionMatrix);
+                this._cloud.getClass().getModel(),
+                this._cloud.getClass().getShader(),
+                this._positionMatrix);
         cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
     };
     /**
@@ -171,8 +173,8 @@ define([
      */
     DustParticle.prototype.simulate = function (camera) {
         var i,
-              modelPos = this._visualModel.positionMatrix,
-              cameraPos = camera.getPositionMatrix();
+                modelPos = this._visualModel.positionMatrix,
+                cameraPos = camera.getPositionMatrix();
         for (i = 12; i < 15; i++) {
             if (modelPos[i] > -cameraPos[i] + this._range) {
                 this._visualModel.positionMatrix[i] -= this._range * 2;
@@ -182,6 +184,7 @@ define([
         }
         this._visualModel.matrix = this._visualModel.positionMatrix;
     };
+    // ##############################################################################
     /**
      * @class Represents a dust cloud containing dust particles that can indicate
      * direction and speed of movement of the camera for the player.
@@ -241,20 +244,20 @@ define([
         n = this._class.getNumberOfParticles();
         for (i = 0; i < n; i++) {
             particle = new DustParticle(
-                  this,
-                  mat.translation4(
-                        (Math.random() - 0.5) * 2 * this._class.getRange(),
-                        (Math.random() - 0.5) * 2 * this._class.getRange(),
-                        (Math.random() - 0.5) * 2 * this._class.getRange()));
+                    this,
+                    mat.translation4(
+                            (Math.random() - 0.5) * 2 * this._class.getRange(),
+                            (Math.random() - 0.5) * 2 * this._class.getRange(),
+                            (Math.random() - 0.5) * 2 * this._class.getRange()));
             this._particles.push(particle);
 
         }
         armada.resources().executeWhenReady(function () {
             var j, node;
             this._visualModel = new budaScene.PointCloud(
-                  this._class.getShader(),
-                  this._class.getColor(),
-                  this._class.getRange());
+                    this._class.getShader(),
+                    this._class.getColor(),
+                    this._class.getRange());
             node = scene.addObject(this._visualModel);
             for (j = 0; j < n; j++) {
                 this._particles[j].addToScene(node);
@@ -273,6 +276,146 @@ define([
             this._particles[i].simulate(camera);
         }
     };
+    // ##############################################################################
+    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction) {
+        /**
+         * @type ExplosionClass
+         */
+        this._class = explosionClass;
+        /**
+         * @type Float32Array
+         */
+        this._positionMatrix = positionMatrix;
+        /**
+         * @type Float32Array
+         */
+        this._orientationMatrix = orientationMatrix;
+        /**
+         * @type number[3]
+         */
+        this._direction = direction;
+        /**
+         * @type ParticleSystem
+         */
+        this._visualModel = null;
+        /**
+         * @type number
+         */
+        this._timeLeft = explosionClass.getDuration();
+
+    }
+
+    /**
+     * Returns whether this explosion object can be reused to represent a new
+     * explosion.
+     * @returns {Boolean}
+     */
+    Explosion.prototype.canBeReused = function () {
+        return (this._timeLeft <= 0);
+    };
+    Explosion.prototype.getEmitterParticleConstructor = function (index) {
+        var emitterDescriptor = this._class.getParticleEmitterDescriptors()[index];
+        return function () {
+            return new budaScene.Particle(emitterDescriptor.getModel(),
+                    emitterDescriptor.getShader(),
+                    emitterDescriptor.getTexture("emissive", "normal"),
+                    mat.identity4(),
+                    emitterDescriptor.getParticleStates(),
+                    false);
+        };
+    };
+    /**
+     * Creates the renderable object that can be used to represent this explosion
+     * in a visual scene, if it has not been created yet.
+     */
+    Explosion.prototype._createVisualModel = function () {
+        var i, particleEmitters = [], emitter, particleEmitterDescriptors = this._class.getParticleEmitterDescriptors();
+        for (i = 0; i < particleEmitterDescriptors.length; i++) {
+            switch (particleEmitterDescriptors[i].getType()) {
+                case "omnidirectional":
+                    emitter = new budaScene.OmnidirectionalParticleEmitter(mat.identity4(),
+                            this._orientationMatrix,
+                            particleEmitterDescriptors[i].getDimensions(),
+                            particleEmitterDescriptors[i].getVelocity(),
+                            particleEmitterDescriptors[i].getVelocitySpread(),
+                            particleEmitterDescriptors[i].getInitialNumber(),
+                            particleEmitterDescriptors[i].getSpawnNumber(),
+                            particleEmitterDescriptors[i].getSpawnTime(),
+                            particleEmitterDescriptors[i].getDuration(),
+                            this.getEmitterParticleConstructor(i));
+                    break;
+                case "unidirectional":
+                    emitter = new budaScene.UnidirectionalParticleEmitter(mat.identity4(),
+                            this._orientationMatrix,
+                            particleEmitterDescriptors[i].getDimensions(),
+                            this._direction,
+                            particleEmitterDescriptors[i].getDirectionSpread(),
+                            particleEmitterDescriptors[i].getVelocity(),
+                            particleEmitterDescriptors[i].getVelocitySpread(),
+                            particleEmitterDescriptors[i].getInitialNumber(),
+                            particleEmitterDescriptors[i].getSpawnNumber(),
+                            particleEmitterDescriptors[i].getSpawnTime(),
+                            particleEmitterDescriptors[i].getDuration(),
+                            this.getEmitterParticleConstructor(i));
+                    break;
+                case "planar":
+                    emitter = new budaScene.UnidirectionalParticleEmitter(mat.identity4(),
+                            this._orientationMatrix,
+                            particleEmitterDescriptors[i].getDimensions(),
+                            this._direction,
+                            particleEmitterDescriptors[i].getDirectionSpread(),
+                            particleEmitterDescriptors[i].getVelocity(),
+                            particleEmitterDescriptors[i].getVelocitySpread(),
+                            particleEmitterDescriptors[i].getInitialNumber(),
+                            particleEmitterDescriptors[i].getSpawnNumber(),
+                            particleEmitterDescriptors[i].getSpawnTime(),
+                            particleEmitterDescriptors[i].getDuration(),
+                            this.getEmitterParticleConstructor(i));
+                    break;
+            }
+            particleEmitters.push(emitter);
+        }
+        this._visualModel = this._visualModel || new budaScene.ParticleSystem(
+                this._positionMatrix,
+                mat.identity4(),
+                particleEmitters,
+                this._class.getDuration());
+    };
+    /**
+     * Adds a renderable node representing this explosion to the passed scene.
+     * @param {budaScene} scene The scene to which to add the renderable object
+     * presenting the explosion.
+     */
+    Explosion.prototype.addToScene = function (scene) {
+        this._class.getResources();
+        armada.resources().executeWhenReady(function () {
+            this._createVisualModel();
+            scene.addObject(this._visualModel);
+        }.bind(this));
+    };
+    /**
+     * Adds the resources required to render this explosion to the passed scene,
+     * so they get loaded at the next resource load as well as added to any context
+     * the scene is added to.
+     * @param {budaScene} scene
+     */
+    Explosion.prototype.addResourcesToScene = function (scene) {
+        this._class.getResources();
+        armada.resources().executeWhenReady(function () {
+            this._createVisualModel();
+            scene.addResourcesOfObject(this._visualModel);
+        }.bind(this));
+    };
+    /**
+     * Removes the renferences to the renderable object of the
+     * explosion and marks it for removel / reuse.
+     */
+    Explosion.prototype.destroy = function () {
+        this._timeLeft = 0;
+        this._visualModel.markAsReusable();
+        this._visualModel = null;
+    };
+    // ##############################################################################
     /**
      * @class Represents a projectile fired from a weapon.
      * @param {ProjectileClass} projectileClass The class of the projectile
@@ -302,12 +445,12 @@ define([
          * @type PhysicalObject
          */
         this._physicalModel = new physics.PhysicalObject(
-              projectileClass.getMass(),
-              positionMatrix || mat.identity4(),
-              orientationMatrix || mat.identity4(),
-              mat.scaling4(projectileClass.getSize()),
-              spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
-              []);
+                projectileClass.getMass(),
+                positionMatrix || mat.identity4(),
+                orientationMatrix || mat.identity4(),
+                mat.scaling4(projectileClass.getSize()),
+                spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
+                []);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
          * @type Number
@@ -339,12 +482,12 @@ define([
      */
     Projectile.prototype._createVisualModel = function () {
         this._visualModel = this._visualModel || new budaScene.Billboard(
-              this._class.getModel(),
-              this._class.getShader(),
-              this._class.getTexture("emissive", "normal"),
-              this._class.getSize(),
-              this._physicalModel.getPositionMatrix(),
-              this._physicalModel.getOrientationMatrix());
+                this._class.getModel(),
+                this._class.getShader(),
+                this._class.getTexture("emissive", "normal"),
+                this._class.getSize(),
+                this._physicalModel.getPositionMatrix(),
+                this._physicalModel.getOrientationMatrix());
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
@@ -365,10 +508,13 @@ define([
      * @param {budaScene} scene
      */
     Projectile.prototype.addResourcesToScene = function (scene) {
+        var explosion;
         this._class.getResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
+            explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0]);
+            explosion.addResourcesToScene(scene);
         }.bind(this));
     };
     /**
@@ -384,11 +530,11 @@ define([
     /**
      * Simulates the movement of the projectile and checks if it hit any objects.
      * @param {Number} dt The passed time since the last simulation in milliseconds.
-     * @param {PhysicalObject[]} hitObjects The list of objects that is possible for
+     * @param {Spacecraft[]} hitObjects The list of objects that is possible for
      * the projectile to hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjects) {
-        var i, positionVector, relPos, velocityVector, velocity, velocityDir;
+        var i, positionVector, relPos, velocityVector, velocity, velocityDir, explosion, physicalHitObject;
         this._timeLeft -= dt;
         if (this._timeLeft <= 0) {
             this.destroy();
@@ -398,12 +544,19 @@ define([
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             positionVector = mat.translationVector3(this._physicalModel.getPositionMatrix());
             for (i = 0; i < hitObjects.length; i++) {
-                if ((hitObjects[i] !== this._origin) && (hitObjects[i].checkHit(positionVector, [], 0))) {
-                    relPos = vec.sub3(positionVector, mat.translationVector3(hitObjects[i].getPositionMatrix()));
+                physicalHitObject = hitObjects[i].getPhysicalModel();
+                if (physicalHitObject && (physicalHitObject !== this._origin) && (physicalHitObject.checkHit(positionVector, [], 0))) {
+                    relPos = vec.sub3(positionVector, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     velocity = vec.length3(velocityVector);
                     velocityDir = vec.normal3(velocityVector);
-                    hitObjects[i].addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000, 1);
+                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000, 1);
+
+                    explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1));
+                    explosion.addToScene(this._visualModel.getNode().getScene());
+
+                    hitObjects[i].damage(this._class.getDamage());
+
                     this.destroy();
                 }
             }
@@ -473,14 +626,14 @@ define([
         armada.resources().executeWhenReady(function () {
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             this._visualModel = new budaScene.ShadedLODMesh(
-                  this._class.getModel(),
-                  this._class.getShader(),
-                  this._class.getTextures(["normal"]),
-                  this._slot.positionMatrix,
-                  this._slot.orientationMatrix,
-                  mat.identity4(),
-                  (wireframe === true),
-                  lod);
+                    this._class.getModel(),
+                    this._class.getShader(),
+                    this._class.getTextures(["normal"]),
+                    this._slot.positionMatrix,
+                    this._slot.orientationMatrix,
+                    mat.identity4(),
+                    (wireframe === true),
+                    lod);
             parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
         }.bind(this));
     };
@@ -488,20 +641,20 @@ define([
      * Returns the renderable object representing the muzzle flash that is visible
      * when the barrel having the passed index is firing a projectile.
      * @param {Number} barrelIndex
-     * @returns {DynamicParticle}
+     * @returns {Particle}
      */
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex) {
         var
-              projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
-              muzzleFlashPosMatrix = mat.translation4v(this._class.getBarrel(barrelIndex).getPositionVector());
-        return new budaScene.DynamicParticle(
-              projectileClass.getMuzzleFlash().getModel(),
-              projectileClass.getMuzzleFlash().getShader(),
-              projectileClass.getMuzzleFlash().getTexture("emissive", "normal"),
-              projectileClass.getMuzzleFlash().getColor(),
-              projectileClass.getSize(),
-              muzzleFlashPosMatrix,
-              muzzleFlashTimeLength);
+                projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
+                muzzleFlashPosMatrix = mat.translation4v(this._class.getBarrel(barrelIndex).getPositionVector());
+        return budaScene.dynamicParticle(
+                projectileClass.getMuzzleFlash().getModel(),
+                projectileClass.getMuzzleFlash().getShader(),
+                projectileClass.getMuzzleFlash().getTexture("emissive", "normal"),
+                projectileClass.getMuzzleFlash().getColor(),
+                projectileClass.getSize(),
+                muzzleFlashPosMatrix,
+                muzzleFlashTimeLength);
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
@@ -530,9 +683,9 @@ define([
      */
     Weapon.prototype.fire = function (projectiles) {
         var i, curTime, p,
-              orientationMatrix, scaledOriMatrix, weaponSlotPosVector, weaponSlotPosMatrix,
-              projectilePosMatrix, projectileOriMatrix,
-              projectileClass, barrelPosVector, muzzleFlash, barrels;
+                orientationMatrix, scaledOriMatrix, weaponSlotPosVector, weaponSlotPosMatrix,
+                projectilePosMatrix, projectileOriMatrix,
+                projectileClass, barrelPosVector, muzzleFlash, barrels;
         // check cooldown
         curTime = new Date();
         if ((curTime - this._lastFireTime) > this._class.getCooldown()) {
@@ -555,22 +708,22 @@ define([
                 this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash));
                 // add the projectile of this barrel
                 p = new Projectile(
-                      projectileClass,
-                      projectilePosMatrix,
-                      projectileOriMatrix,
-                      this._spacecraft,
-                      new physics.Force("", barrels[i].getForce(), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
+                        projectileClass,
+                        projectilePosMatrix,
+                        projectileOriMatrix,
+                        this._spacecraft,
+                        new physics.Force("", barrels[i].getForce(), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().addForceAndTorque(
-                      vec.sub3(
-                            mat.translationVector3(projectilePosMatrix),
-                            mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
-                      mat.getRowB43Neg(projectileOriMatrix),
-                      barrels[i].getForce(),
-                      timeBurstLength
-                      );
+                        vec.sub3(
+                                mat.translationVector3(projectilePosMatrix),
+                                mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
+                        mat.getRowB43Neg(projectileOriMatrix),
+                        barrels[i].getForce(),
+                        timeBurstLength
+                        );
             }
         }
     };
@@ -617,13 +770,14 @@ define([
     Thruster.prototype.addToScene = function (parentNode) {
         this._propulsionClass.getResources();
         armada.resources().executeWhenReady(function () {
-            this._visualModel = new budaScene.StaticParticle(
-                  this._propulsionClass.getThrusterBurnParticle().getModel(),
-                  this._propulsionClass.getThrusterBurnParticle().getShader(),
-                  this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", "normal"),
-                  this._propulsionClass.getThrusterBurnParticle().getColor(),
-                  this._slot.size,
-                  mat.translation4v(this._slot.positionVector));
+            this._visualModel = budaScene.staticParticle(
+                    this._propulsionClass.getThrusterBurnParticle().getModel(),
+                    this._propulsionClass.getThrusterBurnParticle().getShader(),
+                    this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", "normal"),
+                    this._propulsionClass.getThrusterBurnParticle().getColor(),
+                    this._slot.size,
+                    mat.translation4v(this._slot.positionVector));
+            this._visualModel.setRelativeSize(0);
             parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
             this._shipModel = parentNode.getRenderableObject();
         }.bind(this));
@@ -634,7 +788,7 @@ define([
      */
     Thruster.prototype._updateVisuals = function () {
         // set the size of the particle that shows the burn
-        this._visualModel.setRelSize(this._burnLevel);
+        this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
         this._shipModel.setParameter("luminosityFactors", this._slot.group, Math.min(1.0, 2 * this._burnLevel));
     };
@@ -785,9 +939,9 @@ define([
      */
     Propulsion.prototype.simulate = function () {
         var
-              directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix()),
-              yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
-              pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
+                directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix()),
+                yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
+                pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
         if (this._thrusterUses.forward.burn > 0) {
             this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.getThrust() * this._thrusterUses.forward.burn, directionVector, timeBurstLength);
         }
@@ -956,7 +1110,7 @@ define([
      */
     ManeuveringComputer.prototype.getFlightMode = function () {
         return this._compensated ?
-              (this._restricted ? "restricted" : "compensated") : "free";
+                (this._restricted ? "restricted" : "compensated") : "free";
     };
     /**
      * Switches to the next flight mode. (free / compensated / restricted)
@@ -979,8 +1133,8 @@ define([
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
         this._speedTarget = this._compensated ?
-              this._speedTarget + (intensity || this._speedIncrement) :
-              Number.MAX_VALUE;
+                this._speedTarget + (intensity || this._speedIncrement) :
+                Number.MAX_VALUE;
     };
     /**
      * Sets the target speed to the current speed if it is bigger. Only works 
@@ -1001,8 +1155,8 @@ define([
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
         this._speedTarget = this._compensated ?
-              this._speedTarget - (intensity || this._speedIncrement) :
-              -Number.MAX_VALUE;
+                this._speedTarget - (intensity || this._speedIncrement) :
+                -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed to the current speed if it is smaller. Only works 
@@ -1202,18 +1356,18 @@ define([
      */
     ManeuveringComputer.prototype.controlThrusters = function () {
         var
-              // grab flight parameters for velocity control
-              relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix(),
-              speed = relativeVelocityMatrix[13],
-              speedThreshold = 0.01,
-              // grab flight parameters for turning control
-              turningMatrix = this._spacecraft.getTurningMatrix(),
-              turnThreshold = 0.00002,
-              // cash possibly restricted turn parameters (in rad/5ms)
-              turningLimit = this._turningLimit,
-              yawTarget = this._yawTarget,
-              pitchTarget = this._pitchTarget,
-              yawAngle, pitchAngle, rollAngle;
+                // grab flight parameters for velocity control
+                relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix(),
+                speed = relativeVelocityMatrix[13],
+                speedThreshold = 0.01,
+                // grab flight parameters for turning control
+                turningMatrix = this._spacecraft.getTurningMatrix(),
+                turnThreshold = 0.00002,
+                // cash possibly restricted turn parameters (in rad/5ms)
+                turningLimit = this._turningLimit,
+                yawTarget = this._yawTarget,
+                pitchTarget = this._pitchTarget,
+                yawAngle, pitchAngle, rollAngle;
         // we will add the needed burn levels together, so start from zero
         this._spacecraft.resetThrusterBurn();
         // restrict turning according to current speed in restricted mode
@@ -1228,46 +1382,46 @@ define([
         yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]]));
         if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("yawRight",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
         } else if ((yawTarget - yawAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("yawLeft",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
         }
         // controlling pitch
         pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]]));
         if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchUp",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
         } else if ((pitchTarget - pitchAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchDown",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
         }
         // controlling roll
         rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]]));
         if ((this._rollTarget - rollAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("rollRight",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
         } else if ((this._rollTarget - rollAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("rollLeft",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
         }
         // controlling forward/reverse
         if ((this._speedTarget - speed) > speedThreshold) {
             this._spacecraft.addThrusterBurn("forward",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
         } else if ((this._speedTarget - speed) < -speedThreshold) {
             this._spacecraft.addThrusterBurn("reverse",
-                  Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget)));
+                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget)));
         }
         // controlling horizontal drift
         if (this._compensated || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeRight",
-                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
+                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
             } else if ((this._strafeTarget - speed) < -speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeLeft",
-                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
+                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
             }
         }
         // controlling vertical drift
@@ -1275,10 +1429,10 @@ define([
             speed = relativeVelocityMatrix[14];
             if ((this._liftTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("raise",
-                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed)));
+                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed)));
             } else if ((this._liftTarget - speed) < -speedThreshold) {
                 this._spacecraft.addThrusterBurn("lower",
-                      Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
+                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
             }
         }
         // reset the targets, as new controls are needed from the pilot in the
@@ -1314,6 +1468,10 @@ define([
          * @type SpacecraftClass
          */
         this._class = null;
+        /**
+         * @type number
+         */
+        this._hitpoints = null;
         /**
          * The renderable node that represents this spacecraft in a scene.
          * @name Spacecraft#_visualModel
@@ -1360,6 +1518,16 @@ define([
          * @type Projectile[]
          */
         this._projectileArray = null;
+        /**
+         * @type boolean
+         */
+        this._alive = true;
+        /**
+         * Negative, while the ship is not destoyed, set to zero upon start of destruction animation so
+         * that deletion of the spacecraft can take place at the appropriate time
+         * @type number
+         */
+        this._timeElapsedSinceDestruction = -1;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName);
@@ -1378,13 +1546,14 @@ define([
      */
     Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
         this._class = spacecraftClass;
+        this._hitpoints = this._class.getHitpoints();
         this._physicalModel = new physics.PhysicalObject(
-              this._class.getMass(),
-              positionMatrix || mat.identity4(),
-              orientationMatrix || mat.identity4(),
-              mat.identity4(),
-              mat.identity4(),
-              this._class.getBodies());
+                this._class.getMass(),
+                positionMatrix || mat.identity4(),
+                orientationMatrix || mat.identity4(),
+                mat.identity4(),
+                mat.identity4(),
+                this._class.getBodies());
         this._class.getResources();
         armada.resources().executeWhenReady(function () {
             this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
@@ -1441,7 +1610,7 @@ define([
      * @returns {Boolean}
      */
     Spacecraft.prototype.canBeReused = function () {
-        return false;
+        return !this._alive;
     };
     /**
      * Returns the 4x4 translation matrix describing the position of this 
@@ -1482,8 +1651,8 @@ define([
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
         return mat.mul4(
-              this._physicalModel.getVelocityMatrix(),
-              mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+                this._physicalModel.getVelocityMatrix(),
+                mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the 4x4 rotation matrix describing the current rotation of this
@@ -1492,10 +1661,10 @@ define([
      */
     Spacecraft.prototype.getTurningMatrix = function () {
         return mat.mul4(
-              mat.mul4(
-                    this._physicalModel.getOrientationMatrix(),
-                    this._physicalModel.getAngularVelocityMatrix()),
-              mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+                mat.mul4(
+                        this._physicalModel.getOrientationMatrix(),
+                        this._physicalModel.getAngularVelocityMatrix()),
+                mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
      * Returns the maximum acceleration the spacecraft can achieve using its
@@ -1505,8 +1674,8 @@ define([
      */
     Spacecraft.prototype.getMaxAcceleration = function () {
         return this._propulsion ?
-              this._propulsion.getThrust() / this._physicalModel.getMass() :
-              null;
+                this._propulsion.getThrust() / this._physicalModel.getMass() :
+                null;
     };
     /**
      * Returns the maximum angular acceleration the spacecraft can achieve using
@@ -1516,8 +1685,8 @@ define([
      */
     Spacecraft.prototype.getMaxAngularAcceleration = function () {
         return this._propulsion ?
-              this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
-              null;
+                this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
+                null;
     };
     /**
      * Returns the maximum turning rate the spacecraft can keep at the passed
@@ -1531,8 +1700,8 @@ define([
     };
     Spacecraft.prototype.getHitboxTextures = function () {
         var i, textureTypes,
-              textureResource = armada.resources().getTexture("white"),
-              result = {};
+                textureResource = armada.resources().getTexture("white"),
+                result = {};
         textureTypes = textureResource.getTypes();
         for (i = 0; i < textureTypes.length; i++) {
             result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], "normal");
@@ -1581,10 +1750,10 @@ define([
     Spacecraft.prototype.loadFromJSON = function (dataJSON, projectileArray) {
         var equipmentProfile;
         this._init(
-              armada.logic().getSpacecraftClass(dataJSON.class),
-              mat.translation4v(dataJSON.position),
-              mat.rotation4FromJSON(dataJSON.rotations),
-              projectileArray);
+                armada.logic().getSpacecraftClass(dataJSON.class),
+                mat.translation4v(dataJSON.position),
+                mat.rotation4FromJSON(dataJSON.rotations),
+                projectileArray);
         // equipping the created spacecraft
         // if there is an quipment tag...
         if (dataJSON.equipment) {
@@ -1763,22 +1932,22 @@ define([
      */
     Spacecraft.prototype._addHitboxModel = function (index) {
         var
-              phyModel =
-              armada.resources().getOrAddModel(
-              egomModel.cuboidModel(
-                    this._class.getName() + "-body" + index,
-                    this._class.getBodies()[index].getWidth(),
-                    this._class.getBodies()[index].getHeight(),
-                    this._class.getBodies()[index].getDepth(),
-                    [0.0, 1.0, 1.0, 0.5])),
-              hitZoneMesh = new budaScene.ShadedLODMesh(
-                    phyModel.getEgomModel(),
-                    this._class.getShader(),
-                    this.getHitboxTextures(),
-                    mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
-                    this._class.getBodies()[index].getOrientationMatrix(),
-                    mat.identity4(),
-                    false);
+                phyModel =
+                armada.resources().getOrAddModel(
+                egomModel.cuboidModel(
+                        this._class.getName() + "-body" + index,
+                        this._class.getBodies()[index].getWidth(),
+                        this._class.getBodies()[index].getHeight(),
+                        this._class.getBodies()[index].getDepth(),
+                        [0.0, 1.0, 1.0, 0.5])),
+                hitZoneMesh = new budaScene.ShadedLODMesh(
+                        phyModel.getEgomModel(),
+                        this._class.getShader(),
+                        this.getHitboxTextures(),
+                        mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
+                        this._class.getBodies()[index].getOrientationMatrix(),
+                        mat.identity4(),
+                        false);
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
     Spacecraft.prototype.getResources = function (lod, hitbox) {
@@ -1807,6 +1976,7 @@ define([
      * <li>weapons</li>
      * <li>thursterParticles</li>
      * <li>projectileResources</li>
+     * <li>explosion</li>
      * </ul>
      * @param {Function} callback
      * @returns {ParameterizedMesh} The renderable object created to represent the 
@@ -1829,27 +1999,30 @@ define([
                 this._propulsion.getResources();
             }
         }
+        if (addSupplements.explosion === true) {
+            this._class.getExplosionClass().getResources();
+        }
         armada.resources().executeWhenReady(function () {
-            var node;
+            var node, explosion;
             application.log("Adding spacecraft (" + this._class.getFullName() + ") to scene...", 2);
             this._visualModel = new budaScene.ParameterizedMesh(
-                  this._class.getModel(),
-                  this._class.getShader(),
-                  this._class.getTextures(["normal"]),
-                  this._physicalModel.getPositionMatrix(),
-                  this._physicalModel.getOrientationMatrix(),
-                  mat.scaling4(this._class.getModel().getScale()),
-                  (wireframe === true),
-                  lod,
-                  [{name: "luminosityFactors", length: 20}]);
+                    this._class.getModel(),
+                    this._class.getShader(),
+                    this._class.getTextures(["normal"]),
+                    this._physicalModel.getPositionMatrix(),
+                    this._physicalModel.getOrientationMatrix(),
+                    mat.scaling4(this._class.getModel().getScale()),
+                    (wireframe === true),
+                    lod,
+                    [{name: "luminosityFactors", length: 20}]);
             node = scene.addObject(this._visualModel);
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {
                 // add the parent objects for the hitboxes
                 this._hitbox = new budaScene.RenderableNode(new budaScene.RenderableObject3D(
-                      this._class.getShader(),
-                      false,
-                      false));
+                        this._class.getShader(),
+                        false,
+                        false));
                 // add the models for the hitboxes themselves
                 for (i = 0; i < this._class.getBodies().length; i++) {
                     this._addHitboxModel(i);
@@ -1874,6 +2047,11 @@ define([
                 for (i = 0; i < this._weapons.length; i++) {
                     this._weapons[i].addProjectileResourcesToScene(scene);
                 }
+            }
+            // add projectile resources
+            if (addSupplements.explosion === true) {
+                explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0]);
+                explosion.addResourcesToScene(scene);
             }
             if (callback) {
                 callback(this._visualModel);
@@ -1966,14 +2144,47 @@ define([
         this._visualModel.getNode().resetViewCameras();
     };
     /**
+     * @param {number} damage
+     */
+    Spacecraft.prototype.damage = function (damage) {
+        this._hitpoints -= damage;
+    };
+    /**
+     * 
+     */
+    Spacecraft.prototype.destroy = function () {
+        this._visualModel.getNode().markAsReusable();
+        this._visualModel = null;
+        this._physicalModel = null;
+        this._alive = false;
+    };
+    /**
      * Performs all the phyics and logic simulation of this spacecraft.
      * @param {Number} dt The elapsed time since the last simulation step, in
      * milliseconds.
      */
     Spacecraft.prototype.simulate = function (dt) {
-        if (this._propulsion) {
-            this._maneuveringComputer.controlThrusters();
-            this._propulsion.simulate(dt);
+        var explosion;
+        if (!this._alive) {
+            return;
+        }
+        if (this._hitpoints <= 0) {
+            if (this._timeElapsedSinceDestruction < 0) {
+                this._timeElapsedSinceDestruction = 0;
+                explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), this._physicalModel.getOrientationMatrix(), this._physicalModel.getVelocityMatrix());
+                explosion.addToScene(this._visualModel.getNode().getScene());
+            } else {
+                this._timeElapsedSinceDestruction += dt;
+                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() / 4)) {
+                    this.destroy();
+                    return;
+                }
+            }
+        } else {
+            if (this._propulsion) {
+                this._maneuveringComputer.controlThrusters();
+                this._propulsion.simulate(dt);
+            }
         }
         this._physicalModel.simulate(dt);
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
@@ -2033,14 +2244,14 @@ define([
         for (i = 0; i < dataJSON.skyboxes.length; i++) {
             this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(dataJSON.skyboxes[i].class)));
         }
-        
+
         this._backgroundObjects = [];
         for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
             this._backgroundObjects.push(new BackgroundObject(
-                  armada.logic().getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
-                  dataJSON.backgroundObjects[i].position.angleAlpha,
-                  dataJSON.backgroundObjects[i].position.angleBeta
-                  ));
+                    armada.logic().getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
+                    dataJSON.backgroundObjects[i].position.angleAlpha,
+                    dataJSON.backgroundObjects[i].position.angleBeta
+                    ));
         }
 
         this._dustClouds = [];
@@ -2136,7 +2347,7 @@ define([
     Level.prototype.getPilotedSpacecraft = function () {
         if (this._pilotedCraftIndex !== null) {
             return this._spacecrafts[this._pilotedCraftIndex];
-        } 
+        }
         return null;
     };
     // #########################################################################
@@ -2164,16 +2375,16 @@ define([
     Level.prototype.loadFromJSON = function (dataJSON) {
         var i, spacecraft;
         application.log("Loading level from JSON file...", 2);
-        
+
         if (dataJSON.environment.createFrom) {
             this._environment = armada.logic().getEnvironment(dataJSON.environment.createFrom);
         } else {
             this._environment = new Environment(dataJSON.environment);
         }
-        
+
         this._cameraStartPositionMatrix = mat.identity4();
         this._cameraStartOrientationMatrix = mat.identity4();
-        
+
         if (dataJSON.camera) {
             if (dataJSON.camera.position) {
                 this._cameraStartPositionMatrix = mat.translation4v(vec.scaled3(dataJSON.camera.position, -1));
@@ -2193,7 +2404,7 @@ define([
             }
             this._spacecrafts.push(spacecraft);
         }
-        
+
         application.log("Level successfully loaded.", 2);
     };
     /**
@@ -2221,7 +2432,7 @@ define([
             if (shipNumbersPerClass.hasOwnProperty(shipClass)) {
                 for (i = 0; i < shipNumbersPerClass[shipClass]; i++) {
                     orientation = orientationMatrix ?
-                          mat.matrix4(orientationMatrix) : mat.identity4();
+                            mat.matrix4(orientationMatrix) : mat.identity4();
                     if (randomTurnAroundZ) {
                         orientation = mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
                     }
@@ -2232,12 +2443,12 @@ define([
                         orientation = mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
                     }
                     this._spacecrafts.push(
-                          new Spacecraft(
-                                armada.logic().getSpacecraftClass(shipClass),
-                                mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
-                                orientation,
-                                this._projectiles,
-                                "default"));
+                            new Spacecraft(
+                                    armada.logic().getSpacecraftClass(shipClass),
+                                    mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
+                                    orientation,
+                                    this._projectiles,
+                                    "default"));
                 }
             }
         }
@@ -2256,10 +2467,11 @@ define([
                 hitboxes: true,
                 weapons: true,
                 thrusterParticles: true,
-                projectileResources: true
+                projectileResources: true,
+                explosion: true
             });
             this._spacecrafts[i].addCamerasForViews(scene);
-            this._hitObjects.push(this._spacecrafts[i].getPhysicalModel());
+            this._hitObjects.push(this._spacecrafts[i]);
         }
         if (this._cameraStartPositionMatrix) {
             scene.activeCamera.setPositionMatrix(this._cameraStartPositionMatrix);
@@ -2424,6 +2636,14 @@ define([
         return this._classResourceManager.getResource("dustCloudClasses", name);
     };
     /**
+     * Return the explosion class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ExplosionClass}
+     */
+    LogicContext.prototype.getExplosionClass = function (name) {
+        return this._classResourceManager.getResource("explosionClasses", name);
+    };
+    /**
      * Return the projectile class with the given name if it exists, otherwise null.
      * @param {String} name
      * @returns {ProjectileClass}
@@ -2487,9 +2707,9 @@ define([
      */
     LogicContext.prototype.getSpacecraftClassesInArray = function () {
         var
-              i,
-              result = [],
-              names = this._classResourceManager.getResourceNames("spacecraftClasses");
+                i,
+                result = [],
+                names = this._classResourceManager.getResourceNames("spacecraftClasses");
         for (i = 0; i < names.length; i++) {
             result.push(this.getSpacecraftClass(names[i]));
         }
@@ -2507,6 +2727,7 @@ define([
             "skyboxClasses": classes.SkyboxClass,
             "backgroundObjectClasses": classes.BackgroundObjectClass,
             "dustCloudClasses": classes.DustCloudClass,
+            "explosionClasses": classes.ExplosionClass,
             "projectileClasses": classes.ProjectileClass,
             "weaponClasses": classes.WeaponClass,
             "propulsionClasses": classes.PropulsionClass,

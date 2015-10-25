@@ -362,9 +362,9 @@ define([
         var alreadyBound = false;
         for (var i = 0; i < this._sceneCanvasBindings.length; i++) {
             if (
-                  (this._sceneCanvasBindings[i].scene === scene) &&
-                  (this._sceneCanvasBindings[i].canvas === canvas)
-                  ) {
+                    (this._sceneCanvasBindings[i].scene === scene) &&
+                    (this._sceneCanvasBindings[i].canvas === canvas)
+                    ) {
                 alreadyBound = true;
             }
         }
@@ -384,13 +384,14 @@ define([
      * Renders the scenes displayed on this screen.
      */
     HTMLScreenWithCanvases.prototype.render = function () {
-        var i;
+        var i, d, dt;
+        d = new Date();
+        dt = (this._renderTimes.length > 0) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             this._sceneCanvasBindings[i].scene.cleanUp();
-            this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext());
+            this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext(), dt);
         }
         if (this._renderLoop !== null) {
-            var d = new Date();
             this._renderTimes.push(d);
             while ((this._renderTimes.length > 1) && ((d - this._renderTimes[0]) > 1000)) {
                 this._renderTimes.shift();
@@ -437,7 +438,7 @@ define([
         var width = canvasElement.clientWidth;
         var height = canvasElement.clientHeight;
         if (canvasElement.width !== width ||
-              canvasElement.height !== height) {
+                canvasElement.height !== height) {
             // Change the size of the canvas to match the size it's being displayed
             canvasElement.width = width;
             canvasElement.height = height;
@@ -446,9 +447,9 @@ define([
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             if (this._sceneCanvasBindings[i].canvas === this._canvases[name]) {
                 this._sceneCanvasBindings[i].scene.resizeViewport(
-                      canvasElement.width,
-                      canvasElement.height
-                      );
+                        canvasElement.width,
+                        canvasElement.height
+                        );
             }
         }
     };

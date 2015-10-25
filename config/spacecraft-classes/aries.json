@@ -3,6 +3,7 @@
     "type": "corvette",
     "fullName": "Aries",
     "description": "The most common patrol ship of the Empire. Equipped with two rapid fire precision turrets, it is very efficient at taking out enemy fighters and light bombers. It is only lightly armored, which leaves good maneuverability its main protection against larger ships. ",
+    "hitpoints": 500,
     "model": "aries",
     "shader": "ship",
     "texture": "falcon",
@@ -305,5 +306,6 @@
                 "class": "imperialCorvetteMk1"
             }
         }
-    ]
+    ],
+    "explosion": "smallShipExplosion"
 }

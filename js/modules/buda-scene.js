@@ -444,9 +444,10 @@ define([
      * @param {Number} viewportWidth
      * @param {Number} viewportHeight
      * @param {LODContext} lodContext
+     * @param {number} dt
      * @returns {RenderParameters}
      */
-    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext) {
+    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt) {
         /**
          * @name RenderParameters#context
          * @type ManagedGLContext
@@ -466,11 +467,13 @@ define([
          * @name RenderParameters#parent
          * @type RenderableObject
          */
-        this.parent = parent;         /**
+        this.parent = parent;
+        /**
          * @name RenderParameters#camera
          * @type Camera
          */
-        this.camera = camera;         /**
+        this.camera = camera;
+        /**
          * @name RenderParameters#viewportWidth
          * @type Number
          */
@@ -485,6 +488,11 @@ define([
          * @type LODContext
          */
         this.lodContext = lodContext;
+        /**
+         * @name RenderParameters#dt
+         * @type number
+         */
+        this.dt = dt || 0;
     }
     // #########################################################################
     /**
@@ -651,8 +659,9 @@ define([
      * @param {Number} screenWidth
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
+     * @param {number} dt
      */
-    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask) {
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, dt) {
         this._renderParameters.context = context;
         this._renderParameters.depthMask = depthMask;
         this._renderParameters.scene = this._scene;
@@ -661,6 +670,7 @@ define([
         this._renderParameters.viewportWidth = screenWidth;
         this._renderParameters.viewportHeight = screenHeight;
         this._renderParameters.lodContext = this._scene.getLODContext();
+        this._renderParameters.dt = dt;
     };
     /**
      * Renders the object at this node and all subnodes, if visible.
@@ -668,15 +678,16 @@ define([
      * @param {Number} screenWidth
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
+     * @param {number} dt
      */
-    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask) {
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, dt) {
         var i;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, depthMask);
+            this.setRenderParameters(context, screenWidth, screenHeight, depthMask, dt);
             this._renderableObject.render(this._renderParameters);
             for (i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].render(context, screenWidth, screenHeight, depthMask);
+                this._subnodes[i].render(context, screenWidth, screenHeight, depthMask, dt);
             }
         }
     };
@@ -744,6 +755,15 @@ define([
         this._renderableObject.setShader(shader);
         for (i = 0; i < this._subnodes.length; i++) {
             this._subnodes[i].setShader(shader);
+        }
+    };
+    /**
+     */
+    RenderableNode.prototype.markAsReusable = function () {
+        var i;
+        this._renderableObject.markAsReusable();
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].markAsReusable();
         }
     };
     /**
@@ -921,7 +941,9 @@ define([
      */
     RenderableObject.prototype.addToContext = function (context) {
         var role;
-        this._shader.addToContext(context);
+        if (this._shader) {
+            this._shader.addToContext(context);
+        }
         for (role in this._textures) {
             if (this._textures.hasOwnProperty(role)) {
                 this._textures[role].addToContext(context);
@@ -1029,6 +1051,9 @@ define([
             this.prepareForRender(renderParameters);
             this.performRender(renderParameters);
             this.finishRender(renderParameters);
+        }
+        if (this.simulate && (renderParameters.dt > 0)) {
+            this.simulate(renderParameters.dt);
         }
     };
     /**
@@ -1496,7 +1521,8 @@ define([
      */
     ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function () {
         return (this._wireframe === false) && (this._currentLOD) ? this._model.getNumTriangles(this._currentLOD) : 0;
-    };     // #########################################################################
+    };
+    // #########################################################################
     /**
      * @class A mesh that has associated float parameter arrays, which can be 
      * set through this object and are passed to WebGL through uniforms before
@@ -1565,23 +1591,22 @@ define([
     ParameterizedMesh.prototype.setParameter = function (name, index, value) {
         this._parameterArrays[name][index] = value;
     };
-    ///TODO: continue refactoring from here
     // #########################################################################
     /**
      * @class Visual object that renders a 2D billboard transformed in 3D space.
      * @extends RenderableObject3D
      * @constructor
-     * @param {EgomModel} model The model to store the simple billboard data.
+     * @param {Model} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Texture} texture The texture that should be bound while rendering this object
      * @param {number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
-     * @returns {Billboard}
      */
     function Billboard(model, shader, texture, size, positionMatrix, orientationMatrix) {
         RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
-        this.setTexture("emissive", texture);         /**
+        this.setTexture("emissive", texture);
+        /**
          * @name Billboard#_model
          * @type Model
          */
@@ -1625,13 +1650,222 @@ define([
     };
     // #########################################################################
     /**
-     * Creates a dynamic particle type visual object that has a certain lifespan
-     * and GLSL takes into account its age when rendering. 
-     * @class Visual object that renders a 2D billboard positioned in 3D space and
-     * dynamically changing size during it's lifespan. Used for flashes and
+     * @struct Stores the attributes of a particle for a given state
+     * @param {number[3]} color
+     * @param {number} size
+     * @param {number} timeToReach
+     */
+    function ParticleState(color, size, timeToReach) {
+        /**
+         * When in this state, the particle is rendered with this color
+         * @type number[3]
+         */
+        this.color = color;
+        /**
+         * When in this state, the particle is rendered in this size
+         * @type number
+         */
+        this.size = size;
+        /**
+         * How many milliseconds does it take for the particle to transition to this state
+         * @type number
+         */
+        this.timeToReach = timeToReach;
+    }
+    ///TODO: continue refactoring from here
+    // #########################################################################
+    /**
+     * @class Visual object that renders a 2D billboard positioned in 3D space and can
+     * dynamically change size and color during it's lifespan. Used for flashes and
      * particle systems.
      * @extends RenderableObject3D
-     * @param {EgomModel} model The model to store the simple billboard data.
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {Texture} texture The texture that should be bound while rendering this object.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {Array<ParticleState>} states The list of states this particle will go through during its lifespan.
+     * If only one state is given, the particle will stay forever in that state
+     * @param {boolean} looping Whether to start over from the first state once the last one is reached (or to delete the particle)
+     */
+    function Particle(model, shader, texture, positionMatrix, states, looping) {
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.identity4());
+        this.setSmallestSizeWhenDrawn(4);
+        this.setTexture("emissive", texture);
+        /**
+         * @type Model
+         */
+        this._model = model;
+        /**
+         * @type number[3]
+         */
+        this._color = states[0].color;
+        /**
+         * @type number
+         */
+        this._size = states[0].size;
+        /**
+         * @type number
+         */
+        this._relativeSize = 1;
+        /**
+         * @type Array<ParticleState>
+         */
+        this._states = states;
+        /**
+         * @type number
+         */
+        this._currentStateIndex = 0;
+        /**
+         * @type boolean
+         */
+        this._looping = looping;
+        /**
+         * @type number
+         */
+        this._timeSinceLastTransition = 0;
+        /**
+         * @type Float32Array
+         */
+        this._velocityVector = [0, 0, 0];
+        /**
+         * @type boolean
+         */
+        this._shouldSimulate = false;
+        this.setUniformValueFunction("u_modelMatrix", function () {
+            return this.getModelMatrix();
+        });
+        this.setUniformValueFunction("u_billboardSize", function () {
+            return this._size * this._relativeSize;
+        });
+        this.setUniformValueFunction("u_color", function () {
+            return this._color;
+        });
+        this._updateShouldSimulate();
+    }
+
+    Particle.prototype = new RenderableObject3D();
+    Particle.prototype.constructor = Particle;
+
+    Particle.prototype._updateShouldSimulate = function () {
+        this._shouldSimulate = (this._states.length > 1) || (this._velocityVector && ((this._velocityVector[0] !== 0) || (this._velocityVector[1] !== 0) || (this._velocityVector[2] !== 0)));
+    };
+
+    /**
+     * @returns {number} The value of the relative size.
+     */
+    Particle.prototype.getRelativeSize = function () {
+        return this._relativeSize;
+    };
+
+    /**
+     * Updates the visibility as well based on the new size.
+     * @param {number} value The new value of the relative size.
+     */
+    Particle.prototype.setRelativeSize = function (value) {
+        this._relativeSize = value;
+        this._visible = this._relativeSize >= 0.001;
+    };
+
+    /**
+     * @returns {number[3]} 
+     */
+    Particle.prototype.getVelocityVector = function () {
+        return this._velocityMatrix;
+    };
+
+    /**
+     * @param {Float32Array} value
+     */
+    Particle.prototype.setVelocityVector = function (value) {
+        this._velocityVector = value;
+        this._updateShouldSimulate();
+    };
+
+    /**
+     * @override
+     * @param {ManagedGLContext} context
+     */
+    Particle.prototype.addToContext = function (context) {
+        RenderableObject3D.prototype.addToContext.call(this, context);
+        this._model.addToContext(context, false);
+    };
+
+    /**
+     * We are only rendering 2 triangles, so only returns false if there is a parent that is not
+     * visible, but does not perform real frustum check as that would be slower.
+     * @returns {boolean} Always true.
+     */
+    Particle.prototype.isInsideViewFrustum = function () {
+        return (this.getParent() && this.isInsideParent()) ? this.getParent().isInsideViewFrustum() : true;
+    };
+
+    /**
+     * @override
+     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
+     */
+    Particle.prototype.shouldBeRendered = function (renderParameters) {
+        if (RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters)) {
+            return this._size > 0;
+        }
+    };
+
+    /**
+     * @override
+     * Renders the particle, binding the needed texture.
+     * @param {RenderParameters} renderParameters
+     */
+    Particle.prototype.performRender = function (renderParameters) {
+        this._model.render(renderParameters.context, false);
+    };
+
+    /**
+     * @override
+     * @returns {Number} Always 2
+     */
+    Particle.prototype.getNumberOfDrawnTriangles = function () {
+        return 2;
+    };
+
+    /**
+     * Performs one simulation step, changing the attributes of the particle based on the state list
+     * and marking it for deletion if needed.
+     * @param {number} dt The time passed since the last simulation step in milliseconds
+     */
+    Particle.prototype.simulate = function (dt) {
+        var nextStateIndex, stateProgress;
+        if (!this._shouldSimulate) {
+            return;
+        }
+        if (this._states.length > 1) {
+            this._timeSinceLastTransition += dt;
+            nextStateIndex = (this._currentStateIndex + 1) % this._states.length;
+            while (this._timeSinceLastTransition >= this._states[nextStateIndex].timeToReach) {
+                if ((nextStateIndex === 0) && (!this._looping)) {
+                    this._size = 0;
+                    this.markAsReusable();
+                    return;
+                }
+                this._timeSinceLastTransition -= this._states[nextStateIndex].timeToReach;
+                nextStateIndex = (nextStateIndex + 1) % this._states.length;
+            }
+            this._currentStateIndex = (nextStateIndex - 1) % this._states.length;
+            stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
+
+            this._color[0] = this._states[this._currentStateIndex].color[0] * stateProgress + this._states[nextStateIndex].color[0] * (1 - stateProgress);
+            this._color[1] = this._states[this._currentStateIndex].color[1] * stateProgress + this._states[nextStateIndex].color[1] * (1 - stateProgress);
+            this._color[2] = this._states[this._currentStateIndex].color[2] * stateProgress + this._states[nextStateIndex].color[2] * (1 - stateProgress);
+
+            this._size = this._states[this._currentStateIndex].size * (1.0 - stateProgress) + this._states[nextStateIndex].size * stateProgress;
+        }
+        this.translatev(vec.scaled3(this._velocityVector, dt / 1000));
+    };
+    // #########################################################################
+    /**
+     * @class Visual object that renders a 2D billboard positioned in 3D space and
+     * dynamically changing size during it's lifespan. Used for flashes.
+     * @extends RenderableObject3D
+     * @param {Model} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Texture} texture The texture that should be bound while rendering this object.
      * @param {number[]} color The RGBA components of the color to modulate the billboard texture with.
@@ -1639,66 +1873,13 @@ define([
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {number} duration The lifespan of the particle in milliseconds.
      */
-    function DynamicParticle(model, shader, texture, color, size, positionMatrix, duration) {
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.scaling4(size));
-        this.setSmallestSizeWhenDrawn(4);
-        this.model = model;
-        this.setTexture("emissive", texture);
-        this.color = color;
-        this.creationTime = new Date().getTime();
-        this.duration = duration;
-        this.setUniformValueFunction("u_modelMatrix", function () {
-            return this.getModelMatrix();
-        });
-        this.setUniformValueFunction("u_billboardSize", function () {
-            return this._scalingMatrix[0];
-        });
-        this.setUniformValueFunction("u_relAge", function () {
-            return (new Date().getTime() - this.creationTime) / this.duration;
-        });
-        this.setUniformValueFunction("u_color", function () {
-            return this.color;
-        });
+    function dynamicParticle(model, shader, texture, color, size, positionMatrix, duration) {
+        return new Particle(model, shader, texture, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false);
     }
-
-    DynamicParticle.prototype = new RenderableObject3D();
-    DynamicParticle.prototype.constructor = DynamicParticle;
-
-    DynamicParticle.prototype.addToContext = function (context) {
-        RenderableObject3D.prototype.addToContext.call(this, context);
-        this.model.addToContext(context, false);
-    };
-
+    // #########################################################################
     /**
-     * Always returns true as is it faster to skip the check because anyway we are
-     * only rendering 2 triangles here.
-     * @returns {boolean} Always true.
-     */
-    DynamicParticle.prototype.isInsideViewFrustum = function () {
-        return (this.getParent() && this.isInsideParent()) ? this.getParent().isInsideViewFrustum() : true;
-    };
-
-    /**
-     * @override
-     * Renders the particle, binding the needed texture.
-     * @param {RenderParameters} renderParameters
-     */
-    DynamicParticle.prototype.performRender = function (renderParameters) {
-        if (new Date().getTime() >= this.creationTime + this.duration) {
-            this.toBeDeleted = true;
-        } else {
-            this.model.render(renderParameters.context, false);
-        }
-    };
-
-    DynamicParticle.prototype.getNumberOfDrawnTriangles = function () {
-        return 2;
-    };
-
-    /**
-     * Creates a static particle type visual object.
      * @class Visual object that renders a 2D billboard positioned in 3D space.
-     * @extends DynamicParticle
+     * @extends Particle
      * @param {EgomModel} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Texture} texture The texture that should be bound while rendering this object.
@@ -1706,50 +1887,162 @@ define([
      * @param {number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      */
-    function StaticParticle(model, shader, texture, color, size, positionMatrix) {
-        DynamicParticle.call(this, model, shader, texture, color, size, positionMatrix, 1000);
-        this._relSize = 0;
-
-        this.setUniformValueFunction("u_relAge", function () {
-            return 1.0 - this._relSize;
-        });
+    function staticParticle(model, shader, texture, color, size, positionMatrix) {
+        return new Particle(model, shader, texture, positionMatrix, [new ParticleState(color, size, 0)], false);
+    }
+    // #########################################################################
+    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
+        this._positionMatrix = positionMatrix;
+        this._orientationMatrix = orientationMatrix;
+        this._dimensions = dimensions;
+        this._initialNumber = initialNumber;
+        this._spawnNumber = spawnNumber;
+        this._spawnTime = spawnTime;
+        this._age = 0;
+        this._duration = duration;
+        this._lastSpawn = 0;
+        this._particleConstructor = particleConstructor;
     }
 
-    StaticParticle.prototype = new DynamicParticle();
-    StaticParticle.prototype.constructor = StaticParticle;
-
-    /**
-     * Getter function for the _relSize member.
-     * @returns {number} The value of the relative size.
-     */
-    StaticParticle.prototype.getRelSize = function () {
-        return this._relSize;
+    ParticleEmitter.prototype._createParticle = function () {
+        var particle, positionMatrix;
+        particle = this._particleConstructor();
+        positionMatrix = mat.translation4(this._positionMatrix[12] + (Math.random() - 0.5) * this._dimensions[0],
+                this._positionMatrix[13] + (Math.random() - 0.5) * this._dimensions[1],
+                this._positionMatrix[14] + (Math.random() - 0.5) * this._dimensions[2]);
+        particle.setPositionMatrix(mat.translation4v(mat.translationVector3(mat.mul4(positionMatrix, this._orientationMatrix))));
+        return particle;
     };
 
-    /**
-     * Setter function for the _relSize member. Also updates the visibility.
-     * @param {number} newValue The new value of the relative size.
-     */
-    StaticParticle.prototype.setRelSize = function (newValue) {
-        this._relSize = newValue;
-        this.visible = this._relSize >= 0.001;
-    };
-
-    StaticParticle.prototype.shouldBeRendered = function (renderParameters) {
-        if (DynamicParticle.prototype.shouldBeRendered.call(this, renderParameters)) {
-            return this._relSize > 0;
+    ParticleEmitter.prototype.emitParticles = function (dt) {
+        var particles, i;
+        particles = [];
+        if (this._age === 0) {
+            for (i = 0; i < this._initialNumber; i++) {
+                particles.push(this._createParticle());
+            }
         }
+        this._age += dt;
+        while (((this._age - this._lastSpawn) > this._spawnTime) && (this._spawnTime <= this._duration)) {
+            for (i = 0; i < this._spawnNumber; i++) {
+                particles.push(this._createParticle());
+            }
+            this._lastSpawn += this._spawnTime;
+        }
+        return particles;
     };
+    // #########################################################################
+    function OmnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+        this._velocity = velocity;
+        this._velocitySpread = velocitySpread;
+    }
+
+    OmnidirectionalParticleEmitter.prototype = new ParticleEmitter();
+    OmnidirectionalParticleEmitter.prototype.constructor = OmnidirectionalParticleEmitter;
+
+    OmnidirectionalParticleEmitter.prototype._createParticle = function () {
+        var velocity, velocityMatrix, particle = ParticleEmitter.prototype._createParticle.call(this);
+        velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
+        velocityMatrix = mat.translation4v([0, velocity, 0]);
+        velocityMatrix = mat.mul4(velocityMatrix, mat.rotation4([1, 0, 0], Math.random() * 2 * Math.PI));
+        velocityMatrix = mat.mul4(velocityMatrix, mat.rotation4([0, 0, 1], Math.random() * 2 * Math.PI));
+        particle.setVelocityVector(mat.translationVector3(velocityMatrix));
+        return particle;
+    };
+    // #########################################################################
+    function UnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, direction, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+        this._direction = direction;
+        this._directionSpread = directionSpread;
+        this._velocity = velocity;
+        this._velocitySpread = velocitySpread;
+    }
+
+    UnidirectionalParticleEmitter.prototype = new ParticleEmitter();
+    UnidirectionalParticleEmitter.prototype.constructor = UnidirectionalParticleEmitter;
+
+    UnidirectionalParticleEmitter.prototype._createParticle = function () {
+        var velocity, velocityMatrix, axis, particle = ParticleEmitter.prototype._createParticle.call(this);
+        velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
+        velocityMatrix = mat.translation4v(vec.scaled3(this._direction, velocity));
+        axis = (Math.abs(this._direction[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._direction[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
+        velocityMatrix = mat.mul4(velocityMatrix, mat.rotation4(axis, (Math.random() - 0.5) * this._directionSpread / 180.0 * Math.PI));
+        axis = vec.normal3(vec.cross3(axis, this._direction));
+        velocityMatrix = mat.mul4(velocityMatrix, mat.rotation4(axis, (Math.random() - 0.5) * this._directionSpread / 180.0 * Math.PI));
+        particle.setVelocityVector(mat.translationVector3(velocityMatrix));
+        return particle;
+    };
+
+    // #########################################################################
+    function PlanarParticleEmitter(positionMatrix, orientationMatrix, dimensions, planeNormal, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+        this._planeNormal = planeNormal;
+        this._directionSpread = directionSpread;
+        this._velocity = velocity;
+        this._velocitySpread = velocitySpread;
+    }
+
+    PlanarParticleEmitter.prototype = new ParticleEmitter();
+    PlanarParticleEmitter.prototype.constructor = UnidirectionalParticleEmitter;
+
+    PlanarParticleEmitter.prototype._createParticle = function () {
+        var directionVector, velocity, velocityMatrix, particle = ParticleEmitter.prototype._createParticle.call(this);
+        velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
+        directionVector = (Math.abs(this._planeNormal[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._planeNormal[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
+        directionVector = vec.normal3(vec.cross3(directionVector, this._planeNormal));
+        velocityMatrix = mat.translation4v(vec.scaled3(directionVector, velocity));
+        velocityMatrix = mat.mul4(velocityMatrix, mat.rotation4(vec.cross3(directionVector, this._planeNormal), (Math.random() - 0.5) * this._directionSpread / 180.0 * Math.PI));
+        velocityMatrix = mat.mul4(velocityMatrix, mat.rotation4(this._planeNormal, Math.random() * 2 * Math.PI));
+        particle.setVelocityVector(mat.translationVector3(velocityMatrix));
+        return particle;
+    };
+
+    // #########################################################################
+    /**
+     * @class 
+     * @extends RenderableObject3D
+     * @param {Float32Array} positionMatrix
+     * @param {Float32Array} velocityMatrix
+     * @param {Array<ParticleEmitter>} emitters
+     * @param {number} duration
+     */
+    function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration) {
+        RenderableObject3D.call(this, null, false, true, positionMatrix, mat.identity4(), mat.identity4());
+        this._velocityMatrix = velocityMatrix;
+        this._emitters = emitters;
+        this._age = 0;
+        this._duration = duration;
+    }
+
+    ParticleSystem.prototype = new RenderableObject3D();
+    ParticleSystem.prototype.constructor = ParticleSystem;
 
     /**
      * @override
-     * Renders the particle, binding the needed texture.
-     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
      */
-    StaticParticle.prototype.performRender = function (renderParameters) {
-        this.model.render(renderParameters.context, false);
+    ParticleSystem.prototype.shouldBeRendered = function () {
+        return false;
     };
 
+    ParticleSystem.prototype.simulate = function (dt) {
+        var i, j, particles;
+        if (this._age > this._duration) {
+            this.markAsReusable();
+            return;
+        }
+        this._age += dt;
+        for (i = 0; i < this._emitters.length; i++) {
+            particles = this._emitters[i].emitParticles(dt);
+            for (j = 0; j < particles.length; j++) {
+                this.getNode().addSubnode(new RenderableNode(particles[j]));
+            }
+        }
+        this.translatev(vec.scaled3(mat.translation4v(this._velocityMatrix), dt / 1000));
+    };
+
+    // #########################################################################
     /**
      * The cloud is rendered through rendering its particles.
      * This object only exists to set the uniforms common to all particles.
@@ -2840,8 +3133,9 @@ define([
      * Renders the whole scene applying the general configuration and then rendering
      * all visual objects in the graph.
      * @param {ManagedGLContext} context
+     * @param {number} dt
      */
-    Scene.prototype.render = function (context) {
+    Scene.prototype.render = function (context, dt) {
         var i, j, _length_, gl, camOri, cameraZ, clear;
         application.log("Rendering scene...", 3);
         this._drawnTriangles = 0;
@@ -2907,7 +3201,7 @@ define([
 
         for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
             this._backgroundObjects[i].resetForNewFrame();
-            this._backgroundObjects[i].render(context, this.width, this.height, false);
+            this._backgroundObjects[i].render(context, this.width, this.height, false, dt);
             this._drawnTriangles += this._backgroundObjects[i].getNumberOfDrawnTriangles();
         }
 
@@ -2920,7 +3214,7 @@ define([
         gl.disable(gl.BLEND);
         for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             application.log("Rendering object " + i + "...", 4);
-            this.objects[i].render(context, this.width, this.height, true);
+            this.objects[i].render(context, this.width, this.height, true, dt);
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
         }
         // second rendering pass: rendering the transparent triangles with 
@@ -2949,8 +3243,15 @@ define([
         ShadedLODMesh: ShadedLODMesh,
         ParameterizedMesh: ParameterizedMesh,
         Billboard: Billboard,
-        StaticParticle: StaticParticle,
-        DynamicParticle: DynamicParticle,
+        ParticleState: ParticleState,
+        Particle: Particle,
+        staticParticle: staticParticle,
+        dynamicParticle: dynamicParticle,
+        ParticleEmitter: ParticleEmitter,
+        OmnidirectionalParticleEmitter: OmnidirectionalParticleEmitter,
+        UnidirectionalParticleEmitter: UnidirectionalParticleEmitter,
+        PlanarParticleEmitter: PlanarParticleEmitter,
+        ParticleSystem: ParticleSystem,
         PointCloud: PointCloud,
         PointParticle: PointParticle
     };

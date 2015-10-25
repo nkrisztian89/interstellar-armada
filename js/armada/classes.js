@@ -467,6 +467,144 @@ define([
     DustCloudClass.prototype.getRange = function () {
         return this._range;
     };
+
+    // ##############################################################################
+    /**
+     * @class A simple class capable of loading the descriptor of a particle emitter 
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON] 
+     */
+    function ParticleEmitterDescriptor(dataJSON) {
+        TexturedModelClass.call(this, dataJSON);
+    }
+    ParticleEmitterDescriptor.prototype = new TexturedModelClass();
+    ParticleEmitterDescriptor.prototype.constructor = ParticleEmitterDescriptor;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ParticleEmitterDescriptor.prototype._loadData = function (dataJSON) {
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
+        this._type = dataJSON ? (dataJSON.type || "omnidirectional") : null;
+        this._dimensions = dataJSON ? (dataJSON.dimensions || [0, 0, 0]) : null;
+        this._directionSpread = (dataJSON && ((this._type === "unidirectional") || (this._type === "planar"))) ? (dataJSON.directionSpread || 0) : null;
+        this._velocity = dataJSON ? (dataJSON.velocity || 0) : null;
+        this._velocitySpread = dataJSON ? (dataJSON.velocitySpread || 0) : null;
+        this._initialNumber = dataJSON ? (dataJSON.initialNumber || 0) : null;
+        this._spawnNumber = dataJSON ? (dataJSON.spawnNumber || 0) : null;
+        this._spawnTime = dataJSON ? (dataJSON.spawnTime || 1) : null;
+        this._duration = dataJSON ? (dataJSON.duration || 1) : null;
+        this._particleStates = dataJSON ? (dataJSON.particleStates || []) : null;
+    };
+    /**
+     * @override
+     */
+    ParticleEmitterDescriptor.prototype.getResources = function () {
+        TexturedModelClass.prototype.getResources.call(this, {model: egomModel.squareModel("squareModel")});
+    };
+    /**
+     * @returns {string}
+     */
+    ParticleEmitterDescriptor.prototype.getType = function () {
+        return this._type;
+    };
+
+    ParticleEmitterDescriptor.prototype.getDimensions = function () {
+        return this._dimensions;
+    };
+
+    ParticleEmitterDescriptor.prototype.getDirectionSpread = function () {
+        return this._directionSpread;
+    };
+
+    ParticleEmitterDescriptor.prototype.getVelocity = function () {
+        return this._velocity;
+    };
+
+    ParticleEmitterDescriptor.prototype.getVelocitySpread = function () {
+        return this._velocitySpread;
+    };
+
+    ParticleEmitterDescriptor.prototype.getInitialNumber = function () {
+        return this._initialNumber;
+    };
+
+    ParticleEmitterDescriptor.prototype.getSpawnNumber = function () {
+        return this._spawnNumber;
+    };
+
+    ParticleEmitterDescriptor.prototype.getSpawnTime = function () {
+        return this._spawnTime;
+    };
+
+    ParticleEmitterDescriptor.prototype.getDuration = function () {
+        return this._duration;
+    };
+
+    ParticleEmitterDescriptor.prototype.getParticleStates = function () {
+        return this._particleStates;
+    };
+    // ##############################################################################
+    /**
+     * @class
+     * @augments GenericClass
+     * @param {Object} dataJSON
+     */
+    function ExplosionClass(dataJSON) {
+        GenericClass.call(this, dataJSON);
+    }
+    ExplosionClass.prototype = new GenericClass();
+    ExplosionClass.prototype.constructor = ExplosionClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ExplosionClass.prototype._loadData = function (dataJSON) {
+        var i;
+        GenericClass.prototype._loadData.call(this, dataJSON);
+
+        this._particleEmitterDescriptors = null;
+        if (dataJSON && dataJSON.particleEmitters) {
+            this._particleEmitterDescriptors = [];
+            for (i = 0; i < dataJSON.particleEmitters.length; i++) {
+                dataJSON.particleEmitters[i].name = "-";
+                this._particleEmitterDescriptors.push(new ParticleEmitterDescriptor(dataJSON.particleEmitters[i]));
+            }
+        }
+    };
+    /**
+     * 
+     */
+    ExplosionClass.prototype.getResources = function () {
+        var i;
+        for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
+            this._particleEmitterDescriptors[i].getResources();
+        }
+    };
+    /**
+     * 
+     */
+    ExplosionClass.prototype.getParticleEmitterDescriptors = function () {
+        return this._particleEmitterDescriptors;
+    };
+    /**
+     * 
+     * @returns {Number}
+     */
+    ExplosionClass.prototype.getDuration = function () {
+        var i, j, emitterDuration, particleStates, result = 0;
+        for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
+            emitterDuration = this._particleEmitterDescriptors[i].getDuration();
+            particleStates = this._particleEmitterDescriptors[i].getParticleStates();
+            for (j = 0; j < particleStates.length; j++) {
+                emitterDuration += particleStates[j].timeToReach;
+            }
+            if (emitterDuration > result) {
+                result = emitterDuration;
+            }
+        }
+        return result;
+    };
     // ##############################################################################
     /**
      * @class Projectiles such as bullets or plasma bursts can belong to different
@@ -487,6 +625,10 @@ define([
      */
     ProjectileClass.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * @type Number
+         */
+        this._damage = dataJSON ? (dataJSON.damage || 0) : null;
         /**
          * The size by which the model representing the projectile will be scaled.
          * @type Number
@@ -524,6 +666,10 @@ define([
                 application.crash();
             }
         }
+        /**
+         * @type ExplosionClass
+         */
+        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
     };
     /**
      * @override
@@ -531,6 +677,13 @@ define([
     ProjectileClass.prototype.getResources = function () {
         TexturedModelClass.prototype.getResources.call(this, {model: egomModel.turningBillboardModel("projectileModel-" + this.getName(), this._intersectionPositions)});
         this._muzzleFlash.getResources();
+        this._explosionClass.getResources();
+    };
+    /**
+     * @returns {Number}
+     */
+    ProjectileClass.prototype.getDamage = function () {
+        return this._damage;
     };
     /**
      * @returns {Number}
@@ -555,6 +708,12 @@ define([
      */
     ProjectileClass.prototype.getMuzzleFlash = function () {
         return this._muzzleFlash;
+    };
+    /**
+     * @returns {ExplosionClass}
+     */
+    ProjectileClass.prototype.getExplosionClass = function () {
+        return this._explosionClass;
     };
     // ##############################################################################
     /**
@@ -1066,6 +1225,10 @@ define([
          */
         this._description = dataJSON.description || application.crash();
         /**
+         * @type number
+         */
+        this._hitpoints = dataJSON.hitpoints || application.crash();
+        /**
          * The mass of the spacecraft in kilograms.
          * @type Number
          */
@@ -1078,9 +1241,9 @@ define([
         if (dataJSON.bodies) {
             for (i = 0; i < dataJSON.bodies.length; i++) {
                 this._bodies.push(new physics.Body(
-                      mat.translation4v(dataJSON.bodies[i].position || application.crash()),
-                      mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
-                      dataJSON.bodies[i].size));
+                        mat.translation4v(dataJSON.bodies[i].position || application.crash()),
+                        mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
+                        dataJSON.bodies[i].size));
             }
         } else {
             application.crash();
@@ -1172,6 +1335,10 @@ define([
                 this._equipmentProfiles[dataJSON.equipmentProfiles[i].name] = new EquipmentProfile(dataJSON.equipmentProfiles[i]);
             }
         }
+        /**
+         * @type ExplosionClass
+         */
+        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
     };
     /**
      * @returns {SpacecraftType}
@@ -1190,6 +1357,12 @@ define([
      */
     SpacecraftClass.prototype.getDescription = function () {
         return this._description;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getHitpoints = function () {
+        return this._hitpoints;
     };
     /**
      * @returns {Number}
@@ -1227,12 +1400,26 @@ define([
     SpacecraftClass.prototype.getViews = function () {
         return this._views;
     };
+    /**
+     * @returns {ExplosionClass}
+     */
+    SpacecraftClass.prototype.getExplosionClass = function () {
+        return this._explosionClass;
+    };
+    /**
+     * @override
+     */
+    SpacecraftClass.prototype.getResources = function () {
+        TexturedModelClass.prototype.getResources.call(this);
+        this._explosionClass.getResources();
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         SkyboxClass: SkyboxClass,
         BackgroundObjectClass: BackgroundObjectClass,
         DustCloudClass: DustCloudClass,
+        ExplosionClass: ExplosionClass,
         ProjectileClass: ProjectileClass,
         WeaponClass: WeaponClass,
         PropulsionClass: PropulsionClass,

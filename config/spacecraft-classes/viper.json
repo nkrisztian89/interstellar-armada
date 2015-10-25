@@ -3,6 +3,7 @@
     "type": "bomber",
     "fullName": "Viper",
     "description": "A light bomber class that has good self-defence and precision strike capabilities thanks to the large amount of smaller missiles it can carry and its relatively heavy armor and shielding.",
+    "hitpoints": 45,
     "model": "viper",
     "shader": "ship",
     "texture": "falcon",
@@ -393,5 +394,6 @@
                 "class": "imperialBomberMk1"
             }
         }
-    ]
+    ],
+    "explosion": "fighterExplosion"
 }

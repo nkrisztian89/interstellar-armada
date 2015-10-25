@@ -3,6 +3,7 @@
     "type": "cruiser",
     "fullName": "Libra",
     "description": "The main capital ship of the imperial armada. This class is equipped with protection against various threats. It sports heavy armor, both large caliber and small, precision turrets, two battle hangars that can house up to 48 fighters to battle off more maneuverable enemies if needed or bombers to support the already significant firepower of the cruiser, as well as state-of-the-art countermeasure and jammer systems.",
+    "hitpoints": 8000,
     "model": "libra",
     "shader": "ship",
     "texture": "libra",
@@ -614,5 +615,6 @@
                 "class": "imperialCruiserMk1"
             }
         }
-    ]
+    ],
+    "explosion": "smallShipExplosion"
 }
