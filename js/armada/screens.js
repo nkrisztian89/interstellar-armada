@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, document */
+/*global define, document, setInterval, clearInterval */
 
 define([
     "utils/utils",
@@ -50,13 +50,11 @@ define([
         }));
 
         /**
-         * @name BattleScreen#_level
          * @type Level
          */
         this._level = null;
         /**
-         * @name BattleScreen#_battleScene
-         * @type budaScene
+         * @type Scene
          */
         this._battleScene = null;
         this._simulationLoop = null;
@@ -72,27 +70,32 @@ define([
         document.body.style.cursor = 'default';
         clearInterval(this._simulationLoop);
         this._simulationLoop = null;
+        if (this._battleScene) {
+            this._battleScene.setShouldAnimate(false);
+        }
     };
 
     BattleScreen.prototype.resumeBattle = function () {
+        var prevDate, freq;
         document.body.style.cursor = this._battleCursor || 'default';
         if (this._simulationLoop === null) {
-            var prevDate = new Date();
-            var freq = 60;
-            var self = this;
+            prevDate = new Date();
+            freq = 60;
 
-            this._simulationLoop = setInterval(function ()
-            {
+            if (this._battleScene) {
+                this._battleScene.setShouldAnimate(true);
+            }
+            this._simulationLoop = setInterval(function () {
                 var curDate = new Date();
                 armada.control().control();
-                self._level.tick(curDate - prevDate);
-                self._battleScene.activeCamera.update();
+                this._level.tick(curDate - prevDate);
+                this._battleScene.activeCamera.update();
                 prevDate = curDate;
-            }, 1000 / freq);
+            }.bind(this), 1000 / freq);
             armada.control().startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
-                  "No action was taken, to avoid double-running the simulation.");
+                    "No action was taken, to avoid double-running the simulation.");
         }
 
     };
@@ -243,9 +246,9 @@ define([
         var craft = this._level.getPilotedSpacecraft();
         if (craft) {
             this._ui.setContent(
-                  craft.getFlightMode() + " flight mode<br/>" +
-                  "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
-                  ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+                    craft.getFlightMode() + " flight mode<br/>" +
+                    "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
+                    ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
         }
     };
 
@@ -263,8 +266,8 @@ define([
         this._loadingBox.show();
         this.resizeCanvases();
         armada.control().setScreenCenter(
-              this.getScreenCanvas("battleCanvas").getCanvasElement().width / 2,
-              this.getScreenCanvas("battleCanvas").getCanvasElement().height / 2);
+                this.getScreenCanvas("battleCanvas").getCanvasElement().width / 2,
+                this.getScreenCanvas("battleCanvas").getCanvasElement().height / 2);
 
         this._level = new logic.Level();
 
@@ -280,10 +283,10 @@ define([
                 armada.resources().getShader("shadowMapping");
             }
             this._battleScene = new budaScene.Scene(
-                  0, 0, canvas.width, canvas.height,
-                  true, [true, true, true, true],
-                  [0, 0, 0, 1], true,
-                  armada.graphics().getLODContext());
+                    0, 0, canvas.width, canvas.height,
+                    true, [true, true, true, true],
+                    [0, 0, 0, 1], true,
+                    armada.graphics().getLODContext());
             this._level.addToScene(this._battleScene);
 
             armada.control().getController("general").setLevel(this._level);
@@ -499,10 +502,10 @@ define([
         // create a new scene and add a directional light source which will not change
         // while different objects are shown
         this._scene = new budaScene.Scene(
-              0, 0, canvas.clientWidth, canvas.clientHeight,
-              true, [true, true, true, true],
-              [0, 0, 0, 0], true,
-              armada.graphics().getLODContext());
+                0, 0, canvas.clientWidth, canvas.clientHeight,
+                true, [true, true, true, true],
+                [0, 0, 0, 0], true,
+                armada.graphics().getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
         armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
@@ -610,12 +613,12 @@ define([
             // create a ship that can be used to add the models (ship with default weapons
             // to the scene
             this._item = new logic.Spacecraft(
-                  shipClass,
-                  mat.identity4(),
-                  mat.identity4(),
-                  null,
-                  "default"
-                  );
+                    shipClass,
+                    mat.identity4(),
+                    mat.identity4(),
+                    null,
+                    "default"
+                    );
             // request the required shaders from the resource manager
             armada.resources().getShader("oneColorReveal");
             if (armada.graphics().getShadowMapping()) {
@@ -628,8 +631,8 @@ define([
                 this._solidModel = model;
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
                 this._solidModel.getNode().setShader(armada.graphics().getShadowMapping() ?
-                      armada.resources().getShader("shadowMapReveal").getManagedShader()
-                      : armada.resources().getShader("simpleReveal").getManagedShader());
+                        armada.resources().getShader("shadowMapReveal").getManagedShader()
+                        : armada.resources().getShader("simpleReveal").getManagedShader());
                 // set the necessary uniform functions for the reveal shader
                 this._solidModel.setUniformValueFunction("u_revealFront", function () {
                     return true;
@@ -670,14 +673,14 @@ define([
                 this._itemLengthInMeters = this._item.getVisualModel()._model.getHeightInMeters();
                 this._itemFront = this._item.getVisualModel()._model.getMaxY();
                 this._itemDescription.setContent(
-                      shipClass.getDescription() + "<br/>" +
-                      "<br/>" +
-                      "Length: " + (((this._itemLengthInMeters) < 100) ?
-                            (this._itemLengthInMeters).toPrecision(3)
-                            : Math.round(this._itemLengthInMeters)) +
-                      " m<br/>" +
-                      "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
-                      "Thrusters: " + shipClass.getThrusterSlots().length);
+                        shipClass.getDescription() + "<br/>" +
+                        "<br/>" +
+                        "Length: " + (((this._itemLengthInMeters) < 100) ?
+                                (this._itemLengthInMeters).toPrecision(3)
+                                : Math.round(this._itemLengthInMeters)) +
+                        " m<br/>" +
+                        "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
+                        "Thrusters: " + shipClass.getThrusterSlots().length);
                 // this will create the GL context if needed or update it with the new
                 // data if it already exists
                 this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));
@@ -948,12 +951,12 @@ define([
             // new key for the action
             var interpreter = armada.control().getInterpreter("keyboard");
             interpreter.setAndStoreKeyBinding(new Control.KeyBinding(
-                  this._actionUnderSetting,
-                  utils.getKeyOfCode(event.keyCode),
-                  this._settingShiftState,
-                  this._settingCtrlState,
-                  this._settingAltState
-                  ));
+                    this._actionUnderSetting,
+                    utils.getKeyOfCode(event.keyCode),
+                    this._settingShiftState,
+                    this._settingCtrlState,
+                    this._settingAltState
+                    ));
             this.stopKeySetting();
         }
     };

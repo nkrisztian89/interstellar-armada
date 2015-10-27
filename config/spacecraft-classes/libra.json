@@ -543,6 +543,21 @@
             ]
         },
         {
+            "name": "cannon",
+            "fov": 90,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [145, 50, 16],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -90
+                }
+            ]
+        },
+        {
             "name": "free",
             "fov": 60,
             "followsPosition": true,

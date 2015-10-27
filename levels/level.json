@@ -55,6 +55,36 @@
             "position": [-60, -50, -280]
         },
         {
+            "class": "aries",
+            "position": [160, 750, -295],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        },
+        {
+            "class": "falcon",
+            "position": [180, 650, -285],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        },
+        {
+            "class": "falcon",
+            "position": [220, 690, -285],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        },
+        {
             "class": "taurus",
             "position": [200, -80, -350],
             "rotations": [

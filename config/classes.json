@@ -15,13 +15,13 @@
                     "size": 300,
                     "shader": "backgroundBillboard",
                     "texture": "flare",
-                    "color": [1.0, 1.0, 0.0]
+                    "color": [1.0, 1.0, 0.0, 1.0]
                 },
                 {
                     "size": 250,
                     "shader": "backgroundBillboard",
                     "texture": "flare",
-                    "color": [1.0, 1.0, 1.0]
+                    "color": [1.0, 1.0, 1.0, 1.0]
                 }
             ]
         },
@@ -33,13 +33,13 @@
                     "size": 150,
                     "shader": "backgroundBillboard",
                     "texture": "flare",
-                    "color": [0.1, 1.0, 1.0]
+                    "color": [0.1, 1.0, 1.0, 1.0]
                 },
                 {
                     "size": 50,
                     "shader": "backgroundBillboard",
                     "texture": "flare",
-                    "color": [1.0, 1.0, 1.0]
+                    "color": [1.0, 1.0, 1.0, 1.0]
                 }
             ]
         }
@@ -71,17 +71,17 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 0.5, 0.0],
+                            "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0.35,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.3],
+                            "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 0.7,
                             "timeToReach": 300
                         },
                         {
-                            "color": [1.0, 0.0, 0.0],
+                            "color": [1.0, 0.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 500
                         }
@@ -100,12 +100,12 @@
                     "texture": "flare",
                     "particleStates": [
                         {
-                            "color": [1.0, 1.0, 1.0],
+                            "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 4.5,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.4],
+                            "color": [1.0, 1.0, 0.4, 1.0],
                             "size": 0,
                             "timeToReach": 450
                         }
@@ -124,14 +124,36 @@
                     "texture": "flare",
                     "particleStates": [
                         {
-                            "color": [1.0, 1.0, 1.0],
+                            "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 40,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.3],
+                            "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 0,
                             "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 0,
+                    "spawnNumber": 1,
+                    "spawnTime": 75,
+                    "duration": 75,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.0, 0.0, 0.0],
+                            "size": 25,
+                            "timeToReach": 600
                         }
                     ]
                 },
@@ -148,17 +170,17 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 1.0, 0.0],
+                            "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0.5,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 1.0],
+                            "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 0.8,
                             "timeToReach": 300
                         },
                         {
-                            "color": [1.0, 0.8, 0.0],
+                            "color": [1.0, 0.8, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 300
                         }
@@ -177,17 +199,17 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 0.5, 0.0],
+                            "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 3.5,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.3],
+                            "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 7,
                             "timeToReach": 200
                         },
                         {
-                            "color": [1.0, 0.5, 0.0],
+                            "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 250
                         }
@@ -203,12 +225,12 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 0.8, 0.0],
+                            "color": [1.0, 0.8, 0.0, 1.0],
                             "size": 6,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 0.2, 0.0],
+                            "color": [1.0, 0.2, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 450
                         }
@@ -227,12 +249,12 @@
                     "texture": "flare",
                     "particleStates": [
                         {
-                            "color": [0.3, 0.9, 1.0],
+                            "color": [0.3, 0.9, 1.0, 1.0],
                             "size": 200,
                             "timeToReach": 0
                         },
                         {
-                            "color": [0.1, 0.6, 1.0],
+                            "color": [0.1, 0.6, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 400
                         }
@@ -249,12 +271,12 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 1.0, 1.0],
+                            "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 140,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.3],
+                            "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 0,
                             "timeToReach": 350
                         }
@@ -270,17 +292,17 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 1.0, 0.0],
+                            "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 2.5,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 1.0],
+                            "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 5,
                             "timeToReach": 700
                         },
                         {
-                            "color": [1.0, 0.0, 0.0],
+                            "color": [1.0, 0.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 700
                         }
@@ -299,17 +321,17 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 0.5, 0.0],
+                            "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 25,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.3],
+                            "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 7,
                             "timeToReach": 600
                         },
                         {
-                            "color": [1.0, 0.3, 0.0],
+                            "color": [1.0, 0.3, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 200
                         }
@@ -325,12 +347,12 @@
                     "texture": "explosion",
                     "particleStates": [
                         {
-                            "color": [1.0, 1.0, 1.0],
+                            "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 1,
                             "timeToReach": 0
                         },
                         {
-                            "color": [1.0, 1.0, 0.0],
+                            "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 1000
                         }
@@ -352,7 +374,7 @@
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",
-                "color": [0.0, 1.0, 0.0]
+                "color": [0.0, 1.0, 0.0, 1.0]
             },
             "explosion": "smallHitExplosion"
         },
@@ -368,7 +390,7 @@
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",
-                "color": [1.0, 1.0, 0.0]
+                "color": [1.0, 1.0, 0.0, 1.0]
             },
             "explosion": "smallHitExplosion"
         },
@@ -384,7 +406,7 @@
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",
-                "color": [0.0, 0.6, 1.0]
+                "color": [0.0, 0.6, 1.0, 1.0]
             },
             "explosion": "smallHitExplosion"
         }
@@ -471,7 +493,7 @@
             "name": "imperialFighterMk1",
             "shader": "permanentParticle",
             "texture": "flare",
-            "color": [0.0, 0.8, 1.0],
+            "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
             "referenceMass": 10000,
             "thrust": 50,
@@ -481,7 +503,7 @@
             "name": "imperialBomberMk1",
             "shader": "permanentParticle",
             "texture": "flare",
-            "color": [0.0, 0.8, 1.0],
+            "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
             "referenceMass": 35000,
             "thrust": 30,
@@ -491,7 +513,7 @@
             "name": "imperialCorvetteMk1",
             "shader": "permanentParticle",
             "texture": "flare",
-            "color": [0.0, 0.8, 1.0],
+            "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
             "referenceMass": 800000,
             "thrust": 15,
@@ -501,7 +523,7 @@
             "name": "imperialFrigateMk1",
             "shader": "permanentParticle",
             "texture": "flare",
-            "color": [0.0, 0.8, 1.0],
+            "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
             "referenceMass": 2200000,
             "thrust": 10,
@@ -511,7 +533,7 @@
             "name": "imperialCruiserMk1",
             "shader": "permanentParticle",
             "texture": "flare",
-            "color": [0.0, 0.8, 1.0],
+            "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
             "referenceMass": 25000000,
             "thrust": 5,

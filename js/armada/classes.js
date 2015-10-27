@@ -316,10 +316,10 @@ define([
         this._size = dataJSON ? (dataJSON.size || 1) : null;
         /**
          * The color that can be passed to the shader to modulate the texture with
-         * while rendering. [red,green,blue]
-         * @type Number[3]
+         * while rendering. [red,green,blue, alpha]
+         * @type Number[4]
          */
-        this._color = dataJSON ? (dataJSON.color || [1, 1, 1]) : null;
+        this._color = dataJSON ? (dataJSON.color || [1, 1, 1, 1]) : null;
     };
     /**
      * @override
@@ -469,6 +469,7 @@ define([
     };
 
     // ##############################################################################
+    ///TODO: review and properly document class
     /**
      * @class A simple class capable of loading the descriptor of a particle emitter 
      * @augments TexturedModelClass
@@ -545,6 +546,7 @@ define([
         return this._particleStates;
     };
     // ##############################################################################
+    ///TODO: review and properly document class
     /**
      * @class
      * @augments GenericClass
@@ -626,6 +628,7 @@ define([
     ProjectileClass.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
+         * The amount of damage this projectile causes when it hits a spacecraft.
          * @type Number
          */
         this._damage = dataJSON ? (dataJSON.damage || 0) : null;
@@ -667,6 +670,7 @@ define([
             }
         }
         /**
+         * The class of the explosion this spacecraft creates when it hits a spacecraft.
          * @type ExplosionClass
          */
         this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
@@ -1336,6 +1340,7 @@ define([
             }
         }
         /**
+         * The class of the explosion this spacecraft creates when it is destroyed and explodes.
          * @type ExplosionClass
          */
         this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
