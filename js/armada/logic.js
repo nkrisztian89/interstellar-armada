@@ -301,7 +301,7 @@ define([
         /**
          * @type number
          */
-        this._timeLeft = explosionClass.getDuration();
+        this._timeLeft = explosionClass.getDuration() + 100;
 
     }
 

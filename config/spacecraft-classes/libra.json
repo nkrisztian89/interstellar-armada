@@ -631,5 +631,5 @@
             }
         }
     ],
-    "explosion": "smallShipExplosion"
+    "explosion": "largeShipExplosion"
 }

@@ -164,7 +164,7 @@
         },
         {
             "group": 3,
-            "uses": ["rollRight", "strafeLeft" ,"yawRight"],
+            "uses": ["rollRight", "strafeLeft", "yawRight"],
             "thrusters": [
                 {
                     "position": [56, -211, -165],

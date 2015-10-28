@@ -1701,6 +1701,7 @@ define([
      * @param {boolean} looping Whether to start over from the first state once the last one is reached (or to delete the particle)
      */
     function Particle(model, shader, texture, positionMatrix, states, looping) {
+        var i;
         RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.identity4());
         this.setSmallestSizeWhenDrawn(1);
         this.setTexture("emissive", texture);
@@ -1715,7 +1716,10 @@ define([
          * specified in the states of the particle.
          * @type number[4]
          */
-        this._color = states[0].color;
+        this._color = [];
+        for (i = 0; i < states[0].color.length; i++) {
+            this._color.push(states[0].color[i]);
+        }
         /**
          * The billboard will be scaled using this number when rendering.
          * Do not set directly! It changes automatically and linearly with time using the colors 
