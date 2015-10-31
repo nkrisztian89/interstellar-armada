@@ -494,7 +494,7 @@ define([
         this._initialNumber = dataJSON ? (dataJSON.initialNumber || 0) : null;
         this._spawnNumber = dataJSON ? (dataJSON.spawnNumber || 0) : null;
         this._spawnTime = dataJSON ? (dataJSON.spawnTime || 1) : null;
-        this._duration = dataJSON ? (dataJSON.duration || 1) : null;
+        this._duration = dataJSON ? (dataJSON.duration !== undefined ? dataJSON.duration : 1) : null;
         this._particleStates = dataJSON ? (dataJSON.particleStates || []) : null;
     };
     /**
@@ -606,6 +606,19 @@ define([
             }
         }
         return result;
+    };
+
+    /**
+     * @returns {Boolean}
+     */
+    ExplosionClass.prototype.isContinuous = function () {
+        var i;
+        for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
+            if (this._particleEmitterDescriptors[i].getDuration() === 0) {
+                return true;
+            }
+        }
+        return false;
     };
     // ##############################################################################
     /**
@@ -1193,6 +1206,16 @@ define([
         return new budaScene.Camera(aspect, this._fov, this._movable, this._turnable, followedObject, this._followPositionMatrix, this._followOrientationMatrix, this._rotationCenterIsObject);
     };
     // ##############################################################################
+    ///TODO: review and properly document class
+    /**
+     * 
+     * @param {Object} dataJSON
+     */
+    function DamageIndicator(dataJSON) {
+        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || application.crash()) : null;
+        this.explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.class || application.crash()) || application.crash()) : null;
+    }
+    // ##############################################################################
     /**
      * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
      * ship or a space station all belong to a certain class that determines their
@@ -1344,6 +1367,18 @@ define([
          * @type ExplosionClass
          */
         this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
+        /**
+         * The damage indicators (fires, sparks) that progressively appear as the ship loses hull integrity
+         * @type DamageIndicator[]
+         */
+        this._damageIndicators = [];
+        if (dataJSON.damageIndicators) {
+            for (i = 0; i < dataJSON.damageIndicators.length; i++) {
+                this._damageIndicators.push(new DamageIndicator(dataJSON.damageIndicators[i]));
+            }
+        } else {
+            application.crash();
+        }
     };
     /**
      * @returns {SpacecraftType}
@@ -1412,11 +1447,21 @@ define([
         return this._explosionClass;
     };
     /**
+     * @returns {Array<DamageIndicator>}
+     */
+    SpacecraftClass.prototype.getDamageIndicators = function () {
+        return this._damageIndicators;
+    };
+    /**
      * @override
      */
     SpacecraftClass.prototype.getResources = function () {
+        var i;
         TexturedModelClass.prototype.getResources.call(this);
         this._explosionClass.getResources();
+        for (i = 0; i < this._damageIndicators.length; i++) {
+            this._damageIndicators[i].explosionClass.getResources();
+        }
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

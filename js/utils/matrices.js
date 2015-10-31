@@ -127,6 +127,20 @@ define([
     };
 
     /**
+     * Returns a 4x4 transformation matrix describing a translation.
+     * @param {Float32Array} m A generic 4x4 transformation matrix.
+     * @returns {Float32Array}
+     */
+    mat.translation4m4 = function (m) {
+        return new Float32Array([
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            m[12], m[13], m[14], 1.0
+        ]);
+    };
+
+    /**
      * Returns a new 4x4 transformation matrix describing a rotation along an
      * arbitrary axis.
      * @param {Number[]} axis An array of 3 numbers describing the axis of the
@@ -135,12 +149,27 @@ define([
      */
     mat.rotation4 = function (axis, angle) {
         var
-              cosAngle = Math.cos(angle),
-              sinAngle = Math.sin(angle);
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
         return new Float32Array([
             cosAngle + (1 - cosAngle) * axis[0] * axis[0], (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2], (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1], 0.0,
             (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2], cosAngle + (1 - cosAngle) * axis[1] * axis[1], (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0], 0.0,
             (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1], (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0], cosAngle + (1 - cosAngle) * axis[2] * axis[2], 0.0,
+            0.0, 0.0, 0.0, 1.0
+        ]);
+    };
+
+    /**
+     * Returns a 4x4 transformation matrix describing a rotation, using only the top left 3x3 submatrix
+     * of a 4x4 matrix.
+     * @param {Float32Array} m A generic 4x4 transformation matrix.
+     * @returns {Float32Array}
+     */
+    mat.rotation4m4 = function (m) {
+        return new Float32Array([
+            m[0], m[1], m[2], 0.0,
+            m[4], m[5], m[6], 0.0,
+            m[8], m[9], m[10], 0.0,
             0.0, 0.0, 0.0, 1.0
         ]);
     };
@@ -162,7 +191,7 @@ define([
             0.0, y, 0.0, 0.0,
             0.0, 0.0, z, 0.0,
             0.0, 0.0, 0.0, 1.0]
-              );
+                );
     };
 
     /**
@@ -229,13 +258,13 @@ define([
                 axis = [0, 0, 1];
             }
             result =
-                  mat.mul4(
-                        result,
-                        mat.rotation4(
-                              axis,
-                              parseFloat(tags[i].getAttribute("degree")) / 180 * 3.1415
-                              )
-                        );
+                    mat.mul4(
+                            result,
+                            mat.rotation4(
+                                    axis,
+                                    parseFloat(tags[i].getAttribute("degree")) / 180 * 3.1415
+                                    )
+                            );
         }
         return result;
     };
@@ -266,13 +295,13 @@ define([
                     axis = jsonArray[i].axis;
                 }
                 result =
-                      mat.mul4(
-                            result,
-                            mat.rotation4(
-                                  axis,
-                                  parseFloat(jsonArray[i].degrees) / 180 * 3.1415
-                                  )
-                            );
+                        mat.mul4(
+                                result,
+                                mat.rotation4(
+                                        axis,
+                                        parseFloat(jsonArray[i].degrees) / 180 * 3.1415
+                                        )
+                                );
             }
         }
         return result;
@@ -324,7 +353,7 @@ define([
     mat.getRowA3 = function (m) {
         return [m[0], m[1], m[2]];
     };
-    
+
     /**
      * Returns the opposite of the first row vector of a 3x3 matrix.
      * @param {Float32Array} m A 3x3 matrix.
@@ -342,7 +371,7 @@ define([
     mat.getRowA4 = function (m) {
         return [m[0], m[1], m[2], m[3]];
     };
-    
+
     /**
      * Returns the opposite of the first row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
@@ -351,7 +380,7 @@ define([
     mat.getRowA4Neg = function (m) {
         return [-m[0], -m[1], -m[2], -m[3]];
     };
-    
+
     /**
      * Returns the second row vector of a 3x3 matrix.
      * @param {Float32Array} m A 3x3 matrix.
@@ -360,7 +389,7 @@ define([
     mat.getRowB3 = function (m) {
         return [m[3], m[4], m[5]];
     };
-    
+
     /**
      * Returns the opposite of the second row vector of a 3x3 matrix.
      * @param {Float32Array} m A 3x3 matrix.
@@ -378,7 +407,7 @@ define([
     mat.getRowB4 = function (m) {
         return [m[4], m[5], m[6], m[7]];
     };
-    
+
     /**
      * Returns the opposite of the second row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
@@ -387,7 +416,7 @@ define([
     mat.getRowB4Neg = function (m) {
         return [-m[4], -m[5], -m[6], -m[7]];
     };
-    
+
     /**
      * Returns the first 3 elements of the second row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
@@ -396,7 +425,7 @@ define([
     mat.getRowB43 = function (m) {
         return [m[4], m[5], m[6]];
     };
-    
+
     /**
      * Returns the first 3 elements of the opposite of the second row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
@@ -416,6 +445,15 @@ define([
     };
 
     /**
+     * Returns the first 3 elements of the third row vector of a 4x4 matrix.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowC43 = function (m) {
+        return [m[8], m[9], m[10]];
+    };
+
+    /**
      * Returns the fourth row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
      * @returns {Number[4]}
@@ -431,9 +469,9 @@ define([
      */
     mat.determinant3 = function (m) {
         return (
-              m[0] * m[4] * m[8] + m[1] * m[5] * m[6] + m[2] * m[3] * m[7] -
-              m[2] * m[4] * m[6] - m[1] * m[3] * m[8] - m[0] * m[5] * m[7]
-              );
+                m[0] * m[4] * m[8] + m[1] * m[5] * m[6] + m[2] * m[3] * m[7] -
+                m[2] * m[4] * m[6] - m[1] * m[3] * m[8] - m[0] * m[5] * m[7]
+                );
     };
 
     /**
@@ -476,8 +514,8 @@ define([
     mat.toString3 = function (m, d) {
         d = d || 2;
         return m[0].toFixed(d) + " " + m[1].toFixed(d) + " " + m[2].toFixed(d) + "\n" +
-              m[3].toFixed(d) + " " + m[4].toFixed(d) + " " + m[5].toFixed(d) + "\n" +
-              m[6].toFixed(d) + " " + m[7].toFixed(d) + " " + m[8].toFixed(d);
+                m[3].toFixed(d) + " " + m[4].toFixed(d) + " " + m[5].toFixed(d) + "\n" +
+                m[6].toFixed(d) + " " + m[7].toFixed(d) + " " + m[8].toFixed(d);
     };
 
     /**
@@ -490,9 +528,9 @@ define([
     mat.toString4 = function (m, d) {
         d = d || 2;
         return m[0].toFixed(d) + " " + m[1].toFixed(d) + " " + m[2].toFixed(d) + " " + m[3].toFixed(d) + "\n" +
-              m[4].toFixed(d) + " " + m[5].toFixed(d) + " " + m[6].toFixed(d) + " " + m[7].toFixed(d) + "\n" +
-              m[8].toFixed(d) + " " + m[9].toFixed(d) + " " + m[10].toFixed(d) + " " + m[11].toFixed(d) + "\n" +
-              m[12].toFixed(d) + " " + m[13].toFixed(d) + " " + m[14].toFixed(d) + " " + m[15].toFixed(d);
+                m[4].toFixed(d) + " " + m[5].toFixed(d) + " " + m[6].toFixed(d) + " " + m[7].toFixed(d) + "\n" +
+                m[8].toFixed(d) + " " + m[9].toFixed(d) + " " + m[10].toFixed(d) + " " + m[11].toFixed(d) + "\n" +
+                m[12].toFixed(d) + " " + m[13].toFixed(d) + " " + m[14].toFixed(d) + " " + m[15].toFixed(d);
     };
 
     /**
@@ -506,9 +544,9 @@ define([
     mat.toHTMLString4 = function (m, d) {
         d = d || 2;
         return m[0].toFixed(d) + " " + m[1].toFixed(d) + " " + m[2].toFixed(d) + " " + m[3].toFixed(d) + "<br/>" +
-              m[4].toFixed(d) + " " + m[5].toFixed(d) + " " + m[6].toFixed(d) + " " + m[7].toFixed(d) + "<br/>" +
-              m[8].toFixed(d) + " " + m[9].toFixed(d) + " " + m[10].toFixed(d) + " " + m[11].toFixed(d) + "<br/>" +
-              m[12].toFixed(d) + " " + m[13].toFixed(d) + " " + m[14].toFixed(d) + " " + m[15].toFixed(d);
+                m[4].toFixed(d) + " " + m[5].toFixed(d) + " " + m[6].toFixed(d) + " " + m[7].toFixed(d) + "<br/>" +
+                m[8].toFixed(d) + " " + m[9].toFixed(d) + " " + m[10].toFixed(d) + " " + m[11].toFixed(d) + "<br/>" +
+                m[12].toFixed(d) + " " + m[13].toFixed(d) + " " + m[14].toFixed(d) + " " + m[15].toFixed(d);
     };
 
 // -----------------------------------------------------------------------------
@@ -775,9 +813,9 @@ define([
      */
     mat.correctedOrthogonal4 = function (m) {
         var
-              vx = vec.normal3([m[0], m[1], m[2]]),
-              vy = vec.normal3([m[4], m[5], m[6]]),
-              vz = vec.cross3(vx, vy);
+                vx = vec.normal3([m[0], m[1], m[2]]),
+                vy = vec.normal3([m[4], m[5], m[6]]),
+                vz = vec.cross3(vx, vy);
         vy = vec.cross3(vz, vx);
         return new Float32Array([
             vx[0], vx[1], vx[2], 0.0,
@@ -799,11 +837,11 @@ define([
         var i, result = new Float32Array(m);
         for (i = 0; i < result.length; i++) {
             result[i] = (Math.abs(m[i]) < epsilon) ?
-                  0.0 :
-                  ((Math.abs(1 - m[i]) < epsilon) ?
-                        1.0 :
-                        ((Math.abs(-1 - m[i]) < epsilon) ?
-                              -1.0 : m[i]));
+                    0.0 :
+                    ((Math.abs(1 - m[i]) < epsilon) ?
+                            1.0 :
+                            ((Math.abs(-1 - m[i]) < epsilon) ?
+                                    -1.0 : m[i]));
         }
         return result;
     };
@@ -819,23 +857,23 @@ define([
      */
     mat.equal4 = function (m1, m2) {
         return (
-              m1[0] === m2[0] &&
-              m1[1] === m2[1] &&
-              m1[2] === m2[2] &&
-              m1[3] === m2[3] &&
-              m1[4] === m2[4] &&
-              m1[5] === m2[5] &&
-              m1[6] === m2[6] &&
-              m1[7] === m2[7] &&
-              m1[8] === m2[8] &&
-              m1[9] === m2[9] &&
-              m1[10] === m2[10] &&
-              m1[11] === m2[11] &&
-              m1[12] === m2[12] &&
-              m1[13] === m2[13] &&
-              m1[14] === m2[14] &&
-              m1[15] === m2[15]
-              );
+                m1[0] === m2[0] &&
+                m1[1] === m2[1] &&
+                m1[2] === m2[2] &&
+                m1[3] === m2[3] &&
+                m1[4] === m2[4] &&
+                m1[5] === m2[5] &&
+                m1[6] === m2[6] &&
+                m1[7] === m2[7] &&
+                m1[8] === m2[8] &&
+                m1[9] === m2[9] &&
+                m1[10] === m2[10] &&
+                m1[11] === m2[11] &&
+                m1[12] === m2[12] &&
+                m1[13] === m2[13] &&
+                m1[14] === m2[14] &&
+                m1[15] === m2[15]
+                );
     };
 
     /**
@@ -927,10 +965,10 @@ define([
      */
     mat.distanceSquared = function (m1, m2) {
         return (
-              (m1[12] - m2[12]) * (m1[12] - m2[12]) +
-              (m1[13] - m2[13]) * (m1[13] - m2[13]) +
-              (m1[14] - m2[14]) * (m1[14] - m2[14])
-              );
+                (m1[12] - m2[12]) * (m1[12] - m2[12]) +
+                (m1[13] - m2[13]) * (m1[13] - m2[13]) +
+                (m1[14] - m2[14]) * (m1[14] - m2[14])
+                );
     };
 
     return mat;

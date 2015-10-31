@@ -631,5 +631,23 @@
             }
         }
     ],
-    "explosion": "largeShipExplosion"
+    "explosion": "largeShipExplosion",
+    "damageIndicators": [
+        {
+            "hullIntegrity": 35,
+            "class": "largeFire"
+        },
+        {
+            "hullIntegrity": 20,
+            "class": "largeFire"
+        },
+        {
+            "hullIntegrity": 10,
+            "class": "largeFire"
+        },
+        {
+            "hullIntegrity": 5,
+            "class": "largeFire"
+        }
+    ]
 }

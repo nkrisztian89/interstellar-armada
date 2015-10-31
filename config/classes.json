@@ -452,8 +452,8 @@
                     "dimensions": [4, 4, 4],
                     "initialNumber": 0,
                     "spawnNumber": 1,
-                    "spawnTime": 50,
-                    "duration": 100,
+                    "spawnTime": 150,
+                    "duration": 150,
                     "shader": "particle",
                     "texture": "flare",
                     "particleStates": [
@@ -920,6 +920,187 @@
                             "color": [1.0, 0.0, 0.0, 0.0],
                             "size": 450,
                             "timeToReach": 1000
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "smallFire",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 30,
+                    "velocitySpread": 10,
+                    "initialNumber": 14,
+                    "spawnNumber": 0,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0.8,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.8, 0.2, 1.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 35,
+                    "velocity": 5,
+                    "velocitySpread": 3,
+                    "initialNumber": 0,
+                    "spawnNumber": 3,
+                    "spawnTime": 100,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 3.5,
+                            "timeToReach": 400
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "mediumFire",
+            "particleEmitters": [
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 45,
+                    "velocity": 70,
+                    "velocitySpread": 15,
+                    "initialNumber": 14,
+                    "spawnNumber": 4,
+                    "spawnTime": 250,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0.9,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.8, 0.2, 1.0],
+                            "size": 0,
+                            "timeToReach": 750
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 35,
+                    "velocity": 24,
+                    "velocitySpread": 6,
+                    "initialNumber": 0,
+                    "spawnNumber": 3,
+                    "spawnTime": 100,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 11,
+                            "timeToReach": 500
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "largeFire",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 50,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 0,
+                            "timeToReach": 300
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 30,
+                    "velocity": 45,
+                    "velocitySpread": 20,
+                    "initialNumber": 20,
+                    "spawnNumber": 9,
+                    "spawnTime": 150,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.8, 1.0],
+                            "size": 2,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.9, 0.2, 1.0],
+                            "size": 0,
+                            "timeToReach": 1000
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 30,
+                    "velocity": 15,
+                    "velocitySpread": 6,
+                    "initialNumber": 0,
+                    "spawnNumber": 4,
+                    "spawnTime": 100,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 20,
+                            "timeToReach": 500
                         }
                     ]
                 }

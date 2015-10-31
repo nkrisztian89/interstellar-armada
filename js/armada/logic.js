@@ -277,7 +277,22 @@ define([
         }
     };
     // ##############################################################################
-    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction) {
+    // ##############################################################################
+    ///TODO: review and properly document class
+    /**
+     * @class Logic domain class used for explosions and fires. Uses a particle system for
+     * the visual model.
+     * @param {ExplosionClass} explosionClass The class that contains the general attributes of the
+     * type of explosion the instance represents.
+     * @param {Float32Array} positionMatrix 4x4 translation matrix used to set the position of the visual model (meters)
+     * @param {Float32Array} orientationMatrix 4x4 rotation matrix used to set the orientation of the visual model
+     * @param {Number[3]} direction This vector will be used to set the direction of the particle emitters (which can emit
+     * particles towards or perpendicular to this vector)
+     * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
+     * and change position and/or orientation with it, even after they have been emitted
+     * @returns {logic_L24.Explosion}
+     */
+    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles) {
         /**
          * @type ExplosionClass
          */
@@ -291,15 +306,19 @@ define([
          */
         this._orientationMatrix = orientationMatrix;
         /**
-         * @type number[3]
+         * @type Number[3]
          */
         this._direction = direction;
+        /**
+         * @type Boolean
+         */
+        this._carriesParticles = carriesParticles;
         /**
          * @type ParticleSystem
          */
         this._visualModel = null;
         /**
-         * @type number
+         * @type Number
          */
         this._timeLeft = explosionClass.getDuration() + 100;
 
@@ -323,6 +342,13 @@ define([
                     emitterDescriptor.getParticleStates(),
                     false);
         };
+    };
+    /**
+     * Returns the particle system that is used to represent this explosion.
+     * @returns {ParticleSystem}
+     */
+    Explosion.prototype.getVisualModel = function () {
+        return this._visualModel;
     };
     /**
      * Creates the renderable object that can be used to represent this explosion
@@ -359,7 +385,7 @@ define([
                             this.getEmitterParticleConstructor(i));
                     break;
                 case "planar":
-                    emitter = new budaScene.UnidirectionalParticleEmitter(mat.identity4(),
+                    emitter = new budaScene.PlanarParticleEmitter(mat.identity4(),
                             this._orientationMatrix,
                             particleEmitterDescriptors[i].getDimensions(),
                             this._direction,
@@ -379,18 +405,26 @@ define([
                 this._positionMatrix,
                 mat.identity4(),
                 particleEmitters,
-                this._class.getDuration());
+                this._class.getDuration(),
+                this._class.isContinuous(),
+                this._carriesParticles);
     };
     /**
      * Adds a renderable node representing this explosion to the passed scene.
-     * @param {budaScene} scene The scene to which to add the renderable object
+     * @param {Scene} scene The scene to which to add the renderable object
      * presenting the explosion.
+     * @param {RenderableNode} parentNode If given, the explosion will be added 
+     * to the scene graph as the subnode of this node
      */
-    Explosion.prototype.addToScene = function (scene) {
+    Explosion.prototype.addToScene = function (scene, parentNode) {
         this._class.getResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
-            scene.addObject(this._visualModel);
+            if (parentNode) {
+                parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+            } else {
+                scene.addObject(this._visualModel);
+            }
         }.bind(this));
     };
     /**
@@ -405,6 +439,12 @@ define([
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
         }.bind(this));
+    };
+    /**
+     * Cancels the explosion without deleting the already created particles.
+     */
+    Explosion.prototype.finish = function () {
+        this._visualModel.finishEmitting();
     };
     /**
      * Removes the renferences to the renderable object of the
@@ -513,7 +553,7 @@ define([
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
-            explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0]);
+            explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
             explosion.addResourcesToScene(scene);
         }.bind(this));
     };
@@ -552,10 +592,11 @@ define([
                     velocityDir = vec.normal3(velocityVector);
                     physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000, 1);
 
-                    explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1));
+                    explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1), true);
                     explosion.addToScene(this._visualModel.getNode().getScene());
 
-                    hitObjects[i].damage(this._class.getDamage());
+                    relPos = vec.mulVec4Mat4(positionVector, mat.inverse4(hitObjects[i].getVisualModel().getModelMatrix()));
+                    hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(velocityDir, -1));
 
                     this.destroy();
                 }
@@ -1528,6 +1569,11 @@ define([
          * @type number
          */
         this._timeElapsedSinceDestruction = -1;
+        /**
+         * The list of damage indicators that are currently visible on the spacecraft.
+         * @type Array<Explosion>
+         */
+        this._activeDamageIndicators = [];
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName);
@@ -2050,7 +2096,7 @@ define([
             }
             // add projectile resources
             if (addSupplements.explosion === true) {
-                explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0]);
+                explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
                 explosion.addResourcesToScene(scene);
             }
             if (callback) {
@@ -2143,11 +2189,28 @@ define([
     Spacecraft.prototype.resetViewCameras = function () {
         this._visualModel.getNode().resetViewCameras();
     };
+    ///TODO: document properly
     /**
-     * @param {number} damage
+     * @param {Number} damage
+     * @param {Number[3]} damagePosition
      */
-    Spacecraft.prototype.damage = function (damage) {
+    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir) {
+        var i, damageIndicator, hitpointThreshold, explosion;
         this._hitpoints -= damage;
+        for (i = 0; i < this._class.getDamageIndicators().length; i++) {
+            damageIndicator = this._class.getDamageIndicators()[i];
+            hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._class.getHitpoints();
+            if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
+                explosion = new Explosion(damageIndicator.explosionClass,
+                        mat.translation4v(damagePosition),
+                        mat.identity4(),
+                        damageDir,
+                        true,
+                        false);
+                explosion.addToScene(this._visualModel.getNode().getScene(), this._visualModel.getNode());
+                this._activeDamageIndicators.push(explosion);
+            }
+        }
     };
     /**
      * 
@@ -2164,15 +2227,18 @@ define([
      * milliseconds.
      */
     Spacecraft.prototype.simulate = function (dt) {
-        var explosion;
+        var i, explosion;
         if (!this._alive) {
             return;
         }
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {
                 this._timeElapsedSinceDestruction = 0;
-                explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), this._physicalModel.getOrientationMatrix(), this._physicalModel.getVelocityMatrix());
+                explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), this._physicalModel.getOrientationMatrix(), mat.getRowC43(this._physicalModel.getPositionMatrix()), false);
                 explosion.addToScene(this._visualModel.getNode().getScene());
+                for (i = 0; i < this._activeDamageIndicators; i++) {
+                    this._activeDamageIndicators[i].finish();
+                }
             } else {
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() / 4)) {

@@ -307,5 +307,15 @@
             }
         }
     ],
-    "explosion": "smallShipExplosion"
+    "explosion": "smallShipExplosion",
+    "damageIndicators": [
+        {
+            "hullIntegrity": 25,
+            "class": "mediumFire"
+        },
+        {
+            "hullIntegrity": 10,
+            "class": "mediumFire"
+        }
+    ]
 }

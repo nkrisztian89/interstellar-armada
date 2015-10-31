@@ -369,5 +369,15 @@
             }
         }
     ],
-    "explosion": "fighterExplosion"
+    "explosion": "fighterExplosion",
+    "damageIndicators": [
+        {
+            "hullIntegrity": 25,
+            "class": "smallFire"
+        },
+        {
+            "hullIntegrity": 10,
+            "class": "smallFire"
+        }
+    ]
 }
