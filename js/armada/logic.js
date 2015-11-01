@@ -112,7 +112,7 @@ define([
             var i, layers, layerParticle;
             layers = this._class.getLayers();
             for (i = 0; i < layers.length; i++) {
-                layerParticle = budaScene.staticParticle(
+                layerParticle = new budaScene.BackgroundBillboard(
                         layers[i].getModel(),
                         layers[i].getShader(),
                         layers[i].getTexture("emissive", "normal"),
@@ -2193,6 +2193,7 @@ define([
     /**
      * @param {Number} damage
      * @param {Number[3]} damagePosition
+     * @param {Number[3]} damageDir
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir) {
         var i, damageIndicator, hitpointThreshold, explosion;

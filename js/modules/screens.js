@@ -386,7 +386,7 @@ define([
     HTMLScreenWithCanvases.prototype.render = function () {
         var i, d, dt;
         d = new Date();
-        dt = (this._renderTimes.length > 0) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
+        dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             this._sceneCanvasBindings[i].scene.cleanUp();
             this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext(), dt);

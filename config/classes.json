@@ -957,7 +957,7 @@
                     "velocity": 5,
                     "velocitySpread": 3,
                     "initialNumber": 0,
-                    "spawnNumber": 3,
+                    "spawnNumber": 2,
                     "spawnTime": 100,
                     "duration": 0,
                     "shader": "particle",
@@ -984,7 +984,7 @@
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
                     "directionSpread": 45,
-                    "velocity": 70,
+                    "velocity": 85,
                     "velocitySpread": 15,
                     "initialNumber": 14,
                     "spawnNumber": 4,
@@ -995,13 +995,13 @@
                     "particleStates": [
                         {
                             "color": [1.0, 1.0, 0.6, 1.0],
-                            "size": 0.9,
+                            "size": 1.1,
                             "timeToReach": 0
                         },
                         {
                             "color": [1.0, 0.8, 0.2, 1.0],
                             "size": 0,
-                            "timeToReach": 750
+                            "timeToReach": 900
                         }
                     ]
                 },
@@ -1009,10 +1009,10 @@
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
                     "directionSpread": 35,
-                    "velocity": 24,
+                    "velocity": 30,
                     "velocitySpread": 6,
                     "initialNumber": 0,
-                    "spawnNumber": 3,
+                    "spawnNumber": 2,
                     "spawnTime": 100,
                     "duration": 0,
                     "shader": "particle",
@@ -1025,7 +1025,7 @@
                         },
                         {
                             "color": [1.0, 0.3, 0.0, 0.0],
-                            "size": 11,
+                            "size": 12.5,
                             "timeToReach": 500
                         }
                     ]
@@ -1057,36 +1057,36 @@
                 {
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
-                    "directionSpread": 30,
-                    "velocity": 45,
-                    "velocitySpread": 20,
+                    "directionSpread": 40,
+                    "velocity": 65,
+                    "velocitySpread": 15,
                     "initialNumber": 20,
-                    "spawnNumber": 9,
-                    "spawnTime": 150,
+                    "spawnNumber": 3,
+                    "spawnTime": 200,
                     "duration": 0,
                     "shader": "particle",
-                    "texture": "flare",
+                    "texture": "explosion",
                     "particleStates": [
                         {
                             "color": [1.0, 1.0, 0.8, 1.0],
-                            "size": 2,
+                            "size": 2.3,
                             "timeToReach": 0
                         },
                         {
                             "color": [1.0, 0.9, 0.2, 1.0],
                             "size": 0,
-                            "timeToReach": 1000
+                            "timeToReach": 1400
                         }
                     ]
                 },
                 {
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
-                    "directionSpread": 30,
-                    "velocity": 15,
-                    "velocitySpread": 6,
+                    "directionSpread": 25,
+                    "velocity": 45,
+                    "velocitySpread": 8,
                     "initialNumber": 0,
-                    "spawnNumber": 4,
+                    "spawnNumber": 3,
                     "spawnTime": 100,
                     "duration": 0,
                     "shader": "particle",

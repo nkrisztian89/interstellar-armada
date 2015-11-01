@@ -96,48 +96,41 @@ define([
         /**
          * Optional parent, relative to which the position, orientation and
          * scaling of this object is interpreted.
-         * @name Object3D#_parent
          * @type Object3D
          */
         this._parent = null;
         /**
-         * @name Object3D#_positionMatrix
          * @type Float32Array
          */
         this._positionMatrix = positionMatrix || mat.identity4();
         /**
-         * @name Object3D#_orientationMatrix
          * @type Float32Array
          */
         this._orientationMatrix = orientationMatrix || mat.identity4();
         /**
-         * @name Object3D#_scalingMatrix
          * @type Float32Array
          */
         this._scalingMatrix = scalingMatrix || mat.identity4();
         /**
          * Cache variable to store the calculated value of the combined model
          * matrix.
-         * @name Object3D#_modelMatrix
          * @type Float32Array
          */
         this._modelMatrix = null;
         /**
-         * @name Object3D#_size
          * @type Number
          */
-        this._size = size !== undefined ? size : 1;         /**
+        this._size = size !== undefined ? size : 1;
+        /**
          * Cache value to store whether the object is situated within its 
          * parent's boundaries, as the parent's values can be used for certain 
          * calculations in this case.
-         * @name Object3D#_insideParent
          * @type Boolean
          */
         this._insideParent = null;
         /**
          * Stored value of the last frustum calculation result. Not used for
          * caching but to avoid creating a new object to store this every time.
-         * @name Object3D#_lastSizeInsideViewFrustum
          * @type Object
          */
         this._lastSizeInsideViewFrustum = {width: -1, height: -1};
@@ -1703,7 +1696,7 @@ define([
     function Particle(model, shader, texture, positionMatrix, states, looping) {
         var i;
         RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.identity4());
-        this.setSmallestSizeWhenDrawn(1);
+        this.setSmallestSizeWhenDrawn(0.1);
         this.setTexture("emissive", texture);
         /**
          * The model to store the simple billboard data.
@@ -1714,23 +1707,25 @@ define([
          * The currently active color of the color used to modulate the texture color when rendering.
          * Do not set directly! It changes automatically and linearly with time using the colors 
          * specified in the states of the particle.
-         * @type number[4]
+         * @type Number[4]
          */
         this._color = [];
-        for (i = 0; i < states[0].color.length; i++) {
-            this._color.push(states[0].color[i]);
+        if (states) {
+            for (i = 0; i < states[0].color.length; i++) {
+                this._color.push(states[0].color[i]);
+            }
         }
         /**
          * The billboard will be scaled using this number when rendering.
          * Do not set directly! It changes automatically and linearly with time using the colors 
          * specified in the states of the particle.
-         * @type number
+         * @type Number
          */
-        this._size = states[0].size;
+        this._size = states ? states[0].size : 0;
         /**
          * The billboard will be scaled using this number when rendering.
          * Can be set from outside to influence the visible size of the particle.
-         * @type number
+         * @type Number
          */
         this._relativeSize = 1;
         /**
@@ -1740,21 +1735,21 @@ define([
          * last state has been reached.
          * @type Array<ParticleState>
          */
-        this._states = states;
+        this._states = states || [];
         /**
          * The index of the current state the particle is in, that is, the last state it fully reached
          * (the actual attributes might be already transitioning towards the next state)
-         * @type number
+         * @type Number
          */
         this._currentStateIndex = 0;
         /**
          * Whether to start over from the first state once the last one is reached (or to delete the particle)
-         * @type boolean
+         * @type Boolean
          */
         this._looping = looping;
         /**
          * Time passed since the current state has been reached, in milliseconds
-         * @type number
+         * @type Number
          */
         this._timeSinceLastTransition = 0;
         /**
@@ -1765,7 +1760,7 @@ define([
         /**
          * Whether the particle needs to be animated (there are more states or it has a non-zero velocity).
          * This is a cache variable.
-         * @type boolean
+         * @type Boolean
          */
         this._shouldAnimate = false;
         this.setUniformValueFunction("u_modelMatrix", function () {
@@ -1779,9 +1774,15 @@ define([
         });
         this._updateShouldAnimate();
     }
-
     Particle.prototype = new RenderableObject3D();
     Particle.prototype.constructor = Particle;
+    /**
+     * @override
+     * @returns {Number}
+     */
+    Particle.prototype.getSize = function () {
+        return this._size * this._relativeSize;
+    };
     /**
      * Returns whether the particle has a non-zero velocity set.
      * @returns {Boolean}
@@ -1854,8 +1855,8 @@ define([
      * @returns {Boolean}
      */
     Particle.prototype.shouldBeRendered = function (renderParameters) {
-        if (RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters)) {
-            return (this._size * this._relativeSize) > 0.01;
+        if ((this._size * this._relativeSize) > 0.01) {
+            return RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters);
         }
         return false;
     };
@@ -1948,6 +1949,39 @@ define([
     function staticParticle(model, shader, texture, color, size, positionMatrix) {
         return new Particle(model, shader, texture, positionMatrix, [new ParticleState(color, size, 0)], false);
     }
+    /**
+     * @class Can be used for a static particle that is rendered as part of the background. (such as a star)
+     * @extends Particle
+     * @param {Model} model A billboard or similar model.
+     * @param {Shader} shader The shader to use for render.
+     * @param {Texture} texture The texture to use.
+     * @param {Number[4]} color Will be passed to the shader as the uniform u_color
+     * @param {Number} size Will be passed to the shader as the uniform u_billboardSize
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position in meters. Should be
+     * a far away position in the distance for objects part of te background
+     */
+    function BackgroundBillboard(model, shader, texture, color, size, positionMatrix) {
+        Particle.call(this, model, shader, texture, positionMatrix, [new ParticleState(color, size, 0)], false);
+    }
+    BackgroundBillboard.prototype = new Particle();
+    BackgroundBillboard.prototype.constructor = BackgroundBillboard;
+    /**
+     * @override
+     * It is faster not to do any check for an object as simple as a billboard. Will always return true.
+     * @returns {Boolean}
+     */
+    BackgroundBillboard.prototype.isInsideViewFrustum = function () {
+        return true;
+    };
+    /**
+     * @override
+     * Will only do the same basic check as for a general RenderableObject
+     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
+     */
+    BackgroundBillboard.prototype.shouldBeRendered = function (renderParameters) {
+        return RenderableObject.prototype.shouldBeRendered.call(this, renderParameters);
+    };
     // #########################################################################
     /**
      * @class Generates new particles in rounds using a particle constructor function, serving as the basic
@@ -3611,6 +3645,7 @@ define([
         Particle: Particle,
         staticParticle: staticParticle,
         dynamicParticle: dynamicParticle,
+        BackgroundBillboard: BackgroundBillboard,
         ParticleEmitter: ParticleEmitter,
         OmnidirectionalParticleEmitter: OmnidirectionalParticleEmitter,
         UnidirectionalParticleEmitter: UnidirectionalParticleEmitter,
