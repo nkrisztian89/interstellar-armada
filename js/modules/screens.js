@@ -301,6 +301,11 @@ define([
     HTMLScreenWithCanvases.prototype = new HTMLScreen();
     HTMLScreenWithCanvases.prototype.constructor = HTMLScreenWithCanvases;
 
+    HTMLScreenWithCanvases.prototype.clearSceneCanvasBindings = function () {
+        ///TODO: Scene.destroy
+        this._sceneCanvasBindings = [];
+    };
+
     /**
      * Stops the render loop and nulls out the components.
      */

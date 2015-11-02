@@ -101,7 +101,7 @@ define([
     /**
      * 
      */
-    ShadedClass.prototype.getResources = function () {
+    ShadedClass.prototype.acquireResources = function () {
         if (this._shader === null) {
             this._shader = armada.resources().getShader(this._shaderName);
         }
@@ -147,8 +147,8 @@ define([
      * @override
      * @param {Object} params
      */
-    ShadedModelClass.prototype.getResources = function (params) {
-        ShadedClass.prototype.getResources.call(this);
+    ShadedModelClass.prototype.acquireResources = function (params) {
+        ShadedClass.prototype.acquireResources.call(this);
         if (this._model === null) {
             if (params && params.model) {
                 this._model = armada.resources().getOrAddModel(params.model);
@@ -201,8 +201,8 @@ define([
     /**
      * @override
      */
-    SkyboxClass.prototype.getResources = function () {
-        ShadedModelClass.prototype.getResources.call(this, {model: egomModel.fvqModel("fvqModel")});
+    SkyboxClass.prototype.acquireResources = function () {
+        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.fvqModel("fvqModel")});
         if (this._cubemap === null) {
             this._cubemap = armada.resources().getCubemap(this._cubemapName);
         }
@@ -248,8 +248,8 @@ define([
      * @override
      * @param {Object} params
      */
-    TexturedModelClass.prototype.getResources = function (params) {
-        ShadedModelClass.prototype.getResources.call(this, params);
+    TexturedModelClass.prototype.acquireResources = function (params) {
+        ShadedModelClass.prototype.acquireResources.call(this, params);
         if (this._texture === null) {
             this._texture = armada.resources().getTexture(this._textureName);
         }
@@ -324,8 +324,8 @@ define([
     /**
      * @override
      */
-    ParticleDescriptor.prototype.getResources = function () {
-        TexturedModelClass.prototype.getResources.call(this, {model: egomModel.squareModel("squareModel")});
+    ParticleDescriptor.prototype.acquireResources = function () {
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel("squareModel")});
     };
     /**
      * @returns {Number}
@@ -386,10 +386,10 @@ define([
     /**
      * 
      */
-    BackgroundObjectClass.prototype.getResources = function () {
+    BackgroundObjectClass.prototype.acquireResources = function () {
         var i;
         for (i = 0; i < this._layers.length; i++) {
-            this._layers[i].getResources();
+            this._layers[i].acquireResources();
         }
     };
     /**
@@ -446,8 +446,8 @@ define([
     /**
      * @override
      */
-    DustCloudClass.prototype.getResources = function () {
-        ShadedModelClass.prototype.getResources.call(this, {model: egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._color)});
+    DustCloudClass.prototype.acquireResources = function () {
+        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._color)});
     };
     /**
      * @returns {Number}
@@ -467,104 +467,185 @@ define([
     DustCloudClass.prototype.getRange = function () {
         return this._range;
     };
-
     // ##############################################################################
-    ///TODO: review and properly document class
     /**
      * @class A simple class capable of loading the descriptor of a particle emitter 
-     * @augments TexturedModelClass
-     * @param {Object} [dataJSON] 
+     * @extends TexturedModelClass
+     * @param {Object} [dataJSON] If given, all properties of the descriptor will be initialized
+     * from this JSON object.
      */
     function ParticleEmitterDescriptor(dataJSON) {
+        // this will call the overridden _loadData function and thus initialize all fields
         TexturedModelClass.call(this, dataJSON);
     }
     ParticleEmitterDescriptor.prototype = new TexturedModelClass();
     ParticleEmitterDescriptor.prototype.constructor = ParticleEmitterDescriptor;
     /**
      * @override
+     * Loads and sets all properties of the emitter descriptor based on the passed JSON object.
      * @param {Object} dataJSON
      */
     ParticleEmitterDescriptor.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * The string description of the type of the described particle emitter. Based on this the proper class
+         * can be instantiated when the emitter object is created. Possible values at the moment:
+         * omnidirectional, unidirectional, planar
+         * @type String
+         */
         this._type = dataJSON ? (dataJSON.type || "omnidirectional") : null;
+        /**
+         * The size of the area where the new particles are generated. (meters, [x,y,z])
+         * @type Number[3]
+         */
         this._dimensions = dataJSON ? (dataJSON.dimensions || [0, 0, 0]) : null;
+        /**
+         * The maximum angle that the velocity vector of the emitted particles can differ from the main direction / plane.
+         * @type Number
+         */
         this._directionSpread = (dataJSON && ((this._type === "unidirectional") || (this._type === "planar"))) ? (dataJSON.directionSpread || 0) : null;
+        /**
+         * The (average) starting velocity of the emitted particles. m/s
+         * @type Number
+         */
         this._velocity = dataJSON ? (dataJSON.velocity || 0) : null;
+        /**
+         * The size of the random range within the particle velocities are generated. m/s
+         * @type Number
+         */
         this._velocitySpread = dataJSON ? (dataJSON.velocitySpread || 0) : null;
+        /**
+         * The number of particles emitted right after the creation of the emitter
+         * @type Number
+         */
         this._initialNumber = dataJSON ? (dataJSON.initialNumber || 0) : null;
+        /**
+         * The number of particles emitted at the end of  each spawning round
+         * @type Number
+         */
         this._spawnNumber = dataJSON ? (dataJSON.spawnNumber || 0) : null;
+        /**
+         * The duration of one spawning round (milliseconds)
+         * @type Number
+         */
         this._spawnTime = dataJSON ? (dataJSON.spawnTime || 1) : null;
+        /**
+         * The duration while new particles are emitted after the emitter has been created. (milliseconds)
+         * @type Number
+         */
         this._duration = dataJSON ? (dataJSON.duration !== undefined ? dataJSON.duration : 1) : null;
+        /**
+         * The list of states that the generated particles should go through.
+         * @type ParticleState[]
+         */
         this._particleStates = dataJSON ? (dataJSON.particleStates || []) : null;
     };
     /**
      * @override
      */
-    ParticleEmitterDescriptor.prototype.getResources = function () {
-        TexturedModelClass.prototype.getResources.call(this, {model: egomModel.squareModel("squareModel")});
+    ParticleEmitterDescriptor.prototype.acquireResources = function () {
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel("squareModel")});
     };
     /**
-     * @returns {string}
+     * Returns the string description of the type of the described particle emitter. Based on this the proper class
+     * can be instantiated when the emitter object is created. Possible values at the moment:
+     * omnidirectional, unidirectional, planar
+     * @returns {String}
      */
     ParticleEmitterDescriptor.prototype.getType = function () {
         return this._type;
     };
-
+    /**
+     * Returns the size of the area where the new particles are generated. (meters, [x,y,z])
+     * @returns {Number[3]}
+     */
     ParticleEmitterDescriptor.prototype.getDimensions = function () {
         return this._dimensions;
     };
-
+    /**
+     * Returns the maximum angle that the velocity vector of the emitted particles can differ from the main direction / plane.
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getDirectionSpread = function () {
         return this._directionSpread;
     };
-
+    /**
+     * Returns the (average) starting velocity of the emitted particles. m/s
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getVelocity = function () {
         return this._velocity;
     };
-
+    /**
+     * Returns the size of the random range within the particle velocities are generated. m/s
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getVelocitySpread = function () {
         return this._velocitySpread;
     };
-
+    /**
+     * Returns the number of particles emitted right after the creation of the emitter
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getInitialNumber = function () {
         return this._initialNumber;
     };
-
+    /**
+     * Returns the number of particles emitted at the end of  each spawning round
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getSpawnNumber = function () {
         return this._spawnNumber;
     };
-
+    /**
+     * Returns the duration of one spawning round (milliseconds)
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getSpawnTime = function () {
         return this._spawnTime;
     };
-
+    /**
+     * Returns the duration for which new particles are emitted after the emitter has been created. (milliseconds)
+     * @returns {Number}
+     */
     ParticleEmitterDescriptor.prototype.getDuration = function () {
         return this._duration;
     };
-
+    /**
+     * Returns the list of states that the generated particles should go through.
+     * @returns {ParticleState[]}
+     */
     ParticleEmitterDescriptor.prototype.getParticleStates = function () {
         return this._particleStates;
     };
     // ##############################################################################
-    ///TODO: review and properly document class
     /**
-     * @class
-     * @augments GenericClass
-     * @param {Object} dataJSON
+     * @class Stores the general properties of a class of explosions (or fires), that can be
+     * used to create instances of that class of explosion or fire.
+     * Since explosions and fires are represented visually using partice systems, the
+     * properties of this class are the ones needed to set up such a particle system.
+     * @extends GenericClass
+     * @param {Object} dataJSON The JSON object to load the properties from.
      */
     function ExplosionClass(dataJSON) {
+        // This will call the overridden _loadData method
         GenericClass.call(this, dataJSON);
     }
     ExplosionClass.prototype = new GenericClass();
     ExplosionClass.prototype.constructor = ExplosionClass;
     /**
      * @override
+     * Initializes all properties from the passed JSON object
      * @param {Object} dataJSON
      */
     ExplosionClass.prototype._loadData = function (dataJSON) {
         var i;
         GenericClass.prototype._loadData.call(this, dataJSON);
-
+        /**
+         * The list of descriptors of the particle emitters that the visual model of the explosion
+         * will consist of.
+         * @type Array<ParticleEmitterDescriptor>
+         */
         this._particleEmitterDescriptors = null;
         if (dataJSON && dataJSON.particleEmitters) {
             this._particleEmitterDescriptors = [];
@@ -575,22 +656,25 @@ define([
         }
     };
     /**
-     * 
+     * Sets up the references to all required resource objects and marks them for loading.
      */
-    ExplosionClass.prototype.getResources = function () {
+    ExplosionClass.prototype.acquireResources = function () {
         var i;
         for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
-            this._particleEmitterDescriptors[i].getResources();
+            this._particleEmitterDescriptors[i].acquireResources();
         }
     };
     /**
-     * 
+     * Returns the list of descriptors of the particle emitters that the visual model of the explosion
+     * shall consist of.
+     * @returns {Array<ParticleEmitterDescriptor>}
      */
     ExplosionClass.prototype.getParticleEmitterDescriptors = function () {
         return this._particleEmitterDescriptors;
     };
     /**
-     * 
+     * Returns the duration while the particle system representing this explosion would display particles (milliseconds)
+     * (including for how long would it generate them and after that for how long would the generated particles last)
      * @returns {Number}
      */
     ExplosionClass.prototype.getDuration = function () {
@@ -607,8 +691,10 @@ define([
         }
         return result;
     };
-
     /**
+     * Returns whether a particle system representing an instance of an explosion of this kind
+     * would produce particles continuously until it is explicitly stopped (or finish on its
+     * own after some duration, accessed via getDuration())
      * @returns {Boolean}
      */
     ExplosionClass.prototype.isContinuous = function () {
@@ -691,10 +777,10 @@ define([
     /**
      * @override
      */
-    ProjectileClass.prototype.getResources = function () {
-        TexturedModelClass.prototype.getResources.call(this, {model: egomModel.turningBillboardModel("projectileModel-" + this.getName(), this._intersectionPositions)});
-        this._muzzleFlash.getResources();
-        this._explosionClass.getResources();
+    ProjectileClass.prototype.acquireResources = function () {
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel("projectileModel-" + this.getName(), this._intersectionPositions)});
+        this._muzzleFlash.acquireResources();
+        this._explosionClass.acquireResources();
     };
     /**
      * @returns {Number}
@@ -779,8 +865,8 @@ define([
     /**
      *
      */
-    Barrel.prototype.getResources = function () {
-        this._projectileClass.getResources();
+    Barrel.prototype.acquireResources = function () {
+        this._projectileClass.acquireResources();
     };
     // ##############################################################################
     /**
@@ -829,11 +915,11 @@ define([
     /**
      * @override
      */
-    WeaponClass.prototype.getResources = function () {
+    WeaponClass.prototype.acquireResources = function () {
         var i;
-        TexturedModelClass.prototype.getResources.call(this);
+        TexturedModelClass.prototype.acquireResources.call(this);
         for (i = 0; i < this._barrels.length; i++) {
-            this._barrels[i].getResources();
+            this._barrels[i].acquireResources();
         }
     };
     /**
@@ -909,8 +995,8 @@ define([
     /**
      * 
      */
-    PropulsionClass.prototype.getResources = function () {
-        this._thrusterBurnParticle.getResources();
+    PropulsionClass.prototype.acquireResources = function () {
+        this._thrusterBurnParticle.acquireResources();
     };
     /**
      * @returns {ParticleDescriptor}
@@ -1206,13 +1292,23 @@ define([
         return new budaScene.Camera(aspect, this._fov, this._movable, this._turnable, followedObject, this._followPositionMatrix, this._followOrientationMatrix, this._rotationCenterIsObject);
     };
     // ##############################################################################
-    ///TODO: review and properly document class
     /**
-     * 
-     * @param {Object} dataJSON
+     * @struct Damage indicators are explosions or fires that are created on a spacecraft
+     * when its hitpoints fall below a certain level.
+     * This struct holds the information necessary to create one such indicator.
+     * Each spacecraft has a list of these.
+     * @param {Object} dataJSON The JSON object that hold the data of this indicator to be loaded.
      */
     function DamageIndicator(dataJSON) {
+        /**
+         * The amount of hull integrity below which this indicator should be presented. (percentage)
+         * @type Number
+         */
         this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || application.crash()) : null;
+        /**
+         * The class of the explosion that should be created to display this indicator.
+         * @type ExplosionClass
+         */
         this.explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.class || application.crash()) || application.crash()) : null;
     }
     // ##############################################################################
@@ -1455,12 +1551,12 @@ define([
     /**
      * @override
      */
-    SpacecraftClass.prototype.getResources = function () {
+    SpacecraftClass.prototype.acquireResources = function () {
         var i;
-        TexturedModelClass.prototype.getResources.call(this);
-        this._explosionClass.getResources();
+        TexturedModelClass.prototype.acquireResources.call(this);
+        this._explosionClass.acquireResources();
         for (i = 0; i < this._damageIndicators.length; i++) {
-            this._damageIndicators[i].explosionClass.getResources();
+            this._damageIndicators[i].explosionClass.acquireResources();
         }
     };
     // -------------------------------------------------------------------------

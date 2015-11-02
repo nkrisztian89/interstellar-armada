@@ -983,7 +983,7 @@
                 {
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
-                    "directionSpread": 45,
+                    "directionSpread": 25,
                     "velocity": 85,
                     "velocitySpread": 15,
                     "initialNumber": 14,
@@ -1001,7 +1001,7 @@
                         {
                             "color": [1.0, 0.8, 0.2, 1.0],
                             "size": 0,
-                            "timeToReach": 900
+                            "timeToReach": 1100
                         }
                     ]
                 },

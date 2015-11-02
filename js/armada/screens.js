@@ -17,8 +17,9 @@ define([
     "modules/screens",
     "modules/buda-scene",
     "armada/armada",
-    "armada/logic"
-], function (utils, mat, application, components, screens, budaScene, armada, logic) {
+    "armada/logic",
+    "armada/control"
+], function (utils, mat, application, components, screens, budaScene, armada, logic, control) {
     "use strict";
 
     /**
@@ -103,6 +104,9 @@ define([
     BattleScreen.prototype.hide = function () {
         screens.HTMLScreenWithCanvases.prototype.hide.call(this);
         this.pauseBattle();
+        if (this._level) {
+            this._level.destroy();
+        }
         this._level = null;
         this._battleScene = null;
     };
@@ -306,6 +310,7 @@ define([
                     depthRatio: armada.graphics().getShadowDepthRatio()
                 });
                 this.updateStatus("initializing WebGL...", 75);
+                this.clearSceneCanvasBindings();
                 this.bindSceneToCanvas(this._battleScene, this.getScreenCanvas("battleCanvas"));
                 this.updateStatus("", 100);
                 application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
@@ -354,7 +359,6 @@ define([
 
         this._mousePos = null;
     }
-    ;
 
     DatabaseScreen.prototype = new screens.HTMLScreenWithCanvases();
     DatabaseScreen.prototype.constructor = DatabaseScreen;
@@ -743,7 +747,6 @@ define([
         this._shadowQualitySelector = this.registerExternalComponent(new components.Selector(name + "_shadowQualitySelector", "selector.html", "selector.css", "Shadow quality:", ["low", "medium", "high"]), "settingsDiv");
         this._shadowDistanceSelector = this.registerExternalComponent(new components.Selector(name + "_shadowDistanceSelector", "selector.html", "selector.css", "Shadow distance:", ["very close", "close", "medium", "far", "very far"]), "settingsDiv");
     }
-    ;
 
     GraphicsScreen.prototype = new screens.HTMLScreen();
     GraphicsScreen.prototype.constructor = GraphicsScreen;
@@ -894,7 +897,6 @@ define([
          */
         this._settingAltState = null;
     }
-    ;
 
     ControlsScreen.prototype = new screens.HTMLScreen();
     ControlsScreen.prototype.constructor = ControlsScreen;
@@ -950,7 +952,7 @@ define([
             // if it was any other key, respect the shift, ctrl, alt states and set the
             // new key for the action
             var interpreter = armada.control().getInterpreter("keyboard");
-            interpreter.setAndStoreKeyBinding(new Control.KeyBinding(
+            interpreter.setAndStoreKeyBinding(new control.KeyBinding(
                     this._actionUnderSetting,
                     utils.getKeyOfCode(event.keyCode),
                     this._settingShiftState,

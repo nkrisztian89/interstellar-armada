@@ -2419,81 +2419,158 @@ define([
             this.getNode().markAsReusable();
         }
     };
-    ///-------------------------------------------------------------------------
-    ///TODO: continue refactoring from here
     // #########################################################################
     /**
-     * The cloud is rendered through rendering its particles.
-     * This object only exists to set the uniforms common to all particles.
-     * @param {Shader} shader
-     * @param {Number[]} color The RGBA components of the color of the points.
-     * @param {Number} range
-     * @returns {PointCloud}
+     * @class Rendering a point cloud can provide visual feedback to the player as to which direction
+     * is the camera moving at the moment.
+     * This object exists as a parent to set the uniforms common to all particles, but it is not rendered
+     * itself. (performRender is an empty function)
+     * @extends RenderableObject
+     * @param {Shader} shader The shader to use when rendering the points
+     * @param {Number[4]} color The RGBA components of the color of the point particles.
+     * It will be passed to the shader as the uniform u_color
+     * @param {Number} range How deep the point cloud should extend forward from the screen (meters)
      */
     function PointCloud(shader, color, range) {
         RenderableObject.call(this, shader, false, true);
-        this.color = color;
-        this.range = range;
-        this.shift = [0.0, 0.0, 0.0];
-
+        /**
+         * The RGBA components of the color of the point particles.
+         * Passed to the shader as the uniform u_color.
+         * @type Number[4]
+         */
+        this._color = color;
+        /**
+         * How deep the point cloud should extend forward from the screen (meters).
+         * Passed to the shader as the uniform u_farthestZ, using which particles can be gradually blended
+         * into the background based on their distance.
+         * @type Number
+         */
+        this._range = range;
+        /**
+         * Which direction the particles are currently moving and how much (meters). 
+         * Passed to the shader as the uniform u_shift, using which
+         * the trails of the particles can be visualised to indicate the direction of their movement.
+         * @type Number[3]
+         */
+        this._shift = [0.0, 0.0, 0.0];
         this.setUniformValueFunction("u_color", function () {
-            return this.color;
+            return this._color;
         });
         this.setUniformValueFunction("u_shift", function () {
-            return this.shift;
+            return this._shift;
         });
         this.setUniformValueFunction("u_length", function () {
-            return vec.length3(this.shift);
+            return vec.length3(this._shift);
         });
         this.setUniformValueFunction("u_farthestZ", function () {
-            return this.range;
+            return this._range;
         });
     }
-
     PointCloud.prototype = new RenderableObject();
     PointCloud.prototype.constructor = PointCloud;
-
     /**
-     * Creates a dust particle type visual object.
+     * Updates the shift vector.
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} z
+     */
+    PointCloud.prototype.setShift = function (x, y, z) {
+        this._shift[0] = x;
+        this._shift[1] = y;
+        this._shift[2] = z;
+    };
+    // #########################################################################
+    /**
      * @class Visual object that renders a point like object as a line as it is
      * moving. Used to represent dust particles that give a visual clue about the
      * motion of the camera.
      * @extends RenderableObject
-     * @param {Egom.Model} model A model of 2 vertices has to be passed (see lineModel()).
-     * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {Model} model A model of 2 vertices has to be passed (see lineModel()).
+     * @param {Shader} shader The shader that should be active while rendering this object. Should be the same as the 
+     * point cloud's.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the point.
      */
     function PointParticle(model, shader, positionMatrix) {
         RenderableObject.call(this, shader, false, true);
-        this.positionMatrix = positionMatrix;
-
-        this.model = model;
+        /**
+         * A 4x4 translation matrix representing the position of this point in space to be passed
+         * to the shader.
+         * @type Float32Array
+         */
+        this._positionMatrix = positionMatrix;
+        /**
+         * Stores a reference to the 2-vertex line model. (see lineModel())
+         * @type Model
+         */
+        this._model = model;
         this.setUniformValueFunction("u_modelMatrix", function () {
             return this.getModelMatrix();
         });
     }
-
     PointParticle.prototype = new RenderableObject();
     PointParticle.prototype.constructor = PointParticle;
-
+    /**
+     * @override
+     * Adds the line model resource next to the general ones.
+     * @param {ManagedGLContext} context
+     */
     PointParticle.prototype.addToContext = function (context) {
         RenderableObject.prototype.addToContext.call(this, context);
-        this.model.addToContext(context, false);
+        this._model.addToContext(context, false);
     };
-
+    /**
+     * Return the 4x4 translation matrix describing the position of this particle in space.
+     * @returns {Float32Array}
+     */
+    PointParticle.prototype.getPositionMatrix = function () {
+        return this._positionMatrix;
+    };
+    /**
+     * Only takes the position into account, as point-like objects do not have an orientation.
+     * Does not support parent-child relative positions as regular RenderableObject3Ds do.
+     * @returns {Float32Array}
+     */
     PointParticle.prototype.getModelMatrix = function () {
-        return this.positionMatrix;
+        return this._positionMatrix;
     };
-
+    /**
+     * Modifies the position matrix of the particle to make sure it the particle is situated
+     * within a given range from a given center point.
+     * Use this to relocate the point cloud to be around a camera.
+     * @param {Float32Array} centerPositionMatrix The 4x4 translation matrix describing the center
+     * location around which to place the particle (meters)
+     * @param {Number} range The maximum x,y or z distance the replaced particle can have from the
+     * center point.
+     */
+    PointParticle.prototype.fitPositionWithinRange = function (centerPositionMatrix, range) {
+        var i;
+        for (i = 12; i < 15; i++) {
+            while (this._positionMatrix[i] > -centerPositionMatrix[i] + range) {
+                this._positionMatrix[i] -= range * 2;
+            }
+            while (this._positionMatrix[i] < -centerPositionMatrix[i] - range) {
+                this._positionMatrix[i] += range * 2;
+            }
+        }
+    };
     /**
      * @override
      * Renders the particle.
      * @param {RenderParameters} renderParameters
      */
     PointParticle.prototype.performRender = function (renderParameters) {
-        this.model.render(renderParameters.context, true);
+        this._model.render(renderParameters.context, true);
     };
-
+    /**
+     * Always returns false, there are no animations for this type of objects.
+     * @returns {Boolean}
+     */
+    PointParticle.prototype.shouldAnimate = function () {
+        return false;
+    };
+    ///-------------------------------------------------------------------------
+    ///TODO: continue refactoring from here
+    // #########################################################################
     /**
      * Creates a new camera object.
      * @class A virtual camera that can be positioned free or relative to another
@@ -3427,13 +3504,16 @@ define([
      * marked for deletion.
      */
     Scene.prototype.cleanUp = function () {
-        var i;
+        var i, j, k;
         for (i = 0; i < this.objects.length; i++) {
             this.objects[i].cleanUp();
-            while ((i < this.objects.length) && ((!this.objects[i]) || (this.objects[i].canBeReused() === true))) {
-                this.objects[i] = null;
-                this.objects.splice(i, 1);
+            j = i;
+            k = 0;
+            while ((j < this.objects.length) && ((!this.objects[j]) || (this.objects[j].canBeReused() === true))) {
+                j++;
+                k++;
             }
+            this.objects.splice(i, k);
         }
     };
 

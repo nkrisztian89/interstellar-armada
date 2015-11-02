@@ -61,7 +61,7 @@ define([
      * @param {Scene} scene
      */
     Skybox.prototype.addToScene = function (scene) {
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
                     this._class.getModel(),
@@ -70,6 +70,12 @@ define([
                     this._class.getCubemap(),
                     scene.activeCamera));
         }.bind(this));
+    };
+    /**
+     * Removes all references to other objects for proper cleanup of memory.
+     */
+    Skybox.prototype.destroy = function () {
+        this._class = null;
     };
     // ##############################################################################
     /**
@@ -85,13 +91,11 @@ define([
     function BackgroundObject(backgroundObjectClass, degreesAlpha, degreesBeta) {
         /**
          * The class storing the general characteristics of this object.
-         * @name BackgroundObject#_class
          * @type BackgroundObjectClass
          */
         this._class = backgroundObjectClass;
         /**
          * A unit length vector pointing in the direction of this object.
-         * @name BackgroundObject#_position
          * @type Number[3]
          */
         this._position = [
@@ -107,7 +111,7 @@ define([
      */
     BackgroundObject.prototype.addToScene = function (scene) {
         scene.addLightSource(new budaScene.LightSource(this._class.getLightColor(), this._position));
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             var i, layers, layerParticle;
             layers = this._class.getLayers();
@@ -123,6 +127,13 @@ define([
                 scene.addBackgroundObject(layerParticle);
             }
         }.bind(this));
+    };
+    /**
+     * Removes all references to other objects for proper cleanup of memory.
+     */
+    BackgroundObject.prototype.destroy = function () {
+        this._class = null;
+        this._position = null;
     };
     // ##############################################################################
     /**
@@ -172,17 +183,18 @@ define([
      * particles.
      */
     DustParticle.prototype.simulate = function (camera) {
-        var i,
-                modelPos = this._visualModel.positionMatrix,
-                cameraPos = camera.getPositionMatrix();
-        for (i = 12; i < 15; i++) {
-            if (modelPos[i] > -cameraPos[i] + this._range) {
-                this._visualModel.positionMatrix[i] -= this._range * 2;
-            } else if (modelPos[i] < -cameraPos[i] - this._range) {
-                this._visualModel.positionMatrix[i] += this._range * 2;
-            }
+        this._visualModel.fitPositionWithinRange(camera.getPositionMatrix(), this._range);
+    };
+    /**
+     * Removes all references to other objects for proper cleanup of memory.
+     */
+    DustParticle.prototype.destroy = function () {
+        this._positionMatrix = null;
+        if (this._visualModel) {
+            this._visualModel.getNode().markAsReusable();
+            this._visualModel = null;
         }
-        this._visualModel.matrix = this._visualModel.positionMatrix;
+        this._cloud = null;
     };
     // ##############################################################################
     /**
@@ -239,7 +251,7 @@ define([
      */
     DustCloud.prototype.addToScene = function (scene) {
         var i, n, particle;
-        this._class.getResources();
+        this._class.acquireResources();
         this._particles = [];
         n = this._class.getNumberOfParticles();
         for (i = 0; i < n; i++) {
@@ -271,14 +283,31 @@ define([
     DustCloud.prototype.simulate = function (camera) {
         var i, n;
         n = this._class.getNumberOfParticles();
-        this._visualModel.shift = [-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2];
+        this._visualModel.setShift(-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2);
         for (i = 0; i < n; i++) {
             this._particles[i].simulate(camera);
         }
     };
+    /**
+     * Removes all references to other objects for proper cleanup of memory.
+     */
+    DustCloud.prototype.destroy = function () {
+        var i, n;
+        n = this._class.getNumberOfParticles();
+        this._class = null;
+        if (this._particles) {
+            for (i = 0; i < n; i++) {
+                this._particles[i].destroy();
+                this._particles[i] = null;
+            }
+            this._particles = null;
+        }
+        if (this._visualModel) {
+            this._visualModel.getNode().markAsReusable();
+            this._visualModel = null;
+        }
+    };
     // ##############################################################################
-    // ##############################################################################
-    ///TODO: review and properly document class
     /**
      * @class Logic domain class used for explosions and fires. Uses a particle system for
      * the visual model.
@@ -290,48 +319,49 @@ define([
      * particles towards or perpendicular to this vector)
      * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
      * and change position and/or orientation with it, even after they have been emitted
-     * @returns {logic_L24.Explosion}
      */
     function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles) {
         /**
+         * The class that contains the general attributes of the type of explosion the instance represents.
          * @type ExplosionClass
          */
         this._class = explosionClass;
         /**
+         * 4x4 translation matrix used to set the position of the visual model (meters)
          * @type Float32Array
          */
         this._positionMatrix = positionMatrix;
         /**
+         * 4x4 rotation matrix used to set the orientation of the visual model
          * @type Float32Array
          */
         this._orientationMatrix = orientationMatrix;
         /**
+         * This vector is used to set the direction of the particle emitters (which can emit
+         * particles towards ("unidirectional") or perpendicular ("planar") to this vector)
          * @type Number[3]
          */
         this._direction = direction;
         /**
+         * If true, the particles emitted by the explosion will belong to it as subnodes,
+         * and change position and/or orientation with it, even after they have been emitted
          * @type Boolean
          */
         this._carriesParticles = carriesParticles;
         /**
+         * Holds a reference to the particle system that is used to visualize the explosion.
          * @type ParticleSystem
          */
         this._visualModel = null;
-        /**
-         * @type Number
-         */
-        this._timeLeft = explosionClass.getDuration() + 100;
-
     }
-
     /**
-     * Returns whether this explosion object can be reused to represent a new
-     * explosion.
-     * @returns {Boolean}
+     * Returns a function that constructs and returns a particle object based on the 
+     * particle emitter descriptor of the given index.
+     * @param {Number} index The index of the particle emitter descriptor to use
+     * @returns {Function} A function that takes no parameters and returns a new instance of 
+     * a Particle, and can be used as the particle constructor function for the particle
+     * emitter created based on the particle emitter descriptor of the given index.
      */
-    Explosion.prototype.canBeReused = function () {
-        return (this._timeLeft <= 0);
-    };
     Explosion.prototype.getEmitterParticleConstructor = function (index) {
         var emitterDescriptor = this._class.getParticleEmitterDescriptors()[index];
         return function () {
@@ -417,7 +447,7 @@ define([
      * to the scene graph as the subnode of this node
      */
     Explosion.prototype.addToScene = function (scene, parentNode) {
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             if (parentNode) {
@@ -431,10 +461,10 @@ define([
      * Adds the resources required to render this explosion to the passed scene,
      * so they get loaded at the next resource load as well as added to any context
      * the scene is added to.
-     * @param {budaScene} scene
+     * @param {Scene} scene
      */
     Explosion.prototype.addResourcesToScene = function (scene) {
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
@@ -447,12 +477,16 @@ define([
         this._visualModel.finishEmitting();
     };
     /**
-     * Removes the renferences to the renderable object of the
-     * explosion and marks it for removel / reuse.
+     * Cancels the held references and marks the renderable object as reusable.
      */
     Explosion.prototype.destroy = function () {
-        this._timeLeft = 0;
-        this._visualModel.markAsReusable();
+        this._class = null;
+        this._positionMatrix = null;
+        this._orientationMatrix = null;
+        this._direction = null;
+        if (this._visualModel) {
+            this._visualModel.markAsReusable();
+        }
         this._visualModel = null;
     };
     // ##############################################################################
@@ -535,7 +569,7 @@ define([
      * presenting the projectile.
      */
     Projectile.prototype.addToScene = function (scene) {
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addObject(this._visualModel);
@@ -549,7 +583,7 @@ define([
      */
     Projectile.prototype.addResourcesToScene = function (scene) {
         var explosion;
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
@@ -558,23 +592,13 @@ define([
         }.bind(this));
     };
     /**
-     * Removes the renferences to the renderable and physics objects of the
-     * projectile and marks it for removel / reuse.
-     */
-    Projectile.prototype.destroy = function () {
-        this._timeLeft = 0;
-        this._visualModel.markAsReusable();
-        this._visualModel = null;
-        this._physicalModel = null;
-    };
-    /**
      * Simulates the movement of the projectile and checks if it hit any objects.
      * @param {Number} dt The passed time since the last simulation in milliseconds.
      * @param {Spacecraft[]} hitObjects The list of objects that is possible for
      * the projectile to hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjects) {
-        var i, positionVector, relPos, velocityVector, velocity, velocityDir, explosion, physicalHitObject;
+        var i, positionVector, relPos, relDir, velocityVector, velocity, velocityDir, explosion, physicalHitObject;
         this._timeLeft -= dt;
         if (this._timeLeft <= 0) {
             this.destroy();
@@ -596,12 +620,27 @@ define([
                     explosion.addToScene(this._visualModel.getNode().getScene());
 
                     relPos = vec.mulVec4Mat4(positionVector, mat.inverse4(hitObjects[i].getVisualModel().getModelMatrix()));
-                    hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(velocityDir, -1));
+                    relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
+                    hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(relDir, -1));
 
                     this.destroy();
                 }
             }
         }
+    };
+    /**
+     * Removes the renferences to the renderable and physics objects of the
+     * projectile and marks it for removel / reuse.
+     */
+    Projectile.prototype.destroy = function () {
+        this._timeLeft = 0;
+        this._class = null;
+        this._origin = null;
+        if (this._visualModel && this._visualModel.getNode()) {
+            this._visualModel.getNode().markAsReusable();
+        }
+        this._visualModel = null;
+        this._physicalModel = null;
     };
     /**
      * @class Represents a weapon on a spacecraft.
@@ -648,8 +687,8 @@ define([
     /**
      * 
      */
-    Weapon.prototype.getResources = function () {
-        this._class.getResources();
+    Weapon.prototype.acquireResources = function () {
+        this._class.acquireResources();
     };
     /**
      * Adds a renderable node representing this weapon to the scene under the
@@ -663,7 +702,7 @@ define([
      * mode.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
-        this.getResources();
+        this.acquireResources();
         armada.resources().executeWhenReady(function () {
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             this._visualModel = new budaScene.ShadedLODMesh(
@@ -809,7 +848,7 @@ define([
      * that has this thruster)
      */
     Thruster.prototype.addToScene = function (parentNode) {
-        this._propulsionClass.getResources();
+        this._propulsionClass.acquireResources();
         armada.resources().executeWhenReady(function () {
             this._visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
@@ -890,8 +929,8 @@ define([
     /**
      * 
      */
-    Propulsion.prototype.getResources = function () {
-        this._class.getResources();
+    Propulsion.prototype.acquireResources = function () {
+        this._class.acquireResources();
     };
     /**
      * Returns the thrust power of this propulsion system, in newtowns.
@@ -1505,17 +1544,18 @@ define([
     function Spacecraft(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
         /**
          * The class of this spacecraft that describes its general properties.
-         * @name Spacecraft#_class
          * @type SpacecraftClass
          */
         this._class = null;
         /**
-         * @type number
+         * The number of hitpoints indicate the amount of damage the ship can take. Successful hits by
+         * projectiles on the ship reduce the amount of hitpoints based on the damage value of the 
+         * projectile, and when it hits zero, the spacecraft explodes.
+         * @type Number
          */
         this._hitpoints = null;
         /**
          * The renderable node that represents this spacecraft in a scene.
-         * @name Spacecraft#_visualModel
          * @type ParameterizedMesh
          */
         this._visualModel = null;
@@ -1523,50 +1563,46 @@ define([
          * The object representing the physical properties of this spacecraft.
          * Used to calculate the movement and rotation of the craft as well as
          * check for collisions and hits.
-         * @name Spacecraft#_physicalModel
          * @type PhysicalObject
          */
         this._physicalModel = null;
         /**
          * The list of weapons this spacecraft is equipped with.
-         * @name Spacecraft#_weapons
          * @type Weapon[]
          */
         this._weapons = null;
         /**
          * The propulsion system this spacecraft is equipped with.
-         * @name Spacecraft#_propulsion
          * @type Propulsion
          */
         this._propulsion = null;
         /**
          * The maneuvering computer of this spacecraft that translates high
          * level maneuvering commands issued to this craft into thruster control.
-         * @name Spacecraft#_maneuveringComputer
          * @type ManeuveringComputer
          */
         this._maneuveringComputer = null;
         /**
          * The renderable object that is used as the parent for the visual
          * representation of the hitboxes of this craft.
-         * @name Spacecraft#_hitbox
          * @type RenderableObject
          */
         this._hitbox = null;
         /**
          * The array to which the spacecraft will add its fired projectiles.
-         * @name Spacecraft#_projectileArray
          * @type Projectile[]
          */
         this._projectileArray = null;
         /**
-         * @type boolean
+         * Set to false when the spacecraft object is destroyed and cannot be used anymore. At this
+         * point, references from it have also been removed.
+         * @type Boolean
          */
         this._alive = true;
         /**
          * Negative, while the ship is not destoyed, set to zero upon start of destruction animation so
          * that deletion of the spacecraft can take place at the appropriate time
-         * @type number
+         * @type Number
          */
         this._timeElapsedSinceDestruction = -1;
         /**
@@ -1600,7 +1636,7 @@ define([
                 mat.identity4(),
                 mat.identity4(),
                 this._class.getBodies());
-        this._class.getResources();
+        this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
         }.bind(this));
@@ -1996,13 +2032,13 @@ define([
                         false);
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
-    Spacecraft.prototype.getResources = function (lod, hitbox) {
+    Spacecraft.prototype.acquireResources = function (lod, hitbox) {
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             armada.resources().getTexture("white");
         }
-        this._class.getResources(params);
+        this._class.acquireResources(params);
     };
     /**
      * Creates and adds the renderable objects to represent this spacecraft to
@@ -2032,21 +2068,21 @@ define([
         var i;
         addSupplements = addSupplements || {};
         // getting resources
-        this.getResources(lod, addSupplements && (addSupplements.hitboxes === true));
+        this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true));
         if (addSupplements.weapons === true) {
             for (i = 0; i < this._weapons.length; i++) {
-                this._weapons[i].getResources(lod, addSupplements.projectileResources);
+                this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
             }
         }
         // add the thruster particles
         if (addSupplements.thrusterParticles === true) {
             if (this._propulsion) {
                 this._propulsion.addThrusters(this._class.getThrusterSlots());
-                this._propulsion.getResources();
+                this._propulsion.acquireResources();
             }
         }
         if (addSupplements.explosion === true) {
-            this._class.getExplosionClass().getResources();
+            this._class.getExplosionClass().acquireResources();
         }
         armada.resources().executeWhenReady(function () {
             var node, explosion;
@@ -2189,15 +2225,20 @@ define([
     Spacecraft.prototype.resetViewCameras = function () {
         this._visualModel.getNode().resetViewCameras();
     };
-    ///TODO: document properly
     /**
-     * @param {Number} damage
-     * @param {Number[3]} damagePosition
-     * @param {Number[3]} damageDir
+     * Simulates what happens when a given amount of damage is dealt to the spacecraft at a specific
+     * point, coming from source coming from a specific direction.
+     * @param {Number} damage The amount of damage done to the spacecraft (hitpoints)
+     * @param {Number[3]} damagePosition The relative position vector of where the damage occured.
+     * Needs to take into consideration the position, orientation and scaling of the spacecraft.
+     * @param {Number[3]} damageDir The relative direction whector indicating where the damage came from.
+     * Also needs to take into consideration the orientation of the spacecraft.
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir) {
         var i, damageIndicator, hitpointThreshold, explosion;
+        // logic simulation: modify hitpoints
         this._hitpoints -= damage;
+        // visual simulation: add damage indicators if needed
         for (i = 0; i < this._class.getDamageIndicators().length; i++) {
             damageIndicator = this._class.getDamageIndicators()[i];
             hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._class.getHitpoints();
@@ -2212,15 +2253,6 @@ define([
                 this._activeDamageIndicators.push(explosion);
             }
         }
-    };
-    /**
-     * 
-     */
-    Spacecraft.prototype.destroy = function () {
-        this._visualModel.getNode().markAsReusable();
-        this._visualModel = null;
-        this._physicalModel = null;
-        this._alive = false;
     };
     /**
      * Performs all the phyics and logic simulation of this spacecraft.
@@ -2259,6 +2291,34 @@ define([
         if (this._propulsion) {
             this._maneuveringComputer.updateSpeedIncrement(dt);
         }
+    };
+    /**
+     * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
+     */
+    Spacecraft.prototype.destroy = function () {
+        var i;
+        this._class = null;
+        this._weapons = null;
+        this._propulsion = null;
+        this._maneuveringComputer = null;
+        this._projectileArray = null;
+        if (this._hitbox) {
+            this._hitbox.markAsReusable();
+        }
+        this._hitbox = null;
+        if (this._visualModel && this._visualModel.getNode()) {
+            this._visualModel.getNode().markAsReusable();
+        }
+        this._visualModel = null;
+        this._physicalModel = null;
+        if (this._activeDamageIndicators) {
+            for (i = 0; i < this._activeDamageIndicators.length; i++) {
+                this._activeDamageIndicators[i].destroy();
+                this._activeDamageIndicators[i] = null;
+            }
+            this._activeDamageIndicators = null;
+        }
+        this._alive = false;
     };
     // #########################################################################
     /**
@@ -2353,6 +2413,31 @@ define([
             this._dustClouds[i].simulate(this._camera);
         }
     };
+    Environment.prototype.destroy = function () {
+        var i;
+        if (this._skyboxes) {
+            for (i = 0; i < this._skyboxes.length; i++) {
+                this._skyboxes[i].destroy();
+                this._skyboxes[i] = null;
+            }
+            this._skyboxes = null;
+        }
+        if (this._backgroundObjects) {
+            for (i = 0; i < this._backgroundObjects.length; i++) {
+                this._backgroundObjects[i].destroy();
+                this._backgroundObjects[i] = null;
+            }
+            this._backgroundObjects = null;
+        }
+        if (this._dustClouds) {
+            for (i = 0; i < this._dustClouds.length; i++) {
+                this._dustClouds[i].destroy();
+                this._dustClouds[i] = null;
+            }
+            this._dustClouds = null;
+        }
+        this._camera = null;
+    };
     // #########################################################################
     /**
      * @class Represents a battle scene with an environment, spacecrafts, 
@@ -2364,39 +2449,39 @@ define([
     function Level() {
         /**
          * Stores the attributes of the environment where this level is situated.
-         * @name Level#_environment
          * @type Environment
          */
         this._environment = null;
         /**
+         * Whether this level has an own environment created by itself (described in the level JSON)
+         * or just refers one from the common environments.
+         * @type Boolean
+         */
+        this._ownsEnvironment = false;
+        /**
          * The starting position of the camera if a scene is generated for this 
          * level.
-         * @name Level#_cameraStartPositionMatrix
          * @type Float32Array
          */
         this._cameraStartPositionMatrix = null;
         /**
          * The starting orientation of the camera if a scene is generated for this 
          * level.
-         * @name Level#_cameraStartOrientationMatrix
          * @type Float32Array
          */
         this._cameraStartOrientationMatrix = null;
         /**
          * The list of spacecrafts that are placed on the map of this level.
-         * @name Level#_spacecrafts
          * @type Spacecraft[]
          */
         this._spacecrafts = null;
         /**
          * An array to store the projectiles fired by the spacecrafts.
-         * @name Level#_projectiles
          * @type Projectile[]
          */
         this._projectiles = null;
         /**
          * The index of the spacecraft that is piloted by the player.
-         * @name Level#_pilotedCraftIndex
          * @type Number
          */
         this._pilotedCraftIndex = null;
@@ -2404,7 +2489,6 @@ define([
          * A list of references to all the physical objects that take part in
          * collision / hit check in this level to easily pass them to such
          * simulation methods.
-         * @name Level#_hitObjects
          * @type PhysicalObject[]
          */
         this._hitObjects = null;
@@ -2445,8 +2529,10 @@ define([
 
         if (dataJSON.environment.createFrom) {
             this._environment = armada.logic().getEnvironment(dataJSON.environment.createFrom);
+            this._ownsEnvironment = false;
         } else {
             this._environment = new Environment(dataJSON.environment);
+            this._ownsEnvironment = true;
         }
 
         this._cameraStartPositionMatrix = mat.identity4();
@@ -2584,6 +2670,37 @@ define([
                 this._projectiles[i].simulate(dt, this._hitObjects);
             }
         }
+    };
+    /**
+     * Removes all references to other objects for proper cleanup of memory.
+     */
+    Level.prototype.destroy = function () {
+        var i;
+        if (this._environment && this._ownsEnvironment) {
+            this._environment.destroy();
+        }
+        this._environment = null;
+        this._cameraStartPositionMatrix = null;
+        this._cameraStartOrientationMatrix = null;
+        if (this._spacecrafts) {
+            for (i = 0; i < this._spacecrafts.length; i++) {
+                if (this._spacecrafts[i]) {
+                    this._spacecrafts[i].destroy();
+                    this._spacecrafts[i] = null;
+                }
+            }
+            this._spacecrafts = null;
+        }
+        if (this._projectiles) {
+            for (i = 0; i < this._projectiles.length; i++) {
+                if (this._projectiles[i]) {
+                    this._projectiles[i].destroy();
+                    this._projectiles[i] = null;
+                }
+            }
+            this._projectiles = null;
+        }
+        this._hitObjects = null;
     };
     // #########################################################################
     /**
