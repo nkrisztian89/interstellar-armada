@@ -614,8 +614,8 @@ define([
         // texture coordinates may be taken from the vertices, from the parameters
         // passed to this function or from the default coordinates set for the model
         texCoords = params.useVertexTexCoords ?
-              [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-              (params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+                (params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
         // normals are taken from the parameters - can be 1 or 3 element long
         normals = params.normals;
         // if not specified, use the model's default group index
@@ -648,28 +648,28 @@ define([
         triangle1Params.withoutLines = true;
         // for texture coordinates and normals, the first 3 values need to be used
         triangle1Params.texCoords = params.useVertexTexCoords ?
-              [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-              (params.texCoords ?
-                    [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
-                    [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+                (params.texCoords ?
+                        [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
+                        [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
         triangle1Params.normals = params.normals ?
-              (params.normals.length === 4 ?
-                    [params.normals[0], params.normals[1], params.normals[2]] :
-                    params.normals) :
-              null;
+                (params.normals.length === 4 ?
+                        [params.normals[0], params.normals[1], params.normals[2]] :
+                        params.normals) :
+                null;
         this.addTriangleWithParams(a, b, c, triangle1Params);
         // adding the first triangle
         triangle2Params = Object.create(params);
         triangle2Params.texCoords = params.useVertexTexCoords ?
-              [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
-              (params.texCoords ?
-                    [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
-                    [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
+                [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
+                (params.texCoords ?
+                        [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
+                        [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
         triangle2Params.normals = params.normals ?
-              (params.normals.length === 4 ?
-                    [params.normals[2], params.normals[3], params.normals[0]] :
-                    params.normals) :
-              null;
+                (params.normals.length === 4 ?
+                        [params.normals[2], params.normals[3], params.normals[0]] :
+                        params.normals) :
+                null;
         this.addTriangleWithParams(c, d, a, triangle2Params);
         // adding the 4 lines around the quad
         if (!params.withoutLines) {
@@ -784,8 +784,8 @@ define([
      */
     Mesh.prototype.getBufferData = function (wireframe, startIndex) {
         var i, j, nLines, nTriangles, ix, index,
-              vertexData, texCoordData, normalData, colorData, luminosityData,
-              shininessData, groupIndexData, triangleIndexData;
+                vertexData, texCoordData, normalData, colorData, luminosityData,
+                shininessData, groupIndexData, triangleIndexData;
         startIndex = startIndex || 0;
         if (wireframe === true) {
             nLines = this._lines.length;
@@ -984,8 +984,8 @@ define([
      */
     Mesh.prototype.loadToVertexBuffers = function (context, startIndex, wireframe, solid) {
         var bufferData = null,
-              dataSize = 0,
-              props = this._contextProperties[context.getName()] || new MeshContextProperties();
+                dataSize = 0,
+                props = this._contextProperties[context.getName()] || new MeshContextProperties();
         if (wireframe) {
             bufferData = this.getBufferData(true, startIndex);
             props.bufferStartWireframe = startIndex;
@@ -1154,7 +1154,7 @@ define([
         // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
         for (i = 0; i < angles; i++) {
             for (j = 0; j < angles; j++) {
-                this.appendVertex([x + radius * Math.sin(j * 2 * 3.1415 / angles) * Math.cos(i * 2 * 3.1415 / angles), y + radius * Math.cos(j * 2 * 3.1415 / angles), z + radius * Math.sin(i * 2 * 3.1415 / angles) * Math.sin(j * 2 * 3.1415 / angles)]);
+                this.appendVertex([x + radius * Math.sin(j * 2 * Math.PI / angles) * Math.cos(i * 2 * Math.PI / angles), y + radius * Math.cos(j * 2 * Math.PI / angles), z + radius * Math.sin(i * 2 * Math.PI / angles) * Math.sin(j * 2 * Math.PI / angles)]);
             }
         }
 
@@ -1480,54 +1480,54 @@ define([
      */
     Model.prototype.loadFromXML = function (filename, xmlDoc, defaultLOD) {
         var i, j, str,
-              minLoadedLOD = null,
-              maxLoadedLOD = null,
-              defaultMinLOD = null,
-              defaultMaxLOD = null,
-              minLOD, maxLOD, minMaxLOD,
-              version, defaultShininess, colorPalette, propertyTags, propName, defLOD,
-              vertexTagName, lineTagName, triangleTagName,
-              params,
-              vertexTags, nVertices, lineTags, nLines, triangleTags, nTriangles,
-              index, vertex, line, triangle,
-              resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
-                  var lod;
-                  if (minLoadedLOD === null) {
-                      for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
-                          this.getMeshWithLOD(lod).resetMesh();
-                      }
-                      minLoadedLOD = newMinLoadedLOD;
-                      maxLoadedLOD = newMaxLoadedLOD;
-                  } else {
-                      for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
-                          this.getMeshWithLOD(lod).resetMesh();
-                      }
-                      for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
-                          this.getMeshWithLOD(lod).resetMesh();
-                      }
-                      minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
-                      maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
-                  }
-              }.bind(this),
-              parseFloatList = function (s) {
-                  return s.split(",").map(parseFloat);
-              };
+                minLoadedLOD = null,
+                maxLoadedLOD = null,
+                defaultMinLOD = null,
+                defaultMaxLOD = null,
+                minLOD, maxLOD, minMaxLOD,
+                version, defaultShininess, colorPalette, propertyTags, propName, defLOD,
+                vertexTagName, lineTagName, triangleTagName,
+                params,
+                vertexTags, nVertices, lineTags, nLines, triangleTags, nTriangles,
+                index, vertex, line, triangle,
+                resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
+                    var lod;
+                    if (minLoadedLOD === null) {
+                        for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD;
+                    } else {
+                        for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
+                    }
+                }.bind(this),
+                parseFloatList = function (s) {
+                    return s.split(",").map(parseFloat);
+                };
         defaultLOD = defaultLOD || 0;
         application.log("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed XML document
         if (!(xmlDoc instanceof Document)) {
             application.showError("'" + filename + "' does not appear to be an XML document.",
-                  "severe",
-                  "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                  "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
             return false;
         }
         if (xmlDoc.documentElement.nodeName !== "EgomModel") {
             application.showError("'" + filename + "' does not appear to be an EgomModel file.",
-                  "severe",
-                  "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                  "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
-                  "'" + xmlDoc.documentElement.nodeName + "' instead.");
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
+                    "'" + xmlDoc.documentElement.nodeName + "' instead.");
             return false;
         }
         // checking EgomModel version
@@ -1538,7 +1538,7 @@ define([
         }
         if (_supportedVersions.indexOf(version) < 0) {
             application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
-                  "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }
         // loading info properties
@@ -1609,18 +1609,18 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             vertex = new Vertex(
-                  (parseFloat(version) >= 2.1 ?
-                        [
-                            parseFloat(vertexTags[i].getAttribute("x")),
-                            parseFloat(vertexTags[i].getAttribute("y")),
-                            parseFloat(vertexTags[i].getAttribute("z"))
-                        ]
-                        // version 2.0
-                        : [
-                            parseFloat(vertexTags[i].getAttribute("x")) / 10000,
-                            parseFloat(vertexTags[i].getAttribute("y")) / -10000,
-                            parseFloat(vertexTags[i].getAttribute("z")) / -10000
-                        ]));
+                    (parseFloat(version) >= 2.1 ?
+                            [
+                                parseFloat(vertexTags[i].getAttribute("x")),
+                                parseFloat(vertexTags[i].getAttribute("y")),
+                                parseFloat(vertexTags[i].getAttribute("z"))
+                            ]
+                            // version 2.0
+                            : [
+                                parseFloat(vertexTags[i].getAttribute("x")) / 10000,
+                                parseFloat(vertexTags[i].getAttribute("y")) / -10000,
+                                parseFloat(vertexTags[i].getAttribute("z")) / -10000
+                            ]));
             for (j = minLOD; j <= maxLOD; j++) {
                 this.getMeshWithLOD(j).setVertex(index, vertex);
             }
@@ -1640,26 +1640,26 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             line = new Line(
-                  parseInt(lineTags[i].getAttribute("a"), 10),
-                  parseInt(lineTags[i].getAttribute("b"), 10),
-                  (parseFloat(version) >= 2.1 ?
-                        (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"), 10)] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
-                        // version 2.0
-                        : [
-                            parseInt(lineTags[i].getAttribute("red"), 10) / 255,
-                            parseInt(lineTags[i].getAttribute("green"), 10) / 255,
-                            parseInt(lineTags[i].getAttribute("blue"), 10) / 255]),
-                  (parseFloat(version) >= 2.1 ?
-                        (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
-                        // version 2.0
-                        : parseInt(lineTags[i].getAttribute("luminosity"), 10) / 255),
-                  (parseFloat(version) >= 2.1 ?
-                        lineTags[i].getAttribute("n").split(",").map(parseFloat)
-                        // version 2.0
-                        : [
-                            parseFloat(lineTags[i].getAttribute("nx")),
-                            -parseFloat(lineTags[i].getAttribute("ny")),
-                            -parseFloat(lineTags[i].getAttribute("nz"))]));
+                    parseInt(lineTags[i].getAttribute("a"), 10),
+                    parseInt(lineTags[i].getAttribute("b"), 10),
+                    (parseFloat(version) >= 2.1 ?
+                            (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"), 10)] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
+                            // version 2.0
+                            : [
+                                parseInt(lineTags[i].getAttribute("red"), 10) / 255,
+                                parseInt(lineTags[i].getAttribute("green"), 10) / 255,
+                                parseInt(lineTags[i].getAttribute("blue"), 10) / 255]),
+                    (parseFloat(version) >= 2.1 ?
+                            (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
+                            // version 2.0
+                            : parseInt(lineTags[i].getAttribute("luminosity"), 10) / 255),
+                    (parseFloat(version) >= 2.1 ?
+                            lineTags[i].getAttribute("n").split(",").map(parseFloat)
+                            // version 2.0
+                            : [
+                                parseFloat(lineTags[i].getAttribute("nx")),
+                                -parseFloat(lineTags[i].getAttribute("ny")),
+                                -parseFloat(lineTags[i].getAttribute("nz"))]));
             for (j = minLOD; j <= maxLOD; j++) {
                 this.getMeshWithLOD(j).addLine(line);
             }
@@ -1680,70 +1680,70 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             params.color = parseFloat(version) >= 2.1 ?
-                  (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"), 10)] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
-                  // version 2.0
-                  : [
-                      parseInt(triangleTags[i].getAttribute("red"), 10) / 255,
-                      parseInt(triangleTags[i].getAttribute("green"), 10) / 255,
-                      parseInt(triangleTags[i].getAttribute("blue"), 10) / 255,
-                      (255 - parseInt(triangleTags[i].getAttribute("alpha"), 10)) / 255];
+                    (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"), 10)] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
+                    // version 2.0
+                    : [
+                        parseInt(triangleTags[i].getAttribute("red"), 10) / 255,
+                        parseInt(triangleTags[i].getAttribute("green"), 10) / 255,
+                        parseInt(triangleTags[i].getAttribute("blue"), 10) / 255,
+                        (255 - parseInt(triangleTags[i].getAttribute("alpha"), 10)) / 255];
             params.luminosity = parseFloat(version) >= 2.1 ?
-                  (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
-                  // version 2.0
-                  : parseInt(triangleTags[i].getAttribute("luminosity"), 10) / 255;
+                    (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("luminosity"), 10) / 255;
             params.shininess = parseFloat(version) >= 2.1 ?
-                  (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi"), 10) : defaultShininess)
-                  // version 2.0
-                  : parseInt(triangleTags[i].getAttribute("shininess"), 10);
+                    (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi"), 10) : defaultShininess)
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("shininess"), 10);
             params.texCoords = parseFloat(version) >= 2.1 ?
-                  [
-                      triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
-                      triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
-                      triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
-                  ]
-                  // version 2.0
-                  : [
-                      [
-                          parseFloat(triangleTags[i].getAttribute("tax")),
-                          parseFloat(triangleTags[i].getAttribute("tay"))],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("tbx")),
-                          parseFloat(triangleTags[i].getAttribute("tby"))],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("tcx")),
-                          parseFloat(triangleTags[i].getAttribute("tcy"))]];
-            params.normals = parseFloat(version) >= 2.1 ?
-                  (triangleTags[i].hasAttribute("n") ?
-                        [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
+                    [
+                        triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
+                        triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
+                        triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
+                    ]
+                    // version 2.0
+                    : [
                         [
-                            triangleTags[i].getAttribute("na").split(",").map(parseFloat),
-                            triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
-                            triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
-                        ])
-                  // version 2.0
-                  : [
-                      [
-                          parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
+                            parseFloat(triangleTags[i].getAttribute("tax")),
+                            parseFloat(triangleTags[i].getAttribute("tay"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tbx")),
+                            parseFloat(triangleTags[i].getAttribute("tby"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tcx")),
+                            parseFloat(triangleTags[i].getAttribute("tcy"))]];
+            params.normals = parseFloat(version) >= 2.1 ?
+                    (triangleTags[i].hasAttribute("n") ?
+                            [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
+                            [
+                                triangleTags[i].getAttribute("na").split(",").map(parseFloat),
+                                triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
+                                triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
+                            ])
+                    // version 2.0
+                    : [
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
             params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
             params.withoutLines = true;
             triangle = null;
             for (j = minLOD; j <= maxLOD; j++) {
                 if (!triangle) {
                     triangle = this.getMeshWithLOD(j).addTriangleWithParams(
-                          triangleTags[i].getAttribute("a"),
-                          triangleTags[i].getAttribute("b"),
-                          triangleTags[i].getAttribute("c"),
-                          params);
+                            triangleTags[i].getAttribute("a"),
+                            triangleTags[i].getAttribute("b"),
+                            triangleTags[i].getAttribute("c"),
+                            params);
                 } else {
                     this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
                 }
@@ -2026,8 +2026,8 @@ define([
      */
     Model.prototype.getBufferSize = function (context) {
         var i,
-              props = this._contextProperties[context.getName()],
-              result = 0;
+                props = this._contextProperties[context.getName()],
+                result = 0;
         for (i = props.minLOD; i <= props.maxLOD; i++) {
             result += this.getMeshWithLOD(i).getBufferSize(props.wireframe, props.solid);
         }

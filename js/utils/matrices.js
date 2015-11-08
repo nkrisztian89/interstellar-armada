@@ -262,7 +262,7 @@ define([
                             result,
                             mat.rotation4(
                                     axis,
-                                    parseFloat(tags[i].getAttribute("degree")) / 180 * 3.1415
+                                    parseFloat(tags[i].getAttribute("degree")) / 180 * Math.PI
                                     )
                             );
         }
@@ -299,7 +299,7 @@ define([
                                 result,
                                 mat.rotation4(
                                         axis,
-                                        parseFloat(jsonArray[i].degrees) / 180 * 3.1415
+                                        parseFloat(jsonArray[i].degrees) / 180 * Math.PI
                                         )
                                 );
             }
@@ -379,6 +379,26 @@ define([
      */
     mat.getRowA4Neg = function (m) {
         return [-m[0], -m[1], -m[2], -m[3]];
+    };
+
+    /**
+     * Returns the first row vector of a 4x4 matrix clipped to a 3D vector.
+     * (same as getRowA3)
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowA43 = function (m) {
+        return [m[0], m[1], m[2]];
+    };
+
+    /**
+     * Returns the opposite of the first row vector of a 4x4 matrix clipped to a 3D vector.
+     * (same as getRowA3Neg)
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowA43Neg = function (m) {
+        return [-m[0], -m[1], -m[2]];
     };
 
     /**

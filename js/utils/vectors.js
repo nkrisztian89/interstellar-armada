@@ -91,8 +91,8 @@ define(function () {
      */
     vec.normal2 = function (v) {
         var
-              divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
-              factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor];
     };
     /**
@@ -102,8 +102,8 @@ define(function () {
      */
     vec.normal3 = function (v) {
         var
-              divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
-              factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor, v[2] * factor];
     };
     /**
@@ -180,8 +180,8 @@ define(function () {
      */
     vec.angle2u = function (v1, v2) {
         return (
-              Math.acos(v1[0] * v2[0] + v1[1] * v2[1])
-              );
+                Math.acos(v1[0] * v2[0] + v1[1] * v2[1])
+                );
     };
     /**
      * Returns the angle of the two 3D unit vectors in radians.
@@ -191,8 +191,8 @@ define(function () {
      */
     vec.angle3u = function (v1, v2) {
         return (
-              Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
-              );
+                Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
+                );
     };
 
     // -----------------------------------------------------------------------------
@@ -212,19 +212,6 @@ define(function () {
         ]);
     };
     /**
-     * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
-     * @param {Float32Array} m A 3x3 matrix.
-     * @param {Number[3]} v A 3D vector.
-     * @returns {Float32Array} m*v
-     */
-    vec.mulMat3Vec3 = function (m, v) {
-        return new Float32Array([
-            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
-            m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
-            m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
-        ]);
-    };
-    /**
      * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
      * given 4x4 matrix. (from the right)
      * @param {Number[3]} v A 3D vector.
@@ -236,20 +223,6 @@ define(function () {
             m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
             m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
             m[2] * v[0] + m[6] * v[1] + m[10] * v[2]
-        ]);
-    };
-    /**
-     * Multiplies the given 4x4 matrix with the given 4D row vector. (from the right)
-     * @param {Float32Array} m A 4x4 matrix.
-     * @param {Number[4]} v A 4D vector.
-     * @returns {Float32Array} m*v
-     */
-    vec.mulMat4Vec4 = function (m, v) {
-        return new Float32Array([
-            m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
-            m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
-            m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
-            m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
         ]);
     };
     /**
@@ -266,6 +239,46 @@ define(function () {
             m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3]
         ]);
     };
-
+    /**
+     * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
+     * @param {Float32Array} m A 3x3 matrix.
+     * @param {Number[3]} v A 3D vector.
+     * @returns {Float32Array} m*v
+     */
+    vec.mulMat3Vec3 = function (m, v) {
+        return new Float32Array([
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+            m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
+            m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
+        ]);
+    };
+    /**
+     * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
+     * given 4x4 matrix. (from the left)
+     * @param {Float32Array} m A 4x4 matrix.
+     * @param {Number[3]} v A 3D vector.
+     * @returns {Float32Array} m'*v
+     */
+    vec.mulMat4Vec3 = function (m, v) {
+        return new Float32Array([
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+            m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
+            m[8] * v[0] + m[9] * v[1] + m[10] * v[2]
+        ]);
+    };
+    /**
+     * Multiplies the given 4x4 matrix with the given 4D row vector. (from the right)
+     * @param {Float32Array} m A 4x4 matrix.
+     * @param {Number[4]} v A 4D vector.
+     * @returns {Float32Array} m*v
+     */
+    vec.mulMat4Vec4 = function (m, v) {
+        return new Float32Array([
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
+            m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
+            m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
+            m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
+        ]);
+    };
     return vec;
 });

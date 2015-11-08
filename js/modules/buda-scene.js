@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true, bitwise: true */
+/*jslint nomen: true, plusplus: true, bitwise: true, white: true */
 /*global define, Float32Array, Int32Array */
 
 
@@ -271,7 +271,9 @@ define([
          * @param {Number} angle Angle in radians.
          */
         function rotate(axis, angle) {
-            this.setOrientationMatrix(mat.mul4(this._orientationMatrix, mat.rotation4(axis, angle)));
+            if (angle !== 0) {
+                this.setOrientationMatrix(mat.mul4(this._orientationMatrix, mat.rotation4(axis, angle)));
+            }
         }
         /**
          * Rotates the current orientation by multiplying it by the given 
@@ -370,14 +372,12 @@ define([
             fullMatrix =
                     mat.mul4(mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
                             camera.getPerspectiveMatrix());
-
             position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
             position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
             position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
             position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
             zOffsetPosition = vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
             zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
-
             // frustum culling: back and front
             if (((zOffset > -1.0) && (zOffset < 1.0)) || ((position[2] > -1.0) && (position[2] < 1.0))) {
                 // frustum culling: sides
@@ -513,11 +513,6 @@ define([
          * @type Boolean
          */
         this._visible = true;
-        /**
-         * A reference to the fist camera of the scene that follows this object.
-         * @type Camera
-         */
-        this._firstCamera = null;
         /**
          * A variable to hold the rendering parameters passed to the held object
          * before each render, in order to avoid creating a new object to store
@@ -691,30 +686,6 @@ define([
         }
     };
     /**
-     * Returns the first camera in the scene following this node.
-     * @returns {Camera}
-     */
-    RenderableNode.prototype.getFirstCamera = function () {
-        return this._firstCamera;
-    };
-    /**
-     * Sets the reference to the first camera following this node.
-     * @param {Camera} firstCamera
-     */
-    RenderableNode.prototype.setFirstCamera = function (firstCamera) {
-        this._firstCamera = firstCamera;
-    };
-    /**
-     * Resets the state of all cameras that follow this node.
-     */
-    RenderableNode.prototype.resetViewCameras = function () {
-        var camera;
-        for (camera = this._firstCamera;
-                camera !== null; camera = ((camera.getNextView() === this._firstCamera) ? null : camera.getNextView())) {
-            camera.reset();
-        }
-    };
-    /**
      * Adds and sets up all resources needed to render the held object and all
      * subnodes to the given context.
      * @param {ManagedGLContext} context
@@ -811,7 +782,8 @@ define([
          * @name RenderableObject#_shader
          * @type Shader
          */
-        this._shader = shader;         /**
+        this._shader = shader;
+        /**
          * The textures this object uses, ordered by their roles/types.
          * @name RenderableObject#_textures
          * @type Object.<String, Texture|Cubemap>
@@ -1159,7 +1131,6 @@ define([
     RenderableObject3D.prototype = new RenderableObject();
     makeObject3DMixinClass.call(RenderableObject3D);
     RenderableObject3D.prototype.constructor = RenderableObject;
-
     /**
      * Sets a new minimum size limit, below which rendering will be disabled.
      * @param {Number} value
@@ -1277,20 +1248,17 @@ define([
         RenderableObject.call(this, shader, false, true);
         /**
          * Must be a quad model that fills the screen.
-         * @name CubemapSampledFVQ#_model
          * @type Model
          */
         this._model = model;
         /**
          * The name of the uniform variable that holds the texture sampler is 
          * this variable prefixed with "u_" and suffixed with "Sampler".
-         * @name CubemapSampledFVQ#_samplerName
          * @type String
          */
         this._samplerName = samplerName;
         /**
          * The camera to be used for querying the cube map.
-         * @name CubemapSampledFVQ#_camera
          * @type Camera
          */
         this._camera = camera;
@@ -1434,7 +1402,6 @@ define([
         }
         return visibleSize * this._lodSizeFactors[referenceSize.toString()];
     };
-
     /**
      * Returns the LOD that should be used when rendering using the passed 
      * render parameters.
@@ -1904,7 +1871,6 @@ define([
             this._currentStateIndex = (nextStateIndex - 1) % this._states.length;
             // calculate the relative progress
             stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
-
             for (i = 0; i < this._color.length; i++) {
                 this._color[i] = (this._states[this._currentStateIndex].color[i] * (1.0 - stateProgress)) + (this._states[nextStateIndex].color[i] * stateProgress);
             }
@@ -2568,584 +2534,770 @@ define([
     PointParticle.prototype.shouldAnimate = function () {
         return false;
     };
-    ///-------------------------------------------------------------------------
-    ///TODO: continue refactoring from here
+    ///TODO: finish implementation
     // #########################################################################
     /**
-     * Creates a new camera object.
-     * @class A virtual camera that can be positioned free or relative to another
-     * object. The scene can contain many cameras and the real camera can be set to
-     * follow one of these.
-     * @param {number} aspect The X/Y aspect ration of the screen of the camera.
-     * @param {number} fov The Field Of View of the camera in degrees.
-     * @param {boolean} controllablePosition Whether the position of the camera is changeable by the player.
-     * @param {boolean} controllableDirection Whether the direction of the camera is changeable by the player.
-     * @param {RenderableObject} followedObject The object to which the camera position and direction has to be interpredet.
-     * If undefined, the camera position is interpreted as absolute (relative to scene center)
-     * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
-     * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
-     * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
+     * @class
+     * @extends Object3D
+     * @param {Number} aspect
+     * @param {Number} fov
+     * @param {Boolean} movable
+     * @param {Boolean} turnable
+     * @param {Object3D} followedObject
+     * @param {Float32Array} followPositionMatrix
+     * @param {Float32Array} followOrientationMatrix
+     * @param {Boolean} rotationCenterIsObject
      */
-    function Camera(aspect, fov, controllablePosition, controllableDirection, followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
-        Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
-        this.velocityVector = [0, 0, 0];
-        this.maxSpeed = 5;
-        this.acceleration = 0.1;
-        this.angularVelocityVector = [0, 0, 0];
-        this.maxTurn = 0.2;
-        this.angularAcceleration = 0.005;
-        this.angularDecceleration = 0.05;
-        if (followedObject) {
-            this.followObject(followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject);
+    function CameraConfiguration(aspect, fov, movable, turnable, followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
+        Object3D.call(this, followPositionMatrix, followOrientationMatrix);
+        /**
+         * @type Object3D
+         */
+        this._followedObject = followedObject;
+        /**
+         * @type Number
+         */
+        this._positionMode = null;
+        if (!followedObject && !movable) {
+            this._positionMode = this.PositionMode.absoluteFixed;
         }
-        this._aspect = aspect;
-        this._maxFOV = 160;
-        this._minFOV = 5;
+        if (!followedObject && movable) {
+            this._positionMode = this.PositionMode.moveRelativeToCamera;
+        }
+        if (followedObject && !movable && !rotationCenterIsObject) {
+            this._positionMode = this.PositionMode.relativeFixed;
+        }
+        if (followedObject && movable && !rotationCenterIsObject) {
+            this._positionMode = this.PositionMode.moveRelativeToObject;
+        }
+        if (followedObject && rotationCenterIsObject) {
+            this._positionMode = this.PositionMode.turnAroundObject;
+        }
+        if (followedObject && movable && !turnable) {
+            this._positionMode = this.PositionMode.moveRelativeToCamera;
+        }
+        if (this._positionMode === null) {
+            application.crash();
+        }
+        /**
+         * @type Number[3]
+         */
+        this._positionVector = mat.translationVector3(followPositionMatrix);
+        /**
+         * @type Number
+         */
+        this._minZ = 0;
+        /**
+         * @type Number
+         */
+        this._maxZ = 0;
+        /**
+         * @type Number
+         */
+        this._orientationMode = null;
+        if (turnable && !followedObject) {
+            this._orientationMode = this.OrientationMode.absoluteFree;
+        }
+        if (!turnable && !followedObject) {
+            this._orientationMode = this.OrientationMode.absoluteFixed;
+        }
+        if (turnable && followedObject && !rotationCenterIsObject) {
+            this._orientationMode = this.OrientationMode.relativeFPS;
+        }
+        if (turnable && followedObject && rotationCenterIsObject) {
+            this._orientationMode = this.OrientationMode.relativeFree;
+        }
+        if (!turnable && followedObject) {
+            this._orientationMode = this.OrientationMode.relativeFixed;
+        }
+        if (followedObject && movable && !turnable) {
+            this._orientationMode = this.OrientationMode.pointTowardsObject;
+        }
+        if (this._orientationMode === null) {
+            application.crash();
+        }
+        /**
+         * @type Number
+         */
+        this._alpha = 0;
+        /**
+         * @type Number
+         */
+        this._beta = 0;
+        /**
+         * @type Number
+         */
+        this._minAlpha = 0;
+        /**
+         * @type Number
+         */
+        this._maxAlpha = 0;
+        /**
+         * @type Number
+         */
+        this._minBeta = 0;
+        /**
+         * @type Number
+         */
+        this._maxBeta = 0;
+        /**
+         * @type Float32Array
+         */
+        this._relativeOrientationMatrix = followOrientationMatrix;
+        /**
+         * @type Number
+         */
         this._fov = fov;
-        this.controllablePosition = controllablePosition;
-        this.controllableDirection = controllableDirection;
-        this.updatePerspectiveMatrix();
-        this.nextView = null;
+        /**
+         * @type Number
+         */
+        this._minFOV = 5; ///TODO: hardcoded
+        /**
+         * @type Number
+         */
+        this._maxFOV = 160; ///TODO: hardcoded
+        /**
+         * @type Number
+         */
+        this._aspect = aspect;
+        /**
+         * @type Float32Array
+         */
+        this._perspectiveMatrix = null;
     }
 
+    makeObject3DMixinClass.call(CameraConfiguration);
+    CameraConfiguration.prototype.PositionMode = {
+        absoluteFixed: 0,
+        relativeFixed: 1,
+        moveRelativeToCamera: 2,
+        moveRelativeToObject: 3,
+        moveAroundObject: 4,
+        turnAroundObject: 5
+    };
+    CameraConfiguration.prototype.OrientationMode = {
+        absoluteFixed: 0,
+        relativeFixed: 1,
+        pointTowardsObject: 2,
+        pointTowardsObjectFPS: 3,
+        absoluteFree: 4,
+        relativeFree: 5,
+        absoluteFPS: 6,
+        relativeFPS: 7
+    };
+    /**
+     * 
+     * @returns {Object3D}
+     */
+    CameraConfiguration.prototype.getFollowedObject = function () {
+        return this._followedObject;
+    };
+    CameraConfiguration.prototype.getAspect = function () {
+        return this._aspect;
+    };
+    CameraConfiguration.prototype.getFOV = function () {
+        return this._fov;
+    };
+    CameraConfiguration.prototype.positionFollowsObject = function () {
+        switch (this._positionMode) {
+            case this.PositionMode.relativeFixed:
+            case this.PositionMode.moveRelativeToObject:
+            case this.PositionMode.moveAroundObject:
+            case this.PositionMode.turnAroundObject:
+                return true;
+            case this.PositionMode.absoluteFixed:
+            case this.PositionMode.moveRelativeToCamera:
+                return false;
+            default:
+                application.crash();
+        }
+        return false;
+    };
+    CameraConfiguration.prototype.updatePosition = function (velocityVector, dt) {
+        var inverseOrientationMatrix, translationVector, inversePositionMatrix;
+        switch (this._positionMode) {
+            case this.PositionMode.absoluteFixed:
+                break;
+            case this.PositionMode.relativeFixed:
+            case this.PositionMode.moveRelativeToObject:
+                if (this._positionMode === this.PositionMode.moveRelativeToObject) {
+                    this._positionVector = vec.add3(this._positionVector, vec.scaled3(velocityVector, dt / 1000));
+                }
+                inversePositionMatrix = mat.mul4(mat.mul4(mat.translation4v(this._positionVector), this._followedObject.getOrientationMatrix()), this._followedObject.getPositionMatrix());
+                this.setPositionMatrix(mat.translation4(-inversePositionMatrix[12], -inversePositionMatrix[13], -inversePositionMatrix[14]));
+                break;
+            case this.PositionMode.moveRelativeToCamera:
+                inverseOrientationMatrix = mat.transposed3(mat.inverse3(mat.matrix3from4(this.getOrientationMatrix())));
+                translationVector = vec.scaled3(vec.mulMat3Vec3(inverseOrientationMatrix, velocityVector), dt / 1000);
+                this.translatev(translationVector);
+                break;
+            case this.PositionMode.moveAroundObject:
+            case this.PositionMode.turnAroundObject:
+                if (this._positionMode === this.PositionMode.moveAroundObject) {
+                    this._positionVector[2] += velocityVector[2] * dt / 1000;
+                    this._positionVector[2] = Math.min(Math.max(this._positionVector[2], this._minZ), this._maxZ);
+                }
+                inversePositionMatrix =
+                        mat.mul4(mat.mul4(
+                                mat.translation4v(mat.translationVector4(mat.mul4(mat.translation4v(this._positionVector), mat.inverseOfRotation4(this._relativeOrientationMatrix)))),
+                                this._followedObject.getOrientationMatrix()
+                                ),
+                                this._followedObject.getPositionMatrix()
+                                );
+                this.setPositionMatrix(mat.translation4(-inversePositionMatrix[12], -inversePositionMatrix[13], -inversePositionMatrix[14]));
+                break;
+        }
+    };
+    CameraConfiguration.prototype.updateOrientation = function (angularVelocityVector, dt) {
+        var dirTowardsObject, axis, angle;
+        switch (this._orientationMode) {
+            case this.OrientationMode.absoluteFixed:
+                break;
+            case this.OrientationMode.relativeFixed:
+            case this.OrientationMode.relativeFree:
+            case this.OrientationMode.relativeFPS:
+                if (this._orientationMode === this.OrientationMode.relativeFree) {
+                    this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix,
+                            mat.mul4(mat.rotation4([0, 0, 1], angularVelocityVector[1] * Math.PI / 180 * dt / 1000),
+                                    mat.rotation4([1, 0, 0], angularVelocityVector[0] * Math.PI / 180 * dt / 1000)));
+                } else if (this._orientationMode === this.OrientationMode.relativeFPS) {
+                    this._alpha += angularVelocityVector[1] * dt / 1000;
+                    this._beta += angularVelocityVector[0] * dt / 1000;
+                    this._relativeOrientationMatrix = mat.mul4(mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180), mat.rotation4([1, 0, 0], this._beta * Math.PI / 180));
+                }
+                // look in direction y instead of z:
+                this.setOrientationMatrix(mat.mul4(mat.mul4(mat.inverseOfRotation4(this._followedObject.getOrientationMatrix()),
+                        this._relativeOrientationMatrix),
+                        mat.rotation4([1, 0, 0], Math.PI / 2)));
+                break;
+            case this.OrientationMode.pointTowardsObject:
+                this.setOrientationMatrix(mat.identity4());
+                dirTowardsObject = vec.normal3(vec.sub3(this._followedObject.getPositionVector(), this.getPositionVector()));
+                this._orientationMatrix[8] = dirTowardsObject[0];
+                this._orientationMatrix[9] = dirTowardsObject[1];
+                this._orientationMatrix[10] = dirTowardsObject[2];
+                axis = vec.cross3([1, 0, 0], dirTowardsObject);
+                this._orientationMatrix[4] = axis[0];
+                this._orientationMatrix[5] = axis[1];
+                this._orientationMatrix[6] = axis[2];
+                axis = vec.cross3(dirTowardsObject, axis);
+                this._orientationMatrix[0] = axis[0];
+                this._orientationMatrix[1] = axis[1];
+                this._orientationMatrix[2] = axis[2];
+                this.setOrientationMatrix(mat.inverseOfRotation4(mat.correctedOrthogonal4(this.getOrientationMatrix())));
+                break;
+            case this.OrientationMode.pointTowardsObjectFPS:
+                dirTowardsObject = vec.normal3(vec.sub3(this._followedObject.getPositionVector(), this.getPositionVector()));
+                this._alpha = vec.angle3u([0, 0, 1], dirTowardsObject);
+                this.setOrientationMatrix(mat.rotation4([0, 1, 0], this._alpha));
+                this._beta = vec.angle3u(mat.getRowC43(this.getOrientationMatrix()), dirTowardsObject);
+                this.setOrientationMatrix(mat.mul4(mat.rotation4([1, 0, 0], this._beta), mat.rotation4([0, 0, 1], this._alpha)));
+                this.setOrientationMatrix(mat.inverseOfRotation4(mat.correctedOrthogonal4(this.getOrientationMatrix())));
+                break;
+            case this.OrientationMode.absoluteFree:
+                this.rotateByMatrix(mat.mul4(mat.rotation4([0, 1, 0], angularVelocityVector[1] * Math.PI / 180 * dt / 1000),
+                        mat.rotation4([1, 0, 0], angularVelocityVector[0] * Math.PI / 180 * dt / 1000)));
+                break;
+            case this.OrientationMode.absoluteFPS:
+                this._alpha += angularVelocityVector[1] * dt / 1000;
+                this._beta += angularVelocityVector[0] * dt / 1000;
+                this.setOrientationMatrix(mat.mul4(mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180), mat.rotation4([1, 0, 0], this._beta * Math.PI / 180)));
+                break;
+        }
+    };
+    CameraConfiguration.prototype.getPerspectiveMatrix = function () {
+        if (!this._perspectiveMatrix) {
+            this._updatePerspectiveMatrix();
+        }
+        return this._perspectiveMatrix;
+    };
+    CameraConfiguration.prototype._updatePerspectiveMatrix = function () {
+        ///TODO: hard-coded constants
+        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * Math.PI / 360 / 2) / 2 / 20, 5000.0);
+    };
+    /**
+     * Sets the camera's Field Of View by also recalculating the perspective matrix.
+     * @param {number} fov The new desired FOV in degrees.
+     */
+    CameraConfiguration.prototype.setFOV = function (fov) {
+        this._fov = fov;
+        this._updatePerspectiveMatrix();
+    };
+    /**
+     * Sets the camera's aspect ratio by also recalculating the perspective matrix.
+     * @param {number} aspect The new desired aspect ratio.
+     */
+    CameraConfiguration.prototype.setAspect = function (aspect) {
+        this._aspect = aspect;
+        this._updatePerspectiveMatrix();
+    };
+    CameraConfiguration.prototype.decreaseFOV = function () {
+        ///TODO: not accurate
+        if (this._fov > this._minFOV) {
+            this.setFOV(this._fov * 0.95);
+        }
+    };
+    CameraConfiguration.prototype.increaseFOV = function () {
+        ///TODO: not accurate
+        if (this._fov < this._maxFOV) {
+            this.setFOV(this._fov * 1.05);
+        }
+    };
+    // #########################################################################
+    function Camera(scene, aspect, fov, adaptationTime, configuration) {
+        Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
+        /**
+         * @type Scene
+         */
+        this._scene = scene;
+        /**
+         * @type CameraConfiguration
+         */
+        this._previousConfiguration = null;
+        /**
+         * @type CameraConfiguration
+         */
+        this._currentConfiguration = configuration;
+        if (!this._currentConfiguration) {
+            this._currentConfiguration = new CameraConfiguration(aspect, fov, true, true, null, mat.identity4(), mat.identity4(), false);
+        }
+        /**
+         * @type Number
+         */
+        this._transitionStyle = this.TransitionStyle.smooth; ///TODO: hardcoded
+        /**
+         * @type Number
+         */
+        this._defaultTransitionStyle = this.TransitionStyle.smooth; ///TODO: hardcoded
+        /**
+         * @type Number
+         */
+        this._transitionDuration = adaptationTime;
+        /**
+         * @type Number
+         */
+        this._defaultTransitionDuration = adaptationTime;
+        /**
+         * @type Number
+         */
+        this._transitionElapsedTime = 0;
+        /**
+         * @type Number
+         */
+        this._followMode = this.FollowMode.instantaneous; ///TODO: hardcoded
+        /**
+         * @type Number[3]
+         */
+        this._velocityVector = [0, 0, 0];
+        /**
+         * @type Number[3]
+         */
+        this._controlledVelocityVector = [0, 0, 0];
+        /**
+         * @type Number[3]
+         */
+        this._velocityTargetVector = [0, 0, 0];
+        /**
+         * @type Number
+         */
+        this._maxSpeed = 250; ///TODO: hardcoded
+        /**
+         * @type Number
+         */
+        this._acceleration = 200; ///TODO: hardcoded
+        /**
+         * @type Number
+         */
+        this._decceleration = 500; ///TODO: hardcoded
+        /**
+         * @type Number[3]
+         */
+        this._angularVelocityVector = [0, 0, 0];
+        /**
+         * @type Number
+         */
+        this._maxAngularVelocity = 180;
+        /**
+         * @type Number
+         */
+        this._angularAcceleration = 720;
+        /**
+         * @type Number
+         */
+        this._angularDecceleration = 2880;
+        /**
+         * @type Number[3]
+         */
+        this._angularVelocityTargetVector = [0, 0, 0];
+        /**
+         * @type Number[3]
+         */
+        this._followedObjectPreviousPosition = null;
+    }
     makeObject3DMixinClass.call(Camera);
-
+    Camera.prototype.TransitionStyle = {
+        linear: 0,
+        smooth: 1
+    };
+    Camera.prototype.FollowMode = {
+        instantaneous: 0,
+        oneStepBehind: 1
+    };
     Camera.prototype.getCameraMatrix = function () {
         return mat.mul4(this.getPositionMatrix(), this.getOrientationMatrix());
     };
-
     Camera.prototype.getPerspectiveMatrix = function () {
-        return this._perspectiveMatrix;
+        return this._currentConfiguration.getPerspectiveMatrix();
     };
-
-    Camera.prototype.getNextView = function () {
-        return this.nextView;
+    Camera.prototype.getVelocityVector = function () {
+        return this._velocityVector;
     };
-
-    /**
-     * Sets the camera up to follow the given visual object.
-     * @param {RenderableObject} followedObject The object to which the camera position and direction has to be interpredet.
-     * If undefined, the camera position is interpreted as absolute (relative to scene center)
-     * @param {Float32Array} followPositionMatrix The translation matrix describing the relative position to the followed object.
-     * @param {Float32Array} followOrientationMatrix The rotation matrix describing the relative orientation to the followed object. 
-     * @param {boolean} rotationCenterIsObject Whether the rotation of the camera has to be executed around the followed model.
-     */
-    Camera.prototype.followObject = function (followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
-        this.followedObject = followedObject;
-        if (followPositionMatrix === undefined) {
-            followPositionMatrix = mat.identity4();
-        }
-        if (followOrientationMatrix === undefined) {
-            followOrientationMatrix = mat.identity4();
-        }
-        this.followPositionMatrix = followPositionMatrix;
-        this.followOrientationMatrix = followOrientationMatrix;
-        this.originalFollowPositionMatrix = followPositionMatrix;
-        this.originalFollowOrientationMatrix = followOrientationMatrix;
-        this.rotationCenterIsObject = rotationCenterIsObject;
-        if (!followedObject.getNode().getFirstCamera()) {
-            followedObject.getNode().setFirstCamera(this);
-        }
-    };
-
-    /**
-     * Resets the camera's relative position and orientation to their original values.
-     */
-    Camera.prototype.reset = function () {
-        this.followPositionMatrix = this.originalFollowPositionMatrix;
-        this.followOrientationMatrix = this.originalFollowOrientationMatrix;
-    };
-
-    Camera.prototype.updatePerspectiveMatrix = function () {
-        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * 3.1415 / 360 / 2) / 2 / 20, 5000.0);
-    };
-
     /**
      * Sets the camera's Field Of View by also recalculating the perspective matrix.
      * @param {number} fov The new desired FOV in degrees.
      */
     Camera.prototype.setFOV = function (fov) {
-        this._fov = fov;
-        this.updatePerspectiveMatrix();
+        this._currentConfiguration.setFOV(fov);
     };
-
     /**
      * Sets the camera's aspect ratio by also recalculating the perspective matrix.
      * @param {number} aspect The new desired aspect ratio.
      */
     Camera.prototype.setAspect = function (aspect) {
-        this._aspect = aspect;
-        this.updatePerspectiveMatrix();
+        this._currentConfiguration.setAspect(aspect);
     };
-
     Camera.prototype.decreaseFOV = function () {
-        if (this._fov > this._minFOV) {
-            this.setFOV(this._fov * 0.95);
-        }
+        this._currentConfiguration.decreaseFOV();
     };
-
     Camera.prototype.increaseFOV = function () {
-        if (this._fov < this._maxFOV) {
-            this.setFOV(this._fov * 1.05);
-        }
+        this._currentConfiguration.increaseFOV();
     };
-
     Camera.prototype.turnLeft = function (intensity) {
-        if (this.controllableDirection) {
-            if ((intensity === undefined) || (intensity === null)) {
-                if (this.angularVelocityVector[1] < this.maxTurn) {
-                    this.angularVelocityVector[1] += this.angularAcceleration;
-                }
-            } else {
-                this.angularVelocityVector[1] = intensity;
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[1] < this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[1] = this._maxAngularVelocity;
             }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.turnLeft(intensity);
+        } else {
+            this._angularVelocityTargetVector[1] = intensity;
+            this._angularVelocityVector[1] = intensity;
         }
     };
-
     Camera.prototype.stopLeftTurn = function () {
-        if (this.angularVelocityVector[1] > 0) {
-            this.angularVelocityVector[1] = 0;//-=
-            //Math.min(this.angularDecceleration, this.angularVelocityVector[1]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopLeftTurn();
+        if (this._angularVelocityTargetVector[1] > 0) {
+            this._angularVelocityTargetVector[1] = 0;
         }
     };
-
     Camera.prototype.turnRight = function (intensity) {
-        if (this.controllableDirection) {
-            if ((intensity === undefined) || (intensity === null)) {
-                if (this.angularVelocityVector[1] > -this.maxTurn) {
-                    this.angularVelocityVector[1] -= this.angularAcceleration;
-                }
-            } else {
-                this.angularVelocityVector[1] = -intensity;
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[1] > -this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[1] = -this._maxAngularVelocity;
             }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.turnRight(intensity);
+        } else {
+            this._angularVelocityTargetVector[1] = -intensity;
+            this._angularVelocityVector[1] = -intensity;
         }
     };
-
     Camera.prototype.stopRightTurn = function () {
-        if (this.angularVelocityVector[1] < 0) {
-            this.angularVelocityVector[1] = 0;//+=
-            //Math.min(this.angularDecceleration, -this.angularVelocityVector[1]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopRightTurn();
+        if (this._angularVelocityTargetVector[1] < 0) {
+            this._angularVelocityTargetVector[1] = 0;
         }
     };
-
     Camera.prototype.turnUp = function (intensity) {
-        if (this.controllableDirection) {
-            if ((intensity === undefined) || (intensity === null)) {
-                if (this.angularVelocityVector[0] < this.maxTurn) {
-                    this.angularVelocityVector[0] += this.angularAcceleration;
-                }
-            } else {
-                this.angularVelocityVector[0] = intensity;
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[0] < this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[0] = this._maxAngularVelocity;
             }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.turnUp(intensity);
+        } else {
+            this._angularVelocityTargetVector[0] = intensity;
+            this._angularVelocityVector[0] = intensity;
         }
     };
-
     Camera.prototype.stopUpTurn = function () {
-        if (this.angularVelocityVector[0] > 0) {
-            this.angularVelocityVector[0] = 0;//-=
-            //Math.min(this.angularDecceleration, this.angularVelocityVector[0]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopUpTurn();
+        if (this._angularVelocityTargetVector[0] > 0) {
+            this._angularVelocityTargetVector[0] = 0;
         }
     };
-
     Camera.prototype.turnDown = function (intensity) {
-        if (this.controllableDirection) {
-            if ((intensity === undefined) || (intensity === null)) {
-                if (this.angularVelocityVector[0] > -this.maxTurn) {
-                    this.angularVelocityVector[0] -= this.angularAcceleration;
-                }
-            } else {
-                this.angularVelocityVector[0] = -intensity;
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[0] > -this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[0] = -this._maxAngularVelocity;
             }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.turnDown(intensity);
+        } else {
+            this._angularVelocityTargetVector[0] = -intensity;
+            this._angularVelocityVector[0] = -intensity;
         }
     };
-
     Camera.prototype.stopDownTurn = function () {
-        if (this.angularVelocityVector[0] < 0) {
-            this.angularVelocityVector[0] = 0;//+=
-            //Math.min(this.angularDecceleration, -this.angularVelocityVector[0]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopDownTurn();
+        if (this._angularVelocityTargetVector[0] < 0) {
+            this._angularVelocityTargetVector[0] = 0;
         }
     };
-
-    Camera.prototype.moveLeft = function () {
-        if (this.controllablePosition) {
-            if (this.velocityVector[0] < this.maxSpeed) {
-                this.velocityVector[0] += this.acceleration;
-            }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.moveLeft();
-        }
-    };
-
-    Camera.prototype.stopLeftMove = function () {
-        if (this.velocityVector[0] > 0) {
-            this.velocityVector[0] -=
-                    Math.min(this.acceleration, this.velocityVector[0]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopLeftMove();
-        }
-    };
-
-    Camera.prototype.moveRight = function () {
-        if (this.controllablePosition) {
-            if (this.velocityVector[0] > -this.maxSpeed) {
-                this.velocityVector[0] -= this.acceleration;
-            }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.moveRight();
-        }
-    };
-
-    Camera.prototype.stopRightMove = function () {
-        if (this.velocityVector[0] < 0) {
-            this.velocityVector[0] +=
-                    Math.min(this.acceleration, -this.velocityVector[0]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopRightMove();
-        }
-    };
-
-    Camera.prototype.moveUp = function () {
-        if (this.controllablePosition) {
-            if (this.velocityVector[1] > -this.maxSpeed) {
-                this.velocityVector[1] -= this.acceleration;
-            }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.moveUp();
-        }
-    };
-
-    Camera.prototype.stopUpMove = function () {
-        if (this.velocityVector[1] < 0) {
-            this.velocityVector[1] +=
-                    Math.min(this.acceleration, -this.velocityVector[1]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopUpMove();
-        }
-    };
-
-    Camera.prototype.moveDown = function () {
-        if (this.controllablePosition) {
-            if (this.velocityVector[1] < this.maxSpeed) {
-                this.velocityVector[1] += this.acceleration;
-            }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.moveDown();
-        }
-    };
-
-    Camera.prototype.stopDownMove = function () {
-        if (this.velocityVector[1] > 0) {
-            this.velocityVector[1] -=
-                    Math.min(this.acceleration, this.velocityVector[1]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopDownMove();
-        }
-    };
-
-    Camera.prototype.moveForward = function () {
-        if (this.controllablePosition) {
-            if (this.velocityVector[2] < this.maxSpeed) {
-                this.velocityVector[2] += this.acceleration;
-            }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.moveForward();
-        }
-    };
-
-    Camera.prototype.stopForwardMove = function () {
-        if (this.velocityVector[2] > 0) {
-            this.velocityVector[2] -=
-                    Math.min(this.acceleration, this.velocityVector[2]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopForwardMove();
-        }
-    };
-
-    Camera.prototype.moveBackward = function () {
-        if (this.controllablePosition) {
-            if (this.velocityVector[2] > -this.maxSpeed) {
-                this.velocityVector[2] -= this.acceleration;
-            }
-        }
-        if (this.followedCamera) {
-            this.followedCamera.moveBackward();
-        }
-    };
-
-    Camera.prototype.stopBackwardMove = function () {
-        if (this.velocityVector[2] < 0) {
-            this.velocityVector[2] +=
-                    Math.min(this.acceleration, -this.velocityVector[2]);
-        }
-        if (this.followedCamera) {
-            this.followedCamera.stopBackwardMove();
-        }
-    };
-
-    Camera.prototype.updatePosition = function () {
-        var inverseOrientationMatrix, translationVector, camPositionMatrix, newPositionMatrix;
-        if (this.controllablePosition) {
-            inverseOrientationMatrix = mat.transposed3(mat.inverse3(mat.matrix3from4(this.getOrientationMatrix())));
-            translationVector = vec.mulMat3Vec3(inverseOrientationMatrix, this.velocityVector);
-            if (this.followedObject === undefined) {
-                this.translatev(translationVector);
-            } else {
-                this.followPositionMatrix =
-                        mat.mul4(this.followPositionMatrix, mat.translation4v(translationVector));
-            }
-        }
-        if (this.followedObject) {
-            camPositionMatrix =
-                    mat.mul4(mat.mul4(this.rotationCenterIsObject ?
-                            mat.translation4v(mat.translationVector4(mat.mul4(this.followPositionMatrix, mat.inverseOfRotation4(this.followOrientationMatrix))))
-                            :
-                            this.followPositionMatrix,
-                            this.followedObject.getOrientationMatrix()
-                            ),
-                            this.followedObject.getPositionMatrix()
-                            );
-            newPositionMatrix =
-                    mat.translation4(-camPositionMatrix[12], -camPositionMatrix[13], -camPositionMatrix[14]);
-            this.setPositionMatrix(newPositionMatrix);
-        }
-    };
-
-    Camera.prototype.updateOrientation = function () {
-        var rotationMatrix;
-        if (this.controllableDirection) {
-            if (this.followedObject === undefined) {
-                rotationMatrix =
-                        mat.mul4(mat.rotation4([0, 1, 0], this.angularVelocityVector[1]),
-                                mat.rotation4([1, 0, 0], this.angularVelocityVector[0]));
-                this.rotateByMatrix(rotationMatrix);
-            } else {
-                rotationMatrix =
-                        mat.mul4(mat.rotation4([0, 0, 1], this.angularVelocityVector[1]),
-                                mat.rotation4([1, 0, 0], this.angularVelocityVector[0]));
-                this.followOrientationMatrix = mat.mul4(this.followOrientationMatrix, rotationMatrix);
-            }
-        }
-        if (this.followedObject) {
-            // look in direction y instead of z:
-            this.setOrientationMatrix(mat.mul4(mat.mul4(mat.inverseOfRotation4(this.followedObject.getOrientationMatrix()),
-                    this.followOrientationMatrix),
-                    mat.rotation4([1, 0, 0], 3.1415 / 2)));
-        }
-    };
-
-    /**
-     * Creates a new SceneCamera.
-     * @class A camera that is used to draw a scene. Can follow one of
-     * the camera objects in the resource center, adapting its parameters to the
-     * ones of that camera in a given time.
-     * @extends Camera
-     * @param {number} aspect The starting X/Y aspect ratio of the camera.
-     * @param {number} fov The starting field of view value of the camera in degrees.
-     * @param {number} adaptationTime The initial duration the camera will take when adapting its parameters
-     * to a new followed camera in milliseconds.
-     * @param {Camera} followedCamera Initial camera object to follow.
-     * */
-    function SceneCamera(aspect, fov, adaptationTime, followedCamera) {
-        Camera.call(this, aspect, fov, true, true);
-        /**
-         * @name SceneCamera#_scene
-         * @type Scene
-         */
-        this._scene = null;
-        this.adaptationTime = adaptationTime;
-        /**
-         * @name SceneCamera#followedCamera
-         * @type Camera
-         */
-        this.followedCamera = null;
-        this._previousFollowedPosition = null;
-        this.followCamera(followedCamera);
-    }
-
-    SceneCamera.prototype = new Camera();
-    SceneCamera.prototype.constructor = SceneCamera;
-
-    SceneCamera.prototype.setScene = function (scene) {
-        if (!this._scene) {
-            this._scene = scene;
-        } else {
-            application.showError("Attempting to assign an already assigned camera to a different scene!", "minor");
-        }
-    };
-
-    SceneCamera.prototype.changeToNextView = function () {
-        if ((this.followedCamera) && (this.followedCamera.nextView)) {
-            this.followCamera(this.followedCamera.nextView, 500);
-        }
-    };
-
-    SceneCamera.prototype.followNextObject = function () {
-        var currentlyFollowedObject, firstObject, currentObject;
-        if (this.followedCamera && this.followedCamera.followedObject) {
-            currentlyFollowedObject = this.followedCamera.followedObject.getNode();
-            this.followCamera(this._scene.getNextObject(currentlyFollowedObject).getFirstCamera(), 4000);
-            // if we are currently not following any cameras, just start following the first one
-        } else {
-            firstObject = this._scene.getFirstObject();
-            if (firstObject.getFirstCamera()) {
-                this.followCamera(firstObject.getFirstCamera(), 4000);
-            } else {
-                for (currentObject = this._scene.getNextObject(firstObject);
-                        currentObject !== firstObject;
-                        currentObject = this._scene.getNextObject(currentObject)) {
-                    if (currentObject.getFirstCamera()) {
-                        this.followCamera(currentObject.getFirstCamera(), 4000);
-                        break;
-                    }
-                }
-            }
-        }
-    };
-
-    SceneCamera.prototype.followPreviousObject = function () {
-        var currentlyFollowedObject, firstObject, currentObject;
-        if (this.followedCamera && this.followedCamera.followedObject) {
-            currentlyFollowedObject = this.followedCamera.followedObject;
-            this.followCamera(this._scene.getPreviousObject(currentlyFollowedObject).getFirstView(), 4000);
-            // if we are currently not following any cameras, just start following the first one
-        } else {
-            firstObject = this._scene.getFirstObject();
-            if (firstObject.getFirstView()) {
-                this.followCamera(firstObject.getFirstView(), 4000);
-            } else {
-                for (currentObject = this._scene.getNextObject(firstObject);
-                        currentObject !== firstObject;
-                        currentObject = this._scene.getNextObject(currentObject)) {
-                    if (currentObject.getFirstView()) {
-                        this.followCamera(currentObject.getFirstView(), 4000);
-                        break;
-                    }
-                }
-            }
-        }
-    };
-
-    SceneCamera.prototype.followObject = function (object) {
-        if (object) {
-            this.followCamera(object.getNode().getFirstCamera(), 500);
-        } else {
-            this.followCamera(null, 0);
-        }
-    };
-
-    /**
-     * Set the camera up to adapt to a virtual camera.
-     * @param {Camera} camera The new camera to follow.
-     * @param {number} adaptationTime The duration the camera will take when adapting its parameters
-     * to the new followed camera in milliseconds. (optional)
-     */
-    SceneCamera.prototype.followCamera = function (camera, adaptationTime) {
-        if (adaptationTime !== undefined) {
-            this.adaptationTime = adaptationTime;
-        }
-        this.followedCamera = camera;
-        this.adaptationStartTime = new Date().getTime();
-        this.adaptationStartPositionMatrix = this._positionMatrix;
-        this.adaptationStartOrientationMatrix = this._orientationMatrix;
-        this.adaptationStartFOV = this._fov;
-        this.adaptationTimeLeft = this.adaptationTime;
-    };
-
-    /**
-     * Updates the transformation matrices of the scene camera to transition to a
-     * new followed camera if it did not adapt to it fully yet.
-     */
-    SceneCamera.prototype.update = function () {
-        var currentTime, adaptationProgress, trans, newPositionMatrix, velocityMatrix, newFollowedPosition;
-        if (this.followedCamera) {
-            this.followedCamera.updateOrientation();
-            this.followedCamera.updatePosition();
-            if (this.adaptationTimeLeft > 0) {
-                currentTime = new Date().getTime();
-                adaptationProgress = Math.min(1.0, (currentTime - this.adaptationStartTime) / this.adaptationTime);
-                this.adaptationTimeLeft = this.adaptationTime - (currentTime - this.adaptationStartTime);
-                trans = mat.translation4((this.followedCamera._positionMatrix[12] - this.adaptationStartPositionMatrix[12]) * adaptationProgress,
-                        (this.followedCamera._positionMatrix[13] - this.adaptationStartPositionMatrix[13]) * adaptationProgress,
-                        (this.followedCamera._positionMatrix[14] - this.adaptationStartPositionMatrix[14]) * adaptationProgress);
-                newPositionMatrix = mat.translatedByM4(this.adaptationStartPositionMatrix, trans);
-                velocityMatrix = mat.mul4(mat.translation4(newPositionMatrix[12] - this._positionMatrix[12],
-                        newPositionMatrix[13] - this._positionMatrix[13],
-                        newPositionMatrix[14] - this._positionMatrix[14]), this._orientationMatrix);
-                this.velocityVector = [velocityMatrix[12], velocityMatrix[13], velocityMatrix[14]];
-                this._positionMatrix = newPositionMatrix;
-                this._orientationMatrix = mat.correctedOrthogonal4(mat.add4(mat.scaled4(this.adaptationStartOrientationMatrix, 1.0 - adaptationProgress),
-                        mat.scaled4(this.followedCamera._orientationMatrix, adaptationProgress)));
-                this.setFOV(this.adaptationStartFOV + (this.followedCamera._fov - this.adaptationStartFOV) * adaptationProgress);
-                this._previousFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
-            } else {
-                this._positionMatrix = this.followedCamera._positionMatrix;
-                this._orientationMatrix = this.followedCamera._orientationMatrix;
-                this._perspectiveMatrix = this.followedCamera._perspectiveMatrix;
-                newFollowedPosition = this.followedCamera.followedObject.getPositionMatrix();
-                velocityMatrix = mat.mul4(mat.translation4(-newFollowedPosition[12] + this._previousFollowedPosition[12],
-                        -newFollowedPosition[13] + this._previousFollowedPosition[13],
-                        -newFollowedPosition[14] + this._previousFollowedPosition[14]), this._orientationMatrix);
-                this.velocityVector = [velocityMatrix[12], velocityMatrix[13], velocityMatrix[14]];
-                this._previousFollowedPosition = newFollowedPosition;
-            }
-        } else {
-            this.updateOrientation();
-            this.updatePosition();
-        }
-    };
-
-    SceneCamera.prototype.getFollowedSpacecraft = function (logicContext) {
+    Camera.prototype._updateAngularVelocity = function (dt) {
         var i;
-        if ((this.followedCamera !== undefined) && (this.followedCamera.followedObject !== undefined)) {
-            // look up the spacecraft being followed (these references need to be cleaned up
-            // to make this part transparent)
-            i = 0;
-            while ((i < logicContext.level._spacecrafts.length) &&
-                    (logicContext.level._spacecrafts[i].visualModel !== this.followedCamera.followedObject)) {
-                i++;
-            }
-            // if we found it, set the proper controller
-            if (i < logicContext.level._spacecrafts.length) {
-                return logicContext.level._spacecrafts[i];
+        for (i = 0; i < this._angularVelocityVector.length; i++) {
+            if (this._angularVelocityVector[i] >= 0) {
+                if (this._angularVelocityVector[i] < this._angularVelocityTargetVector[i]) {
+                    this._angularVelocityVector[i] += this._angularAcceleration * dt / 1000;
+                    if (this._angularVelocityVector[i] > this._angularVelocityTargetVector[i]) {
+                        this._angularVelocityVector[i] = this._angularVelocityTargetVector[i];
+                    }
+                } else if (this._angularVelocityVector[i] > this._angularVelocityTargetVector[i]) {
+                    this._angularVelocityVector[i] -= this._angularDecceleration * dt / 1000;
+                    if (this._angularVelocityVector[i] < this._angularVelocityTargetVector[i]) {
+                        this._angularVelocityVector[i] = this._angularVelocityTargetVector[i];
+                    }
+                }
+            } else if (this._angularVelocityVector[i] < 0) {
+                if (this._angularVelocityVector[i] > this._angularVelocityTargetVector[i]) {
+                    this._angularVelocityVector[i] -= this._angularAcceleration * dt / 1000;
+                    if (this._angularVelocityVector[i] < this._angularVelocityTargetVector[i]) {
+                        this._angularVelocityVector[i] = this._angularVelocityTargetVector[i];
+                    }
+                } else if (this._angularVelocityVector[i] < this._angularVelocityTargetVector[i]) {
+                    this._angularVelocityVector[i] += this._angularDecceleration * dt / 1000;
+                    if (this._angularVelocityVector[i] > this._angularVelocityTargetVector[i]) {
+                        this._angularVelocityVector[i] = this._angularVelocityTargetVector[i];
+                    }
+                }
             }
         }
-        return null;
     };
-
+    Camera.prototype.moveLeft = function () {
+        if (this._velocityTargetVector[0] < this._maxSpeed) {
+            this._velocityTargetVector[0] = this._maxSpeed;
+        }
+    };
+    Camera.prototype.stopLeftMove = function () {
+        if (this._velocityTargetVector[0] > 0) {
+            this._velocityTargetVector[0] = 0;
+        }
+    };
+    Camera.prototype.moveRight = function () {
+        if (this._velocityTargetVector[0] > -this._maxSpeed) {
+            this._velocityTargetVector[0] = -this._maxSpeed;
+        }
+    };
+    Camera.prototype.stopRightMove = function () {
+        if (this._velocityTargetVector[0] < 0) {
+            this._velocityTargetVector[0] = 0;
+        }
+    };
+    Camera.prototype.moveUp = function () {
+        if (this._velocityTargetVector[1] > -this._maxSpeed) {
+            this._velocityTargetVector[1] = -this._maxSpeed;
+        }
+    };
+    Camera.prototype.stopUpMove = function () {
+        if (this._velocityTargetVector[1] < 0) {
+            this._velocityTargetVector[1] = 0;
+        }
+    };
+    Camera.prototype.moveDown = function () {
+        if (this._velocityTargetVector[1] < this._maxSpeed) {
+            this._velocityTargetVector[1] = this._maxSpeed;
+        }
+    };
+    Camera.prototype.stopDownMove = function () {
+        if (this._velocityTargetVector[1] > 0) {
+            this._velocityTargetVector[1] = 0;
+        }
+    };
+    Camera.prototype.moveForward = function () {
+        if (this._velocityTargetVector[2] < this._maxSpeed) {
+            this._velocityTargetVector[2] = this._maxSpeed;
+        }
+    };
+    Camera.prototype.stopForwardMove = function () {
+        if (this._velocityTargetVector[2] > 0) {
+            this._velocityTargetVector[2] = 0;
+        }
+    };
+    Camera.prototype.moveBackward = function () {
+        if (this._velocityTargetVector[2] > -this._maxSpeed) {
+            this._velocityTargetVector[2] = -this._maxSpeed;
+        }
+    };
+    Camera.prototype.stopBackwardMove = function () {
+        if (this._velocityTargetVector[2] < 0) {
+            this._velocityTargetVector[2] = 0;
+        }
+    };
+    Camera.prototype._updateVelocity = function (dt) {
+        var i;
+        for (i = 0; i < this._controlledVelocityVector.length; i++) {
+            if (this._controlledVelocityVector[i] >= 0) {
+                if (this._controlledVelocityVector[i] < this._velocityTargetVector[i]) {
+                    this._controlledVelocityVector[i] += this._acceleration * dt / 1000;
+                    if (this._controlledVelocityVector[i] > this._velocityTargetVector[i]) {
+                        this._controlledVelocityVector[i] = this._velocityTargetVector[i];
+                    }
+                } else if (this._controlledVelocityVector[i] > this._velocityTargetVector[i]) {
+                    this._controlledVelocityVector[i] -= this._decceleration * dt / 1000;
+                    if (this._controlledVelocityVector[i] < this._velocityTargetVector[i]) {
+                        this._controlledVelocityVector[i] = this._velocityTargetVector[i];
+                    }
+                }
+            } else if (this._controlledVelocityVector[i] < 0) {
+                if (this._controlledVelocityVector[i] > this._velocityTargetVector[i]) {
+                    this._controlledVelocityVector[i] -= this._acceleration * dt / 1000;
+                    if (this._controlledVelocityVector[i] < this._velocityTargetVector[i]) {
+                        this._controlledVelocityVector[i] = this._velocityTargetVector[i];
+                    }
+                } else if (this._controlledVelocityVector[i] < this._velocityTargetVector[i]) {
+                    this._controlledVelocityVector[i] += this._decceleration * dt / 1000;
+                    if (this._controlledVelocityVector[i] > this._velocityTargetVector[i]) {
+                        this._controlledVelocityVector[i] = this._velocityTargetVector[i];
+                    }
+                }
+            }
+        }
+    };
+    Camera.prototype._getFreeCameraConfiguration = function (positionMatrix, orientationMatrix) {
+        positionMatrix = positionMatrix ? mat.matrix4(positionMatrix) : mat.matrix4(this.getPositionMatrix());
+        orientationMatrix = orientationMatrix ? mat.matrix4(orientationMatrix) : mat.matrix4(this.getOrientationMatrix());
+        return new CameraConfiguration(this._currentConfiguration.getAspect(),
+                this._currentConfiguration.getFOV(),
+                true,
+                true,
+                null,
+                positionMatrix,
+                orientationMatrix,
+                false);
+    };
+    Camera.prototype.setConfiguration = function (configuration) {
+        this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
+        this._previousConfiguration = null;
+    };
+    Camera.prototype.startTransitionToConfiguration = function (configuration, duration, style) {
+        if (duration === 0) {
+            this.setConfiguration(configuration);
+        } else {
+            if (this._previousConfiguration) {
+                this._previousConfiguration = new CameraConfiguration(this._currentConfiguration.getAspect(), this._currentConfiguration.getFOV(), false, false, null, mat.matrix4(this.getPositionMatrix()), mat.matrix4(this.getOrientationMatrix()), false);
+            } else {
+                this._previousConfiguration = this._currentConfiguration;
+            }
+            this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
+            this._transitionDuration = duration === undefined ? this._defaultTransitionDuration : duration;
+            this._transitionElapsedTime = 0;
+            this._transitionStyle = style === undefined ? this._defaultTransitionStyle : style;
+        }
+    };
+    Camera.prototype.setToFreeCamera = function (positionMatrix, orientationMatrix, duration, style) {
+        this.startTransitionToConfiguration(this._getFreeCameraConfiguration(positionMatrix, orientationMatrix), duration || 0, style);
+    };
+    Camera.prototype.followObject = function (objectToFollow, duration, style) {
+        this.startTransitionToConfiguration(this._scene.getFirstCameraConfigurationForObject(objectToFollow), duration, style);
+    };
+    Camera.prototype.changeToNextView = function (duration, style) {
+        this.startTransitionToConfiguration(this._scene.getNextCameraConfigurationOfSameObject(this._currentConfiguration), duration, style);
+    };
+    Camera.prototype.followNextObject = function (duration, style) {
+        this.startTransitionToConfiguration(this._scene.getCameraConfigurationForNextObject(this._currentConfiguration.getFollowedObject()), duration, style);
+    };
+    Camera.prototype.followPreviousObject = function (duration, style) {
+        this.startTransitionToConfiguration(this._scene.getCameraConfigurationForPreviousObject(this._currentConfiguration.getFollowedObject()), duration, style);
+    };
+    Camera.prototype.update = function (dt) {
+        var startPositionVector, endPositionVector, previousPositionVector,
+                startOrientationMatrix, endOrientationMatrix, transitionOrientationMatrix,
+                dot, alpha, gamma, axis,
+                transitionProgress,
+                forwardTransitionOrientationMatrix, backwardTransitionOrientationMatrix;
+        if (this._previousConfiguration) {
+            this._currentConfiguration.updatePosition([0, 0, 0], dt);
+            this._currentConfiguration.updateOrientation([0, 0, 0], dt);
+            this._currentConfiguration.updatePosition([0, 0, 0], dt);
+            this._transitionElapsedTime += dt;
+            if (this._transitionElapsedTime > this._transitionDuration) {
+                this._transitionElapsedTime = this._transitionDuration;
+            }
+            switch (this._transitionStyle) {
+                case this.TransitionStyle.linear:
+                    transitionProgress = this._transitionElapsedTime / this._transitionDuration;
+                    break;
+                case this.TransitionStyle.smooth:
+                    transitionProgress = this._transitionElapsedTime / this._transitionDuration;
+                    transitionProgress = 3 * transitionProgress * transitionProgress - 2 * transitionProgress * transitionProgress * transitionProgress;
+                    break;
+                default:
+                    application.crash();
+            }
+            this._previousConfiguration.updatePosition([0, 0, 0], dt);
+            this._previousConfiguration.updateOrientation([0, 0, 0], dt);
+            // calculate position
+            startPositionVector = this._previousConfiguration.getPositionVector();
+            endPositionVector = this._currentConfiguration.getPositionVector();
+            previousPositionVector = this.getPositionVector();
+            this.setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
+            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(mat.inverseOfRotation4(this.getOrientationMatrix()), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
+            // calculate orientation
+            startOrientationMatrix = this._previousConfiguration.getOrientationMatrix();
+            endOrientationMatrix = this._currentConfiguration.getOrientationMatrix();
+            dot = vec.dot3(mat.getRowB43(startOrientationMatrix), mat.getRowB43(endOrientationMatrix));
+            if (Math.abs(dot) > 0.99) {
+                axis = mat.getRowC43(startOrientationMatrix);
+                alpha = dot > 0 ? 0 : Math.PI;
+            } else {
+                axis = vec.cross3(mat.getRowB43(endOrientationMatrix), mat.getRowB43(startOrientationMatrix));
+                alpha = vec.angle3u(mat.getRowB43(startOrientationMatrix), mat.getRowB43(endOrientationMatrix));
+            }
+            if (alpha > Math.PI) {
+                alpha -= 2 * Math.PI;
+            }
+            transitionOrientationMatrix = mat.correctedOrthogonal4(mat.mul4(startOrientationMatrix, mat.rotation4(axis, alpha)));
+            dot = vec.dot3(mat.getRowA43(transitionOrientationMatrix), mat.getRowA43(endOrientationMatrix));
+            if (Math.abs(dot) > 0.99) {
+                gamma = dot > 0 ? 0 : Math.PI;
+            } else {
+                gamma = vec.angle3u(mat.getRowA43(transitionOrientationMatrix), mat.getRowA43(endOrientationMatrix));
+            }
+            if (gamma > Math.PI) {
+                gamma -= 2 * Math.PI;
+            }
+            this.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
+            this.rotate(this.getYDirectionVector(), -gamma * transitionProgress);
+            this.rotate(axis, alpha * transitionProgress);
+            forwardTransitionOrientationMatrix = mat.correctedOrthogonal4(this.getOrientationMatrix());
+            this.setOrientationMatrix(mat.matrix4(endOrientationMatrix));
+            this.rotate(axis, -alpha * (1 - transitionProgress));
+            this.rotate(this.getYDirectionVector(), gamma * (1 - transitionProgress));
+            backwardTransitionOrientationMatrix = mat.correctedOrthogonal4(this.getOrientationMatrix());
+            this.setOrientationMatrix(mat.correctedOrthogonal4(mat.add4(mat.scaled4(forwardTransitionOrientationMatrix, 1.0 - transitionProgress),
+                    mat.scaled4(backwardTransitionOrientationMatrix, transitionProgress))));
+            if (this._transitionElapsedTime === this._transitionDuration) {
+                this._previousConfiguration = null;
+            }
+        } else {
+            this._updateVelocity(dt);
+            this._updateAngularVelocity(dt);
+            this._currentConfiguration.updatePosition(this._controlledVelocityVector, dt);
+            this._currentConfiguration.updateOrientation(this._angularVelocityVector, dt);
+            this._currentConfiguration.updatePosition([0, 0, 0], dt);
+            switch (this._followMode) {
+                case this.FollowMode.instantaneous:
+                    this.setPositionMatrix(this._currentConfiguration.getPositionMatrix());
+                    this.setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
+                    break;
+                case this.FollowMode.oneStepBehind:
+                    ///TODO: implement
+                    application.crash();
+                    break;
+            }
+            if (this._currentConfiguration.positionFollowsObject()) {
+                if (this._followedObjectPreviousPosition) {
+                    this._velocityVector = vec.scaled3(vec.mulMat4Vec3(mat.inverseOfRotation4(this.getOrientationMatrix()), vec.sub3(this._currentConfiguration.getFollowedObject().getPositionVector(), this._followedObjectPreviousPosition)), -1000 / dt);
+                } else {
+                    this._velocityVector = [0, 0, 0];
+                }
+                this._followedObjectPreviousPosition = this._currentConfiguration.getFollowedObject().getPositionVector();
+            } else {
+                this._velocityVector = this._controlledVelocityVector;
+            }
+        }
+    };
+    ///-------------------------------------------------------------------------
+    ///TODO: continue refactoring from here
     /**
      * @class Represents a light source that can be taken into account when rendering.
      * @param {Number[3]} color
@@ -3187,16 +3339,14 @@ define([
             }
         }
     };
-
     LightSource.prototype.reset = function () {
         this.matrix = null;
         this.translationVector = null;
     };
-
     /**
      * 
      * @param {ManagedGLContext} context
-     * @param {SceneCamera} camera
+     * @param {Camera} camera
      * @param {Number[3]} cameraZ
      * @param {Number} rangeIndex
      * @param {Number} range
@@ -3204,7 +3354,6 @@ define([
      */
     LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
-
         var matrix = mat.mul4(mat.mul4(camera.getPositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
         this.matrix = this.matrix || mat.mul4(camera.getPositionMatrix(), this._orientationMatrix);
         this.translationVector = this.translationVector || new Float32Array(vec.normal3(vec.add3(mat.translationVector3(matrix), vec.scaled3(mat.translationVector3(this.matrix), -1))));
@@ -3220,7 +3369,6 @@ define([
             }
         });
     };
-
     /**
      * Creates a new scene graph object.
      * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
@@ -3244,37 +3392,27 @@ define([
         this.colorMask = colorMask;
         this.clearColor = clearColor;
         this.clearDepthOnRender = clearDepthOnRender;
-
         this._backgroundObjects = [];
         this.objects = [];
-        this.cameras = [];
+        this._cameraConfigurations = [];
         this.lights = [];
-
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = [];
-
-        this.setActiveCamera(new SceneCamera(width / height, 60, 1000));
-
+        this.setActiveCamera(new Camera(this, width / height, 60, 1000));
         this.lodContext = lodContext;
-
         this._shadowMappingEnabled = false;
         this._shadowMappingShader = null;
         this._shadowMapTextureSize = null;
         this._shadowMapRanges = [];
         this._shadowMapDepthRatio = null;
-
         this.uniformValueFunctions = {};
-
         /**
          * @type Boolean
          */
         this._shouldAnimate = true;
-
         this.firstRender = true;
         this._drawnTriangles = 0;
-
         this._contexts = [];
-
         var self = this;
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
@@ -3285,7 +3423,6 @@ define([
         this.uniformValueFunctions.u_lights = function () {
             return self.lights;
         };
-
         this.uniformValueFunctions.u_cameraMatrix = function () {
             return self.activeCamera.getCameraMatrix();
         };
@@ -3329,7 +3466,6 @@ define([
             }.bind(this);
         }
     };
-
     Scene.prototype.setShadowMapRanges = function (ranges) {
         var i, j;
         this._shadowMapRanges = ranges;
@@ -3339,26 +3475,21 @@ define([
             }
         }
     };
-
     Scene.prototype.setActiveCamera = function (sceneCamera) {
         this.activeCamera = sceneCamera;
-        sceneCamera.setScene(this);
     };
-
     /**
      * @returns {Boolean}
      */
     Scene.prototype.shouldAnimate = function () {
         return this._shouldAnimate;
     };
-
     /**
      * @param {Boolean} value
      */
     Scene.prototype.setShouldAnimate = function (value) {
         this._shouldAnimate = value;
     };
-
     /**
      * Appends a new visual object to the list of background objects.
      * @param {RenderableObject} newRenderableObject The object to append.
@@ -3369,7 +3500,6 @@ define([
         node.setScene(this);
         return node;
     };
-
     /**
      * Appends a new visual object to the topmost level of the scene graph.
      * @param {RenderableObject} newRenderableObject The object to append.
@@ -3380,19 +3510,16 @@ define([
         node.setScene(this);
         return node;
     };
-
     Scene.prototype.addObjectToContexts = function (newRenderableObject) {
         var i;
         for (i = 0; i < this._contexts.length; i++) {
             newRenderableObject.addToContext(this._contexts[i]);
         }
     };
-
     Scene.prototype.clearObjects = function () {
         this._backgroundObjects = [];
         this.objects = [];
     };
-
     /**
      * 
      * @returns {RenderableNode}
@@ -3400,7 +3527,6 @@ define([
     Scene.prototype.getFirstObject = function () {
         return this.objects[0];
     };
-
     /**
      * @param {RenderableObject} currentObject
      * @returns {RenderableObject}
@@ -3416,7 +3542,6 @@ define([
         }
         return this.objects[0];
     };
-
     /**
      * @param {RenderableObject} currentObject
      * @returns {RenderableObject}
@@ -3432,7 +3557,6 @@ define([
         }
         return this.objects[0];
     };
-
     /**
      * @param {RenderableObject} object
      */
@@ -3441,37 +3565,40 @@ define([
         this._resourceHolderObjects.push(node);
         node.setScene(this);
     };
-
     Scene.prototype.addLightSource = function (newLightSource) {
         this.lights.push(newLightSource);
     };
-
     Scene.prototype.getLODContext = function () {
         return this.lodContext;
     };
-
     Scene.prototype.getNumberOfDrawnTriangles = function () {
         return this._drawnTriangles;
     };
-
     Scene.prototype.setUniformValueFunction = function (uniformName, valueFunction) {
         this.uniformValueFunctions[uniformName] = valueFunction;
     };
-
     /**
-     * 
-     * @param {Camera} camera
+     * Adds a new camera configuration, making sure that it is stored next to other configurations
+     * following the same object.
+     * @param {CameraConfiguration} cameraConfiguration
      */
-    Scene.prototype.addCamera = function (camera) {
-        this.cameras.push(camera);
-        if ((this.cameras.length >= 2) && (this.cameras[this.cameras.length - 1].followedObject === this.cameras[this.cameras.length - 2].followedObject)) {
-            this.cameras[this.cameras.length - 1].nextView = this.cameras[this.cameras.length - 2].nextView;
-            this.cameras[this.cameras.length - 2].nextView = this.cameras[this.cameras.length - 1];
+    Scene.prototype.addCameraConfiguration = function (cameraConfiguration) {
+        var lastConfigurationIndex = -1, i;
+        if ((this._cameraConfigurations.length === 0) || (this._cameraConfigurations[this._cameraConfigurations.length - 1].getFollowedObject() === cameraConfiguration.getFollowedObject())) {
+            this._cameraConfigurations.push(cameraConfiguration);
         } else {
-            this.cameras[this.cameras.length - 1].nextView = this.cameras[this.cameras.length - 1];
+            for (i = 0; i < this._cameraConfigurations.length; i++) {
+                if (this._cameraConfigurations[i].getFollowedObject() === cameraConfiguration.getFollowedObject()) {
+                    lastConfigurationIndex = i;
+                }
+            }
+            if (lastConfigurationIndex === -1) {
+                this._cameraConfigurations.push(cameraConfiguration);
+            } else {
+                this._cameraConfigurations.splice(lastConfigurationIndex + 1, 0, cameraConfiguration);
+            }
         }
     };
-
     /**
      * Recalculates the perspective matrices of cameras in case the viewport size
      * (and as a result, aspect) has changed.
@@ -3482,12 +3609,11 @@ define([
         var i, _length_;
         this.width = newWidth;
         this.height = newHeight;
-        for (i = 0, _length_ = this.cameras.length; i < _length_; i++) {
-            this.cameras[i].setAspect(this.width / this.height);
+        for (i = 0, _length_ = this._cameraConfigurations.length; i < _length_; i++) {
+            this._cameraConfigurations[i].setAspect(this.width / this.height);
         }
         this.activeCamera.setAspect(this.width / this.height);
     };
-
     /**
      * Assigns all uniforms in the given shader program that
      * the scene has a value function for, using the appropriate webGL calls.
@@ -3498,7 +3624,101 @@ define([
     Scene.prototype.assignUniforms = function (context, shader) {
         shader.assignUniforms(context, this.uniformValueFunctions);
     };
-
+    /**
+     * 
+     * @param {Object3D} objectToFind
+     * @returns {CameraConfiguration}
+     */
+    Scene.prototype.getFirstCameraConfigurationForObject = function (objectToFind) {
+        var i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (this._cameraConfigurations[i].getFollowedObject() === objectToFind) {
+                return this._cameraConfigurations[i];
+            }
+        }
+        return null;
+    };
+    /**
+     * 
+     * @param {CameraConfiguration} currentConfiguration
+     * @returns {CameraConfiguration}
+     */
+    Scene.prototype.getNextCameraConfigurationOfSameObject = function (currentConfiguration) {
+        var firstConfiguration = null, i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (!firstConfiguration && this._cameraConfigurations[i].getFollowedObject() === currentConfiguration.getFollowedObject()) {
+                firstConfiguration = this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i] === currentConfiguration) {
+                if (i === this._cameraConfigurations.length - 1) {
+                    return firstConfiguration;
+                }
+                if (this._cameraConfigurations[i + 1].getFollowedObject() === currentConfiguration.getFollowedObject()) {
+                    return this._cameraConfigurations[i + 1];
+                }
+                return firstConfiguration;
+            }
+        }
+        return null;
+    };
+    /**
+     * 
+     * @param {Object3D} currentObject
+     */
+    Scene.prototype.getCameraConfigurationForNextObject = function (currentObject) {
+        var firstConfigurationOfFirstObject = null, i, objectFound = false;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (!firstConfigurationOfFirstObject && (this._cameraConfigurations[i].getFollowedObject() !== null)) {
+                firstConfigurationOfFirstObject = this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i].getFollowedObject() === currentObject) {
+                objectFound = true;
+            } else if (objectFound) {
+                return this._cameraConfigurations[i];
+            }
+        }
+        return firstConfigurationOfFirstObject;
+    };
+    /**
+     * 
+     * @param {Object3D} currentObject
+     */
+    Scene.prototype.getCameraConfigurationForPreviousObject = function (currentObject) {
+        var firstConfigurationOfLastObject = null, i, objectFound = false, previousObject = null;
+        for (i = this._cameraConfigurations.length - 1; i >= 0; i--) {
+            if ((this._cameraConfigurations[i].getFollowedObject() !== null) && (!firstConfigurationOfLastObject || (this._cameraConfigurations[i].getFollowedObject() === firstConfigurationOfLastObject.getFollowedObject()))) {
+                firstConfigurationOfLastObject = this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i].getFollowedObject() === currentObject) {
+                objectFound = true;
+            } else if (objectFound) {
+                if (!previousObject) {
+                    previousObject = this._cameraConfigurations[i].getFollowedObject();
+                } else {
+                    if (this._cameraConfigurations[i].getFollowedObject() !== previousObject) {
+                        return this._cameraConfigurations[i + 1];
+                    }
+                }
+            }
+        }
+        return previousObject ? this._cameraConfigurations[0] : firstConfigurationOfLastObject;
+    };
+    /**
+     * Removes all camera configurations that refer the object stored at the passed node.
+     * @param {RenderableNode} objectNode
+     */
+    Scene.prototype._removeCameraConfigurationsOfObject = function (objectNode) {
+        var i, j, k;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            j = i;
+            k = 0;
+            while ((j < this._cameraConfigurations.length) && (this._cameraConfigurations[j].getFollowedObject().getNode() === objectNode)) {
+                j++;
+                k++;
+            }
+            this._cameraConfigurations.splice(i, k);
+        }
+    };
     /**
      * Cleans up the whole scene graph, removing all object that are deleted or are
      * marked for deletion.
@@ -3510,13 +3730,13 @@ define([
             j = i;
             k = 0;
             while ((j < this.objects.length) && ((!this.objects[j]) || (this.objects[j].canBeReused() === true))) {
+                this._removeCameraConfigurationsOfObject(this.objects[j]);
                 j++;
                 k++;
             }
             this.objects.splice(i, k);
         }
     };
-
     /**
      * 
      * @param {ManagedGLContext} context
@@ -3549,7 +3769,6 @@ define([
         }
         this._contexts.push(context);
     };
-
     Scene.prototype.enableShadowMapping = function () {
         if (this._shadowMappingShader && this._shadowMapRanges.length > 0) {
             var i, l;
@@ -3576,11 +3795,9 @@ define([
             application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
         }
     };
-
     Scene.prototype.disableShadowMapping = function () {
         this._shadowMappingEnabled = false;
     };
-
     Scene.prototype.toggleShadowMapping = function () {
         this._shadowMappingEnabled = !this._shadowMappingEnabled;
         if (this._shadowMappingEnabled) {
@@ -3589,24 +3806,19 @@ define([
             this.disableShadowMapping();
         }
     };
-
     Scene.prototype.renderShadowMap = function (context) {
         var i, _length_, gl = context.gl;
-
         gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
-
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.colorMask(true, true, true, true);
         gl.disable(gl.BLEND);
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
         for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
             this.objects[i].renderToShadowMap(context, this.width, this.height);
         }
     };
-
     /**
      * Renders the whole scene applying the general configuration and then rendering
      * all visual objects in the graph.
@@ -3617,9 +3829,7 @@ define([
         var i, j, _length_, gl, camOri, cameraZ, clear;
         application.log("Rendering scene...", 3);
         this._drawnTriangles = 0;
-
         gl = context.gl;
-
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
         for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
@@ -3649,9 +3859,7 @@ define([
             }
         }
         context.setCurrentFrameBuffer(null);
-
         gl.viewport(this.left, this.top, this.width, this.height);
-
         if (this.clearColorOnRender) {
             gl.colorMask(this.colorMask[0], this.colorMask[1], this.colorMask[2], this.colorMask[3]);
             gl.clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], this.clearColor[3]);
@@ -3665,11 +3873,9 @@ define([
         clear = this.clearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
         clear = this.clearDepthOnRender ? clear | gl.DEPTH_BUFFER_BIT : clear;
         gl.clear(clear);
-
         gl.enable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
         gl.depthMask(false);
-
         // if only one shader is used in rendering the whole scene, we will need to
         // update its uniforms (as they are normally updated every time a new shader
         // is set)
@@ -3685,7 +3891,6 @@ define([
 
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
-
         // first rendering pass: rendering the non-transparent triangles with 
         // Z buffer writing turned on
         application.log("Rendering transparent phase...", 4);
@@ -3706,14 +3911,12 @@ define([
             this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
         }
     };
-
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         LODContext: LODContext,
         Scene: Scene,
         LightSource: LightSource,
-        Camera: Camera,
         RenderableObject: RenderableObject,
         RenderableObject3D: RenderableObject3D,
         RenderableNode: RenderableNode,
@@ -3732,6 +3935,8 @@ define([
         PlanarParticleEmitter: PlanarParticleEmitter,
         ParticleSystem: ParticleSystem,
         PointCloud: PointCloud,
-        PointParticle: PointParticle
+        PointParticle: PointParticle,
+        CameraConfiguration: CameraConfiguration,
+        Camera: Camera
     };
 });

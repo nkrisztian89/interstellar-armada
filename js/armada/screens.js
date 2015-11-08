@@ -6,8 +6,8 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
-/*global define, document, setInterval, clearInterval */
+/*jslint nomen: true, white: true, plusplus: true */
+/*global define, window, document, setInterval, clearInterval */
 
 define([
     "utils/utils",
@@ -90,7 +90,7 @@ define([
                 var curDate = new Date();
                 armada.control().control();
                 this._level.tick(curDate - prevDate);
-                this._battleScene.activeCamera.update();
+                this._battleScene.activeCamera.update(curDate - prevDate);
                 prevDate = curDate;
             }.bind(this), 1000 / freq);
             armada.control().startListening();
@@ -437,20 +437,19 @@ define([
 
     DatabaseScreen.prototype.startRevealLoop = function () {
         var prevDate = new Date();
-        var self = this;
-        this._revealLoop = setInterval(function ()
-        {
+        this._revealLoop = setInterval(function () {
             var curDate = new Date();
-            if (self._revealState < 2.0) {
-                self._revealState += (curDate - prevDate) / 1000 / 2;
+            if (this._revealState < 2.0) {
+                this._revealState += (curDate - prevDate) / 1000 / 2;
             } else {
-                self.stopRevealLoop();
+                this.stopRevealLoop();
             }
             prevDate = curDate;
-        }, 1000 / 60);
+        }.bind(this), 1000 / 60); ///TODO: hardcoded value
     };
 
     DatabaseScreen.prototype.startRotationLoop = function () {
+        var prevDate = new Date();
         // turn the ship to start the rotation facing the camera
         this._solidModel.setOrientationMatrix(mat.identity4());
         this._solidModel.rotate([0.0, 0.0, 1.0], Math.PI);
@@ -458,15 +457,12 @@ define([
         this._wireframeModel.setOrientationMatrix(mat.identity4());
         this._wireframeModel.rotate([0.0, 0.0, 1.0], Math.PI);
         this._wireframeModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
-        var prevDate = new Date();
-        var self = this;
-        this._rotationLoop = setInterval(function ()
-        {
+        this._rotationLoop = setInterval(function () {
             var curDate = new Date();
-            self._solidModel.rotate(self._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
-            self._wireframeModel.rotate(self._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            this._solidModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            this._wireframeModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
             prevDate = curDate;
-        }, 1000 / 60);
+        }.bind(this), 1000 / 60); ///TODO: hardcoded value
     };
 
     DatabaseScreen.prototype.stopRevealLoop = function () {
@@ -824,7 +820,7 @@ define([
             self._lodSelector.selectValueWithIndex(armada.graphics().getMaxLoadedLOD());
             self._shaderComplexitySelector.selectValue(armada.graphics().getShaderComplexity());
             self._shadowMappingSelector.selectValue((armada.graphics().getShadowMapping() === true) ? "on" : "off");
-            self._shadowQualitySelector.selectValue(function (v) {
+            self._shadowQualitySelector.selectValue((function (v) {
                 switch (v) {
                     case 1024:
                         return "low";
@@ -835,8 +831,8 @@ define([
                     default:
                         return "medium";
                 }
-            }((armada.graphics().getShadowQuality())));
-            self._shadowDistanceSelector.selectValue(function (v) {
+            }((armada.graphics().getShadowQuality()))));
+            self._shadowDistanceSelector.selectValue((function (v) {
                 switch (v) {
                     case 2:
                         return "very close";
@@ -851,7 +847,7 @@ define([
                     default:
                         return "medium";
                 }
-            }((armada.graphics().getShadowDistance())));
+            }((armada.graphics().getShadowDistance()))));
         });
     };
 
@@ -999,13 +995,12 @@ define([
             this._settingShiftState = false;
             this._settingCtrlState = false;
             this._settingAltState = false;
-            var self = this;
             document.onkeydown = function (event) {
-                self.handleKeyDownWhileSetting(event);
-            };
+                this.handleKeyDownWhileSetting(event);
+            }.bind(this);
             document.onkeyup = function (event) {
-                self.handleKeyUpWhileSetting(event);
-            };
+                this.handleKeyUpWhileSetting(event);
+            }.bind(this);
         }
     };
 
@@ -1041,41 +1036,45 @@ define([
      * of that key binding.
      */
     ControlsScreen.prototype.generateTables = function () {
-        var self = this;
         armada.control().executeWhenReady(function () {
-            var tablesContainer = document.getElementById(self._name + "_tablesContainer");
+            var i, j, k, n,
+                    tablesContainer = document.getElementById(this._name + "_tablesContainer"),
+                    gameControllers = armada.control().getControllers(),
+                    h2Element, tableElement, theadElement, thElement, tbodyElement, actions, trElement, td1Element, td2Element,
+                    keySetterFunction = function (self) {
+                        return function () {
+                            self.startKeySetting(this);
+                        };
+                    };
             tablesContainer.innerHTML = "";
-            var gameControllers = armada.control().getControllers();
-            for (var i = 0; i < gameControllers.length; i++) {
-                var h2Element = document.createElement("h2");
+            for (i = 0; i < gameControllers.length; i++) {
+                h2Element = document.createElement("h2");
                 h2Element.innerHTML = gameControllers[i].getType() + " controls";
                 tablesContainer.appendChild(h2Element);
-                var tableElement = document.createElement("table");
+                tableElement = document.createElement("table");
                 tableElement.className = "horizontallyCentered outerContainer";
-                var theadElement = document.createElement("thead");
-                for (var j = 0, n = armada.control().getInputInterpreters().length; j < n; j++) {
-                    var thElement = document.createElement("th");
+                theadElement = document.createElement("thead");
+                for (j = 0, n = armada.control().getInputInterpreters().length; j < n; j++) {
+                    thElement = document.createElement("th");
                     thElement.innerHTML = armada.control().getInputInterpreters()[j].getDeviceName();
                     theadElement.appendChild(thElement);
                 }
                 theadElement.innerHTML += "<th>Action</th>";
-                var tbodyElement = document.createElement("tbody");
-                var actions = gameControllers[i].getActions();
+                tbodyElement = document.createElement("tbody");
+                actions = gameControllers[i].getActions();
                 for (j = 0; j < actions.length; j++) {
-                    var trElement = document.createElement("tr");
-                    for (var k = 0, n = armada.control().getInputInterpreters().length; k < n; k++) {
-                        var td1Element = document.createElement("td");
+                    trElement = document.createElement("tr");
+                    for (k = 0, n = armada.control().getInputInterpreters().length; k < n; k++) {
+                        td1Element = document.createElement("td");
                         if (armada.control().getInputInterpreters()[k].getDeviceName() === "Keyboard") {
                             td1Element.setAttribute("id", actions[j].getName());
                             td1Element.className = "clickable";
-                            td1Element.onclick = function () {
-                                self.startKeySetting(this);
-                            };
+                            td1Element.onclick = keySetterFunction(this);
                         }
                         td1Element.innerHTML = armada.control().getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
                         trElement.appendChild(td1Element);
                     }
-                    var td2Element = document.createElement("td");
+                    td2Element = document.createElement("td");
                     td2Element.innerHTML = actions[j].getDescription();
                     trElement.appendChild(td2Element);
                     tbodyElement.appendChild(trElement);
@@ -1084,7 +1083,7 @@ define([
                 tableElement.appendChild(tbodyElement);
                 tablesContainer.appendChild(tableElement);
             }
-        });
+        }.bind(this));
     };
 
     /**

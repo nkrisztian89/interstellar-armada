@@ -346,7 +346,7 @@
             {
                 "type": "mouse",
                 "sensitivityProfile": {
-                    "moveSensitivity": 0.005,
+                    "moveSensitivity": 10,
                     "displacementSensitivity": 0.00002,
                     "displacementDeadzone": 6
                 },

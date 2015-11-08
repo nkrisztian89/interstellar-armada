@@ -14,7 +14,7 @@ varying float v_dist;
 
 void main() {
     gl_Position = u_cameraMatrix * u_modelMatrix * vec4(0.0,0.0,0.0,1.0);
-    gl_Position.xyz += a_position.x * u_shift;
+    gl_Position.xyz += a_position.x * (u_shift / 200.0);
     v_dist = max(-gl_Position.z/u_farthestZ,0.0);
     gl_Position = u_projMatrix * gl_Position;
     v_position = a_position;

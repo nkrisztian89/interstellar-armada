@@ -283,7 +283,7 @@ define([
     DustCloud.prototype.simulate = function (camera) {
         var i, n;
         n = this._class.getNumberOfParticles();
-        this._visualModel.setShift(-camera.velocityVector[0] / 2, -camera.velocityVector[1] / 2, -camera.velocityVector[2] / 2);
+        this._visualModel.setShift(-camera.getVelocityVector()[0], -camera.getVelocityVector()[1], -camera.getVelocityVector()[2]);
         for (i = 0; i < n; i++) {
             this._particles[i].simulate(camera);
         }
@@ -2135,20 +2135,24 @@ define([
                 explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
                 explosion.addResourcesToScene(scene);
             }
+            // add comera configurations
+            if (addSupplements.cameraConfigurations === true) {
+                this._addCameraConfigurationsForViews(scene);
+            }
             if (callback) {
                 callback(this._visualModel);
             }
         }.bind(this));
     };
     /**
-     * Adds camera objects that correspond to the views defined for this 
+     * Adds camera configuration objects that correspond to the views defined for this 
      * spacecraft type and follow this specific spacecraft.
-     * @param {budaScene} scene The scene to add the cameras to.
+     * @param {Scene} scene The scene to add the cameras to.
      */
-    Spacecraft.prototype.addCamerasForViews = function (scene) {
+    Spacecraft.prototype._addCameraConfigurationsForViews = function (scene) {
         var i;
         for (i = 0; i < this._class.getViews().length; i++) {
-            scene.addCamera(this._class.getViews()[i].createCameraForObject(scene.width / scene.height, this._visualModel));
+            scene.addCameraConfiguration(this._class.getViews()[i].createCameraConfigurationForObject(scene.width / scene.height, this._visualModel));
         }
     };
     /**
@@ -2223,7 +2227,8 @@ define([
      * correspond to the different views fixed on this spacecraft in the scene.
      */
     Spacecraft.prototype.resetViewCameras = function () {
-        this._visualModel.getNode().resetViewCameras();
+        ///TODO: implement new version
+        //this._visualModel.getNode().resetViewCameras();
     };
     /**
      * Simulates what happens when a given amount of damage is dealt to the spacecraft at a specific
@@ -2621,16 +2626,14 @@ define([
                 weapons: true,
                 thrusterParticles: true,
                 projectileResources: true,
-                explosion: true
+                explosion: true,
+                cameraConfigurations: true
             });
-            this._spacecrafts[i].addCamerasForViews(scene);
             this._hitObjects.push(this._spacecrafts[i]);
         }
-        if (this._cameraStartPositionMatrix) {
-            scene.activeCamera.setPositionMatrix(this._cameraStartPositionMatrix);
-        }
-        if (this._cameraStartOrientationMatrix) {
-            scene.activeCamera.setOrientationMatrix(this._cameraStartOrientationMatrix);
+        if (this._cameraStartPositionMatrix || this._cameraStartOrientationMatrix) {
+            scene.activeCamera.setToFreeCamera(this._cameraStartPositionMatrix, this._cameraStartOrientationMatrix);
+            scene.activeCamera.update(0);
         }
     };
     /**

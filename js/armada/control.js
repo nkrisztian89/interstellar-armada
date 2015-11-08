@@ -38,8 +38,8 @@ define([
          * @type String
          */
         this._actionName = ((typeof dataJSONOrActionName) === "string" ?
-              dataJSONOrActionName :
-              null);
+                dataJSONOrActionName :
+                null);
         /**
          * The string representation of the key. 
          * @see KeyboardInputInterpreter#getKeyCodeTable
@@ -222,9 +222,9 @@ define([
      */
     KeyBinding.prototype.isTriggered = function (currentlyPressedKeys) {
         return (currentlyPressedKeys[this._keyCode] &&
-              (currentlyPressedKeys[16] === this._shiftState) &&
-              (currentlyPressedKeys[17] === this._ctrlState) &&
-              (currentlyPressedKeys[18] === this._altState));
+                (currentlyPressedKeys[16] === this._shiftState) &&
+                (currentlyPressedKeys[17] === this._ctrlState) &&
+                (currentlyPressedKeys[18] === this._altState));
     };
 
     /**
@@ -994,12 +994,12 @@ define([
         for (bindingActionName in this._bindings) {
             if (this._bindings.hasOwnProperty(bindingActionName)) {
                 actionIntensity =
-                      this._bindings[bindingActionName].getTriggeredIntensity(
-                      this._currentlyPressedButtons,
-                      this._mousePosition[0] - this._screenCenter[0],
-                      this._mousePosition[1] - this._screenCenter[1],
-                      this._mousePositionChange[0],
-                      this._mousePositionChange[1]);
+                        this._bindings[bindingActionName].getTriggeredIntensity(
+                        this._currentlyPressedButtons,
+                        this._mousePosition[0] - this._screenCenter[0],
+                        this._mousePosition[1] - this._screenCenter[1],
+                        this._mousePositionChange[0],
+                        this._mousePositionChange[1]);
                 if (this._bindings[bindingActionName].isMeasuredFromCenter() === true) {
                     if (actionIntensity > this._displacementDeadzone) {
                         result.push({
@@ -1114,7 +1114,7 @@ define([
         // gamepad button
         if (this._button !== null) {
             return (gamepad.buttons[this._button] === 1.0 ||
-                  ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
+                    ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
         }
         if (this._axisIndex !== null) {
             return Math.max((gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
@@ -1288,11 +1288,11 @@ define([
                 actionIntensity = this._bindings[bindingActionName].getTriggeredIntensity(this._gamepad);
                 if (actionIntensity > 0) {
                     isTurnAction =
-                          (bindingActionName === "yawLeft" || bindingActionName === "yawRight" ||
-                                bindingActionName === "pitchUp" || bindingActionName === "pitchDown" ||
-                                bindingActionName === "rollLeft" || bindingActionName === "rollRight" ||
-                                bindingActionName === "cameraTurnLeft" || bindingActionName === "cameraTurnRight" ||
-                                bindingActionName === "cameraTurnUp" || bindingActionName === "cameraTurnDown");
+                            (bindingActionName === "yawLeft" || bindingActionName === "yawRight" ||
+                                    bindingActionName === "pitchUp" || bindingActionName === "pitchDown" ||
+                                    bindingActionName === "rollLeft" || bindingActionName === "rollRight" ||
+                                    bindingActionName === "cameraTurnLeft" || bindingActionName === "cameraTurnRight" ||
+                                    bindingActionName === "cameraTurnUp" || bindingActionName === "cameraTurnDown");
                     result.push({
                         name: bindingActionName,
                         intensity: actionIntensity * (isTurnAction ? this._turnSensitivity : 1)
@@ -1557,10 +1557,10 @@ define([
             }
         } else {
             application.showError("Attempting to initialize action '" + actionName + "', but no such action was defined " +
-                  "for '" + this.getType() + "' type controllers.", "severe", "The action definition might be missing from the " +
-                  "settings file, or the settings file has not been loaded properly. The game is still playable, " +
-                  "but this action will not work until the error with the settings file is corrected and the game " +
-                  "is restarted.");
+                    "for '" + this.getType() + "' type controllers.", "severe", "The action definition might be missing from the " +
+                    "settings file, or the settings file has not been loaded properly. The game is still playable, " +
+                    "but this action will not work until the error with the settings file is corrected and the game " +
+                    "is restarted.");
         }
     };
 
@@ -1815,7 +1815,7 @@ define([
         /**
          * A reference to the controlled camera object.
          * @name CameraController#_controlledCamera
-         * @type SceneCamera
+         * @type Camera
          */
         this._controlledCamera = null;
 
@@ -1912,7 +1912,7 @@ define([
     /**
      * Sets the controlled camera for this controller. After called, all controls 
      * will take effect on the camera passed here as a parameter.
-     * @param {SceneCamera} controlledCamera
+     * @param {Camera} controlledCamera
      */
     CameraController.prototype.setControlledCamera = function (controlledCamera) {
         this._controlledCamera = controlledCamera;
@@ -1920,7 +1920,7 @@ define([
 
     /**
      * Sets the controlled camera to follow the passed visual object from now on.
-     * @param {RenderableObject} renderableObject
+     * @param {Object3D} renderableObject
      */
     CameraController.prototype.setCameraToFollowObject = function (renderableObject) {
         this._controlledCamera.followObject(renderableObject);
@@ -1930,7 +1930,7 @@ define([
      * Sets the controlled camera to free control (not following any objects)
      */
     CameraController.prototype.setToFreeCamera = function () {
-        this._controlledCamera.followObject(null);
+        this._controlledCamera.setToFreeCamera();
     };
 
     /**
@@ -2140,11 +2140,11 @@ define([
      */
     ControlContext.prototype.control = function () {
         var
-              i,
-              triggeredActions,
-              actionFilterFunction = function (action) {
-                  return !this._disabledActions[action.name];
-              }.bind(this);
+                i,
+                triggeredActions,
+                actionFilterFunction = function (action) {
+                    return !this._disabledActions[action.name];
+                }.bind(this);
         if (this._listening) {
             triggeredActions = [];
 
@@ -2186,8 +2186,8 @@ define([
                         break;
                     default:
                         application.showError("Unrecognized controller type: '" + dataJSON.controllers[i].type + "'!",
-                              "severe", "Every controller defined in the settings file must be of one of the following types: " +
-                              "general, fighter, camera.");
+                                "severe", "Every controller defined in the settings file must be of one of the following types: " +
+                                "general, fighter, camera.");
                 }
             }
 
@@ -2205,8 +2205,8 @@ define([
                         break;
                     default:
                         application.showError("Unrecognized input device type: '" + dataJSON.inputDevices[i].type + "'!",
-                              "severe", "Every input device defined in the settings file must be of one of the following types: " +
-                              "keyboard, mouse.");
+                                "severe", "Every input device defined in the settings file must be of one of the following types: " +
+                                "keyboard, mouse.");
                 }
             }
             // if only the defaults need to be restored, go through the stored interpreters 
@@ -2296,6 +2296,7 @@ define([
         this._fighterController.setControlledSpacecraft(pilotedSpacecraft);
         pilotedSpacecraft.resetViewCameras();
         this._cameraController.setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
+        ///TODO: implement a way to be able to control both the camera and spacecraft at the same time
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         this.disableAction("cameraMoveLeft");
