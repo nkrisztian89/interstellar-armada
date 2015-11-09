@@ -1283,13 +1283,12 @@ define([
     /**
      * Creates and returns a camera configuration set up for following the given object according to the view's
      * parameters.
-     * @param {Number} aspect The X/Y aspect ratio of the camera.
      * @param {Object3D} followedObject The object relative to which the camera 
      * position and direction has to be interpreted.
      * @returns {CameraConfiguration} The created camera configuration.
      */
-    ObjectView.prototype.createCameraConfigurationForObject = function (aspect, followedObject) {
-        return new budaScene.CameraConfiguration(aspect, this._fov, this._movable, this._turnable, followedObject, this._followPositionMatrix, this._followOrientationMatrix, this._rotationCenterIsObject);
+    ObjectView.prototype.createCameraConfigurationForObject = function (followedObject) {
+        return new budaScene.CameraConfiguration(this._fov, this._movable, this._turnable, followedObject, this._followPositionMatrix, this._followOrientationMatrix, this._rotationCenterIsObject);
     };
     // ##############################################################################
     /**

@@ -2152,7 +2152,7 @@ define([
     Spacecraft.prototype._addCameraConfigurationsForViews = function (scene) {
         var i;
         for (i = 0; i < this._class.getViews().length; i++) {
-            scene.addCameraConfiguration(this._class.getViews()[i].createCameraConfigurationForObject(scene.width / scene.height, this._visualModel));
+            scene.addCameraConfiguration(this._class.getViews()[i].createCameraConfigurationForObject(this._visualModel));
         }
     };
     /**

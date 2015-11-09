@@ -534,11 +534,11 @@
             "movable": false,
             "turnable": true,
             "rotationCenterIsObject": false,
-            "position": [30, -280, 0],
+            "position": [-30, -280, 0],
             "rotations": [
                 {
                     "axis": "Z",
-                    "degrees": -90
+                    "degrees": 90
                 }
             ]
         },

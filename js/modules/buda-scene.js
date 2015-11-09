@@ -2539,7 +2539,6 @@ define([
     /**
      * @class
      * @extends Object3D
-     * @param {Number} aspect
      * @param {Number} fov
      * @param {Boolean} movable
      * @param {Boolean} turnable
@@ -2548,7 +2547,7 @@ define([
      * @param {Float32Array} followOrientationMatrix
      * @param {Boolean} rotationCenterIsObject
      */
-    function CameraConfiguration(aspect, fov, movable, turnable, followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
+    function CameraConfiguration(fov, movable, turnable, followedObject, followPositionMatrix, followOrientationMatrix, rotationCenterIsObject) {
         Object3D.call(this, followPositionMatrix, followOrientationMatrix);
         /**
          * @type Object3D
@@ -2656,14 +2655,6 @@ define([
          * @type Number
          */
         this._maxFOV = 160; ///TODO: hardcoded
-        /**
-         * @type Number
-         */
-        this._aspect = aspect;
-        /**
-         * @type Float32Array
-         */
-        this._perspectiveMatrix = null;
     }
 
     makeObject3DMixinClass.call(CameraConfiguration);
@@ -2685,15 +2676,18 @@ define([
         absoluteFPS: 6,
         relativeFPS: 7
     };
-    /**
-     * 
+    /** 
      * @returns {Object3D}
      */
     CameraConfiguration.prototype.getFollowedObject = function () {
         return this._followedObject;
     };
-    CameraConfiguration.prototype.getAspect = function () {
-        return this._aspect;
+    /**
+     * Sets the camera's Field Of View 
+     * @param {number} fov The new desired FOV in degrees.
+     */
+    CameraConfiguration.prototype.setFOV = function (fov) {
+        this._fov = fov;
     };
     CameraConfiguration.prototype.getFOV = function () {
         return this._fov;
@@ -2749,7 +2743,7 @@ define([
         }
     };
     CameraConfiguration.prototype.updateOrientation = function (angularVelocityVector, dt) {
-        var dirTowardsObject, axis, angle;
+        var dirTowardsObject, axis;
         switch (this._orientationMode) {
             case this.OrientationMode.absoluteFixed:
                 break;
@@ -2805,43 +2799,17 @@ define([
                 break;
         }
     };
-    CameraConfiguration.prototype.getPerspectiveMatrix = function () {
-        if (!this._perspectiveMatrix) {
-            this._updatePerspectiveMatrix();
-        }
-        return this._perspectiveMatrix;
-    };
-    CameraConfiguration.prototype._updatePerspectiveMatrix = function () {
-        ///TODO: hard-coded constants
-        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * Math.PI / 360 / 2) / 2 / 20, 5000.0);
-    };
-    /**
-     * Sets the camera's Field Of View by also recalculating the perspective matrix.
-     * @param {number} fov The new desired FOV in degrees.
-     */
-    CameraConfiguration.prototype.setFOV = function (fov) {
-        this._fov = fov;
-        this._updatePerspectiveMatrix();
-    };
-    /**
-     * Sets the camera's aspect ratio by also recalculating the perspective matrix.
-     * @param {number} aspect The new desired aspect ratio.
-     */
-    CameraConfiguration.prototype.setAspect = function (aspect) {
-        this._aspect = aspect;
-        this._updatePerspectiveMatrix();
-    };
     CameraConfiguration.prototype.decreaseFOV = function () {
-        ///TODO: not accurate
         if (this._fov > this._minFOV) {
-            this.setFOV(this._fov * 0.95);
+            this.setFOV(Math.max(this._fov * 0.95, this._minFOV)); ///TODO: hardcoded constant
         }
+        return this._fov;
     };
     CameraConfiguration.prototype.increaseFOV = function () {
-        ///TODO: not accurate
         if (this._fov < this._maxFOV) {
-            this.setFOV(this._fov * 1.05);
+            this.setFOV(Math.min(this._fov * 1.05, this._maxFOV)); ///TODO: hardcoded constant
         }
+        return this._fov;
     };
     // #########################################################################
     function Camera(scene, aspect, fov, adaptationTime, configuration) {
@@ -2859,7 +2827,7 @@ define([
          */
         this._currentConfiguration = configuration;
         if (!this._currentConfiguration) {
-            this._currentConfiguration = new CameraConfiguration(aspect, fov, true, true, null, mat.identity4(), mat.identity4(), false);
+            this._currentConfiguration = new CameraConfiguration(fov, true, true, null, mat.identity4(), mat.identity4(), false);
         }
         /**
          * @type Number
@@ -2933,6 +2901,18 @@ define([
          * @type Number[3]
          */
         this._followedObjectPreviousPosition = null;
+        /**
+         * @type Number
+         */
+        this._aspect = aspect;
+        /**
+         * @type Number
+         */
+        this._fov = fov;
+        /**
+         * @type Float32Array
+         */
+        this._perspectiveMatrix = null;
     }
     makeObject3DMixinClass.call(Camera);
     Camera.prototype.TransitionStyle = {
@@ -2946,17 +2926,26 @@ define([
     Camera.prototype.getCameraMatrix = function () {
         return mat.mul4(this.getPositionMatrix(), this.getOrientationMatrix());
     };
-    Camera.prototype.getPerspectiveMatrix = function () {
-        return this._currentConfiguration.getPerspectiveMatrix();
-    };
     Camera.prototype.getVelocityVector = function () {
         return this._velocityVector;
+    };
+    Camera.prototype.getPerspectiveMatrix = function () {
+        if (!this._perspectiveMatrix) {
+            this._updatePerspectiveMatrix();
+        }
+        return this._perspectiveMatrix;
+    };
+    Camera.prototype._updatePerspectiveMatrix = function () {
+        ///TODO: hard-coded constants
+        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * Math.PI / 360 / 2) / 2 / 20, 5000.0);
     };
     /**
      * Sets the camera's Field Of View by also recalculating the perspective matrix.
      * @param {number} fov The new desired FOV in degrees.
      */
     Camera.prototype.setFOV = function (fov) {
+        this._fov = fov;
+        this._updatePerspectiveMatrix();
         this._currentConfiguration.setFOV(fov);
     };
     /**
@@ -2964,13 +2953,14 @@ define([
      * @param {number} aspect The new desired aspect ratio.
      */
     Camera.prototype.setAspect = function (aspect) {
-        this._currentConfiguration.setAspect(aspect);
+        this._aspect = aspect;
+        this._updatePerspectiveMatrix();
     };
     Camera.prototype.decreaseFOV = function () {
-        this._currentConfiguration.decreaseFOV();
+        this._fov = this._currentConfiguration.decreaseFOV();
     };
     Camera.prototype.increaseFOV = function () {
-        this._currentConfiguration.increaseFOV();
+        this._fov = this._currentConfiguration.increaseFOV();
     };
     Camera.prototype.turnLeft = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -3155,8 +3145,8 @@ define([
     Camera.prototype._getFreeCameraConfiguration = function (positionMatrix, orientationMatrix) {
         positionMatrix = positionMatrix ? mat.matrix4(positionMatrix) : mat.matrix4(this.getPositionMatrix());
         orientationMatrix = orientationMatrix ? mat.matrix4(orientationMatrix) : mat.matrix4(this.getOrientationMatrix());
-        return new CameraConfiguration(this._currentConfiguration.getAspect(),
-                this._currentConfiguration.getFOV(),
+        return new CameraConfiguration(
+                this._fov,
                 true,
                 true,
                 null,
@@ -3173,7 +3163,7 @@ define([
             this.setConfiguration(configuration);
         } else {
             if (this._previousConfiguration) {
-                this._previousConfiguration = new CameraConfiguration(this._currentConfiguration.getAspect(), this._currentConfiguration.getFOV(), false, false, null, mat.matrix4(this.getPositionMatrix()), mat.matrix4(this.getOrientationMatrix()), false);
+                this._previousConfiguration = new CameraConfiguration(this._currentConfiguration.getFOV(), false, false, null, mat.matrix4(this.getPositionMatrix()), mat.matrix4(this.getOrientationMatrix()), false);
             } else {
                 this._previousConfiguration = this._currentConfiguration;
             }
@@ -3200,10 +3190,9 @@ define([
     };
     Camera.prototype.update = function (dt) {
         var startPositionVector, endPositionVector, previousPositionVector,
-                startOrientationMatrix, endOrientationMatrix, transitionOrientationMatrix,
-                dot, alpha, gamma, axis,
-                transitionProgress,
-                forwardTransitionOrientationMatrix, backwardTransitionOrientationMatrix;
+                relativeTransitionRotationMatrix, halfTransitionOrientationMatrix,
+                dot, alpha, gamma, axis, axis2,
+                transitionProgress;
         if (this._previousConfiguration) {
             this._currentConfiguration.updatePosition([0, 0, 0], dt);
             this._currentConfiguration.updateOrientation([0, 0, 0], dt);
@@ -3226,45 +3215,53 @@ define([
             this._previousConfiguration.updatePosition([0, 0, 0], dt);
             this._previousConfiguration.updateOrientation([0, 0, 0], dt);
             // calculate position
+            // we can simply interpolate the position on a straight linear path
             startPositionVector = this._previousConfiguration.getPositionVector();
             endPositionVector = this._currentConfiguration.getPositionVector();
             previousPositionVector = this.getPositionVector();
             this.setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
             this._velocityVector = vec.scaled3(vec.mulMat4Vec3(mat.inverseOfRotation4(this.getOrientationMatrix()), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
             // calculate orientation
-            startOrientationMatrix = this._previousConfiguration.getOrientationMatrix();
-            endOrientationMatrix = this._currentConfiguration.getOrientationMatrix();
-            dot = vec.dot3(mat.getRowB43(startOrientationMatrix), mat.getRowB43(endOrientationMatrix));
-            if (Math.abs(dot) > 0.99) {
-                axis = mat.getRowC43(startOrientationMatrix);
+            // calculate the rotation matrix that describes the transformation that needs to be applied on the
+            // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
+            relativeTransitionRotationMatrix = mat.mul4(mat.inverseOfRotation4(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
+            // calculate the rotation of axis Y needed
+            dot = vec.dot3([0, 1, 0], mat.getRowB43(relativeTransitionRotationMatrix));
+            // if the angle of the two Y vectors is too close to 0 or 180 degrees, their cross product will be too small
+            // to reliably use it as a rotation axis, therefore fall back to axis Z in this case
+            if (Math.abs(dot) > 0.995) {
+                axis = [0, 0, 1];
                 alpha = dot > 0 ? 0 : Math.PI;
             } else {
-                axis = vec.cross3(mat.getRowB43(endOrientationMatrix), mat.getRowB43(startOrientationMatrix));
-                alpha = vec.angle3u(mat.getRowB43(startOrientationMatrix), mat.getRowB43(endOrientationMatrix));
+                axis = vec.normal3(vec.cross3(mat.getRowB43(relativeTransitionRotationMatrix), [0, 1, 0]));
+                alpha = vec.angle3u(mat.getRowB43(relativeTransitionRotationMatrix), [0, 1, 0]);
             }
             if (alpha > Math.PI) {
                 alpha -= 2 * Math.PI;
             }
-            transitionOrientationMatrix = mat.correctedOrthogonal4(mat.mul4(startOrientationMatrix, mat.rotation4(axis, alpha)));
-            dot = vec.dot3(mat.getRowA43(transitionOrientationMatrix), mat.getRowA43(endOrientationMatrix));
-            if (Math.abs(dot) > 0.99) {
+            // calculate the matrix we would get if we rotated the Y vector into position
+            halfTransitionOrientationMatrix = mat.correctedOrthogonal4(mat.mul4(relativeTransitionRotationMatrix, mat.rotation4(axis, -alpha)));
+            // X and Z vectors might still be out of place, therefore do the same calculations as before to 
+            // get the second rotation needed, which will put all vectors in place
+            dot = vec.dot3([1, 0, 0], mat.getRowA43(halfTransitionOrientationMatrix));
+            if (Math.abs(dot) > 0.995) {
+                axis2 = [0, 1, 0];
                 gamma = dot > 0 ? 0 : Math.PI;
             } else {
-                gamma = vec.angle3u(mat.getRowA43(transitionOrientationMatrix), mat.getRowA43(endOrientationMatrix));
+                axis2 = vec.normal3(vec.cross3(mat.getRowA43(halfTransitionOrientationMatrix), [1, 0, 0]));
+                gamma = vec.angle3u(mat.getRowA43(halfTransitionOrientationMatrix), [1, 0, 0]);
             }
             if (gamma > Math.PI) {
                 gamma -= 2 * Math.PI;
             }
-            this.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
-            this.rotate(this.getYDirectionVector(), -gamma * transitionProgress);
+            // now that the two rotations are calculated, we can interpolate the transformation using the angles
+            this.setOrientationMatrix(mat.identity4());
+            this.rotate(axis2, gamma * transitionProgress);
             this.rotate(axis, alpha * transitionProgress);
-            forwardTransitionOrientationMatrix = mat.correctedOrthogonal4(this.getOrientationMatrix());
-            this.setOrientationMatrix(mat.matrix4(endOrientationMatrix));
-            this.rotate(axis, -alpha * (1 - transitionProgress));
-            this.rotate(this.getYDirectionVector(), gamma * (1 - transitionProgress));
-            backwardTransitionOrientationMatrix = mat.correctedOrthogonal4(this.getOrientationMatrix());
-            this.setOrientationMatrix(mat.correctedOrthogonal4(mat.add4(mat.scaled4(forwardTransitionOrientationMatrix, 1.0 - transitionProgress),
-                    mat.scaled4(backwardTransitionOrientationMatrix, transitionProgress))));
+            this.setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
+            // calculate FOV
+            this._fov = this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress;
+            this._updatePerspectiveMatrix();
             if (this._transitionElapsedTime === this._transitionDuration) {
                 this._previousConfiguration = null;
             }
@@ -3284,6 +3281,7 @@ define([
                     application.crash();
                     break;
             }
+            this.setFOV(this._currentConfiguration.getFOV());
             if (this._currentConfiguration.positionFollowsObject()) {
                 if (this._followedObjectPreviousPosition) {
                     this._velocityVector = vec.scaled3(vec.mulMat4Vec3(mat.inverseOfRotation4(this.getOrientationMatrix()), vec.sub3(this._currentConfiguration.getFollowedObject().getPositionVector(), this._followedObjectPreviousPosition)), -1000 / dt);
