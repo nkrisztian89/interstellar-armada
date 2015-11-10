@@ -3159,15 +3159,15 @@ define([
         this._previousConfiguration = null;
     };
     Camera.prototype.startTransitionToConfiguration = function (configuration, duration, style) {
-        if (duration === 0) {
+        if ((duration === 0) || !configuration) {
             this.setConfiguration(configuration);
         } else {
-            if (this._previousConfiguration) {
+            if (this._previousConfiguration && this._currentConfiguration) {
                 this._previousConfiguration = new CameraConfiguration(this._currentConfiguration.getFOV(), false, false, null, mat.matrix4(this.getPositionMatrix()), mat.matrix4(this.getOrientationMatrix()), false);
             } else {
                 this._previousConfiguration = this._currentConfiguration;
             }
-            this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
+            this._currentConfiguration = configuration;
             this._transitionDuration = duration === undefined ? this._defaultTransitionDuration : duration;
             this._transitionElapsedTime = 0;
             this._transitionStyle = style === undefined ? this._defaultTransitionStyle : style;
@@ -3227,9 +3227,9 @@ define([
             relativeTransitionRotationMatrix = mat.mul4(mat.inverseOfRotation4(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
             // calculate the rotation of axis Y needed
             dot = vec.dot3([0, 1, 0], mat.getRowB43(relativeTransitionRotationMatrix));
-            // if the angle of the two Y vectors is too close to 0 or 180 degrees, their cross product will be too small
-            // to reliably use it as a rotation axis, therefore fall back to axis Z in this case
-            if (Math.abs(dot) > 0.995) {
+            // if the angle of the two Y vectors is (around) 0 or 180 degrees, their cross product will be of zero length
+            // and we cannot use it as a rotation axis, therefore fall back to axis Z in this case
+            if (Math.abs(dot) > 0.99999) {
                 axis = [0, 0, 1];
                 alpha = dot > 0 ? 0 : Math.PI;
             } else {
@@ -3244,7 +3244,7 @@ define([
             // X and Z vectors might still be out of place, therefore do the same calculations as before to 
             // get the second rotation needed, which will put all vectors in place
             dot = vec.dot3([1, 0, 0], mat.getRowA43(halfTransitionOrientationMatrix));
-            if (Math.abs(dot) > 0.995) {
+            if (Math.abs(dot) > 0.99999) {
                 axis2 = [0, 1, 0];
                 gamma = dot > 0 ? 0 : Math.PI;
             } else {
@@ -3604,12 +3604,8 @@ define([
      * @param {Number} newHeight
      */
     Scene.prototype.resizeViewport = function (newWidth, newHeight) {
-        var i, _length_;
         this.width = newWidth;
         this.height = newHeight;
-        for (i = 0, _length_ = this._cameraConfigurations.length; i < _length_; i++) {
-            this._cameraConfigurations[i].setAspect(this.width / this.height);
-        }
         this.activeCamera.setAspect(this.width / this.height);
     };
     /**
