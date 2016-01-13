@@ -1288,7 +1288,22 @@ define([
      * @returns {CameraConfiguration} The created camera configuration.
      */
     ObjectView.prototype.createCameraConfigurationForObject = function (followedObject) {
-        return new budaScene.CameraConfiguration(this._fov, this._movable, this._turnable, followedObject, this._followPositionMatrix, this._followOrientationMatrix, this._rotationCenterIsObject);
+        var positionConfiguration, orientationConfiguration;
+        positionConfiguration = new budaScene.CameraPositionConfiguration(!this._movable,
+                this._rotationCenterIsObject,
+                [followedObject],
+                this._followPositionMatrix,
+                1, ///TODO: hardcoded
+                100);///TODO: hardcoded
+        orientationConfiguration = new budaScene.CameraOrientationConfiguration(!this._turnable,
+                false,
+                false,
+                [followedObject],
+                this._followOrientationMatrix,
+                0, 0, ///TODO: hardcoded
+                -90, 90, ///TODO: hardcoded
+                -90, 90);///TODO: hardcoded
+        return new budaScene.CameraConfiguration(positionConfiguration, orientationConfiguration, this._fov, 5, 160);///TODO: hardcoded
     };
     // ##############################################################################
     /**

@@ -17,7 +17,7 @@ define([
     var mat = {};
 
     // -----------------------------------------------------------------------------
-// Functions that create new matrices
+    // Functions that create new matrices
 
     /**
      * Returns a 3x3 identity matrix.
@@ -989,6 +989,60 @@ define([
                 (m1[13] - m2[13]) * (m1[13] - m2[13]) +
                 (m1[14] - m2[14]) * (m1[14] - m2[14])
                 );
+    };
+
+    // -----------------------------------------------------------------------------
+    // Functions that modify existing matrices
+
+    /**
+     * Sets the value of a 3x3 matrix to that of another 3x3 matrix, without creating a new
+     * matrix or modifying the reference itself. (copies the value over instead)
+     * @param {Float32Array} left The leftvalue, a 3x3 matrix
+     * @param {Float32Array} right The rightvalue, a 3x3 matrix
+     */
+    mat.setMatrix3 = function (left, right) {
+        var i;
+        for (i = 0; i < 9; i++) {
+            left[i] = right[i];
+        }
+    };
+
+    /**
+     * Sets the value of a 4x4 matrix to that of another 4x4 matrix, without creating a new
+     * matrix or modifying the reference itself. (copies the value over instead)
+     * @param {Float32Array} left The leftvalue, a 4x4 matrix
+     * @param {Float32Array} right The rightvalue, a 4x4 matrix
+     */
+    mat.setMatrix4 = function (left, right) {
+        var i;
+        for (i = 0; i < 16; i++) {
+            left[i] = right[i];
+        }
+    };
+
+    /**
+     * Applies a translation to the passed 4x4 transformation matrix described by the passed
+     * 3D vector.
+     * @param {Float32Array} m A 4x4 matrix
+     * @param {Number[3]} v A 3D vector
+     */
+    mat.translateByVector = function (m, v) {
+        m[12] += v[0];
+        m[13] += v[1];
+        m[14] += v[2];
+    };
+
+    /**
+     * Applies a translation to the passed 4x4 transformation matrix described by the second
+     * passed transformation matrix, which is treated like a translation matrix (other parts
+     * of the matrix are not considered)
+     * @param {Float32Array} m A 4x4 matrix
+     * @param {Float32Array} n A 4x4 translation matrix
+     */
+    mat.translateByMatrix = function (m, n) {
+        m[12] += n[12];
+        m[13] += n[13];
+        m[14] += n[14];
     };
 
     return mat;
