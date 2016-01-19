@@ -291,13 +291,14 @@
             "rotations": [
                 {
                     "axis": "X",
-                    "degrees": -90
+                    "degrees": 90
                 }
             ]
         },
         {
             "name": "cockpit",
             "fov": 60,
+            "fps": true,
             "followsPosition": true,
             "movable": false,
             "turnable": true,
@@ -333,13 +334,62 @@
             "position": [0, -40, 0]
         },
         {
+            "name": "fps-turnaround",
+            "fov": 60,
+            "fps": true,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 0],
+            "rotations": [
+                {
+                    "axis": "X",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
             "name": "flyby",
             "fov": 60,
-            "followsPosition": true,
+            "followsPosition": false,
+            "lookAtSelf": true,
             "movable": true,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 0, 0]
+            "position": [100, 100, 20]
+        },
+        {
+            "name": "flyby-fps",
+            "fov": 60,
+            "fps": true,
+            "followsPosition": false,
+            "lookAtSelf": true,
+            "movable": true,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [100, 100, 20]
+        },
+        {
+            "name": "target",
+            "fov": 60,
+            "followsPosition": true,
+            "lookAtTarget": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 6.5]
+        },
+        {
+            "name": "target",
+            "fov": 60,
+            "fps": true,
+            "followsPosition": true,
+            "lookAtTarget": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 6.5]
         }
     ],
     "equipmentProfiles": [

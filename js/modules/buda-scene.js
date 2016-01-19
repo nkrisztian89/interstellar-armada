@@ -11,11 +11,12 @@
 
 
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/managed-gl"
-], function (vec, mat, application, managedGL) {
+], function (utils, vec, mat, application, managedGL) {
     "use strict";
     var makeObject3DMixinClassFunction, makeObject3DMixinClass;
     // #########################################################################
@@ -1264,7 +1265,7 @@ define([
         this._camera = camera;
         this.setTexture(samplerName, cubemap);
         this.setUniformValueFunction("u_viewDirectionProjectionInverse", function () {
-            return mat.inverse4(mat.mul4(this._camera.getOrientationMatrix(), this._camera.getPerspectiveMatrix()));
+            return mat.inverse4(mat.mul4(this._camera.getCameraOrientationMatrix(), this._camera.getPerspectiveMatrix()));
         });
     }
     CubemapSampledFVQ.prototype = new RenderableObject();
@@ -2568,18 +2569,23 @@ define([
          */
         this._followedObjects = followedObjects || [];
         /**
-         * Stores a copy of the starting position matrix so it can be reset to it later.
+         * Stores a copy of the starting relative position matrix so it can be reset to it later.
          * @type Float32Array
          */
-        this._defaultPositionMatrix = mat.matrix4(positionMatrix);
+        this._defaultRelativePositionMatrix = mat.matrix4(positionMatrix);
         /**
-         * Describes the position stored in this configuration. Not the same as the world position of the camera
+         * Describes the relative position stored in this configuration. Not the same as the world position of the camera
          * itself, as it can be relative to followed objects and the camera direction.
          * @type Float32Array
          */
-        this._positionMatrix = positionMatrix;
+        this._relativePositionMatrix = positionMatrix;
         /**
-         * If objects are followed and the camera is fixed, it can still be possible to "zoom" by bringing it closer
+         * Describes the position of the camera in the world. This is calculated based on the other
+         * properties and cannot be set directly.
+         */
+        this._worldPositionMatrix = null;
+        /**
+         * If objects are followed and turnsAroundObjects is true, movement of the camera is possible by "zooming", bringing it closer
          * or farther to the followed objects on a straight line (the direction of which is based on the position matrix).
          * This value marks the closest distance in meters.
          * @type Number
@@ -2595,11 +2601,42 @@ define([
      * 
      */
     CameraPositionConfiguration.prototype.resetToDefaults = function () {
-        mat.setMatrix4(this._positionMatrix, this._defaultPositionMatrix);
+        mat.setMatrix4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
+        this._worldPositionMatrix = null;
     };
 
+    CameraPositionConfiguration.prototype.followsObjects = function () {
+        return this._followedObjects.length > 0;
+    };
 
-    CameraPositionConfiguration.prototype._getFollowedPositionVector = function () {
+    CameraPositionConfiguration.prototype.getFollowedObjects = function () {
+        return this._followedObjects;
+    };
+
+    CameraPositionConfiguration.prototype.followsObject = function (object3D) {
+        return (this._followedObjects.length === 1) && (this._followedObjects[0] === object3D);
+    };
+
+    /**
+     * 
+     * @param {CameraPositionConfiguration} otherCameraPositionConfiguration
+     * @returns {Boolean}
+     */
+    CameraPositionConfiguration.prototype.followsSameObjectsAs = function (otherCameraPositionConfiguration) {
+        return utils.arraysEqual(this._followedObjects.sort(), otherCameraPositionConfiguration._followedObjects.sort());
+    };
+
+    /**
+     * 
+     * @param {CameraPositionConfiguration} otherCameraPositionConfiguration
+     * @returns {Boolean}
+     */
+    CameraPositionConfiguration.prototype.followsSameObjectAs = function (otherCameraPositionConfiguration) {
+        return (this._followedObjects.length === 1) && (otherCameraPositionConfiguration._followedObjects.length === 1) &&
+                (this._followedObjects[0] === otherCameraPositionConfiguration._followedObjects[0]);
+    };
+
+    CameraPositionConfiguration.prototype.getFollowedPositionVector = function () {
         var i, positionVector = [0, 0, 0];
         if (this._followedObjects.length === 0) {
             application.crash();
@@ -2611,7 +2648,7 @@ define([
         return positionVector;
     };
 
-    CameraPositionConfiguration.prototype._getFollowedPositionMatrix = function () {
+    CameraPositionConfiguration.prototype.getFollowedPositionMatrix = function () {
         var i, positionMatrix = mat.identity4();
         if (this._followedObjects.length === 0) {
             application.crash();
@@ -2623,7 +2660,7 @@ define([
         return positionMatrix;
     };
 
-    CameraPositionConfiguration.prototype._getFollowedOrientationMatrix = function () {
+    CameraPositionConfiguration.prototype.getFollowedOrientationMatrix = function () {
         var orientation;
         if (this._followedObjects.length === 0) {
             application.crash();
@@ -2633,42 +2670,58 @@ define([
         return orientation;
     };
 
-    CameraPositionConfiguration.prototype.update = function (orientationMatrix, velocityVector, dt) {
-        var inverseOrientationMatrix, translationVector, inversePositionMatrix, distance;
-
-        if (this._fixed && (this._followedObjects.length === 0)) {
-            return;
-        }
+    CameraPositionConfiguration.prototype._calculateWorldPositionMatrix = function (worldOrientationMatrix) {
         if (this._followedObjects.length > 0) {
-            if (!this._fixed) {
-                mat.translateByVector(this._positionMatrix, vec.scaled3(velocityVector, dt / 1000));
-            }
             if (!this._turnsAroundObjects) {
-                inversePositionMatrix = mat.mul4(mat.mul4(this._positionMatrix, this._getFollowedOrientationMatrix()), this._getFollowedPositionMatrix());
-                this._positionMatrix = mat.translation4(-inversePositionMatrix[12], -inversePositionMatrix[13], -inversePositionMatrix[14]);
+                this._worldPositionMatrix = mat.mul4(
+                        mat.translation4m4(mat.mul4(
+                                this._relativePositionMatrix,
+                                this.getFollowedOrientationMatrix())),
+                        this.getFollowedPositionMatrix());
+            } else {
+                if (!worldOrientationMatrix) {
+                    application.crash();
+                } else {
+                    this._worldPositionMatrix = mat.mul4(
+                            mat.translation4m4(mat.mul4(
+                                    this._relativePositionMatrix,
+                                    mat.mul4(mat.rotation4([1, 0, 0], Math.PI / 2), worldOrientationMatrix))),
+                            this.getFollowedPositionMatrix());
+                }
+            }
+        } else {
+            this._worldPositionMatrix = mat.matrix4(this._relativePositionMatrix);
+        }
+    };
+
+    CameraPositionConfiguration.prototype.getWorldPositionMatrix = function (worldOrientationMatrix) {
+        if (!this._worldPositionMatrix) {
+            this._calculateWorldPositionMatrix(worldOrientationMatrix);
+        }
+        return this._worldPositionMatrix;
+    };
+
+    CameraPositionConfiguration.prototype.update = function (worldOrientationMatrix, velocityVector, dt) {
+        var translationVector, distance;
+
+        if (!this._fixed) {
+            if (this._followedObjects.length === 0) {
+                translationVector = vec.scaled3(vec.mulVec3Mat4(velocityVector, worldOrientationMatrix), -dt / 1000);
+                mat.translateByVector(this._relativePositionMatrix, translationVector);
+            } else {
+                if (this._turnsAroundObjects) {
+                    if (this._minimumDistance < this._maximumDistance) {
+                        translationVector = mat.translationVector3(this._relativePositionMatrix);
+                        distance = vec.length3(translationVector) + (velocityVector[2] * dt / 1000);
+                        distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
+                        this._relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
+                    }
+                } else {
+                    mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4([1, 0, 0], -Math.PI / 2)), -dt / 1000));
+                }
             }
         }
-        else if (!this._fixed && (this._followedObjects.length === 0)) {
-            inverseOrientationMatrix = mat.transposed3(mat.inverse3(mat.matrix3from4(orientationMatrix)));
-            translationVector = vec.scaled3(vec.mulMat3Vec3(inverseOrientationMatrix, velocityVector), dt / 1000);
-            mat.translateByVector(this._positionMatrix, translationVector);
-        }
-        else if ((this._followedObjects.length > 0) && this._turnsAroundObjects) {
-            if (this._fixed && (this._minimumDistance < this._maximumDistance)) {
-                translationVector = mat.translationVector3(this._positionMatrix);
-                distance = vec.length3(translationVector) + (velocityVector[2] * dt / 1000);
-                distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                this._positionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
-            }
-            inversePositionMatrix =
-                    mat.mul4(mat.mul4(
-                            mat.translation4v(mat.translationVector4(mat.mul4(this._positionMatrix, mat.inverseOfRotation4(orientationMatrix)))),
-                            this._getFollowedOrientationMatrix()
-                            ),
-                            this._getFollowedPositionMatrix()
-                            );
-            this._positionMatrix = mat.translation4(-inversePositionMatrix[12], -inversePositionMatrix[13], -inversePositionMatrix[14]);
-        }
+        this._worldPositionMatrix = null;
     };
     /**
      * @struct
@@ -2718,16 +2771,21 @@ define([
          */
         this._followedObjects = followedObjects;
         /**
-         * Stores a copy of the starting orientation matrix so it can be reset to it later.
+         * Stores a copy of the starting relative orientation matrix so it can be reset to it later.
          * @type Float32Array
          */
-        this._defaultOrientationMatrix = mat.matrix4(orientationMatrix);
+        this._defaultRelativeOrientationMatrix = mat.matrix4(orientationMatrix);
         /**
          * If FPS mode is off, this matrix describes the orientation stored in this configuration. Not the same 
          * as the world orientation of the camera itself, as it can be relative to followed objects. (or their position)
          * @type Float32Array
          */
-        this._orientationMatrix = orientationMatrix;
+        this._relativeOrientationMatrix = orientationMatrix;
+        /**
+         * Describes the orientation of the camera in the world. This is calculated based on the other
+         * properties and cannot be set directly.
+         */
+        this._worldOrientationMatrix = null;
         /**
          * Stores a copy of the starting alpha angle so it can be reset to it later.
          * @type Number
@@ -2774,67 +2832,148 @@ define([
         this._maxBeta = maxBeta;
     }
     CameraOrientationConfiguration.prototype.resetToDefaults = function () {
-        mat.setMatrix4(this._orientationMatrix, this._defaultOrientationMatrix);
+        mat.setMatrix4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
         this._alpha = this._defaultAlpha;
         this._beta = this._defaultBeta;
+        this._worldOrientationMatrix = null;
+    };
+
+    CameraOrientationConfiguration.prototype.getFollowedObjects = function () {
+        return this._followedObjects;
+    };
+
+    CameraOrientationConfiguration.prototype.followsObjects = function () {
+        return this._followedObjects.length > 0;
+    };
+
+    CameraOrientationConfiguration.prototype.followsObject = function (object3D) {
+        return (this._followedObjects.length === 1) && (this._followedObjects[0] === object3D);
+    };
+
+    /**
+     * 
+     * @param {CameraOrientationConfiguration} otherCameraOrientationConfiguration
+     * @returns {Boolean}
+     */
+    CameraOrientationConfiguration.prototype.followsSameObjectAs = function (otherCameraOrientationConfiguration) {
+        return (this._followedObjects.length === 1) && (otherCameraOrientationConfiguration._followedObjects.length === 1) &&
+                (this._followedObjects[0] === otherCameraOrientationConfiguration._followedObjects[0]);
+    };
+
+    CameraOrientationConfiguration.prototype.setFollowedObject = function (followedObject) {
+        this._followedObjects = [followedObject];
+    };
+
+    CameraOrientationConfiguration.prototype._getFollowedPositionVector = function () {
+        var i, positionVector = [0, 0, 0];
+        if (this._followedObjects.length === 0) {
+            application.crash();
+        } else {
+            for (i = 0; i < this._followedObjects.length; i++) {
+                positionVector = vec.add3(positionVector, this._followedObjects[i].getPositionVector());
+            }
+        }
+        return positionVector;
+    };
+
+    CameraOrientationConfiguration.prototype.getFollowedOrientationMatrix = function () {
+        var orientation;
+        if (this._followedObjects.length === 0) {
+            application.crash();
+        } else {
+            orientation = mat.matrix4(this._followedObjects[0].getOrientationMatrix());
+        }
+        return orientation;
+    };
+
+    CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, baseOrientationMatrix) {
+        var dirTowardsObject, axis;
+
+        if (this._followedObjects.length > 0) {
+            if (!this._pointsTowardsObjects) {
+                // look in direction y instead of z:
+                this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2),
+                        mat.mul4(this._relativeOrientationMatrix, this.getFollowedOrientationMatrix()));
+            } else {
+                if (!worldPositionMatrix) {
+                    application.crash();
+                } else {
+                    dirTowardsObject = vec.normal3(vec.sub3(this._getFollowedPositionVector(), mat.translationVector3(worldPositionMatrix)));
+                    if (!this._fps) {
+                        if (!this._worldOrientationMatrix) {
+                            this._worldOrientationMatrix = mat.identity4();
+                        }
+                        this._worldOrientationMatrix[8] = dirTowardsObject[0];
+                        this._worldOrientationMatrix[9] = dirTowardsObject[1];
+                        this._worldOrientationMatrix[10] = dirTowardsObject[2];
+                        axis = vec.cross3([1, 0, 0], dirTowardsObject);
+                        this._worldOrientationMatrix[4] = axis[0];
+                        this._worldOrientationMatrix[5] = axis[1];
+                        this._worldOrientationMatrix[6] = axis[2];
+                        axis = vec.cross3(dirTowardsObject, axis);
+                        this._worldOrientationMatrix[0] = axis[0];
+                        this._worldOrientationMatrix[1] = axis[1];
+                        this._worldOrientationMatrix[2] = axis[2];
+                        this._worldOrientationMatrix = mat.correctedOrthogonal4(this._worldOrientationMatrix);
+                    } else {
+                        if (baseOrientationMatrix) {
+                            dirTowardsObject = vec.mulVec3Mat4(dirTowardsObject, mat.inverseOfRotation4(baseOrientationMatrix));
+                        } else {
+                            baseOrientationMatrix = mat.identity4();
+                        }
+                        this._alpha = vec.angle2uCapped([0, 1], vec.normal2([dirTowardsObject[0], dirTowardsObject[1]]));
+                        if (dirTowardsObject[0] < 0) {
+                            this._alpha = -this._alpha;
+                        }
+                        this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2), mat.rotation4([0, 0, 1], this._alpha));
+                        this._beta = vec.angle3uCapped(mat.getRowC43Neg(this._worldOrientationMatrix), dirTowardsObject);
+                        if (dirTowardsObject[2] > 0) {
+                            this._beta = -this._beta;
+                        }
+                        this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2), mat.mul4(
+                                mat.rotation4([1, 0, 0], this._beta),
+                                mat.rotation4([0, 0, 1], this._alpha)));
+                        this._worldOrientationMatrix = mat.mul4(this._worldOrientationMatrix, baseOrientationMatrix);
+                    }
+                }
+            }
+        } else {
+            this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+        }
+    };
+
+    CameraOrientationConfiguration.prototype.getWorldOrientationMatrix = function (worldPositionMatrix, baseOrientationMatrix) {
+        if (!this._worldOrientationMatrix) {
+            this._calculateWorldOrientationMatrix(worldPositionMatrix, baseOrientationMatrix);
+        }
+        return this._worldOrientationMatrix;
     };
 
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
-        var dirTowardsObject, axis;
-        switch (this._orientationMode) {
-            case this.OrientationMode.absoluteFixed:
-                break;
-            case this.OrientationMode.relativeFixed:
-            case this.OrientationMode.relativeFree:
-            case this.OrientationMode.relativeFPS:
-                if (this._orientationMode === this.OrientationMode.relativeFree) {
-                    this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix,
-                            mat.mul4(mat.rotation4([0, 0, 1], angularVelocityVector[1] * Math.PI / 180 * dt / 1000),
-                                    mat.rotation4([1, 0, 0], angularVelocityVector[0] * Math.PI / 180 * dt / 1000)));
-                } else if (this._orientationMode === this.OrientationMode.relativeFPS) {
-                    this._alpha += angularVelocityVector[1] * dt / 1000;
-                    this._beta += angularVelocityVector[0] * dt / 1000;
-                    this._relativeOrientationMatrix = mat.mul4(mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180), mat.rotation4([1, 0, 0], this._beta * Math.PI / 180));
+        if (!this._fixed) {
+            if (this._followedObjects.length > 0) {
+                if (!this._fps) {
+                    this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
+                            mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
+                            mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                } else {
+                    this._alpha -= angularVelocityVector[1] * dt / 1000;
+                    this._beta -= angularVelocityVector[0] * dt / 1000;
+                    this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
                 }
-                // look in direction y instead of z:
-                this.setOrientationMatrix(mat.mul4(mat.mul4(mat.inverseOfRotation4(this._followedObject.getOrientationMatrix()),
-                        this._relativeOrientationMatrix),
-                        mat.rotation4([1, 0, 0], Math.PI / 2)));
-                break;
-            case this.OrientationMode.pointTowardsObject:
-                this.setOrientationMatrix(mat.identity4());
-                dirTowardsObject = vec.normal3(vec.sub3(this._followedObject.getPositionVector(), this.getPositionVector()));
-                this._orientationMatrix[8] = dirTowardsObject[0];
-                this._orientationMatrix[9] = dirTowardsObject[1];
-                this._orientationMatrix[10] = dirTowardsObject[2];
-                axis = vec.cross3([1, 0, 0], dirTowardsObject);
-                this._orientationMatrix[4] = axis[0];
-                this._orientationMatrix[5] = axis[1];
-                this._orientationMatrix[6] = axis[2];
-                axis = vec.cross3(dirTowardsObject, axis);
-                this._orientationMatrix[0] = axis[0];
-                this._orientationMatrix[1] = axis[1];
-                this._orientationMatrix[2] = axis[2];
-                this.setOrientationMatrix(mat.inverseOfRotation4(mat.correctedOrthogonal4(this.getOrientationMatrix())));
-                break;
-            case this.OrientationMode.pointTowardsObjectFPS:
-                dirTowardsObject = vec.normal3(vec.sub3(this._followedObject.getPositionVector(), this.getPositionVector()));
-                this._alpha = vec.angle3u([0, 0, 1], dirTowardsObject);
-                this.setOrientationMatrix(mat.rotation4([0, 1, 0], this._alpha));
-                this._beta = vec.angle3u(mat.getRowC43(this.getOrientationMatrix()), dirTowardsObject);
-                this.setOrientationMatrix(mat.mul4(mat.rotation4([1, 0, 0], this._beta), mat.rotation4([0, 0, 1], this._alpha)));
-                this.setOrientationMatrix(mat.inverseOfRotation4(mat.correctedOrthogonal4(this.getOrientationMatrix())));
-                break;
-            case this.OrientationMode.absoluteFree:
-                this.rotateByMatrix(mat.mul4(mat.rotation4([0, 1, 0], angularVelocityVector[1] * Math.PI / 180 * dt / 1000),
-                        mat.rotation4([1, 0, 0], angularVelocityVector[0] * Math.PI / 180 * dt / 1000)));
-                break;
-            case this.OrientationMode.absoluteFPS:
-                this._alpha += angularVelocityVector[1] * dt / 1000;
-                this._beta += angularVelocityVector[0] * dt / 1000;
-                this.setOrientationMatrix(mat.mul4(mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180), mat.rotation4([1, 0, 0], this._beta * Math.PI / 180)));
-                break;
+            } else {
+                if (!this._fps) {
+                    this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
+                            mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
+                            mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                } else {
+                    this._alpha -= angularVelocityVector[1] * dt / 1000;
+                    this._beta -= angularVelocityVector[0] * dt / 1000;
+                    this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
+                }
+            }
         }
+        this._worldOrientationMatrix = null;
     };
     // #########################################################################
     /**
@@ -2845,8 +2984,9 @@ define([
      * @param {Number} fov
      * @param {Number} minFOV
      * @param {Number} maxFOV
+     * @param {Number} baseOrientation
      */
-    function CameraConfiguration(positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV) {
+    function CameraConfiguration(positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, baseOrientation) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * @type CameraPositionConfiguration
@@ -2872,8 +3012,18 @@ define([
          * @type Number
          */
         this._maxFOV = maxFOV;
+        /**
+         * enum (CameraConfiguration.prototype.BaseOrientation)
+         * @type Number
+         */
+        this._baseOrientation = baseOrientation;
     }
     makeObject3DMixinClass.call(CameraConfiguration);
+    CameraConfiguration.prototype.BaseOrientation = {
+        world: 0,
+        positionFollowedObjects: 1,
+        orientationFollowedObjects: 2
+    };
     /**
      * Sets the camera's Field Of View 
      * @param {Number} fov The new desired FOV in degrees.
@@ -2898,9 +3048,99 @@ define([
         this._orientationConfiguration.resetToDefaults();
     };
 
+    /**
+     * 
+     * @param {Number[3]} velocityVector
+     * @param {Number[3]} angularVelocityVector
+     * @param {Number} dt
+     */
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
-        //this._positionConfiguration.update(this._orientationConfiguration)
+        var baseOrientationMatrix;
+        switch (this._baseOrientation) {
+            case this.BaseOrientation.world:
+                baseOrientationMatrix = null;
+                break;
+            case this.BaseOrientation.positionFollowedObjects:
+                baseOrientationMatrix = this._positionConfiguration.followsObjects() ? mat.matrix4(this._positionConfiguration.getFollowedOrientationMatrix()) : null;
+                break;
+            case this.BaseOrientation.orientationFollowedObjects:
+                baseOrientationMatrix = this._orientationConfiguration.followsObjects() ? mat.matrix4(this._orientationConfiguration.getFollowedOrientationMatrix()) : null;
+                break;
+            default:
+                application.crash();
+        }
+        this._orientationConfiguration.update(angularVelocityVector, dt);
+        this.setOrientationMatrix(this._orientationConfiguration.getWorldOrientationMatrix(this.getPositionMatrix(), baseOrientationMatrix));
+        this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt);
+        this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
+    };
+
+    CameraConfiguration.prototype.positionFollowsObjects = function () {
+        return this._positionConfiguration.followsObjects();
+    };
+
+    CameraConfiguration.prototype.followsObjects = function () {
+        return this._positionConfiguration.followsObjects() || this._orientationConfiguration.followsObjects();
+    };
+
+    /**
+     * @param {CameraConfiguration} otherCameraConfiguration
+     * @returns {Boolean}
+     */
+    CameraConfiguration.prototype.positionFollowsSameObjectsAs = function (otherCameraConfiguration) {
+        return this._positionConfiguration.followsSameObjectsAs(otherCameraConfiguration._positionConfiguration);
+    };
+
+    CameraConfiguration.prototype.followsObject = function (object3D) {
+        return this._positionConfiguration.followsObject(object3D) || (!this._positionConfiguration.followsObjects() && this._orientationConfiguration.followsObject(object3D));
+    };
+
+    /**
+     * 
+     * @param {CameraConfiguration} otherCameraConfiguration
+     * @returns {Boolean}
+     */
+    CameraConfiguration.prototype.followsSameObjectAs = function (otherCameraConfiguration) {
+        return this._positionConfiguration.followsSameObjectAs(otherCameraConfiguration._positionConfiguration) ||
+                this._positionConfiguration.followsSameObjectAs(otherCameraConfiguration._orientationConfiguration) ||
+                this._orientationConfiguration.followsSameObjectAs(otherCameraConfiguration._positionConfiguration) ||
+                this._orientationConfiguration.followsSameObjectAs(otherCameraConfiguration._orientationConfiguration);
+    };
+
+    CameraConfiguration.prototype.getFollowedObject = function () {
+        return this._positionConfiguration.followsObjects() ? this._positionConfiguration.getFollowedObjects()[0] : this._orientationConfiguration.getFollowedObjects()[0];
+    };
+
+    CameraConfiguration.prototype.getFollowedPositionVector = function () {
+        return this._positionConfiguration.getFollowedPositionVector();
+    };
+
+    CameraConfiguration.prototype.getFollowedPositionMatrix = function () {
+        return this._positionConfiguration.getFollowedPositionMatrix();
+    };
+
+    CameraConfiguration.prototype.setTarget = function (targetObject) {
+        if (!this._orientationConfiguration.followsObjects() || !(this._orientationConfiguration.followsSameObjectAs(this._positionConfiguration))) {
+            this._orientationConfiguration.setFollowedObject(targetObject);
+        }
+    };
+
+    /**
+     * 
+     * @param {Float32Array} positionMatrix
+     * @param {Float32Array} orientationMatrix
+     * @param {Number} fov
+     * @param {Number} minFOV
+     * @param {Number} maxFOV
+     * @returns {CameraConfiguration}
+     */
+    function getFreeCameraConfiguration(positionMatrix, orientationMatrix, fov, minFOV, maxFOV) {
+        return new CameraConfiguration(
+                new CameraPositionConfiguration(false, false, [], positionMatrix, 0, 0),
+                new CameraOrientationConfiguration(false, false, false, [], orientationMatrix, 0, 0, 0, 0, 0, 0),
+                fov, minFOV, maxFOV, CameraConfiguration.prototype.BaseOrientation.world);
     }
+
     // #########################################################################
     function Camera(scene, aspect, fov, adaptationTime, configuration) {
         Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
@@ -2917,7 +3157,7 @@ define([
          */
         this._currentConfiguration = configuration;
         if (!this._currentConfiguration) {
-            this._currentConfiguration = new CameraConfiguration(fov, true, true, null, mat.identity4(), mat.identity4(), false);
+            this._currentConfiguration = getFreeCameraConfiguration(mat.identity4(), mat.identity4(), fov, fov, fov);
         }
         /**
          * @type Number
@@ -3014,8 +3254,17 @@ define([
         oneStepBehind: 1
     };
     Camera.prototype.getCameraMatrix = function () {
-        return mat.mul4(this.getPositionMatrix(), this.getOrientationMatrix());
+        return mat.mul4(mat.inverseOfTranslation4(this.getPositionMatrix()), mat.inverseOfRotation4(this.getOrientationMatrix()));
     };
+
+    Camera.prototype.getCameraPositionMatrix = function () {
+        return mat.inverseOfTranslation4(this.getPositionMatrix());
+    };
+
+    Camera.prototype.getCameraOrientationMatrix = function () {
+        return mat.inverseOfRotation4(this.getOrientationMatrix());
+    };
+
     Camera.prototype.getVelocityVector = function () {
         return this._velocityVector;
     };
@@ -3235,14 +3484,7 @@ define([
     Camera.prototype._getFreeCameraConfiguration = function (positionMatrix, orientationMatrix) {
         positionMatrix = positionMatrix ? mat.matrix4(positionMatrix) : mat.matrix4(this.getPositionMatrix());
         orientationMatrix = orientationMatrix ? mat.matrix4(orientationMatrix) : mat.matrix4(this.getOrientationMatrix());
-        return new CameraConfiguration(
-                this._fov,
-                true,
-                true,
-                null,
-                positionMatrix,
-                orientationMatrix,
-                false);
+        return getFreeCameraConfiguration(positionMatrix, orientationMatrix, this._fov, this._fov, this._fov);
     };
     Camera.prototype.setConfiguration = function (configuration) {
         this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
@@ -3253,7 +3495,7 @@ define([
             this.setConfiguration(configuration);
         } else {
             if (this._previousConfiguration && this._currentConfiguration) {
-                this._previousConfiguration = new CameraConfiguration(this._currentConfiguration.getFOV(), false, false, null, mat.matrix4(this.getPositionMatrix()), mat.matrix4(this.getOrientationMatrix()), false);
+                this._previousConfiguration = this._getFreeCameraConfiguration();
             } else {
                 this._previousConfiguration = this._currentConfiguration;
             }
@@ -3278,15 +3520,18 @@ define([
     Camera.prototype.followPreviousObject = function (duration, style) {
         this.startTransitionToConfiguration(this._scene.getCameraConfigurationForPreviousObject(this._currentConfiguration.getFollowedObject()), duration, style);
     };
+
+    Camera.prototype.setTarget = function (targetObject) {
+        this._currentConfiguration.setTarget(targetObject);
+    };
+
     Camera.prototype.update = function (dt) {
         var startPositionVector, endPositionVector, previousPositionVector,
                 relativeTransitionRotationMatrix, halfTransitionOrientationMatrix,
                 dot, alpha, gamma, axis, axis2,
                 transitionProgress;
         if (this._previousConfiguration) {
-            this._currentConfiguration.updatePosition([0, 0, 0], dt);
-            this._currentConfiguration.updateOrientation([0, 0, 0], dt);
-            this._currentConfiguration.updatePosition([0, 0, 0], dt);
+            this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
             this._transitionElapsedTime += dt;
             if (this._transitionElapsedTime > this._transitionDuration) {
                 this._transitionElapsedTime = this._transitionDuration;
@@ -3302,15 +3547,14 @@ define([
                 default:
                     application.crash();
             }
-            this._previousConfiguration.updatePosition([0, 0, 0], dt);
-            this._previousConfiguration.updateOrientation([0, 0, 0], dt);
+            this._previousConfiguration.update([0, 0, 0], [0, 0, 0], dt);
             // calculate position
             // we can simply interpolate the position on a straight linear path
             startPositionVector = this._previousConfiguration.getPositionVector();
             endPositionVector = this._currentConfiguration.getPositionVector();
             previousPositionVector = this.getPositionVector();
             this.setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
-            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(mat.inverseOfRotation4(this.getOrientationMatrix()), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
+            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), -1000 / dt);
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
@@ -3358,9 +3602,8 @@ define([
         } else {
             this._updateVelocity(dt);
             this._updateAngularVelocity(dt);
-            this._currentConfiguration.updatePosition(this._controlledVelocityVector, dt);
-            this._currentConfiguration.updateOrientation(this._angularVelocityVector, dt);
-            this._currentConfiguration.updatePosition([0, 0, 0], dt);
+            this._currentConfiguration.update(this._controlledVelocityVector, this._angularVelocityVector, dt);
+            this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
             switch (this._followMode) {
                 case this.FollowMode.instantaneous:
                     this.setPositionMatrix(this._currentConfiguration.getPositionMatrix());
@@ -3372,13 +3615,19 @@ define([
                     break;
             }
             this.setFOV(this._currentConfiguration.getFOV());
-            if (this._currentConfiguration.positionFollowsObject()) {
+            if (this._currentConfiguration.positionFollowsObjects()) {
                 if (this._followedObjectPreviousPosition) {
-                    this._velocityVector = vec.scaled3(vec.mulMat4Vec3(mat.inverseOfRotation4(this.getOrientationMatrix()), vec.sub3(this._currentConfiguration.getFollowedObject().getPositionVector(), this._followedObjectPreviousPosition)), -1000 / dt);
+                    this._velocityVector = vec.scaled3(
+                            vec.mulMat4Vec3(
+                                    this.getOrientationMatrix(),
+                                    vec.sub3(
+                                            this._currentConfiguration.getFollowedPositionVector(),
+                                            this._followedObjectPreviousPosition)),
+                            -1000 / dt);
                 } else {
                     this._velocityVector = [0, 0, 0];
                 }
-                this._followedObjectPreviousPosition = this._currentConfiguration.getFollowedObject().getPositionVector();
+                this._followedObjectPreviousPosition = this._currentConfiguration.getFollowedPositionVector();
             } else {
                 this._velocityVector = this._controlledVelocityVector;
             }
@@ -3442,8 +3691,8 @@ define([
      */
     LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
-        var matrix = mat.mul4(mat.mul4(camera.getPositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
-        this.matrix = this.matrix || mat.mul4(camera.getPositionMatrix(), this._orientationMatrix);
+        var matrix = mat.mul4(mat.mul4(camera.getCameraPositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
+        this.matrix = this.matrix || mat.mul4(camera.getCameraPositionMatrix(), this._orientationMatrix);
         this.translationVector = this.translationVector || new Float32Array(vec.normal3(vec.add3(mat.translationVector3(matrix), vec.scaled3(mat.translationVector3(this.matrix), -1))));
         context.getCurrentShader().assignUniforms(context, {
             "u_lightMatrix": function () {
@@ -3515,13 +3764,13 @@ define([
             return self.activeCamera.getCameraMatrix();
         };
         this.uniformValueFunctions.u_cameraOrientationMatrix = function () {
-            return self.activeCamera.getOrientationMatrix();
+            return self.activeCamera.getCameraOrientationMatrix();
         };
         this.uniformValueFunctions.u_projMatrix = function () {
             return self.activeCamera.getPerspectiveMatrix();
         };
         this.uniformValueFunctions.u_eyePos = function () {
-            return new Float32Array(vec.scaled3(self.activeCamera.getPositionVector(), -1));
+            return new Float32Array(self.activeCamera.getPositionVector());
         };
         this.uniformValueFunctions.u_shadows = function () {
             return self._shadowMappingEnabled;
@@ -3672,11 +3921,11 @@ define([
      */
     Scene.prototype.addCameraConfiguration = function (cameraConfiguration) {
         var lastConfigurationIndex = -1, i;
-        if ((this._cameraConfigurations.length === 0) || (this._cameraConfigurations[this._cameraConfigurations.length - 1].getFollowedObject() === cameraConfiguration.getFollowedObject())) {
+        if ((this._cameraConfigurations.length === 0) || (this._cameraConfigurations[this._cameraConfigurations.length - 1].followsSameObjectAs(cameraConfiguration))) {
             this._cameraConfigurations.push(cameraConfiguration);
         } else {
             for (i = 0; i < this._cameraConfigurations.length; i++) {
-                if (this._cameraConfigurations[i].getFollowedObject() === cameraConfiguration.getFollowedObject()) {
+                if (this._cameraConfigurations[i].followsSameObjectAs(cameraConfiguration)) {
                     lastConfigurationIndex = i;
                 }
             }
@@ -3716,7 +3965,7 @@ define([
     Scene.prototype.getFirstCameraConfigurationForObject = function (objectToFind) {
         var i;
         for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (this._cameraConfigurations[i].getFollowedObject() === objectToFind) {
+            if (this._cameraConfigurations[i].followsObject(objectToFind)) {
                 return this._cameraConfigurations[i];
             }
         }
@@ -3730,14 +3979,14 @@ define([
     Scene.prototype.getNextCameraConfigurationOfSameObject = function (currentConfiguration) {
         var firstConfiguration = null, i;
         for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (!firstConfiguration && this._cameraConfigurations[i].getFollowedObject() === currentConfiguration.getFollowedObject()) {
+            if (!firstConfiguration && this._cameraConfigurations[i].followsSameObjectAs(currentConfiguration)) {
                 firstConfiguration = this._cameraConfigurations[i];
             }
             if (this._cameraConfigurations[i] === currentConfiguration) {
                 if (i === this._cameraConfigurations.length - 1) {
                     return firstConfiguration;
                 }
-                if (this._cameraConfigurations[i + 1].getFollowedObject() === currentConfiguration.getFollowedObject()) {
+                if (this._cameraConfigurations[i + 1].followsSameObjectAs(currentConfiguration)) {
                     return this._cameraConfigurations[i + 1];
                 }
                 return firstConfiguration;
@@ -3752,10 +4001,10 @@ define([
     Scene.prototype.getCameraConfigurationForNextObject = function (currentObject) {
         var firstConfigurationOfFirstObject = null, i, objectFound = false;
         for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (!firstConfigurationOfFirstObject && (this._cameraConfigurations[i].getFollowedObject() !== null)) {
+            if (!firstConfigurationOfFirstObject && (this._cameraConfigurations[i].followsObjects())) {
                 firstConfigurationOfFirstObject = this._cameraConfigurations[i];
             }
-            if (this._cameraConfigurations[i].getFollowedObject() === currentObject) {
+            if (this._cameraConfigurations[i].followsObject(currentObject)) {
                 objectFound = true;
             } else if (objectFound) {
                 return this._cameraConfigurations[i];
@@ -3770,16 +4019,16 @@ define([
     Scene.prototype.getCameraConfigurationForPreviousObject = function (currentObject) {
         var firstConfigurationOfLastObject = null, i, objectFound = false, previousObject = null;
         for (i = this._cameraConfigurations.length - 1; i >= 0; i--) {
-            if ((this._cameraConfigurations[i].getFollowedObject() !== null) && (!firstConfigurationOfLastObject || (this._cameraConfigurations[i].getFollowedObject() === firstConfigurationOfLastObject.getFollowedObject()))) {
+            if ((this._cameraConfigurations[i].followsObjects()) && (!firstConfigurationOfLastObject || (this._cameraConfigurations[i].followsSameObjectAs(firstConfigurationOfLastObject)))) {
                 firstConfigurationOfLastObject = this._cameraConfigurations[i];
             }
-            if (this._cameraConfigurations[i].getFollowedObject() === currentObject) {
+            if (this._cameraConfigurations[i].followsObject(currentObject)) {
                 objectFound = true;
             } else if (objectFound) {
                 if (!previousObject) {
                     previousObject = this._cameraConfigurations[i].getFollowedObject();
                 } else {
-                    if (this._cameraConfigurations[i].getFollowedObject() !== previousObject) {
+                    if (!this._cameraConfigurations[i].followsObject(previousObject)) {
                         return this._cameraConfigurations[i + 1];
                     }
                 }
@@ -3796,12 +4045,16 @@ define([
         for (i = 0; i < this._cameraConfigurations.length; i++) {
             j = i;
             k = 0;
-            while ((j < this._cameraConfigurations.length) && (this._cameraConfigurations[j].getFollowedObject().getNode() === objectNode)) {
+            while ((j < this._cameraConfigurations.length) && (this._cameraConfigurations[j].getFollowedObject()) && (this._cameraConfigurations[j].getFollowedObject().getNode() === objectNode)) {
                 j++;
                 k++;
             }
             this._cameraConfigurations.splice(i, k);
         }
+    };
+
+    Scene.prototype.setTarget = function (renderableObject) {
+        this.activeCamera.setTarget(renderableObject);
     };
     /**
      * Cleans up the whole scene graph, removing all object that are deleted or are
@@ -3923,7 +4176,7 @@ define([
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
-            camOri = mat.inverseOfRotation4(this.activeCamera.getOrientationMatrix());
+            camOri = this.activeCamera.getOrientationMatrix();
             cameraZ = [camOri[8], camOri[9], camOri[10]];
             for (i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {

@@ -183,7 +183,7 @@ define([
      * particles.
      */
     DustParticle.prototype.simulate = function (camera) {
-        this._visualModel.fitPositionWithinRange(camera.getPositionMatrix(), this._range);
+        this._visualModel.fitPositionWithinRange(camera.getCameraPositionMatrix(), this._range);
     };
     /**
      * Removes all references to other objects for proper cleanup of memory.
@@ -1539,9 +1539,11 @@ define([
      * @param {String} [equipmentProfileName] The name of the equipment profile
      * to use to equip the spacecraft. If not given, the spacecraft will not be
      * equipped.
+     * @param {Spacecraft[]} spacecraftArray The array of spacecrafts participating
+     * in the same battle simulation as this one.
      * @returns {Spacecraft}
      */
-    function Spacecraft(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
+    function Spacecraft(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
         /**
          * The class of this spacecraft that describes its general properties.
          * @type SpacecraftClass
@@ -1610,9 +1612,19 @@ define([
          * @type Array<Explosion>
          */
         this._activeDamageIndicators = [];
+        /**
+         * The array of other spacecrafts that participate in the same simulation (can be targeted)
+         * @type Spacecraft[]
+         */
+        this._spacecraftArray = null;
+        /**
+         * The currently targeted spacecraft.
+         * @type Spacecraft
+         */
+        this._target = null;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
-            this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName);
+            this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
         }
     }
     // initializer
@@ -1624,9 +1636,10 @@ define([
      * @param {Float32Array} [orientationMatrix]
      * @param {Projectile[]} [projectileArray]
      * @param {String} [equipmentProfileName]
+     * @param {Spacecraft[]} [spacecraftArray]
      * @see Spacecraft
      */
-    Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName) {
+    Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
         this._class = spacecraftClass;
         this._hitpoints = this._class.getHitpoints();
         this._physicalModel = new physics.PhysicalObject(
@@ -1647,6 +1660,7 @@ define([
         if (equipmentProfileName !== undefined) {
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
         }
+        this._spacecraftArray = spacecraftArray || null;
     };
     // direct getters and setters
     /**
@@ -1828,14 +1842,18 @@ define([
      * @param {Object} dataJSON
      * @param {Projectile[]} [projectileArray=null] The array to which the
      * spacecraft will add its fired projectiles.
+     * @param {Spacecraft[]} [spacecraftArray=null] The array of spacecrafts
+     * participating in the same battle.
      */
-    Spacecraft.prototype.loadFromJSON = function (dataJSON, projectileArray) {
+    Spacecraft.prototype.loadFromJSON = function (dataJSON, projectileArray, spacecraftArray) {
         var equipmentProfile;
         this._init(
                 armada.logic().getSpacecraftClass(dataJSON.class),
                 mat.translation4v(dataJSON.position),
                 mat.rotation4FromJSON(dataJSON.rotations),
-                projectileArray);
+                projectileArray,
+                undefined,
+                spacecraftArray);
         // equipping the created spacecraft
         // if there is an quipment tag...
         if (dataJSON.equipment) {
@@ -1853,6 +1871,14 @@ define([
         } else if (this._class.getEquipmentProfile("default") !== undefined) {
             this.equipProfile(this._class.getEquipmentProfile("default"));
         }
+    };
+    /**
+     * Sets a new spacecraft array which contains the other spacecrafts participating
+     * in the same simulation. Called by e.g. the Level, when it adds the spacecrafts.
+     * @param {Spacecraft[]} spacecraftArray
+     */
+    Spacecraft.prototype.setSpacecraftArray = function (spacecraftArray) {
+        this._spacecraftArray = spacecraftArray;
     };
     /**
      * Returns a string representation of the current flight mode set for this
@@ -2201,6 +2227,37 @@ define([
         }
     };
     /**
+     * Targets the next spacecraft.
+     */
+    Spacecraft.prototype.targetNext = function () {
+        var i, found = false;
+        if (this._spacecraftArray) {
+            for (i = 0; i < this._spacecraftArray.length; i++) {
+                if ((this._spacecraftArray[i] !== this) && (!this._target || found)) {
+                    this._target = this._spacecraftArray[i];
+                    if (this._visualModel) {
+                        this._visualModel.getNode().getScene().setTarget(this._target.getVisualModel());
+                    }
+                    break;
+                }
+                if (this._target && (this._spacecraftArray[i] === this._target)) {
+                    found = true;
+                }
+            }
+            if (found) {
+                for (i = 0; i < this._spacecraftArray.length; i++) {
+                    if (this._spacecraftArray[i] !== this) {
+                        this._target = this._spacecraftArray[i];
+                        if (this._visualModel) {
+                            this._visualModel.getNode().getScene().setTarget(this._target.getVisualModel());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    };
+    /**
      * Resets all the thruster burn levels of the spacecraft to zero.
      */
     Spacecraft.prototype.resetThrusterBurn = function () {
@@ -2307,6 +2364,8 @@ define([
         this._propulsion = null;
         this._maneuveringComputer = null;
         this._projectileArray = null;
+        this._spacecraftArray = null;
+        this._target = null;
         if (this._hitbox) {
             this._hitbox.markAsReusable();
         }
@@ -2545,7 +2604,7 @@ define([
 
         if (dataJSON.camera) {
             if (dataJSON.camera.position) {
-                this._cameraStartPositionMatrix = mat.translation4v(vec.scaled3(dataJSON.camera.position, -1));
+                this._cameraStartPositionMatrix = mat.translation4v(dataJSON.camera.position);
             }
             if (dataJSON.camera.rotations) {
                 this._cameraStartOrientationMatrix = mat.rotation4FromJSON(dataJSON.camera.rotations);
@@ -2556,7 +2615,7 @@ define([
         this._spacecrafts = [];
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
             spacecraft = new Spacecraft();
-            spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectiles);
+            spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectiles, this._spacecrafts);
             if (dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraftIndex = i;
             }
@@ -2606,7 +2665,8 @@ define([
                                     mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                                     orientation,
                                     this._projectiles,
-                                    "default"));
+                                    "default",
+                                    this._spacecrafts));
                 }
             }
         }

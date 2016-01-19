@@ -173,15 +173,25 @@ define(function () {
         ];
     };
     /**
-     * Returns the angle of the two 2D vectors in radians.
+     * Returns the angle of the two 2D unit vectors in radians.
      * @param {Number[2]} v1 The first 2D vector.
      * @param {Number[2]} v2 The second 2D vector.
      * @returns {Number} The angle in radian.
      */
     vec.angle2u = function (v1, v2) {
-        return (
-                Math.acos(v1[0] * v2[0] + v1[1] * v2[1])
-                );
+        return Math.acos(v1[0] * v2[0] + v1[1] * v2[1]);
+    };
+    /**
+     * Returns the angle of the two 2D unit vectors in radians. The dot product
+     * of the vectors is capped between -1.0 and 1.0, and so this cannot return
+     * NaN accidentally (with the product falling slightly out of range due to
+     * float inaccuracy)
+     * @param {Number[2]} v1 The first 2D vector.
+     * @param {Number[2]} v2 The second 2D vector.
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle2uCapped = function (v1, v2) {
+        return (Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1]), 1.0)));
     };
     /**
      * Returns the angle of the two 3D unit vectors in radians.
@@ -190,9 +200,19 @@ define(function () {
      * @returns {Number} The angle in radian.
      */
     vec.angle3u = function (v1, v2) {
-        return (
-                Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
-                );
+        return Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]);
+    };
+    /**
+     * Returns the angle of the two 3D unit vectors in radians. The dot product
+     * of the vectors is capped between -1.0 and 1.0, and so this cannot return
+     * NaN accidentally (with the product falling slightly out of range due to
+     * float inaccuracy)
+     * @param {Number[3]} v1 A 3D unit vector.
+     * @param {Number[3]} v2 A 3D unit vector.
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle3uCapped = function (v1, v2) {
+        return Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]), 1.0));
     };
 
     // -----------------------------------------------------------------------------

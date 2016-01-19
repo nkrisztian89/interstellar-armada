@@ -103,6 +103,9 @@
                         "name": "changeFlightMode",
                         "description": "Change flight mode"
                     }, {
+                        "name": "nextTarget",
+                        "description": "Target next spoacecraft"
+                    }, {
                         "name": "fire",
                         "description": "Fire primary weapons",
                         "continuous": true
@@ -232,6 +235,9 @@
                         "action": "fire",
                         "key": "space"
                     }, {
+                    "action": "nextTarget",
+                        "key": "t"
+                    }, {    
                         "action": "changeFlightMode",
                         "key": "tab"
                     }, {
@@ -339,7 +345,7 @@
                         "key": "escape"
                     }, {
                         "action": "toggleTextVisibility",
-                        "key": "t"
+                        "key": "i"
                     }
                 ]
             },

@@ -7,7 +7,7 @@
         "rotations": [
             {
                 "axis": "x",
-                "degrees": 60
+                "degrees": -60
             }
         ]
     },

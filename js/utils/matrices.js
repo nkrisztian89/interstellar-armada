@@ -193,6 +193,25 @@ define([
             0.0, 0.0, 0.0, 1.0]
                 );
     };
+    
+    /**
+     * Creates a 4x4 transformation matrix describing a translation and a rotation based on
+     * two separate matrices, only the translation / rotation part of which are taken into
+     * account and combined.
+     * @param {Float32Array} translationMatrix A 4x4 matrix. Taken as a translation matrix,
+     * irrelevant parts are not considered.
+     * @param {Float32Array} rotationMatrix A 4x4 matrix. Taken as a roation matrix,
+     * irrelevant parts are not considered.
+     * @returns {Float32Array}
+     */
+    mat.translationRotation = function (translationMatrix, rotationMatrix) {
+        return new Float32Array([
+            rotationMatrix[0], rotationMatrix[1], rotationMatrix[2], 0.0,
+            rotationMatrix[4], rotationMatrix[5], rotationMatrix[6], 0.0,
+            rotationMatrix[8], rotationMatrix[9], rotationMatrix[10], 0.0,
+            translationMatrix[12], translationMatrix[13], translationMatrix[14], 1.0
+        ]);
+    };
 
     /**
      * Returns a 4x4 transformation matrix describing a perspective projection.
@@ -471,6 +490,15 @@ define([
      */
     mat.getRowC43 = function (m) {
         return [m[8], m[9], m[10]];
+    };
+    
+    /**
+     * Returns the opposite of the first 3 elements of the third row vector of a 4x4 matrix.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    mat.getRowC43Neg = function (m) {
+        return [-m[8], -m[9], -m[10]];
     };
 
     /**

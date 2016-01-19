@@ -1710,6 +1710,10 @@ define([
         this.setActionFunction("changeFlightMode", true, function () {
             self._controlledSpacecraft.changeFlightMode();
         });
+        // switch to next target
+        this.setActionFunction("nextTarget", true, function () {
+            self._controlledSpacecraft.targetNext();
+        });
         // forward burn
         this.setActionFunctions("forward", function (i) {
             self._controlledSpacecraft.forward(i);

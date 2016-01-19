@@ -1234,6 +1234,7 @@ define([
         return this._propulsionDescriptor;
     };
     // ##############################################################################
+    ///TODO: finish documentation
     /**
      * @class Describes the parameters of a certain view of an object, based on which
      * a camera can be created if that object is deployed in a scene.
@@ -1251,9 +1252,23 @@ define([
          */
         this._fov = dataJSON.fov || application.crash();
         /**
+         * Whether turning the view should happen in FPS mode (around axes relative to the followed
+         * object, and not the camera itself)
          * @type Boolean
          */
-        this._followsPosition = dataJSON.followsPosition || application.crash();
+        this._fps = (typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false;
+        /**
+         * @type Boolean
+         */
+        this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : application.crash();
+        /**
+         * @type Boolean
+         */
+        this._lookAtSelf = (typeof dataJSON.lookAtSelf) === "boolean" ? dataJSON.lookAtSelf : false;
+        /**
+         * @type Boolean
+         */
+        this._lookAtTarget = (typeof dataJSON.lookAtTarget) === "boolean" ? dataJSON.lookAtTarget : false;
         /**
          * Whether the position of the view is changeable by the player.
          * @type Boolean
@@ -1291,19 +1306,22 @@ define([
         var positionConfiguration, orientationConfiguration;
         positionConfiguration = new budaScene.CameraPositionConfiguration(!this._movable,
                 this._rotationCenterIsObject,
-                [followedObject],
+                this._followsPosition ? [followedObject] : [],
                 this._followPositionMatrix,
                 1, ///TODO: hardcoded
                 100);///TODO: hardcoded
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(!this._turnable,
-                false,
-                false,
-                [followedObject],
+                this._lookAtSelf || this._lookAtTarget,
+                this._fps,
+                this._lookAtTarget ? [] : [followedObject],
                 this._followOrientationMatrix,
                 0, 0, ///TODO: hardcoded
                 -90, 90, ///TODO: hardcoded
                 -90, 90);///TODO: hardcoded
-        return new budaScene.CameraConfiguration(positionConfiguration, orientationConfiguration, this._fov, 5, 160);///TODO: hardcoded
+        return new budaScene.CameraConfiguration(
+                positionConfiguration, orientationConfiguration,
+                this._fov, 5, 160,
+                budaScene.CameraConfiguration.prototype.BaseOrientation.positionFollowedObjects);///TODO: hardcoded
     };
     // ##############################################################################
     /**
