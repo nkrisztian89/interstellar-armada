@@ -1317,12 +1317,13 @@ define([
                 this._followOrientationMatrix,
                 0, 0, ///TODO: hardcoded
                 -90, 90, ///TODO: hardcoded
-                -90, 90);///TODO: hardcoded
+                -90, 90, ///TODO: hardcoded
+                budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.positionFollowedObjects, ///TODO: hardcoded
+                budaScene.CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld);///TODO: hardcoded
         return new budaScene.CameraConfiguration(
                 this._name,
                 positionConfiguration, orientationConfiguration,
-                this._fov, 5, 160,
-                budaScene.CameraConfiguration.prototype.BaseOrientation.positionFollowedObjects);///TODO: hardcoded
+                this._fov, 5, 160);///TODO: hardcoded
     };
     // ##############################################################################
     /**

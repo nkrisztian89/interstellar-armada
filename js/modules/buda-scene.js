@@ -2813,14 +2813,18 @@ define([
      * orientation is absolute, setting multiple objects means the orientation of the first one will be followed. (as of now, can be changed
      * later to utilize all orientations)
      * @param {Float32Array} orientationMatrix The starting relative (if objects are followed) or world (if not) orientation of the camera.
-     * @param {Number} alpha In FPS-mode, the starting alpha angle (around the Z axis)
-     * @param {Number} beta In FPS-mode, the starting beta angle (around X axis)
-     * @param {Number} minAlpha In FPS-mode, the lowest possible value for the alpha angle.
-     * @param {Number} maxAlpha In FPS-mode, the highest possible value for the alpha angle.
-     * @param {Number} minBeta In FPS-mode, the lowest possible value for the beta angle.
-     * @param {Number} maxBeta In FPS-mode, the highest possible value for the beta angle.
+     * @param {Number} [alpha] In FPS-mode, the starting alpha angle (around the Z axis)
+     * @param {Number} [beta] In FPS-mode, the starting beta angle (around X axis)
+     * @param {Number} [minAlpha] In FPS-mode, the lowest possible value for the alpha angle.
+     * @param {Number} [maxAlpha] In FPS-mode, the highest possible value for the alpha angle.
+     * @param {Number} [minBeta] In FPS-mode, the lowest possible value for the beta angle.
+     * @param {Number} [maxBeta] In FPS-mode, the highest possible value for the beta angle.
+     * @param {Number} [baseOrientation] (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be 
+     * taken as base when calculating the orientation in FPS-mode.
+     * @param {Number} [pointToFallback] (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation 
+     * calculation to use if no objects are specified to point towards to
      */
-    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta) {
+    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta, baseOrientation, pointToFallback) {
         /**
          * If true, the camera orientation can't be controlled by the player, but is automatically
          * calculated. The absolute orientation might still change e.g. if it is relative to objects
@@ -2912,7 +2916,57 @@ define([
          * @type Number
          */
         this._maxBeta = maxBeta;
+        /**
+         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be taken as base when calculating 
+         * the orientation in FPS-mode.
+         * @type Number
+         */
+        this._baseOrientation = baseOrientation;
+        /**
+         * (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation calculation to use if no 
+         * objects are specified to point towards to
+         * @type Number
+         */
+        this._pointToFallback = pointToFallback;
     }
+    /**
+     * @enum {Number}
+     * Options about what coordinate sytem should be taken as base when calculating the orientation in FPS-mode.
+     */
+    CameraOrientationConfiguration.prototype.BaseOrientation = {
+        /**
+         * The FPS-mode angles should be relative to the world coordinate system
+         */
+        world: 1,
+        /**
+         * The FPS-mode angles should be relative to the orientation of the object(s) followed by position
+         */
+        positionFollowedObjects: 2,
+        /**
+         * The FPS-mode angles should be relative to the orientation of the object(s) followed by orientation
+         */
+        orientationFollowedObjects: 3
+    };
+    /**
+     * @enum {Number}
+     * Options on what orientation calculation to fall back to in case a "point-to" configuration was set (which always faces the followed
+     * objects), but no followed objects are specified.
+     */
+    CameraOrientationConfiguration.prototype.PointToFallback = {
+        /**
+         * Treat the relative orientation matrix as world orientation matrix
+         */
+        world: 1,
+        /**
+         * Let the orientation stay as it is (as it was before)
+         */
+        stationary: 2,
+        /**
+         * Calculate the orientation relative to the object that is followed by position. If no object is followed by position, use the
+         * world setting
+         */
+        positionFollowedObjectOrWorld: 3
+    };
     /**
      * Returns a camera orientation configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
@@ -2930,7 +2984,9 @@ define([
                 this._minAlpha,
                 this._maxAlpha,
                 this._minBeta,
-                this._maxBeta);
+                this._maxBeta,
+                this._baseOrientation,
+                this._pointToFallback);
         result._worldOrientationMatrix = this._worldOrientationMatrix;
         return result;
     };
@@ -3002,16 +3058,36 @@ define([
      * depends on changes, therefore serving as a cache variable)
      * @param {Float32Array} worldPositionMatrix The current position of the camera in world coordinates - needed for configurations
      * that always face the followed object, so that the orientation can be set according to the direction from the camera towards the objects
-     * @param {Float32Array} baseOrientationMatrix The 4x4 rotation matrix describing the coordinate system according to which the FPS-mode
-     * angles should be considered
+     * @param {Float32Array} positionFollowedObjectOrientationMatrix The orientation matrix of the object(s) that are followed by position
+     * (by the camera that uses this orientation configuration) Needed as in FPS-mode, this can be taken as a base coordinate system, and
+     * in point-to mode, as a fallback base orientation
      */
-    CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, baseOrientationMatrix) {
-        var dirTowardsObject, axis;
+    CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
+        var baseOrientationMatrix, dirTowardsObject, axis,
+                calculateRelative = function (followedOrienationMatrix) {
+                    // look in direction y instead of z:
+                    this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2),
+                            mat.mul4(this._relativeOrientationMatrix, followedOrienationMatrix));
+                }.bind(this),
+                calculateAbsolute = function () {
+                    this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+                }.bind(this);
+        switch (this._baseOrientation) {
+            case this.BaseOrientation.world:
+                baseOrientationMatrix = null;
+                break;
+            case this.BaseOrientation.positionFollowedObjects:
+                baseOrientationMatrix = positionFollowedObjectOrientationMatrix || null;
+                break;
+            case this.BaseOrientation.orientationFollowedObjects:
+                baseOrientationMatrix = this.followsObjects() ? this.getFollowedOrientationMatrix() : null;
+                break;
+            default:
+                application.crash();
+        }
         if (this._followedObjects.length > 0) {
             if (!this._pointsTowardsObjects) {
-                // look in direction y instead of z:
-                this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2),
-                        mat.mul4(this._relativeOrientationMatrix, this.getFollowedOrientationMatrix()));
+                calculateRelative(this.getFollowedOrientationMatrix());
             } else {
                 if (!worldPositionMatrix) {
                     application.crash();
@@ -3056,20 +3132,43 @@ define([
                 }
             }
         } else {
-            this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+            if (this._pointsTowardsObjects) {
+                switch (this._pointToFallback) {
+                    case this.PointToFallback.world:
+                        calculateAbsolute();
+                        break;
+                    case this.PointToFallback.stationary:
+                        if (!this._worldOrientationMatrix) {
+                            this._worldOrientationMatrix = mat.identity4();
+                        }
+                        break;
+                    case this.PointToFallback.positionFollowedObjectOrWorld:
+                        if (positionFollowedObjectOrientationMatrix) {
+                            calculateRelative(positionFollowedObjectOrientationMatrix);
+                        } else {
+                            calculateAbsolute();
+                        }
+                        break;
+                    default:
+                        application.crash();
+                }
+            } else {
+                calculateAbsolute();
+            }
         }
     };
     /**
      * If not cached, calculates, and returns the rotation matrix describing the current orientation of the camera in world coordinates.
      * @param {Float32Array} worldPositionMatrix The current position of the camera in world coordinates - needed for configurations
      * that always face the followed object, so that the orientation can be set according to the direction from the camera towards the objects
-     * @param {Float32Array} baseOrientationMatrix The 4x4 rotation matrix describing the coordinate system according to which the FPS-mode
-     * angles should be considered
+     * @param {Float32Array} positionFollowedObjectOrientationMatrix The orientation matrix of the object(s) that are followed by position
+     * (by the camera that uses this orientation configuration) Needed as in FPS-mode, this can be taken as a base coordinate system, and
+     * in point-to mode, as a fallback base orientation
      * @returns {Float32Array}
      */
-    CameraOrientationConfiguration.prototype.getWorldOrientationMatrix = function (worldPositionMatrix, baseOrientationMatrix) {
+    CameraOrientationConfiguration.prototype.getWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
         if (!this._worldOrientationMatrix) {
-            this._calculateWorldOrientationMatrix(worldPositionMatrix, baseOrientationMatrix);
+            this._calculateWorldOrientationMatrix(worldPositionMatrix, positionFollowedObjectOrientationMatrix);
         }
         return this._worldOrientationMatrix;
     };
@@ -3080,6 +3179,9 @@ define([
      * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
+        if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.stationary)) {
+            return;
+        }
         if (!this._fixed) {
             if (this._fps) {
                 this._alpha -= angularVelocityVector[1] * dt / 1000;
@@ -3116,10 +3218,8 @@ define([
      * @param {Number} fov The starting field of view, in degrees.
      * @param {Number} minFOV The minimum field of view value that can be set for a camera using this configuration.
      * @param {Number} maxFOV The maximum field of view value that can be set for a camera using this configuration.
-     * @param {Number} baseOrientation A value from the enum CameraConfiguration.prototype.BaseOrientation, describing what coordinate
-     * system should be taken as base when calculating the orientation in FPS-mode.
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, baseOrientation) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * @type String
@@ -3149,18 +3249,8 @@ define([
          * @type Number
          */
         this._maxFOV = maxFOV;
-        /**
-         * enum (CameraConfiguration.prototype.BaseOrientation)
-         * @type Number
-         */
-        this._baseOrientation = baseOrientation;
     }
     makeObject3DMixinClass.call(CameraConfiguration);
-    CameraConfiguration.prototype.BaseOrientation = {
-        world: 0,
-        positionFollowedObjects: 1,
-        orientationFollowedObjects: 2
-    };
     CameraConfiguration.prototype.copy = function () {
         var result = new CameraConfiguration(
                 "",
@@ -3168,8 +3258,7 @@ define([
                 this._orientationConfiguration.copy(),
                 this._fov,
                 this._minFOV,
-                this._maxFOV,
-                this._baseOrientation);
+                this._maxFOV);
         result.setPositionMatrix(this.getPositionMatrix());
         result.setOrientationMatrix(this.getOrientationMatrix());
         return result;
@@ -3212,22 +3301,8 @@ define([
      * @param {Number} dt
      */
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
-        var baseOrientationMatrix;
-        switch (this._baseOrientation) {
-            case this.BaseOrientation.world:
-                baseOrientationMatrix = null;
-                break;
-            case this.BaseOrientation.positionFollowedObjects:
-                baseOrientationMatrix = this._positionConfiguration.followsObjects() ? mat.matrix4(this._positionConfiguration.getFollowedObjectOrientationMatrix()) : null;
-                break;
-            case this.BaseOrientation.orientationFollowedObjects:
-                baseOrientationMatrix = this._orientationConfiguration.followsObjects() ? mat.matrix4(this._orientationConfiguration.getFollowedOrientationMatrix()) : null;
-                break;
-            default:
-                application.crash();
-        }
         this._orientationConfiguration.update(angularVelocityVector, dt);
-        this.setOrientationMatrix(this._orientationConfiguration.getWorldOrientationMatrix(this.getPositionMatrix(), baseOrientationMatrix));
+        this.setOrientationMatrix(this._orientationConfiguration.getWorldOrientationMatrix(this.getPositionMatrix(), this._positionConfiguration.followsObjects() ? this._positionConfiguration.getFollowedObjectOrientationMatrix() : null));
         this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt);
         this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
     };
@@ -3265,8 +3340,10 @@ define([
         return new CameraConfiguration(
                 "",
                 new CameraPositionConfiguration(false, false, [], positionMatrix, 0, 0),
-                new CameraOrientationConfiguration(false, false, false, [], orientationMatrix, 0, 0, 0, 0, 0, 0),
-                fov, minFOV, maxFOV, CameraConfiguration.prototype.BaseOrientation.world);
+                new CameraOrientationConfiguration(false, false, false, [], orientationMatrix, 0, 0, 0, 0, 0, 0,
+                        CameraOrientationConfiguration.prototype.BaseOrientation.world,
+                        CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld),
+                fov, minFOV, maxFOV);
     }
 
     // #########################################################################
