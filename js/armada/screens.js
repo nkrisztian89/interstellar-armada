@@ -250,6 +250,7 @@ define([
         var craft = this._level.getPilotedSpacecraft();
         if (craft) {
             this._ui.setContent(
+                    (craft.getTarget() ? ("target: " + craft.getTarget().getClassName() + " (" + craft.getTarget().getHitpoints() + "/" + craft.getTarget().getClass().getHitpoints() + ")<br/>") : "") +
                     craft.getFlightMode() + " flight mode<br/>" +
                     "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
                     ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
@@ -485,7 +486,7 @@ define([
     DatabaseScreen.prototype.hide = function () {
         screens.HTMLScreenWithCanvases.prototype.hide.call(this);
         this.executeWhenReady(function () {
-            this._scene.clearObjects();
+            this._scene.clearNodes();
             this.render();
         });
     };
@@ -599,7 +600,7 @@ define([
 
         // clear the previous scene graph and render the empty scene to clear the
         // background of the canvas to transparent
-        this._scene.clearObjects();
+        this._scene.clearNodes();
         this.render();
 
         armada.logic().executeWhenReady(function () {

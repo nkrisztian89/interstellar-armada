@@ -521,6 +521,11 @@ define([
          * @type RenderParameters
          */
         this._renderParameters = new RenderParameters();
+        /**
+         * A list of camera configurations that are associated with this node.
+         * @type Array<CameraConfiguration>
+         */
+        this._cameraConfigurations = [];
     }
     /**
      * Returns whether this node can be reused to hold a different object.
@@ -612,6 +617,51 @@ define([
     RenderableNode.prototype.addSubnode = function (subnode) {
         this._subnodes.push(subnode);
         subnode.setParent(this);
+    };
+    /**
+     * Adds a new associated camera configuration to this node.
+     * @param {CameraConfiguration} cameraConfiguration
+     */
+    RenderableNode.prototype.addCameraConfiguration = function (cameraConfiguration) {
+        this._cameraConfigurations.push(cameraConfiguration);
+    };
+    /**
+     * Returns the camera configuration the comes after one passed as parameter in the list of associated camera configurations.
+     * If the last configuration is passed, returns the first one. If the list is empty, returns null.
+     * @param {CameraConfiguration} currentCameraConfiguration
+     * @returns {CameraConfiguration}
+     */
+    RenderableNode.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
+        var i, found;
+        if (!currentCameraConfiguration) {
+            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[0] : null;
+        }
+        for (i = 0, found = false; i < this._cameraConfigurations.length; i++) {
+            if (found) {
+                return this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
+                found = true;
+            }
+        }
+        if (found) {
+            return this._cameraConfigurations[0];
+        }
+        application.crash(); // the current configuration was not in the list
+    };
+    /**
+     * Returns a list of the associated camera configurations that have the specified name.
+     * @param {String} name
+     * @returns {Array<CameraConfiguration>}
+     */
+    RenderableNode.prototype.getCameraConfigurationsWithName = function (name) {
+        var result = [], i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (this._cameraConfigurations[i].getName() === name) {
+                result.push(this._cameraConfigurations[i]);
+            }
+        }
+        return result;
     };
     /**
      * Resets the held object and all subnodes. Called at the beginning of each
@@ -1924,7 +1974,7 @@ define([
      * @param {Texture} texture The texture to use.
      * @param {Number[4]} color Will be passed to the shader as the uniform u_color
      * @param {Number} size Will be passed to the shader as the uniform u_billboardSize
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position in meters. Should be
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position. Should be
      * a far away position in the distance for objects part of te background
      */
     function BackgroundBillboard(model, shader, texture, color, size, positionMatrix) {
@@ -1954,9 +2004,9 @@ define([
      * @class Generates new particles in rounds using a particle constructor function, serving as the basic
      * element of a particle system.
      * @param {Float32Array} positionMatrix The position of the center of the emitter area, 
-     * relative to the center of the particle system (in meters)
+     * relative to the center of the particle system
      * @param {Float32Array} orientationMatrix The orienation relative to the center of the particle system
-     * @param {Number[3]} dimensions The size of the area in which the new particles are generated (in meters)
+     * @param {Number[3]} dimensions The size of the area in which the new particles are generated
      * @param {Number} initialNumber The number of particles generated right after the creation of the emitter
      * @param {Number} spawnNumber The number of particles generated at the end of each spawn round
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
@@ -1967,7 +2017,7 @@ define([
      */
     function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
         /**
-         * The position of the center of the emitter area, relative to the center of the particle system (in meters)
+         * The position of the center of the emitter area, relative to the center of the particle system
          * @type Float32Array
          */
         this._positionMatrix = positionMatrix;
@@ -1977,7 +2027,7 @@ define([
          */
         this._orientationMatrix = orientationMatrix;
         /**
-         * The size of the area in which the new particles are generated (in meters)
+         * The size of the area in which the new particles are generated
          * @type Number[3]
          */
         this._dimensions = dimensions;
@@ -2089,9 +2139,9 @@ define([
      * @class A particle emitter that emits particles that move in all directions with a velocity within a given range
      * @extends ParticleEmitter
      * @param {Float32Array} positionMatrix The position of the center of the emitter area, 
-     * relative to the center of the particle system (in meters)
+     * relative to the center of the particle system
      * @param {Float32Array} orientationMatrix The orienation relative to the center of the particle system
-     * @param {Number[3]} dimensions The size of the area in which the new particles are generated (in meters)
+     * @param {Number[3]} dimensions The size of the area in which the new particles are generated
      * @param {Number} velocity The starting velocity of the emitted particles is randomly generated within a range.
      * This number is the middle of that range. (m/s)
      * @param {Number} velocitySpread The starting velocity of the emitted particles is randomly generated within a range.
@@ -2140,9 +2190,9 @@ define([
      * @class A particle emitter that emits particles that move within a given angle around given direction with a velocity within a given range
      * @extends ParticleEmitter
      * @param {Float32Array} positionMatrix The position of the center of the emitter area, 
-     * relative to the center of the particle system (in meters)
+     * relative to the center of the particle system 
      * @param {Float32Array} orientationMatrix The orienation relative to the center of the particle system
-     * @param {Number[3]} dimensions The size of the area in which the new particles are generated (in meters)
+     * @param {Number[3]} dimensions The size of the area in which the new particles are generated
      * @param {Number[3]} direction The direction of the starting velocity of the particles will be generated
      * around this vector
      * @param {Number} directionSpread The maximum angle that the random generated direction of the generated
@@ -2209,9 +2259,9 @@ define([
      * or deviating from it within a given angle 
      * @extends ParticleEmitter
      * @param {Float32Array} positionMatrix The position of the center of the emitter area, 
-     * relative to the center of the particle system (in meters)
+     * relative to the center of the particle system
      * @param {Float32Array} orientationMatrix The orienation relative to the center of the particle system
-     * @param {Number[3]} dimensions The size of the area in which the new particles are generated (in meters)
+     * @param {Number[3]} dimensions The size of the area in which the new particles are generated
      * @param {Number[3]} planeNormal The normal vector of the plane in or around which the velocity vectors
      * of the generated particles will fall
      * @param {Number} directionSpread The maximum angle that the random generated direction of the generated
@@ -2535,16 +2585,20 @@ define([
     PointParticle.prototype.shouldAnimate = function () {
         return false;
     };
-    ///TODO: finish implementation
     // #########################################################################
     /**
-     * @struct
-     * @param {Boolean} fixed
-     * @param {Boolean} turnsAroundObjects
-     * @param {Array<Object3D>} followedObjects
-     * @param {Float32Array} positionMatrix
-     * @param {Number} minimumDistance
-     * @param {Number} maximumDistance
+     * @class This class can update and compute the world position of a camera based on the related configuration settings, which it stores.
+     * @param {Boolean} fixed Whether the camera position should be locked and not be movable by the user
+     * @param {Boolean} turnsAroundObjects If true, the camera position can be changed by rotating it, as it will be calculated relative to
+     * the followed object(s) and the orientation of the camera. If not fixed, "zooming" on a straight line towards/away from the object(s)
+     * is possible as well
+     * @param {Array<Object3D>} followedObjects The list of objects the camera's position should follow. Setting no objects means the set 
+     * position is absolute, setting multiple objects means the average of their positions will be followed.
+     * @param {Float32Array} positionMatrix The set position. Might mean the absolute (world) or relative position depending on other settings.
+     * The final world position is always calculated and not set.
+     * @param {Number} minimumDistance If the camera turns around the followed objects and it is not fixed, this is the closest distance it
+     * can approach the followed objects to.
+     * @param {Number} maximumDistance Same as minimum distance, instead this is the maximum setting.
      */
     function CameraPositionConfiguration(fixed, turnsAroundObjects, followedObjects, positionMatrix, minimumDistance, maximumDistance) {
         /**
@@ -2587,55 +2641,55 @@ define([
         /**
          * If objects are followed and turnsAroundObjects is true, movement of the camera is possible by "zooming", bringing it closer
          * or farther to the followed objects on a straight line (the direction of which is based on the position matrix).
-         * This value marks the closest distance in meters.
+         * This value marks the closest distance.
          * @type Number
          */
         this._minimumDistance = minimumDistance;
         /**
-         * See minimum distance for detailed explanation. This value marks the largest distance in meters. 
+         * See minimum distance for detailed explanation. This value marks the maximum distance. 
          * @type Number
          */
         this._maximumDistance = maximumDistance;
     }
     /**
-     * 
+     * Returns a camera position configuration with the same settings as this one, cloning referenced values to make sure changes to this
+     * configuration do not affect the created copy.
+     * @returns {CameraPositionConfiguration}
+     */
+    CameraPositionConfiguration.prototype.copy = function () {
+        var result = new CameraPositionConfiguration(
+                this._fixed,
+                this._turnsAroundObjects,
+                this._followedObjects.slice(),
+                mat.matrix4(this._relativePositionMatrix),
+                this._minimumDistance,
+                this._maximumDistance);
+        result._worldPositionMatrix = this._worldPositionMatrix;
+        return result;
+    };
+    /**
+     * Resets the configuration to its initial state.
      */
     CameraPositionConfiguration.prototype.resetToDefaults = function () {
         mat.setMatrix4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
         this._worldPositionMatrix = null;
     };
-
-    CameraPositionConfiguration.prototype.followsObjects = function () {
-        return this._followedObjects.length > 0;
-    };
-
-    CameraPositionConfiguration.prototype.getFollowedObjects = function () {
-        return this._followedObjects;
-    };
-
-    CameraPositionConfiguration.prototype.followsObject = function (object3D) {
-        return (this._followedObjects.length === 1) && (this._followedObjects[0] === object3D);
-    };
-
     /**
-     * 
-     * @param {CameraPositionConfiguration} otherCameraPositionConfiguration
+     * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
+     * whether this conifugation is set to follow the same list of objects.
+     * @param {Array<Object3D>} [objects]
      * @returns {Boolean}
      */
-    CameraPositionConfiguration.prototype.followsSameObjectsAs = function (otherCameraPositionConfiguration) {
-        return utils.arraysEqual(this._followedObjects.sort(), otherCameraPositionConfiguration._followedObjects.sort());
+    CameraPositionConfiguration.prototype.followsObjects = function (objects) {
+        return objects ?
+                utils.arraysEqual(this._followedObjects.sort(), objects.sort()) :
+                (this._followedObjects.length > 0);
     };
-
     /**
-     * 
-     * @param {CameraPositionConfiguration} otherCameraPositionConfiguration
-     * @returns {Boolean}
+     * Returns the 3D vector describing the current location in space that is tracked by this camera configuration.
+     * The result is not a reference to any actually tracked vector, but a copy describing the current location.
+     * @returns {Number[3]}
      */
-    CameraPositionConfiguration.prototype.followsSameObjectAs = function (otherCameraPositionConfiguration) {
-        return (this._followedObjects.length === 1) && (otherCameraPositionConfiguration._followedObjects.length === 1) &&
-                (this._followedObjects[0] === otherCameraPositionConfiguration._followedObjects[0]);
-    };
-
     CameraPositionConfiguration.prototype.getFollowedPositionVector = function () {
         var i, positionVector = [0, 0, 0];
         if (this._followedObjects.length === 0) {
@@ -2647,7 +2701,11 @@ define([
         }
         return positionVector;
     };
-
+    /**
+     * Returns the 4x4 translation matrix describing the current location in space that is tracked by this camera configuration.
+     * The result is not a reference to any actually tracked matrix, but a copy describing the current location.
+     * @returns {Float32Array}
+     */
     CameraPositionConfiguration.prototype.getFollowedPositionMatrix = function () {
         var i, positionMatrix = mat.identity4();
         if (this._followedObjects.length === 0) {
@@ -2659,8 +2717,12 @@ define([
         }
         return positionMatrix;
     };
-
-    CameraPositionConfiguration.prototype.getFollowedOrientationMatrix = function () {
+    /**
+     * Returns the orientation matrix of the first followed object. This is necessary for calculating the relative portion of the position
+     * as well as if the orientation following is set to FPS-mode with a coordinate system relative to the position-followed object.
+     * @returns {Float32Array}
+     */
+    CameraPositionConfiguration.prototype.getFollowedObjectOrientationMatrix = function () {
         var orientation;
         if (this._followedObjects.length === 0) {
             application.crash();
@@ -2669,14 +2731,19 @@ define([
         }
         return orientation;
     };
-
+    /**
+     * Calculates and updates the internally stored world position matrix (which is nulled out automatically whenever one of the values it 
+     * depends on changes, therefore serving as a cache variable)
+     * @param {Float32Array} worldOrientationMatrix The current orientation of the camera in world coordinates - needed for configurations
+     * that turn around the followed object, as in those cases the relative portion of the position is calculated based on it
+     */
     CameraPositionConfiguration.prototype._calculateWorldPositionMatrix = function (worldOrientationMatrix) {
         if (this._followedObjects.length > 0) {
             if (!this._turnsAroundObjects) {
                 this._worldPositionMatrix = mat.mul4(
                         mat.translation4m4(mat.mul4(
                                 this._relativePositionMatrix,
-                                this.getFollowedOrientationMatrix())),
+                                this.getFollowedObjectOrientationMatrix())),
                         this.getFollowedPositionMatrix());
             } else {
                 if (!worldOrientationMatrix) {
@@ -2693,17 +2760,28 @@ define([
             this._worldPositionMatrix = mat.matrix4(this._relativePositionMatrix);
         }
     };
-
+    /**
+     * If not cached, calculates, and returns the translation matrix describing the current location of the camera in world coordinates.
+     * @param {Float32Array} worldOrientationMatrix The current orientation of the camera in world coordinates - needed for configurations
+     * that turn around the followed object, as in those cases the relative portion of the position is calculated based on it
+     * @returns {Float32Array}
+     */
     CameraPositionConfiguration.prototype.getWorldPositionMatrix = function (worldOrientationMatrix) {
         if (!this._worldPositionMatrix) {
             this._calculateWorldPositionMatrix(worldOrientationMatrix);
         }
         return this._worldPositionMatrix;
     };
-
+    /**
+     * Updates the position of the configuration based on the movement of the camera and the objects it follows
+     * @param {Float32Array} worldOrientationMatrix The orientation of the camera in world coordinates - a free camera moves along its own
+     * axes
+     * @param {Number[3]} velocityVector The vector describing the current velocity of the camera (not taking into account the movement
+     * of the objects it follows and the orientation, as those are calculated in within this functions)
+     * @param {Number} dt The time passed since the last update, to calculate the distance travelled
+     */
     CameraPositionConfiguration.prototype.update = function (worldOrientationMatrix, velocityVector, dt) {
         var translationVector, distance;
-
         if (!this._fixed) {
             if (this._followedObjects.length === 0) {
                 translationVector = vec.scaled3(vec.mulVec3Mat4(velocityVector, worldOrientationMatrix), -dt / 1000);
@@ -2723,19 +2801,24 @@ define([
         }
         this._worldPositionMatrix = null;
     };
+    // #########################################################################
     /**
-     * @struct
-     * @param {Boolean} fixed
-     * @param {Boolean} pointsTowardsObjects
-     * @param {Boolean} fps
-     * @param {Array<Object3D>} followedObjects
-     * @param {Float32Array} orientationMatrix
-     * @param {Number} alpha
-     * @param {Number} beta
-     * @param {Number} minAlpha
-     * @param {Number} maxAlpha
-     * @param {Number} minBeta
-     * @param {Number} maxBeta
+     * @class This class can update and compute the orientation of a camera in world coordinates, based on the related configuration 
+     * settings, which it stores.
+     * @param {Boolean} fixed Whether the camera orientation should be locked and not be turnable by the user
+     * @param {Boolean} pointsTowardsObjects Whether the camera orientation should be calculated so that it always faces the followed objects
+     * @param {Boolean} fps Whether the camera should work in "FPS-mode", by being turnable along 2 axes (of a base coordinate system, that
+     * can be specified at the time of calculation)
+     * @param {Array<Object3D>} followedObjects The list of objects the camera's orientation should follow. Setting no objects means the set 
+     * orientation is absolute, setting multiple objects means the orientation of the first one will be followed. (as of now, can be changed
+     * later to utilize all orientations)
+     * @param {Float32Array} orientationMatrix The starting relative (if objects are followed) or world (if not) orientation of the camera.
+     * @param {Number} alpha In FPS-mode, the starting alpha angle (around the Z axis)
+     * @param {Number} beta In FPS-mode, the starting beta angle (around X axis)
+     * @param {Number} minAlpha In FPS-mode, the lowest possible value for the alpha angle.
+     * @param {Number} maxAlpha In FPS-mode, the highest possible value for the alpha angle.
+     * @param {Number} minBeta In FPS-mode, the lowest possible value for the beta angle.
+     * @param {Number} maxBeta In FPS-mode, the highest possible value for the beta angle.
      */
     function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta) {
         /**
@@ -2747,10 +2830,9 @@ define([
         this._fixed = fixed;
         /**
          * If objects are followed, the true value means the orientation needs to be calculated so
-         * that the camera faces the followed point, and the transformation described be the 
-         * orientation matrix is applied afterwards, while false means that the orientation is to
-         * be set to the same as (the average of) the followed objects, and transformations applied
-         * subsequently.
+         * that the camera faces the followed point, while false means that the orientation is to
+         * be set to the same as (the first of) the followed objects, and the transformation described
+         * in this configuration is applied subsequently.
          * @type Boolean
          */
         this._pointsTowardsObjects = pointsTowardsObjects;
@@ -2769,7 +2851,7 @@ define([
          * towards their average position).
          * @type Array<Object3D>
          */
-        this._followedObjects = followedObjects;
+        this._followedObjects = followedObjects || [];
         /**
          * Stores a copy of the starting relative orientation matrix so it can be reset to it later.
          * @type Float32Array
@@ -2831,40 +2913,66 @@ define([
          */
         this._maxBeta = maxBeta;
     }
+    /**
+     * Returns a camera orientation configuration with the same settings as this one, cloning referenced values to make sure changes to this
+     * configuration do not affect the created copy.
+     * @returns {CameraOrientationConfiguration}
+     */
+    CameraOrientationConfiguration.prototype.copy = function () {
+        var result = new CameraOrientationConfiguration(
+                this._fixed,
+                this._pointsTowardsObjects,
+                this._fps,
+                this._followedObjects.slice(),
+                mat.matrix4(this._relativeOrientationMatrix),
+                this._alpha,
+                this._beta,
+                this._minAlpha,
+                this._maxAlpha,
+                this._minBeta,
+                this._maxBeta);
+        result._worldOrientationMatrix = this._worldOrientationMatrix;
+        return result;
+    };
+    /**
+     * Resets the configuration to its initial state.
+     */
     CameraOrientationConfiguration.prototype.resetToDefaults = function () {
         mat.setMatrix4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
         this._alpha = this._defaultAlpha;
         this._beta = this._defaultBeta;
         this._worldOrientationMatrix = null;
     };
-
-    CameraOrientationConfiguration.prototype.getFollowedObjects = function () {
-        return this._followedObjects;
-    };
-
-    CameraOrientationConfiguration.prototype.followsObjects = function () {
-        return this._followedObjects.length > 0;
-    };
-
-    CameraOrientationConfiguration.prototype.followsObject = function (object3D) {
-        return (this._followedObjects.length === 1) && (this._followedObjects[0] === object3D);
-    };
-
     /**
-     * 
-     * @param {CameraOrientationConfiguration} otherCameraOrientationConfiguration
+     * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
+     * whether this conifugation is set to follow the same list of objects.
+     * @param {Array<Object3D>} [objects]
      * @returns {Boolean}
      */
-    CameraOrientationConfiguration.prototype.followsSameObjectAs = function (otherCameraOrientationConfiguration) {
-        return (this._followedObjects.length === 1) && (otherCameraOrientationConfiguration._followedObjects.length === 1) &&
-                (this._followedObjects[0] === otherCameraOrientationConfiguration._followedObjects[0]);
+    CameraOrientationConfiguration.prototype.followsObjects = function (objects) {
+        return objects ?
+                utils.arraysEqual(this._followedObjects.sort(), objects.sort()) :
+                (this._followedObjects.length > 0);
     };
-
+    /**
+     * Sets the list of followed object to the single passed 3D object.
+     * @param {Object3D} followedObject
+     */
     CameraOrientationConfiguration.prototype.setFollowedObject = function (followedObject) {
         this._followedObjects = [followedObject];
     };
-
-    CameraOrientationConfiguration.prototype._getFollowedPositionVector = function () {
+    /**
+     * Sets the list of followed object to the passed one.
+     * @param {Array<Object3D>} followedObjects
+     */
+    CameraOrientationConfiguration.prototype.setFollowedObjects = function (followedObjects) {
+        this._followedObjects = followedObjects;
+    };
+    /**
+     * Returns a 3D vector describing the current (average) location in space of the followed objects.
+     * @returns {Number[3]}
+     */
+    CameraOrientationConfiguration.prototype._getFollowedObjectsPositionVector = function () {
         var i, positionVector = [0, 0, 0];
         if (this._followedObjects.length === 0) {
             application.crash();
@@ -2875,7 +2983,11 @@ define([
         }
         return positionVector;
     };
-
+    /**
+     * Returns the orientation matrix of the first followed object. Can be later changed to calculate an orientation based on all objects
+     * in the list.
+     * @returns {Float32Array}
+     */
     CameraOrientationConfiguration.prototype.getFollowedOrientationMatrix = function () {
         var orientation;
         if (this._followedObjects.length === 0) {
@@ -2885,10 +2997,16 @@ define([
         }
         return orientation;
     };
-
+    /**
+     * Calculates and updates the internally stored world orientation matrix (which is nulled out automatically whenever one of the values it 
+     * depends on changes, therefore serving as a cache variable)
+     * @param {Float32Array} worldPositionMatrix The current position of the camera in world coordinates - needed for configurations
+     * that always face the followed object, so that the orientation can be set according to the direction from the camera towards the objects
+     * @param {Float32Array} baseOrientationMatrix The 4x4 rotation matrix describing the coordinate system according to which the FPS-mode
+     * angles should be considered
+     */
     CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, baseOrientationMatrix) {
         var dirTowardsObject, axis;
-
         if (this._followedObjects.length > 0) {
             if (!this._pointsTowardsObjects) {
                 // look in direction y instead of z:
@@ -2898,7 +3016,7 @@ define([
                 if (!worldPositionMatrix) {
                     application.crash();
                 } else {
-                    dirTowardsObject = vec.normal3(vec.sub3(this._getFollowedPositionVector(), mat.translationVector3(worldPositionMatrix)));
+                    dirTowardsObject = vec.normal3(vec.sub3(this._getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
                     if (!this._fps) {
                         if (!this._worldOrientationMatrix) {
                             this._worldOrientationMatrix = mat.identity4();
@@ -2941,53 +3059,72 @@ define([
             this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
         }
     };
-
+    /**
+     * If not cached, calculates, and returns the rotation matrix describing the current orientation of the camera in world coordinates.
+     * @param {Float32Array} worldPositionMatrix The current position of the camera in world coordinates - needed for configurations
+     * that always face the followed object, so that the orientation can be set according to the direction from the camera towards the objects
+     * @param {Float32Array} baseOrientationMatrix The 4x4 rotation matrix describing the coordinate system according to which the FPS-mode
+     * angles should be considered
+     * @returns {Float32Array}
+     */
     CameraOrientationConfiguration.prototype.getWorldOrientationMatrix = function (worldPositionMatrix, baseOrientationMatrix) {
         if (!this._worldOrientationMatrix) {
             this._calculateWorldOrientationMatrix(worldPositionMatrix, baseOrientationMatrix);
         }
         return this._worldOrientationMatrix;
     };
-
+    /**
+     * Updates the orientation of the configuration based on the spin of the camera and the position / orientation of the objects it follows
+     * @param {Number[3]} angularVelocityVector The vector describing the current angular velocity (spin) of the camera (not taking into account the spin
+     * of the objects it follows and the current orientation, as those are calculated in within this functions)
+     * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
+     */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
         if (!this._fixed) {
-            if (this._followedObjects.length > 0) {
-                if (!this._fps) {
+            if (this._fps) {
+                this._alpha -= angularVelocityVector[1] * dt / 1000;
+                this._beta -= angularVelocityVector[0] * dt / 1000;
+                this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
+                this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
+                this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
+            } else {
+                if (this._followedObjects.length > 0) {
                     this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
                             mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
                             mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 } else {
-                    this._alpha -= angularVelocityVector[1] * dt / 1000;
-                    this._beta -= angularVelocityVector[0] * dt / 1000;
-                    this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
-                }
-            } else {
-                if (!this._fps) {
                     this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
                             mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
                             mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
-                } else {
-                    this._alpha -= angularVelocityVector[1] * dt / 1000;
-                    this._beta -= angularVelocityVector[0] * dt / 1000;
-                    this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
                 }
             }
         }
         this._worldOrientationMatrix = null;
     };
+    ///TODO: finish implementation
     // #########################################################################
     /**
-     * @class
+     * @class Stores a specific configuration of camera settings such as how the position and orientation should be calculated (in two 
+     * separate contained objects) or what is the current, maximum, minimum field of view. Based on the information stored in this 
+     * object, the state of the camera at one point in time can be calculated. This class therefore only stores information about a static 
+     * state and the constraints it has. The actual camera object can store two of these configurations and transition its state between 
+     * them and stores all the dynamic information such as velocity.
      * @extends Object3D
-     * @param {CameraPositionConfiguration} positionConfiguration
-     * @param {CameraOrientationConfiguration} orientationConfiguration
-     * @param {Number} fov
-     * @param {Number} minFOV
-     * @param {Number} maxFOV
-     * @param {Number} baseOrientation
+     * @param {String} [name] An optional, descriptive name of this configuration by which it can be found and referred to later.
+     * @param {CameraPositionConfiguration} positionConfiguration All the settings necessary to calculate the world position.
+     * @param {CameraOrientationConfiguration} orientationConfiguration All the settings necessary to calculate the world orientation.
+     * @param {Number} fov The starting field of view, in degrees.
+     * @param {Number} minFOV The minimum field of view value that can be set for a camera using this configuration.
+     * @param {Number} maxFOV The maximum field of view value that can be set for a camera using this configuration.
+     * @param {Number} baseOrientation A value from the enum CameraConfiguration.prototype.BaseOrientation, describing what coordinate
+     * system should be taken as base when calculating the orientation in FPS-mode.
      */
-    function CameraConfiguration(positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, baseOrientation) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, baseOrientation) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
+        /**
+         * @type String
+         */
+        this._name = name;
         /**
          * @type CameraPositionConfiguration
          */
@@ -3023,6 +3160,26 @@ define([
         world: 0,
         positionFollowedObjects: 1,
         orientationFollowedObjects: 2
+    };
+    CameraConfiguration.prototype.copy = function () {
+        var result = new CameraConfiguration(
+                "",
+                this._positionConfiguration.copy(),
+                this._orientationConfiguration.copy(),
+                this._fov,
+                this._minFOV,
+                this._maxFOV,
+                this._baseOrientation);
+        result.setPositionMatrix(this.getPositionMatrix());
+        result.setOrientationMatrix(this.getOrientationMatrix());
+        return result;
+    };
+    /**
+     * 
+     * @returns {String}
+     */
+    CameraConfiguration.prototype.getName = function () {
+        return this._name;
     };
     /**
      * Sets the camera's Field Of View 
@@ -3061,7 +3218,7 @@ define([
                 baseOrientationMatrix = null;
                 break;
             case this.BaseOrientation.positionFollowedObjects:
-                baseOrientationMatrix = this._positionConfiguration.followsObjects() ? mat.matrix4(this._positionConfiguration.getFollowedOrientationMatrix()) : null;
+                baseOrientationMatrix = this._positionConfiguration.followsObjects() ? mat.matrix4(this._positionConfiguration.getFollowedObjectOrientationMatrix()) : null;
                 break;
             case this.BaseOrientation.orientationFollowedObjects:
                 baseOrientationMatrix = this._orientationConfiguration.followsObjects() ? mat.matrix4(this._orientationConfiguration.getFollowedOrientationMatrix()) : null;
@@ -3083,34 +3240,6 @@ define([
         return this._positionConfiguration.followsObjects() || this._orientationConfiguration.followsObjects();
     };
 
-    /**
-     * @param {CameraConfiguration} otherCameraConfiguration
-     * @returns {Boolean}
-     */
-    CameraConfiguration.prototype.positionFollowsSameObjectsAs = function (otherCameraConfiguration) {
-        return this._positionConfiguration.followsSameObjectsAs(otherCameraConfiguration._positionConfiguration);
-    };
-
-    CameraConfiguration.prototype.followsObject = function (object3D) {
-        return this._positionConfiguration.followsObject(object3D) || (!this._positionConfiguration.followsObjects() && this._orientationConfiguration.followsObject(object3D));
-    };
-
-    /**
-     * 
-     * @param {CameraConfiguration} otherCameraConfiguration
-     * @returns {Boolean}
-     */
-    CameraConfiguration.prototype.followsSameObjectAs = function (otherCameraConfiguration) {
-        return this._positionConfiguration.followsSameObjectAs(otherCameraConfiguration._positionConfiguration) ||
-                this._positionConfiguration.followsSameObjectAs(otherCameraConfiguration._orientationConfiguration) ||
-                this._orientationConfiguration.followsSameObjectAs(otherCameraConfiguration._positionConfiguration) ||
-                this._orientationConfiguration.followsSameObjectAs(otherCameraConfiguration._orientationConfiguration);
-    };
-
-    CameraConfiguration.prototype.getFollowedObject = function () {
-        return this._positionConfiguration.followsObjects() ? this._positionConfiguration.getFollowedObjects()[0] : this._orientationConfiguration.getFollowedObjects()[0];
-    };
-
     CameraConfiguration.prototype.getFollowedPositionVector = function () {
         return this._positionConfiguration.getFollowedPositionVector();
     };
@@ -3119,10 +3248,8 @@ define([
         return this._positionConfiguration.getFollowedPositionMatrix();
     };
 
-    CameraConfiguration.prototype.setTarget = function (targetObject) {
-        if (!this._orientationConfiguration.followsObjects() || !(this._orientationConfiguration.followsSameObjectAs(this._positionConfiguration))) {
-            this._orientationConfiguration.setFollowedObject(targetObject);
-        }
+    CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects) {
+        this._orientationConfiguration.setFollowedObjects(targetObjects);
     };
 
     /**
@@ -3136,6 +3263,7 @@ define([
      */
     function getFreeCameraConfiguration(positionMatrix, orientationMatrix, fov, minFOV, maxFOV) {
         return new CameraConfiguration(
+                "",
                 new CameraPositionConfiguration(false, false, [], positionMatrix, 0, 0),
                 new CameraOrientationConfiguration(false, false, false, [], orientationMatrix, 0, 0, 0, 0, 0, 0),
                 fov, minFOV, maxFOV, CameraConfiguration.prototype.BaseOrientation.world);
@@ -3243,6 +3371,10 @@ define([
          * @type Float32Array
          */
         this._perspectiveMatrix = null;
+        /**
+         * @type RenderableNode
+         */
+        this._followedNode = null;
     }
     makeObject3DMixinClass.call(Camera);
     Camera.prototype.TransitionStyle = {
@@ -3263,6 +3395,14 @@ define([
 
     Camera.prototype.getCameraOrientationMatrix = function () {
         return mat.inverseOfRotation4(this.getOrientationMatrix());
+    };
+
+    /**
+     * 
+     * @returns {CameraConfiguration}
+     */
+    Camera.prototype.getConfiguration = function () {
+        return this._currentConfiguration;
     };
 
     Camera.prototype.getVelocityVector = function () {
@@ -3490,6 +3630,12 @@ define([
         this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
         this._previousConfiguration = null;
     };
+    /**
+     * 
+     * @param {CameraConfiguration} configuration
+     * @param {Number} duration
+     * @param {Number} style Camera.prototype.TransitionStyle
+     */
     Camera.prototype.startTransitionToConfiguration = function (configuration, duration, style) {
         if ((duration === 0) || !configuration) {
             this.setConfiguration(configuration);
@@ -3508,21 +3654,56 @@ define([
     Camera.prototype.setToFreeCamera = function (positionMatrix, orientationMatrix, duration, style) {
         this.startTransitionToConfiguration(this._getFreeCameraConfiguration(positionMatrix, orientationMatrix), duration || 0, style);
     };
-    Camera.prototype.followObject = function (objectToFollow, duration, style) {
-        this.startTransitionToConfiguration(this._scene.getFirstCameraConfigurationForObject(objectToFollow), duration, style);
+    /**
+     * 
+     * @param {RenderableNode} node
+     * @param {Number} duration
+     * @param {Number} style Camera.prototype.TransitionStyle
+     */
+    Camera.prototype.followNode = function (node, duration, style) {
+        this._followedNode = node;
+        this.startTransitionToConfiguration(this._followedNode.getNextCameraConfiguration(), duration, style);
     };
+    /**
+     * 
+     * @param {RenderableObject3D} objectToFollow
+     * @param {Number} duration
+     * @param {Number} style Camera.prototype.TransitionStyle
+     */
+    Camera.prototype.followObject = function (objectToFollow, duration, style) {
+        this.followNode(objectToFollow.getNode(), duration, style);
+    };
+    /**
+     * 
+     * @param {Number} duration
+     * @param {Number} style Camera.prototype.TransitionStyle
+     */
     Camera.prototype.changeToNextView = function (duration, style) {
-        this.startTransitionToConfiguration(this._scene.getNextCameraConfigurationOfSameObject(this._currentConfiguration), duration, style);
+        if (this._followedNode) {
+            this.startTransitionToConfiguration(this._followedNode.getNextCameraConfiguration(this._currentConfiguration), duration, style);
+        }
     };
     Camera.prototype.followNextObject = function (duration, style) {
-        this.startTransitionToConfiguration(this._scene.getCameraConfigurationForNextObject(this._currentConfiguration.getFollowedObject()), duration, style);
+        var node = this._scene.getNextNode(this._followedNode);
+        while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
+            node = this._scene.getNextNode(node);
+        }
+        if (node && node.getNextCameraConfiguration()) {
+            this.followNode(node, duration, style);
+        }
     };
     Camera.prototype.followPreviousObject = function (duration, style) {
-        this.startTransitionToConfiguration(this._scene.getCameraConfigurationForPreviousObject(this._currentConfiguration.getFollowedObject()), duration, style);
+        var node = this._scene.getPreviousNode(this._followedNode);
+        while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
+            node = this._scene.getPreviousNode(node);
+        }
+        if (node && node.getNextCameraConfiguration()) {
+            this.followNode(node, duration, style);
+        }
     };
 
-    Camera.prototype.setTarget = function (targetObject) {
-        this._currentConfiguration.setTarget(targetObject);
+    Camera.prototype.followOrientationOfObjects = function (targetObjects) {
+        this._currentConfiguration.setOrientationFollowedObjects(targetObjects);
     };
 
     Camera.prototype.update = function (dt) {
@@ -3735,6 +3916,10 @@ define([
         this.lights = [];
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = [];
+        /**
+         * @type Camera
+         */
+        this.activeCamera = null;
         this.setActiveCamera(new Camera(this, width / height, 60, 1000));
         this.lodContext = lodContext;
         this._shadowMappingEnabled = false;
@@ -3853,7 +4038,7 @@ define([
             newRenderableObject.addToContext(this._contexts[i]);
         }
     };
-    Scene.prototype.clearObjects = function () {
+    Scene.prototype.clearNodes = function () {
         this._backgroundObjects = [];
         this.objects = [];
     };
@@ -3861,17 +4046,17 @@ define([
      * 
      * @returns {RenderableNode}
      */
-    Scene.prototype.getFirstObject = function () {
+    Scene.prototype.getFirstNode = function () {
         return this.objects[0];
     };
     /**
-     * @param {RenderableObject} currentObject
-     * @returns {RenderableObject}
+     * @param {RenderableNode} currentNode
+     * @returns {RenderableNode}
      */
-    Scene.prototype.getNextObject = function (currentObject) {
+    Scene.prototype.getNextNode = function (currentNode) {
         var i, _length_;
         for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            if (this.objects[i] === currentObject) {
+            if (this.objects[i] === currentNode) {
                 return ((i === (this.objects.length - 1)) ?
                         this.objects[0] :
                         this.objects[i + 1]);
@@ -3880,13 +4065,13 @@ define([
         return this.objects[0];
     };
     /**
-     * @param {RenderableObject} currentObject
-     * @returns {RenderableObject}
+     * @param {RenderableNode} currentNode
+     * @returns {RenderableNode}
      */
-    Scene.prototype.getPreviousObject = function (currentObject) {
+    Scene.prototype.getPreviousNode = function (currentNode) {
         var i, _length_;
         for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            if (this.objects[i] === currentObject) {
+            if (this.objects[i] === currentNode) {
                 return ((i === 0) ?
                         this.objects[this.objects.length - 1] :
                         this.objects[i - 1]);
@@ -3915,26 +4100,11 @@ define([
         this.uniformValueFunctions[uniformName] = valueFunction;
     };
     /**
-     * Adds a new camera configuration, making sure that it is stored next to other configurations
-     * following the same object.
+     * Adds a new camera configuration that will be associated with the scene itself.
      * @param {CameraConfiguration} cameraConfiguration
      */
     Scene.prototype.addCameraConfiguration = function (cameraConfiguration) {
-        var lastConfigurationIndex = -1, i;
-        if ((this._cameraConfigurations.length === 0) || (this._cameraConfigurations[this._cameraConfigurations.length - 1].followsSameObjectAs(cameraConfiguration))) {
-            this._cameraConfigurations.push(cameraConfiguration);
-        } else {
-            for (i = 0; i < this._cameraConfigurations.length; i++) {
-                if (this._cameraConfigurations[i].followsSameObjectAs(cameraConfiguration)) {
-                    lastConfigurationIndex = i;
-                }
-            }
-            if (lastConfigurationIndex === -1) {
-                this._cameraConfigurations.push(cameraConfiguration);
-            } else {
-                this._cameraConfigurations.splice(lastConfigurationIndex + 1, 0, cameraConfiguration);
-            }
-        }
+        this._cameraConfigurations.push(cameraConfiguration);
     };
     /**
      * Recalculates the perspective matrices of cameras in case the viewport size
@@ -3958,105 +4128,6 @@ define([
         shader.assignUniforms(context, this.uniformValueFunctions);
     };
     /**
-     * 
-     * @param {Object3D} objectToFind
-     * @returns {CameraConfiguration}
-     */
-    Scene.prototype.getFirstCameraConfigurationForObject = function (objectToFind) {
-        var i;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (this._cameraConfigurations[i].followsObject(objectToFind)) {
-                return this._cameraConfigurations[i];
-            }
-        }
-        return null;
-    };
-    /**
-     * 
-     * @param {CameraConfiguration} currentConfiguration
-     * @returns {CameraConfiguration}
-     */
-    Scene.prototype.getNextCameraConfigurationOfSameObject = function (currentConfiguration) {
-        var firstConfiguration = null, i;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (!firstConfiguration && this._cameraConfigurations[i].followsSameObjectAs(currentConfiguration)) {
-                firstConfiguration = this._cameraConfigurations[i];
-            }
-            if (this._cameraConfigurations[i] === currentConfiguration) {
-                if (i === this._cameraConfigurations.length - 1) {
-                    return firstConfiguration;
-                }
-                if (this._cameraConfigurations[i + 1].followsSameObjectAs(currentConfiguration)) {
-                    return this._cameraConfigurations[i + 1];
-                }
-                return firstConfiguration;
-            }
-        }
-        return null;
-    };
-    /**
-     * 
-     * @param {Object3D} currentObject
-     */
-    Scene.prototype.getCameraConfigurationForNextObject = function (currentObject) {
-        var firstConfigurationOfFirstObject = null, i, objectFound = false;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (!firstConfigurationOfFirstObject && (this._cameraConfigurations[i].followsObjects())) {
-                firstConfigurationOfFirstObject = this._cameraConfigurations[i];
-            }
-            if (this._cameraConfigurations[i].followsObject(currentObject)) {
-                objectFound = true;
-            } else if (objectFound) {
-                return this._cameraConfigurations[i];
-            }
-        }
-        return firstConfigurationOfFirstObject;
-    };
-    /**
-     * 
-     * @param {Object3D} currentObject
-     */
-    Scene.prototype.getCameraConfigurationForPreviousObject = function (currentObject) {
-        var firstConfigurationOfLastObject = null, i, objectFound = false, previousObject = null;
-        for (i = this._cameraConfigurations.length - 1; i >= 0; i--) {
-            if ((this._cameraConfigurations[i].followsObjects()) && (!firstConfigurationOfLastObject || (this._cameraConfigurations[i].followsSameObjectAs(firstConfigurationOfLastObject)))) {
-                firstConfigurationOfLastObject = this._cameraConfigurations[i];
-            }
-            if (this._cameraConfigurations[i].followsObject(currentObject)) {
-                objectFound = true;
-            } else if (objectFound) {
-                if (!previousObject) {
-                    previousObject = this._cameraConfigurations[i].getFollowedObject();
-                } else {
-                    if (!this._cameraConfigurations[i].followsObject(previousObject)) {
-                        return this._cameraConfigurations[i + 1];
-                    }
-                }
-            }
-        }
-        return previousObject ? this._cameraConfigurations[0] : firstConfigurationOfLastObject;
-    };
-    /**
-     * Removes all camera configurations that refer the object stored at the passed node.
-     * @param {RenderableNode} objectNode
-     */
-    Scene.prototype._removeCameraConfigurationsOfObject = function (objectNode) {
-        var i, j, k;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            j = i;
-            k = 0;
-            while ((j < this._cameraConfigurations.length) && (this._cameraConfigurations[j].getFollowedObject()) && (this._cameraConfigurations[j].getFollowedObject().getNode() === objectNode)) {
-                j++;
-                k++;
-            }
-            this._cameraConfigurations.splice(i, k);
-        }
-    };
-
-    Scene.prototype.setTarget = function (renderableObject) {
-        this.activeCamera.setTarget(renderableObject);
-    };
-    /**
      * Cleans up the whole scene graph, removing all object that are deleted or are
      * marked for deletion.
      */
@@ -4067,7 +4138,6 @@ define([
             j = i;
             k = 0;
             while ((j < this.objects.length) && ((!this.objects[j]) || (this.objects[j].canBeReused() === true))) {
-                this._removeCameraConfigurationsOfObject(this.objects[j]);
                 j++;
                 k++;
             }

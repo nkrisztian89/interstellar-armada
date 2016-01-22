@@ -397,6 +397,17 @@
             "turnable": true,
             "rotationCenterIsObject": true,
             "position": [0, -185, 0]
+        },
+        {
+            "name": "target",
+            "fov": 60,
+            "fps": true,
+            "followsPosition": true,
+            "lookAtTarget": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -165, 40]
         }
     ],
     "equipmentProfiles": [

@@ -1671,6 +1671,13 @@ define([
         return this._class;
     };
     /**
+     * Returns the current amount of hit points this spacecraft has left.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getHitpoints = function () {
+        return this._hitpoints;
+    };
+    /**
      * Returns the renderable object that represents this spacecraft in a scene.
      * @returns {RenderableObject}
      */
@@ -2163,7 +2170,7 @@ define([
             }
             // add comera configurations
             if (addSupplements.cameraConfigurations === true) {
-                this._addCameraConfigurationsForViews(scene);
+                this._addCameraConfigurationsForViews();
             }
             if (callback) {
                 callback(this._visualModel);
@@ -2173,12 +2180,11 @@ define([
     /**
      * Adds camera configuration objects that correspond to the views defined for this 
      * spacecraft type and follow this specific spacecraft.
-     * @param {Scene} scene The scene to add the cameras to.
      */
-    Spacecraft.prototype._addCameraConfigurationsForViews = function (scene) {
+    Spacecraft.prototype._addCameraConfigurationsForViews = function () {
         var i;
         for (i = 0; i < this._class.getViews().length; i++) {
-            scene.addCameraConfiguration(this._class.getViews()[i].createCameraConfigurationForObject(this._visualModel));
+            this._visualModel.getNode().addCameraConfiguration(this._class.getViews()[i].createCameraConfigurationForObject(this._visualModel));
         }
     };
     /**
@@ -2226,36 +2232,60 @@ define([
             this._weapons[i].fire(this._projectileArray);
         }
     };
+    ///TODO: finish
+    /**
+     * 
+     * @param {Spacecraft} target
+     */
+    Spacecraft.prototype.setTarget = function (target) {
+        var i, camConfigs;
+        this._target = target;
+        if (this._visualModel) {
+            camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName("target");
+            for (i = 0; i < camConfigs.length; i++) {
+                if (this._visualModel.getNode().getScene().activeCamera.getConfiguration() === camConfigs[i]) {
+                    this._visualModel.getNode().getScene().activeCamera.setToFreeCamera();
+                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
+                    this._visualModel.getNode().getScene().activeCamera.startTransitionToConfiguration(camConfigs[i], 300, budaScene.Camera.prototype.TransitionStyle.smooth);
+                } else {
+                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
+                }
+            }
+        }
+    };
     /**
      * Targets the next spacecraft.
      */
     Spacecraft.prototype.targetNext = function () {
-        var i, found = false;
+        var i, found;
         if (this._spacecraftArray) {
-            for (i = 0; i < this._spacecraftArray.length; i++) {
+            for (i = 0, found = false; i < this._spacecraftArray.length; i++) {
                 if ((this._spacecraftArray[i] !== this) && (!this._target || found)) {
-                    this._target = this._spacecraftArray[i];
-                    if (this._visualModel) {
-                        this._visualModel.getNode().getScene().setTarget(this._target.getVisualModel());
-                    }
-                    break;
+                    this.setTarget(this._spacecraftArray[i]);
+                    return;
                 }
                 if (this._target && (this._spacecraftArray[i] === this._target)) {
                     found = true;
                 }
             }
-            if (found) {
-                for (i = 0; i < this._spacecraftArray.length; i++) {
-                    if (this._spacecraftArray[i] !== this) {
-                        this._target = this._spacecraftArray[i];
-                        if (this._visualModel) {
-                            this._visualModel.getNode().getScene().setTarget(this._target.getVisualModel());
-                        }
-                        break;
-                    }
+            for (i = 0; i < this._spacecraftArray.length; i++) {
+                if (this._spacecraftArray[i] !== this) {
+                    this.setTarget(this._spacecraftArray[i]);
+                    return;
                 }
             }
+
         }
+    };
+    /**
+     * Returns the currently targeted spacecraft.
+     * @returns {Spacecraft}
+     */
+    Spacecraft.prototype.getTarget = function () {
+        if (this._target && this._target.canBeReused()) {
+            this.setTarget(null);
+        }
+        return this._target;
     };
     /**
      * Resets all the thruster burn levels of the spacecraft to zero.
@@ -2325,6 +2355,9 @@ define([
         var i, explosion;
         if (!this._alive) {
             return;
+        }
+        if (this._target && this._target.canBeReused()) {
+            this.setTarget(null);
         }
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {
@@ -2545,10 +2578,10 @@ define([
          */
         this._projectiles = null;
         /**
-         * The index of the spacecraft that is piloted by the player.
-         * @type Number
+         * A reference to the spacecraft piloted by the player.
+         * @type Spacecraft
          */
-        this._pilotedCraftIndex = null;
+        this._pilotedCraft = null;
         /**
          * A list of references to all the physical objects that take part in
          * collision / hit check in this level to easily pass them to such
@@ -2559,9 +2592,13 @@ define([
     }
     // #########################################################################
     // indirect getters and setters
+    /**
+     * Returns the currently piloted spacecraft.
+     * @returns {Spacecraft}
+     */
     Level.prototype.getPilotedSpacecraft = function () {
-        if (this._pilotedCraftIndex !== null) {
-            return this._spacecrafts[this._pilotedCraftIndex];
+        if (this._pilotedCraft !== null) {
+            return this._pilotedCraft;
         }
         return null;
     };
@@ -2617,7 +2654,7 @@ define([
             spacecraft = new Spacecraft();
             spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectiles, this._spacecrafts);
             if (dataJSON.spacecrafts[i].piloted) {
-                this._pilotedCraftIndex = i;
+                this._pilotedCraft = spacecraft;
             }
             this._spacecrafts.push(spacecraft);
         }

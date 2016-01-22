@@ -1126,7 +1126,7 @@
         },
         {
             "name": "proton",
-            "damage": 25,
+            "damage": 35,
             "shader": "billboard",
             "texture": "proton",
             "size": 8,

@@ -1319,6 +1319,7 @@ define([
                 -90, 90, ///TODO: hardcoded
                 -90, 90);///TODO: hardcoded
         return new budaScene.CameraConfiguration(
+                this._name,
                 positionConfiguration, orientationConfiguration,
                 this._fov, 5, 160,
                 budaScene.CameraConfiguration.prototype.BaseOrientation.positionFollowedObjects);///TODO: hardcoded
