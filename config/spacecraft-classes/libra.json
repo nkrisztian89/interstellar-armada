@@ -495,7 +495,7 @@
             "rotations": [
                 {
                     "axis": "X",
-                    "degrees": -90
+                    "degrees": 90
                 }
             ]
         },
@@ -538,7 +538,7 @@
             "rotations": [
                 {
                     "axis": "Z",
-                    "degrees": 90
+                    "degrees": -90
                 }
             ]
         },
@@ -553,7 +553,7 @@
             "rotations": [
                 {
                     "axis": "Z",
-                    "degrees": -90
+                    "degrees": 90
                 }
             ]
         },
@@ -565,6 +565,17 @@
             "turnable": true,
             "rotationCenterIsObject": true,
             "position": [0, -1050, 0]
+        },
+        {
+            "name": "target",
+            "fps": true,
+            "fov": 60,
+            "followsPosition": true,
+            "lookAtTarget": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -750, 240]
         }
     ],
     "equipmentProfiles": [

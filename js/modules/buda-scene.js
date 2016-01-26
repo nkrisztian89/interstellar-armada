@@ -18,7 +18,20 @@ define([
     "modules/managed-gl"
 ], function (utils, vec, mat, application, managedGL) {
     "use strict";
-    var makeObject3DMixinClassFunction, makeObject3DMixinClass;
+    var makeObject3DMixinClassFunction, makeObject3DMixinClass,
+            Constants = {
+                /**
+                 * When decreased by one step, the field of view of a camera will be multiplied by this factor
+                 * @type Number
+                 */
+                FOV_DECREASE_FACTOR: 0.95,
+                /**
+                 * When increased by one step, the field of view of a camera will be multiplied by this factor
+                 * @type Number
+                 */
+                FOV_INCREASE_FACTOR: 1.05
+            };
+    Object.freeze(Constants);
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -3179,6 +3192,7 @@ define([
      * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
+        ///TODO: add rotation for the third axis
         if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.stationary)) {
             return;
         }
@@ -3203,7 +3217,6 @@ define([
         }
         this._worldOrientationMatrix = null;
     };
-    ///TODO: finish implementation
     // #########################################################################
     /**
      * @class Stores a specific configuration of camera settings such as how the position and orientation should be calculated (in two 
@@ -3222,38 +3235,51 @@ define([
     function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
+         * An optional, descriptive name of this configuration by which it can be found and referred to.
          * @type String
          */
         this._name = name;
         /**
+         * Stores all the settings necessary to calculate the world position and can carry out the calculations as well.
          * @type CameraPositionConfiguration
          */
         this._positionConfiguration = positionConfiguration;
         /**
+         * Stores all the settings necessary to calculate the world orientation and can carry out the calculations as well.
          * @type CameraOrientationConfiguration
          */
         this._orientationConfiguration = orientationConfiguration;
         /**
+         * The starting field of view, in degrees is stored so the configuration can be reset to defaults later.
          * @type Number
          */
         this._defaultFOV = fov;
         /**
+         * The current field of view, in degrees. Refers to the horizontal field of view, the vertical will depend on the aspect of the camera.
          * @type Number
          */
         this._fov = fov;
         /**
+         * The minimum value to which the field of view can be set in this configuration, in degrees.
          * @type Number
          */
         this._minFOV = minFOV;
         /**
+         * The maximum value to which the field of view can be set in this configuration, in degrees.
          * @type Number
          */
         this._maxFOV = maxFOV;
     }
     makeObject3DMixinClass.call(CameraConfiguration);
-    CameraConfiguration.prototype.copy = function () {
+    /**
+     * Creates and returns copy with the same configuration settings as this one, but with new references to avoid any change made to the
+     * original configuration to affect the new one or vice versa.
+     * @param {String} [name=""] An optional name for the created copy.
+     * @returns {CameraConfiguration}
+     */
+    CameraConfiguration.prototype.copy = function (name) {
         var result = new CameraConfiguration(
-                "",
+                name || "",
                 this._positionConfiguration.copy(),
                 this._orientationConfiguration.copy(),
                 this._fov,
@@ -3264,41 +3290,59 @@ define([
         return result;
     };
     /**
-     * 
+     * Returns the descriptive name of this configuration so it can be identified.
      * @returns {String}
      */
     CameraConfiguration.prototype.getName = function () {
         return this._name;
     };
     /**
-     * Sets the camera's Field Of View 
+     * Sets the configuration's horizontal Field Of View 
      * @param {Number} fov The new desired FOV in degrees.
      */
     CameraConfiguration.prototype.setFOV = function (fov) {
         this._fov = Math.min(Math.max(fov, this._minFOV), this._maxFOV);
     };
+    /**
+     * Returns the currently set horizontal field of view, in degrees.
+     * @returns {Number}
+     */
     CameraConfiguration.prototype.getFOV = function () {
         return this._fov;
     };
+    /**
+     * Decreases the field of view of the configuration by a small amount (but not below the set minimum).
+     * @returns {Number} The resulting new value of the field of view. (in degrees)
+     */
     CameraConfiguration.prototype.decreaseFOV = function () {
-        this.setFOV(this._fov * 0.95); ///TODO: hardcoded constant
+        this.setFOV(this._fov * Constants.FOV_DECREASE_FACTOR);
         return this._fov;
     };
+    /**
+     * Increases the field of view of the configuration by a small amount (but not above the set maximum).
+     * @returns {Number} The resulting new value of the field of view. (in degrees)
+     */
     CameraConfiguration.prototype.increaseFOV = function () {
-        this.setFOV(this._fov * 1.05); ///TODO: hardcoded constant
+        this.setFOV(this._fov * Constants.FOV_INCREASE_FACTOR);
         return this._fov;
     };
+    /**
+     * Resets all configuration values to their initial state (including position, orientation and field of view configuration)
+     */
     CameraConfiguration.prototype.resetToDefaults = function () {
         this.setFOV(this._defaultFOV);
         this._positionConfiguration.resetToDefaults();
         this._orientationConfiguration.resetToDefaults();
     };
-
     /**
-     * 
-     * @param {Number[3]} velocityVector
-     * @param {Number[3]} angularVelocityVector
-     * @param {Number} dt
+     * Updates the position and orientation of the camera based on the current configuration values and the given velocity and spin vectors.
+     * The passed vectors should represent a velocity set by the user who is controlling the camera, and how they are interpreted in world 
+     * coordinates depends on the actual configuration settings (such as a fixed position camera will ignore the velocityVector, a free
+     * position configuration will move the camera along its own axes etc). The update might change the position or the orientation of the
+     * camera even if the passed vectors are null vectors, the camera can be set to follow moving objects in the scene!
+     * @param {Number[3]} velocityVector The velocity of the camera set by the controlling user: [X,Y,Z] (not in world coordinates)
+     * @param {Number[3]} angularVelocityVector The spin of the camera set by the controlling user, around axes: [Z,X,Y]
+     * @param {Number} dt The passed time since the last update, to calculate the actual path travelled / angles rotated since then
      */
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
         this._orientationConfiguration.update(angularVelocityVector, dt);
@@ -3306,27 +3350,42 @@ define([
         this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt);
         this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
     };
-
+    ///TODO: continue refactoring from here
+    /**
+     * 
+     * @returns {Boolean}
+     */
     CameraConfiguration.prototype.positionFollowsObjects = function () {
         return this._positionConfiguration.followsObjects();
     };
-
+    /**
+     * 
+     * @returns {Boolean}
+     */
     CameraConfiguration.prototype.followsObjects = function () {
         return this._positionConfiguration.followsObjects() || this._orientationConfiguration.followsObjects();
     };
-
+    /**
+     * 
+     * @returns {Number[3]}
+     */
     CameraConfiguration.prototype.getFollowedPositionVector = function () {
         return this._positionConfiguration.getFollowedPositionVector();
     };
-
+    /**
+     * 
+     * @returns {Float32Array}
+     */
     CameraConfiguration.prototype.getFollowedPositionMatrix = function () {
         return this._positionConfiguration.getFollowedPositionMatrix();
     };
-
+    /**
+     * 
+     * @param {Object3D[]} targetObjects
+     */
     CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects) {
         this._orientationConfiguration.setFollowedObjects(targetObjects);
     };
-
     /**
      * 
      * @param {Float32Array} positionMatrix
@@ -3345,7 +3404,6 @@ define([
                         CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld),
                 fov, minFOV, maxFOV);
     }
-
     // #########################################################################
     function Camera(scene, aspect, fov, adaptationTime, configuration) {
         Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
@@ -3493,7 +3551,7 @@ define([
     };
     Camera.prototype._updatePerspectiveMatrix = function () {
         ///TODO: hard-coded constants
-        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(this._fov * Math.PI / 360 / 2) / 2 / 20, 5000.0);
+        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(Math.radians(this._fov) / 2) / 20, 5000.0);
     };
     /**
      * Sets the camera's Field Of View by also recalculating the perspective matrix.

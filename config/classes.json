@@ -231,7 +231,7 @@
                     ]
                 },
                 {
-                    "type": "planar",
+                    "type": "unidirectional",
                     "dimensions": [1, 1, 1],
                     "directionSpread": 10,
                     "velocity": 200,
@@ -1142,11 +1142,11 @@
         },
         {
             "name": "ion",
-            "damage": 85,
+            "damage": 100,
             "shader": "billboard",
             "texture": "ion",
             "size": 18,
-            "mass": 15,
+            "mass": 20,
             "duration": 5000,
             "intersectionPositions": [0],
             "muzzleFlash": {
@@ -1224,11 +1224,11 @@
             "model": "ion_cannon",
             "texture": "libra",
             "grade": 1,
-            "cooldown": 5000,
+            "cooldown": 3000,
             "barrels": [
                 {
                     "projectile": "ion",
-                    "force": 100000,
+                    "force": 200000,
                     "position": [0, 320, 0]
                 }
             ]
