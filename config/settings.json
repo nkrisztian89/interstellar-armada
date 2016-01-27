@@ -104,7 +104,7 @@
                         "description": "Change flight mode"
                     }, {
                         "name": "nextTarget",
-                        "description": "Target next spoacecraft"
+                        "description": "Target next spacecraft"
                     }, {
                         "name": "fire",
                         "description": "Fire primary weapons",
@@ -207,6 +207,14 @@
                         "description": "Turn the camera downwards",
                         "continuous": true
                     }, {
+                        "name": "cameraRollLeft",
+                        "description": "Roll the camera to the left",
+                        "continuous": true
+                    }, {
+                        "name": "cameraRollRight",
+                        "description": "Roll the camera to the right",
+                        "continuous": true
+                    }, {
                         "name": "cameraDecreaseFOV",
                         "description": "Zoom in",
                         "continuous": true
@@ -295,6 +303,14 @@
                         "action": "cameraTurnDown",
                         "key": "down",
                         "ctrl": true
+                    }, {
+                        "action": "cameraRollLeft",
+                        "key": "left",
+                        "shift": true
+                    }, {
+                        "action": "cameraRollRight",
+                        "key": "right",
+                        "shift": true
                     }, {
                         "action": "cameraMoveLeft",
                         "key": "left"

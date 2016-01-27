@@ -3192,7 +3192,6 @@ define([
      * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
-        ///TODO: add rotation for the third axis
         if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.stationary)) {
             return;
         }
@@ -3206,11 +3205,15 @@ define([
             } else {
                 if (this._followedObjects.length > 0) {
                     this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
-                            mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
+                            mat.mul4(
+                                    mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), -angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
+                                    mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000)),
                             mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 } else {
                     this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
-                            mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
+                            mat.mul4(
+                                    mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), -angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
+                                    mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000)),
                             mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 }
             }
@@ -3634,6 +3637,36 @@ define([
     Camera.prototype.stopDownTurn = function () {
         if (this._angularVelocityTargetVector[0] < 0) {
             this._angularVelocityTargetVector[0] = 0;
+        }
+    };
+    Camera.prototype.rollLeft = function (intensity) {
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[2] < this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[2] = this._maxAngularVelocity;
+            }
+        } else {
+            this._angularVelocityTargetVector[2] = intensity;
+            this._angularVelocityVector[2] = intensity;
+        }
+    };
+    Camera.prototype.stopLeftRoll = function () {
+        if (this._angularVelocityTargetVector[2] > 0) {
+            this._angularVelocityTargetVector[2] = 0;
+        }
+    };
+    Camera.prototype.rollRight = function (intensity) {
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[2] > -this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[2] = -this._maxAngularVelocity;
+            }
+        } else {
+            this._angularVelocityTargetVector[2] = -intensity;
+            this._angularVelocityVector[2] = -intensity;
+        }
+    };
+    Camera.prototype.stopRightRoll = function () {
+        if (this._angularVelocityTargetVector[2] < 0) {
+            this._angularVelocityTargetVector[2] = 0;
         }
     };
     Camera.prototype._updateAngularVelocity = function (dt) {

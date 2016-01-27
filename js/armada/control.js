@@ -1292,7 +1292,8 @@ define([
                                     bindingActionName === "pitchUp" || bindingActionName === "pitchDown" ||
                                     bindingActionName === "rollLeft" || bindingActionName === "rollRight" ||
                                     bindingActionName === "cameraTurnLeft" || bindingActionName === "cameraTurnRight" ||
-                                    bindingActionName === "cameraTurnUp" || bindingActionName === "cameraTurnDown");
+                                    bindingActionName === "cameraTurnUp" || bindingActionName === "cameraTurnDown" ||
+                                    bindingActionName === "cameraRollLeft" || bindingActionName === "cameraRollRight");
                     result.push({
                         name: bindingActionName,
                         intensity: actionIntensity * (isTurnAction ? this._turnSensitivity : 1)
@@ -1849,6 +1850,16 @@ define([
         }, function () {
             self._controlledCamera.stopDownTurn();
         });
+        this.setActionFunctions("cameraRollLeft", function (i) {
+            self._controlledCamera.rollLeft(i);
+        }, function () {
+            self._controlledCamera.stopLeftRoll();
+        });
+        this.setActionFunctions("cameraRollRight", function (i) {
+            self._controlledCamera.rollRight(i);
+        }, function () {
+            self._controlledCamera.stopRightRoll();
+        });
         //moving the camera along the 3 axes
         this.setActionFunctions("cameraMoveLeft", function () {
             self._controlledCamera.moveLeft();
@@ -2313,6 +2324,8 @@ define([
         this.disableAction("cameraTurnRight");
         this.disableAction("cameraTurnUp");
         this.disableAction("cameraTurnDown");
+        this.disableAction("cameraRollLeft");
+        this.disableAction("cameraRollRight");
         armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
         armada.getScreen().showCrosshair();
         armada.getScreen().showUI();
@@ -2338,6 +2351,8 @@ define([
         this.enableAction("cameraTurnRight");
         this.enableAction("cameraTurnUp");
         this.enableAction("cameraTurnDown");
+        this.enableAction("cameraRollLeft");
+        this.enableAction("cameraRollRight");
         armada.getScreen().setHeaderContent("Spectator mode");
         armada.getScreen().hideCrosshair();
         armada.getScreen().hideUI();
