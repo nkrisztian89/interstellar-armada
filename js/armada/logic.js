@@ -2243,12 +2243,9 @@ define([
         if (this._visualModel) {
             camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName("target");
             for (i = 0; i < camConfigs.length; i++) {
+                camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
                 if (this._visualModel.getNode().getScene().activeCamera.getConfiguration() === camConfigs[i]) {
-                    this._visualModel.getNode().getScene().activeCamera.setToFreeCamera();
-                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
-                    this._visualModel.getNode().getScene().activeCamera.startTransitionToConfiguration(camConfigs[i], 300, budaScene.Camera.prototype.TransitionStyle.smooth);
-                } else {
-                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
+                    this._visualModel.getNode().getScene().activeCamera.transitionToSameConfiguration(300, budaScene.Camera.prototype.TransitionStyle.smooth);
                 }
             }
         }

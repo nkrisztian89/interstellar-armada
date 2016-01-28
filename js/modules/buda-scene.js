@@ -3188,7 +3188,7 @@ define([
     /**
      * Updates the orientation of the configuration based on the spin of the camera and the position / orientation of the objects it follows
      * @param {Number[3]} angularVelocityVector The vector describing the current angular velocity (spin) of the camera (not taking into account the spin
-     * of the objects it follows and the current orientation, as those are calculated in within this functions)
+     * of the objects it follows and the current orientation, as those are calculated in within this functions) degrees / second, around axes [X, Y, Z]
      * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
@@ -3314,6 +3314,20 @@ define([
         return this._fov;
     };
     /**
+     * Returns the minimum horizontal field of view that can be set, in degrees.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getMinFOV = function () {
+        return this._minFOV;
+    };
+    /**
+     * Returns the maximum horizontal field of view that can be set, in degrees.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getMaxFOV = function () {
+        return this._maxFOV;
+    };
+    /**
      * Decreases the field of view of the configuration by a small amount (but not below the set minimum).
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
@@ -3344,7 +3358,7 @@ define([
      * position configuration will move the camera along its own axes etc). The update might change the position or the orientation of the
      * camera even if the passed vectors are null vectors, the camera can be set to follow moving objects in the scene!
      * @param {Number[3]} velocityVector The velocity of the camera set by the controlling user: [X,Y,Z] (not in world coordinates)
-     * @param {Number[3]} angularVelocityVector The spin of the camera set by the controlling user, around axes: [Z,X,Y]
+     * @param {Number[3]} angularVelocityVector The spin of the camera set by the controlling user, around axes: [X,Y,Z], degrees / second
      * @param {Number} dt The passed time since the last update, to calculate the actual path travelled / angles rotated since then
      */
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
@@ -3353,175 +3367,214 @@ define([
         this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt);
         this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
     };
-    ///TODO: continue refactoring from here
     /**
-     * 
+     * Returns whether the camera position is set to follow any objects in this configuration.
      * @returns {Boolean}
      */
     CameraConfiguration.prototype.positionFollowsObjects = function () {
         return this._positionConfiguration.followsObjects();
     };
     /**
-     * 
+     * Returns whether the camera orientation is set to follow any objects in this configuration.
      * @returns {Boolean}
      */
-    CameraConfiguration.prototype.followsObjects = function () {
-        return this._positionConfiguration.followsObjects() || this._orientationConfiguration.followsObjects();
+    CameraConfiguration.prototype.orientationFollowsObjects = function () {
+        return this._orientationConfiguration.followsObjects();
     };
     /**
-     * 
+     * Returns a 3D vector that represents the current position in the world which is being followed by this configuration.
+     * The vector contains copies of the current coordinates and does not change as the followed position changes.
      * @returns {Number[3]}
      */
     CameraConfiguration.prototype.getFollowedPositionVector = function () {
         return this._positionConfiguration.getFollowedPositionVector();
     };
     /**
-     * 
-     * @returns {Float32Array}
-     */
-    CameraConfiguration.prototype.getFollowedPositionMatrix = function () {
-        return this._positionConfiguration.getFollowedPositionMatrix();
-    };
-    /**
-     * 
-     * @param {Object3D[]} targetObjects
+     * Sets the list of objects which should be followed with the orientation of the camera (either by setting a relative orientation or
+     * in "point-to" mode, depending on the orientation configuration)
+     * @param {Object3D[]} targetObjects Should not be null, but an empty list, if no objects are to be specified
      */
     CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects) {
         this._orientationConfiguration.setFollowedObjects(targetObjects);
     };
+    // -------------------------------------------------------------------------
     /**
-     * 
-     * @param {Float32Array} positionMatrix
-     * @param {Float32Array} orientationMatrix
-     * @param {Number} fov
-     * @param {Number} minFOV
-     * @param {Number} maxFOV
+     * Returns a new camera configuration which does not follow any objects but can be moved and turned freely and has the specified position, 
+     * orientation and field of view.
+     * @param {Boolean} fps Whether the orientation of the camera should be controlled in FPS mode.
+     * @param {Float32Array} positionMatrix The initial position. (4x4 translation matrix)
+     * @param {Float32Array} orientationMatrix The initial orientation. (4x4 rotation matrix)
+     * @param {Number} fov The initial horizontal field of view, in degrees.
+     * @param {Number} minFOV The minimum horizontal field of view that can be set for this configuration, in degrees.
+     * @param {Number} maxFOV The maximum horizontal field of view that can be set for this configuration, in degrees.
      * @returns {CameraConfiguration}
      */
-    function getFreeCameraConfiguration(positionMatrix, orientationMatrix, fov, minFOV, maxFOV) {
+    function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV) {
         return new CameraConfiguration(
                 "",
-                new CameraPositionConfiguration(false, false, [], positionMatrix, 0, 0),
-                new CameraOrientationConfiguration(false, false, false, [], orientationMatrix, 0, 0, 0, 0, 0, 0,
+                new CameraPositionConfiguration(false, false, [], mat.matrix4(positionMatrix), 0, 0),
+                new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), 0, 0, 0, 0, 0, 0,
                         CameraOrientationConfiguration.prototype.BaseOrientation.world,
                         CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld),
                 fov, minFOV, maxFOV);
     }
     // #########################################################################
-    function Camera(scene, aspect, fov, adaptationTime, configuration) {
+    /**
+     * @class A virtual camera that can be used to render a scene from a specific viewpoint. The position, orientation and field of view
+     * of the camera is calculated by separate configuration classes, and this camera class refers those classes. It also supports 
+     * transitioning smoothly from one configuration to another.
+     * @param {Scene} scene A reference to the scene this camera is used to render. The camera can follow objects in this scene. (with its
+     * position or orientation)
+     * @param {Number} aspect The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
+     * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
+     * @param {Number} transitionDuration The time the camera should take to transition from one configuration to another by default, in 
+     * milliseconds.
+     * @param {Number} transitionStyle (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
+     * @param {Number} maxSpeed The maximum speed the camera is allowed to move with along an axis by the user. (meters / second)
+     * @param {Number} acceleration The acceleration rate of the camera along one axis when controlled (moved) by the user. (m/s^2)
+     * @param {Number} deceleration The deceleration rate of the camera along one axis when controlled (stopped) by the user. (m/s^2)
+     * @param {Number} maxSpin The maximum angular velocity the camera is allowed to turn with along an axis by the user (degrees / second)
+     * @param {Number} angularAcceleration The angular acceleration of the camera along one axis when controlled (turned) by the user. (deg/s^2)
+     * @param {Number} angularDeceleration The angular deceleration of the camera along one axis when controlled (stopped) by the user. (deg/s^2)
+     */
+    function Camera(scene, aspect, configuration, transitionDuration, transitionStyle, maxSpeed, acceleration, deceleration, maxSpin, angularAcceleration, angularDeceleration) {
         Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
         /**
+         * A reference to the scene this camera is used to render.
          * @type Scene
          */
         this._scene = scene;
         /**
+         * The configuration the camera is currently transitioning from to a new one. If no transition is in progress, its value is null.
          * @type CameraConfiguration
          */
         this._previousConfiguration = null;
         /**
+         * The camera configuration that is used currently to calculate the camera position, orientation and field of view. Should never be
+         * null.
          * @type CameraConfiguration
          */
         this._currentConfiguration = configuration;
-        if (!this._currentConfiguration) {
-            this._currentConfiguration = getFreeCameraConfiguration(mat.identity4(), mat.identity4(), fov, fov, fov);
-        }
         /**
+         * (enum Camera.prototype.TransitionStyle) The style used for the current configuration transition.
          * @type Number
          */
-        this._transitionStyle = this.TransitionStyle.smooth; ///TODO: hardcoded
+        this._transitionStyle = this.TransitionStyle.none;
         /**
+         * (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
          * @type Number
          */
-        this._defaultTransitionStyle = this.TransitionStyle.smooth; ///TODO: hardcoded
+        this._defaultTransitionStyle = transitionStyle;
         /**
+         * The duration of the transition currently in progress, in milliseconds.
          * @type Number
          */
-        this._transitionDuration = adaptationTime;
+        this._transitionDuration = 0;
         /**
+         * The time the camera should take to transition from one configuration to another by default (when none is specified), in 
+         * milliseconds.
          * @type Number
          */
-        this._defaultTransitionDuration = adaptationTime;
+        this._defaultTransitionDuration = transitionDuration;
         /**
+         * The amount of time that has already passed during the current transition. The current state of properties of the camera between
+         * the two configurations is calculated based on this and the transition style.
          * @type Number
          */
         this._transitionElapsedTime = 0;
         /**
-         * @type Number
-         */
-        this._followMode = this.FollowMode.instantaneous; ///TODO: hardcoded
-        /**
+         * The vector describing the current relative velocity of the camera. This can be used to draw trails for particles that visualize
+         * the camera's movement. When an object is followed, the velocity is considered to be that of the object (not counting relative
+         * camera movements)
          * @type Number[3]
          */
         this._velocityVector = [0, 0, 0];
         /**
+         * The relative velocity vector that is the result of acceleration induced by the user controlling the camera.
          * @type Number[3]
          */
         this._controlledVelocityVector = [0, 0, 0];
         /**
+         * The target value for the controlled velocity vector currently set by user controls (it might take some time to reach this target
+         * depending of the acceleration parameters of the camera). E.g. if when the user is moving the camera to the right, this will be
+         * [max speed, 0, 0]
          * @type Number[3]
          */
         this._velocityTargetVector = [0, 0, 0];
         /**
+         * The maximum speed the camera is allowed to move with along one axis by the user. (meters / second)
          * @type Number
          */
-        this._maxSpeed = 250; ///TODO: hardcoded
+        this._maxSpeed = maxSpeed;
         /**
+         * The acceleration rate of the camera along one axis when controlled (moved) by the user. (m/s^2)
          * @type Number
          */
-        this._acceleration = 200; ///TODO: hardcoded
+        this._acceleration = acceleration;
         /**
+         * The deceleration rate of the camera along one axis when controlled (stopped) by the user. (m/s^2)
          * @type Number
          */
-        this._deceleration = 500; ///TODO: hardcoded
+        this._deceleration = deceleration;
         /**
+         * The current relative angular velocity of the camera, around axes: [X,Y,Z], in degrees / second
+         * This is the result of angular acceleration induced by the player. (followed objects not considered)
          * @type Number[3]
          */
         this._angularVelocityVector = [0, 0, 0];
         /**
+         * The maximum angular velocity around an axis when controlled by the user, degrees / second
          * @type Number
          */
-        this._maxAngularVelocity = 180;
+        this._maxAngularVelocity = maxSpin;
         /**
+         * The angular acceleration of the camera along one axis when controlled (turned) by the user. (deg/s^2)
          * @type Number
          */
-        this._angularAcceleration = 720;
+        this._angularAcceleration = angularAcceleration;
         /**
+         * The angular deceleration of the camera along one axis when controlled (stopped) by the user. (deg/s^2)
          * @type Number
          */
-        this._angularDeceleration = 2880;
+        this._angularDeceleration = angularDeceleration;
         /**
+         * The target value for the controlled angular velocity vector currently set by user controls (it might take some time to reach this 
+         * target depending of the angular acceleration parameters of the camera). E.g. if when the user is turning the camera to the right, 
+         * this will be [0, max.ang.acc., 0]
          * @type Number[3]
          */
         this._angularVelocityTargetVector = [0, 0, 0];
         /**
+         * A stored value of the previous world position of the followed object(s), so that the camera velocity can be calculated if the 
+         * camera is following objects.
          * @type Number[3]
          */
-        this._followedObjectPreviousPosition = null;
+        this._previousFollowedPositionVector = null;
         /**
+         * The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
          * @type Number
          */
         this._aspect = aspect;
         /**
-         * @type Number
-         */
-        this._fov = fov;
-        /**
+         * The stored value of the 4x4 perspective matrix calculated from the properties of the camera. Whenever a related property is
+         * changed, the value is recalculated.
          * @type Float32Array
          */
         this._perspectiveMatrix = null;
         /**
+         * A reference to the rendereble node that the current configuration of this camera is associated with (typically because it follows 
+         * the object stored at it). Thanks to this reference, the camera can cycle through the configurations associated with the same node,
+         * or pick the next node from the scene to follow.
          * @type RenderableNode
          */
         this._followedNode = null;
     }
     makeObject3DMixinClass.call(Camera);
+    ///TODO: continue refactoring from here
     Camera.prototype.TransitionStyle = {
-        linear: 0,
-        smooth: 1
-    };
-    Camera.prototype.FollowMode = {
-        instantaneous: 0,
-        oneStepBehind: 1
+        none: 0,
+        linear: 1,
+        smooth: 2
     };
     Camera.prototype.getCameraMatrix = function () {
         return mat.mul4(mat.inverseOfTranslation4(this.getPositionMatrix()), mat.inverseOfRotation4(this.getOrientationMatrix()));
@@ -3548,21 +3601,20 @@ define([
     };
     Camera.prototype.getPerspectiveMatrix = function () {
         if (!this._perspectiveMatrix) {
-            this._updatePerspectiveMatrix();
+            this._updatePerspectiveMatrix(this._currentConfiguration.getFOV());
         }
         return this._perspectiveMatrix;
     };
-    Camera.prototype._updatePerspectiveMatrix = function () {
+    Camera.prototype._updatePerspectiveMatrix = function (fov) {
         ///TODO: hard-coded constants
-        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(Math.radians(this._fov) / 2) / 20, 5000.0);
+        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(Math.radians(fov) / 2) / 20, 5000.0);
     };
     /**
      * Sets the camera's Field Of View by also recalculating the perspective matrix.
      * @param {number} fov The new desired FOV in degrees.
      */
     Camera.prototype.setFOV = function (fov) {
-        this._fov = fov;
-        this._updatePerspectiveMatrix();
+        this._updatePerspectiveMatrix(fov);
         this._currentConfiguration.setFOV(fov);
     };
     /**
@@ -3571,13 +3623,13 @@ define([
      */
     Camera.prototype.setAspect = function (aspect) {
         this._aspect = aspect;
-        this._updatePerspectiveMatrix();
+        this._updatePerspectiveMatrix(this._currentConfiguration.getFOV());
     };
     Camera.prototype.decreaseFOV = function () {
-        this._fov = this._currentConfiguration.decreaseFOV();
+        this._updatePerspectiveMatrix(this._currentConfiguration.decreaseFOV());
     };
     Camera.prototype.increaseFOV = function () {
-        this._fov = this._currentConfiguration.increaseFOV();
+        this._updatePerspectiveMatrix(this._currentConfiguration.increaseFOV());
     };
     Camera.prototype.turnLeft = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -3790,9 +3842,15 @@ define([
         }
     };
     Camera.prototype._getFreeCameraConfiguration = function (positionMatrix, orientationMatrix) {
-        positionMatrix = positionMatrix ? mat.matrix4(positionMatrix) : mat.matrix4(this.getPositionMatrix());
-        orientationMatrix = orientationMatrix ? mat.matrix4(orientationMatrix) : mat.matrix4(this.getOrientationMatrix());
-        return getFreeCameraConfiguration(positionMatrix, orientationMatrix, this._fov, this._fov, this._fov);
+        positionMatrix = positionMatrix || this.getPositionMatrix();
+        orientationMatrix = orientationMatrix || this.getOrientationMatrix();
+        return getFreeCameraConfiguration(
+                false,
+                positionMatrix,
+                orientationMatrix,
+                this._currentConfiguration.getFOV(),
+                this._currentConfiguration.getMinFOV(),
+                this._currentConfiguration.getMaxFOV());
     };
     Camera.prototype.setConfiguration = function (configuration) {
         this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
@@ -3820,7 +3878,13 @@ define([
         }
     };
     Camera.prototype.setToFreeCamera = function (positionMatrix, orientationMatrix, duration, style) {
+        this._followedNode = null;
         this.startTransitionToConfiguration(this._getFreeCameraConfiguration(positionMatrix, orientationMatrix), duration || 0, style);
+    };
+    Camera.prototype.transitionToSameConfiguration = function (duration, style) {
+        var configuration = this._currentConfiguration;
+        this.setConfiguration(this._getFreeCameraConfiguration());
+        this.startTransitionToConfiguration(configuration, duration || 0, style);
     };
     /**
      * 
@@ -3830,7 +3894,9 @@ define([
      */
     Camera.prototype.followNode = function (node, duration, style) {
         this._followedNode = node;
-        this.startTransitionToConfiguration(this._followedNode.getNextCameraConfiguration(), duration, style);
+        if (this._followedNode) {
+            this.startTransitionToConfiguration(this._followedNode.getNextCameraConfiguration(), duration, style);
+        }
     };
     /**
      * 
@@ -3943,8 +4009,7 @@ define([
             this.rotate(axis, alpha * transitionProgress);
             this.setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
             // calculate FOV
-            this._fov = this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress;
-            this._updatePerspectiveMatrix();
+            this._updatePerspectiveMatrix(this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress);
             if (this._transitionElapsedTime === this._transitionDuration) {
                 this._previousConfiguration = null;
             }
@@ -3953,37 +4018,28 @@ define([
             this._updateAngularVelocity(dt);
             this._currentConfiguration.update(this._controlledVelocityVector, this._angularVelocityVector, dt);
             this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
-            switch (this._followMode) {
-                case this.FollowMode.instantaneous:
-                    this.setPositionMatrix(this._currentConfiguration.getPositionMatrix());
-                    this.setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
-                    break;
-                case this.FollowMode.oneStepBehind:
-                    ///TODO: implement
-                    application.crash();
-                    break;
-            }
+            this.setPositionMatrix(this._currentConfiguration.getPositionMatrix());
+            this.setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
             this.setFOV(this._currentConfiguration.getFOV());
             if (this._currentConfiguration.positionFollowsObjects()) {
-                if (this._followedObjectPreviousPosition) {
+                if (this._previousFollowedPositionVector) {
                     this._velocityVector = vec.scaled3(
                             vec.mulMat4Vec3(
                                     this.getOrientationMatrix(),
                                     vec.sub3(
                                             this._currentConfiguration.getFollowedPositionVector(),
-                                            this._followedObjectPreviousPosition)),
+                                            this._previousFollowedPositionVector)),
                             -1000 / dt);
                 } else {
                     this._velocityVector = [0, 0, 0];
                 }
-                this._followedObjectPreviousPosition = this._currentConfiguration.getFollowedPositionVector();
+                this._previousFollowedPositionVector = this._currentConfiguration.getFollowedPositionVector();
             } else {
                 this._velocityVector = this._controlledVelocityVector;
             }
         }
     };
     ///-------------------------------------------------------------------------
-    ///TODO: continue refactoring from here
     /**
      * @class Represents a light source that can be taken into account when rendering.
      * @param {Number[3]} color
@@ -4088,7 +4144,18 @@ define([
          * @type Camera
          */
         this.activeCamera = null;
-        this.setActiveCamera(new Camera(this, width / height, 60, 1000));
+        this.setActiveCamera(new Camera(
+                this,
+                width / height,
+                getFreeCameraConfiguration(false, mat.identity4(), mat.identity4(), 60, 5, 90), ///TODO: hardcoded constants
+                1000,
+                Camera.prototype.TransitionStyle.smooth,
+                250,
+                200,
+                500,
+                180,
+                720,
+                2880));
         this.lodContext = lodContext;
         this._shadowMappingEnabled = false;
         this._shadowMappingShader = null;
@@ -4403,6 +4470,9 @@ define([
     Scene.prototype.render = function (context, dt) {
         var i, j, _length_, gl, camOri, cameraZ, clear;
         application.log("Rendering scene...", 3);
+        if (this._shouldAnimate) {
+            this.activeCamera.update(dt);
+        }
         this._drawnTriangles = 0;
         gl = context.gl;
         // ensuring that transformation matrices are only calculated once for 

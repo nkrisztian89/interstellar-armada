@@ -90,7 +90,6 @@ define([
                 var curDate = new Date();
                 armada.control().control();
                 this._level.tick(curDate - prevDate);
-                this._battleScene.activeCamera.update(curDate - prevDate);
                 prevDate = curDate;
             }.bind(this), 1000 / freq);
             armada.control().startListening();
