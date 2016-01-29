@@ -1323,7 +1323,8 @@ define([
         return new budaScene.CameraConfiguration(
                 this._name,
                 positionConfiguration, orientationConfiguration,
-                this._fov, 5, 160);///TODO: hardcoded
+                this._fov, 5, 160, ///TODO: hardcoded
+                0.1, 0.1, 0.1);///TODO: hardcoded
     };
     // ##############################################################################
     /**

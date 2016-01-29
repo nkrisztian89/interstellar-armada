@@ -183,7 +183,7 @@ define([
      * particles.
      */
     DustParticle.prototype.simulate = function (camera) {
-        this._visualModel.fitPositionWithinRange(camera.getCameraPositionMatrix(), this._range);
+        this._visualModel.fitPositionWithinRange(camera.getPositionMatrix(), this._range);
     };
     /**
      * Removes all references to other objects for proper cleanup of memory.

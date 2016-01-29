@@ -29,7 +29,17 @@ define([
                  * When increased by one step, the field of view of a camera will be multiplied by this factor
                  * @type Number
                  */
-                FOV_INCREASE_FACTOR: 1.05
+                FOV_INCREASE_FACTOR: 1.05,
+                /**
+                 * When decreased by one step, the span of a camera will be multiplied by this factor
+                 * @type Number
+                 */
+                SPAN_DECREASE_FACTOR: 0.95,
+                /**
+                 * When increased by one step, the span of a camera will be multiplied by this factor
+                 * @type Number
+                 */
+                SPAN_INCREASE_FACTOR: 1.05
             };
     Object.freeze(Constants);
     // #########################################################################
@@ -385,7 +395,7 @@ define([
             // along the axes of the camera space
             fullMatrix =
                     mat.mul4(mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
-                            camera.getPerspectiveMatrix());
+                            camera.getProjectionMatrix());
             position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
             position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
             position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
@@ -439,6 +449,7 @@ define([
         };
     };
     makeObject3DMixinClass = makeObject3DMixinClassFunction();
+    makeObject3DMixinClass.call(Object3D);
     // #########################################################################
     /**
      * @constructor
@@ -1328,7 +1339,7 @@ define([
         this._camera = camera;
         this.setTexture(samplerName, cubemap);
         this.setUniformValueFunction("u_viewDirectionProjectionInverse", function () {
-            return mat.inverse4(mat.mul4(this._camera.getCameraOrientationMatrix(), this._camera.getPerspectiveMatrix()));
+            return mat.inverse4(mat.mul4(this._camera.getInverseOrientationMatrix(), this._camera.getProjectionMatrix()));
         });
     }
     CubemapSampledFVQ.prototype = new RenderableObject();
@@ -2575,10 +2586,10 @@ define([
     PointParticle.prototype.fitPositionWithinRange = function (centerPositionMatrix, range) {
         var i;
         for (i = 12; i < 15; i++) {
-            while (this._positionMatrix[i] > -centerPositionMatrix[i] + range) {
+            while (this._positionMatrix[i] > centerPositionMatrix[i] + range) {
                 this._positionMatrix[i] -= range * 2;
             }
-            while (this._positionMatrix[i] < -centerPositionMatrix[i] - range) {
+            while (this._positionMatrix[i] < centerPositionMatrix[i] - range) {
                 this._positionMatrix[i] += range * 2;
             }
         }
@@ -2960,6 +2971,7 @@ define([
          */
         orientationFollowedObjects: 3
     };
+    Object.freeze(CameraOrientationConfiguration.prototype.BaseOrientation);
     /**
      * @enum {Number}
      * Options on what orientation calculation to fall back to in case a "point-to" configuration was set (which always faces the followed
@@ -2980,6 +2992,7 @@ define([
          */
         positionFollowedObjectOrWorld: 3
     };
+    Object.freeze(CameraOrientationConfiguration.prototype.PointToFallback);
     /**
      * Returns a camera orientation configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
@@ -3231,11 +3244,15 @@ define([
      * @param {String} [name] An optional, descriptive name of this configuration by which it can be found and referred to later.
      * @param {CameraPositionConfiguration} positionConfiguration All the settings necessary to calculate the world position.
      * @param {CameraOrientationConfiguration} orientationConfiguration All the settings necessary to calculate the world orientation.
-     * @param {Number} fov The starting field of view, in degrees.
+     * @param {Number} fov The starting horizontal field of view, in degrees.
      * @param {Number} minFOV The minimum field of view value that can be set for a camera using this configuration.
      * @param {Number} maxFOV The maximum field of view value that can be set for a camera using this configuration.
+     * @param {Number} span The starting horizontal span of the camera. This is the world-space distance that the camera sees
+     * horizontally at depth 0. In meters.
+     * @param {Number} minSpan The minimum span that can be set for a camera using this configuration.
+     * @param {Number} maxSpan The maximum span that can be set for a camera using this configuration.
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * An optional, descriptive name of this configuration by which it can be found and referred to.
@@ -3272,6 +3289,27 @@ define([
          * @type Number
          */
         this._maxFOV = maxFOV;
+        /**
+         * The starting span, in meters is stored so the configuration can be reset to defaults later.
+         * @type Number
+         */
+        this._defaultSpan = span;
+        /**
+         * The current span, in meters. This is the world-space distance that the camera sees
+         * horizontally at depth 0, the vertical span will depend on the aspect of the camera.
+         * @type Number
+         */
+        this._span = span;
+        /**
+         * The minimum value to which the span can be set in this configuration, in meters.
+         * @type Number
+         */
+        this._minSpan = minSpan;
+        /**
+         * The maximum value to which the span can be set in this configuration, in meters.
+         * @type Number
+         */
+        this._maxSpan = maxSpan;
     }
     makeObject3DMixinClass.call(CameraConfiguration);
     /**
@@ -3287,7 +3325,10 @@ define([
                 this._orientationConfiguration.copy(),
                 this._fov,
                 this._minFOV,
-                this._maxFOV);
+                this._maxFOV,
+                this._span,
+                this._minSpan,
+                this._maxSpan);
         result.setPositionMatrix(this.getPositionMatrix());
         result.setOrientationMatrix(this.getOrientationMatrix());
         return result;
@@ -3344,10 +3385,55 @@ define([
         return this._fov;
     };
     /**
-     * Resets all configuration values to their initial state (including position, orientation and field of view configuration)
+     * Sets the configuration's horizontal span.
+     * @param {Number} span The new desired span in meters.
+     */
+    CameraConfiguration.prototype.setSpan = function (span) {
+        this._span = Math.min(Math.max(span, this._minSpan), this._maxSpan);
+    };
+    /**
+     * Returns the currently set horizontal span, in meters.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getSpan = function () {
+        return this._span;
+    };
+    /**
+     * Returns the minimum horizontal span that can be set, in meters.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getMinSpan = function () {
+        return this._minSpan;
+    };
+    /**
+     * Returns the maximum horizontal span that can be set, in meters.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getMaxSpan = function () {
+        return this._maxSpan;
+    };
+    /**
+     * Decreases the span of the configuration by a small amount (but not below the set minimum).
+     * @returns {Number} The resulting new value of the span. (in meters)
+     */
+    CameraConfiguration.prototype.decreaseSpan = function () {
+        this.setSpan(this._span * Constants.SPAN_DECREASE_FACTOR);
+        return this._span;
+    };
+    /**
+     * Increases the span of the configuration by a small amount (but not above the set maximum).
+     * @returns {Number} The resulting new value of the span. (in meters)
+     */
+    CameraConfiguration.prototype.increaseSpan = function () {
+        this.setSpan(this._span * Constants.SPAN_INCREASE_FACTOR);
+        return this._span;
+    };
+    /**
+     * Resets all configuration values to their initial state (including position, orientation, field of view and span configuration)
      */
     CameraConfiguration.prototype.resetToDefaults = function () {
         this.setFOV(this._defaultFOV);
+        this.setSpan(this._defaultSpan);
         this._positionConfiguration.resetToDefaults();
         this._orientationConfiguration.resetToDefaults();
     };
@@ -3407,16 +3493,20 @@ define([
      * @param {Number} fov The initial horizontal field of view, in degrees.
      * @param {Number} minFOV The minimum horizontal field of view that can be set for this configuration, in degrees.
      * @param {Number} maxFOV The maximum horizontal field of view that can be set for this configuration, in degrees.
+     * @param {Number} span The initial horizontal span, in meters.
+     * @param {Number} minSpan The minimum horizontal span that can be set for this configuration, in meters.
+     * @param {Number} maxSpan The maximum horizontal span that can be set for this configuration, in meters.
      * @returns {CameraConfiguration}
      */
-    function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV) {
+    function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
         return new CameraConfiguration(
                 "",
                 new CameraPositionConfiguration(false, false, [], mat.matrix4(positionMatrix), 0, 0),
                 new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), 0, 0, 0, 0, 0, 0,
                         CameraOrientationConfiguration.prototype.BaseOrientation.world,
                         CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld),
-                fov, minFOV, maxFOV);
+                fov, minFOV, maxFOV,
+                span, minSpan, maxSpan);
     }
     // #########################################################################
     /**
@@ -3426,6 +3516,7 @@ define([
      * @param {Scene} scene A reference to the scene this camera is used to render. The camera can follow objects in this scene. (with its
      * position or orientation)
      * @param {Number} aspect The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
+     * @param {Number} viewDistance Objects are visible up to this distance when rendered using this camera. (in meters)
      * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
      * @param {Number} transitionDuration The time the camera should take to transition from one configuration to another by default, in 
      * milliseconds.
@@ -3437,13 +3528,23 @@ define([
      * @param {Number} angularAcceleration The angular acceleration of the camera along one axis when controlled (turned) by the user. (deg/s^2)
      * @param {Number} angularDeceleration The angular deceleration of the camera along one axis when controlled (stopped) by the user. (deg/s^2)
      */
-    function Camera(scene, aspect, configuration, transitionDuration, transitionStyle, maxSpeed, acceleration, deceleration, maxSpin, angularAcceleration, angularDeceleration) {
+    function Camera(scene, aspect, viewDistance, configuration, transitionDuration, transitionStyle, maxSpeed, acceleration, deceleration, maxSpin, angularAcceleration, angularDeceleration) {
         Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
         /**
          * A reference to the scene this camera is used to render.
          * @type Scene
          */
         this._scene = scene;
+        /**
+         * The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
+         * @type Number
+         */
+        this._aspect = aspect;
+        /**
+         * Objects are visible up to this distance when rendered using this camera. In meters.
+         * @type Number
+         */
+        this._viewDistance = viewDistance;
         /**
          * The configuration the camera is currently transitioning from to a new one. If no transition is in progress, its value is null.
          * @type CameraConfiguration
@@ -3551,16 +3652,11 @@ define([
          */
         this._previousFollowedPositionVector = null;
         /**
-         * The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
-         * @type Number
-         */
-        this._aspect = aspect;
-        /**
          * The stored value of the 4x4 perspective matrix calculated from the properties of the camera. Whenever a related property is
          * changed, the value is recalculated.
          * @type Float32Array
          */
-        this._perspectiveMatrix = null;
+        this._projectionMatrix = null;
         /**
          * A reference to the rendereble node that the current configuration of this camera is associated with (typically because it follows 
          * the object stored at it). Thanks to this reference, the camera can cycle through the configurations associated with the same node,
@@ -3568,69 +3664,195 @@ define([
          * @type RenderableNode
          */
         this._followedNode = null;
+        /**
+         * A cache variable storing the calculated value of the camera matrix. This depends on the position and orientation matrices and
+         * thus is reset to null when those are changed.
+         * @type Float32Array
+         */
+        this._cameraMatrix = null;
+        /**
+         * A cache variable storing the calculated inverse of the position matrix. It is reset to null whenever the position changes.
+         * @type Float32Array
+         */
+        this._inversePositionMatrix = null;
+        /**
+         * A cache variable storing the calculated inverse of the orientation matrix. It is reset to null whenever the orientation changes.
+         * @type Float32Array
+         */
+        this._inverseOrientationMatrix = null;
     }
     makeObject3DMixinClass.call(Camera);
-    ///TODO: continue refactoring from here
+    /**
+     * @enum {Number}
+     * Options about how should the combination of the two configurations be calculated when the camera is transitioning from one
+     * to the another.
+     */
     Camera.prototype.TransitionStyle = {
+        /**
+         * No valid value given, a transition with this value will result in an error. This way accidentally not setting a value
+         * can be noticed. (for instantly jumping to the new configuration, use a duration of 0)
+         */
         none: 0,
+        /**
+         * Use a simple linear transition from one configuration to another. The position will move, and the direction will turn
+         * in a linear manner.
+         */
         linear: 1,
+        /**
+         * Use a calculation resulting in an accelerating change in the first half, and a decelerating change during the second
+         * half of the transition.
+         */
         smooth: 2
     };
-    Camera.prototype.getCameraMatrix = function () {
-        return mat.mul4(mat.inverseOfTranslation4(this.getPositionMatrix()), mat.inverseOfRotation4(this.getOrientationMatrix()));
-    };
-
-    Camera.prototype.getCameraPositionMatrix = function () {
-        return mat.inverseOfTranslation4(this.getPositionMatrix());
-    };
-
-    Camera.prototype.getCameraOrientationMatrix = function () {
-        return mat.inverseOfRotation4(this.getOrientationMatrix());
-    };
-
+    Object.freeze(Camera.prototype.TransitionStyle);
     /**
-     * 
+     * @override
+     * Sets a new position matrix for the camera. The update method calculates the position and this should not be called from
+     * outside, but it has to be overridden to clear the cache variables dependent on the position.
+     * @param {Float32Array} value
+     */
+    Camera.prototype.setPositionMatrix = function (value) {
+        Object3D.prototype.setPositionMatrix.call(this, value);
+        this._cameraMatrix = null;
+        this._inversePositionMatrix = null;
+    };
+    /**
+     * @override
+     * Sets a new orientation matrix for the camera. The update method calculates the orientation and this should not be called from
+     * outside, but it has to be overridden to clear the cache variables dependent on the orientation.
+     * @param {Float32Array} value
+     */
+    Camera.prototype.setOrientationMatrix = function (value) {
+        Object3D.prototype.setOrientationMatrix.call(this, value);
+        this._cameraMatrix = null;
+        this._inverseOrientationMatrix = null;
+    };
+    /**
+     * Returns the current camera matrix based on the position and orientation. This will be the inverse transformation
+     * that is to be applied to objects to transform them from world space into camera space.
+     * @returns {Float32Array}
+     */
+    Camera.prototype.getCameraMatrix = function () {
+        if (!this._cameraMatrix) {
+            this._cameraMatrix = mat.mul4(this.getInversePositionMatrix(), this.getInverseOrientationMatrix());
+        }
+        return this._cameraMatrix;
+    };
+    /**
+     * Returns the inverse of the position matrix of the camera. Uses caching to eliminate unnecessary calculations.
+     * @returns {Float32Array}
+     */
+    Camera.prototype.getInversePositionMatrix = function () {
+        if (!this._inversePositionMatrix) {
+            this._inversePositionMatrix =
+                    mat.inverseOfTranslation4(this.getPositionMatrix());
+        }
+        return this._inversePositionMatrix;
+    };
+    /**
+     * Returns the inverse of the orientation matrix of the camera. Uses caching to eliminate unnecessary calculations.
+     * @returns {Float32Array}
+     */
+    Camera.prototype.getInverseOrientationMatrix = function () {
+        if (!this._inverseOrientationMatrix) {
+            this._inverseOrientationMatrix =
+                    mat.inverseOfRotation4(this.getOrientationMatrix());
+        }
+        return this._inverseOrientationMatrix;
+    };
+    /**
+     * Returns the currently set configuration of the camera. If the camera is in transition between two configurations,
+     * this will return the configuration it is transitioning into.
      * @returns {CameraConfiguration}
      */
     Camera.prototype.getConfiguration = function () {
         return this._currentConfiguration;
     };
-
+    /**
+     * Returns a vector representing the current relative velocity of the camera. If the camera is freely movable by the
+     * user, this will be the velocity that is the result of the user controls. If the camera position is following some
+     * objects, this will be the relative velocity of the followed point in space (regardless of additional camera
+     * movements). While transitioning, this will be the relative velocity of the camera position as it moves from
+     * the position of the first configuration towards the second.
+     * This velocity vector can be used to draw trails for objects to visualise the movement of the camera.
+     * @returns {Number[3]}
+     */
     Camera.prototype.getVelocityVector = function () {
         return this._velocityVector;
     };
-    Camera.prototype.getPerspectiveMatrix = function () {
-        if (!this._perspectiveMatrix) {
-            this._updatePerspectiveMatrix(this._currentConfiguration.getFOV());
-        }
-        return this._perspectiveMatrix;
-    };
-    Camera.prototype._updatePerspectiveMatrix = function (fov) {
-        ///TODO: hard-coded constants
-        this._perspectiveMatrix = mat.perspective4(this._aspect / 20, 1.0 / 20, this._aspect / Math.tan(Math.radians(fov) / 2) / 20, 5000.0);
-    };
     /**
-     * Sets the camera's Field Of View by also recalculating the perspective matrix.
-     * @param {number} fov The new desired FOV in degrees.
+     * Returns the current projection matrix of the camera. Currently only perspective projection is supported.
+     * Calculates the matrix from the current camera properties if necessary, and caches the result.
+     * @returns {Float32Array}
      */
-    Camera.prototype.setFOV = function (fov) {
-        this._updatePerspectiveMatrix(fov);
-        this._currentConfiguration.setFOV(fov);
+    Camera.prototype.getProjectionMatrix = function () {
+        if (!this._projectionMatrix) {
+            this._updateProjectionMatrix(this._currentConfiguration.getFOV(), this._currentConfiguration.getSpan());
+        }
+        return this._projectionMatrix;
     };
     /**
-     * Sets the camera's aspect ratio by also recalculating the perspective matrix.
-     * @param {number} aspect The new desired aspect ratio.
+     * Updates the stored cache value of the projection matrix of the camera based on its current properties.
+     * Currently only perspective projection is supported.
+     * @param {Number} fov The horizontal field of view for the perspective projection, in degrees.
+     * @param {Number} span The horizontal span of the viewing rectangle at depth 0, in meters.
+     */
+    Camera.prototype._updateProjectionMatrix = function (fov, span) {
+        this._projectionMatrix = mat.perspective4(span / 2.0, span / this._aspect / 2.0, span / 2.0 / Math.tan(Math.radians(fov) / 2), this._viewDistance);
+    };
+    /**
+     * Sets the camera's aspect ratio. (width / height)
+     * @param {Number} aspect The new desired aspect ratio.
      */
     Camera.prototype.setAspect = function (aspect) {
         this._aspect = aspect;
-        this._updatePerspectiveMatrix(this._currentConfiguration.getFOV());
+        this._projectionMatrix = null;
     };
+    /**
+     * Sets the camera's horizontal Field Of View.
+     * @param {Number} fov The new desired horizontal FOV in degrees.
+     */
+    Camera.prototype.setFOV = function (fov) {
+        this._currentConfiguration.setFOV(fov);
+        this._projectionMatrix = null;
+    };
+    /**
+     * Decreases the camera's field of view by a small step, but not below the minimum allowed by the current configuration.
+     */
     Camera.prototype.decreaseFOV = function () {
-        this._updatePerspectiveMatrix(this._currentConfiguration.decreaseFOV());
+        this._currentConfiguration.decreaseFOV();
+        this._projectionMatrix = null;
     };
+    /**
+     * Increases the camera's field of view by a small step, but not above the maximum allowed by the current configuration.
+     */
     Camera.prototype.increaseFOV = function () {
-        this._updatePerspectiveMatrix(this._currentConfiguration.increaseFOV());
+        this._currentConfiguration.increaseFOV();
+        this._projectionMatrix = null;
     };
+    /**
+     * Sets the camera's horizontal span.
+     * @param {Number} span The new desired horizontal span in meters.
+     */
+    Camera.prototype.setSpan = function (span) {
+        this._currentConfiguration.setSpan(span);
+        this._projectionMatrix = null;
+    };
+    /**
+     * Decreases the camera's span by a small step, but not below the minimum allowed by the current configuration.
+     */
+    Camera.prototype.decreaseSpan = function () {
+        this._currentConfiguration.decreaseSpan();
+        this._projectionMatrix = null;
+    };
+    /**
+     * Increases the camera's span by a small step, but not above the maximum allowed by the current configuration.
+     */
+    Camera.prototype.increaseSpan = function () {
+        this._currentConfiguration.increaseSpan();
+        this._projectionMatrix = null;
+    };
+    ///TODO: continue refactoring from here
     Camera.prototype.turnLeft = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
             if (this._angularVelocityTargetVector[1] < this._maxAngularVelocity) {
@@ -3850,7 +4072,10 @@ define([
                 orientationMatrix,
                 this._currentConfiguration.getFOV(),
                 this._currentConfiguration.getMinFOV(),
-                this._currentConfiguration.getMaxFOV());
+                this._currentConfiguration.getMaxFOV(),
+                this._currentConfiguration.getSpan(),
+                this._currentConfiguration.getMinSpan(),
+                this._currentConfiguration.getMaxSpan());
     };
     Camera.prototype.setConfiguration = function (configuration) {
         this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
@@ -4009,7 +4234,9 @@ define([
             this.rotate(axis, alpha * transitionProgress);
             this.setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
             // calculate FOV
-            this._updatePerspectiveMatrix(this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress);
+            this._updateProjectionMatrix(
+                    this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress,
+                    this._previousConfiguration.getSpan() + (this._currentConfiguration.getSpan() - this._previousConfiguration.getSpan()) * transitionProgress);
             if (this._transitionElapsedTime === this._transitionDuration) {
                 this._previousConfiguration = null;
             }
@@ -4096,8 +4323,8 @@ define([
      */
     LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
         context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
-        var matrix = mat.mul4(mat.mul4(camera.getCameraPositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
-        this.matrix = this.matrix || mat.mul4(camera.getCameraPositionMatrix(), this._orientationMatrix);
+        var matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
+        this.matrix = this.matrix || mat.mul4(camera.getInversePositionMatrix(), this._orientationMatrix);
         this.translationVector = this.translationVector || new Float32Array(vec.normal3(vec.add3(mat.translationVector3(matrix), vec.scaled3(mat.translationVector3(this.matrix), -1))));
         context.getCurrentShader().assignUniforms(context, {
             "u_lightMatrix": function () {
@@ -4144,10 +4371,12 @@ define([
          * @type Camera
          */
         this.activeCamera = null;
+        ///TODO: hardcoded constants
         this.setActiveCamera(new Camera(
                 this,
                 width / height,
-                getFreeCameraConfiguration(false, mat.identity4(), mat.identity4(), 60, 5, 90), ///TODO: hardcoded constants
+                5000,
+                getFreeCameraConfiguration(false, mat.identity4(), mat.identity4(), 60, 5, 90, 0.1, 0.1, 0.1),
                 1000,
                 Camera.prototype.TransitionStyle.smooth,
                 250,
@@ -4184,10 +4413,10 @@ define([
             return self.activeCamera.getCameraMatrix();
         };
         this.uniformValueFunctions.u_cameraOrientationMatrix = function () {
-            return self.activeCamera.getCameraOrientationMatrix();
+            return self.activeCamera.getInverseOrientationMatrix();
         };
         this.uniformValueFunctions.u_projMatrix = function () {
-            return self.activeCamera.getPerspectiveMatrix();
+            return self.activeCamera.getProjectionMatrix();
         };
         this.uniformValueFunctions.u_eyePos = function () {
             return new Float32Array(self.activeCamera.getPositionVector());
@@ -4470,9 +4699,7 @@ define([
     Scene.prototype.render = function (context, dt) {
         var i, j, _length_, gl, camOri, cameraZ, clear;
         application.log("Rendering scene...", 3);
-        if (this._shouldAnimate) {
-            this.activeCamera.update(dt);
-        }
+        this.activeCamera.update(this._shouldAnimate ? dt : 0);
         this._drawnTriangles = 0;
         gl = context.gl;
         // ensuring that transformation matrices are only calculated once for 
