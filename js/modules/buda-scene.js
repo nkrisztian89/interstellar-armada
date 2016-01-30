@@ -2699,6 +2699,13 @@ define([
         this._worldPositionMatrix = null;
     };
     /**
+     * Directly sets a new relative position matrix for this configuration.
+     * @param {Float32Array} value A 4x4 translation matrix.
+     */
+    CameraPositionConfiguration.prototype.setRelativePositionMatrix = function (value) {
+        this._relativePositionMatrix = value;
+    };
+    /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
      * whether this conifugation is set to follow the same list of objects.
      * @param {Array<Object3D>} [objects]
@@ -2808,7 +2815,7 @@ define([
         var translationVector, distance;
         if (!this._fixed) {
             if (this._followedObjects.length === 0) {
-                translationVector = vec.scaled3(vec.mulVec3Mat4(velocityVector, worldOrientationMatrix), -dt / 1000);
+                translationVector = vec.scaled3(vec.mulVec3Mat4(velocityVector, worldOrientationMatrix), dt / 1000);
                 mat.translateByVector(this._relativePositionMatrix, translationVector);
             } else {
                 if (this._turnsAroundObjects) {
@@ -2819,7 +2826,7 @@ define([
                         this._relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
                     }
                 } else {
-                    mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4([1, 0, 0], -Math.PI / 2)), -dt / 1000));
+                    mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4([1, 0, 0], -Math.PI / 2)), dt / 1000));
                 }
             }
         }
@@ -3026,6 +3033,13 @@ define([
         this._worldOrientationMatrix = null;
     };
     /**
+     * Directly sets a new relative orientation matrix for this configuration.
+     * @param {Float32Array} value A 4x4 rotation matrix.
+     */
+    CameraOrientationConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
+        this._relativeOrientationMatrix = value;
+    };
+    /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
      * whether this conifugation is set to follow the same list of objects.
      * @param {Array<Object3D>} [objects]
@@ -3210,8 +3224,8 @@ define([
         }
         if (!this._fixed) {
             if (this._fps) {
-                this._alpha -= angularVelocityVector[1] * dt / 1000;
-                this._beta -= angularVelocityVector[0] * dt / 1000;
+                this._alpha += angularVelocityVector[1] * dt / 1000;
+                this._beta += angularVelocityVector[0] * dt / 1000;
                 this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
                 this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
@@ -3219,15 +3233,15 @@ define([
                 if (this._followedObjects.length > 0) {
                     this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
                             mat.mul4(
-                                    mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), -angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
-                                    mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000)),
-                            mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                                    mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
+                                    mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000)),
+                            mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 } else {
                     this._relativeOrientationMatrix = mat.mul4(this._relativeOrientationMatrix, mat.mul4(
                             mat.mul4(
-                                    mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), -angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
-                                    mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), -angularVelocityVector[0] * Math.PI / 180 * dt / 1000)),
-                            mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), -angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                                    mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
+                                    mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000)),
+                            mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 }
             }
         }
@@ -3312,6 +3326,20 @@ define([
         this._maxSpan = maxSpan;
     }
     makeObject3DMixinClass.call(CameraConfiguration);
+    /**
+     * Sets a new relative (or absolute, depending on the configuration properties) position matrix for this configuration.
+     * @param {Float32Array} value A 4x4 translation matrix.
+     */
+    CameraConfiguration.prototype.setRelativePositionMatrix = function (value) {
+        this._positionConfiguration.setRelativePositionMatrix(value);
+    };
+    /**
+     * Sets a new relative (or absolute, depending on the configuration properties) orientation matrix for this configuration.
+     * @param {Float32Array} value A 4x4 rotation matrix.
+     */
+    CameraConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
+        this._orientationConfiguration.setRelativeOrientationMatrix(value);
+    };
     /**
      * Creates and returns copy with the same configuration settings as this one, but with new references to avoid any change made to the
      * original configuration to affect the new one or vice versa.
@@ -3529,7 +3557,11 @@ define([
      * @param {Number} angularDeceleration The angular deceleration of the camera along one axis when controlled (stopped) by the user. (deg/s^2)
      */
     function Camera(scene, aspect, viewDistance, configuration, transitionDuration, transitionStyle, maxSpeed, acceleration, deceleration, maxSpin, angularAcceleration, angularDeceleration) {
-        Object3D.call(this, mat.identity4(), mat.identity4(), mat.identity4());
+        /**
+         * An internal 3D object representing the position and orientation of the camera.
+         * @type Object3D
+         */
+        this._object3D = new Object3D(mat.identity4(), mat.identity4(), mat.identity4());
         /**
          * A reference to the scene this camera is used to render.
          * @type Scene
@@ -3681,7 +3713,6 @@ define([
          */
         this._inverseOrientationMatrix = null;
     }
-    makeObject3DMixinClass.call(Camera);
     /**
      * @enum {Number}
      * Options about how should the combination of the two configurations be calculated when the camera is transitioning from one
@@ -3706,26 +3737,60 @@ define([
     };
     Object.freeze(Camera.prototype.TransitionStyle);
     /**
-     * @override
-     * Sets a new position matrix for the camera. The update method calculates the position and this should not be called from
-     * outside, but it has to be overridden to clear the cache variables dependent on the position.
+     * Returns the 4x4 translation matrix describing the current position of the camera in world space.
+     * @returns {Float32Array}
+     */
+    Camera.prototype.getPositionMatrix = function () {
+        return this._object3D.getPositionMatrix();
+    };
+    /**
+     * Returns the 3D vector describing the current position of the camera in world space.
+     * @returns {Number[3]}
+     */
+    Camera.prototype.getPositionVector = function () {
+        return this._object3D.getPositionVector();
+    };
+    /**
+     * Returns the 4x4 rotation matrix describing the current orientaton of the camera in world space.
+     * @returns {Float32Array}
+     */
+    Camera.prototype.getOrientationMatrix = function () {
+        return this._object3D.getOrientationMatrix();
+    };
+    /**
+     * Sets a new position matrix for the camera. The update method calculates the position and this should not be called from outside.
      * @param {Float32Array} value
      */
-    Camera.prototype.setPositionMatrix = function (value) {
-        Object3D.prototype.setPositionMatrix.call(this, value);
+    Camera.prototype._setPositionMatrix = function (value) {
+        this._object3D.setPositionMatrix(value);
         this._cameraMatrix = null;
         this._inversePositionMatrix = null;
     };
     /**
-     * @override
-     * Sets a new orientation matrix for the camera. The update method calculates the orientation and this should not be called from
-     * outside, but it has to be overridden to clear the cache variables dependent on the orientation.
+     * Sets a new orientation matrix for the camera. The update method calculates the orientation and this should not be called from outside.
      * @param {Float32Array} value
      */
-    Camera.prototype.setOrientationMatrix = function (value) {
-        Object3D.prototype.setOrientationMatrix.call(this, value);
+    Camera.prototype._setOrientationMatrix = function (value) {
+        this._object3D.setOrientationMatrix(value);
         this._cameraMatrix = null;
         this._inverseOrientationMatrix = null;
+    };
+    /**
+     * Rotates the current orientation around the given axis by the given angle. This directly manipulates the orientation of the camera
+     * and thus should not be used from outside.
+     * @param {Number[3]} axis The 3D vector of the axis.
+     * @param {Number} angle Angle in radians.
+     */
+    Camera.prototype._rotate = function (axis, angle) {
+        this._object3D.rotate(axis, angle);
+        this._setOrientationMatrix(this._object3D.getOrientationMatrix());
+    };
+    /**
+     * Moves the camera to the specified (absolute or relative, depending on the configuration of the camera) position.
+     * @param {Number[3]} positionVector
+     */
+    Camera.prototype.moveToPosition = function (positionVector) {
+        this._currentConfiguration.setRelativePositionMatrix(mat.translation4v(positionVector));
     };
     /**
      * Returns the current camera matrix based on the position and orientation. This will be the inverse transformation
@@ -3745,7 +3810,7 @@ define([
     Camera.prototype.getInversePositionMatrix = function () {
         if (!this._inversePositionMatrix) {
             this._inversePositionMatrix =
-                    mat.inverseOfTranslation4(this.getPositionMatrix());
+                    mat.inverseOfTranslation4(this._object3D.getPositionMatrix());
         }
         return this._inversePositionMatrix;
     };
@@ -3756,7 +3821,7 @@ define([
     Camera.prototype.getInverseOrientationMatrix = function () {
         if (!this._inverseOrientationMatrix) {
             this._inverseOrientationMatrix =
-                    mat.inverseOfRotation4(this.getOrientationMatrix());
+                    mat.inverseOfRotation4(this._object3D.getOrientationMatrix());
         }
         return this._inverseOrientationMatrix;
     };
@@ -3852,23 +3917,11 @@ define([
         this._currentConfiguration.increaseSpan();
         this._projectionMatrix = null;
     };
-    ///TODO: continue refactoring from here
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (yawing) to the left.
+     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     */
     Camera.prototype.turnLeft = function (intensity) {
-        if ((intensity === undefined) || (intensity === null)) {
-            if (this._angularVelocityTargetVector[1] < this._maxAngularVelocity) {
-                this._angularVelocityTargetVector[1] = this._maxAngularVelocity;
-            }
-        } else {
-            this._angularVelocityTargetVector[1] = intensity;
-            this._angularVelocityVector[1] = intensity;
-        }
-    };
-    Camera.prototype.stopLeftTurn = function () {
-        if (this._angularVelocityTargetVector[1] > 0) {
-            this._angularVelocityTargetVector[1] = 0;
-        }
-    };
-    Camera.prototype.turnRight = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
             if (this._angularVelocityTargetVector[1] > -this._maxAngularVelocity) {
                 this._angularVelocityTargetVector[1] = -this._maxAngularVelocity;
@@ -3878,27 +3931,41 @@ define([
             this._angularVelocityVector[1] = -intensity;
         }
     };
-    Camera.prototype.stopRightTurn = function () {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be turning (yawing) to the left.
+     */
+    Camera.prototype.stopLeftTurn = function () {
         if (this._angularVelocityTargetVector[1] < 0) {
             this._angularVelocityTargetVector[1] = 0;
         }
     };
-    Camera.prototype.turnUp = function (intensity) {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (yawing) to the right.
+     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     */
+    Camera.prototype.turnRight = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
-            if (this._angularVelocityTargetVector[0] < this._maxAngularVelocity) {
-                this._angularVelocityTargetVector[0] = this._maxAngularVelocity;
+            if (this._angularVelocityTargetVector[1] < this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[1] = this._maxAngularVelocity;
             }
         } else {
-            this._angularVelocityTargetVector[0] = intensity;
-            this._angularVelocityVector[0] = intensity;
+            this._angularVelocityTargetVector[1] = intensity;
+            this._angularVelocityVector[1] = intensity;
         }
     };
-    Camera.prototype.stopUpTurn = function () {
-        if (this._angularVelocityTargetVector[0] > 0) {
-            this._angularVelocityTargetVector[0] = 0;
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be turning (yawing) to the right.
+     */
+    Camera.prototype.stopRightTurn = function () {
+        if (this._angularVelocityTargetVector[1] > 0) {
+            this._angularVelocityTargetVector[1] = 0;
         }
     };
-    Camera.prototype.turnDown = function (intensity) {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (pitching) upwards.
+     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     */
+    Camera.prototype.turnUp = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
             if (this._angularVelocityTargetVector[0] > -this._maxAngularVelocity) {
                 this._angularVelocityTargetVector[0] = -this._maxAngularVelocity;
@@ -3908,27 +3975,41 @@ define([
             this._angularVelocityVector[0] = -intensity;
         }
     };
-    Camera.prototype.stopDownTurn = function () {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be turning (pitching) upwards.
+     */
+    Camera.prototype.stopUpTurn = function () {
         if (this._angularVelocityTargetVector[0] < 0) {
             this._angularVelocityTargetVector[0] = 0;
         }
     };
-    Camera.prototype.rollLeft = function (intensity) {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (pitching) downwards.
+     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     */
+    Camera.prototype.turnDown = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
-            if (this._angularVelocityTargetVector[2] < this._maxAngularVelocity) {
-                this._angularVelocityTargetVector[2] = this._maxAngularVelocity;
+            if (this._angularVelocityTargetVector[0] < this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[0] = this._maxAngularVelocity;
             }
         } else {
-            this._angularVelocityTargetVector[2] = intensity;
-            this._angularVelocityVector[2] = intensity;
+            this._angularVelocityTargetVector[0] = intensity;
+            this._angularVelocityVector[0] = intensity;
         }
     };
-    Camera.prototype.stopLeftRoll = function () {
-        if (this._angularVelocityTargetVector[2] > 0) {
-            this._angularVelocityTargetVector[2] = 0;
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be turning (pitching) downwards.
+     */
+    Camera.prototype.stopDownTurn = function () {
+        if (this._angularVelocityTargetVector[0] > 0) {
+            this._angularVelocityTargetVector[0] = 0;
         }
     };
-    Camera.prototype.rollRight = function (intensity) {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be rolling to the left.
+     * @param {Number|null} [intensity] An optional intensity with which the roll should be carried out.
+     */
+    Camera.prototype.rollLeft = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
             if (this._angularVelocityTargetVector[2] > -this._maxAngularVelocity) {
                 this._angularVelocityTargetVector[2] = -this._maxAngularVelocity;
@@ -3938,11 +4019,40 @@ define([
             this._angularVelocityVector[2] = -intensity;
         }
     };
-    Camera.prototype.stopRightRoll = function () {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be rolling to the left.
+     */
+    Camera.prototype.stopLeftRoll = function () {
         if (this._angularVelocityTargetVector[2] < 0) {
             this._angularVelocityTargetVector[2] = 0;
         }
     };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be rolling to the right.
+     * @param {Number|null} [intensity] An optional intensity with which the roll should be carried out.
+     */
+    Camera.prototype.rollRight = function (intensity) {
+        if ((intensity === undefined) || (intensity === null)) {
+            if (this._angularVelocityTargetVector[2] < this._maxAngularVelocity) {
+                this._angularVelocityTargetVector[2] = this._maxAngularVelocity;
+            }
+        } else {
+            this._angularVelocityTargetVector[2] = intensity;
+            this._angularVelocityVector[2] = intensity;
+        }
+    };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be rolling to the right.
+     */
+    Camera.prototype.stopRightRoll = function () {
+        if (this._angularVelocityTargetVector[2] > 0) {
+            this._angularVelocityTargetVector[2] = 0;
+        }
+    };
+    /**
+     * Calculates the angular velocity for this simulation step based on the control inputs that were issued to the camera in this step.
+     * @param {Number} dt The time that has passed since the last simulation step (in milliseconds)
+     */
     Camera.prototype._updateAngularVelocity = function (dt) {
         var i;
         for (i = 0; i < this._angularVelocityVector.length; i++) {
@@ -3973,66 +4083,106 @@ define([
             }
         }
     };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be moving to the left.
+     */
     Camera.prototype.moveLeft = function () {
-        if (this._velocityTargetVector[0] < this._maxSpeed) {
-            this._velocityTargetVector[0] = this._maxSpeed;
-        }
-    };
-    Camera.prototype.stopLeftMove = function () {
-        if (this._velocityTargetVector[0] > 0) {
-            this._velocityTargetVector[0] = 0;
-        }
-    };
-    Camera.prototype.moveRight = function () {
         if (this._velocityTargetVector[0] > -this._maxSpeed) {
             this._velocityTargetVector[0] = -this._maxSpeed;
         }
     };
-    Camera.prototype.stopRightMove = function () {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be moving to the left.
+     */
+    Camera.prototype.stopLeftMove = function () {
         if (this._velocityTargetVector[0] < 0) {
             this._velocityTargetVector[0] = 0;
         }
     };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be moving to the right.
+     */
+    Camera.prototype.moveRight = function () {
+        if (this._velocityTargetVector[0] < this._maxSpeed) {
+            this._velocityTargetVector[0] = this._maxSpeed;
+        }
+    };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be moving to the right.
+     */
+    Camera.prototype.stopRightMove = function () {
+        if (this._velocityTargetVector[0] > 0) {
+            this._velocityTargetVector[0] = 0;
+        }
+    };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be moving upwards.
+     */
     Camera.prototype.moveUp = function () {
-        if (this._velocityTargetVector[1] > -this._maxSpeed) {
-            this._velocityTargetVector[1] = -this._maxSpeed;
-        }
-    };
-    Camera.prototype.stopUpMove = function () {
-        if (this._velocityTargetVector[1] < 0) {
-            this._velocityTargetVector[1] = 0;
-        }
-    };
-    Camera.prototype.moveDown = function () {
         if (this._velocityTargetVector[1] < this._maxSpeed) {
             this._velocityTargetVector[1] = this._maxSpeed;
         }
     };
-    Camera.prototype.stopDownMove = function () {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be moving upwards.
+     */
+    Camera.prototype.stopUpMove = function () {
         if (this._velocityTargetVector[1] > 0) {
             this._velocityTargetVector[1] = 0;
         }
     };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be moving downwards.
+     */
+    Camera.prototype.moveDown = function () {
+        if (this._velocityTargetVector[1] > -this._maxSpeed) {
+            this._velocityTargetVector[1] = -this._maxSpeed;
+        }
+    };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be moving downwards.
+     */
+    Camera.prototype.stopDownMove = function () {
+        if (this._velocityTargetVector[1] < 0) {
+            this._velocityTargetVector[1] = 0;
+        }
+    };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be moving forward.
+     */
     Camera.prototype.moveForward = function () {
-        if (this._velocityTargetVector[2] < this._maxSpeed) {
-            this._velocityTargetVector[2] = this._maxSpeed;
-        }
-    };
-    Camera.prototype.stopForwardMove = function () {
-        if (this._velocityTargetVector[2] > 0) {
-            this._velocityTargetVector[2] = 0;
-        }
-    };
-    Camera.prototype.moveBackward = function () {
         if (this._velocityTargetVector[2] > -this._maxSpeed) {
             this._velocityTargetVector[2] = -this._maxSpeed;
         }
     };
-    Camera.prototype.stopBackwardMove = function () {
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be moving forward.
+     */
+    Camera.prototype.stopForwardMove = function () {
         if (this._velocityTargetVector[2] < 0) {
             this._velocityTargetVector[2] = 0;
         }
     };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera wants it to be moving backwards.
+     */
+    Camera.prototype.moveBackward = function () {
+        if (this._velocityTargetVector[2] < this._maxSpeed) {
+            this._velocityTargetVector[2] = this._maxSpeed;
+        }
+    };
+    /**
+     * Calling this in a simulation step means that in this step, the controller of the camera does not want it to be moving backwards.
+     */
+    Camera.prototype.stopBackwardMove = function () {
+        if (this._velocityTargetVector[2] > 0) {
+            this._velocityTargetVector[2] = 0;
+        }
+    };
+    /**
+     * Calculates the velocity for this simulation step based on the control inputs that were issued to the camera in this step.
+     * @param {Number} dt The time that has passed since the last simulation step (in milliseconds)
+     */
     Camera.prototype._updateVelocity = function (dt) {
         var i;
         for (i = 0; i < this._controlledVelocityVector.length; i++) {
@@ -4063,6 +4213,7 @@ define([
             }
         }
     };
+    ///TODO: continue refactoring from here
     Camera.prototype._getFreeCameraConfiguration = function (positionMatrix, orientationMatrix) {
         positionMatrix = positionMatrix || this.getPositionMatrix();
         orientationMatrix = orientationMatrix || this.getOrientationMatrix();
@@ -4193,7 +4344,7 @@ define([
             startPositionVector = this._previousConfiguration.getPositionVector();
             endPositionVector = this._currentConfiguration.getPositionVector();
             previousPositionVector = this.getPositionVector();
-            this.setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
+            this._setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
             this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), -1000 / dt);
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
@@ -4229,10 +4380,10 @@ define([
                 gamma -= 2 * Math.PI;
             }
             // now that the two rotations are calculated, we can interpolate the transformation using the angles
-            this.setOrientationMatrix(mat.identity4());
-            this.rotate(axis2, gamma * transitionProgress);
-            this.rotate(axis, alpha * transitionProgress);
-            this.setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
+            this._setOrientationMatrix(mat.identity4());
+            this._rotate(axis2, gamma * transitionProgress);
+            this._rotate(axis, alpha * transitionProgress);
+            this._setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
             // calculate FOV
             this._updateProjectionMatrix(
                     this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress,
@@ -4245,8 +4396,8 @@ define([
             this._updateAngularVelocity(dt);
             this._currentConfiguration.update(this._controlledVelocityVector, this._angularVelocityVector, dt);
             this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
-            this.setPositionMatrix(this._currentConfiguration.getPositionMatrix());
-            this.setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
+            this._setPositionMatrix(this._currentConfiguration.getPositionMatrix());
+            this._setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
             this.setFOV(this._currentConfiguration.getFOV());
             if (this._currentConfiguration.positionFollowsObjects()) {
                 if (this._previousFollowedPositionVector) {

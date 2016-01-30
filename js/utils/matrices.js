@@ -193,7 +193,7 @@ define([
             0.0, 0.0, 0.0, 1.0]
                 );
     };
-    
+
     /**
      * Creates a 4x4 transformation matrix describing a translation and a rotation based on
      * two separate matrices, only the translation / rotation part of which are taken into
@@ -491,7 +491,7 @@ define([
     mat.getRowC43 = function (m) {
         return [m[8], m[9], m[10]];
     };
-    
+
     /**
      * Returns the opposite of the first 3 elements of the third row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
@@ -796,21 +796,22 @@ define([
      * @returns {Float32Array} The calculated inverse 4x4 matrix.
      */
     mat.inverseOfTranslation4 = function (m) {
-        return mat.translation4(-m[12], -m[13], -m[14]);
+        return new Float32Array([
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            -m[12], -m[13], -m[14], 1.0
+        ]);
     };
 
     /**
-     * Calculates and returns the inverse of the top left 3x3 block of a 4x4 matrix,
-     * but complemented to 4x4 matrix (using identity matrix values for the rest part).
-     * Can be used to calculate the inverse of a rotation (or scaling) described in
-     * the 3x3 part of a 4x4 matrix without letting the optional translation
-     * interfere with it.
-     * @param {Float32Array} m The input 4x4 matrix.
-     * @returns {Float32Array} The calculated inverse, complemented 4x4 matrix.
+     * Calculates and returns the inverse of a 4x4 rotation matrix, using the fact that
+     * it coincides with its transpose. It is the same as transposed4, but the different
+     * name of the function can clarify the role of it when it is used.
+     * @param {Float32Array} m The input 4x4 rotation matrix.
+     * @returns {Float32Array} The calculated inverse (transpose) rotation matrix.
      */
-    mat.inverseOfRotation4 = function (m) {
-        return mat.matrix4from3(mat.inverse3(mat.matrix3from4(m)));
-    };
+    mat.inverseOfRotation4 = mat.transposed4;
 
     /**
      * A computationally efficient function to return the inverse of a 4x4 scaling

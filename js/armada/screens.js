@@ -679,13 +679,14 @@ define([
                                 (this._itemLengthInMeters).toPrecision(3)
                                 : Math.round(this._itemLengthInMeters)) +
                         " m<br/>" +
+                        "Armor: " + shipClass.getHitpoints() + "</br>" +
                         "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
                         "Thrusters: " + shipClass.getThrusterSlots().length);
                 // this will create the GL context if needed or update it with the new
                 // data if it already exists
                 this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
-                this._scene.activeCamera.setPositionMatrix(mat.translation4(0, 0, this._item.getVisualModel().getScaledSize()));
+                this._scene.activeCamera.moveToPosition([0, 0, this._item.getVisualModel().getScaledSize()]);
                 if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
                     this._scene.setShadowMapRanges([
                         0.5 * this._item.getVisualModel().getScaledSize(),
