@@ -309,7 +309,7 @@ define([
             armada.resources().executeWhenReady(function () {
                 this._battleScene.setShadowMapping({
                     enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
-                    shader: armada.resources().getShader("shadowMapping").getManagedShader(),
+                    shader: armada.graphics().getShadowMapping() ? armada.resources().getShader("shadowMapping").getManagedShader() : null,
                     textureSize: armada.graphics().getShadowQuality(),
                     ranges: armada.graphics().getShadowRanges(),
                     depthRatio: armada.graphics().getShadowDepthRatio()
@@ -320,7 +320,7 @@ define([
                 this.updateStatus("", 100);
                 application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                 this._smallHeader.setContent("running an early test of Interstellar Armada, version: " + armada.getVersion());
-                armada.control().switchToSpectatorMode();
+                armada.control().switchToSpectatorMode(false);
                 this._battleCursor = document.body.style.cursor;
                 this.showMessage("Ready!");
                 this.getLoadingBox().hide();
@@ -520,7 +520,7 @@ define([
             if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
                 this._scene.setShadowMapping({
                     enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
-                    shader: armada.resources().getShader("shadowMapping").getManagedShader(),
+                    shader: armada.graphics().getShadowMapping() ? armada.resources().getShader("shadowMapping").getManagedShader() : null,
                     textureSize: armada.graphics().getShadowQuality(),
                     ranges: [],
                     depthRatio: armada.graphics().getShadowDepthRatio()

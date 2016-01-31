@@ -1304,13 +1304,15 @@ define([
      */
     ObjectView.prototype.createCameraConfigurationForObject = function (followedObject) {
         var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._followOrientationMatrix);
-        positionConfiguration = new budaScene.CameraPositionConfiguration(!this._movable,
+        positionConfiguration = new budaScene.CameraPositionConfiguration(
+                !this._movable,
                 this._rotationCenterIsObject,
                 this._followsPosition ? [followedObject] : [],
                 this._followPositionMatrix,
                 1, ///TODO: hardcoded
                 100);///TODO: hardcoded
-        orientationConfiguration = new budaScene.CameraOrientationConfiguration(!this._turnable,
+        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+                !this._turnable,
                 this._lookAtSelf || this._lookAtTarget,
                 this._fps,
                 this._lookAtTarget ? [] : [followedObject],
@@ -1323,7 +1325,86 @@ define([
         return new budaScene.CameraConfiguration(
                 this._name,
                 positionConfiguration, orientationConfiguration,
-                this._fov, 5, 160, ///TODO: hardcoded
+                this._fov, 5, 100, ///TODO: hardcoded
+                0.1, 0.1, 0.1);///TODO: hardcoded
+    };
+    // ##############################################################################
+    /**
+     * @class Describes the parameters of a certain view of a scene, based on which a camera configuration can be created and added to the
+     * scene
+     * @param {Object} dataJSON The JSON object containing the properties of this view to initialize from.
+     */
+    function SceneView(dataJSON) {
+        /**
+         * A desciptive name for the view
+         * @type String
+         */
+        this._name = dataJSON.name || application.crash();
+        /**
+         * The Field Of View of the view in degrees.
+         * @type Number
+         */
+        this._fov = dataJSON.fov || application.crash();
+        /**
+         * Whether turning the view should happen in FPS mode (turning around the Z axis of the world and its own X axis)
+         * @type Boolean
+         */
+        this._fps = (typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false;
+        /**
+         * Whether the object orientation should always point towards the center of all objects in the scene
+         * @type Boolean
+         */
+        this._turnAroundAll = (typeof dataJSON.turnAroundAll) === "boolean" ? dataJSON.turnAroundAll : false;
+        /**
+         * Whether the position of the view is changeable by the player.
+         * @type Boolean
+         */
+        this._movable = (typeof dataJSON.movable) === "boolean" ? dataJSON.movable : true;
+        /**
+         * Whether the direction of the view is changeable by the player.
+         * @type Boolean
+         */
+        this._turnable = (typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : true;
+        /**
+         * The translation matrix describing the position of the camera in the scene (or relative to the center of all objects)
+         * @type Float32Array
+         */
+        this._positionMatrix = mat.translation4v(dataJSON.position || application.crash());
+        /**
+         * The rotation matrix describing the world orientation of the camera
+         * @type Float32Array
+         */
+        this._orientationMatrix = mat.rotation4FromJSON(dataJSON.rotations);
+    }
+    /**
+     * Creates and returns a camera configuration set up for according to the view's parameters.
+     * @param {Scene} scene The scene to add the configuration to.
+     * @returns {CameraConfiguration} The created camera configuration.
+     */
+    SceneView.prototype.createCameraConfigurationForScene = function (scene) {
+        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._orientationMatrix);
+        positionConfiguration = new budaScene.CameraPositionConfiguration(
+                !this._movable,
+                this._turnAroundAll,
+                this._turnAroundAll ? scene.getAll3DObjects() : [],
+                this._positionMatrix,
+                1, ///TODO: hardcoded
+                100);///TODO: hardcoded
+        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+                !this._turnable,
+                false,
+                this._fps,
+                [],
+                this._orientationMatrix,
+                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
+                -90, 90, ///TODO: hardcoded
+                -90, 90, ///TODO: hardcoded
+                budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.positionFollowedObjects, ///TODO: hardcoded
+                budaScene.CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld);///TODO: hardcoded
+        return new budaScene.CameraConfiguration(
+                this._name,
+                positionConfiguration, orientationConfiguration,
+                this._fov, 5, 100, ///TODO: hardcoded
                 0.1, 0.1, 0.1);///TODO: hardcoded
     };
     // ##############################################################################
@@ -1606,6 +1687,7 @@ define([
         PropulsionClass: PropulsionClass,
         EquipmentProfile: EquipmentProfile,
         SpacecraftType: SpacecraftType,
+        SceneView: SceneView,
         SpacecraftClass: SpacecraftClass
     };
 });

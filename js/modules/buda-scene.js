@@ -2738,6 +2738,11 @@ define([
             for (i = 0; i < this._followedObjects.length; i++) {
                 positionVector = vec.add3(positionVector, this._followedObjects[i].getPositionVector());
             }
+            positionVector = [
+                positionVector[0] / this._followedObjects.length,
+                positionVector[1] / this._followedObjects.length,
+                positionVector[2] / this._followedObjects.length
+            ];
         }
         return positionVector;
     };
@@ -2754,6 +2759,10 @@ define([
             for (i = 0; i < this._followedObjects.length; i++) {
                 mat.translateByMatrix(positionMatrix, this._followedObjects[i].getPositionMatrix());
             }
+            positionMatrix = mat.translation4(
+                    positionMatrix[12] / this._followedObjects.length,
+                    positionMatrix[13] / this._followedObjects.length,
+                    positionMatrix[14] / this._followedObjects.length);
         }
         return positionMatrix;
     };
@@ -2772,12 +2781,28 @@ define([
         return orientation;
     };
     /**
+     * Removes the destroyed objects from the list of followed objects.
+     */
+    CameraPositionConfiguration.prototype._cleanupFollowedObjects = function () {
+        var i, j, k;
+        for (i = 0; i < this._followedObjects.length; i++) {
+            j = i;
+            k = 0;
+            while ((j < this._followedObjects.length) && ((!this._followedObjects[j]) || (this._followedObjects[j].canBeReused() === true))) {
+                j++;
+                k++;
+            }
+            this._followedObjects.splice(i, k);
+        }
+    };
+    /**
      * Calculates and updates the internally stored world position matrix (which is nulled out automatically whenever one of the values it 
      * depends on changes, therefore serving as a cache variable)
      * @param {Float32Array} worldOrientationMatrix The current orientation of the camera in world coordinates - needed for configurations
      * that turn around the followed object, as in those cases the relative portion of the position is calculated based on it
      */
     CameraPositionConfiguration.prototype._calculateWorldPositionMatrix = function (worldOrientationMatrix) {
+        this._cleanupFollowedObjects();
         if (this._followedObjects.length > 0) {
             if (!this._turnsAroundObjects) {
                 this._worldPositionMatrix = mat.mul4(
@@ -3110,6 +3135,21 @@ define([
         return orientation;
     };
     /**
+     * Removes the destroyed objects from the list of followed objects.
+     */
+    CameraOrientationConfiguration.prototype._cleanupFollowedObjects = function () {
+        var i, j, k;
+        for (i = 0; i < this._followedObjects.length; i++) {
+            j = i;
+            k = 0;
+            while ((j < this._followedObjects.length) && ((!this._followedObjects[j]) || (this._followedObjects[j].canBeReused() === true))) {
+                j++;
+                k++;
+            }
+            this._followedObjects.splice(i, k);
+        }
+    };
+    /**
      * Calculates and updates the internally stored world orientation matrix (which is nulled out automatically whenever one of the values it 
      * depends on changes, therefore serving as a cache variable)
      * @param {Float32Array} worldPositionMatrix The current position of the camera in world coordinates - needed for configurations
@@ -3132,6 +3172,7 @@ define([
                         this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
                     }
                 }.bind(this);
+        this._cleanupFollowedObjects();
         switch (this._baseOrientation) {
             case this.BaseOrientation.world:
                 baseOrientationMatrix = null;
@@ -4734,14 +4775,6 @@ define([
         this.uniformValueFunctions.u_shadows = function () {
             return self._shadowMappingEnabled;
         };
-        ///TODO: temporary test
-        this.addCameraConfiguration(getFreeCameraConfiguration(
-                true,
-                mat.translation4(-400, 200, -350),
-                mat.rotation4([0, 0, 1], Math.PI / 2), //mat.identity4(),
-                //mat.mul4(mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2), mat.rotation4([0, 1, 0], -Math.PI / 2)), mat.rotation4([1, 0, 0], -Math.PI / 2)),
-                60, 10, 90,
-                0.1, 0.1, 0.1));
     }
 
     Scene.prototype.setShadowMapping = function (params) {
@@ -4823,6 +4856,23 @@ define([
     Scene.prototype.clearNodes = function () {
         this._backgroundObjects = [];
         this.objects = [];
+    };
+    Scene.prototype.getAllObjects = function () {
+        var i, result = [];
+        for (i = 0; i < this.objects.length; i++) {
+            result.push(this.object[i].getRenderableObject());
+        }
+        return result;
+    };
+    Scene.prototype.getAll3DObjects = function () {
+        var i, o, result = [];
+        for (i = 0; i < this.objects.length; i++) {
+            o = this.objects[i].getRenderableObject();
+            if (o.getPositionMatrix && o.getOrientationMatrix) {
+                result.push(o);
+            }
+        }
+        return result;
     };
     /**
      * 

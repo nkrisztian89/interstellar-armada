@@ -1647,7 +1647,7 @@ define([
         });
         // switching to spectator mode
         this.setActionFunction("switchToSpectatorMode", true, function () {
-            armada.control().switchToSpectatorMode();
+            armada.control().switchToSpectatorMode(true);
         });
         // toggling the visibility of hitboxes
         this.setActionFunction("toggleHitboxVisibility", true, function () {
@@ -2338,10 +2338,13 @@ define([
     /**
      * Switches to spectator mode, in which the player can freely move the camera
      * around or follow and inspect any object in the scene.
+     * @param {Boolean} [freeCamera=false] Whether to set the camera free at the current position and location.
      */
-    ControlContext.prototype.switchToSpectatorMode = function () {
+    ControlContext.prototype.switchToSpectatorMode = function (freeCamera) {
         this._fighterController.setControlledSpacecraft(null);
-        this._cameraController.setToFreeCamera();
+        if (freeCamera) {
+            this._cameraController.setToFreeCamera();
+        }
         this.enableAction("followNext");
         this.enableAction("followPrevious");
         this.enableAction("cameraMoveLeft");

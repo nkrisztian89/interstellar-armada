@@ -2547,22 +2547,17 @@ define([
         this._environment = null;
         /**
          * Whether this level has an own environment created by itself (described in the level JSON)
-         * or just refers one from the common environments.
+         * or just refers one from the common environments. (if the latter is the case, the referred environment cannot be destroyed when
+         * this level is destroyed)
          * @type Boolean
          */
         this._ownsEnvironment = false;
         /**
-         * The starting position of the camera if a scene is generated for this 
-         * level.
-         * @type Float32Array
+         * The list of views that will be used to add camera configurations to the scene of this level. The first element of this list
+         * will be the starting camera configuration.
+         * @type SceneView[]
          */
-        this._cameraStartPositionMatrix = null;
-        /**
-         * The starting orientation of the camera if a scene is generated for this 
-         * level.
-         * @type Float32Array
-         */
-        this._cameraStartOrientationMatrix = null;
+        this._views = null;
         /**
          * The list of spacecrafts that are placed on the map of this level.
          * @type Spacecraft[]
@@ -2623,7 +2618,6 @@ define([
     Level.prototype.loadFromJSON = function (dataJSON) {
         var i, spacecraft;
         application.log("Loading level from JSON file...", 2);
-
         if (dataJSON.environment.createFrom) {
             this._environment = armada.logic().getEnvironment(dataJSON.environment.createFrom);
             this._ownsEnvironment = false;
@@ -2631,19 +2625,12 @@ define([
             this._environment = new Environment(dataJSON.environment);
             this._ownsEnvironment = true;
         }
-
-        this._cameraStartPositionMatrix = mat.identity4();
-        this._cameraStartOrientationMatrix = mat.identity4();
-
-        if (dataJSON.camera) {
-            if (dataJSON.camera.position) {
-                this._cameraStartPositionMatrix = mat.translation4v(dataJSON.camera.position);
-            }
-            if (dataJSON.camera.rotations) {
-                this._cameraStartOrientationMatrix = mat.rotation4FromJSON(dataJSON.camera.rotations);
+        this._views = [];
+        if (dataJSON.views) {
+            for (i = 0; i < dataJSON.views.length; i++) {
+                this._views.push(new classes.SceneView(dataJSON.views[i]));
             }
         }
-
         this._projectiles = [];
         this._spacecrafts = [];
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
@@ -2654,7 +2641,6 @@ define([
             }
             this._spacecrafts.push(spacecraft);
         }
-
         application.log("Level successfully loaded.", 2);
     };
     /**
@@ -2707,7 +2693,7 @@ define([
     /**
      * Adds renderable objects representing all visual elements of the level to
      * the passed scene.
-     * @param {budaScene} scene
+     * @param {Scene} scene
      */
     Level.prototype.addToScene = function (scene) {
         var i;
@@ -2724,10 +2710,15 @@ define([
             });
             this._hitObjects.push(this._spacecrafts[i]);
         }
-        if (this._cameraStartPositionMatrix || this._cameraStartOrientationMatrix) {
-            scene.activeCamera.setToFreeCamera(false, this._cameraStartPositionMatrix, this._cameraStartOrientationMatrix);
-            scene.activeCamera.update(0);
-        }
+        armada.resources().executeWhenReady(function () {
+            for (i = 0; i < this._views.length; i++) {
+                scene.addCameraConfiguration(this._views[i].createCameraConfigurationForScene(scene));
+                if (i === 0) {
+                    scene.activeCamera.followNode(null, 0);
+                    scene.activeCamera.update(0);
+                }
+            }
+        }.bind(this));
     };
     /**
      * Toggles the visibility of the hitboxes of all spacecrafts in the level.
