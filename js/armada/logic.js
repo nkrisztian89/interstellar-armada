@@ -2311,8 +2311,7 @@ define([
      * correspond to the different views fixed on this spacecraft in the scene.
      */
     Spacecraft.prototype.resetViewCameras = function () {
-        ///TODO: implement new version
-        //this._visualModel.getNode().resetViewCameras();
+        this._visualModel.getNode().resetCameraConfigurations();
     };
     /**
      * Simulates what happens when a given amount of damage is dealt to the spacecraft at a specific

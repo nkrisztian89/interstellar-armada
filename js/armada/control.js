@@ -1909,6 +1909,9 @@ define([
         this.setActionFunction("followPrevious", true, function () {
             self._controlledCamera.followPreviousNode(true);
         });
+        this.setActionFunction("resetView", true, function () {
+            self._controlledCamera.transitionToConfigurationDefaults();
+        });
     }
 
     CameraController.prototype = new Controller();

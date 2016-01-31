@@ -231,6 +231,9 @@
                     }, {
                         "name": "changeView",
                         "description": "Change view of currently followed spacecraft"
+                    }, {
+                        "name": "resetView",
+                        "description": "Reset the current view to its original state"
                     }
                 ]
             }
@@ -344,6 +347,9 @@
                     }, {
                         "action": "followPrevious",
                         "key": "x"
+                    }, {
+                        "action": "resetView",
+                        "key": "b"
                     }, {
                         "action": "pause",
                         "key": "p"

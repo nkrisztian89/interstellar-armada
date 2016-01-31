@@ -688,6 +688,15 @@ define([
         return result;
     };
     /**
+     * Resets the default settings of all the associated camera configurations.
+     */
+    RenderableNode.prototype.resetCameraConfigurations = function () {
+        var i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            this._cameraConfigurations[i].resetToDefaults();
+        }
+    };
+    /**
      * Resets the held object and all subnodes. Called at the beginning of each
      * frame.
      */
@@ -4259,6 +4268,9 @@ define([
         }
         positionMatrix = positionMatrix || this.getPositionMatrix();
         orientationMatrix = orientationMatrix || this.getOrientationMatrix();
+        if (fps) {
+            orientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], Math.PI / 2), orientationMatrix);
+        }
         return getFreeCameraConfiguration(
                 fps,
                 positionMatrix,
@@ -4347,6 +4359,17 @@ define([
         var configuration = this._currentConfiguration;
         this.setConfiguration(this._getFreeCameraConfiguration());
         this.startTransitionToConfiguration(configuration, duration, style);
+    };
+    /**
+     * Start a transition to the same configuration, but with its default settings reset. This preserves the reference to the configuration
+     * and does not create a copy.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     */
+    Camera.prototype.transitionToConfigurationDefaults = function (duration, style) {
+        this._currentConfiguration.resetToDefaults();
+        this.transitionToSameConfiguration(duration, style);
     };
     /**
      * Start a transition to the first camera configuration associated with the passed renderable node, if any.
