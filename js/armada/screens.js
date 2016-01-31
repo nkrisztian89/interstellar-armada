@@ -11,6 +11,7 @@
 
 define([
     "utils/utils",
+    "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/components",
@@ -19,7 +20,7 @@ define([
     "armada/armada",
     "armada/logic",
     "armada/control"
-], function (utils, mat, application, components, screens, budaScene, armada, logic, control) {
+], function (utils, vec, mat, application, components, screens, budaScene, armada, logic, control) {
     "use strict";
 
     /**
@@ -247,6 +248,7 @@ define([
         var craft;
         screens.HTMLScreenWithCanvases.prototype.render.call(this);
         this._stats.setContent(
+                //vec.toString3(this._battleScene.activeCamera.getVelocityVector()) + "</br>" +
                 this.getFPS() + "<br/>" +
                 this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
         craft = this._level.getPilotedSpacecraft();

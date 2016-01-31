@@ -344,6 +344,10 @@
             "position": [0, -40, 0],
             "rotations": [
                 {
+                    "axis": "Z",
+                    "degrees": 45
+                },
+                {
                     "axis": "X",
                     "degrees": 45
                 }

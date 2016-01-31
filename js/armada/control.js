@@ -1904,10 +1904,10 @@ define([
         });
         // following another object
         this.setActionFunction("followNext", true, function () {
-            self._controlledCamera.followNextObject();
+            self._controlledCamera.followNextNode(true);
         });
         this.setActionFunction("followPrevious", true, function () {
-            self._controlledCamera.followPreviousObject();
+            self._controlledCamera.followPreviousNode(true);
         });
     }
 

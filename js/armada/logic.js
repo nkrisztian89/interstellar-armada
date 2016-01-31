@@ -283,7 +283,7 @@ define([
     DustCloud.prototype.simulate = function (camera) {
         var i, n;
         n = this._class.getNumberOfParticles();
-        this._visualModel.setShift(-camera.getVelocityVector()[0], -camera.getVelocityVector()[1], -camera.getVelocityVector()[2]);
+        this._visualModel.setShift(camera.getVelocityVector()[0], camera.getVelocityVector()[1], camera.getVelocityVector()[2]);
         for (i = 0; i < n; i++) {
             this._particles[i].simulate(camera);
         }

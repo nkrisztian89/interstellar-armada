@@ -3111,13 +3111,17 @@ define([
      */
     CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
         var baseOrientationMatrix, dirTowardsObject, axis,
-                calculateRelative = function (followedOrienationMatrix) {
+                calculateRelative = function (followedOrientationMatrix) {
                     // look in direction y instead of z:
                     this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2),
-                            mat.mul4(this._relativeOrientationMatrix, followedOrienationMatrix));
+                            mat.mul4(this._relativeOrientationMatrix, followedOrientationMatrix));
                 }.bind(this),
                 calculateAbsolute = function () {
-                    this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+                    if (this._fps) {
+                        this._worldOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2), mat.matrix4(this._relativeOrientationMatrix));
+                    } else {
+                        this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+                    }
                 }.bind(this);
         switch (this._baseOrientation) {
             case this.BaseOrientation.world:
@@ -4266,19 +4270,28 @@ define([
                 this._currentConfiguration.getMinSpan(),
                 this._currentConfiguration.getMaxSpan());
     };
-    ///TODO: continue refactoring from here
+    /**
+     * Directly sets a new configuration to use for this camera. The new configuration is applied instantly, without transition.
+     * @param {CameraConfiguration} configuration 
+     */
     Camera.prototype.setConfiguration = function (configuration) {
-        this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
+        this._currentConfiguration = configuration;
         this._previousConfiguration = null;
     };
     /**
-     * 
+     * Initiates a new transition from the current configuration to the given one. If a transition already is in progress, the new 
+     * transition will start from a new, free camera configuration set to the current position and orientation of the camera.
      * @param {CameraConfiguration} configuration
-     * @param {Number} duration
-     * @param {Number} style Camera.prototype.TransitionStyle
+     * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
+     * is given, the new configuration will be applied instantly.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * default will be used.
      */
     Camera.prototype.startTransitionToConfiguration = function (configuration, duration, style) {
-        if ((duration === 0) || !configuration) {
+        if (this._currentConfiguration === configuration) {
+            return;
+        }
+        if (duration === 0) {
             this.setConfiguration(configuration);
         } else {
             if (this._previousConfiguration && this._currentConfiguration) {
@@ -4292,48 +4305,125 @@ define([
             this._transitionStyle = style === undefined ? this._defaultTransitionStyle : style;
         }
     };
-    Camera.prototype.setToFreeCamera = function (fps, positionMatrix, orientationMatrix, duration, style) {
+    /**
+     * Starts a transition to a free camera configuration (with absolute position and orientation both controllable) with the given
+     * parameters.
+     * @param {Boolean} [fps] Whether the new camera configuration should be set to FPS-mode. If not given, the current configuration 
+     * setting will be used.
+     * @param {Float32Array} [positionMatrix] The position matrix of the new configuration. If not given, the current world position will be
+     * used.
+     * @param {Float32Array} [orientationMatrix] The orientation matrix of the new configuration. If not given, the current world 
+     * orientation will be used.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     */
+    Camera.prototype.transitionToFreeCamera = function (fps, positionMatrix, orientationMatrix, duration, style) {
         this._followedNode = null;
-        this.startTransitionToConfiguration(this._getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix), duration || 0, style);
+        this.startTransitionToConfiguration(this._getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix), duration, style);
     };
+    /**
+     * Instantly sets a new, free camera configuration (with absolute position and orientation both controllable) with the given parameters
+     * for this camera.
+     * @param {Boolean} [fps] Whether the new camera configuration should be set to FPS-mode. If not given, the current configuration 
+     * setting will be used.
+     * @param {Float32Array} [positionMatrix] The position matrix of the new configuration. If not given, the current world position will be
+     * used.
+     * @param {Float32Array} [orientationMatrix] The orientation matrix of the new configuration. If not given, the current world 
+     * orientation will be used.
+     */
+    Camera.prototype.setToFreeCamera = function (fps, positionMatrix, orientationMatrix) {
+        this.transitionToFreeCamera(fps, positionMatrix, orientationMatrix, 0);
+    };
+    /**
+     * Start a new transition from a free camera at the current position and orientation towards the configuration that was already active.
+     * This is useful when some property of the current configuration changes, as with this method a smoother transition to the recalculated
+     * position / orientation can be displayed.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     */
     Camera.prototype.transitionToSameConfiguration = function (duration, style) {
         var configuration = this._currentConfiguration;
         this.setConfiguration(this._getFreeCameraConfiguration());
-        this.startTransitionToConfiguration(configuration, duration || 0, style);
+        this.startTransitionToConfiguration(configuration, duration, style);
     };
     /**
-     * 
-     * @param {RenderableNode} node
-     * @param {Number} duration
-     * @param {Number} style Camera.prototype.TransitionStyle
+     * Start a transition to the first camera configuration associated with the passed renderable node, if any.
+     * @param {RenderableNode} [node] If no node is given, the method will start a transition to the first camera configuration associated
+     * with the scene itself.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     * @returns {Boolean} Whether a configuration change or transition has been initiated. If the given node (or the scene) does not have
+     * any associated camera configurations, this will be false.
      */
     Camera.prototype.followNode = function (node, duration, style) {
+        var configuration;
         this._followedNode = node;
         if (this._followedNode) {
-            this.startTransitionToConfiguration(this._followedNode.getNextCameraConfiguration(), duration, style);
+            configuration = this._followedNode.getNextCameraConfiguration();
+            if (configuration) {
+                this.startTransitionToConfiguration(configuration, duration, style);
+                return true;
+            }
+            return false;
         }
+        // if no node was given
+        configuration = this._scene.getNextCameraConfiguration();
+        if (configuration) {
+            this.startTransitionToConfiguration(configuration, duration, style);
+            return true;
+        }
+        return false;
     };
     /**
-     * 
-     * @param {RenderableObject3D} objectToFollow
-     * @param {Number} duration
-     * @param {Number} style Camera.prototype.TransitionStyle
+     * A convenience methods so that instead of the renderable node, one can specify the renderable object to follow. This will just get
+     * the node of the object and follow that.
+     * @param {RenderableObject3D} objectToFollow The renderable object the node of which to follow.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     * @returns {Boolean} Whether a configuration change or transition has been initiated. If the node of the given object does not have
+     * any associated camera configurations, this will be false.
      */
     Camera.prototype.followObject = function (objectToFollow, duration, style) {
-        this.followNode(objectToFollow.getNode(), duration, style);
+        return this.followNode(objectToFollow.getNode(), duration, style);
     };
     /**
-     * 
-     * @param {Number} duration
-     * @param {Number} style Camera.prototype.TransitionStyle
+     * Start a transition to the next camera configuration associated with the currently followed node, or the scene, in case no node is
+     * followed. If the currently followed configuration is the last one, the first one will be chosen.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
      */
     Camera.prototype.changeToNextView = function (duration, style) {
         if (this._followedNode) {
+            // if there is a followed node, that means the current configuration is among its associated configurations, we can safely proceed
             this.startTransitionToConfiguration(this._followedNode.getNextCameraConfiguration(this._currentConfiguration), duration, style);
+        } else {
+            // if there is no followed node, we need to be more careful, first need to check if the scene has any associated configurations at all
+            if (this._scene.getNextCameraConfiguration()) {
+                // then we need to check if the current configuration is among the associated ones (it can be a generic free configuration)
+                this.startTransitionToConfiguration(this._scene.getNextCameraConfiguration(this._scene.hasCameraConfiguration(this._currentConfiguration) ? this._currentConfiguration : null), duration, style);
+            }
         }
     };
-    Camera.prototype.followNextObject = function (duration, style) {
+    /**
+     * Start a transition to the first associated camera configuration of the next renderable node.
+     * @param {Boolean} [considerScene=false] Whether to also consider the scene "as a node". If true, than after the last node, this 
+     * method will set the fist configuration associated with the scene rather than jumping right to the first node again.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     */
+    Camera.prototype.followNextNode = function (considerScene, duration, style) {
         var node = this._scene.getNextNode(this._followedNode);
+        if (considerScene && this._followedNode && (node === this._scene.getFirstNode())) {
+            if (this.followNode(null, duration, style)) {
+                return;
+            }
+        }
         while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
             node = this._scene.getNextNode(node);
         }
@@ -4341,26 +4431,55 @@ define([
             this.followNode(node, duration, style);
         }
     };
-    Camera.prototype.followPreviousObject = function (duration, style) {
-        var node = this._scene.getPreviousNode(this._followedNode);
+    /**
+     * Start a transition to the first associated camera configuration of the previous renderable node.
+     * @param {Boolean} [considerScene=false] Whether to also consider the scene "as a node". If true, than after the first node, this 
+     * method will set the fist configuration associated with the scene rather than jumping right to the last node again.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     */
+    Camera.prototype.followPreviousNode = function (considerScene, duration, style) {
+        var firstNode = this._scene.getFirstNode(), node = this._scene.getPreviousNode(this._followedNode);
+        if (considerScene && (this._followedNode === firstNode)) {
+            if (this.followNode(null, duration, style)) {
+                return;
+            }
+        }
         while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
+            if (node === firstNode) {
+                if (this.followNode(null, duration, style)) {
+                    return;
+                }
+            }
             node = this._scene.getPreviousNode(node);
         }
         if (node && node.getNextCameraConfiguration()) {
             this.followNode(node, duration, style);
         }
     };
-
+    /**
+     * Changes the list of objects that the active configuration's orientation is set to follow.
+     * @param {Object3D[]} targetObjects Should not be null, but an empty list, if no objects are to be specified
+     */
     Camera.prototype.followOrientationOfObjects = function (targetObjects) {
         this._currentConfiguration.setOrientationFollowedObjects(targetObjects);
     };
-
+    /**
+     * Calculates and sets the world position and orientation and the relative velocity vector of the camera based on the configuration 
+     * settings, the transition (if one is in progress) and the commands that were issued by the controller in this simulation step.
+     * @param {Number} dt The time that has passed since the last simulation step (in milliseconds)
+     */
     Camera.prototype.update = function (dt) {
         var startPositionVector, endPositionVector, previousPositionVector,
                 relativeTransitionRotationMatrix, rotations,
                 transitionProgress;
         if (this._previousConfiguration) {
+            // if a transition is in progress...
+            // during transitions, movement and turning commands are not taken into account, therefore updating the configurations without
+            // considering those
             this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
+            // calculating transition progress based on the elapsed time and the transition style
             this._transitionElapsedTime += dt;
             if (this._transitionElapsedTime > this._transitionDuration) {
                 this._transitionElapsedTime = this._transitionDuration;
@@ -4383,7 +4502,8 @@ define([
             endPositionVector = this._currentConfiguration.getPositionVector();
             previousPositionVector = this.getPositionVector();
             this._setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
-            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), -1000 / dt);
+            // calculate the velocity vector
+            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
@@ -4398,17 +4518,22 @@ define([
             this._updateProjectionMatrix(
                     this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress,
                     this._previousConfiguration.getSpan() + (this._currentConfiguration.getSpan() - this._previousConfiguration.getSpan()) * transitionProgress);
+            // if the transition has finished, drop the previous configuration
             if (this._transitionElapsedTime === this._transitionDuration) {
                 this._previousConfiguration = null;
             }
         } else {
+            // if there is no transition in progress...
+            // update the current velocity and spin based on the commands issued by the controller in this step and the elapsed time
             this._updateVelocity(dt);
             this._updateAngularVelocity(dt);
+            // make sure that even if the position / orientation are dependent on each other, both are fully updated for the configuration
             this._currentConfiguration.update(this._controlledVelocityVector, this._angularVelocityVector, dt);
             this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
+            // update the position and orientation
             this._setPositionMatrix(this._currentConfiguration.getPositionMatrix());
             this._setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
-            this.setFOV(this._currentConfiguration.getFOV());
+            // update the relative velocity vector
             if (this._currentConfiguration.positionFollowsObjects()) {
                 if (this._previousFollowedPositionVector) {
                     this._velocityVector = vec.scaled3(
@@ -4417,7 +4542,7 @@ define([
                                     vec.sub3(
                                             this._currentConfiguration.getFollowedPositionVector(),
                                             this._previousFollowedPositionVector)),
-                            -1000 / dt);
+                            1000 / dt);
                 } else {
                     this._velocityVector = [0, 0, 0];
                 }
@@ -4427,6 +4552,7 @@ define([
             }
         }
     };
+    ///TODO: continue refactoring from here
     ///-------------------------------------------------------------------------
     /**
      * @class Represents a light source that can be taken into account when rendering.
@@ -4585,6 +4711,14 @@ define([
         this.uniformValueFunctions.u_shadows = function () {
             return self._shadowMappingEnabled;
         };
+        ///TODO: temporary test
+        this.addCameraConfiguration(getFreeCameraConfiguration(
+                true,
+                mat.translation4(-400, 200, -350),
+                mat.rotation4([0, 0, 1], Math.PI / 2), //mat.identity4(),
+                //mat.mul4(mat.mul4(mat.rotation4([1, 0, 0], -Math.PI / 2), mat.rotation4([0, 1, 0], -Math.PI / 2)), mat.rotation4([1, 0, 0], -Math.PI / 2)),
+                60, 10, 90,
+                0.1, 0.1, 0.1));
     }
 
     Scene.prototype.setShadowMapping = function (params) {
@@ -4702,7 +4836,7 @@ define([
                         this.objects[i - 1]);
             }
         }
-        return this.objects[0];
+        return this.objects[this.objects.length - 1];
     };
     /**
      * @param {RenderableObject} object
@@ -4730,6 +4864,58 @@ define([
      */
     Scene.prototype.addCameraConfiguration = function (cameraConfiguration) {
         this._cameraConfigurations.push(cameraConfiguration);
+    };
+    /**
+     * Returns whether the given camera configuration is among the ones associated with this scene.
+     * @param {CameraConfiguration} cameraConfiguration
+     * @returns {Boolean}
+     */
+    Scene.prototype.hasCameraConfiguration = function (cameraConfiguration) {
+        var i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (this._cameraConfigurations[i] === cameraConfiguration) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * Returns the camera configuration the comes after one passed as parameter in the list of associated camera configurations.
+     * If the last configuration is passed, returns the first one. If the list is empty, returns null.
+     * @param {CameraConfiguration} currentCameraConfiguration
+     * @returns {CameraConfiguration}
+     */
+    Scene.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
+        var i, found;
+        if (!currentCameraConfiguration) {
+            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[0] : null;
+        }
+        for (i = 0, found = false; i < this._cameraConfigurations.length; i++) {
+            if (found) {
+                return this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
+                found = true;
+            }
+        }
+        if (found) {
+            return this._cameraConfigurations[0];
+        }
+        application.crash(); // the current configuration was not in the list
+    };
+    /**
+     * Returns a list of the associated camera configurations that have the specified name.
+     * @param {String} name
+     * @returns {Array<CameraConfiguration>}
+     */
+    Scene.prototype.getCameraConfigurationsWithName = function (name) {
+        var result = [], i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (this._cameraConfigurations[i].getName() === name) {
+                result.push(this._cameraConfigurations[i]);
+            }
+        }
+        return result;
     };
     /**
      * Recalculates the perspective matrices of cameras in case the viewport size
