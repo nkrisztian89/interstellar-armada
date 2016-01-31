@@ -1945,7 +1945,7 @@ define([
      * Sets the controlled camera to free control (not following any objects)
      */
     CameraController.prototype.setToFreeCamera = function () {
-        this._controlledCamera.setToFreeCamera();
+        this._controlledCamera.setToFreeCamera(false);
     };
 
     /**

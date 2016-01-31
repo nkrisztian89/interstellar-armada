@@ -244,9 +244,12 @@ define([
     };
 
     BattleScreen.prototype.render = function () {
+        var craft;
         screens.HTMLScreenWithCanvases.prototype.render.call(this);
-        this._stats.setContent(this.getFPS() + "<br/>" + this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
-        var craft = this._level.getPilotedSpacecraft();
+        this._stats.setContent(
+                this.getFPS() + "<br/>" +
+                this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
+        craft = this._level.getPilotedSpacecraft();
         if (craft) {
             this._ui.setContent(
                     (craft.getTarget() ? ("target: " + craft.getTarget().getClassName() + " (" + craft.getTarget().getHitpoints() + "/" + craft.getTarget().getClass().getHitpoints() + ")<br/>") : "") +

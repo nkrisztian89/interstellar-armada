@@ -1303,7 +1303,7 @@ define([
      * @returns {CameraConfiguration} The created camera configuration.
      */
     ObjectView.prototype.createCameraConfigurationForObject = function (followedObject) {
-        var positionConfiguration, orientationConfiguration;
+        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._followOrientationMatrix);
         positionConfiguration = new budaScene.CameraPositionConfiguration(!this._movable,
                 this._rotationCenterIsObject,
                 this._followsPosition ? [followedObject] : [],
@@ -1315,7 +1315,7 @@ define([
                 this._fps,
                 this._lookAtTarget ? [] : [followedObject],
                 this._followOrientationMatrix,
-                0, 0, ///TODO: hardcoded
+                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 -90, 90, ///TODO: hardcoded
                 -90, 90, ///TODO: hardcoded
                 budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.positionFollowedObjects, ///TODO: hardcoded

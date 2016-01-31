@@ -2907,46 +2907,46 @@ define([
          * Stores a copy of the starting alpha angle so it can be reset to it later.
          * @type Number
          */
-        this._defaultAlpha = alpha;
+        this._defaultAlpha = alpha || 0;
         /**
          * If FPS mode is on, this number describes the angle by which the orientation needs to be rotated around the
          * Y axis, in degrees.
          * @type Number
          */
-        this._alpha = alpha;
+        this._alpha = alpha || 0;
         /**
          * Stores a copy of the starting beta angle so it can be reset to it later.
          * @type Number
          */
-        this._defaultBeta = beta;
+        this._defaultBeta = beta || 0;
         /**
          * If FPS mode is on, this number describes the angle by which the orientation needs to be rotated around the
          * X axis, in degrees.
          * @type Number
          */
-        this._beta = beta;
+        this._beta = beta || 0;
         /**
          * If the camera is in FPS mode and not fixed, this value constraints turning it around, as the alpha angle
          * cannot be set below it. Can be a negative number. In degrees.
          * @type Number
          */
-        this._minAlpha = minAlpha;
+        this._minAlpha = (minAlpha !== undefined) ? minAlpha : -360;
         /**
          * If the camera is in FPS mode and not fixed, this value constraints turning it around, as the alpha angle
          * cannot be set above it. In degrees.
          * @type Number
          */
-        this._maxAlpha = maxAlpha;
+        this._maxAlpha = (maxAlpha !== undefined) ? maxAlpha : 360;
         /**
          * See min alpha for explanation. The minimum for the beta angle. In degrees.
          * @type Number
          */
-        this._minBeta = minBeta;
+        this._minBeta = (minBeta !== undefined) ? minBeta : -360;
         /**
          * See max alpha for explanation. The maximum for the beta angle. In degrees.
          * @type Number
          */
-        this._maxBeta = maxBeta;
+        this._maxBeta = (maxBeta !== undefined) ? maxBeta : 360;
         /**
          * (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be taken as base when calculating 
          * the orientation in FPS-mode.
@@ -3038,6 +3038,13 @@ define([
      */
     CameraOrientationConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
         this._relativeOrientationMatrix = value;
+    };
+    /**
+     * Returns whether this configuration is in FPS-mode.
+     * @returns {Boolean}
+     */
+    CameraOrientationConfiguration.prototype.isFPS = function () {
+        return this._fps;
     };
     /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
@@ -3226,6 +3233,18 @@ define([
             if (this._fps) {
                 this._alpha += angularVelocityVector[1] * dt / 1000;
                 this._beta += angularVelocityVector[0] * dt / 1000;
+                if (this._alpha >= 360) {
+                    this._alpha -= 360;
+                }
+                if (this._alpha <= -360) {
+                    this._alpha += 360;
+                }
+                if (this._beta >= 360) {
+                    this._beta -= 360;
+                }
+                if (this._beta <= -360) {
+                    this._beta += 360;
+                }
                 this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
                 this._relativeOrientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
@@ -3327,20 +3346,6 @@ define([
     }
     makeObject3DMixinClass.call(CameraConfiguration);
     /**
-     * Sets a new relative (or absolute, depending on the configuration properties) position matrix for this configuration.
-     * @param {Float32Array} value A 4x4 translation matrix.
-     */
-    CameraConfiguration.prototype.setRelativePositionMatrix = function (value) {
-        this._positionConfiguration.setRelativePositionMatrix(value);
-    };
-    /**
-     * Sets a new relative (or absolute, depending on the configuration properties) orientation matrix for this configuration.
-     * @param {Float32Array} value A 4x4 rotation matrix.
-     */
-    CameraConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
-        this._orientationConfiguration.setRelativeOrientationMatrix(value);
-    };
-    /**
      * Creates and returns copy with the same configuration settings as this one, but with new references to avoid any change made to the
      * original configuration to affect the new one or vice versa.
      * @param {String} [name=""] An optional name for the created copy.
@@ -3362,11 +3367,32 @@ define([
         return result;
     };
     /**
+     * Sets a new relative (or absolute, depending on the configuration properties) position matrix for this configuration.
+     * @param {Float32Array} value A 4x4 translation matrix.
+     */
+    CameraConfiguration.prototype.setRelativePositionMatrix = function (value) {
+        this._positionConfiguration.setRelativePositionMatrix(value);
+    };
+    /**
+     * Sets a new relative (or absolute, depending on the configuration properties) orientation matrix for this configuration.
+     * @param {Float32Array} value A 4x4 rotation matrix.
+     */
+    CameraConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
+        this._orientationConfiguration.setRelativeOrientationMatrix(value);
+    };
+    /**
      * Returns the descriptive name of this configuration so it can be identified.
      * @returns {String}
      */
     CameraConfiguration.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Returns whether this configuration is in FPS-mode.
+     * @returns {Boolean}
+     */
+    CameraConfiguration.prototype.isFPS = function () {
+        return this._orientationConfiguration.isFPS();
     };
     /**
      * Sets the configuration's horizontal Field Of View 
@@ -3527,10 +3553,11 @@ define([
      * @returns {CameraConfiguration}
      */
     function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
+        var angles = mat.getYawAndPitch(orientationMatrix);
         return new CameraConfiguration(
                 "",
                 new CameraPositionConfiguration(false, false, [], mat.matrix4(positionMatrix), 0, 0),
-                new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), 0, 0, 0, 0, 0, 0,
+                new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined, undefined, undefined,
                         CameraOrientationConfiguration.prototype.BaseOrientation.world,
                         CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld),
                 fov, minFOV, maxFOV,
@@ -4213,12 +4240,23 @@ define([
             }
         }
     };
-    ///TODO: continue refactoring from here
-    Camera.prototype._getFreeCameraConfiguration = function (positionMatrix, orientationMatrix) {
+    /**
+     * Creates and returns a camera configuration based on the one currently set for this camera, with absolute position and orientation and
+     * free movement setting. The starting position and orientation will either be the passed ones (if any), or the current position / orientation
+     * of the camera.
+     * @param {Boolean} [fps] Whether to set the created configuration to FPS-mode. if not specified, the current configuration setting will be used.
+     * @param {Float32Array} [positionMatrix] If none given, the current world position will be used.
+     * @param {Float32Array} [orientationMatrix] If none given, the current world orientation will be used.
+     * @returns {CameraConfiguration}
+     */
+    Camera.prototype._getFreeCameraConfiguration = function (fps, positionMatrix, orientationMatrix) {
+        if (fps === undefined) {
+            fps = this._currentConfiguration.isFPS();
+        }
         positionMatrix = positionMatrix || this.getPositionMatrix();
         orientationMatrix = orientationMatrix || this.getOrientationMatrix();
         return getFreeCameraConfiguration(
-                false,
+                fps,
                 positionMatrix,
                 orientationMatrix,
                 this._currentConfiguration.getFOV(),
@@ -4228,6 +4266,7 @@ define([
                 this._currentConfiguration.getMinSpan(),
                 this._currentConfiguration.getMaxSpan());
     };
+    ///TODO: continue refactoring from here
     Camera.prototype.setConfiguration = function (configuration) {
         this._currentConfiguration = configuration || this._getFreeCameraConfiguration();
         this._previousConfiguration = null;
@@ -4243,7 +4282,7 @@ define([
             this.setConfiguration(configuration);
         } else {
             if (this._previousConfiguration && this._currentConfiguration) {
-                this._previousConfiguration = this._getFreeCameraConfiguration();
+                this._previousConfiguration = this._getFreeCameraConfiguration(false);
             } else {
                 this._previousConfiguration = this._currentConfiguration;
             }
@@ -4253,9 +4292,9 @@ define([
             this._transitionStyle = style === undefined ? this._defaultTransitionStyle : style;
         }
     };
-    Camera.prototype.setToFreeCamera = function (positionMatrix, orientationMatrix, duration, style) {
+    Camera.prototype.setToFreeCamera = function (fps, positionMatrix, orientationMatrix, duration, style) {
         this._followedNode = null;
-        this.startTransitionToConfiguration(this._getFreeCameraConfiguration(positionMatrix, orientationMatrix), duration || 0, style);
+        this.startTransitionToConfiguration(this._getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix), duration || 0, style);
     };
     Camera.prototype.transitionToSameConfiguration = function (duration, style) {
         var configuration = this._currentConfiguration;
@@ -4318,8 +4357,7 @@ define([
 
     Camera.prototype.update = function (dt) {
         var startPositionVector, endPositionVector, previousPositionVector,
-                relativeTransitionRotationMatrix, halfTransitionOrientationMatrix,
-                dot, alpha, gamma, axis, axis2,
+                relativeTransitionRotationMatrix, rotations,
                 transitionProgress;
         if (this._previousConfiguration) {
             this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
@@ -4350,39 +4388,11 @@ define([
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
             relativeTransitionRotationMatrix = mat.mul4(mat.inverseOfRotation4(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
-            // calculate the rotation of axis Y needed
-            dot = vec.dot3([0, 1, 0], mat.getRowB43(relativeTransitionRotationMatrix));
-            // if the angle of the two Y vectors is (around) 0 or 180 degrees, their cross product will be of zero length
-            // and we cannot use it as a rotation axis, therefore fall back to axis Z in this case
-            if (Math.abs(dot) > 0.99999) {
-                axis = [0, 0, 1];
-                alpha = dot > 0 ? 0 : Math.PI;
-            } else {
-                axis = vec.normal3(vec.cross3(mat.getRowB43(relativeTransitionRotationMatrix), [0, 1, 0]));
-                alpha = vec.angle3u(mat.getRowB43(relativeTransitionRotationMatrix), [0, 1, 0]);
-            }
-            if (alpha > Math.PI) {
-                alpha -= 2 * Math.PI;
-            }
-            // calculate the matrix we would get if we rotated the Y vector into position
-            halfTransitionOrientationMatrix = mat.correctedOrthogonal4(mat.mul4(relativeTransitionRotationMatrix, mat.rotation4(axis, -alpha)));
-            // X and Z vectors might still be out of place, therefore do the same calculations as before to 
-            // get the second rotation needed, which will put all vectors in place
-            dot = vec.dot3([1, 0, 0], mat.getRowA43(halfTransitionOrientationMatrix));
-            if (Math.abs(dot) > 0.99999) {
-                axis2 = [0, 1, 0];
-                gamma = dot > 0 ? 0 : Math.PI;
-            } else {
-                axis2 = vec.normal3(vec.cross3(mat.getRowA43(halfTransitionOrientationMatrix), [1, 0, 0]));
-                gamma = vec.angle3u(mat.getRowA43(halfTransitionOrientationMatrix), [1, 0, 0]);
-            }
-            if (gamma > Math.PI) {
-                gamma -= 2 * Math.PI;
-            }
+            rotations = mat.getRotations(relativeTransitionRotationMatrix);
             // now that the two rotations are calculated, we can interpolate the transformation using the angles
             this._setOrientationMatrix(mat.identity4());
-            this._rotate(axis2, gamma * transitionProgress);
-            this._rotate(axis, alpha * transitionProgress);
+            this._rotate(rotations.gammaAxis, rotations.gamma * transitionProgress);
+            this._rotate(rotations.alphaAxis, rotations.alpha * transitionProgress);
             this._setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
             // calculate FOV
             this._updateProjectionMatrix(

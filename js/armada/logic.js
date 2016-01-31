@@ -2726,7 +2726,7 @@ define([
             this._hitObjects.push(this._spacecrafts[i]);
         }
         if (this._cameraStartPositionMatrix || this._cameraStartOrientationMatrix) {
-            scene.activeCamera.setToFreeCamera(this._cameraStartPositionMatrix, this._cameraStartOrientationMatrix);
+            scene.activeCamera.setToFreeCamera(false, this._cameraStartPositionMatrix, this._cameraStartOrientationMatrix);
             scene.activeCamera.update(0);
         }
     };

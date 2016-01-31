@@ -14,7 +14,9 @@ define([
 ], function (vec) {
     "use strict";
 
-    var mat = {};
+    var mat = {}, Constants = {
+        CLOSE_TO_ONE_THRESHOLD: 0.99999,
+    };
 
     // -----------------------------------------------------------------------------
     // Functions that create new matrices
@@ -550,6 +552,99 @@ define([
      */
     mat.translationLength = function (m) {
         return vec.length3([m[12], m[13], m[14]]);
+    };
+    
+    /**
+     * Returns two angles, rotating by which would bring the axis Y unit vector in line with the passed unit vector.
+     * @param {Number[3]} v A 3D unit vector.
+     * @returns {Object} Has two fields, yaw is the angle of rotation around axis Z and pitch is the angle or rotation around axis X,
+     * in radians.
+     */
+    mat.getVectorYawAndPitch = function (v) {
+        var pitchVector, result = {};
+        if (Math.abs(v[2]) > Constants.CLOSE_TO_ONE_THRESHOLD) {
+            result.yaw = 0;
+            result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
+        } else {
+            result.yaw = vec.angle2uCapped([0, 1], vec.normal2([v[0], v[1]]));
+            if (v[0] < 0) {
+                result.yaw = -result.yaw;
+            }
+            pitchVector = vec.mulVec3Mat4(v, mat.rotation4([0, 0, 1], -result.yaw));
+            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchVector[1], pitchVector[2]]));
+            if (pitchVector[2] > 0) {
+                result.pitch = -result.pitch;
+            }
+        }
+        return result;
+    };
+
+    /**
+     * Takes a rotation matrix that was created as a product of two rotations, a first one around axis X and then one around axis Z, and 
+     * returns the two angles corresponding to the two rotations. If the input matrix is not such a matrix (e.g. it was rotated around axis
+     * Y as well), the result will not be accurate (and meaningful).
+     * @param {Float32Array} m A 4x4 rotation matrix that is the combination (product) of a rotation first around axis X, then around axis Z.
+     * @returns {Object} Has two fields, yaw is the angle of rotation around axis Z and pitch is the angle or rotation around axis X,
+     * in radians.
+     */
+    mat.getYawAndPitch = function (m) {
+        var pitchMatrix, result = {};
+        if (Math.abs(m [6]) > Constants.CLOSE_TO_ONE_THRESHOLD) {
+            result.yaw = 0;
+            result.pitch = (m [6] > 0) ? -Math.PI / 2 : Math.PI / 2;
+        } else {
+            result.yaw = vec.angle2uCapped([0, 1], vec.normal2(m[10] > 0 ? [m[4], m[5]] : [-m[4], -m[5]]));
+            if (m[4] * m[10] < 0) {
+                result.yaw = -result.yaw;
+            }
+            pitchMatrix = mat.correctedOrthogonal4(mat.mul4(m, mat.rotation4([0, 0, 1], -result.yaw)));
+            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
+            if (pitchMatrix[6] > 0) {
+                result.pitch = -result.pitch;
+            }
+        }
+        return result;
+    };
+
+    /**
+     * Returns the axes and angles (alpha and gamma) of two rotations that would transform the identity matrix into the passed rotation matrix.
+     * @param {Float32Array} m A 4x4 rotation matrix.
+     * @returns {Object} Has 4 fields: alpha and alphaAxis describe a rotation that would bring the Y axis of an identity matrix in line with
+     * the Y axis of the passed matrix m, while gamma and gammaAxis describe a rotation that would afterwards bring the other axes in line.
+     * The angles are in radian.
+     */
+    mat.getRotations = function (m) {
+        var dot, halfMatrix, result = {};
+        // calculate the rotation of axis Y needed
+        dot = vec.dot3([0, 1, 0], mat.getRowB43(m));
+        // if the angle of the two Y vectors is (around) 0 or 180 degrees, their cross product will be of zero length
+        // and we cannot use it as a rotation axis, therefore fall back to axis Z in this case
+        if (Math.abs(dot) > Constants.CLOSE_TO_ONE_THRESHOLD) {
+            result.alphaAxis = [0, 0, 1];
+            result.alpha = dot > 0 ? 0 : Math.PI;
+        } else {
+            result.alphaAxis = vec.normal3(vec.cross3(mat.getRowB43(m), [0, 1, 0]));
+            result.alpha = vec.angle3u(mat.getRowB43(m), [0, 1, 0]);
+        }
+        if (result.alpha > Math.PI) {
+            result.alpha -= 2 * Math.PI;
+        }
+        // calculate the matrix we would get if we rotated the Y vector into position
+        halfMatrix = mat.correctedOrthogonal4(mat.mul4(m, mat.rotation4(result.alphaAxis, -result.alpha)));
+        // X and Z vectors might still be out of place, therefore do the same calculations as before to 
+        // get the second rotation needed, which will put all vectors in place
+        dot = vec.dot3([1, 0, 0], mat.getRowA43(halfMatrix));
+        if (Math.abs(dot) > Constants.CLOSE_TO_ONE_THRESHOLD) {
+            result.gammaAxis = [0, 1, 0];
+            result.gamma = dot > 0 ? 0 : Math.PI;
+        } else {
+            result.gammaAxis = vec.normal3(vec.cross3(mat.getRowA43(halfMatrix), [1, 0, 0]));
+            result.gamma = vec.angle3u(mat.getRowA43(halfMatrix), [1, 0, 0]);
+        }
+        if (result.gamma > Math.PI) {
+            result.gamma -= 2 * Math.PI;
+        }
+        return result;
     };
 
     /**
