@@ -3,6 +3,7 @@
     "type": "interceptor",
     "fullName": "Falcon",
     "description": "The latest generation of interceptors, which recently became the new standard in the fleets of the Galactic Empire. Excellent for dogfighting, with a thin cross-section making it difficult to hit, a good variety of battle equipment it can carry and an effective jammer arrangement.",
+    "showInDatabase": true,
     "hitpoints": 20,
     "model": "falcon",
     "shader": "ship",
@@ -332,57 +333,6 @@
             "turnable": true,
             "rotationCenterIsObject": true,
             "position": [0, -40, 0]
-        },
-        {
-            "name": "fps-turnaround",
-            "fov": 60,
-            "fps": true,
-            "followsPosition": true,
-            "movable": false,
-            "turnable": true,
-            "rotationCenterIsObject": true,
-            "position": [0, -40, 0],
-            "rotations": [
-                {
-                    "axis": "Z",
-                    "degrees": 45
-                },
-                {
-                    "axis": "X",
-                    "degrees": 45
-                }
-            ]
-        },
-        {
-            "name": "flyby",
-            "fov": 60,
-            "followsPosition": false,
-            "lookAt": "self",
-            "movable": true,
-            "turnable": false,
-            "rotationCenterIsObject": false,
-            "position": [100, 100, 20]
-        },
-        {
-            "name": "flyby-fps",
-            "fov": 60,
-            "fps": true,
-            "followsPosition": false,
-            "lookAt": "self",
-            "movable": true,
-            "turnable": false,
-            "rotationCenterIsObject": false,
-            "position": [100, 100, 20]
-        },
-        {
-            "name": "target",
-            "fov": 60,
-            "followsPosition": true,
-            "lookAt": "target",
-            "movable": false,
-            "turnable": false,
-            "rotationCenterIsObject": true,
-            "position": [0, -40, 6.5]
         },
         {
             "name": "target",

@@ -1403,6 +1403,10 @@
             "source": "spacecraft-classes/falcon.json"
         },
         {
+            "name": "falcon-cameraTest",
+            "source": "spacecraft-classes/falcon-cameraTest.json"
+        },
+        {
             "name": "viper",
             "source": "spacecraft-classes/viper.json"
         },

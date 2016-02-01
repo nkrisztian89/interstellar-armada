@@ -656,15 +656,18 @@ define([
     // indirect getters and setters
     /**
      * Returns all the available spacecraft classes in an array.
+     * @param {Boolean} forDatabase Whether to return only those classes that should show up in the database
      * @returns {SpacecraftClass[]}
      */
-    LogicContext.prototype.getSpacecraftClassesInArray = function () {
+    LogicContext.prototype.getSpacecraftClassesInArray = function (forDatabase) {
         var
                 i,
                 result = [],
                 names = this._classResourceManager.getResourceNames("spacecraftClasses");
         for (i = 0; i < names.length; i++) {
-            result.push(this.getSpacecraftClass(names[i]));
+            if (!forDatabase || this.getSpacecraftClass(names[i]).shouldShowInDatabase()) {
+                result.push(this.getSpacecraftClass(names[i]));
+            }
         }
         return result;
     };

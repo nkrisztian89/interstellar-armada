@@ -100,18 +100,29 @@ define([
     ShadedClass.prototype.constructor = ShadedClass;
     /**
      * @override
-     * @param {Object} dataJSON
+     * Initializes the properties of this class from another instance and then overrides the ones specified in the JSON object.
+     * @param {ShadedClass} [otherShadedClass] If no class is given, the properties will be simply initialized from the JSON object
+     * @param {Object} [dataJSON] If not given, properties will not be overriden / will be initialized to null
      */
-    ShadedClass.prototype._loadData = function (dataJSON) {
+    ShadedClass.prototype._overrideData = function (otherShadedClass, dataJSON) {
         GenericClass.prototype._loadData.call(this, dataJSON);
         /**
          * @type String
          */
-        this._shaderName = dataJSON ? (dataJSON.shader || showMissingPropertyError(this, "shader")) : null;
+        this._shaderName = otherShadedClass ?
+                ((dataJSON && dataJSON.shader) ? dataJSON.shader : otherShadedClass._shaderName) :
+                (dataJSON ? (dataJSON.shader || showMissingPropertyError(this, "shader")) : null);
         /**
          * @type ShaderResource
          */
         this._shader = null;
+    };
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ShadedClass.prototype._loadData = function (dataJSON) {
+        this._overrideData(null, dataJSON);
     };
     /**
      * 
@@ -145,18 +156,29 @@ define([
     ShadedModelClass.prototype.constructor = ShadedModelClass;
     /**
      * @override
-     * @param {Object} dataJSON
+     * Initializes the properties of this class from another instance and then overrides the ones specified in the JSON object.
+     * @param {ShadedModelClass} [otherShadedModelClass] If no class is given, the properties will be simply initialized from the JSON object
+     * @param {Object} [dataJSON] If not given, properties will not be overriden / will be initialized to null
      */
-    ShadedModelClass.prototype._loadData = function (dataJSON) {
-        ShadedClass.prototype._loadData.call(this, dataJSON);
+    ShadedModelClass.prototype._overrideData = function (otherShadedModelClass, dataJSON) {
+        ShadedClass.prototype._overrideData.call(this, otherShadedModelClass, dataJSON);
         /**
          * @type String
          */
-        this._modelName = dataJSON ? (dataJSON.model || null) : null;
+        this._modelName = otherShadedModelClass ?
+                ((dataJSON && dataJSON.model) ? dataJSON.model : otherShadedModelClass._modelName) :
+                (dataJSON ? (dataJSON.model || null) : null);
         /**
          * @type ModelResource
          */
         this._model = null;
+    };
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ShadedModelClass.prototype._loadData = function (dataJSON) {
+        this._overrideData(null, dataJSON);
     };
     /**
      * @override
@@ -246,18 +268,29 @@ define([
     TexturedModelClass.prototype.constructor = TexturedModelClass;
     /**
      * @override
-     * @param {Object} dataJSON
+     * Initializes the properties of this class from another instance and then overrides the ones specified in the JSON object.
+     * @param {TexturedModelClass} [otherTexturedModelClass] If no class is given, the properties will be simply initialized from the JSON object
+     * @param {Object} [dataJSON] If not given, properties will not be overriden / will be initialized to null
      */
-    TexturedModelClass.prototype._loadData = function (dataJSON) {
-        ShadedModelClass.prototype._loadData.call(this, dataJSON);
+    TexturedModelClass.prototype._overrideData = function (otherTexturedModelClass, dataJSON) {
+        ShadedModelClass.prototype._overrideData.call(this, otherTexturedModelClass, dataJSON);
         /**
          * @type String
          */
-        this._textureName = dataJSON ? (dataJSON.texture || showMissingPropertyError(this, "texture")) : null;
+        this._textureName = otherTexturedModelClass ?
+                ((dataJSON && dataJSON.texture) ? dataJSON.texture : otherTexturedModelClass._textureName) :
+                (dataJSON ? (dataJSON.texture || showMissingPropertyError(this, "texture")) : null);
         /**
          * @type TextureResource
          */
         this._texture = null;
+    };
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    TexturedModelClass.prototype._loadData = function (dataJSON) {
+        this._overrideData(null, dataJSON);
     };
     /**
      * @override
@@ -1460,40 +1493,59 @@ define([
     SpacecraftClass.prototype.constructor = SpacecraftClass;
     /**
      * @override
-     * @param {Object} dataJSON
+     * @param {SpacecraftClass} otherSpacecraftClass
+     * @param {Object} dataJSON 
      */
-    SpacecraftClass.prototype._loadData = function (dataJSON) {
-        var i, j, groupIndex, uses, startPosition, translationVector, rotations, maxGrade, count, size, jsonObject;
-        TexturedModelClass.prototype._loadData.call(this, dataJSON);
+    SpacecraftClass.prototype._overrideData = function (otherSpacecraftClass, dataJSON) {
+        var i, j, startPosition, translationVector, rotations, maxGrade, count, groupIndex, uses, size, jsonObject;
+        TexturedModelClass.prototype._overrideData.call(this, otherSpacecraftClass, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
          * @type SpacecraftType
          */
-        this._spacecraftType = armada.logic().getSpacecraftType(dataJSON.type || showMissingPropertyError(this, "type"));
+        this._spacecraftType = otherSpacecraftClass ?
+                (dataJSON.type ? armada.logic().getSpacecraftType(dataJSON.type) : otherSpacecraftClass._spacecraftType) :
+                armada.logic().getSpacecraftType(dataJSON.type || showMissingPropertyError(this, "type"));
         /**
          * The full name of this class as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON.fullName || showMissingPropertyError(this, "fullName");
+        this._fullName = otherSpacecraftClass ?
+                (dataJSON.fullName || otherSpacecraftClass._fullName) :
+                (dataJSON.fullName || showMissingPropertyError(this, "fullName"));
         /**
          * The description of this class as can be viewed in the game.
          * @type String
          */
-        this._description = dataJSON.description || showMissingPropertyError(this, "description");
+        this._description = otherSpacecraftClass ?
+                (dataJSON.description || otherSpacecraftClass._description) :
+                (dataJSON.description || showMissingPropertyError(this, "description"));
         /**
-         * @type number
+         * Whether this spacecraft class should show up in the database
+         * @type Boolean
          */
-        this._hitpoints = dataJSON.hitpoints || showMissingPropertyError(this, "hitpoints");
+        this._showInDatabase = otherSpacecraftClass ?
+                (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : otherSpacecraftClass._showInDatabase) :
+                (dataJSON.showInDatabase || showMissingPropertyError(this, "showInDatabase"));
+        /**
+         * The amount of damage a ship of this class can take before being destroyed.
+         * @type Number
+         */
+        this._hitpoints = otherSpacecraftClass ?
+                (dataJSON.hitpoints || otherSpacecraftClass._hitpoints) :
+                (dataJSON.hitpoints || showMissingPropertyError(this, "hitpoints"));
         /**
          * The mass of the spacecraft in kilograms.
          * @type Number
          */
-        this._mass = dataJSON.mass || showMissingPropertyError(this, "mass");
+        this._mass = otherSpacecraftClass ?
+                (dataJSON.mass || otherSpacecraftClass._mass) :
+                (dataJSON.mass || showMissingPropertyError(this, "mass"));
         /**
          * The physical bodies that model the spacecraft's shape for hit checks.
          * @type Body[]
          */
-        this._bodies = [];
+        this._bodies = (otherSpacecraftClass && !dataJSON.bodies) ? otherSpacecraftClass._bodies : [];
         if (dataJSON.bodies) {
             for (i = 0; i < dataJSON.bodies.length; i++) {
                 this._bodies.push(new physics.Body(
@@ -1501,14 +1553,14 @@ define([
                         mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
                         dataJSON.bodies[i].size));
             }
-        } else {
+        } else if (!otherSpacecraftClass) {
             showMissingPropertyError(this, "bodies");
         }
         /**
          * The slots where weapons can be equipped on the ship.
          * @type WeaponSlot[]
          */
-        this._weaponSlots = [];
+        this._weaponSlots = (otherSpacecraftClass && !dataJSON.weaponSlots) ? otherSpacecraftClass._weaponSlots : [];
         if (dataJSON.weaponSlots) {
             for (i = 0; i < dataJSON.weaponSlots.length; i++) {
                 if (dataJSON.weaponSlots[i].array) {
@@ -1532,12 +1584,14 @@ define([
         /**
          * @type Number
          */
-        this._maxPropulsionGrade = dataJSON.maxPropulsionGrade || showMissingPropertyError(this, "maxPropulsionGrade");
+        this._maxPropulsionGrade = otherSpacecraftClass ?
+                (dataJSON.maxPropulsionGrade || otherSpacecraftClass._maxPropulsionGrade) :
+                (dataJSON.maxPropulsionGrade || showMissingPropertyError(this, "maxPropulsionGrade"));
         /**
          * The slots where the thrusters are located on the ship.
          * @type ThrusterSlot[]
          */
-        this._thrusterSlots = [];
+        this._thrusterSlots = (otherSpacecraftClass && !dataJSON.thrusterSlots) ? otherSpacecraftClass._thrusterSlots : [];
         if (dataJSON.thrusterSlots) {
             for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
                 groupIndex = dataJSON.thrusterSlots[i].group;
@@ -1571,13 +1625,13 @@ define([
          * be positioned.
          * @type ObjectView[]
          */
-        this._views = [];
+        this._views = (otherSpacecraftClass && !dataJSON.views) ? otherSpacecraftClass._views : [];
         if (dataJSON.views) {
             for (i = 0; i < dataJSON.views.length; i++) {
                 this._views.push(new ObjectView(dataJSON.views[i]));
             }
-        } else {
-            application.crash();
+        } else if (!otherSpacecraftClass) {
+            showMissingPropertyError(this, "views");
         }
         /**
          * The available equipment profiles (possible sets of equipment that can be
@@ -1585,7 +1639,7 @@ define([
          * an associative array (the profile names are keys)
          * @type Object
          */
-        this._equipmentProfiles = {};
+        this._equipmentProfiles = (otherSpacecraftClass && !dataJSON.equipmentProfiles) ? otherSpacecraftClass._equipmentProfiles : {};
         if (dataJSON.equipmentProfiles) {
             for (i = 0; i < dataJSON.equipmentProfiles.length; i++) {
                 this._equipmentProfiles[dataJSON.equipmentProfiles[i].name] = new EquipmentProfile(dataJSON.equipmentProfiles[i]);
@@ -1595,18 +1649,35 @@ define([
          * The class of the explosion this spacecraft creates when it is destroyed and explodes.
          * @type ExplosionClass
          */
-        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        this._explosionClass = otherSpacecraftClass ?
+                (dataJSON.explosion ? armada.logic().getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
+                armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion"));
         /**
          * The damage indicators (fires, sparks) that progressively appear as the ship loses hull integrity
          * @type DamageIndicator[]
          */
-        this._damageIndicators = [];
+        this._damageIndicators = (otherSpacecraftClass && !dataJSON.damageIndicators) ? otherSpacecraftClass._damageIndicators : [];
         if (dataJSON.damageIndicators) {
             for (i = 0; i < dataJSON.damageIndicators.length; i++) {
                 this._damageIndicators.push(new DamageIndicator(dataJSON.damageIndicators[i]));
             }
-        } else {
+        } else if (!otherSpacecraftClass) {
             showMissingPropertyError(this, "damageIndicators");
+        }
+    };
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    SpacecraftClass.prototype._loadData = function (dataJSON) {
+        var baseClass;
+        if (dataJSON.basedOn) {
+            baseClass = armada.logic().getSpacecraftClass(dataJSON.basedOn);
+            baseClass.executeWhenReady(function () {
+                this._overrideData(baseClass, dataJSON);
+            }.bind(this));
+        } else {
+            this._overrideData(null, dataJSON);
         }
     };
     /**
@@ -1626,6 +1697,12 @@ define([
      */
     SpacecraftClass.prototype.getDescription = function () {
         return this._description;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SpacecraftClass.prototype.shouldShowInDatabase = function () {
+        return this._showInDatabase;
     };
     /**
      * @returns {Number}

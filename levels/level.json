@@ -40,7 +40,7 @@
     ],
     "spacecrafts": [
         {
-            "class": "falcon",
+            "class": "falcon-cameraTest",
             "piloted": true,
             "position": [0, 0, -60],
             "equipment": {

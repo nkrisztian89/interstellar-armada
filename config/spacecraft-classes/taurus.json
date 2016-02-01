@@ -3,6 +3,7 @@
     "type": "frigate",
     "fullName": "Taurus",
     "description": "A small warship fully dedicated to armor and firepower. Its main job is to take on the larger, more powerful ships of the enemy fleet and keep them under constant fire, drawing their attention from smaller and more vulnerable units.",
+    "showInDatabase": true,
     "hitpoints": 1200,
     "model": "taurus",
     "shader": "ship",

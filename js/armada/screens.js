@@ -574,7 +574,7 @@ define([
         // using % operator does not work with -1, reverted to "if"
         this._itemIndex -= 1;
         if (this._itemIndex === -1) {
-            this._itemIndex = armada.logic().getSpacecraftClassesInArray().length - 1;
+            this._itemIndex = armada.logic().getSpacecraftClassesInArray(true).length - 1;
         }
         this.loadShip();
     };
@@ -584,7 +584,7 @@ define([
      * screen. Loops around.
      */
     DatabaseScreen.prototype.selectNextShip = function () {
-        this._itemIndex = (this._itemIndex + 1) % armada.logic().getSpacecraftClassesInArray().length;
+        this._itemIndex = (this._itemIndex + 1) % armada.logic().getSpacecraftClassesInArray(true).length;
         this.loadShip();
     };
 
@@ -610,7 +610,7 @@ define([
         armada.logic().executeWhenReady(function () {
             // display the data that can be displayed right away, and show loading
             // for the rest
-            var shipClass = armada.logic().getSpacecraftClassesInArray()[this._itemIndex];
+            var shipClass = armada.logic().getSpacecraftClassesInArray(true)[this._itemIndex];
             this._itemName.setContent(shipClass.getFullName());
             this._itemType.setContent(shipClass.getSpacecraftType().getFullName());
             this._itemDescription.setContent("Loading...");
