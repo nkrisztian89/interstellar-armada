@@ -10,6 +10,7 @@
 /*global define, Element, this */
 
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -21,7 +22,7 @@ define([
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
+], function (utils, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
     "use strict";
     var
             /**
@@ -306,6 +307,430 @@ define([
             this._visualModel.getNode().markAsReusable();
             this._visualModel = null;
         }
+    };
+    // #########################################################################
+    /**
+     * @class Represents an environment that can be used to build a visual 
+     * representation and perform the game logic on a virtual environment where 
+     * the game takes place.
+     * @param {Object} dataJSON If given, the data of the environment will be
+     * initialized from this JSON object.
+     * @returns {Environment}
+     */
+    function Environment(dataJSON) {
+        /**
+         * The list of skyboxes this environment contains as background.
+         * @name Environment#_skyboxes
+         * @type Skybox[]
+         */
+        this._skyboxes = null;
+        /**
+         * The list of background objects (stars, nebulae) this environment contains.
+         * @name Environment#_backgroundObjects
+         * @type BackgroundObject[]
+         */
+        this._backgroundObjects = null;
+        /**
+         * The list of dust clouds this environment contains.
+         * @name Environment#_dustClouds
+         * @type DustCloud[]
+         */
+        this._dustClouds = null;
+        /**
+         * The camera relative to which the environment is rendered.
+         * @name Environment#_camera
+         * @type Camera
+         */
+        this._camera = null;
+        // if given, load the data from the JSON object
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
+        }
+    }
+    // #########################################################################
+    // methods
+    /**
+     * Loads all the data about this environment stored in the passed JSON object.
+     * @param {Object} dataJSON
+     */
+    Environment.prototype.loadFromJSON = function (dataJSON) {
+        var i;
+        this._skyboxes = [];
+        for (i = 0; i < dataJSON.skyboxes.length; i++) {
+            this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(dataJSON.skyboxes[i].class)));
+        }
+
+        this._backgroundObjects = [];
+        for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
+            this._backgroundObjects.push(new BackgroundObject(
+                    armada.logic().getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
+                    dataJSON.backgroundObjects[i].position.angleAlpha,
+                    dataJSON.backgroundObjects[i].position.angleBeta
+                    ));
+        }
+
+        this._dustClouds = [];
+        for (i = 0; i < dataJSON.dustClouds.length; i++) {
+            this._dustClouds.push(new DustCloud(armada.logic().getDustCloudClass(dataJSON.dustClouds[i].class)));
+        }
+    };
+    /**
+     * Adds renderable objects representing all visual elements of the 
+     * environment to the passed scene.
+     * @param {budaScene} scene
+     */
+    Environment.prototype.addToScene = function (scene) {
+        var i;
+        for (i = 0; i < this._skyboxes.length; i++) {
+            this._skyboxes[i].addToScene(scene);
+        }
+        for (i = 0; i < this._backgroundObjects.length; i++) {
+            this._backgroundObjects[i].addToScene(scene);
+        }
+        for (i = 0; i < this._dustClouds.length; i++) {
+            this._dustClouds[i].addToScene(scene);
+        }
+        this._camera = scene.activeCamera;
+    };
+    /**
+     * Performs a simulation step to update the state of the environment.
+     */
+    Environment.prototype.simulate = function () {
+        var i;
+        for (i = 0; i < this._dustClouds.length; i++) {
+            this._dustClouds[i].simulate(this._camera);
+        }
+    };
+    Environment.prototype.destroy = function () {
+        var i;
+        if (this._skyboxes) {
+            for (i = 0; i < this._skyboxes.length; i++) {
+                this._skyboxes[i].destroy();
+                this._skyboxes[i] = null;
+            }
+            this._skyboxes = null;
+        }
+        if (this._backgroundObjects) {
+            for (i = 0; i < this._backgroundObjects.length; i++) {
+                this._backgroundObjects[i].destroy();
+                this._backgroundObjects[i] = null;
+            }
+            this._backgroundObjects = null;
+        }
+        if (this._dustClouds) {
+            for (i = 0; i < this._dustClouds.length; i++) {
+                this._dustClouds[i].destroy();
+                this._dustClouds[i] = null;
+            }
+            this._dustClouds = null;
+        }
+        this._camera = null;
+    };
+    // #########################################################################
+    /**
+     * @class A class responsible for loading and storing game logic related 
+     * settings and data as well and provide an interface to access them.
+     * @returns {LogicContext}
+     */
+    function LogicContext() {
+        asyncResource.AsyncResource.call(this);
+        /**
+         * The name of the file (without path) that contains the descriptions
+         * of the in-game classes.
+         * @type String
+         */
+        this._classesSourceFileName = null;
+        /**
+         * The name of the file (without path) that contains the descriptions
+         * of the reusable environments.
+         * @type String
+         */
+        this._environmentsSourceFileName = null;
+        /**
+         * @type ResourceManagerF
+         */
+        this._classResourceManager = new resourceManager.ResourceManager();
+        /**
+         * An associative array storing the reusable Environment objects that 
+         * describe possible environments for levels. The keys are the names
+         * of the environments.
+         * @name LogicContext#_environments
+         * @type Object
+         */
+        this._environments = null;
+        /**
+         * @type Array<String>
+         */
+        this._levelFileNames = null;
+        /**
+         * Whether the rotation of models (both automatic and manual) is enabled
+         * on the database screen.
+         * @name LogicContext#_databaseModelRotation
+         * @type Boolean
+         */
+        this._databaseModelRotation = null;
+        /**
+         * A descriptor object of how many random ships of each class should be added to the test 
+         * scene
+         * @type Object
+         */
+        this._randomShips = null;
+        /**
+         * Whether projectiles can hit the same ship that fired them
+         * @type Boolean
+         */
+        this._selfFire = null;
+        /**
+         * (enum LogicContext.prototype.AutoTargeting) What mode is auto targeting set to (by default)
+         * @type String 
+         */
+        this._autoTargeting = null;
+    }
+    LogicContext.prototype = new asyncResource.AsyncResource();
+    LogicContext.prototype.constructor = LogicContext;
+    /**
+     * @enum {String}
+     * The options for auto targeting.
+     */
+    LogicContext.prototype.AutoTargeting = {
+        /**
+         * Automatic targeting is completely switched off
+         */
+        NEVER: "never",
+        /**
+         * If a ship is hit, it is automatically selected as a target if no ships are selected as target yet
+         */
+        HIT_AND_NO_TARGET: "hitAndNoTarget",
+        /**
+         * If a ship is hit, it is automatically selected as a (new) target unless the player has manually set a different target before
+         */
+        HIT_AND_AUTO_TARGET: "hitAndAutoTarget",
+        /**
+         * If a ship is hit, it is always selected as a (new) target
+         */
+        ALWAYS_WHEN_HIT: "alwaysWhenHit"
+    };
+    Object.freeze(LogicContext.prototype.AutoTargeting);
+    // direct getters and setters
+    /**
+     * The game classes will be loaded from the file set here. Give the path to the file relative
+     * to the configuration folder.
+     * @param {String} value
+     */
+    LogicContext.prototype.setClassesSourceFileName = function (value) {
+        this._classesSourceFileName = value;
+    };
+    /**
+     * The game environments will be loaded from the file set here. Give the path to the file relative
+     * to the environment folder.
+     * @param {String} value
+     */
+    LogicContext.prototype.setEnvironmentsSourceFileName = function (value) {
+        this._environmentsSourceFileName = value;
+    };
+    /**
+     * Sets the array of strings that contains the names of the level descriptor JSON files.
+     * The path doesn't need to be included, the files will be looked for in the levels folder.
+     * @param {Array<String>} value
+     */
+    LogicContext.prototype.setLevelFileNames = function (value) {
+        this._levelFileNames = value;
+    };
+    /**
+     * Returns whether the rotation (both automatic and manual) of models on the
+     * database screen is currently turned on.
+     * @returns {Boolean}
+     */
+    LogicContext.prototype.getDatabaseModelRotation = function () {
+        return this._databaseModelRotation;
+    };
+    /**
+     * Returns how many random ships of each class should be added to the test battle scene
+     * @returns {Object}
+     */
+    LogicContext.prototype.getRandomShips = function () {
+        return this._randomShips;
+    };
+    /**
+     * Returns whether projectiles can hit the same ship that fired them
+     * @returns {Boolean}
+     */
+    LogicContext.prototype.getSelfFire = function () {
+        return this._selfFire;
+    };
+    /**
+     * (enum LogicContext.prototype.AutoTargeting) Returns what mode is auto targeting switched to
+     * @returns {String}
+     */
+    LogicContext.prototype.getAutoTargeting = function () {
+        return this._autoTargeting;
+    };
+    /**
+     * Return the skybox class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SkyboxClass}
+     */
+    LogicContext.prototype.getSkyboxClass = function (name) {
+        return this._classResourceManager.getResource("skyboxClasses", name);
+    };
+    /**
+     * Return the background object class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {BackgroundObjectClass}
+     */
+    LogicContext.prototype.getBackgroundObjectClass = function (name) {
+        return this._classResourceManager.getResource("backgroundObjectClasses", name);
+    };
+    /**
+     * Return the dust cloud class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {DustCloudClass}
+     */
+    LogicContext.prototype.getDustCloudClass = function (name) {
+        return this._classResourceManager.getResource("dustCloudClasses", name);
+    };
+    /**
+     * Return the explosion class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ExplosionClass}
+     */
+    LogicContext.prototype.getExplosionClass = function (name) {
+        return this._classResourceManager.getResource("explosionClasses", name);
+    };
+    /**
+     * Return the projectile class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ProjectileClass}
+     */
+    LogicContext.prototype.getProjectileClass = function (name) {
+        return this._classResourceManager.getResource("projectileClasses", name);
+    };
+    /**
+     * Return the weapon class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {WeaponClass}
+     */
+    LogicContext.prototype.getWeaponClass = function (name) {
+        return this._classResourceManager.getResource("weaponClasses", name);
+    };
+    /**
+     * Return the propulsion class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {PropulsionClass}
+     */
+    LogicContext.prototype.getPropulsionClass = function (name) {
+        return this._classResourceManager.getResource("propulsionClasses", name);
+    };
+    /**
+     * Return the spacecraft type with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SpacecraftType}
+     */
+    LogicContext.prototype.getSpacecraftType = function (name) {
+        return this._classResourceManager.getResource("spacecraftTypes", name);
+    };
+    /**
+     * Return the spacecraft class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SpacecraftClass}
+     */
+    LogicContext.prototype.getSpacecraftClass = function (name) {
+        return this._classResourceManager.getResource("spacecraftClasses", name);
+    };
+    /**
+     * Return the reusable environment with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {Environment}
+     */
+    LogicContext.prototype.getEnvironment = function (name) {
+        return this._environments[name] || null;
+    };
+    /**
+     * Returns the name of the level file (without path) of the given index.
+     * @param {number} index
+     * @returns {string}
+     */
+    LogicContext.prototype.getLevelFileName = function (index) {
+        return this._levelFileNames[index];
+    };
+    // indirect getters and setters
+    /**
+     * Returns all the available spacecraft classes in an array.
+     * @returns {SpacecraftClass[]}
+     */
+    LogicContext.prototype.getSpacecraftClassesInArray = function () {
+        var
+                i,
+                result = [],
+                names = this._classResourceManager.getResourceNames("spacecraftClasses");
+        for (i = 0; i < names.length; i++) {
+            result.push(this.getSpacecraftClass(names[i]));
+        }
+        return result;
+    };
+    // methods
+    /**
+     * Sends an asynchronous request to grab the file containing the in-game
+     * class descriptions and sets a callback to load those descriptions and
+     * initiate the loading of reusable environments when ready.
+     */
+    LogicContext.prototype.requestClassesLoad = function () {
+        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, {
+            "skyboxClasses": classes.SkyboxClass,
+            "backgroundObjectClasses": classes.BackgroundObjectClass,
+            "dustCloudClasses": classes.DustCloudClass,
+            "explosionClasses": classes.ExplosionClass,
+            "projectileClasses": classes.ProjectileClass,
+            "weaponClasses": classes.WeaponClass,
+            "propulsionClasses": classes.PropulsionClass,
+            "spacecraftTypes": classes.SpacecraftType,
+            "spacecraftClasses": classes.SpacecraftClass
+        }, function () {
+            this._classResourceManager.requestAllResources();
+            this._classResourceManager.requestResourceLoad();
+            this.requestEnvironmentsLoad();
+        }.bind(this));
+    };
+    /**
+     * Sends an asynchronous request to grab the file containing the reusable
+     * environment descriptions and sets a callback to load those descriptions 
+     * and set the resource state of this context to ready when done.
+     */
+    LogicContext.prototype.requestEnvironmentsLoad = function () {
+        application.requestTextFile("environment", this._environmentsSourceFileName, function (responseText) {
+            this.loadEnvironmentsFromJSON(JSON.parse(responseText));
+            this.setToReady();
+        }.bind(this));
+    };
+    /**
+     * Loads the desciptions of all reusable environments from the passed JSON object,
+     *  creates and stores all the objects for them.
+     * @param {Object} dataJSON
+     */
+    LogicContext.prototype.loadEnvironmentsFromJSON = function (dataJSON) {
+        var i, environment;
+        this._environments = {};
+        for (i = 0; i < dataJSON.environments.length; i++) {
+            environment = new Environment(dataJSON.environments[i]);
+            this._environments[dataJSON.environments[i].name] = environment;
+        }
+    };
+    /**
+     * Loads all the setting and references from the passed JSON object and
+     * initiates the request(s) necessary to load additional configuration from
+     * referenced files.
+     * @param {Object} dataJSON
+     */
+    LogicContext.prototype.loadFromJSON = function (dataJSON) {
+        this._databaseModelRotation = dataJSON.database.modelRotation;
+        this._randomShips = dataJSON.battle.randomShips;
+        this._selfFire = dataJSON.battle.selfFire;
+        this._autoTargeting =
+                utils.getSafeEnumValue(LogicContext.prototype.AutoTargeting, dataJSON.battle.autoTargeting) ||
+                application.showError(
+                        "Invalid value '" + dataJSON.battle.autoTargeting + "' specified for auto targeting! Auto targeting will be switched off.",
+                        "minor", "Valid values for auto targeting are : " + utils.getEnumValues(LogicContext.prototype.AutoTargeting).join(", ") + ".");
+        this.requestClassesLoad();
     };
     // ##############################################################################
     /**
@@ -607,9 +1032,10 @@ define([
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             positionVector = mat.translationVector3(this._physicalModel.getPositionMatrix());
+            // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 physicalHitObject = hitObjects[i].getPhysicalModel();
-                if (physicalHitObject && (physicalHitObject !== this._origin) && (physicalHitObject.checkHit(positionVector, [], 0))) {
+                if (physicalHitObject && (armada.logic().getSelfFire() || (hitObjects[i] !== this._origin)) && (physicalHitObject.checkHit(positionVector, [], 0))) {
                     relPos = vec.sub3(positionVector, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     velocity = vec.length3(velocityVector);
@@ -622,6 +1048,24 @@ define([
                     relPos = vec.mulVec4Mat4(positionVector, mat.inverse4(hitObjects[i].getVisualModel().getModelMatrix()));
                     relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
                     hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(relDir, -1));
+                    // auto targeting on hit
+                    if (hitObjects[i] !== this._origin) {
+                        switch (armada.logic().getAutoTargeting()) {
+                            case LogicContext.prototype.AutoTargeting.HIT_AND_NO_TARGET:
+                                if (!this._origin.getTarget()) {
+                                    this._origin.setTarget(hitObjects[i], true);
+                                }
+                                break;
+                            case LogicContext.prototype.AutoTargeting.HIT_AND_AUTO_TARGET:
+                                if (!this._origin.hasManualTarget()) {
+                                    this._origin.setTarget(hitObjects[i], true);
+                                }
+                                break;
+                            case LogicContext.prototype.AutoTargeting.ALWAYS_WHEN_HIT:
+                                this._origin.setTarget(hitObjects[i], true);
+                                break;
+                        }
+                    }
 
                     this.destroy();
                 }
@@ -1622,6 +2066,11 @@ define([
          * @type Spacecraft
          */
         this._target = null;
+        /**
+         * Whether the currently targeted spacecraft was selected automatically.
+         * @type Boolean
+         */
+        this._autoTarget = false;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
@@ -2236,10 +2685,12 @@ define([
     /**
      * 
      * @param {Spacecraft} target
+     * @param {Boolean} auto
      */
-    Spacecraft.prototype.setTarget = function (target) {
+    Spacecraft.prototype.setTarget = function (target, auto) {
         var i, camConfigs;
         this._target = target;
+        this._autoTarget = auto || false;
         if (this._visualModel) {
             camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName("target");
             for (i = 0; i < camConfigs.length; i++) {
@@ -2285,6 +2736,13 @@ define([
         return this._target;
     };
     /**
+     * Returns whether the currently targeted spacecraft was selected manually
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.hasManualTarget = function () {
+        return this._target && !this._autoTarget;
+    };
+    /**
      * Resets all the thruster burn levels of the spacecraft to zero.
      */
     Spacecraft.prototype.resetThrusterBurn = function () {
@@ -2326,19 +2784,23 @@ define([
         var i, damageIndicator, hitpointThreshold, explosion;
         // logic simulation: modify hitpoints
         this._hitpoints -= damage;
-        // visual simulation: add damage indicators if needed
-        for (i = 0; i < this._class.getDamageIndicators().length; i++) {
-            damageIndicator = this._class.getDamageIndicators()[i];
-            hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._class.getHitpoints();
-            if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
-                explosion = new Explosion(damageIndicator.explosionClass,
-                        mat.translation4v(damagePosition),
-                        mat.identity4(),
-                        damageDir,
-                        true,
-                        false);
-                explosion.addToScene(this._visualModel.getNode().getScene(), this._visualModel.getNode());
-                this._activeDamageIndicators.push(explosion);
+        if (this._hitpoints < 0) {
+            this._hitpoints = 0;
+        } else {
+            // visual simulation: add damage indicators if needed
+            for (i = 0; i < this._class.getDamageIndicators().length; i++) {
+                damageIndicator = this._class.getDamageIndicators()[i];
+                hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._class.getHitpoints();
+                if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
+                    explosion = new Explosion(damageIndicator.explosionClass,
+                            mat.translation4v(damagePosition),
+                            mat.identity4(),
+                            damageDir,
+                            true,
+                            false);
+                    explosion.addToScene(this._visualModel.getNode().getScene(), this._visualModel.getNode());
+                    this._activeDamageIndicators.push(explosion);
+                }
             }
         }
     };
@@ -2412,124 +2874,6 @@ define([
             this._activeDamageIndicators = null;
         }
         this._alive = false;
-    };
-    // #########################################################################
-    /**
-     * @class Represents an environment that can be used to build a visual 
-     * representation and perform the game logic on a virtual environment where 
-     * the game takes place.
-     * @param {Object} dataJSON If given, the data of the environment will be
-     * initialized from this JSON object.
-     * @returns {Environment}
-     */
-    function Environment(dataJSON) {
-        /**
-         * The list of skyboxes this environment contains as background.
-         * @name Environment#_skyboxes
-         * @type Skybox[]
-         */
-        this._skyboxes = null;
-        /**
-         * The list of background objects (stars, nebulae) this environment contains.
-         * @name Environment#_backgroundObjects
-         * @type BackgroundObject[]
-         */
-        this._backgroundObjects = null;
-        /**
-         * The list of dust clouds this environment contains.
-         * @name Environment#_dustClouds
-         * @type DustCloud[]
-         */
-        this._dustClouds = null;
-        /**
-         * The camera relative to which the environment is rendered.
-         * @name Environment#_camera
-         * @type Camera
-         */
-        this._camera = null;
-        // if given, load the data from the JSON object
-        if (dataJSON !== undefined) {
-            this.loadFromJSON(dataJSON);
-        }
-    }
-    // #########################################################################
-    // methods
-    /**
-     * Loads all the data about this environment stored in the passed JSON object.
-     * @param {Object} dataJSON
-     */
-    Environment.prototype.loadFromJSON = function (dataJSON) {
-        var i;
-        this._skyboxes = [];
-        for (i = 0; i < dataJSON.skyboxes.length; i++) {
-            this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(dataJSON.skyboxes[i].class)));
-        }
-
-        this._backgroundObjects = [];
-        for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
-            this._backgroundObjects.push(new BackgroundObject(
-                    armada.logic().getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
-                    dataJSON.backgroundObjects[i].position.angleAlpha,
-                    dataJSON.backgroundObjects[i].position.angleBeta
-                    ));
-        }
-
-        this._dustClouds = [];
-        for (i = 0; i < dataJSON.dustClouds.length; i++) {
-            this._dustClouds.push(new DustCloud(armada.logic().getDustCloudClass(dataJSON.dustClouds[i].class)));
-        }
-    };
-    /**
-     * Adds renderable objects representing all visual elements of the 
-     * environment to the passed scene.
-     * @param {budaScene} scene
-     */
-    Environment.prototype.addToScene = function (scene) {
-        var i;
-        for (i = 0; i < this._skyboxes.length; i++) {
-            this._skyboxes[i].addToScene(scene);
-        }
-        for (i = 0; i < this._backgroundObjects.length; i++) {
-            this._backgroundObjects[i].addToScene(scene);
-        }
-        for (i = 0; i < this._dustClouds.length; i++) {
-            this._dustClouds[i].addToScene(scene);
-        }
-        this._camera = scene.activeCamera;
-    };
-    /**
-     * Performs a simulation step to update the state of the environment.
-     */
-    Environment.prototype.simulate = function () {
-        var i;
-        for (i = 0; i < this._dustClouds.length; i++) {
-            this._dustClouds[i].simulate(this._camera);
-        }
-    };
-    Environment.prototype.destroy = function () {
-        var i;
-        if (this._skyboxes) {
-            for (i = 0; i < this._skyboxes.length; i++) {
-                this._skyboxes[i].destroy();
-                this._skyboxes[i] = null;
-            }
-            this._skyboxes = null;
-        }
-        if (this._backgroundObjects) {
-            for (i = 0; i < this._backgroundObjects.length; i++) {
-                this._backgroundObjects[i].destroy();
-                this._backgroundObjects[i] = null;
-            }
-            this._backgroundObjects = null;
-        }
-        if (this._dustClouds) {
-            for (i = 0; i < this._dustClouds.length; i++) {
-                this._dustClouds[i].destroy();
-                this._dustClouds[i] = null;
-            }
-            this._dustClouds = null;
-        }
-        this._camera = null;
     };
     // #########################################################################
     /**
@@ -2789,267 +3133,11 @@ define([
         }
         this._hitObjects = null;
     };
-    // #########################################################################
-    /**
-     * @class A class responsible for loading and storing game logic related 
-     * settings and data as well and provide an interface to access them.
-     * @returns {LogicContext}
-     */
-    function LogicContext() {
-        asyncResource.AsyncResource.call(this);
-        /**
-         * The name of the file (without path) that contains the descriptions
-         * of the in-game classes.
-         * @type String
-         */
-        this._classesSourceFileName = null;
-        /**
-         * The name of the file (without path) that contains the descriptions
-         * of the reusable environments.
-         * @type String
-         */
-        this._environmentsSourceFileName = null;
-        /**
-         * @type ResourceManagerF
-         */
-        this._classResourceManager = new resourceManager.ResourceManager();
-        /**
-         * An associative array storing the reusable Environment objects that 
-         * describe possible environments for levels. The keys are the names
-         * of the environments.
-         * @name LogicContext#_environments
-         * @type Object
-         */
-        this._environments = null;
-        /**
-         * @type Array<String>
-         */
-        this._levelFileNames = null;
-        /**
-         * Whether the rotation of models (both automatic and manual) is enabled
-         * on the database screen.
-         * @name LogicContext#_databaseModelRotation
-         * @type Boolean
-         */
-        this._databaseModelRotation = null;
-        /**
-         * A descriptor object of how many random ships of each class should be added to the test 
-         * scene
-         * @type Object
-         */
-        this._randomShips = null;
-    }
-    LogicContext.prototype = new asyncResource.AsyncResource();
-    LogicContext.prototype.constructor = LogicContext;
-    // #########################################################################
-    // direct getters and setters
-    /**
-     * The game classes will be loaded from the file set here. Give the path to the file relative
-     * to the configuration folder.
-     * @param {String} value
-     */
-    LogicContext.prototype.setClassesSourceFileName = function (value) {
-        this._classesSourceFileName = value;
-    };
-    /**
-     * The game environments will be loaded from the file set here. Give the path to the file relative
-     * to the environment folder.
-     * @param {String} value
-     */
-    LogicContext.prototype.setEnvironmentsSourceFileName = function (value) {
-        this._environmentsSourceFileName = value;
-    };
-    /**
-     * Sets the array of strings that contains the names of the level descriptor JSON files.
-     * The path doesn't need to be included, the files will be looked for in the levels folder.
-     * @param {Array<String>} value
-     */
-    LogicContext.prototype.setLevelFileNames = function (value) {
-        this._levelFileNames = value;
-    };
-    /**
-     * Returns whether the rotation (both automatic and manual) of models on the
-     * database screen is currently turned on.
-     * @returns {Boolean}
-     */
-    LogicContext.prototype.getDatabaseModelRotation = function () {
-        return this._databaseModelRotation;
-    };
-    /**
-     * Returns how many random ships of each class should be added to the test battle scene
-     * @returns {Object}
-     */
-    LogicContext.prototype.getRandomShips = function () {
-        return this._randomShips;
-    };
-    /**
-     * Return the skybox class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {SkyboxClass}
-     */
-    LogicContext.prototype.getSkyboxClass = function (name) {
-        return this._classResourceManager.getResource("skyboxClasses", name);
-    };
-    /**
-     * Return the background object class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {BackgroundObjectClass}
-     */
-    LogicContext.prototype.getBackgroundObjectClass = function (name) {
-        return this._classResourceManager.getResource("backgroundObjectClasses", name);
-    };
-    /**
-     * Return the dust cloud class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {DustCloudClass}
-     */
-    LogicContext.prototype.getDustCloudClass = function (name) {
-        return this._classResourceManager.getResource("dustCloudClasses", name);
-    };
-    /**
-     * Return the explosion class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {ExplosionClass}
-     */
-    LogicContext.prototype.getExplosionClass = function (name) {
-        return this._classResourceManager.getResource("explosionClasses", name);
-    };
-    /**
-     * Return the projectile class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {ProjectileClass}
-     */
-    LogicContext.prototype.getProjectileClass = function (name) {
-        return this._classResourceManager.getResource("projectileClasses", name);
-    };
-    /**
-     * Return the weapon class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {WeaponClass}
-     */
-    LogicContext.prototype.getWeaponClass = function (name) {
-        return this._classResourceManager.getResource("weaponClasses", name);
-    };
-    /**
-     * Return the propulsion class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {PropulsionClass}
-     */
-    LogicContext.prototype.getPropulsionClass = function (name) {
-        return this._classResourceManager.getResource("propulsionClasses", name);
-    };
-    /**
-     * Return the spacecraft type with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {SpacecraftType}
-     */
-    LogicContext.prototype.getSpacecraftType = function (name) {
-        return this._classResourceManager.getResource("spacecraftTypes", name);
-    };
-    /**
-     * Return the spacecraft class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {SpacecraftClass}
-     */
-    LogicContext.prototype.getSpacecraftClass = function (name) {
-        return this._classResourceManager.getResource("spacecraftClasses", name);
-    };
-    /**
-     * Return the reusable environment with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {Environment}
-     */
-    LogicContext.prototype.getEnvironment = function (name) {
-        return this._environments[name] || null;
-    };
-    /**
-     * Returns the name of the level file (without path) of the given index.
-     * @param {number} index
-     * @returns {string}
-     */
-    LogicContext.prototype.getLevelFileName = function (index) {
-        return this._levelFileNames[index];
-    };
-    // #########################################################################
-    // indirect getters and setters
-    /**
-     * Returns all the available spacecraft classes in an array.
-     * @returns {SpacecraftClass[]}
-     */
-    LogicContext.prototype.getSpacecraftClassesInArray = function () {
-        var
-                i,
-                result = [],
-                names = this._classResourceManager.getResourceNames("spacecraftClasses");
-        for (i = 0; i < names.length; i++) {
-            result.push(this.getSpacecraftClass(names[i]));
-        }
-        return result;
-    };
-    // #########################################################################
-    // methods
-    /**
-     * Sends an asynchronous request to grab the file containing the in-game
-     * class descriptions and sets a callback to load those descriptions and
-     * initiate the loading of reusable environments when ready.
-     */
-    LogicContext.prototype.requestClassesLoad = function () {
-        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, {
-            "skyboxClasses": classes.SkyboxClass,
-            "backgroundObjectClasses": classes.BackgroundObjectClass,
-            "dustCloudClasses": classes.DustCloudClass,
-            "explosionClasses": classes.ExplosionClass,
-            "projectileClasses": classes.ProjectileClass,
-            "weaponClasses": classes.WeaponClass,
-            "propulsionClasses": classes.PropulsionClass,
-            "spacecraftTypes": classes.SpacecraftType,
-            "spacecraftClasses": classes.SpacecraftClass
-        }, function () {
-            this._classResourceManager.requestAllResources();
-            this._classResourceManager.requestResourceLoad();
-            this.requestEnvironmentsLoad();
-        }.bind(this));
-    };
-    /**
-     * Sends an asynchronous request to grab the file containing the reusable
-     * environment descriptions and sets a callback to load those descriptions 
-     * and set the resource state of this context to ready when done.
-     */
-    LogicContext.prototype.requestEnvironmentsLoad = function () {
-        application.requestTextFile("environment", this._environmentsSourceFileName, function (responseText) {
-            this.loadEnvironmentsFromJSON(JSON.parse(responseText));
-            this.setToReady();
-        }.bind(this));
-    };
-    /**
-     * Loads the desciptions of all reusable environments from the passed JSON object,
-     *  creates and stores all the objects for them.
-     * @param {Object} dataJSON
-     */
-    LogicContext.prototype.loadEnvironmentsFromJSON = function (dataJSON) {
-        var i, environment;
-        this._environments = {};
-        for (i = 0; i < dataJSON.environments.length; i++) {
-            environment = new Environment(dataJSON.environments[i]);
-            this._environments[dataJSON.environments[i].name] = environment;
-        }
-    };
-    /**
-     * Loads all the setting and references from the passed JSON object and
-     * initiates the request(s) necessary to load additional configuration from
-     * referenced files.
-     * @param {Object} dataJSON
-     */
-    LogicContext.prototype.loadFromJSON = function (dataJSON) {
-        this._databaseModelRotation = dataJSON.database.modelRotation;
-        this._randomShips = dataJSON.battle.randomShips;
-        this.requestClassesLoad();
-    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        LogicContext: LogicContext,
         Spacecraft: Spacecraft,
-        Level: Level,
-        LogicContext: LogicContext
+        Level: Level
     };
 });

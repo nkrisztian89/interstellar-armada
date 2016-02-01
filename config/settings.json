@@ -67,7 +67,9 @@
                 "viper": 2,
                 "aries": 1,
                 "taurus": 1
-            }
+            },
+            "selfFire": true,
+            "autoTargeting": "hitAndAutoTarget"
         }
     },
     "control": {

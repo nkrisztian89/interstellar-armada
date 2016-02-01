@@ -20,6 +20,21 @@ define([
     "armada/armada"
 ], function (vec, mat, application, resourceManager, egomModel, physics, budaScene, armada) {
     "use strict";
+    /**
+     * Shows an error message explaining that a certain property was not specified when initializing a class, that would be
+     * needed for it.
+     * @param {Object} classInstance
+     * @param {String} propertyName
+     */
+    function showMissingPropertyError(classInstance, propertyName) {
+        application.showError(
+                "Cannot initialize " + classInstance.constructor.name + " without correctly specifying its property '" + propertyName + "'!",
+                "severe",
+                "The property was either not specified, or it was specified with a wrong type or an invalid value." +
+                (((typeof classInstance._name) === "string") ?
+                        "The error happened while initializing '" + classInstance._name + "'" : ""));
+        return null;
+    }
     // ##############################################################################
     /**
      * @class
@@ -27,7 +42,7 @@ define([
      * @param {object} dataJSON
      */
     function GenericClass(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || application.crash()) : null);
+        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || showMissingPropertyError(this, "name")) : null);
         /**
          * @type String
          */
@@ -92,7 +107,7 @@ define([
         /**
          * @type String
          */
-        this._shaderName = dataJSON ? (dataJSON.shader || application.crash()) : null;
+        this._shaderName = dataJSON ? (dataJSON.shader || showMissingPropertyError(this, "shader")) : null;
         /**
          * @type ShaderResource
          */
@@ -192,7 +207,7 @@ define([
         /**
          * @type String
          */
-        this._cubemapName = dataJSON ? (dataJSON.cubemap || application.crash()) : null;
+        this._cubemapName = dataJSON ? (dataJSON.cubemap || showMissingPropertyError(this, "cubemap")) : null;
         /**
          * @type CubemapResource
          */
@@ -238,7 +253,7 @@ define([
         /**
          * @type String
          */
-        this._textureName = dataJSON ? (dataJSON.texture || application.crash()) : null;
+        this._textureName = dataJSON ? (dataJSON.texture || showMissingPropertyError(this, "texture")) : null;
         /**
          * @type TextureResource
          */
@@ -379,7 +394,7 @@ define([
                     this._layers.push(new ParticleDescriptor(descriptorJSON));
                 }
             } else {
-                application.crash();
+                showMissingPropertyError(this, "layers");
             }
         }
     };
@@ -430,7 +445,7 @@ define([
          * class is instantiated.
          * @type Number
          */
-        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || application.crash()) : null;
+        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || showMissingPropertyError(this, "numberOfParticles")) : null;
         /**
          * The color of the particles in the dust clouds of this class.
          * @type Number[3]
@@ -441,7 +456,7 @@ define([
          * from the camera along any axis.
          * @type Number
          */
-        this._range = dataJSON ? (dataJSON.range || application.crash()) : null;
+        this._range = dataJSON ? (dataJSON.range || showMissingPropertyError(this, "range")) : null;
     };
     /**
      * @override
@@ -747,13 +762,13 @@ define([
          * shot from weapons.
          * @type Number
          */
-        this._mass = dataJSON ? (dataJSON.mass || application.crash()) : null;
+        this._mass = dataJSON ? (dataJSON.mass || showMissingPropertyError(this, "mass")) : null;
         /**
          * The length of life of the projectile in milliseconds, after which it will 
          * disappear.
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration || application.crash()) : null;
+        this._duration = dataJSON ? (dataJSON.duration || showMissingPropertyError(this, "duration")) : null;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
@@ -765,14 +780,14 @@ define([
                 dataJSON.muzzleFlash.name = "-";
                 this._muzzleFlash = new ParticleDescriptor(dataJSON.muzzleFlash);
             } else {
-                application.crash();
+                showMissingPropertyError(this, "muzzleFlash");
             }
         }
         /**
          * The class of the explosion this spacecraft creates when it hits a spacecraft.
          * @type ExplosionClass
          */
-        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
+        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion")) || application.crash()) : null;
     };
     /**
      * @override
@@ -829,7 +844,7 @@ define([
          * The class of the projectile being shot from this barrel.
          * @type ProjectileClass
          */
-        this._projectileClass = dataJSON ? (armada.logic().getProjectileClass(dataJSON.projectile || application.crash()) || application.crash()) : null;
+        this._projectileClass = dataJSON ? (armada.logic().getProjectileClass(dataJSON.projectile || showMissingPropertyError(this, "projectile")) || application.crash()) : null;
         /**
          * The force with which the barrel shoots the projectile (used for initial 
          * acceleration, resulting in the speed of the projectile)
@@ -837,12 +852,12 @@ define([
          * measured in newtons.
          * @type Number
          */
-        this._force = dataJSON ? (dataJSON.force || application.crash()) : null;
+        this._force = dataJSON ? (dataJSON.force || showMissingPropertyError(this, "force")) : null;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
          * @type Number[3]
          */
-        this._positionVector = dataJSON ? (dataJSON.position || application.crash()) : null;
+        this._positionVector = dataJSON ? (dataJSON.position || showMissingPropertyError(this, "position")) : null;
     }
     /**
      * @returns {ProjectileClass}
@@ -891,12 +906,12 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON ? (dataJSON.grade || application.crash()) : null;
+        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : null;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
-        this._cooldown = dataJSON ? (dataJSON.cooldown || application.crash()) : null;
+        this._cooldown = dataJSON ? (dataJSON.cooldown || showMissingPropertyError(this, "cooldown")) : null;
         /**
          * The list of barrels of this weapon.
          * @type Barrel[]
@@ -908,7 +923,7 @@ define([
                     this._barrels.push(new Barrel(dataJSON.barrels[i]));
                 }
             } else {
-                application.crash();
+                showMissingPropertyError(this, "barrels");
             }
         }
     };
@@ -977,20 +992,20 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON ? (dataJSON.grade || application.crash()) : null;
+        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : null;
         /**
          * The strength of the force applied to the ship when the thrusters are 
          * fired in one direction, measured in newtons.
          * @type Number
          */
-        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || application.crash()) : null;
+        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || showMissingPropertyError(this, "thrust")) : null;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
          * used to turn it, in kg*rad/s^2 (mass is considered instead of a
          * calculated coefficient based on shape, for simplicity)
          * @type Number
          */
-        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || application.crash()) : null;
+        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || showMissingPropertyError(this, "angularThrust")) : null;
     };
     /**
      * 
@@ -1044,11 +1059,11 @@ define([
          * The full name of this type as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || application.crash()) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || showMissingPropertyError(this, "fullName")) : null;
         /**
          * @type String
          */
-        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : application.crash()) : null;
+        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : showMissingPropertyError(this, "description")) : null;
         /**
          * @type String[]
          */
@@ -1102,7 +1117,7 @@ define([
          * The translation matrix for the position of the slot relative to the ship.
          * @type Float32Array
          */
-        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || application.crash())) : null;
+        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"))) : null;
         /**
          * The rotation matrix describing the orientation of the weapon slot 
          * relative to the ship.
@@ -1112,7 +1127,7 @@ define([
         /**
          * @type Number
          */
-        this.maxGrade = dataJSON ? (dataJSON.maxGrade || application.crash()) : null;
+        this.maxGrade = dataJSON ? (dataJSON.maxGrade || showMissingPropertyError(this, "maxGrade")) : null;
     }
     // ##############################################################################
     /**
@@ -1126,7 +1141,7 @@ define([
          * The coordinates of the position of the slot relative to the ship.
          * @type Number[4]
          */
-        this.positionVector = dataJSON ? (dataJSON.position || application.crash()) : null;
+        this.positionVector = dataJSON ? (dataJSON.position || showMissingPropertyError(this, "position")) : null;
         if (this.positionVector) {
             this.positionVector.push(1.0);
         }
@@ -1143,7 +1158,7 @@ define([
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
          * @type String[]
          */
-        this.uses = dataJSON ? (dataJSON.uses || application.crash()) : null;
+        this.uses = dataJSON ? (dataJSON.uses || showMissingPropertyError(this, "uses")) : null;
         /**
          * The index of the thruster group this slot belongs to.
          * Members of the same group should have the same uses list. The parts of the
@@ -1151,7 +1166,7 @@ define([
          * index, allowing to manipulate their appearance using uniform arrays.
          * @type Number
          */
-        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : application.crash()) : null;
+        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : showMissingPropertyError(this, "groupIndex")) : null;
     }
     // ##############################################################################
     /**
@@ -1165,7 +1180,7 @@ define([
          * The name of the class of the weapon to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || application.crash()) : null;
+        this.className = dataJSON ? (dataJSON.class || showMissingPropertyError(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -1179,7 +1194,7 @@ define([
          * The name of the class of the propulsion to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || application.crash()) : null;
+        this.className = dataJSON ? (dataJSON.class || showMissingPropertyError(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -1234,7 +1249,6 @@ define([
         return this._propulsionDescriptor;
     };
     // ##############################################################################
-    ///TODO: finish documentation
     /**
      * @class Describes the parameters of a certain view of an object, based on which
      * a camera can be created if that object is deployed in a scene.
@@ -1245,45 +1259,48 @@ define([
          * A desciptive name for the view, e.g. "cockpit"
          * @type String
          */
-        this._name = dataJSON.name || application.crash();
+        this._name = dataJSON.name || showMissingPropertyError(this, "name");
         /**
          * The Field Of View of the view in degrees.
          * @type Number
          */
-        this._fov = dataJSON.fov || application.crash();
+        this._fov = dataJSON.fov || showMissingPropertyError(this, "fov");
         /**
-         * Whether turning the view should happen in FPS mode (around axes relative to the followed
-         * object, and not the camera itself)
+         * Whether turning the view should happen in FPS mode (around axes relative to the followed object / world, and not the camera itself)
          * @type Boolean
          */
         this._fps = (typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false;
         /**
+         * Whether the position of the view should follow the position of the object it is associated with (making the set position relative
+         * to it)
          * @type Boolean
          */
-        this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : application.crash();
+        this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : showMissingPropertyError(this, "followsPosition");
         /**
+         * Whether the view's orientation should always be centered on the associated object
          * @type Boolean
          */
-        this._lookAtSelf = (typeof dataJSON.lookAtSelf) === "boolean" ? dataJSON.lookAtSelf : false;
+        this._lookAtSelf = dataJSON.lookAt === "self";
         /**
+         * Whether the view's orientation should always be centered on the target of the associated object
          * @type Boolean
          */
-        this._lookAtTarget = (typeof dataJSON.lookAtTarget) === "boolean" ? dataJSON.lookAtTarget : false;
+        this._lookAtTarget = dataJSON.lookAt === "target";
         /**
          * Whether the position of the view is changeable by the player.
          * @type Boolean
          */
-        this._movable = (typeof dataJSON.movable) === "boolean" ? dataJSON.movable : application.crash();
+        this._movable = (typeof dataJSON.movable) === "boolean" ? dataJSON.movable : showMissingPropertyError(this, "movable");
         /**
          * Whether the direction of the view is changeable by the player.
          * @type Boolean
          */
-        this._turnable = (typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : application.crash();
+        this._turnable = (typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : showMissingPropertyError(this, "turnable");
         /**
          * The translation matrix describing the relative position to the object.
          * @type Float32Array
          */
-        this._followPositionMatrix = mat.translation4v(dataJSON.position || application.crash());
+        this._followPositionMatrix = mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"));
         /**
          * The rotation matrix describing the relative orientation to the object. 
          * @type Float32Array
@@ -1293,7 +1310,7 @@ define([
          * Whether the rotation of the camera has to be executed around the followed object.
          * @type Boolean
          */
-        this._rotationCenterIsObject = (typeof dataJSON.rotationCenterIsObject) === "boolean" ? dataJSON.rotationCenterIsObject : application.crash();
+        this._rotationCenterIsObject = (typeof dataJSON.rotationCenterIsObject) === "boolean" ? dataJSON.rotationCenterIsObject : showMissingPropertyError(this, "rotationCenterIsObject");
     }
     /**
      * Creates and returns a camera configuration set up for following the given object according to the view's
@@ -1339,12 +1356,12 @@ define([
          * A desciptive name for the view
          * @type String
          */
-        this._name = dataJSON.name || application.crash();
+        this._name = dataJSON.name || showMissingPropertyError(this, "name");
         /**
          * The Field Of View of the view in degrees.
          * @type Number
          */
-        this._fov = dataJSON.fov || application.crash();
+        this._fov = dataJSON.fov || showMissingPropertyError(this, "fov");
         /**
          * Whether turning the view should happen in FPS mode (turning around the Z axis of the world and its own X axis)
          * @type Boolean
@@ -1369,7 +1386,7 @@ define([
          * The translation matrix describing the position of the camera in the scene (or relative to the center of all objects)
          * @type Float32Array
          */
-        this._positionMatrix = mat.translation4v(dataJSON.position || application.crash());
+        this._positionMatrix = mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"));
         /**
          * The rotation matrix describing the world orientation of the camera
          * @type Float32Array
@@ -1420,12 +1437,12 @@ define([
          * The amount of hull integrity below which this indicator should be presented. (percentage)
          * @type Number
          */
-        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || application.crash()) : null;
+        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || showMissingPropertyError(this, "hullIntegrity")) : null;
         /**
          * The class of the explosion that should be created to display this indicator.
          * @type ExplosionClass
          */
-        this.explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.class || application.crash()) || application.crash()) : null;
+        this.explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.class || showMissingPropertyError(this, "class")) || application.crash()) : null;
     }
     // ##############################################################################
     /**
@@ -1452,26 +1469,26 @@ define([
          * The type of spacecraft this class belongs to.
          * @type SpacecraftType
          */
-        this._spacecraftType = armada.logic().getSpacecraftType(dataJSON.type || application.crash());
+        this._spacecraftType = armada.logic().getSpacecraftType(dataJSON.type || showMissingPropertyError(this, "type"));
         /**
          * The full name of this class as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON.fullName || application.crash();
+        this._fullName = dataJSON.fullName || showMissingPropertyError(this, "fullName");
         /**
          * The description of this class as can be viewed in the game.
          * @type String
          */
-        this._description = dataJSON.description || application.crash();
+        this._description = dataJSON.description || showMissingPropertyError(this, "description");
         /**
          * @type number
          */
-        this._hitpoints = dataJSON.hitpoints || application.crash();
+        this._hitpoints = dataJSON.hitpoints || showMissingPropertyError(this, "hitpoints");
         /**
          * The mass of the spacecraft in kilograms.
          * @type Number
          */
-        this._mass = dataJSON.mass || application.crash();
+        this._mass = dataJSON.mass || showMissingPropertyError(this, "mass");
         /**
          * The physical bodies that model the spacecraft's shape for hit checks.
          * @type Body[]
@@ -1480,12 +1497,12 @@ define([
         if (dataJSON.bodies) {
             for (i = 0; i < dataJSON.bodies.length; i++) {
                 this._bodies.push(new physics.Body(
-                        mat.translation4v(dataJSON.bodies[i].position || application.crash()),
+                        mat.translation4v(dataJSON.bodies[i].position || showMissingPropertyError(this, "bodies[i].position")),
                         mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
                         dataJSON.bodies[i].size));
             }
         } else {
-            application.crash();
+            showMissingPropertyError(this, "bodies");
         }
         /**
          * The slots where weapons can be equipped on the ship.
@@ -1495,11 +1512,11 @@ define([
         if (dataJSON.weaponSlots) {
             for (i = 0; i < dataJSON.weaponSlots.length; i++) {
                 if (dataJSON.weaponSlots[i].array) {
-                    startPosition = dataJSON.weaponSlots[i].startPosition || application.crash();
-                    translationVector = dataJSON.weaponSlots[i].translationVector || application.crash();
+                    startPosition = dataJSON.weaponSlots[i].startPosition || showMissingPropertyError(this, "weaponSlot array startPosition");
+                    translationVector = dataJSON.weaponSlots[i].translationVector || showMissingPropertyError(this, "weaponSlot array translationVector");
                     rotations = dataJSON.weaponSlots[i].rotations;
-                    maxGrade = dataJSON.weaponSlots[i].maxGrade || application.crash();
-                    count = dataJSON.weaponSlots[i].count || application.crash();
+                    maxGrade = dataJSON.weaponSlots[i].maxGrade || showMissingPropertyError(this, "weaponSlot array maxGrade");
+                    count = dataJSON.weaponSlots[i].count || showMissingPropertyError(this, "weaponSlot array count");
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
                             position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
@@ -1515,7 +1532,7 @@ define([
         /**
          * @type Number
          */
-        this._maxPropulsionGrade = dataJSON.maxPropulsionGrade || application.crash();
+        this._maxPropulsionGrade = dataJSON.maxPropulsionGrade || showMissingPropertyError(this, "maxPropulsionGrade");
         /**
          * The slots where the thrusters are located on the ship.
          * @type ThrusterSlot[]
@@ -1526,10 +1543,10 @@ define([
                 groupIndex = dataJSON.thrusterSlots[i].group;
                 uses = dataJSON.thrusterSlots[i].uses;
                 if (dataJSON.thrusterSlots[i].array) {
-                    startPosition = dataJSON.thrusterSlots[i].startPosition || application.crash();
-                    translationVector = dataJSON.thrusterSlots[i].translationVector || application.crash();
-                    size = dataJSON.thrusterSlots[i].size || application.crash();
-                    count = dataJSON.thrusterSlots[i].count || application.crash();
+                    startPosition = dataJSON.thrusterSlots[i].startPosition || showMissingPropertyError(this, "thrusterSlot array startPosition");
+                    translationVector = dataJSON.thrusterSlots[i].translationVector || showMissingPropertyError(this, "thrusterSlot array translationVector");
+                    size = dataJSON.thrusterSlots[i].size || showMissingPropertyError(this, "thrusterSlot array size");
+                    count = dataJSON.thrusterSlots[i].count || showMissingPropertyError(this, "thrusterSlot array count");
                     for (j = 0; j < count; j++) {
                         this._thrusterSlots.push(new ThrusterSlot({
                             position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
@@ -1578,7 +1595,7 @@ define([
          * The class of the explosion this spacecraft creates when it is destroyed and explodes.
          * @type ExplosionClass
          */
-        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || application.crash()) || application.crash()) : null;
+        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion")) || application.crash()) : null;
         /**
          * The damage indicators (fires, sparks) that progressively appear as the ship loses hull integrity
          * @type DamageIndicator[]
@@ -1589,7 +1606,7 @@ define([
                 this._damageIndicators.push(new DamageIndicator(dataJSON.damageIndicators[i]));
             }
         } else {
-            application.crash();
+            showMissingPropertyError(this, "damageIndicators");
         }
     };
     /**

@@ -357,7 +357,7 @@
             "rotations": [
                 {
                     "axis": "X",
-                    "degrees": -90
+                    "degrees": 90
                 }
             ]
         },
@@ -403,7 +403,7 @@
             "fov": 60,
             "fps": true,
             "followsPosition": true,
-            "lookAtTarget": true,
+            "lookAt": "target",
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,

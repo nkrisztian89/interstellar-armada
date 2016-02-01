@@ -331,7 +331,7 @@
             "rotations": [
                 {
                     "axis": "X",
-                    "degrees": -90
+                    "degrees": 90
                 }
             ]
         },

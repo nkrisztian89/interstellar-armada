@@ -11,7 +11,6 @@
 
 define(function () {
     "use strict";
-
     var
             exports = {},
             _keyCodeTable = {
@@ -47,7 +46,6 @@ define(function () {
                 "f10": 121, "f11": 122, "f12": 123,
                 "-": 173, ",": 188, ".": 190
             };
-
     /**
      * Returns a [red,green,blue] array representing an RGB color based on the
      * data stored in the attributes of the passed XML tag.
@@ -90,7 +88,6 @@ define(function () {
         }
         return result;
     };
-
     /**
      * Returns the first XML element under the passed parent element (or XML
      * document root element, if a document was passed) that has the passed
@@ -107,7 +104,6 @@ define(function () {
         }
         return null;
     };
-
     /**
      * Returns the key code of the key passed in human readable string form.
      * @see KeyboardInputInterpreter#getKeyCodeTable
@@ -121,7 +117,6 @@ define(function () {
                         _keyCodeTable[key]) :
                 null;
     };
-
     /**
      * Returns the key in human readable string form corresponding to the key code
      * passed as parameter.
@@ -138,7 +133,6 @@ define(function () {
         }
         return "#" + keyCode;
     };
-
     exports.arraysEqual = function (array1, array2) {
         var i, l;
         if (!array2) {
@@ -159,6 +153,38 @@ define(function () {
         }
         return true;
     };
-
+    /**
+     * Returns a value that is guaranteed to be among the possible values of an enumeration object.
+     * @param {Object} enumObject
+     * @param {any} value
+     * @param {any} defaultValue
+     * @returns {any|null}
+     */
+    exports.getSafeEnumValue = function (enumObject, value, defaultValue) {
+        var p;
+        defaultValue = defaultValue ? this(enumObject, defaultValue) : null;
+        for (p in enumObject) {
+            if (enumObject.hasOwnProperty(p)) {
+                if (value === enumObject[p]) {
+                    return value;
+                }
+            }
+        }
+        return defaultValue || null;
+    };
+    /**
+     * Returns an array of the possible values of an object serving as an enum.
+     * @param {Object} enumObject
+     * @returns {Array}
+     */
+    exports.getEnumValues = function (enumObject) {
+        var result = [], p;
+        for (p in enumObject) {
+            if (enumObject.hasOwnProperty(p)) {
+                result.push(enumObject[p]);
+            }
+        }
+        return result;
+    };
     return exports;
 });

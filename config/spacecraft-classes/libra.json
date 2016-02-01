@@ -571,7 +571,7 @@
             "fps": true,
             "fov": 60,
             "followsPosition": true,
-            "lookAtTarget": true,
+            "lookAt": "target",
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
