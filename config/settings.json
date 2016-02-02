@@ -70,6 +70,14 @@
             },
             "selfFire": true,
             "autoTargeting": "hitAndAutoTarget"
+        },
+        "camera": {
+            "defaultFOV": 60,
+            "defaultFOVRange": [5, 100],
+            "defaultSpan": 0.1,
+            "defaultSpanRange": [0.1, 0.1],
+            "defaultBaseOrientation": "positionFollowedObjects",
+            "defaultPointToFallback": "positionFollowedObjectOrWorld"
         }
     },
     "control": {
@@ -248,9 +256,9 @@
                         "action": "fire",
                         "key": "space"
                     }, {
-                    "action": "nextTarget",
+                        "action": "nextTarget",
                         "key": "t"
-                    }, {    
+                    }, {
                         "action": "changeFlightMode",
                         "key": "tab"
                     }, {

@@ -2843,6 +2843,7 @@ define([
      * axes
      * @param {Number[3]} velocityVector The vector describing the current velocity of the camera (not taking into account the movement
      * of the objects it follows and the orientation, as those are calculated in within this functions)
+     * This method might update the velocity vector.
      * @param {Number} dt The time passed since the last update, to calculate the distance travelled
      */
     CameraPositionConfiguration.prototype.update = function (worldOrientationMatrix, velocityVector, dt) {
@@ -2856,6 +2857,9 @@ define([
                     if (this._minimumDistance < this._maximumDistance) {
                         translationVector = mat.translationVector3(this._relativePositionMatrix);
                         distance = vec.length3(translationVector) + (velocityVector[2] * dt / 1000);
+                        if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
+                            velocityVector[2] = 0;
+                        }
                         distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
                         this._relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
                     }
@@ -2878,15 +2882,15 @@ define([
      * orientation is absolute, setting multiple objects means the orientation of the first one will be followed. (as of now, can be changed
      * later to utilize all orientations)
      * @param {Float32Array} orientationMatrix The starting relative (if objects are followed) or world (if not) orientation of the camera.
-     * @param {Number} [alpha] In FPS-mode, the starting alpha angle (around the Z axis)
-     * @param {Number} [beta] In FPS-mode, the starting beta angle (around X axis)
-     * @param {Number} [minAlpha] In FPS-mode, the lowest possible value for the alpha angle.
-     * @param {Number} [maxAlpha] In FPS-mode, the highest possible value for the alpha angle.
-     * @param {Number} [minBeta] In FPS-mode, the lowest possible value for the beta angle.
-     * @param {Number} [maxBeta] In FPS-mode, the highest possible value for the beta angle.
-     * @param {Number} [baseOrientation] (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be 
+     * @param {Number} [alpha=0] In FPS-mode, the starting alpha angle (around the Z axis)
+     * @param {Number} [beta=0] In FPS-mode, the starting beta angle (around X axis)
+     * @param {Number} [minAlpha=-360] In FPS-mode, the lowest possible value for the alpha angle.
+     * @param {Number} [maxAlpha=360] In FPS-mode, the highest possible value for the alpha angle.
+     * @param {Number} [minBeta=-90] In FPS-mode, the lowest possible value for the beta angle.
+     * @param {Number} [maxBeta=90] In FPS-mode, the highest possible value for the beta angle.
+     * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be 
      * taken as base when calculating the orientation in FPS-mode.
-     * @param {Number} [pointToFallback] (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation 
+     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation 
      * calculation to use if no objects are specified to point towards to
      */
     function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta, baseOrientation, pointToFallback) {
@@ -2975,46 +2979,46 @@ define([
          * See min alpha for explanation. The minimum for the beta angle. In degrees.
          * @type Number
          */
-        this._minBeta = (minBeta !== undefined) ? minBeta : -360;
+        this._minBeta = (minBeta !== undefined) ? minBeta : -90;
         /**
          * See max alpha for explanation. The maximum for the beta angle. In degrees.
          * @type Number
          */
-        this._maxBeta = (maxBeta !== undefined) ? maxBeta : 360;
+        this._maxBeta = (maxBeta !== undefined) ? maxBeta : 90;
         /**
          * (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be taken as base when calculating 
          * the orientation in FPS-mode.
-         * @type Number
+         * @type String
          */
         this._baseOrientation = baseOrientation;
         /**
          * (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation calculation to use if no 
          * objects are specified to point towards to
-         * @type Number
+         * @type String
          */
         this._pointToFallback = pointToFallback;
     }
     /**
-     * @enum {Number}
+     * @enum {String}
      * Options about what coordinate sytem should be taken as base when calculating the orientation in FPS-mode.
      */
     CameraOrientationConfiguration.prototype.BaseOrientation = {
         /**
          * The FPS-mode angles should be relative to the world coordinate system
          */
-        world: 1,
+        WORLD: "world",
         /**
          * The FPS-mode angles should be relative to the orientation of the object(s) followed by position
          */
-        positionFollowedObjects: 2,
+        POSITION_FOLLOWED_OBJECTS: "positionFollowedObjects",
         /**
          * The FPS-mode angles should be relative to the orientation of the object(s) followed by orientation
          */
-        orientationFollowedObjects: 3
+        ORIENTATION_FOLLOWED_OBJECTS: "orientationFollowedObjects"
     };
     Object.freeze(CameraOrientationConfiguration.prototype.BaseOrientation);
     /**
-     * @enum {Number}
+     * @enum {String}
      * Options on what orientation calculation to fall back to in case a "point-to" configuration was set (which always faces the followed
      * objects), but no followed objects are specified.
      */
@@ -3022,16 +3026,16 @@ define([
         /**
          * Treat the relative orientation matrix as world orientation matrix
          */
-        world: 1,
+        WORLD: "world",
         /**
          * Let the orientation stay as it is (as it was before)
          */
-        stationary: 2,
+        STATIONARY: "stationary",
         /**
          * Calculate the orientation relative to the object that is followed by position. If no object is followed by position, use the
          * world setting
          */
-        positionFollowedObjectOrWorld: 3
+        POSITION_FOLLOWED_OBJECT_OR_WORLD: "positionFollowedObjectOrWorld"
     };
     Object.freeze(CameraOrientationConfiguration.prototype.PointToFallback);
     /**
@@ -3173,19 +3177,6 @@ define([
                     }
                 }.bind(this);
         this._cleanupFollowedObjects();
-        switch (this._baseOrientation) {
-            case this.BaseOrientation.world:
-                baseOrientationMatrix = null;
-                break;
-            case this.BaseOrientation.positionFollowedObjects:
-                baseOrientationMatrix = positionFollowedObjectOrientationMatrix || null;
-                break;
-            case this.BaseOrientation.orientationFollowedObjects:
-                baseOrientationMatrix = this.followsObjects() ? this.getFollowedOrientationMatrix() : null;
-                break;
-            default:
-                application.crash();
-        }
         if (this._followedObjects.length > 0) {
             if (!this._pointsTowardsObjects) {
                 calculateRelative(this.getFollowedOrientationMatrix());
@@ -3211,6 +3202,19 @@ define([
                         this._worldOrientationMatrix[2] = axis[2];
                         this._worldOrientationMatrix = mat.correctedOrthogonal4(this._worldOrientationMatrix);
                     } else {
+                        switch (this._baseOrientation) {
+                            case this.BaseOrientation.WORLD:
+                                baseOrientationMatrix = null;
+                                break;
+                            case this.BaseOrientation.POSITION_FOLLOWED_OBJECTS:
+                                baseOrientationMatrix = positionFollowedObjectOrientationMatrix || null;
+                                break;
+                            case this.BaseOrientation.ORIENTATION_FOLLOWED_OBJECTS:
+                                baseOrientationMatrix = this.followsObjects() ? this.getFollowedOrientationMatrix() : null;
+                                break;
+                            default:
+                                application.crash();
+                        }
                         if (baseOrientationMatrix) {
                             dirTowardsObject = vec.mulVec3Mat4(dirTowardsObject, mat.inverseOfRotation4(baseOrientationMatrix));
                         } else {
@@ -3235,15 +3239,15 @@ define([
         } else {
             if (this._pointsTowardsObjects) {
                 switch (this._pointToFallback) {
-                    case this.PointToFallback.world:
+                    case this.PointToFallback.WORLD:
                         calculateAbsolute();
                         break;
-                    case this.PointToFallback.stationary:
+                    case this.PointToFallback.STATIONARY:
                         if (!this._worldOrientationMatrix) {
                             this._worldOrientationMatrix = mat.identity4();
                         }
                         break;
-                    case this.PointToFallback.positionFollowedObjectOrWorld:
+                    case this.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD:
                         if (positionFollowedObjectOrientationMatrix) {
                             calculateRelative(positionFollowedObjectOrientationMatrix);
                         } else {
@@ -3280,7 +3284,7 @@ define([
      * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
-        if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.stationary)) {
+        if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.STATIONARY)) {
             return;
         }
         if (!this._fixed) {
@@ -3612,8 +3616,8 @@ define([
                 "",
                 new CameraPositionConfiguration(false, false, [], mat.matrix4(positionMatrix), 0, 0),
                 new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined, undefined, undefined,
-                        CameraOrientationConfiguration.prototype.BaseOrientation.world,
-                        CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld),
+                        CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
+                        CameraOrientationConfiguration.prototype.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
                 fov, minFOV, maxFOV,
                 span, minSpan, maxSpan);
     }
@@ -4398,7 +4402,7 @@ define([
      */
     Camera.prototype.transitionToSameConfiguration = function (duration, style) {
         var configuration = this._currentConfiguration;
-        this.setConfiguration(this._getFreeCameraConfiguration());
+        this.setConfiguration(this._getFreeCameraConfiguration(false));
         this.startTransitionToConfiguration(configuration, duration, style);
     };
     /**
@@ -4409,8 +4413,8 @@ define([
      * will be used.
      */
     Camera.prototype.transitionToConfigurationDefaults = function (duration, style) {
-        this._currentConfiguration.resetToDefaults();
         this.transitionToSameConfiguration(duration, style);
+        this._currentConfiguration.resetToDefaults();
     };
     /**
      * Start a transition to the first camera configuration associated with the passed renderable node, if any.

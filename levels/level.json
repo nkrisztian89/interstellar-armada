@@ -5,7 +5,8 @@
     "views": [
         {
             "name": "free",
-            "fov": 60,
+            "movable": true,
+            "turnable": true,
             "position": [0, -850, 300],
             "rotations": [
                 {
@@ -16,7 +17,8 @@
         }, {
             "name": "fps",
             "fps": true,
-            "fov": 60,
+            "movable": true,
+            "turnable": true,
             "position": [-400, 200, -350],
             "rotations": [
                 {
@@ -27,8 +29,8 @@
         }, {
             "name": "overview",
             "turnAroundAll": true,
-            "fov": 60,
             "movable": false,
+            "turnable": true,
             "position": [0, -2000, 0],
             "rotations": [
                 {

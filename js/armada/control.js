@@ -2343,7 +2343,7 @@ define([
     ControlContext.prototype.switchToSpectatorMode = function (freeCamera) {
         this._fighterController.setControlledSpacecraft(null);
         if (freeCamera) {
-            this._cameraController.setToFreeCamera();
+            this._cameraController.setToFreeCamera(false);
         }
         this.enableAction("followNext");
         this.enableAction("followPrevious");

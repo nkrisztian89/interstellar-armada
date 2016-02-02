@@ -157,7 +157,7 @@ define(function () {
      * Returns a value that is guaranteed to be among the possible values of an enumeration object.
      * @param {Object} enumObject
      * @param {any} value
-     * @param {any} defaultValue
+     * @param {any} [defaultValue]
      * @returns {any|null}
      */
     exports.getSafeEnumValue = function (enumObject, value, defaultValue) {

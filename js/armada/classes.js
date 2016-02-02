@@ -10,6 +10,7 @@
 /*global define */
 
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -18,7 +19,7 @@ define([
     "modules/physics",
     "modules/buda-scene",
     "armada/armada"
-], function (vec, mat, application, resourceManager, egomModel, physics, budaScene, armada) {
+], function (utils, vec, mat, application, resourceManager, egomModel, physics, budaScene, armada) {
     "use strict";
     /**
      * Shows an error message explaining that a certain property was not specified when initializing a class, that would be
@@ -1283,26 +1284,84 @@ define([
     };
     // ##############################################################################
     /**
-     * @class Describes the parameters of a certain view of an object, based on which
-     * a camera can be created if that object is deployed in a scene.
-     * @param {Object} [dataJSON]
+     * @class A common superclass for views, that store information to create camera configurations for scenes / objects.
+     * @param {Object} [dataJSON] If none give, the properties are initialized to null (to allow subclassing)
      */
-    function ObjectView(dataJSON) {
+    function GenericView(dataJSON) {
         /**
          * A desciptive name for the view, e.g. "cockpit"
          * @type String
          */
-        this._name = dataJSON.name || showMissingPropertyError(this, "name");
-        /**
-         * The Field Of View of the view in degrees.
-         * @type Number
-         */
-        this._fov = dataJSON.fov || showMissingPropertyError(this, "fov");
+        this._name = dataJSON ? (dataJSON.name || showMissingPropertyError(this, "name")) : null;
         /**
          * Whether turning the view should happen in FPS mode (around axes relative to the followed object / world, and not the camera itself)
          * @type Boolean
          */
-        this._fps = (typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false;
+        this._fps = dataJSON ? ((typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false) : null;
+        /**
+         * The initial (horizontal) Field Of View of the view in degrees. If null, the default value will be acquired from the logic module
+         * upon the creation of a camera configuration based on this view.
+         * @type Number
+         */
+        this._fov = dataJSON ? (dataJSON.fov || 0) : 0;
+        /**
+         * The minimum and maximum field of view that this view (camera configurations based on it) can be set to. If null, the default 
+         * value will be acquired from the logic module upon the creation of a camera configuration based on this view.
+         * @type Number[2]
+         */
+        this._fovRange = dataJSON ? (dataJSON.fovRange || null) : null;
+        /**
+         * Whether the position of the view is changeable by the player.
+         * @type Boolean
+         */
+        this._movable = dataJSON ? ((typeof dataJSON.movable) === "boolean" ? dataJSON.movable : showMissingPropertyError(this, "movable")) : null;
+        /**
+         * Whether the direction of the view is changeable by the player.
+         * @type Boolean
+         */
+        this._turnable = dataJSON ? ((typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : showMissingPropertyError(this, "turnable")) : null;
+        /**
+         * The translation matrix describing the relative position to the object.
+         * @type Float32Array
+         */
+        this._positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"))) : null;
+        /**
+         * The rotation matrix describing the relative orientation to the object. 
+         * @type Float32Array
+         */
+        this._orientationMatrix = dataJSON ? mat.rotation4FromJSON(dataJSON.rotations) : null;
+        /**
+         * The minimum and maximum alpha angle that this view (camera configurations based on it) can be set to, if in FPS-mode, in degrees.
+         * @type Number[2]
+         */
+        this._alphaRange = (dataJSON && this._fps) ? (dataJSON.alphaRange || [-360, 360]) : [0, 0];
+        /**
+         * The minimum and maximum beta angle that this view (camera configurations based on it) can be set to, if in FPS-mode, in degrees.
+         * @type Number[2]
+         */
+        this._betaRange = (dataJSON && this._fps) ? (dataJSON.betaRange || [-90, 90]) : [0, 0];
+        /**
+         * The initial (horizontal) span of the view in degrees. Null value means that a default value should be asked from the logic module
+         * upon the creation of a camera configuration.
+         * @type Number
+         */
+        this._span = dataJSON ? (dataJSON.span || 0) : 0;
+        /**
+         * The minimum and maximum of the (horizontal) span of the view in degrees. Null value means that a default value should be asked 
+         * from the logic module upon the creation of a camera configuration.
+         * @type Number[2]
+         */
+        this._spanRange = dataJSON ? (dataJSON.spanRange || null) : null;
+    }
+    // ##############################################################################
+    /**
+     * @class Describes the parameters of a certain view of an object, based on which
+     * a camera can be created if that object is deployed in a scene.
+     * @extends GenericView
+     * @param {Object} dataJSON
+     */
+    function ObjectView(dataJSON) {
+        GenericView.call(this, dataJSON);
         /**
          * Whether the position of the view should follow the position of the object it is associated with (making the set position relative
          * to it)
@@ -1310,41 +1369,62 @@ define([
          */
         this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : showMissingPropertyError(this, "followsPosition");
         /**
+         * Whether the orienration of the view should follow the orientation of the object it is associated with (making the set orientation relative
+         * to it). It defaults to true, however, the default changes to false if a lookAt mode is set.
+         * @type Boolean
+         */
+        this._followsOrientation = (typeof dataJSON.followsOrientation) === "boolean" ? dataJSON.followsOrientation : !dataJSON.lookAt;
+        /**
          * Whether the view's orientation should always be centered on the associated object
          * @type Boolean
          */
-        this._lookAtSelf = dataJSON.lookAt === "self";
+        this._lookAtSelf = (dataJSON.lookAt === "self") ?
+                ((this._followsPosition || this._followsOrientation) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition or followsOrientation are true!") :
+                        true) :
+                false;
         /**
          * Whether the view's orientation should always be centered on the target of the associated object
          * @type Boolean
          */
-        this._lookAtTarget = dataJSON.lookAt === "target";
-        /**
-         * Whether the position of the view is changeable by the player.
-         * @type Boolean
-         */
-        this._movable = (typeof dataJSON.movable) === "boolean" ? dataJSON.movable : showMissingPropertyError(this, "movable");
-        /**
-         * Whether the direction of the view is changeable by the player.
-         * @type Boolean
-         */
-        this._turnable = (typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : showMissingPropertyError(this, "turnable");
-        /**
-         * The translation matrix describing the relative position to the object.
-         * @type Float32Array
-         */
-        this._followPositionMatrix = mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"));
-        /**
-         * The rotation matrix describing the relative orientation to the object. 
-         * @type Float32Array
-         */
-        this._followOrientationMatrix = mat.rotation4FromJSON(dataJSON.rotations);
+        this._lookAtTarget = (dataJSON.lookAt === "target") ?
+                (this._followsOrientation ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation is true!") :
+                        true) :
+                false;
         /**
          * Whether the rotation of the camera has to be executed around the followed object.
          * @type Boolean
          */
-        this._rotationCenterIsObject = (typeof dataJSON.rotationCenterIsObject) === "boolean" ? dataJSON.rotationCenterIsObject : showMissingPropertyError(this, "rotationCenterIsObject");
+        this._rotationCenterIsObject = (typeof dataJSON.rotationCenterIsObject) === "boolean" ?
+                (dataJSON.rotationCenterIsObject ?
+                        ((this._lookAtSelf || !this._followsPosition) ?
+                                application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject with lookAtSelf or without followsPosition!") :
+                                true) :
+                        false) :
+                showMissingPropertyError(this, "rotationCenterIsObject");
+        /**
+         * The minimum and maximum distance this view can be moved to from the object it turns around.
+         * @type Number[2]
+         */
+        this._distanceRange = (this._rotationCenterIsObject && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : [0, 0];
+        /**
+         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
+         * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration
+         * based on this view.
+         * @type String 
+         */
+        this._baseOrientation = utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation);
+        /**
+         * (enum CameraOrientationConfiguration.prototype.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
+         * but the object to look at has been destroyed. If null, the default setting will be acquired from the logic module upon the creation of a 
+         * camera configuration based on this view.
+         * @type String
+         */
+        this._pointToFallback = utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback);
     }
+    ObjectView.prototype = new GenericView();
+    ObjectView.prototype.constructor = ObjectView;
     /**
      * Creates and returns a camera configuration set up for following the given object according to the view's
      * parameters.
@@ -1353,79 +1433,57 @@ define([
      * @returns {CameraConfiguration} The created camera configuration.
      */
     ObjectView.prototype.createCameraConfigurationForObject = function (followedObject) {
-        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._followOrientationMatrix);
+        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._orientationMatrix);
         positionConfiguration = new budaScene.CameraPositionConfiguration(
                 !this._movable,
                 this._rotationCenterIsObject,
                 this._followsPosition ? [followedObject] : [],
-                this._followPositionMatrix,
-                1, ///TODO: hardcoded
-                100);///TODO: hardcoded
+                this._positionMatrix,
+                this._distanceRange[0],
+                this._distanceRange[1]);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
                 this._lookAtSelf || this._lookAtTarget,
                 this._fps,
-                this._lookAtTarget ? [] : [followedObject],
-                this._followOrientationMatrix,
+                (this._lookAtSelf || this._followsOrientation) ? [followedObject] : [],
+                this._orientationMatrix,
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
-                -90, 90, ///TODO: hardcoded
-                -90, 90, ///TODO: hardcoded
-                budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.positionFollowedObjects, ///TODO: hardcoded
-                budaScene.CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld);///TODO: hardcoded
+                this._alphaRange[0], this._alphaRange[1],
+                this._betaRange[0], this._betaRange[1],
+                this._baseOrientation || armada.logic().getDefaultCameraBaseOrientation(),
+                this._pointToFallback || armada.logic().getDefaultCameraPointToFallback());
         return new budaScene.CameraConfiguration(
                 this._name,
                 positionConfiguration, orientationConfiguration,
-                this._fov, 5, 100, ///TODO: hardcoded
-                0.1, 0.1, 0.1);///TODO: hardcoded
+                this._fov || armada.logic().getDefaultCameraFOV(),
+                this._fovRange ? this._fovRange[0] : armada.logic().getDefaultCameraFOVRange()[0],
+                this._fovRange ? this._fovRange[1] : armada.logic().getDefaultCameraFOVRange()[1],
+                this._span || armada.logic().getDefaultCameraSpan(),
+                this._spanRange ? this._spanRange[0] : armada.logic().getDefaultCameraSpanRange()[0],
+                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1]);
     };
     // ##############################################################################
     /**
      * @class Describes the parameters of a certain view of a scene, based on which a camera configuration can be created and added to the
      * scene
+     * @extends GenericView
      * @param {Object} dataJSON The JSON object containing the properties of this view to initialize from.
      */
     function SceneView(dataJSON) {
-        /**
-         * A desciptive name for the view
-         * @type String
-         */
-        this._name = dataJSON.name || showMissingPropertyError(this, "name");
-        /**
-         * The Field Of View of the view in degrees.
-         * @type Number
-         */
-        this._fov = dataJSON.fov || showMissingPropertyError(this, "fov");
-        /**
-         * Whether turning the view should happen in FPS mode (turning around the Z axis of the world and its own X axis)
-         * @type Boolean
-         */
-        this._fps = (typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false;
+        GenericView.call(this, dataJSON);
         /**
          * Whether the object orientation should always point towards the center of all objects in the scene
          * @type Boolean
          */
         this._turnAroundAll = (typeof dataJSON.turnAroundAll) === "boolean" ? dataJSON.turnAroundAll : false;
         /**
-         * Whether the position of the view is changeable by the player.
-         * @type Boolean
+         * The minimum and maximum distance this view can be moved to from the objects it turns around.
+         * @type Number[2]
          */
-        this._movable = (typeof dataJSON.movable) === "boolean" ? dataJSON.movable : true;
-        /**
-         * Whether the direction of the view is changeable by the player.
-         * @type Boolean
-         */
-        this._turnable = (typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : true;
-        /**
-         * The translation matrix describing the position of the camera in the scene (or relative to the center of all objects)
-         * @type Float32Array
-         */
-        this._positionMatrix = mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"));
-        /**
-         * The rotation matrix describing the world orientation of the camera
-         * @type Float32Array
-         */
-        this._orientationMatrix = mat.rotation4FromJSON(dataJSON.rotations);
+        this._distanceRange = (this._turnAroundAll && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : [0, 0];
     }
+    SceneView.prototype = new GenericView();
+    SceneView.prototype.constructor = SceneView;
     /**
      * Creates and returns a camera configuration set up for according to the view's parameters.
      * @param {Scene} scene The scene to add the configuration to.
@@ -1438,8 +1496,8 @@ define([
                 this._turnAroundAll,
                 this._turnAroundAll ? scene.getAll3DObjects() : [],
                 this._positionMatrix,
-                1, ///TODO: hardcoded
-                100);///TODO: hardcoded
+                this._distanceRange[0],
+                this._distanceRange[1]);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
                 false,
@@ -1447,15 +1505,19 @@ define([
                 [],
                 this._orientationMatrix,
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
-                -90, 90, ///TODO: hardcoded
-                -90, 90, ///TODO: hardcoded
-                budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.positionFollowedObjects, ///TODO: hardcoded
-                budaScene.CameraOrientationConfiguration.prototype.PointToFallback.positionFollowedObjectOrWorld);///TODO: hardcoded
+                this._alphaRange[0], this._alphaRange[1],
+                this._betaRange[0], this._betaRange[1],
+                budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
+                budaScene.CameraOrientationConfiguration.prototype.PointToFallback.STATIONARY);
         return new budaScene.CameraConfiguration(
                 this._name,
                 positionConfiguration, orientationConfiguration,
-                this._fov, 5, 100, ///TODO: hardcoded
-                0.1, 0.1, 0.1);///TODO: hardcoded
+                this._fov || armada.logic().getDefaultCameraFOV(),
+                this._fovRange ? this._fovRange[0] : armada.logic().getDefaultCameraFOVRange()[0],
+                this._fovRange ? this._fovRange[1] : armada.logic().getDefaultCameraFOVRange()[1],
+                this._span || armada.logic().getDefaultCameraSpan(),
+                this._spanRange ? this._spanRange[0] : armada.logic().getDefaultCameraSpanRange()[0],
+                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1]);
     };
     // ##############################################################################
     /**

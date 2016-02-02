@@ -485,6 +485,36 @@ define([
          * @type String 
          */
         this._autoTargeting = null;
+        /**
+         * The default starting horizontal field of view value for camera configurations, in degrees
+         * @type Number
+         */
+        this._defaultCameraFOV = null;
+        /**
+         * The default minimum and maximum horizontal field of view values for camera configurations, in degrees
+         * @type Number[2]
+         */
+        this._defaultCameraFOVRange = null;
+        /**
+         * The default starting horizontal span value for camera configurations, in meters
+         * @type Number
+         */
+        this._defaultCameraSpan = null;
+        /**
+         * The default minimum and maximum horizontal span values for camera configurations, in meters
+         * @type Number[2]
+         */
+        this._defaultCameraSpanRange = null;
+        /**
+         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The default base orientation mode to use for camera configurations
+         * @type String
+         */
+        this._defaultCameraBaseOrientation = null;
+        /**
+         * (enum CameraOrientationConfiguration.prototype.PointToFallback) The default point-to fallback mode to use for camera configurations
+         * @type String
+         */
+        this._defaultCameraPointToFallback = null;
     }
     LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
@@ -564,6 +594,50 @@ define([
      */
     LogicContext.prototype.getAutoTargeting = function () {
         return this._autoTargeting;
+    };
+    /**
+     * Returns the default starting horizontal field of view value for camera configurations, in degrees
+     * @returns {Number}
+     */
+    LogicContext.prototype.getDefaultCameraFOV = function () {
+        return this._defaultCameraFOV;
+    };
+    /**
+     * Returns the default minimum and maximum horizontal field of view values for camera configurations, in degrees
+     * @returns {Number[2]}
+     */
+    LogicContext.prototype.getDefaultCameraFOVRange = function () {
+        return this._defaultCameraFOVRange;
+    };
+    /**
+     * Returns the default starting horizontal span value for camera configurations, in meters
+     * @returns {Number}
+     */
+    LogicContext.prototype.getDefaultCameraSpan = function () {
+        return this._defaultCameraSpan;
+    };
+    /**
+     * Returns the default minimum and maximum horizontal span values for camera configurations, in meters
+     * @returns {Number[2]}
+     */
+    LogicContext.prototype.getDefaultCameraSpanRange = function () {
+        return this._defaultCameraSpanRange;
+    };
+    /**
+     * (enum CameraOrientationConfiguration.prototype.BaseOrientation) Returns the default base orientation mode to use for camera 
+     * configurations
+     * @returns {String}
+     */
+    LogicContext.prototype.getDefaultCameraBaseOrientation = function () {
+        return this._defaultCameraBaseOrientation;
+    };
+    /**
+     * (enum CameraOrientationConfiguration.prototype.PointToFallback) Returns the default point-to fallback mode to use for camera 
+     * configurations
+     * @returns {String}
+     */
+    LogicContext.prototype.getDefaultCameraPointToFallback = function () {
+        return this._defaultCameraPointToFallback;
     };
     /**
      * Return the skybox class with the given name if it exists, otherwise null.
@@ -733,6 +807,20 @@ define([
                 application.showError(
                         "Invalid value '" + dataJSON.battle.autoTargeting + "' specified for auto targeting! Auto targeting will be switched off.",
                         "minor", "Valid values for auto targeting are : " + utils.getEnumValues(LogicContext.prototype.AutoTargeting).join(", ") + ".");
+        this._defaultCameraFOV = dataJSON.camera.defaultFOV || application.showError("camera.defaultFOV definition is missing from settings!");
+        this._defaultCameraFOVRange = dataJSON.camera.defaultFOVRange || application.showError("camera.defaultFOVRange definition is missing from settings!");
+        this._defaultCameraSpan = dataJSON.camera.defaultSpan || application.showError("camera.defaultSpan definition is missing from settings!");
+        this._defaultCameraSpanRange = dataJSON.camera.defaultSpanRange || application.showError("camera.defaultSpanRange definition is missing from settings!");
+        this._defaultCameraBaseOrientation =
+                utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.camera.defaultBaseOrientation) ||
+                application.showError(
+                        "Invalid value '" + dataJSON.battle.defaultBaseOrientation + "' specified for default camera base orientation mode!",
+                        "severe", "Valid values are : " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".");
+        this._defaultCameraPointToFallback =
+                utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.camera.defaultPointToFallback) ||
+                application.showError(
+                        "Invalid value '" + dataJSON.battle.defaultPointToFallback + "' specified for default camera point-to fallback mode!",
+                        "severe", "Valid values are : " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".");
         this.requestClassesLoad();
     };
     // ##############################################################################
@@ -1060,12 +1148,14 @@ define([
                                 }
                                 break;
                             case LogicContext.prototype.AutoTargeting.HIT_AND_AUTO_TARGET:
-                                if (!this._origin.hasManualTarget()) {
+                                if (!this._origin.hasManualTarget() && (this._origin.getTarget() !== hitObjects[i])) {
                                     this._origin.setTarget(hitObjects[i], true);
                                 }
                                 break;
                             case LogicContext.prototype.AutoTargeting.ALWAYS_WHEN_HIT:
-                                this._origin.setTarget(hitObjects[i], true);
+                                if (this._origin.getTarget() !== hitObjects[i]) {
+                                    this._origin.setTarget(hitObjects[i], true);
+                                }
                                 break;
                         }
                     }
@@ -2697,10 +2787,10 @@ define([
         if (this._visualModel) {
             camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName("target");
             for (i = 0; i < camConfigs.length; i++) {
-                camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
                 if (this._visualModel.getNode().getScene().activeCamera.getConfiguration() === camConfigs[i]) {
                     this._visualModel.getNode().getScene().activeCamera.transitionToSameConfiguration(300, budaScene.Camera.prototype.TransitionStyle.smooth);
                 }
+                camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
             }
         }
     };
