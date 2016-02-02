@@ -89,6 +89,16 @@
             "position": [-4, 0, 3]
         },
         {
+            "name": "above-confined",
+            "followsPosition": true,
+            "movesRelativeToObject": true,
+            "movable": true,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "position": [-4, 0, 3],
+            "confines": [[-4, 4], [0, 0], [3, 3]]
+        },
+        {
             "name": "below-free",
             "fps": true,
             "followsPosition": true,

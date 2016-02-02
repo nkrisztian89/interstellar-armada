@@ -2644,6 +2644,8 @@ define([
      * @param {Boolean} turnsAroundObjects If true, the camera position can be changed by rotating it, as it will be calculated relative to
      * the followed object(s) and the orientation of the camera. If not fixed, "zooming" on a straight line towards/away from the object(s)
      * is possible as well
+     * @param {Boolean} movesRelativeToObject If true, the movement of the camera will happen along the axes of the orientation of the first
+     * followed object (if any)
      * @param {Array<Object3D>} followedObjects The list of objects the camera's position should follow. Setting no objects means the set 
      * position is absolute, setting multiple objects means the average of their positions will be followed.
      * @param {Float32Array} positionMatrix The set position. Might mean the absolute (world) or relative position depending on other settings.
@@ -2651,8 +2653,11 @@ define([
      * @param {Number} minimumDistance If the camera turns around the followed objects and it is not fixed, this is the closest distance it
      * can approach the followed objects to.
      * @param {Number} maximumDistance Same as minimum distance, instead this is the maximum setting.
+     * @param {[Number[3][2]]} confines If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
+     * respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range for the other
+     * axes.
      */
-    function CameraPositionConfiguration(fixed, turnsAroundObjects, followedObjects, positionMatrix, minimumDistance, maximumDistance) {
+    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, positionMatrix, minimumDistance, maximumDistance, confines) {
         /**
          * If true, the camera position can't be controlled by the player, but is automatically
          * calculated. The absolute position might still change e.g. if it is relative to objects
@@ -2667,6 +2672,11 @@ define([
          * @type Boolean
          */
         this._turnsAroundObjects = turnsAroundObjects;
+        /**
+         * If true, the movement of the camera will happen along the axes of the orientation of the first
+         * followed object (if any)
+         */
+        this._movesRelativeToObject = movesRelativeToObject;
         /**
          * The list of objects the camera is following. If empty, the camera is free to move around
          * or has a constant absolute position if fixed. If more than one object is in the list, the camera
@@ -2702,6 +2712,51 @@ define([
          * @type Number
          */
         this._maximumDistance = maximumDistance;
+        /**
+         * Whether the movement of the camera is limited to a certain range on axis X
+         * @type Boolean
+         */
+        this._confinedX = confines && confines[0];
+        /**
+         * The minimum value of the X coordinate of the camera, if confined on axis X
+         * @type Number
+         */
+        this._minimumX = (confines && confines[0]) ? confines[0][0] : 0;
+        /**
+         * The maximum value of the X coordinate of the camera, if confined on axis X
+         * @type Number
+         */
+        this._maximumX = (confines && confines[0]) ? confines[0][1] : 0;
+        /**
+         * Whether the movement of the camera is limited to a certain range on axis Y
+         * @type Boolean
+         */
+        this._confinedY = confines && confines[1];
+        /**
+         * The minimum value of the Y coordinate of the camera, if confined on axis Y
+         * @type Number
+         */
+        this._minimumY = (confines && confines[1]) ? confines[1][0] : 0;
+        /**
+         * The maximum value of the Y coordinate of the camera, if confined on axis Y
+         * @type Number
+         */
+        this._maximumY = (confines && confines[1]) ? confines[1][1] : 0;
+        /**
+         * Whether the movement of the camera is limited to a certain range on axis Z
+         * @type Boolean
+         */
+        this._confinedZ = confines && confines[2];
+        /**
+         * The minimum value of the Z coordinate of the camera, if confined on axis Z
+         * @type Number
+         */
+        this._minimumZ = (confines && confines[2]) ? confines[2][0] : 0;
+        /**
+         * The maximum value of the Z coordinate of the camera, if confined on axis Z
+         * @type Number
+         */
+        this._maximumZ = (confines && confines[2]) ? confines[2][1] : 0;
     }
     /**
      * Returns a camera position configuration with the same settings as this one, cloning referenced values to make sure changes to this
@@ -2712,10 +2767,16 @@ define([
         var result = new CameraPositionConfiguration(
                 this._fixed,
                 this._turnsAroundObjects,
+                this._movesRelativeToObject,
                 this._followedObjects.slice(),
                 mat.matrix4(this._relativePositionMatrix),
                 this._minimumDistance,
-                this._maximumDistance);
+                this._maximumDistance,
+                [
+                    this._confinedX ? [this._minimumX, this._maximumX] : null,
+                    this._confinedY ? [this._minimumY, this._maximumY] : null,
+                    this._confinedZ ? [this._minimumZ, this._maximumZ] : null
+                ]);
         result._worldPositionMatrix = this._worldPositionMatrix;
         return result;
     };
@@ -2887,9 +2948,26 @@ define([
                         this._relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
                     }
                 } else {
-                    mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4([1, 0, 0], -Math.PI / 2)), dt / 1000));
+                    if (this._movesRelativeToObject) {
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4([1, 0, 0], -Math.PI / 2)), dt / 1000));
+                    } else {
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(
+                                velocityVector,
+                                mat.mul4(
+                                        worldOrientationMatrix,
+                                        mat.inverseOfRotation4(this.getFollowedObjectOrientationMatrix()))), dt / 1000));
+                    }
                 }
             }
+        }
+        if (this._confinedX) {
+            this._relativePositionMatrix[12] = Math.min(Math.max(this._relativePositionMatrix[12], this._minimumX), this._maximumX);
+        }
+        if (this._confinedY) {
+            this._relativePositionMatrix[13] = Math.min(Math.max(this._relativePositionMatrix[13], this._minimumY), this._maximumY);
+        }
+        if (this._confinedZ) {
+            this._relativePositionMatrix[14] = Math.min(Math.max(this._relativePositionMatrix[14], this._minimumZ), this._maximumZ);
         }
         this._cleanupFollowedObjects();
         this._worldPositionMatrix = null;
@@ -3644,7 +3722,7 @@ define([
         var angles = mat.getYawAndPitch(orientationMatrix);
         return new CameraConfiguration(
                 "",
-                new CameraPositionConfiguration(false, false, [], mat.matrix4(positionMatrix), 0, 0),
+                new CameraPositionConfiguration(false, false, false, [], mat.matrix4(positionMatrix), 0, 0, null),
                 new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined, undefined, undefined,
                         CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
                         CameraOrientationConfiguration.prototype.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),

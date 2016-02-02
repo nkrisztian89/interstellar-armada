@@ -1352,6 +1352,13 @@ define([
          * @type Number[2]
          */
         this._spanRange = dataJSON ? (dataJSON.spanRange || null) : null;
+        /**
+         * If given, the movement of the camera using a configuration created based on this view will be limited to the specified ranges on 
+         * the 3 axes, respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range 
+         * for the other axes.
+         * @type Number[3][2]
+         */
+        this._confines = dataJSON ? (dataJSON.confines || null) : null;
     }
     // ##############################################################################
     /**
@@ -1409,6 +1416,15 @@ define([
          */
         this._distanceRange = (this._rotationCenterIsObject && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : [0, 0];
         /**
+         * Whether movement of the camera should happen along the axes of the followed object instead of its own
+         * @type Boolean
+         */
+        this._movesRelativeToObject = dataJSON.movesRelativeToObject ?
+                (this._rotationCenterIsObject ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject and movesRelativeToObject cannot be true at the same time!") :
+                        true) :
+                false;
+        /**
          * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
          * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration
          * based on this view.
@@ -1437,10 +1453,12 @@ define([
         positionConfiguration = new budaScene.CameraPositionConfiguration(
                 !this._movable,
                 this._rotationCenterIsObject,
+                this._movesRelativeToObject,
                 this._followsPosition ? [followedObject] : [],
                 this._positionMatrix,
                 this._distanceRange[0],
-                this._distanceRange[1]);
+                this._distanceRange[1],
+                this._confines);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
                 this._lookAtSelf || this._lookAtTarget,
@@ -1494,10 +1512,12 @@ define([
         positionConfiguration = new budaScene.CameraPositionConfiguration(
                 !this._movable,
                 this._turnAroundAll,
+                false,
                 this._turnAroundAll ? scene.getAll3DObjects() : [],
                 this._positionMatrix,
                 this._distanceRange[0],
-                this._distanceRange[1]);
+                this._distanceRange[1],
+                this._confines);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
                 false,
