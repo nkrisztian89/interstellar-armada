@@ -1136,7 +1136,7 @@ define([
                     explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1), true);
                     explosion.addToScene(this._visualModel.getNode().getScene());
 
-                    relPos = vec.mulVec4Mat4(positionVector, mat.inverse4(hitObjects[i].getVisualModel().getModelMatrix()));
+                    relPos = vec.mulVec4Mat4(positionVector, hitObjects[i].getVisualModel().getModelMatrixInverse());
                     relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
                     hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(relDir, -1));
                     // auto targeting on hit
@@ -3025,7 +3025,7 @@ define([
      * @returns {Spacecraft}
      */
     Level.prototype.getPilotedSpacecraft = function () {
-        if (this._pilotedCraft !== null) {
+        if (this._pilotedCraft !== null && !this._pilotedCraft.canBeReused()) {
             return this._pilotedCraft;
         }
         return null;

@@ -1803,7 +1803,12 @@ define([
      */
     FighterController.prototype.executeActions = function (triggeredActions) {
         if (this._controlledSpacecraft) {
-            Controller.prototype.executeActions.call(this, triggeredActions);
+            if (!this._controlledSpacecraft.canBeReused()) {
+                Controller.prototype.executeActions.call(this, triggeredActions);
+            } else {
+                this._controlledSpacecraft = null;
+
+            }
         }
     };
 

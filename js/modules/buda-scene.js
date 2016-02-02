@@ -142,6 +142,11 @@ define([
          */
         this._modelMatrix = null;
         /**
+         * Cache variable to store the calculated value of the inverse of the combined model matrix.
+         * @type Float32Array
+         */
+        this._modelMatrixInverse = null;
+        /**
          * @type Number
          */
         this._size = size !== undefined ? size : 1;
@@ -199,6 +204,7 @@ define([
         function setPositionMatrix(value) {
             this._positionMatrix = value;
             this._modelMatrix = null;
+            this._modelMatrixInverse = null;
             this._insideParent = null;
         }
         /**
@@ -251,6 +257,7 @@ define([
         function setOrientationMatrix(value) {
             this._orientationMatrix = value;
             this._modelMatrix = null;
+            this._modelMatrixInverse = null;
         }
         /**
          * Returns the 3D vector corresponding to the X axis of the current
@@ -322,6 +329,7 @@ define([
         function setScalingMatrix(value) {
             this._scalingMatrix = value;
             this._modelMatrix = null;
+            this._modelMatrixInverse = null;
         }
         /**
          * Returns a scaling matrix corresponding to the stacked scaling applied
@@ -344,6 +352,16 @@ define([
             return this._parent ?
                     mat.mul4(this._modelMatrix, this._parent.getModelMatrix()) :
                     this._modelMatrix;
+        }
+        /**
+         * Returns the calculated inverse of the combined model matrix of this object. Uses cache.
+         * @returns {Float32Array}
+         */
+        function getModelMatrixInverse() {
+            this._modelMatrixInverse = this._modelMatrixInverse || mat.inverse4(this.getModelMatrix());
+            return this._parent ?
+                    mat.mul4(this._parent.getModelMatrixInverse(), this._modelMatrixInverse) :
+                    this._modelMatrixInverse;
         }
         /**
          * Returns the size of this object.
@@ -442,6 +460,7 @@ define([
             this.prototype.rotateByMatrix = rotateByMatrix;
             this.prototype.getCascadeScalingMatrix = getCascadeScalingMatrix;
             this.prototype.getModelMatrix = getModelMatrix;
+            this.prototype.getModelMatrixInverse = getModelMatrixInverse;
             this.prototype.getSize = getSize;
             this.prototype.getScaledSize = getScaledSize;
             this.prototype.isInsideParent = isInsideParent;
@@ -2792,7 +2811,12 @@ define([
                 j++;
                 k++;
             }
-            this._followedObjects.splice(i, k);
+            if (k > 0) {
+                this._followedObjects.splice(i, k);
+                if (this._followedObjects.length === 0) {
+                    this._relativePositionMatrix = mat.matrix4(this._worldPositionMatrix);
+                }
+            }
         }
     };
     /**
@@ -2802,7 +2826,6 @@ define([
      * that turn around the followed object, as in those cases the relative portion of the position is calculated based on it
      */
     CameraPositionConfiguration.prototype._calculateWorldPositionMatrix = function (worldOrientationMatrix) {
-        this._cleanupFollowedObjects();
         if (this._followedObjects.length > 0) {
             if (!this._turnsAroundObjects) {
                 this._worldPositionMatrix = mat.mul4(
@@ -2868,6 +2891,7 @@ define([
                 }
             }
         }
+        this._cleanupFollowedObjects();
         this._worldPositionMatrix = null;
     };
     // #########################################################################
@@ -3150,7 +3174,13 @@ define([
                 j++;
                 k++;
             }
-            this._followedObjects.splice(i, k);
+            if (k > 0) {
+                this._followedObjects.splice(i, k);
+                if (this._followedObjects.length === 0) {
+                    this._relativeOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
+                    this._fps = false;
+                }
+            }
         }
     };
     /**
@@ -3176,7 +3206,6 @@ define([
                         this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
                     }
                 }.bind(this);
-        this._cleanupFollowedObjects();
         if (this._followedObjects.length > 0) {
             if (!this._pointsTowardsObjects) {
                 calculateRelative(this.getFollowedOrientationMatrix());
@@ -3322,6 +3351,7 @@ define([
                 }
             }
         }
+        this._cleanupFollowedObjects();
         this._worldOrientationMatrix = null;
     };
     // #########################################################################
