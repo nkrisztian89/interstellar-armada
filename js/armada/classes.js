@@ -1391,8 +1391,8 @@ define([
          * @type Boolean
          */
         this._lookAtSelf = (dataJSON.lookAt === "self") ?
-                ((this._followsPosition || this._followsOrientation) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition or followsOrientation are true!") :
+                ((this._followsPosition || this._followsOrientation || this._turnable) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition, followsOrientation or turnable are true!") :
                         true) :
                 false;
         /**
@@ -1400,8 +1400,8 @@ define([
          * @type Boolean
          */
         this._lookAtTarget = (dataJSON.lookAt === "target") ?
-                (this._followsOrientation ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation is true!") :
+                ((this._followsOrientation || this._turnable) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation or turnable are true!") :
                         true) :
                 false;
         /**
@@ -1426,19 +1426,23 @@ define([
                 (this._followsPosition ?
                         application.showError("Invalid view configuration ('" + this._name + "'): followsPosition and startsWithRelativePosition cannot be true at the same time!") :
                         true) :
-                false;
+                ((!this._followsPosition && this._resetsWhenLeavingConfines) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!") :
+                        false);
         /**
          * The minimum and maximum distance this view can be moved to from the object it turns around.
          * @type Number[2]
          */
-        this._distanceRange = (this._rotationCenterIsObject && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
+        this._distanceRange = ((this._rotationCenterIsObject || this._lookAtSelf || this._lookAtTarget) && this._movable) ?
+                (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) :
+                (dataJSON.distanceRange || null);
         /**
          * Whether movement of the camera should happen along the axes of the followed object instead of its own
          * @type Boolean
          */
         this._movesRelativeToObject = (dataJSON.movesRelativeToObject === true) ?
-                (this._rotationCenterIsObject ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject and movesRelativeToObject cannot be true at the same time!") :
+                ((this._rotationCenterIsObject || !this._followsPosition || !this._followsOrientation) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): movesRelativeToObject can only be set if both position and orientation is followed and rotationCenterIsObject is false!") :
                         true) :
                 false;
         /**
@@ -1467,6 +1471,12 @@ define([
                                 "minor",
                                 "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
                 null;
+        if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
+            application.showError(
+                    "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
+                    "severe",
+                    "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
+        }
     }
     ObjectView.prototype = new GenericView();
     ObjectView.prototype.constructor = ObjectView;

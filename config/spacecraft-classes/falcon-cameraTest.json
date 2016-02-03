@@ -315,7 +315,7 @@
             "movable": false,
             "turnable": false,
             "position": [30, 100, 15],
-            "distanceRange": [-200, 200]
+            "distanceRange": [15, 200]
         },
         {
             "name": "lookAt-fixed-relative-start-distance-confined-fps",
@@ -327,7 +327,121 @@
             "movable": false,
             "turnable": false,
             "position": [30, 100, 15],
-            "distanceRange": [-200, 200]
+            "distanceRange": [15, 200]
+        },
+        {
+            "name": "lookAt-free-absolute",
+            "followsPosition": false,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [100, 100, 20],
+            "distanceRange": [15, 5000]
+        },
+        {
+            "name": "lookAt-free-absolute-fps",
+            "fps": true,
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [100, 100, 20],
+            "distanceRange": [15, 5000]
+        },
+        {
+            "name": "lookAt-free-relative-start",
+            "followsPosition": false,
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "distanceRange": [15, 5000]
+        },
+        {
+            "name": "lookAt-free-relative-start-fps",
+            "fps": true,
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "distanceRange": [15, 5000]
+        },
+        {
+            "name": "lookAt-free-relative-start-resetting",
+            "followsPosition": false,
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "confines": [[-200, 200], [-200, 200], [-200, 200]],
+            "distanceRange": [15, 5000],
+            "resetsWhenLeavingConfines": true
+        },
+        {
+            "name": "lookAt-free-relative-start-fps-resetting",
+            "fps": true,
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "confines": [[-200, 200], [-200, 200], [-200, 200]],
+            "distanceRange": [15, 5000],
+            "resetsWhenLeavingConfines": true
+        },
+        {
+            "name": "lookAt-free-relative-start-position-confined",
+            "followsPosition": false,
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "confines": [[-200, 200], [-200, 200], [-200, 200]],
+            "distanceRange": [15, 5000]
+        },
+        {
+            "name": "lookAt-free-relative-start-position-confined-fps",
+            "fps": true,
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "confines": [[-200, 200], [-200, 200], [-200, 200]],
+            "distanceRange": [15, 5000]
+        },
+        {
+            "name": "lookAt-free-relative-start-distance-confined",
+            "followsPosition": false,
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "distanceRange": [15, 200]
+        },
+        {
+            "name": "lookAt-free-relative-start-distance-confined-fps",
+            "fps": true,
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": true,
+            "turnable": false,
+            "position": [30, 100, 15],
+            "distanceRange": [15, 200]
         },
         {
             "name": "target",

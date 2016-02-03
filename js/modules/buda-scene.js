@@ -2977,9 +2977,11 @@ define([
     /**
      * Checks whether the configuration's position is outside the set confines, and if it is, either constraints them or resets the defaults
      * (if that option is set)
+     * @param {Number[3]} [orientationFollowedObjectsPositionVector] The position vector of the object(s) followed by orientation.
+     * If there is no object followed by position, then distance confines will be applied to the object(s) followed by orientation (if any)
      * @return {Boolean} Whether the position has passed all the confine checks.
      */
-    CameraPositionConfiguration.prototype._checkConfines = function () {
+    CameraPositionConfiguration.prototype._checkConfines = function (orientationFollowedObjectsPositionVector) {
         var translationVector, distance, relativePositionMatrix;
         // if the position is only taken as relative at the start, then the stored relative position will actually be the world position,
         // so we need to transform it back to the actual relative position, before checking the limits
@@ -2993,16 +2995,33 @@ define([
             relativePositionMatrix = this._relativePositionMatrix;
         }
         // the checks start here
-        if (this._distanceIsConfined && (this._followedObjects.length > 0)) {
-            translationVector = mat.translationVector3(relativePositionMatrix);
-            distance = vec.length3(translationVector);
-            if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
-                if (this._resetsWhenLeavingConfines) {
-                    this.resetToDefaults();
-                    return false;
+        if (this._distanceIsConfined) {
+            if (this._followedObjects.length > 0) {
+                translationVector = mat.translationVector3(relativePositionMatrix);
+                distance = vec.length3(translationVector);
+                if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
+                    if ((distance > this._maximumDistance) && (this._resetsWhenLeavingConfines)) {
+                        this.resetToDefaults();
+                        return false;
+                    }
+                    distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
+                    relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
                 }
-                distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
+                // if the position is absolute, we will do the distance range check from the orientation followed object (if any)
+            } else if (orientationFollowedObjectsPositionVector) {
+                translationVector = vec.sub3(mat.translationVector3(relativePositionMatrix), orientationFollowedObjectsPositionVector);
+                distance = vec.length3(translationVector);
+                if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
+                    if ((distance > this._maximumDistance) && (this._resetsWhenLeavingConfines)) {
+                        // if we have absolute position and a distance confined for the orientation followed object, a reset is not possible
+                        // as it would set an absolute position again which might be out of confines since it does not depend on the position
+                        // of the orientation followed object
+                        application.crash();
+                        return false;
+                    }
+                    distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
+                    relativePositionMatrix = mat.translation4v(vec.add3(orientationFollowedObjectsPositionVector, vec.scaled3(vec.normal3(translationVector), distance)));
+                }
             }
         }
         if (this._xIsConfined) {
@@ -3048,13 +3067,15 @@ define([
      * Updates the position of the configuration based on the movement of the camera and the objects it follows
      * @param {Float32Array} worldOrientationMatrix The orientation of the camera in world coordinates - a free camera moves along its own
      * axes
+     * @param {Number[3]} [orientationFollowedObjectsPositionVector] The position vector of the object(s) followed by orientation.
+     * If there is no object followed by position, then distance confines will be applied to the object(s) followed by orientation (if any)
      * @param {Number[3]} velocityVector The vector describing the current velocity of the camera (not taking into account the movement
      * of the objects it follows and the orientation, as those are calculated in within this functions)
      * This method might update the velocity vector.
      * @param {Number} dt The time passed since the last update, to calculate the distance travelled
      * @returns {Boolean} Whether the update has been successfully completed (or a reset has been happened instead)
      */
-    CameraPositionConfiguration.prototype.update = function (worldOrientationMatrix, velocityVector, dt) {
+    CameraPositionConfiguration.prototype.update = function (worldOrientationMatrix, orientationFollowedObjectsPositionVector, velocityVector, dt) {
         var translationVector, distance;
         if (!this._fixed) {
             if ((this._followedObjects.length === 0) || this._startsWithRelativePosition) {
@@ -3088,7 +3109,7 @@ define([
                 }
             }
         }
-        if (!this._checkConfines()) {
+        if (!this._checkConfines(orientationFollowedObjectsPositionVector)) {
             return false;
         }
         this._cleanupFollowedObjects();
@@ -3355,7 +3376,7 @@ define([
      * Returns a 3D vector describing the current (average) location in space of the followed objects.
      * @returns {Number[3]}
      */
-    CameraOrientationConfiguration.prototype._getFollowedObjectsPositionVector = function () {
+    CameraOrientationConfiguration.prototype.getFollowedObjectsPositionVector = function () {
         var i, positionVector = [0, 0, 0];
         if (this._followedObjects.length === 0) {
             application.crash();
@@ -3431,7 +3452,7 @@ define([
                 if (!worldPositionMatrix) {
                     application.crash();
                 } else {
-                    dirTowardsObject = vec.normal3(vec.sub3(this._getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
+                    dirTowardsObject = vec.normal3(vec.sub3(this.getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
                     if (!this._fps) {
                         if (!this._worldOrientationMatrix) {
                             this._worldOrientationMatrix = mat.identity4();
@@ -3829,7 +3850,7 @@ define([
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
         this._orientationConfiguration.update(angularVelocityVector, dt);
         this.setOrientationMatrix(this._orientationConfiguration.getWorldOrientationMatrix(this.getPositionMatrix(), this._positionConfiguration.followsObjects() ? this._positionConfiguration.getFollowedObjectOrientationMatrix() : null));
-        if (!this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt)) {
+        if (!this._positionConfiguration.update(this.getOrientationMatrix(), this._orientationConfiguration.followsObjects() ? this._orientationConfiguration.getFollowedObjectsPositionVector() : null, velocityVector, dt)) {
             this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
             return false;
         }
