@@ -2830,7 +2830,7 @@ define([
      */
     CameraPositionConfiguration.prototype.resetToDefaults = function (doNotNotifyCamera) {
         if (this._camera && !doNotNotifyCamera) {
-            this._camera.positionConfigurationWillResetToDefaults();
+            this._camera.positionConfigurationWillChange();
         }
         mat.setMatrix4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
         this._worldPositionMatrix = null;
@@ -2839,8 +2839,12 @@ define([
     /**
      * Directly sets a new relative position matrix for this configuration.
      * @param {Float32Array} value A 4x4 translation matrix.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
      */
-    CameraPositionConfiguration.prototype.setRelativePositionMatrix = function (value) {
+    CameraPositionConfiguration.prototype.setRelativePositionMatrix = function (value, doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.positionConfigurationWillChange();
+        }
         this._relativePositionMatrix = value;
     };
     /**
@@ -3322,11 +3326,11 @@ define([
     };
     /**
      * Resets the configuration to its initial state.
-     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
     CameraOrientationConfiguration.prototype.resetToDefaults = function (doNotNotifyCamera) {
         if (this._camera && !doNotNotifyCamera) {
-            this._camera.orientationConfigurationWillResetToDefaults();
+            this._camera.orientationConfigurationWillChange();
         }
         mat.setMatrix4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
         this._alpha = this._defaultAlpha;
@@ -3336,8 +3340,12 @@ define([
     /**
      * Directly sets a new relative orientation matrix for this configuration.
      * @param {Float32Array} value A 4x4 rotation matrix.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraOrientationConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
+    CameraOrientationConfiguration.prototype.setRelativeOrientationMatrix = function (value, doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.orientationConfigurationWillChange();
+        }
         this._relativeOrientationMatrix = value;
     };
     /**
@@ -3359,18 +3367,29 @@ define([
                 (this._followedObjects.length > 0);
     };
     /**
-     * Sets the list of followed object to the single passed 3D object.
-     * @param {Object3D} followedObject
-     */
-    CameraOrientationConfiguration.prototype.setFollowedObject = function (followedObject) {
-        this._followedObjects = [followedObject];
-    };
-    /**
      * Sets the list of followed object to the passed one.
      * @param {Array<Object3D>} followedObjects
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraOrientationConfiguration.prototype.setFollowedObjects = function (followedObjects) {
+    CameraOrientationConfiguration.prototype.setFollowedObjects = function (followedObjects, doNotNotifyCamera) {
+        if ((this._followedObjects.length === 0) && (followedObjects.length === 0)) {
+            return;
+        }
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.orientationConfigurationWillChange();
+        }
         this._followedObjects = followedObjects;
+    };
+    /**
+     * Sets the list of followed object to the single passed 3D object.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
+     * @param {Object3D} followedObject
+     */
+    CameraOrientationConfiguration.prototype.setFollowedObject = function (followedObject, doNotNotifyCamera) {
+        if ((this._followedObjects.length === 1) && (this._followedObjects[0] === followedObject)) {
+            return;
+        }
+        this.setFollowedObjects([followedObject], doNotNotifyCamera);
     };
     /**
      * Returns a 3D vector describing the current (average) location in space of the followed objects.
@@ -3403,6 +3422,7 @@ define([
     };
     /**
      * Removes the destroyed objects from the list of followed objects.
+     * @returns {Boolean} Whether the cleanup finished in order (true) or there was a change in the settings (false)
      */
     CameraOrientationConfiguration.prototype._cleanupFollowedObjects = function () {
         var i, j, k;
@@ -3415,12 +3435,22 @@ define([
             }
             if (k > 0) {
                 this._followedObjects.splice(i, k);
+                // if all followed objects have been eliminated, adapt
                 if (this._followedObjects.length === 0) {
-                    this._relativeOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
-                    this._fps = false;
+                    // notify the camera before any changes are made to the configuration, so it can make a copy of the original settings
+                    if (this._camera) {
+                        this._camera.orientationConfigurationWillChange();
+                    }
+                    // point-to modes have an explicitly set fallback option, but for other modes switch to absolute orientation
+                    if (!this._pointsTowardsObjects) {
+                        this._relativeOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
+                        this._fps = false;
+                    }
+                    return false;
                 }
             }
         }
+        return true;
     };
     /**
      * Calculates and updates the internally stored world orientation matrix (which is nulled out automatically whenever one of the values it 
@@ -3550,6 +3580,7 @@ define([
      * @param {Number[3]} angularVelocityVector The vector describing the current angular velocity (spin) of the camera (not taking into account the spin
      * of the objects it follows and the current orientation, as those are calculated in within this functions) degrees / second, around axes [X, Y, Z]
      * @param {Number} dt The time passed since the last update, to calculate the angles by which the camera rotated since 
+     * @returns {Boolean} Whether the update finished successfully (true) or there was a change in the settings (false)
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
         if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.STATIONARY)) {
@@ -3590,8 +3621,11 @@ define([
                 }
             }
         }
-        this._cleanupFollowedObjects();
+        if (!this._cleanupFollowedObjects()) {
+            return false;
+        }
         this._worldOrientationMatrix = null;
+        return true;
     };
     // #########################################################################
     /**
@@ -3710,16 +3744,18 @@ define([
     /**
      * Sets a new relative (or absolute, depending on the configuration properties) position matrix for this configuration.
      * @param {Float32Array} value A 4x4 translation matrix.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraConfiguration.prototype.setRelativePositionMatrix = function (value) {
-        this._positionConfiguration.setRelativePositionMatrix(value);
+    CameraConfiguration.prototype.setRelativePositionMatrix = function (value, doNotNotifyCamera) {
+        this._positionConfiguration.setRelativePositionMatrix(value, doNotNotifyCamera);
     };
     /**
      * Sets a new relative (or absolute, depending on the configuration properties) orientation matrix for this configuration.
      * @param {Float32Array} value A 4x4 rotation matrix.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraConfiguration.prototype.setRelativeOrientationMatrix = function (value) {
-        this._orientationConfiguration.setRelativeOrientationMatrix(value);
+    CameraConfiguration.prototype.setRelativeOrientationMatrix = function (value, doNotNotifyCamera) {
+        this._orientationConfiguration.setRelativeOrientationMatrix(value, doNotNotifyCamera);
     };
     /**
      * Returns the descriptive name of this configuration so it can be identified.
@@ -3738,8 +3774,12 @@ define([
     /**
      * Sets the configuration's horizontal Field Of View 
      * @param {Number} fov The new desired FOV in degrees.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraConfiguration.prototype.setFOV = function (fov) {
+    CameraConfiguration.prototype.setFOV = function (fov, doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.configurationWillChange();
+        }
         this._fov = Math.min(Math.max(fov, this._minFOV), this._maxFOV);
     };
     /**
@@ -3768,7 +3808,7 @@ define([
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
     CameraConfiguration.prototype.decreaseFOV = function () {
-        this.setFOV(this._fov * Constants.FOV_DECREASE_FACTOR);
+        this.setFOV(this._fov * Constants.FOV_DECREASE_FACTOR, true);
         return this._fov;
     };
     /**
@@ -3776,14 +3816,18 @@ define([
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
     CameraConfiguration.prototype.increaseFOV = function () {
-        this.setFOV(this._fov * Constants.FOV_INCREASE_FACTOR);
+        this.setFOV(this._fov * Constants.FOV_INCREASE_FACTOR, true);
         return this._fov;
     };
     /**
      * Sets the configuration's horizontal span.
      * @param {Number} span The new desired span in meters.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraConfiguration.prototype.setSpan = function (span) {
+    CameraConfiguration.prototype.setSpan = function (span, doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.configurationWillChange();
+        }
         this._span = Math.min(Math.max(span, this._minSpan), this._maxSpan);
     };
     /**
@@ -3812,7 +3856,7 @@ define([
      * @returns {Number} The resulting new value of the span. (in meters)
      */
     CameraConfiguration.prototype.decreaseSpan = function () {
-        this.setSpan(this._span * Constants.SPAN_DECREASE_FACTOR);
+        this.setSpan(this._span * Constants.SPAN_DECREASE_FACTOR, true);
         return this._span;
     };
     /**
@@ -3820,19 +3864,19 @@ define([
      * @returns {Number} The resulting new value of the span. (in meters)
      */
     CameraConfiguration.prototype.increaseSpan = function () {
-        this.setSpan(this._span * Constants.SPAN_INCREASE_FACTOR);
+        this.setSpan(this._span * Constants.SPAN_INCREASE_FACTOR, true);
         return this._span;
     };
     /**
      * Resets all configuration values to their initial state (including position, orientation, field of view and span configuration)
-     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
     CameraConfiguration.prototype.resetToDefaults = function (doNotNotifyCamera) {
         if (this._camera && !doNotNotifyCamera) {
-            this._camera.configurationWillResetToDefaults();
+            this._camera.configurationWillChange();
         }
-        this.setFOV(this._defaultFOV);
-        this.setSpan(this._defaultSpan);
+        this.setFOV(this._defaultFOV, true);
+        this.setSpan(this._defaultSpan, true);
         this._positionConfiguration.resetToDefaults(true);
         this._orientationConfiguration.resetToDefaults(true);
     };
@@ -3845,17 +3889,15 @@ define([
      * @param {Number[3]} velocityVector The velocity of the camera set by the controlling user: [X,Y,Z] (not in world coordinates)
      * @param {Number[3]} angularVelocityVector The spin of the camera set by the controlling user, around axes: [X,Y,Z], degrees / second
      * @param {Number} dt The passed time since the last update, to calculate the actual path travelled / angles rotated since then
-     * @returns {Boolean} Whether the update has been successfully completed (or a position reset has happened during it)
+     * @returns {Boolean} Whether the update has been successfully completed (or a change has happened during it)
      */
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
-        this._orientationConfiguration.update(angularVelocityVector, dt);
+        var result = true;
+        result = this._orientationConfiguration.update(angularVelocityVector, dt);
         this.setOrientationMatrix(this._orientationConfiguration.getWorldOrientationMatrix(this.getPositionMatrix(), this._positionConfiguration.followsObjects() ? this._positionConfiguration.getFollowedObjectOrientationMatrix() : null));
-        if (!this._positionConfiguration.update(this.getOrientationMatrix(), this._orientationConfiguration.followsObjects() ? this._orientationConfiguration.getFollowedObjectsPositionVector() : null, velocityVector, dt)) {
-            this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
-            return false;
-        }
+        result = this._positionConfiguration.update(this.getOrientationMatrix(), this._orientationConfiguration.followsObjects() ? this._orientationConfiguration.getFollowedObjectsPositionVector() : null, velocityVector, dt) && result;
         this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
-        return true;
+        return result;
     };
     /**
      * Returns whether the camera position is set to follow any objects in this configuration.
@@ -3883,9 +3925,10 @@ define([
      * Sets the list of objects which should be followed with the orientation of the camera (either by setting a relative orientation or
      * in "point-to" mode, depending on the orientation configuration)
      * @param {Object3D[]} targetObjects Should not be null, but an empty list, if no objects are to be specified
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
-    CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects) {
-        this._orientationConfiguration.setFollowedObjects(targetObjects);
+    CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects, doNotNotifyCamera) {
+        this._orientationConfiguration.setFollowedObjects(targetObjects, doNotNotifyCamera);
     };
     // -------------------------------------------------------------------------
     /**
@@ -3970,7 +4013,7 @@ define([
          * (enum Camera.prototype.TransitionStyle) The style used for the current configuration transition.
          * @type Number
          */
-        this._transitionStyle = this.TransitionStyle.none;
+        this._transitionStyle = this.TransitionStyle.NONE;
         /**
          * (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
          * @type Number
@@ -4101,17 +4144,17 @@ define([
          * No valid value given, a transition with this value will result in an error. This way accidentally not setting a value
          * can be noticed. (for instantly jumping to the new configuration, use a duration of 0)
          */
-        none: 0,
+        NONE: 0,
         /**
          * Use a simple linear transition from one configuration to another. The position will move, and the direction will turn
          * in a linear manner.
          */
-        linear: 1,
+        LINEAR: 1,
         /**
          * Use a calculation resulting in an accelerating change in the first half, and a decelerating change during the second
          * half of the transition.
          */
-        smooth: 2
+        SMOOTH: 2
     };
     Object.freeze(Camera.prototype.TransitionStyle);
     /**
@@ -4166,9 +4209,17 @@ define([
     /**
      * Moves the camera to the specified (absolute or relative, depending on the configuration of the camera) position.
      * @param {Number[3]} positionVector
+     * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
+     * is given, the new configuration will be applied instantly.
+     * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * default will be used.
      */
-    Camera.prototype.moveToPosition = function (positionVector) {
-        this._currentConfiguration.setRelativePositionMatrix(mat.translation4v(positionVector));
+    Camera.prototype.moveToPosition = function (positionVector, duration, style) {
+        duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
+        if (duration > 0) {
+            this.transitionToSameConfiguration(duration, style);
+        }
+        this._currentConfiguration.setRelativePositionMatrix(mat.translation4v(positionVector), true);
     };
     /**
      * Returns the current camera matrix based on the position and orientation. This will be the inverse transformation
@@ -4254,9 +4305,17 @@ define([
     /**
      * Sets the camera's horizontal Field Of View.
      * @param {Number} fov The new desired horizontal FOV in degrees.
+     * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
+     * is given, the new configuration will be applied instantly.
+     * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * default will be used.
      */
-    Camera.prototype.setFOV = function (fov) {
-        this._currentConfiguration.setFOV(fov);
+    Camera.prototype.setFOV = function (fov, duration, style) {
+        duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
+        if (duration > 0) {
+            this.transitionToSameConfiguration(duration, style);
+        }
+        this._currentConfiguration.setFOV(fov, true);
         this._projectionMatrix = null;
     };
     /**
@@ -4276,9 +4335,17 @@ define([
     /**
      * Sets the camera's horizontal span.
      * @param {Number} span The new desired horizontal span in meters.
+     * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
+     * is given, the new configuration will be applied instantly.
+     * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * default will be used.
      */
-    Camera.prototype.setSpan = function (span) {
-        this._currentConfiguration.setSpan(span);
+    Camera.prototype.setSpan = function (span, duration, style) {
+        duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
+        if (duration > 0) {
+            this.transitionToSameConfiguration(duration, style);
+        }
+        this._currentConfiguration.setSpan(span, true);
         this._projectionMatrix = null;
     };
     /**
@@ -4718,23 +4785,23 @@ define([
         this._currentConfiguration.resetToDefaults(true);
     };
     /**
-     * When a reset to defaults is called from the position configuration's side, this method will be called which will apply a default 
+     * When a change happens in the settings from the position configuration's side, this method will be called which will apply a default 
      * transition.
      */
-    Camera.prototype.positionConfigurationWillResetToDefaults = function () {
+    Camera.prototype.positionConfigurationWillChange = function () {
         this.transitionToSameConfiguration();
     };
     /**
-     * When a reset to defaults is called from the orientation configuration's side, this method will be called which will apply a default 
+     * When a change happens in the settings from the orientation configuration's side, this method will be called which will apply a default 
      * transition.
      */
-    Camera.prototype.orientationConfigurationWillResetToDefaults = function () {
+    Camera.prototype.orientationConfigurationWillChange = function () {
         this.transitionToSameConfiguration();
     };
     /**
-     * When a reset to defaults is called from the configuration's side, this method will be called which will apply a default transition.
+     * When a change happens in the settings from the configuration's side, this method will be called which will apply a default transition.
      */
-    Camera.prototype.configurationWillResetToDefaults = function () {
+    Camera.prototype.configurationWillChange = function () {
         this.transitionToSameConfiguration();
     };
     /**
@@ -4850,9 +4917,16 @@ define([
     /**
      * Changes the list of objects that the active configuration's orientation is set to follow.
      * @param {Object3D[]} targetObjects Should not be null, but an empty list, if no objects are to be specified
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
      */
-    Camera.prototype.followOrientationOfObjects = function (targetObjects) {
-        this._currentConfiguration.setOrientationFollowedObjects(targetObjects);
+    Camera.prototype.followOrientationOfObjects = function (targetObjects, duration, style) {
+        duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
+        if (duration > 0) {
+            this.transitionToSameConfiguration(duration, style);
+        }
+        this._currentConfiguration.setOrientationFollowedObjects(targetObjects, true);
     };
     /**
      * Calculates and sets the world position and orientation and the relative velocity vector of the camera based on the configuration 
@@ -4877,10 +4951,10 @@ define([
                 this._transitionElapsedTime = this._transitionDuration;
             }
             switch (this._transitionStyle) {
-                case this.TransitionStyle.linear:
+                case this.TransitionStyle.LINEAR:
                     transitionProgress = this._transitionElapsedTime / this._transitionDuration;
                     break;
-                case this.TransitionStyle.smooth:
+                case this.TransitionStyle.SMOOTH:
                     transitionProgress = this._transitionElapsedTime / this._transitionDuration;
                     transitionProgress = 3 * transitionProgress * transitionProgress - 2 * transitionProgress * transitionProgress * transitionProgress;
                     break;
@@ -5067,7 +5141,7 @@ define([
                 5000,
                 getFreeCameraConfiguration(false, mat.identity4(), mat.identity4(), 60, 5, 90, 0.1, 0.1, 0.1),
                 1000,
-                Camera.prototype.TransitionStyle.smooth,
+                Camera.prototype.TransitionStyle.SMOOTH,
                 250,
                 200,
                 500,

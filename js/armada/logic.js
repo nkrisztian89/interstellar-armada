@@ -2788,9 +2788,9 @@ define([
             camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName("target");
             for (i = 0; i < camConfigs.length; i++) {
                 if (this._visualModel.getNode().getScene().activeCamera.getConfiguration() === camConfigs[i]) {
-                    this._visualModel.getNode().getScene().activeCamera.transitionToSameConfiguration(300, budaScene.Camera.prototype.TransitionStyle.smooth);
+                    this._visualModel.getNode().getScene().activeCamera.transitionToSameConfiguration(300, budaScene.Camera.prototype.TransitionStyle.SMOOTH);
                 }
-                camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : []);
+                camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : [], true);
             }
         }
     };
