@@ -2688,8 +2688,9 @@ define([
          */
         this._followedObjects = followedObjects || [];
         /**
-         * Whether only at the start and at default resets should the position be calculated as relative (and not follow the followed 
-         * objects continuously)
+         * If true, the given position is taken as relative to the followed object(s), but only at the first step after setting this 
+         * configuration for a new camera or resetting the configuration. After that, instead of following the objects using a relative
+         * position, it will switch to world-position (absolute) mode, and stay at the same place (or can be moved from it)
          * @type Boolean
          */
         this._startsWithRelativePosition = startsWithRelativePosition;
@@ -2818,6 +2819,9 @@ define([
      * @param {Camera} value
      */
     CameraPositionConfiguration.prototype.setCamera = function (value) {
+        if (value && (this._camera !== value) && this._startsWithRelativePosition) {
+            this.resetToDefaults(true);
+        }
         this._camera = value;
     };
     /**
@@ -3239,9 +3243,9 @@ define([
          */
         POSITION_FOLLOWED_OBJECTS: "positionFollowedObjects",
         /**
-         * The FPS-mode angles should be relative to the orientation of the object(s) followed by orientation
+         * The FPS-mode angles should be relative to the orientation of the (first) object followed by orientation
          */
-        ORIENTATION_FOLLOWED_OBJECTS: "orientationFollowedObjects"
+        ORIENTATION_FOLLOWED_OBJECT: "orientationFollowedObject"
     };
     Object.freeze(CameraOrientationConfiguration.prototype.BaseOrientation);
     /**
@@ -3452,7 +3456,7 @@ define([
                             case this.BaseOrientation.POSITION_FOLLOWED_OBJECTS:
                                 baseOrientationMatrix = positionFollowedObjectOrientationMatrix || null;
                                 break;
-                            case this.BaseOrientation.ORIENTATION_FOLLOWED_OBJECTS:
+                            case this.BaseOrientation.ORIENTATION_FOLLOWED_OBJECT:
                                 baseOrientationMatrix = this.followsObjects() ? this.getFollowedOrientationMatrix() : null;
                                 break;
                             default:

@@ -1447,14 +1447,26 @@ define([
          * based on this view.
          * @type String 
          */
-        this._baseOrientation = utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation);
+        this._baseOrientation = dataJSON.baseOrientation ?
+                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
+                        application.showError(
+                                "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
+                                "minor",
+                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
+                null;
         /**
          * (enum CameraOrientationConfiguration.prototype.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
          * but the object to look at has been destroyed. If null, the default setting will be acquired from the logic module upon the creation of a 
          * camera configuration based on this view.
          * @type String
          */
-        this._pointToFallback = utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback);
+        this._pointToFallback = dataJSON.pointToFallback ?
+                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
+                        application.showError(
+                                "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
+                                "minor",
+                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
+                null;
     }
     ObjectView.prototype = new GenericView();
     ObjectView.prototype.constructor = ObjectView;

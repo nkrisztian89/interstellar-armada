@@ -9,7 +9,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -40, 6.5]
+            "position": [0, -30, 6.5]
         },
         {
             "name": "far",
@@ -248,7 +248,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20]
+            "position": [30, 100, 15]
         },
         {
             "name": "lookAt-fixed-relative-start-fps",
@@ -259,7 +259,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20]
+            "position": [30, 100, 15]
         },
         {
             "name": "lookAt-fixed-relative-start-resetting",
@@ -268,7 +268,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20],
+            "position": [30, 100, 15],
             "confines": [[-200, 200], [-200, 200], [-200, 200]],
             "resetsWhenLeavingConfines": true
         },
@@ -281,7 +281,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20],
+            "position": [30, 100, 15],
             "confines": [[-200, 200], [-200, 200], [-200, 200]],
             "resetsWhenLeavingConfines": true
         },
@@ -292,7 +292,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20],
+            "position": [30, 100, 15],
             "confines": [[-200, 200], [-200, 200], [-200, 200]]
         },
         {
@@ -304,7 +304,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20],
+            "position": [30, 100, 15],
             "confines": [[-200, 200], [-200, 200], [-200, 200]]
         },
         {
@@ -314,7 +314,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20],
+            "position": [30, 100, 15],
             "distanceRange": [-200, 200]
         },
         {
@@ -326,7 +326,7 @@
             "lookAt": "self",
             "movable": false,
             "turnable": false,
-            "position": [100, 100, 20],
+            "position": [30, 100, 15],
             "distanceRange": [-200, 200]
         },
         {
