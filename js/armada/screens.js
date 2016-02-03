@@ -248,13 +248,16 @@ define([
         var craft;
         screens.HTMLScreenWithCanvases.prototype.render.call(this);
         this._stats.setContent(
-                //vec.toString3(this._battleScene.activeCamera.getVelocityVector()) + "</br>" +
+                //vec.toString3(this._battleScene.activeCamera.getVelocityVector()) + "<br/>" +
                 this.getFPS() + "<br/>" +
                 this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
         craft = this._level.getPilotedSpacecraft();
         if (craft) {
             this._ui.setContent(
+                    this._battleScene.activeCamera.getConfiguration().getName() + " view</br>" +
+                    "Armor: " + craft.getHitpoints() + "/" + craft.getClass().getHitpoints() + "<br/>" +
                     (craft.getTarget() ? ("target: " + craft.getTarget().getClassName() + " (" + craft.getTarget().getHitpoints() + "/" + craft.getTarget().getClass().getHitpoints() + ")<br/>") : "") +
+                    (craft.getTarget() ? ("distance: " + Math.round(vec.length3(vec.sub3(craft.getTarget().getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector())))) + "<br/>" : "") +
                     craft.getFlightMode() + " flight mode<br/>" +
                     "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
                     ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));

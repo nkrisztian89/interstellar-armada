@@ -1359,6 +1359,11 @@ define([
          * @type Number[3][2]
          */
         this._confines = dataJSON ? (dataJSON.confines || null) : null;
+        /**
+         * Whether the camera configurations based on these view should reset to defaults whenever their camera leaves their confined area
+         * @type Boolean
+         */
+        this._resetsWhenLeavingConfines = dataJSON ? ((typeof dataJSON.resetsWhenLeavingConfines) === "boolean" ? dataJSON.resetsWhenLeavingConfines : false) : null;
     }
     // ##############################################################################
     /**
@@ -1409,17 +1414,29 @@ define([
                                 application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject with lookAtSelf or without followsPosition!") :
                                 true) :
                         false) :
-                showMissingPropertyError(this, "rotationCenterIsObject");
+                ((this._lookAtSelf || !this._followsPosition) ? // if a conflicting setting has been set, we will default to false, otherwise as explicit setting is needed
+                        false :
+                        showMissingPropertyError(this, "rotationCenterIsObject"));
+        /**
+         * Whether instead of continuously following the object's position, it should only be considered when creating or resetting a camera
+         * configuration, and the configuration should have absolute position afterwards
+         * @type Boolean
+         */
+        this._startsWithRelativePosition = (dataJSON.startsWithRelativePosition === true) ?
+                (this._followsPosition ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): followsPosition and startsWithRelativePosition cannot be true at the same time!") :
+                        true) :
+                false;
         /**
          * The minimum and maximum distance this view can be moved to from the object it turns around.
          * @type Number[2]
          */
-        this._distanceRange = (this._rotationCenterIsObject && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : [0, 0];
+        this._distanceRange = (this._rotationCenterIsObject && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
         /**
          * Whether movement of the camera should happen along the axes of the followed object instead of its own
          * @type Boolean
          */
-        this._movesRelativeToObject = dataJSON.movesRelativeToObject ?
+        this._movesRelativeToObject = (dataJSON.movesRelativeToObject === true) ?
                 (this._rotationCenterIsObject ?
                         application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject and movesRelativeToObject cannot be true at the same time!") :
                         true) :
@@ -1454,11 +1471,12 @@ define([
                 !this._movable,
                 this._rotationCenterIsObject,
                 this._movesRelativeToObject,
-                this._followsPosition ? [followedObject] : [],
+                (this._followsPosition || this._startsWithRelativePosition) ? [followedObject] : [],
+                this._startsWithRelativePosition,
                 this._positionMatrix,
-                this._distanceRange[0],
-                this._distanceRange[1],
-                this._confines);
+                this._distanceRange,
+                this._confines,
+                this._resetsWhenLeavingConfines);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
                 this._lookAtSelf || this._lookAtTarget,
@@ -1498,7 +1516,7 @@ define([
          * The minimum and maximum distance this view can be moved to from the objects it turns around.
          * @type Number[2]
          */
-        this._distanceRange = (this._turnAroundAll && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : [0, 0];
+        this._distanceRange = (this._turnAroundAll && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
     }
     SceneView.prototype = new GenericView();
     SceneView.prototype.constructor = SceneView;
@@ -1514,10 +1532,11 @@ define([
                 this._turnAroundAll,
                 false,
                 this._turnAroundAll ? scene.getAll3DObjects() : [],
+                false,
                 this._positionMatrix,
-                this._distanceRange[0],
-                this._distanceRange[1],
-                this._confines);
+                this._distanceRange,
+                this._confines,
+                this._resetsWhenLeavingConfines);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
                 false,

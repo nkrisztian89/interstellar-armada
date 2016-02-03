@@ -2648,16 +2648,19 @@ define([
      * followed object (if any)
      * @param {Array<Object3D>} followedObjects The list of objects the camera's position should follow. Setting no objects means the set 
      * position is absolute, setting multiple objects means the average of their positions will be followed.
+     * @param {Boolean} startsWithRelativePosition Whether only at the start and at default resets should the position be calculated as
+     * relative (and not follow the followed objects continuously)
      * @param {Float32Array} positionMatrix The set position. Might mean the absolute (world) or relative position depending on other settings.
      * The final world position is always calculated and not set.
-     * @param {Number} minimumDistance If the camera turns around the followed objects and it is not fixed, this is the closest distance it
-     * can approach the followed objects to.
-     * @param {Number} maximumDistance Same as minimum distance, instead this is the maximum setting.
+     * @param {Number[2]} distanceRange If the camera turns around the followed objects and it is not fixed, this is the range in which the
+     * distance from the objects is allowed to change
      * @param {[Number[3][2]]} confines If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
      * respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range for the other
      * axes.
+     * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position 
+     * leaves the area determined by its confines (distance, X, Y or Z)
      */
-    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, positionMatrix, minimumDistance, maximumDistance, confines) {
+    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines) {
         /**
          * If true, the camera position can't be controlled by the player, but is automatically
          * calculated. The absolute position might still change e.g. if it is relative to objects
@@ -2685,6 +2688,12 @@ define([
          */
         this._followedObjects = followedObjects || [];
         /**
+         * Whether only at the start and at default resets should the position be calculated as relative (and not follow the followed 
+         * objects continuously)
+         * @type Boolean
+         */
+        this._startsWithRelativePosition = startsWithRelativePosition;
+        /**
          * Stores a copy of the starting relative position matrix so it can be reset to it later.
          * @type Float32Array
          */
@@ -2698,25 +2707,31 @@ define([
         /**
          * Describes the position of the camera in the world. This is calculated based on the other
          * properties and cannot be set directly.
+         * @type Float32Array
          */
         this._worldPositionMatrix = null;
+        /**
+         * Whether the distance from the followed objects is confined to certain limits
+         * @type Boolean
+         */
+        this._distanceIsConfined = distanceRange ? true : false;
         /**
          * If objects are followed and turnsAroundObjects is true, movement of the camera is possible by "zooming", bringing it closer
          * or farther to the followed objects on a straight line (the direction of which is based on the position matrix).
          * This value marks the closest distance.
          * @type Number
          */
-        this._minimumDistance = minimumDistance;
+        this._minimumDistance = distanceRange ? distanceRange[0] : 0;
         /**
          * See minimum distance for detailed explanation. This value marks the maximum distance. 
          * @type Number
          */
-        this._maximumDistance = maximumDistance;
+        this._maximumDistance = distanceRange ? distanceRange[1] : 0;
         /**
          * Whether the movement of the camera is limited to a certain range on axis X
          * @type Boolean
          */
-        this._confinedX = confines && confines[0];
+        this._xIsConfined = confines && confines[0];
         /**
          * The minimum value of the X coordinate of the camera, if confined on axis X
          * @type Number
@@ -2731,7 +2746,7 @@ define([
          * Whether the movement of the camera is limited to a certain range on axis Y
          * @type Boolean
          */
-        this._confinedY = confines && confines[1];
+        this._yIsConfined = confines && confines[1];
         /**
          * The minimum value of the Y coordinate of the camera, if confined on axis Y
          * @type Number
@@ -2746,7 +2761,7 @@ define([
          * Whether the movement of the camera is limited to a certain range on axis Z
          * @type Boolean
          */
-        this._confinedZ = confines && confines[2];
+        this._zIsConfined = confines && confines[2];
         /**
          * The minimum value of the Z coordinate of the camera, if confined on axis Z
          * @type Number
@@ -2757,6 +2772,22 @@ define([
          * @type Number
          */
         this._maximumZ = (confines && confines[2]) ? confines[2][1] : 0;
+        /**
+         * Whether a reset to defaults should automatically be called whenever the camera position leaves the area determined by its 
+         * confines (distance, X, Y or Z)
+         * @type Boolean
+         */
+        this._resetsWhenLeavingConfines = resetsWhenLeavingConfines;
+        /**
+         * Whether the current (next) simulation step is a starting step
+         * @type Boolean
+         */
+        this._isStarting = true;
+        /**
+         * A reference to the camera that currently uses this position configuration
+         * @type Camera
+         */
+        this._camera = null;
     }
     /**
      * Returns a camera position configuration with the same settings as this one, cloning referenced values to make sure changes to this
@@ -2769,23 +2800,37 @@ define([
                 this._turnsAroundObjects,
                 this._movesRelativeToObject,
                 this._followedObjects.slice(),
+                this._startsWithRelativePosition,
                 mat.matrix4(this._relativePositionMatrix),
-                this._minimumDistance,
-                this._maximumDistance,
+                this._distanceIsConfined ? [this._minimumDistance, this._maximumDistance] : null,
                 [
-                    this._confinedX ? [this._minimumX, this._maximumX] : null,
-                    this._confinedY ? [this._minimumY, this._maximumY] : null,
-                    this._confinedZ ? [this._minimumZ, this._maximumZ] : null
-                ]);
+                    this._xIsConfined ? [this._minimumX, this._maximumX] : null,
+                    this._yIsConfined ? [this._minimumY, this._maximumY] : null,
+                    this._zIsConfined ? [this._minimumZ, this._maximumZ] : null
+                ],
+                this._resetsWhenLeavingConfines);
         result._worldPositionMatrix = this._worldPositionMatrix;
+        result._isStarting = this._isStarting;
         return result;
     };
     /**
-     * Resets the configuration to its initial state.
+     * Sets the reference to the camera currently using this position configuration
+     * @param {Camera} value
      */
-    CameraPositionConfiguration.prototype.resetToDefaults = function () {
+    CameraPositionConfiguration.prototype.setCamera = function (value) {
+        this._camera = value;
+    };
+    /**
+     * Resets the configuration to its initial state.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
+     */
+    CameraPositionConfiguration.prototype.resetToDefaults = function (doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.positionConfigurationWillResetToDefaults();
+        }
         mat.setMatrix4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
         this._worldPositionMatrix = null;
+        this._isStarting = true;
     };
     /**
      * Directly sets a new relative position matrix for this configuration.
@@ -2803,7 +2848,7 @@ define([
     CameraPositionConfiguration.prototype.followsObjects = function (objects) {
         return objects ?
                 utils.arraysEqual(this._followedObjects.sort(), objects.sort()) :
-                (this._followedObjects.length > 0);
+                ((this._followedObjects.length > 0) && !this._startsWithRelativePosition);
     };
     /**
      * Returns the 3D vector describing the current location in space that is tracked by this camera configuration.
@@ -2887,7 +2932,8 @@ define([
      * that turn around the followed object, as in those cases the relative portion of the position is calculated based on it
      */
     CameraPositionConfiguration.prototype._calculateWorldPositionMatrix = function (worldOrientationMatrix) {
-        if (this._followedObjects.length > 0) {
+        if ((this._followedObjects.length > 0) && (!this._startsWithRelativePosition || this._isStarting)) {
+            this._isStarting = false;
             if (!this._turnsAroundObjects) {
                 this._worldPositionMatrix = mat.mul4(
                         mat.translation4m4(mat.mul4(
@@ -2904,6 +2950,9 @@ define([
                                     mat.mul4(mat.rotation4([1, 0, 0], Math.PI / 2), worldOrientationMatrix))),
                             this.getFollowedPositionMatrix());
                 }
+            }
+            if (this._startsWithRelativePosition) {
+                this._relativePositionMatrix = mat.matrix4(this._worldPositionMatrix);
             }
         } else {
             this._worldPositionMatrix = mat.matrix4(this._relativePositionMatrix);
@@ -2922,6 +2971,76 @@ define([
         return this._worldPositionMatrix;
     };
     /**
+     * Checks whether the configuration's position is outside the set confines, and if it is, either constraints them or resets the defaults
+     * (if that option is set)
+     * @return {Boolean} Whether the position has passed all the confine checks.
+     */
+    CameraPositionConfiguration.prototype._checkConfines = function () {
+        var translationVector, distance, relativePositionMatrix;
+        // if the position is only taken as relative at the start, then the stored relative position will actually be the world position,
+        // so we need to transform it back to the actual relative position, before checking the limits
+        if (this._startsWithRelativePosition && (!this._isStarting) && (this._followedObjects.length > 0)) {
+            relativePositionMatrix = mat.translation4m4(mat.mul4(
+                    this._relativePositionMatrix,
+                    mat.mul4(
+                            mat.inverseOfTranslation4(this.getFollowedPositionMatrix()),
+                            mat.inverseOfRotation4(this.getFollowedObjectOrientationMatrix()))));
+        } else {
+            relativePositionMatrix = this._relativePositionMatrix;
+        }
+        // the checks start here
+        if (this._distanceIsConfined && (this._followedObjects.length > 0)) {
+            translationVector = mat.translationVector3(relativePositionMatrix);
+            distance = vec.length3(translationVector);
+            if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
+                if (this._resetsWhenLeavingConfines) {
+                    this.resetToDefaults();
+                    return false;
+                }
+                distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
+                relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
+            }
+        }
+        if (this._xIsConfined) {
+            if ((relativePositionMatrix[12] < this._minimumX) || (relativePositionMatrix[12] > this._maximumX)) {
+                if (this._resetsWhenLeavingConfines) {
+                    this.resetToDefaults();
+                    return false;
+                }
+                relativePositionMatrix[12] = Math.min(Math.max(relativePositionMatrix[12], this._minimumX), this._maximumX);
+            }
+        }
+        if (this._yIsConfined) {
+            if ((relativePositionMatrix[13] < this._minimumY) || (relativePositionMatrix[13] > this._maximumY)) {
+                if (this._resetsWhenLeavingConfines) {
+                    this.resetToDefaults();
+                    return false;
+                }
+                relativePositionMatrix[13] = Math.min(Math.max(relativePositionMatrix[13], this._minimumY), this._maximumY);
+            }
+        }
+        if (this._zIsConfined) {
+            if ((relativePositionMatrix[14] < this._minimumZ) || (relativePositionMatrix[14] > this._maximumZ)) {
+                if (this._resetsWhenLeavingConfines) {
+                    this.resetToDefaults();
+                    return false;
+                }
+                relativePositionMatrix[14] = Math.min(Math.max(relativePositionMatrix[14], this._minimumZ), this._maximumZ);
+            }
+        }
+        // if the position is only taken as relative at the start, then calculate and store the world position
+        if (this._startsWithRelativePosition && (!this._isStarting) && (this._followedObjects.length > 0)) {
+            this._relativePositionMatrix = mat.mul4(
+                    mat.translation4m4(mat.mul4(
+                            relativePositionMatrix,
+                            this.getFollowedObjectOrientationMatrix())),
+                    this.getFollowedPositionMatrix());
+        } else {
+            this._relativePositionMatrix = relativePositionMatrix;
+        }
+        return true;
+    };
+    /**
      * Updates the position of the configuration based on the movement of the camera and the objects it follows
      * @param {Float32Array} worldOrientationMatrix The orientation of the camera in world coordinates - a free camera moves along its own
      * axes
@@ -2929,22 +3048,27 @@ define([
      * of the objects it follows and the orientation, as those are calculated in within this functions)
      * This method might update the velocity vector.
      * @param {Number} dt The time passed since the last update, to calculate the distance travelled
+     * @returns {Boolean} Whether the update has been successfully completed (or a reset has been happened instead)
      */
     CameraPositionConfiguration.prototype.update = function (worldOrientationMatrix, velocityVector, dt) {
         var translationVector, distance;
         if (!this._fixed) {
-            if (this._followedObjects.length === 0) {
+            if ((this._followedObjects.length === 0) || this._startsWithRelativePosition) {
                 translationVector = vec.scaled3(vec.mulVec3Mat4(velocityVector, worldOrientationMatrix), dt / 1000);
                 mat.translateByVector(this._relativePositionMatrix, translationVector);
             } else {
                 if (this._turnsAroundObjects) {
-                    if (this._minimumDistance < this._maximumDistance) {
+                    if (this._distanceIsConfined) {
                         translationVector = mat.translationVector3(this._relativePositionMatrix);
                         distance = vec.length3(translationVector) + (velocityVector[2] * dt / 1000);
                         if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
+                            if (this._resetsWhenLeavingConfines) {
+                                this.resetToDefaults();
+                                return false;
+                            }
                             velocityVector[2] = 0;
+                            distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
                         }
-                        distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
                         this._relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
                     }
                 } else {
@@ -2960,17 +3084,12 @@ define([
                 }
             }
         }
-        if (this._confinedX) {
-            this._relativePositionMatrix[12] = Math.min(Math.max(this._relativePositionMatrix[12], this._minimumX), this._maximumX);
-        }
-        if (this._confinedY) {
-            this._relativePositionMatrix[13] = Math.min(Math.max(this._relativePositionMatrix[13], this._minimumY), this._maximumY);
-        }
-        if (this._confinedZ) {
-            this._relativePositionMatrix[14] = Math.min(Math.max(this._relativePositionMatrix[14], this._minimumZ), this._maximumZ);
+        if (!this._checkConfines()) {
+            return false;
         }
         this._cleanupFollowedObjects();
         this._worldPositionMatrix = null;
+        return true;
     };
     // #########################################################################
     /**
@@ -3041,6 +3160,7 @@ define([
         /**
          * Describes the orientation of the camera in the world. This is calculated based on the other
          * properties and cannot be set directly.
+         * @type Float32Array
          */
         this._worldOrientationMatrix = null;
         /**
@@ -3099,6 +3219,11 @@ define([
          * @type String
          */
         this._pointToFallback = pointToFallback;
+        /**
+         * A reference to the camera that currently uses this orientation configuration
+         * @type Camera
+         */
+        this._camera = null;
     }
     /**
      * @enum {String}
@@ -3164,9 +3289,20 @@ define([
         return result;
     };
     /**
-     * Resets the configuration to its initial state.
+     * Sets the reference to the camera currently using this orientation configuration
+     * @param {Camera} value
      */
-    CameraOrientationConfiguration.prototype.resetToDefaults = function () {
+    CameraOrientationConfiguration.prototype.setCamera = function (value) {
+        this._camera = value;
+    };
+    /**
+     * Resets the configuration to its initial state.
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
+     */
+    CameraOrientationConfiguration.prototype.resetToDefaults = function (doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.orientationConfigurationWillResetToDefaults();
+        }
         mat.setMatrix4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
         this._alpha = this._defaultAlpha;
         this._beta = this._defaultBeta;
@@ -3509,6 +3645,11 @@ define([
          * @type Number
          */
         this._maxSpan = maxSpan;
+        /**
+         * A reference to the camera that currently uses this configuration
+         * @type Camera
+         */
+        this._camera = null;
     }
     makeObject3DMixinClass.call(CameraConfiguration);
     /**
@@ -3531,6 +3672,15 @@ define([
         result.setPositionMatrix(this.getPositionMatrix());
         result.setOrientationMatrix(this.getOrientationMatrix());
         return result;
+    };
+    /**
+     * Sets the reference to the camera currently using this configuration
+     * @param {Camera} value
+     */
+    CameraConfiguration.prototype.setCamera = function (value) {
+        this._camera = value;
+        this._positionConfiguration.setCamera(value);
+        this._orientationConfiguration.setCamera(value);
     };
     /**
      * Sets a new relative (or absolute, depending on the configuration properties) position matrix for this configuration.
@@ -3650,12 +3800,16 @@ define([
     };
     /**
      * Resets all configuration values to their initial state (including position, orientation, field of view and span configuration)
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
      */
-    CameraConfiguration.prototype.resetToDefaults = function () {
+    CameraConfiguration.prototype.resetToDefaults = function (doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.configurationWillResetToDefaults();
+        }
         this.setFOV(this._defaultFOV);
         this.setSpan(this._defaultSpan);
-        this._positionConfiguration.resetToDefaults();
-        this._orientationConfiguration.resetToDefaults();
+        this._positionConfiguration.resetToDefaults(true);
+        this._orientationConfiguration.resetToDefaults(true);
     };
     /**
      * Updates the position and orientation of the camera based on the current configuration values and the given velocity and spin vectors.
@@ -3666,12 +3820,17 @@ define([
      * @param {Number[3]} velocityVector The velocity of the camera set by the controlling user: [X,Y,Z] (not in world coordinates)
      * @param {Number[3]} angularVelocityVector The spin of the camera set by the controlling user, around axes: [X,Y,Z], degrees / second
      * @param {Number} dt The passed time since the last update, to calculate the actual path travelled / angles rotated since then
+     * @returns {Boolean} Whether the update has been successfully completed (or a position reset has happened during it)
      */
     CameraConfiguration.prototype.update = function (velocityVector, angularVelocityVector, dt) {
         this._orientationConfiguration.update(angularVelocityVector, dt);
         this.setOrientationMatrix(this._orientationConfiguration.getWorldOrientationMatrix(this.getPositionMatrix(), this._positionConfiguration.followsObjects() ? this._positionConfiguration.getFollowedObjectOrientationMatrix() : null));
-        this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt);
+        if (!this._positionConfiguration.update(this.getOrientationMatrix(), velocityVector, dt)) {
+            this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
+            return false;
+        }
         this.setPositionMatrix(this._positionConfiguration.getWorldPositionMatrix(this.getOrientationMatrix()));
+        return true;
     };
     /**
      * Returns whether the camera position is set to follow any objects in this configuration.
@@ -3722,7 +3881,7 @@ define([
         var angles = mat.getYawAndPitch(orientationMatrix);
         return new CameraConfiguration(
                 "",
-                new CameraPositionConfiguration(false, false, false, [], mat.matrix4(positionMatrix), 0, 0, null),
+                new CameraPositionConfiguration(false, false, false, [], false, mat.matrix4(positionMatrix), null, null, false),
                 new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined, undefined, undefined,
                         CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
                         CameraOrientationConfiguration.prototype.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
@@ -3781,6 +3940,7 @@ define([
          * @type CameraConfiguration
          */
         this._currentConfiguration = configuration;
+        this._currentConfiguration.setCamera(this);
         /**
          * (enum Camera.prototype.TransitionStyle) The style used for the current configuration transition.
          * @type Number
@@ -4440,7 +4600,11 @@ define([
      * @param {CameraConfiguration} configuration 
      */
     Camera.prototype.setConfiguration = function (configuration) {
+        if (this._currentConfiguration) {
+            this._currentConfiguration.setCamera(null);
+        }
         this._currentConfiguration = configuration;
+        this._currentConfiguration.setCamera(this);
         this._previousConfiguration = null;
     };
     /**
@@ -4464,7 +4628,11 @@ define([
             } else {
                 this._previousConfiguration = this._currentConfiguration;
             }
+            if (this._currentConfiguration) {
+                this._currentConfiguration.setCamera(null);
+            }
             this._currentConfiguration = configuration;
+            this._currentConfiguration.setCamera(this);
             this._transitionDuration = duration === undefined ? this._defaultTransitionDuration : duration;
             this._transitionElapsedTime = 0;
             this._transitionStyle = style === undefined ? this._defaultTransitionStyle : style;
@@ -4522,7 +4690,27 @@ define([
      */
     Camera.prototype.transitionToConfigurationDefaults = function (duration, style) {
         this.transitionToSameConfiguration(duration, style);
-        this._currentConfiguration.resetToDefaults();
+        this._currentConfiguration.resetToDefaults(true);
+    };
+    /**
+     * When a reset to defaults is called from the position configuration's side, this method will be called which will apply a default 
+     * transition.
+     */
+    Camera.prototype.positionConfigurationWillResetToDefaults = function () {
+        this.transitionToSameConfiguration();
+    };
+    /**
+     * When a reset to defaults is called from the orientation configuration's side, this method will be called which will apply a default 
+     * transition.
+     */
+    Camera.prototype.orientationConfigurationWillResetToDefaults = function () {
+        this.transitionToSameConfiguration();
+    };
+    /**
+     * When a reset to defaults is called from the configuration's side, this method will be called which will apply a default transition.
+     */
+    Camera.prototype.configurationWillResetToDefaults = function () {
+        this.transitionToSameConfiguration();
     };
     /**
      * Start a transition to the first camera configuration associated with the passed renderable node, if any.
@@ -4654,7 +4842,10 @@ define([
             // if a transition is in progress...
             // during transitions, movement and turning commands are not taken into account, therefore updating the configurations without
             // considering those
-            this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
+            if (!this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt)) {
+                this.update(dt);
+                return;
+            }
             // calculating transition progress based on the elapsed time and the transition style
             this._transitionElapsedTime += dt;
             if (this._transitionElapsedTime > this._transitionDuration) {
@@ -4671,7 +4862,10 @@ define([
                 default:
                     application.crash();
             }
-            this._previousConfiguration.update([0, 0, 0], [0, 0, 0], dt);
+            if (!this._previousConfiguration.update([0, 0, 0], [0, 0, 0], dt)) {
+                this.update(dt);
+                return;
+            }
             // calculate position
             // we can simply interpolate the position on a straight linear path
             startPositionVector = this._previousConfiguration.getPositionVector();
@@ -4704,9 +4898,16 @@ define([
             this._updateVelocity(dt);
             this._updateAngularVelocity(dt);
             // make sure that even if the position / orientation are dependent on each other, both are fully updated for the configuration
-            this._currentConfiguration.update(this._controlledVelocityVector, this._angularVelocityVector, dt);
-            this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt);
+            if (!this._currentConfiguration.update(this._controlledVelocityVector, this._angularVelocityVector, dt)) {
+                this.update(dt);
+                return;
+            }
+            if (!this._currentConfiguration.update([0, 0, 0], [0, 0, 0], dt)) {
+                this.update(dt);
+                return;
+            }
             // update the position and orientation
+            previousPositionVector = this.getPositionVector();
             this._setPositionMatrix(this._currentConfiguration.getPositionMatrix());
             this._setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
             // update the relative velocity vector
@@ -4724,7 +4925,7 @@ define([
                 }
                 this._previousFollowedPositionVector = this._currentConfiguration.getFollowedPositionVector();
             } else {
-                this._velocityVector = this._controlledVelocityVector;
+                this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
             }
         }
     };
