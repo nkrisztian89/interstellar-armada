@@ -1617,7 +1617,7 @@ define([
      * @param {RenderParameters} renderParameters
      */
     ShadedLODMesh.prototype.performRenderToShadowMap = function (renderParameters) {
-        this._model.render(renderParameters.context, this._wireframe, undefined, this.getCurrentLOD(renderParameters));
+        this._model.render(renderParameters.context, this._wireframe, true, this.getCurrentLOD(renderParameters));
     };
     /**
      * @override
@@ -3702,11 +3702,12 @@ define([
      * @param {String} [name] An optional, descriptive name of this configuration by which it can be found and referred to later.
      * @param {CameraPositionConfiguration} positionConfiguration All the settings necessary to calculate the world position.
      * @param {CameraOrientationConfiguration} orientationConfiguration All the settings necessary to calculate the world orientation.
-     * @param {Number} fov The starting horizontal field of view, in degrees.
+     * @param {Number} fov The starting field of view, in degrees.
      * @param {Number} minFOV The minimum field of view value that can be set for a camera using this configuration.
      * @param {Number} maxFOV The maximum field of view value that can be set for a camera using this configuration.
-     * @param {Number} span The starting horizontal span of the camera. This is the world-space distance that the camera sees
-     * horizontally at depth 0. In meters.
+     * @param {Number} span The starting span of the camera. This is the world-space distance that the camera sees
+     * horizontally or vertically at depth 0, depending on camera setting. The other value will be calculated basen on the aspect of the 
+     * camera. In meters.
      * @param {Number} minSpan The minimum span that can be set for a camera using this configuration.
      * @param {Number} maxSpan The maximum span that can be set for a camera using this configuration.
      */
@@ -3733,7 +3734,7 @@ define([
          */
         this._defaultFOV = fov;
         /**
-         * The current field of view, in degrees. Refers to the horizontal field of view, the vertical will depend on the aspect of the camera.
+         * The current field of view, in degrees. Refers to the field of view, the vertical will depend on the aspect of the camera.
          * @type Number
          */
         this._fov = fov;
@@ -3754,7 +3755,8 @@ define([
         this._defaultSpan = span;
         /**
          * The current span, in meters. This is the world-space distance that the camera sees
-         * horizontally at depth 0, the vertical span will depend on the aspect of the camera.
+         * horizontally or vertically at depth 0, depending on camera setting. The other value
+         * will be calculated basen on the aspect of the camera.
          * @type Number
          */
         this._span = span;
@@ -3839,7 +3841,7 @@ define([
         return this._orientationConfiguration.isFPS();
     };
     /**
-     * Sets the configuration's horizontal Field Of View 
+     * Sets the configuration's field of view 
      * @param {Number} fov The new desired FOV in degrees.
      * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
@@ -3850,21 +3852,21 @@ define([
         this._fov = Math.min(Math.max(fov, this._minFOV), this._maxFOV);
     };
     /**
-     * Returns the currently set horizontal field of view, in degrees.
+     * Returns the currently set field of view, in degrees.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getFOV = function () {
         return this._fov;
     };
     /**
-     * Returns the minimum horizontal field of view that can be set, in degrees.
+     * Returns the minimum field of view that can be set, in degrees.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getMinFOV = function () {
         return this._minFOV;
     };
     /**
-     * Returns the maximum horizontal field of view that can be set, in degrees.
+     * Returns the maximum field of view that can be set, in degrees.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getMaxFOV = function () {
@@ -3887,7 +3889,7 @@ define([
         return this._fov;
     };
     /**
-     * Sets the configuration's horizontal span.
+     * Sets the configuration's span.
      * @param {Number} span The new desired span in meters.
      * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
@@ -3898,21 +3900,21 @@ define([
         this._span = Math.min(Math.max(span, this._minSpan), this._maxSpan);
     };
     /**
-     * Returns the currently set horizontal span, in meters.
+     * Returns the currently set span, in meters.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getSpan = function () {
         return this._span;
     };
     /**
-     * Returns the minimum horizontal span that can be set, in meters.
+     * Returns the minimum span that can be set, in meters.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getMinSpan = function () {
         return this._minSpan;
     };
     /**
-     * Returns the maximum horizontal span that can be set, in meters.
+     * Returns the maximum span that can be set, in meters.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getMaxSpan = function () {
@@ -4004,12 +4006,12 @@ define([
      * @param {Boolean} fps Whether the orientation of the camera should be controlled in FPS mode.
      * @param {Float32Array} positionMatrix The initial position. (4x4 translation matrix)
      * @param {Float32Array} orientationMatrix The initial orientation. (4x4 rotation matrix)
-     * @param {Number} fov The initial horizontal field of view, in degrees.
-     * @param {Number} minFOV The minimum horizontal field of view that can be set for this configuration, in degrees.
-     * @param {Number} maxFOV The maximum horizontal field of view that can be set for this configuration, in degrees.
-     * @param {Number} span The initial horizontal span, in meters.
-     * @param {Number} minSpan The minimum horizontal span that can be set for this configuration, in meters.
-     * @param {Number} maxSpan The maximum horizontal span that can be set for this configuration, in meters.
+     * @param {Number} fov The initial field of view, in degrees.
+     * @param {Number} minFOV The minimum field of view that can be set for this configuration, in degrees.
+     * @param {Number} maxFOV The maximum field of view that can be set for this configuration, in degrees.
+     * @param {Number} span The initial span, in meters.
+     * @param {Number} minSpan The minimum span that can be set for this configuration, in meters.
+     * @param {Number} maxSpan The maximum span that can be set for this configuration, in meters.
      * @returns {CameraConfiguration}
      */
     function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
@@ -4031,6 +4033,7 @@ define([
      * @param {Scene} scene A reference to the scene this camera is used to render. The camera can follow objects in this scene. (with its
      * position or orientation)
      * @param {Number} aspect The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
+     * @param {Boolean} usesVerticalValues Whether to consider the set FOV and span values as vertical (true) or horizontal (false)
      * @param {Number} viewDistance Objects are visible up to this distance when rendered using this camera. (in meters)
      * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
      * @param {Number} transitionDuration The time the camera should take to transition from one configuration to another by default, in 
@@ -4043,7 +4046,7 @@ define([
      * @param {Number} angularAcceleration The angular acceleration of the camera along one axis when controlled (turned) by the user. (deg/s^2)
      * @param {Number} angularDeceleration The angular deceleration of the camera along one axis when controlled (stopped) by the user. (deg/s^2)
      */
-    function Camera(scene, aspect, viewDistance, configuration, transitionDuration, transitionStyle, maxSpeed, acceleration, deceleration, maxSpin, angularAcceleration, angularDeceleration) {
+    function Camera(scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle, maxSpeed, acceleration, deceleration, maxSpin, angularAcceleration, angularDeceleration) {
         /**
          * An internal 3D object representing the position and orientation of the camera.
          * @type Object3D
@@ -4059,6 +4062,11 @@ define([
          * @type Number
          */
         this._aspect = aspect;
+        /**
+         * Whether to consider the set FOV and span values as vertical (true) or horizontal (false)
+         * @type Boolean
+         */
+        this._usesVerticalValues = usesVerticalValues;
         /**
          * Objects are visible up to this distance when rendered using this camera. In meters.
          * @type Number
@@ -4355,11 +4363,15 @@ define([
     /**
      * Updates the stored cache value of the projection matrix of the camera based on its current properties.
      * Currently only perspective projection is supported.
-     * @param {Number} fov The horizontal field of view for the perspective projection, in degrees.
-     * @param {Number} span The horizontal span of the viewing rectangle at depth 0, in meters.
+     * @param {Number} fov The field of view for the perspective projection, in degrees.
+     * @param {Number} span The span of the viewing rectangle at depth 0, in meters.
      */
     Camera.prototype._updateProjectionMatrix = function (fov, span) {
-        this._projectionMatrix = mat.perspective4(span / 2.0, span / this._aspect / 2.0, span / 2.0 / Math.tan(Math.radians(fov) / 2), this._viewDistance);
+        if (this._usesVerticalValues) {
+            this._projectionMatrix = mat.perspective4(span * this._aspect / 2.0, span / 2.0, span / 2.0 / Math.tan(Math.radians(fov) / 2), this._viewDistance);
+        } else {
+            this._projectionMatrix = mat.perspective4(span / 2.0, span / this._aspect / 2.0, span / 2.0 / Math.tan(Math.radians(fov) / 2), this._viewDistance);
+        }
     };
     /**
      * Sets the camera's aspect ratio. (width / height)
@@ -4370,7 +4382,7 @@ define([
         this._projectionMatrix = null;
     };
     /**
-     * Returns the current horizontal field of view (the correct current value during transitions as well), in degrees
+     * Returns the current field of view (the correct current value during transitions as well), in degrees
      * @returns {Number}
      */
     Camera.prototype.getFOV = function () {
@@ -4380,8 +4392,8 @@ define([
         return this._currentConfiguration.getFOV();
     };
     /**
-     * Sets the camera's horizontal Field Of View.
-     * @param {Number} fov The new desired horizontal FOV in degrees.
+     * Sets the camera's field of view.
+     * @param {Number} fov The new desired field of view in degrees.
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
      * is given, the new configuration will be applied instantly.
      * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
@@ -4410,7 +4422,7 @@ define([
         this._projectionMatrix = null;
     };
     /**
-     * Returns the current horizontal span (the correct current value during transitions as well), in meters
+     * Returns the current span (the correct current value during transitions as well), in meters
      * @returns {Number}
      */
     Camera.prototype.getSpan = function () {
@@ -4420,8 +4432,8 @@ define([
         return this._currentConfiguration.getSpan();
     };
     /**
-     * Sets the camera's horizontal span.
-     * @param {Number} span The new desired horizontal span in meters.
+     * Sets the camera's span.
+     * @param {Number} span The new desired span in meters.
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
      * is given, the new configuration will be applied instantly.
      * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
@@ -4896,14 +4908,19 @@ define([
      * Start a transition to the first camera configuration associated with the passed renderable node, if any.
      * @param {RenderableNode} [node] If no node is given, the method will start a transition to the first camera configuration associated
      * with the scene itself.
+     * @param {Boolean} forceFirstView If true, then even if the given node is already the followed one, the method will switch to its first
+     * camera configuration. Otherwise it will leave the current camera configuration in this case.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
-     * @returns {Boolean} Whether a configuration change or transition has been initiated. If the given node (or the scene) does not have
-     * any associated camera configurations, this will be false.
+     * @returns {Boolean} Whether as a result of this call, the camera is not following the specified node. If the node has no associated
+     * configurations to switch to, this will be false.
      */
-    Camera.prototype.followNode = function (node, duration, style) {
+    Camera.prototype.followNode = function (node, forceFirstView, duration, style) {
         var configuration;
+        if (!forceFirstView && (this._followedNode === node)) {
+            return true;
+        }
         this._followedNode = node;
         if (this._followedNode) {
             configuration = this._followedNode.getNextCameraConfiguration();
@@ -4925,14 +4942,16 @@ define([
      * A convenience methods so that instead of the renderable node, one can specify the renderable object to follow. This will just get
      * the node of the object and follow that.
      * @param {RenderableObject3D} objectToFollow The renderable object the node of which to follow.
+     * @param {Boolean} forceFirstView If true, then even if the given object's node is already the followed one, the method will switch to 
+     * its first camera configuration. Otherwise it will leave the current camera configuration in this case.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
-     * @returns {Boolean} Whether a configuration change or transition has been initiated. If the node of the given object does not have
-     * any associated camera configurations, this will be false.
+     * @returns {Boolean} Whether as a result of this call, the camera is not following the specified object's node. If the node has no 
+     * associated configurations to switch to, this will be false.
      */
-    Camera.prototype.followObject = function (objectToFollow, duration, style) {
-        return this.followNode(objectToFollow.getNode(), duration, style);
+    Camera.prototype.followObject = function (objectToFollow, forceFirstView, duration, style) {
+        return this.followNode(objectToFollow.getNode(), forceFirstView, duration, style);
     };
     /**
      * Start a transition to the next camera configuration associated with the currently followed node, or the scene, in case no node is
@@ -4983,7 +5002,7 @@ define([
     Camera.prototype.followNextNode = function (considerScene, duration, style) {
         var node = this._scene.getNextNode(this._followedNode);
         if (considerScene && this._followedNode && (node === this._scene.getFirstNode())) {
-            if (this.followNode(null, duration, style)) {
+            if (this.followNode(null, true, duration, style)) {
                 return;
             }
         }
@@ -4991,7 +5010,7 @@ define([
             node = this._scene.getNextNode(node);
         }
         if (node && node.getNextCameraConfiguration()) {
-            this.followNode(node, duration, style);
+            this.followNode(node, true, duration, style);
         }
     };
     /**
@@ -5005,20 +5024,20 @@ define([
     Camera.prototype.followPreviousNode = function (considerScene, duration, style) {
         var firstNode = this._scene.getFirstNode(), node = this._scene.getPreviousNode(this._followedNode);
         if (considerScene && (this._followedNode === firstNode)) {
-            if (this.followNode(null, duration, style)) {
+            if (this.followNode(null, true, duration, style)) {
                 return;
             }
         }
         while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
             if (node === firstNode) {
-                if (this.followNode(null, duration, style)) {
+                if (this.followNode(null, true, duration, style)) {
                     return;
                 }
             }
             node = this._scene.getPreviousNode(node);
         }
         if (node && node.getNextCameraConfiguration()) {
-            this.followNode(node, duration, style);
+            this.followNode(node, true, duration, style);
         }
     };
     /**
@@ -5254,6 +5273,7 @@ define([
         this.setActiveCamera(new Camera(
                 this,
                 width / height,
+                true,
                 5000,
                 getFreeCameraConfiguration(false, mat.identity4(), mat.identity4(), 60, 5, 90, 0.1, 0.1, 0.1),
                 1000,
@@ -5784,7 +5804,6 @@ define([
         PointParticle: PointParticle,
         CameraPositionConfiguration: CameraPositionConfiguration,
         CameraOrientationConfiguration: CameraOrientationConfiguration,
-        CameraConfiguration: CameraConfiguration,
-        Camera: Camera
+        CameraConfiguration: CameraConfiguration
     };
 });

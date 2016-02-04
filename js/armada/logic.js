@@ -486,22 +486,22 @@ define([
          */
         this._autoTargeting = null;
         /**
-         * The default starting horizontal field of view value for camera configurations, in degrees
+         * The default starting field of view value for camera configurations, in degrees
          * @type Number
          */
         this._defaultCameraFOV = null;
         /**
-         * The default minimum and maximum horizontal field of view values for camera configurations, in degrees
+         * The default minimum and maximum field of view values for camera configurations, in degrees
          * @type Number[2]
          */
         this._defaultCameraFOVRange = null;
         /**
-         * The default starting horizontal span value for camera configurations, in meters
+         * The default starting span value for camera configurations, in meters
          * @type Number
          */
         this._defaultCameraSpan = null;
         /**
-         * The default minimum and maximum horizontal span values for camera configurations, in meters
+         * The default minimum and maximum span values for camera configurations, in meters
          * @type Number[2]
          */
         this._defaultCameraSpanRange = null;
@@ -596,28 +596,28 @@ define([
         return this._autoTargeting;
     };
     /**
-     * Returns the default starting horizontal field of view value for camera configurations, in degrees
+     * Returns the default starting field of view value for camera configurations, in degrees
      * @returns {Number}
      */
     LogicContext.prototype.getDefaultCameraFOV = function () {
         return this._defaultCameraFOV;
     };
     /**
-     * Returns the default minimum and maximum horizontal field of view values for camera configurations, in degrees
+     * Returns the default minimum and maximum field of view values for camera configurations, in degrees
      * @returns {Number[2]}
      */
     LogicContext.prototype.getDefaultCameraFOVRange = function () {
         return this._defaultCameraFOVRange;
     };
     /**
-     * Returns the default starting horizontal span value for camera configurations, in meters
+     * Returns the default starting span value for camera configurations, in meters
      * @returns {Number}
      */
     LogicContext.prototype.getDefaultCameraSpan = function () {
         return this._defaultCameraSpan;
     };
     /**
-     * Returns the default minimum and maximum horizontal span values for camera configurations, in meters
+     * Returns the default minimum and maximum span values for camera configurations, in meters
      * @returns {Number[2]}
      */
     LogicContext.prototype.getDefaultCameraSpanRange = function () {
@@ -3151,7 +3151,7 @@ define([
             for (i = 0; i < this._views.length; i++) {
                 scene.addCameraConfiguration(this._views[i].createCameraConfigurationForScene(scene));
                 if (i === 0) {
-                    scene.activeCamera.followNode(null, 0);
+                    scene.activeCamera.followNode(null, true, 0);
                     scene.activeCamera.update(0);
                 }
             }

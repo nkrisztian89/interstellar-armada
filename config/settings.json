@@ -6,7 +6,7 @@
             "shadowMapping": true,
             "shadows": {
                 "quality": 2048,
-                "ranges": [10, 30, 90, 200, 400, 1000],
+                "ranges": [3, 10, 30, 90, 330, 1000],
                 "numRanges": 4,
                 "depthRatio": 1.5
             }
@@ -72,7 +72,7 @@
             "autoTargeting": "hitAndAutoTarget"
         },
         "camera": {
-            "defaultFOV": 60,
+            "defaultFOV": 40,
             "defaultFOVRange": [5, 100],
             "defaultSpan": 0.3,
             "defaultSpanRange": [0.3, 0.3],

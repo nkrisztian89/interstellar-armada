@@ -1949,7 +1949,7 @@ define([
      * @param {Object3D} renderableObject
      */
     CameraController.prototype.setCameraToFollowObject = function (renderableObject) {
-        this._controlledCamera.followObject(renderableObject);
+        this._controlledCamera.followObject(renderableObject, false);
     };
 
     /**
@@ -2320,7 +2320,7 @@ define([
             return;
         }
         this._fighterController.setControlledSpacecraft(pilotedSpacecraft);
-        pilotedSpacecraft.resetViewCameras();
+        //pilotedSpacecraft.resetViewCameras();
         this._cameraController.setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
         ///TODO: implement a way to be able to control both the camera and spacecraft at the same time
         this.disableAction("followNext");

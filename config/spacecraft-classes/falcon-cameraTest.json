@@ -5,6 +5,8 @@
     "views": [
         {
             "name": "near",
+            "fov": 40,
+            "fovRange": [40, 40],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
@@ -13,33 +15,36 @@
         },
         {
             "name": "far",
+            "fov": 55,
+            "fovRange": [55, 55],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -80, 13.5]
+            "position": [0, -50, 15]
         },
         {
-            "name": "top",
+            "name": "cockpit",
+            "fov": 40,
+            "fovRange": [40, 40],
+            "fps": true,
             "followsPosition": true,
             "movable": false,
-            "turnable": false,
+            "turnable": true,
+            "alphaRange": [-90, 90],
+            "betaRange": [-80, 60],
             "rotationCenterIsObject": false,
-            "position": [0, 32, 165],
-            "rotations": [
-                {
-                    "axis": "X",
-                    "degrees": 90
-                }
-            ]
+            "position": [0, 3.8, 1]
         },
         {
             "name": "front",
+            "fov": 55,
+            "fovRange": [55, 55],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 36, 13.5],
+            "position": [0, 32, 12.5],
             "rotations": [
                 {
                     "axis": "Z",
@@ -52,16 +57,19 @@
             ]
         },
         {
-            "name": "cockpit",
-            "fovRange": [60, 60],
-            "fps": true,
+            "name": "top",
+            "fov": 60,
             "followsPosition": true,
             "movable": false,
-            "turnable": true,
-            "alphaRange": [-90, 90],
-            "betaRange": [-80, 80],
+            "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 3.7, 1]
+            "position": [0, 32, 165],
+            "rotations": [
+                {
+                    "axis": "X",
+                    "degrees": 90
+                }
+            ]
         },
         {
             "name": "above",
