@@ -29,15 +29,31 @@
         }, {
             "name": "overview",
             "turnAroundAll": true,
-            "movable": false,
+            "movable": true,
             "turnable": true,
             "position": [0, -2000, 0],
+            "distanceRange": [1000, 3000],
             "rotations": [
                 {
                     "axis": "X",
                     "degrees": -90
                 }
             ]
+        }, {
+            "name": "lookAtAll",
+            "lookAt": "all",
+            "movable": false,
+            "turnable": false,
+            "position": [1000, -2000, 300]
+        }, {
+            "name": "lookAtAll-free-resetting",
+            "lookAt": "all",
+            "movable": true,
+            "turnable": false,
+            "startsWithRelativePosition": true,
+            "position": [1000, -2000, 300],
+            "distanceRange": [500, 5000],
+            "resetsWhenLeavingConfines": true
         }
     ],
     "spacecrafts": [

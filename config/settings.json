@@ -239,8 +239,11 @@
                         "name": "followPrevious",
                         "description": "Follow previous spacecraft. (in spectator mode)"
                     }, {
-                        "name": "changeView",
-                        "description": "Change view of currently followed spacecraft"
+                        "name": "nextView",
+                        "description": "Change to the next view of the currently followed spacecraft"
+                    }, {
+                        "name": "previousView",
+                        "description": "Change to the previous view of the currently followed spacecraft"
                     }, {
                         "name": "resetView",
                         "description": "Reset the current view to its original state"
@@ -349,8 +352,11 @@
                         "action": "cameraIncreaseFOV",
                         "key": "u"
                     }, {
-                        "action": "changeView",
+                        "action": "nextView",
                         "key": "v"
+                    }, {
+                        "action": "previousView",
+                        "key": "g"
                     }, {
                         "action": "followNext",
                         "key": "c"

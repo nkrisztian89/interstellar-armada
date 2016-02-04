@@ -1364,6 +1364,32 @@ define([
          * @type Boolean
          */
         this._resetsWhenLeavingConfines = dataJSON ? ((typeof dataJSON.resetsWhenLeavingConfines) === "boolean" ? dataJSON.resetsWhenLeavingConfines : false) : null;
+        /**
+         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
+         * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration
+         * based on this view.
+         * @type String 
+         */
+        this._baseOrientation = dataJSON ? (dataJSON.baseOrientation ?
+                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
+                        application.showError(
+                                "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
+                                "minor",
+                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
+                null) : null;
+        /**
+         * (enum CameraOrientationConfiguration.prototype.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
+         * but the object to look at has been destroyed. If null, the default setting will be acquired from the logic module upon the creation of a 
+         * camera configuration based on this view.
+         * @type String
+         */
+        this._pointToFallback = dataJSON ? (dataJSON.pointToFallback ?
+                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
+                        application.showError(
+                                "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
+                                "minor",
+                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
+                null) : null;
     }
     // ##############################################################################
     /**
@@ -1423,12 +1449,10 @@ define([
          * @type Boolean
          */
         this._startsWithRelativePosition = (dataJSON.startsWithRelativePosition === true) ?
-                (this._followsPosition ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): followsPosition and startsWithRelativePosition cannot be true at the same time!") :
+                ((this._followsPosition || this._rotationCenterIsObject) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): startsWithRelativePosition cannot be set to true if followsPosition or rotationCenterIsObject are true!") :
                         true) :
-                ((!this._followsPosition && this._resetsWhenLeavingConfines) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!") :
-                        false);
+                false;
         /**
          * The minimum and maximum distance this view can be moved to from the object it turns around.
          * @type Number[2]
@@ -1445,37 +1469,15 @@ define([
                         application.showError("Invalid view configuration ('" + this._name + "'): movesRelativeToObject can only be set if both position and orientation is followed and rotationCenterIsObject is false!") :
                         true) :
                 false;
-        /**
-         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
-         * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration
-         * based on this view.
-         * @type String 
-         */
-        this._baseOrientation = dataJSON.baseOrientation ?
-                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
-                        application.showError(
-                                "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
-                                "minor",
-                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
-                null;
-        /**
-         * (enum CameraOrientationConfiguration.prototype.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
-         * but the object to look at has been destroyed. If null, the default setting will be acquired from the logic module upon the creation of a 
-         * camera configuration based on this view.
-         * @type String
-         */
-        this._pointToFallback = dataJSON.pointToFallback ?
-                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
-                        application.showError(
-                                "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
-                                "minor",
-                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
-                null;
+        // further invalid configuration errors
         if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
             application.showError(
                     "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
                     "severe",
                     "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
+        }
+        if (!this._followsPosition && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
+            application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
         }
     }
     ObjectView.prototype = new GenericView();
@@ -1535,10 +1537,39 @@ define([
          */
         this._turnAroundAll = (typeof dataJSON.turnAroundAll) === "boolean" ? dataJSON.turnAroundAll : false;
         /**
+         * Whether the view's orientation should always be centered on the average position of all objects in the scene
+         * @type Boolean
+         */
+        this._lookAtAll = (dataJSON.lookAt === "all") ?
+                ((this._turnAroundAll || this._turnable) ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'all' if turnAroundAll or turnable are true!") :
+                        true) :
+                false;
+        /**
          * The minimum and maximum distance this view can be moved to from the objects it turns around.
          * @type Number[2]
          */
-        this._distanceRange = (this._turnAroundAll && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
+        this._distanceRange = ((this._turnAroundAll || this._lookAtAll) && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
+        /**
+         * Whether instead of continuously following the object's position, it should only be considered when creating or resetting a camera
+         * configuration, and the configuration should have absolute position afterwards
+         * @type Boolean
+         */
+        this._startsWithRelativePosition = (dataJSON.startsWithRelativePosition === true) ?
+                (this._turnAroundAll ?
+                        application.showError("Invalid view configuration ('" + this._name + "'): startsWithRelativePosition cannot be true if the view is set to turn around the objects!") :
+                        true) :
+                false;
+        // further invalid configuration errors
+        if (!this._turnAroundAll && !this._startsWithRelativePosition && this._lookAtAll && this._confines && this._distanceRange) {
+            application.showError(
+                    "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
+                    "severe",
+                    "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
+        }
+        if (!this._turnAroundAll && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
+            application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
+        }
     }
     SceneView.prototype = new GenericView();
     SceneView.prototype.constructor = SceneView;
@@ -1553,23 +1584,23 @@ define([
                 !this._movable,
                 this._turnAroundAll,
                 false,
-                this._turnAroundAll ? scene.getAll3DObjects() : [],
-                false,
+                this._turnAroundAll || this._startsWithRelativePosition ? scene.getAll3DObjects() : [],
+                this._startsWithRelativePosition,
                 this._positionMatrix,
                 this._distanceRange,
                 this._confines,
                 this._resetsWhenLeavingConfines);
         orientationConfiguration = new budaScene.CameraOrientationConfiguration(
                 !this._turnable,
-                false,
+                this._lookAtAll,
                 this._fps,
-                [],
+                this._lookAtAll ? scene.getAll3DObjects() : [],
                 this._orientationMatrix,
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 this._alphaRange[0], this._alphaRange[1],
                 this._betaRange[0], this._betaRange[1],
-                budaScene.CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
-                budaScene.CameraOrientationConfiguration.prototype.PointToFallback.STATIONARY);
+                this._baseOrientation || armada.logic().getDefaultCameraBaseOrientation(),
+                this._pointToFallback || armada.logic().getDefaultCameraPointToFallback());
         return new budaScene.CameraConfiguration(
                 this._name,
                 positionConfiguration, orientationConfiguration,

@@ -669,8 +669,9 @@ define([
         this._cameraConfigurations.push(cameraConfiguration);
     };
     /**
-     * Returns the camera configuration the comes after one passed as parameter in the list of associated camera configurations.
-     * If the last configuration is passed, returns the first one. If the list is empty, returns null.
+     * Returns the camera configuration the comes after the one passed as parameter in the list of associated camera configurations.
+     * If the last configuration is passed, returns the first one. Returns the first configuration if called with a null parameter, and
+     * crashes if the given configuration is not in the list.
      * @param {CameraConfiguration} currentCameraConfiguration
      * @returns {CameraConfiguration}
      */
@@ -689,6 +690,31 @@ define([
         }
         if (found) {
             return this._cameraConfigurations[0];
+        }
+        application.crash(); // the current configuration was not in the list
+    };
+    /**
+     * Returns the camera configuration the comes before the one passed as parameter in the list of associated camera configurations.
+     * If the first configuration is passed, returns the last one. Returns the last configuration if called with a null parameter, and
+     * crashes if the given configuration is not in the list.
+     * @param {CameraConfiguration} [currentCameraConfiguration]
+     * @returns {CameraConfiguration}
+     */
+    RenderableNode.prototype.getPreviousCameraConfiguration = function (currentCameraConfiguration) {
+        var i, found;
+        if (!currentCameraConfiguration) {
+            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[this._cameraConfigurations.length - 1] : null;
+        }
+        for (i = (this._cameraConfigurations.length - 1), found = false; i >= 0; i--) {
+            if (found) {
+                return this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
+                found = true;
+            }
+        }
+        if (found) {
+            return this._cameraConfigurations[this._cameraConfigurations.length - 1];
         }
         application.crash(); // the current configuration was not in the list
     };
@@ -2659,8 +2685,12 @@ define([
      * axes.
      * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position 
      * leaves the area determined by its confines (distance, X, Y or Z)
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (confine checks, object 
+     * cleanup). Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly
+     * updated to provide a smooth transition between the non-updated and updated state
      */
-    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines) {
+    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, isTransitionConfiguration) {
         /**
          * If true, the camera position can't be controlled by the player, but is automatically
          * calculated. The absolute position might still change e.g. if it is relative to objects
@@ -2780,6 +2810,11 @@ define([
          */
         this._resetsWhenLeavingConfines = resetsWhenLeavingConfines;
         /**
+         * If true, the configuration serves as a suitable starting point for transitions, as it will not perform major updates (resets, 
+         * changes) and the checks necessary for them (confine checks, object cleanup). 
+         */
+        this._isTransitionConfiguration = isTransitionConfiguration;
+        /**
          * Whether the current (next) simulation step is a starting step
          * @type Boolean
          */
@@ -2793,33 +2828,39 @@ define([
     /**
      * Returns a camera position configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
+     * @param {Boolean} [transitionCopy=false] Create a copy that serves as a transition configuration (not doing object cleanup, confine
+     * checks, only regular following of position)
      * @returns {CameraPositionConfiguration}
      */
-    CameraPositionConfiguration.prototype.copy = function () {
+    CameraPositionConfiguration.prototype.copy = function (transitionCopy) {
         var result = new CameraPositionConfiguration(
                 this._fixed,
                 this._turnsAroundObjects,
                 this._movesRelativeToObject,
                 this._followedObjects.slice(),
                 this._startsWithRelativePosition,
-                mat.matrix4(this._relativePositionMatrix),
+                mat.matrix4(this._defaultRelativePositionMatrix),
                 this._distanceIsConfined ? [this._minimumDistance, this._maximumDistance] : null,
                 [
                     this._xIsConfined ? [this._minimumX, this._maximumX] : null,
                     this._yIsConfined ? [this._minimumY, this._maximumY] : null,
                     this._zIsConfined ? [this._minimumZ, this._maximumZ] : null
                 ],
-                this._resetsWhenLeavingConfines);
-        result._worldPositionMatrix = this._worldPositionMatrix;
+                this._resetsWhenLeavingConfines,
+                transitionCopy);
+        result._relativePositionMatrix = mat.matrix4(this._relativePositionMatrix);
+        result._worldPositionMatrix = mat.matrix4(this._worldPositionMatrix);
         result._isStarting = this._isStarting;
         return result;
     };
     /**
-     * Sets the reference to the camera currently using this position configuration
+     * Sets the reference to the camera currently using this position configuration. Configurations with relative starting position are 
+     * automatically reset when a new camera is assigned to them, so that they start from a refreshed relative position
      * @param {Camera} value
+     * @param {Boolean} [doNotReset=false] If true, the automatic configuration reset will be suppressed 
      */
-    CameraPositionConfiguration.prototype.setCamera = function (value) {
-        if (value && (this._camera !== value) && this._startsWithRelativePosition) {
+    CameraPositionConfiguration.prototype.setCamera = function (value, doNotReset) {
+        if (value && (this._camera !== value) && this._startsWithRelativePosition && !doNotReset) {
             this.resetToDefaults(true);
         }
         this._camera = value;
@@ -3113,10 +3154,12 @@ define([
                 }
             }
         }
-        if (!this._checkConfines(orientationFollowedObjectsPositionVector)) {
-            return false;
+        if (!this._isTransitionConfiguration) {
+            if (!this._checkConfines(orientationFollowedObjectsPositionVector)) {
+                return false;
+            }
+            this._cleanupFollowedObjects();
         }
-        this._cleanupFollowedObjects();
         this._worldPositionMatrix = null;
         return true;
     };
@@ -3142,8 +3185,12 @@ define([
      * taken as base when calculating the orientation in FPS-mode.
      * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation 
      * calculation to use if no objects are specified to point towards to
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback). 
+     * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated 
+     * to provide a smooth transition between the non-updated and updated state
      */
-    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta, baseOrientation, pointToFallback) {
+    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta, baseOrientation, pointToFallback, isTransitionConfiguration) {
         /**
          * If true, the camera orientation can't be controlled by the player, but is automatically
          * calculated. The absolute orientation might still change e.g. if it is relative to objects
@@ -3249,6 +3296,11 @@ define([
          */
         this._pointToFallback = pointToFallback;
         /**
+         * If true, the configuration serves as a suitable starting point for transitions, as it will not perform major updates (resets, 
+         * changes) and the checks necessary for them (object cleanup, fallback). 
+         */
+        this._isTransitionConfiguration = isTransitionConfiguration;
+        /**
          * A reference to the camera that currently uses this orientation configuration
          * @type Camera
          */
@@ -3297,15 +3349,17 @@ define([
     /**
      * Returns a camera orientation configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
+     * @param {Boolean} [transitionCopy=false] Create a copy that serves as a transition configuration (not doing object cleanup, fallback
+     * checking, only regular following of orientation)
      * @returns {CameraOrientationConfiguration}
      */
-    CameraOrientationConfiguration.prototype.copy = function () {
+    CameraOrientationConfiguration.prototype.copy = function (transitionCopy) {
         var result = new CameraOrientationConfiguration(
                 this._fixed,
                 this._pointsTowardsObjects,
                 this._fps,
                 this._followedObjects.slice(),
-                mat.matrix4(this._relativeOrientationMatrix),
+                mat.matrix4(this._defaultRelativeOrientationMatrix),
                 this._alpha,
                 this._beta,
                 this._minAlpha,
@@ -3313,8 +3367,10 @@ define([
                 this._minBeta,
                 this._maxBeta,
                 this._baseOrientation,
-                this._pointToFallback);
-        result._worldOrientationMatrix = this._worldOrientationMatrix;
+                this._pointToFallback,
+                transitionCopy);
+        result._relativeOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+        result._worldOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
         return result;
     };
     /**
@@ -3403,6 +3459,11 @@ define([
             for (i = 0; i < this._followedObjects.length; i++) {
                 positionVector = vec.add3(positionVector, this._followedObjects[i].getPositionVector());
             }
+            positionVector = [
+                positionVector[0] / this._followedObjects.length,
+                positionVector[1] / this._followedObjects.length,
+                positionVector[2] / this._followedObjects.length
+            ];
         }
         return positionVector;
     };
@@ -3434,9 +3495,8 @@ define([
                 k++;
             }
             if (k > 0) {
-                this._followedObjects.splice(i, k);
                 // if all followed objects have been eliminated, adapt
-                if (this._followedObjects.length === 0) {
+                if (this._followedObjects.length === k) {
                     // notify the camera before any changes are made to the configuration, so it can make a copy of the original settings
                     if (this._camera) {
                         this._camera.orientationConfigurationWillChange();
@@ -3446,8 +3506,10 @@ define([
                         this._relativeOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
                         this._fps = false;
                     }
+                    this._followedObjects.splice(i, k);
                     return false;
                 }
+                this._followedObjects.splice(i, k);
             }
         }
         return true;
@@ -3621,8 +3683,10 @@ define([
                 }
             }
         }
-        if (!this._cleanupFollowedObjects()) {
-            return false;
+        if (!this._isTransitionConfiguration) {
+            if (!this._cleanupFollowedObjects()) {
+                return false;
+            }
         }
         this._worldOrientationMatrix = null;
         return true;
@@ -3715,30 +3779,33 @@ define([
      * Creates and returns copy with the same configuration settings as this one, but with new references to avoid any change made to the
      * original configuration to affect the new one or vice versa.
      * @param {String} [name=""] An optional name for the created copy.
+     * @param {Boolean} [transitionCopy=false] Create a copy that serves as a transition configuration (not doing object cleanup, confine
+     * checks, fallback, only regular following of position and orientation)
      * @returns {CameraConfiguration}
      */
-    CameraConfiguration.prototype.copy = function (name) {
+    CameraConfiguration.prototype.copy = function (name, transitionCopy) {
         var result = new CameraConfiguration(
                 name || "",
-                this._positionConfiguration.copy(),
-                this._orientationConfiguration.copy(),
+                this._positionConfiguration.copy(transitionCopy),
+                this._orientationConfiguration.copy(transitionCopy),
                 this._fov,
                 this._minFOV,
                 this._maxFOV,
                 this._span,
                 this._minSpan,
                 this._maxSpan);
-        result.setPositionMatrix(this.getPositionMatrix());
-        result.setOrientationMatrix(this.getOrientationMatrix());
+        result.setPositionMatrix(mat.matrix4(this.getPositionMatrix()));
+        result.setOrientationMatrix(mat.matrix4(this.getOrientationMatrix()));
         return result;
     };
     /**
      * Sets the reference to the camera currently using this configuration
      * @param {Camera} value
+     * @param {Boolean} [doNotReset=false] If true, the automatic configuration reset will be suppressed 
      */
-    CameraConfiguration.prototype.setCamera = function (value) {
+    CameraConfiguration.prototype.setCamera = function (value, doNotReset) {
         this._camera = value;
-        this._positionConfiguration.setCamera(value);
+        this._positionConfiguration.setCamera(value, doNotReset);
         this._orientationConfiguration.setCamera(value);
     };
     /**
@@ -4303,6 +4370,16 @@ define([
         this._projectionMatrix = null;
     };
     /**
+     * Returns the current horizontal field of view (the correct current value during transitions as well), in degrees
+     * @returns {Number}
+     */
+    Camera.prototype.getFOV = function () {
+        if (this._previousConfiguration) {
+            return this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * this._getTransitionProgress();
+        }
+        return this._currentConfiguration.getFOV();
+    };
+    /**
      * Sets the camera's horizontal Field Of View.
      * @param {Number} fov The new desired horizontal FOV in degrees.
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
@@ -4331,6 +4408,16 @@ define([
     Camera.prototype.increaseFOV = function () {
         this._currentConfiguration.increaseFOV();
         this._projectionMatrix = null;
+    };
+    /**
+     * Returns the current horizontal span (the correct current value during transitions as well), in meters
+     * @returns {Number}
+     */
+    Camera.prototype.getSpan = function () {
+        if (this._previousConfiguration) {
+            return this._previousConfiguration.getSpan() + (this._currentConfiguration.getSpan() - this._previousConfiguration.getSpan()) * this._getTransitionProgress();
+        }
+        return this._currentConfiguration.getSpan();
     };
     /**
      * Sets the camera's horizontal span.
@@ -4680,23 +4767,24 @@ define([
                 fps,
                 positionMatrix,
                 orientationMatrix,
-                this._currentConfiguration.getFOV(),
+                this.getFOV(),
                 this._currentConfiguration.getMinFOV(),
                 this._currentConfiguration.getMaxFOV(),
-                this._currentConfiguration.getSpan(),
+                this.getSpan(),
                 this._currentConfiguration.getMinSpan(),
                 this._currentConfiguration.getMaxSpan());
     };
     /**
      * Directly sets a new configuration to use for this camera. The new configuration is applied instantly, without transition.
      * @param {CameraConfiguration} configuration 
+     * @param {Boolean} [doNotResetConfiguration=false] If true, the automatic configuration reset will be suppressed 
      */
-    Camera.prototype.setConfiguration = function (configuration) {
+    Camera.prototype.setConfiguration = function (configuration, doNotResetConfiguration) {
         if (this._currentConfiguration) {
             this._currentConfiguration.setCamera(null);
         }
         this._currentConfiguration = configuration;
-        this._currentConfiguration.setCamera(this);
+        this._currentConfiguration.setCamera(this, doNotResetConfiguration);
         this._previousConfiguration = null;
     };
     /**
@@ -4770,7 +4858,7 @@ define([
      */
     Camera.prototype.transitionToSameConfiguration = function (duration, style) {
         var configuration = this._currentConfiguration;
-        this.setConfiguration(this._getFreeCameraConfiguration(false));
+        this.setConfiguration(this._previousConfiguration ? this._getFreeCameraConfiguration(false) : this._currentConfiguration.copy("", true), true);
         this.startTransitionToConfiguration(configuration, duration, style);
     };
     /**
@@ -4866,6 +4954,25 @@ define([
         }
     };
     /**
+     * Start a transition to the previous camera configuration associated with the currently followed node, or the scene, in case no node is
+     * followed. If the currently followed configuration is the first one, the last one will be chosen.
+     * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
+     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * will be used.
+     */
+    Camera.prototype.changeToPreviousView = function (duration, style) {
+        if (this._followedNode) {
+            // if there is a followed node, that means the current configuration is among its associated configurations, we can safely proceed
+            this.startTransitionToConfiguration(this._followedNode.getPreviousCameraConfiguration(this._currentConfiguration), duration, style);
+        } else {
+            // if there is no followed node, we need to be more careful, first need to check if the scene has any associated configurations at all
+            if (this._scene.getNextCameraConfiguration()) {
+                // then we need to check if the current configuration is among the associated ones (it can be a generic free configuration)
+                this.startTransitionToConfiguration(this._scene.getPreviousCameraConfiguration(this._scene.hasCameraConfiguration(this._currentConfiguration) ? this._currentConfiguration : null), duration, style);
+            }
+        }
+    };
+    /**
      * Start a transition to the first associated camera configuration of the next renderable node.
      * @param {Boolean} [considerScene=false] Whether to also consider the scene "as a node". If true, than after the last node, this 
      * method will set the fist configuration associated with the scene rather than jumping right to the first node again.
@@ -4929,6 +5036,25 @@ define([
         this._currentConfiguration.setOrientationFollowedObjects(targetObjects, true);
     };
     /**
+     * Returns the current progress of the transition, which is a number between 0 and 1 based on which the attributes of the camera can
+     * be calculated as a linear combination of the previous and current configurations
+     * @returns {Number}
+     */
+    Camera.prototype._getTransitionProgress = function () {
+        var result;
+        switch (this._transitionStyle) {
+            case this.TransitionStyle.LINEAR:
+                return this._transitionElapsedTime / this._transitionDuration;
+            case this.TransitionStyle.SMOOTH:
+                result = this._transitionElapsedTime / this._transitionDuration;
+                result = 3 * result * result - 2 * result * result * result;
+                return result;
+            default:
+                application.crash();
+        }
+        return -1;
+    };
+    /**
      * Calculates and sets the world position and orientation and the relative velocity vector of the camera based on the configuration 
      * settings, the transition (if one is in progress) and the commands that were issued by the controller in this simulation step.
      * @param {Number} dt The time that has passed since the last simulation step (in milliseconds)
@@ -4950,17 +5076,7 @@ define([
             if (this._transitionElapsedTime > this._transitionDuration) {
                 this._transitionElapsedTime = this._transitionDuration;
             }
-            switch (this._transitionStyle) {
-                case this.TransitionStyle.LINEAR:
-                    transitionProgress = this._transitionElapsedTime / this._transitionDuration;
-                    break;
-                case this.TransitionStyle.SMOOTH:
-                    transitionProgress = this._transitionElapsedTime / this._transitionDuration;
-                    transitionProgress = 3 * transitionProgress * transitionProgress - 2 * transitionProgress * transitionProgress * transitionProgress;
-                    break;
-                default:
-                    application.crash();
-            }
+            transitionProgress = this._getTransitionProgress();
             if (!this._previousConfiguration.update([0, 0, 0], [0, 0, 0], dt)) {
                 this.update(dt);
                 return;
@@ -5365,9 +5481,10 @@ define([
         return false;
     };
     /**
-     * Returns the camera configuration the comes after one passed as parameter in the list of associated camera configurations.
-     * If the last configuration is passed, returns the first one. If the list is empty, returns null.
-     * @param {CameraConfiguration} currentCameraConfiguration
+     * Returns the camera configuration the comes after the one passed as parameter in the list of associated camera configurations.
+     * If the last configuration is passed, returns the first one. Returns the first configuration if called with a null parameter, and
+     * crashes if the given configuration is not in the list.
+     * @param {CameraConfiguration} [currentCameraConfiguration]
      * @returns {CameraConfiguration}
      */
     Scene.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
@@ -5385,6 +5502,31 @@ define([
         }
         if (found) {
             return this._cameraConfigurations[0];
+        }
+        application.crash(); // the current configuration was not in the list
+    };
+    /**
+     * Returns the camera configuration the comes before the one passed as parameter in the list of associated camera configurations.
+     * If the first configuration is passed, returns the last one. Returns the last configuration if called with a null parameter, and
+     * crashes if the given configuration is not in the list.
+     * @param {CameraConfiguration} [currentCameraConfiguration]
+     * @returns {CameraConfiguration}
+     */
+    Scene.prototype.getPreviousCameraConfiguration = function (currentCameraConfiguration) {
+        var i, found;
+        if (!currentCameraConfiguration) {
+            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[this._cameraConfigurations.length - 1] : null;
+        }
+        for (i = (this._cameraConfigurations.length - 1), found = false; i >= 0; i--) {
+            if (found) {
+                return this._cameraConfigurations[i];
+            }
+            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
+                found = true;
+            }
+        }
+        if (found) {
+            return this._cameraConfigurations[this._cameraConfigurations.length - 1];
         }
         application.crash(); // the current configuration was not in the list
     };

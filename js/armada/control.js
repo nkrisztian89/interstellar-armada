@@ -1904,8 +1904,11 @@ define([
             self._controlledCamera.increaseFOV();
         });
         // changing the view
-        this.setActionFunction("changeView", true, function () {
+        this.setActionFunction("nextView", true, function () {
             self._controlledCamera.changeToNextView();
+        });
+        this.setActionFunction("previousView", true, function () {
+            self._controlledCamera.changeToPreviousView();
         });
         // following another object
         this.setActionFunction("followNext", true, function () {

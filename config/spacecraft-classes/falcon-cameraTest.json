@@ -445,7 +445,6 @@
         },
         {
             "name": "target",
-            "fov": 60,
             "followsPosition": true,
             "lookAt": "target",
             "movable": false,
@@ -455,7 +454,6 @@
         },
         {
             "name": "target",
-            "fov": 60,
             "fps": true,
             "followsPosition": true,
             "lookAt": "target",
@@ -463,6 +461,27 @@
             "turnable": false,
             "rotationCenterIsObject": true,
             "position": [0, -40, 6.5]
+        },
+        {
+            "name": "target",
+            "followsPosition": true,
+            "lookAt": "target",
+            "movable": true,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 6.5],
+            "distanceRange": [15, 100]
+        },
+        {
+            "name": "target",
+            "fps": true,
+            "followsPosition": true,
+            "lookAt": "target",
+            "movable": true,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 6.5],
+            "distanceRange": [15, 100]
         }
     ]
 }
