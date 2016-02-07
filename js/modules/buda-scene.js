@@ -5804,6 +5804,7 @@ define([
         PointParticle: PointParticle,
         CameraPositionConfiguration: CameraPositionConfiguration,
         CameraOrientationConfiguration: CameraOrientationConfiguration,
-        CameraConfiguration: CameraConfiguration
+        CameraConfiguration: CameraConfiguration,
+        Camera: Camera
     };
 });
