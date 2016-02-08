@@ -9,6 +9,9 @@
 /*jslint nomen: true, white: true */
 /*global define, require, location, document, JSON */
 
+/**
+ * @param application This module augments the generic application module with functonality specific to the Interstellar Armada game
+ */
 define([
     "modules/application"
 ], function (application) {
@@ -17,34 +20,34 @@ define([
     // add private variables specific to Interstellar Armada
 
     var
-          /**
-           * Manages the texture, cubemap, shader and model resources of the game.
-           * @type ResourceManager
-           */
-          _resourceManager = null,
-          /**
-           * Manages the HTML screens of the game (such as menu, battle, database...)
-           * @type ScreenManager
-           */
-          _screenManager = null,
-          /**
-           * The graphics context of the game, that can be used to access and 
-           * manipulate graphical resources.
-           * @type GraphicsContext
-           */
-          _graphicsContext = null,
-          /**
-           * The logic context of the game, containing the domain specific model (e.g.
-           * what classes of spaceships are there)
-           * @type LogicContext
-           */
-          _logicContext = null,
-          /**
-           * The control context of the game, that can be used to bind input controls
-           * to in-game actions.
-           * @type ControlContext
-           */
-          _controlContext = null;
+            /**
+             * Manages the texture, cubemap, shader and model resources of the game.
+             * @type ResourceManager
+             */
+            _resourceManager = null,
+            /**
+             * Manages the HTML screens of the game (such as menu, battle, database...)
+             * @type ScreenManager
+             */
+            _screenManager = null,
+            /**
+             * The graphics context of the game, that can be used to access and 
+             * manipulate graphical resources.
+             * @type GraphicsContext
+             */
+            _graphicsContext = null,
+            /**
+             * The logic context of the game, containing the domain specific model (e.g.
+             * what classes of spaceships are there)
+             * @type LogicContext
+             */
+            _logicContext = null,
+            /**
+             * The control context of the game, that can be used to bind input controls
+             * to in-game actions.
+             * @type ControlContext
+             */
+            _controlContext = null;
 
     // -------------------------------------------------------------------------
     // Private methods
@@ -76,14 +79,14 @@ define([
 
             application.log("Game version is: " + application.getVersion(), 1);
 
-            _resourceManager.requestConfigLoad(configJSON.configFileURLs.resources, {
+            _resourceManager.requestConfigLoad(configJSON.dataFileURLs.resources, "data", {
                 "textures": graphicsResourceManager.TextureResource,
                 "cubemaps": graphicsResourceManager.CubemapResource,
                 "shaders": graphicsResourceManager.ShaderResource,
                 "models": graphicsResourceManager.ModelResource
             });
-            _logicContext.setClassesSourceFileName(configJSON.configFileURLs.classes);
-            _logicContext.setEnvironmentsSourceFileName(configJSON.configFileURLs.environments);
+            _logicContext.setClassesSourceFileName(configJSON.dataFileURLs.classes);
+            _logicContext.setEnvironmentsSourceFileName(configJSON.dataFileURLs.environments);
             _logicContext.setLevelFileNames(configJSON.levels);
             application.requestSettingsLoad(configJSON.configFileURLs.settings);
         });
@@ -167,11 +170,11 @@ define([
         application.log("Initializing Interstellar Armada...");
         if (location.protocol === "file:") {
             this.showError("Trying to run the game from the local filesystem!", "critical",
-                  "This application can only be run through a web server. " +
-                  "If you wish to run it from your own computer, you have to install, set up " +
-                  "and start a web server first. You have to put the folder containing the files of this game " +
-                  "(assume it is called 'armada') to the HTML serving folder of the web server, then " +
-                  "you can start the game by entering 'localhost/armada' in your browser's address bar.");
+                    "This application can only be run through a web server. " +
+                    "If you wish to run it from your own computer, you have to install, set up " +
+                    "and start a web server first. You have to put the folder containing the files of this game " +
+                    "(assume it is called 'armada') to the HTML serving folder of the web server, then " +
+                    "you can start the game by entering 'localhost/armada' in your browser's address bar.");
             return;
         }
         require([
@@ -230,8 +233,8 @@ define([
      */
     application.getScreen = function (screenName) {
         return screenName ?
-              _screenManager.getScreen(screenName) :
-              _screenManager.getCurrentScreen();
+                _screenManager.getScreen(screenName) :
+                _screenManager.getCurrentScreen();
     };
     /**
      * Switches to the given screen.

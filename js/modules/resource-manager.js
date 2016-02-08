@@ -19,6 +19,10 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, Image */
 
+/**
+ * @param application Required for error displaying and file loading functionality
+ * @param asyncResource Uses AsyncResource as superclass for GenericResource, ResourceHolder and ResourceManager classes
+ */
 define([
     "modules/application",
     "modules/async-resource"
@@ -352,11 +356,12 @@ define([
     };
     /**
      * @param {String} filename
+     * @param {String} fileType
      * @param {Object.<String, Function>} resourceTypes
      * @param {Function} callback
      */
-    ResourceManager.prototype.requestConfigLoad = function (filename, resourceTypes, callback) {
-        application.requestTextFile("config", filename, function (responseText) {
+    ResourceManager.prototype.requestConfigLoad = function (filename, fileType, resourceTypes, callback) {
+        application.requestTextFile(fileType, filename, function (responseText) {
             this._loadConfigFromJSON(JSON.parse(responseText), resourceTypes);
             if (callback) {
                 callback();

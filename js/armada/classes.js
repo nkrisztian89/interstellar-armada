@@ -9,6 +9,17 @@
 /*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
+/**
+ * @param utils Required for managing enums
+ * @param vec Required for calculating vectors when initializing certain classes
+ * @param mat Required for parsing matrices and determining rotation angles
+ * @param application Required for error displaying and file loading functionality
+ * @param resourceManager All the loadable classes are subclassed from GenericResource
+ * @param egomModel Required for default basic (e.g. particle) models
+ * @param physics Required for loading Body instances for the physical model of the spacecrafts
+ * @param budaScene Required for parsing camera related enums and creating camera configurations for views
+ * @param armada Required for referencing resources and classes, applying defaults settings
+ */
 define([
     "utils/utils",
     "utils/vectors",
@@ -71,7 +82,7 @@ define([
      * @override
      */
     GenericClass.prototype._requestFiles = function () {
-        application.requestTextFile("config", this._source, function (responseText) {
+        application.requestTextFile("data", this._source, function (responseText) {
             this._onFilesLoad(true, JSON.parse(responseText));
         }.bind(this), 'text/plain; charset=utf-8');
     };

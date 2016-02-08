@@ -752,7 +752,7 @@ define([
      * initiate the loading of reusable environments when ready.
      */
     LogicContext.prototype.requestClassesLoad = function () {
-        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, {
+        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, "data", {
             "skyboxClasses": classes.SkyboxClass,
             "backgroundObjectClasses": classes.BackgroundObjectClass,
             "dustCloudClasses": classes.DustCloudClass,

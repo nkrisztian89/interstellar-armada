@@ -1,21 +1,24 @@
 {
-    "version": "0.1.0:136+refactoring-36 (2016.02.07.)",
+    "version": "0.1.0:136+refactoring-37 (2016.02.08.)",
     "logVerbosity": 1,
     "folders": {
-        "screen": "screens/",
-        "component": "components/",
-        "css": "css/",
-        "model": "models/",
-        "shader": "shaders/",
-        "texture": "textures/",
         "config": "config/",
-        "level": "levels/",
-        "environment": "levels/"
+        "css": "css/",
+        "data": "data/",
+        "screen": "{{data}}/screens/",
+        "component": "{{data}}/components/",
+        "model": "{{data}}/models/",
+        "shader": "{{data}}/shaders/",
+        "texture": "{{data}}/textures/",
+        "level": "{{data}}/levels/",
+        "environment": "{{data}}/levels/environments/"
     },
     "configFileURLs": {
+        "settings": "settings.json"
+    },
+    "dataFileURLs": {
         "resources": "resources.json",
         "classes": "classes.json",
-        "settings": "settings.json",
         "environments": "environments.json"
     },
     "levels": [
