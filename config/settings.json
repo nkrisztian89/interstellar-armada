@@ -445,6 +445,9 @@
                         "action": "fire",
                         "button": 0
                     }, {
+                        "action": "nextTarget",
+                        "button": 1
+                    }, {
                         "action": "yawLeft",
                         "axis": "-2"
                     }, {
@@ -480,6 +483,24 @@
                     }, {
                         "action": "cameraTurnRight",
                         "axis": "+4"
+                    }, {
+                        "action": "cameraMoveLeft",
+                        "axis": "-0"
+                    }, {
+                        "action": "cameraMoveRight",
+                        "axis": "+0"
+                    }, {
+                        "action": "cameraMoveForward",
+                        "axis": "-1"
+                    }, {
+                        "action": "cameraMoveBackward",
+                        "axis": "+1"
+                    }, {
+                        "action": "nextView",
+                        "button": 3
+                    }, {
+                        "action": "resetView",
+                        "button": 2
                     }, {
                         "action": "resetSpeed",
                         "button": 4
