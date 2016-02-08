@@ -1192,31 +1192,26 @@ define([
     function Weapon(weaponClass, spacecraft, slot) {
         /**
          * The class storing the general characteristics of this weapon.
-         * @name Weapon#_class
          * @type WeaponClass
          */
         this._class = weaponClass;
         /**
          * The spacecraft on which this weapon is located.
-         * @name Weapon#_spacecraft
          * @type Spacecraft
          */
         this._spacecraft = spacecraft;
         /**
          * The weapon slot that this weapon occupies on the spacecraft.
-         * @name Weapon#_slot
          * @type WeaponSlot
          */
         this._slot = slot;
         /**
-         * The time stamp from when the weapon was last fired.
-         * @name Weapon#_lastFireTime
-         * @type Date
+         * The time passed since the last firing in milliseconds
+         * @type Number
          */
-        this._lastFireTime = 0;
+        this._cooldown = 0;
         /**
          * The renderable node that represents this weapon in a scene.
-         * @name Weapon#_visualModel
          * @type RenderableObject
          */
         this._visualModel = null;
@@ -1294,19 +1289,25 @@ define([
         }
     };
     /**
+     * Does all the needed updates to the weapon's state for one simulation step.
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
+     */
+    Weapon.prototype.simulate = function (dt) {
+        this._cooldown = Math.min(this._cooldown + dt, this._class.getCooldown());
+    };
+    /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed
      * array.
      * @param {Projectile[]} projectiles
      */
     Weapon.prototype.fire = function (projectiles) {
-        var i, curTime, p,
+        var i, p,
                 orientationMatrix, scaledOriMatrix, weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels;
         // check cooldown
-        curTime = new Date();
-        if ((curTime - this._lastFireTime) > this._class.getCooldown()) {
-            this._lastFireTime = curTime;
+        if (this._cooldown >= this._class.getCooldown()) {
+            this._cooldown = 0;
             // cache the matrices valid for the whole weapon
             orientationMatrix = this._spacecraft.getOrientationMatrix();
             scaledOriMatrix = mat.mul4(this._spacecraft.getScalingMatrix(), orientationMatrix);
@@ -2910,6 +2911,7 @@ define([
         if (this._target && this._target.canBeReused()) {
             this.setTarget(null);
         }
+        // destruction of the spacecraft
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {
                 this._timeElapsedSinceDestruction = 0;
@@ -2926,6 +2928,10 @@ define([
                 }
             }
         } else {
+            // updating onboard systems, if the spacecraft is still functioning
+            for (i = 0; i < this._weapons.length; i++) {
+                this._weapons[i].simulate(dt);
+            }
             if (this._propulsion) {
                 this._maneuveringComputer.controlThrusters();
                 this._propulsion.simulate(dt);

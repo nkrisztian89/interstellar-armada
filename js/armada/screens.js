@@ -61,10 +61,43 @@ define([
         this._battleScene = null;
         this._simulationLoop = null;
         this._battleCursor = null;
+        this._prevDate = null;
+        this._isTimeStopped = false;
     }
 
     BattleScreen.prototype = new screens.HTMLScreenWithCanvases();
     BattleScreen.prototype.constructor = BattleScreen;
+
+    BattleScreen.prototype._simulationLoopFunction = function () {
+        var curDate = new Date();
+        armada.control().control();
+        if (!this._isTimeStopped) {
+            this._level.tick(curDate - this._prevDate);
+        }
+        this._prevDate = curDate;
+    };
+
+    BattleScreen.prototype.stopTime = function () {
+        this._isTimeStopped = true;
+        if (this._battleScene) {
+            this._battleScene.setShouldAnimate(false);
+        }
+    };
+
+    BattleScreen.prototype.resumeTime = function () {
+        if (this._battleScene) {
+            this._battleScene.setShouldAnimate(true);
+        }
+        this._isTimeStopped = false;
+    };
+
+    BattleScreen.prototype.toggleTime = function () {
+        if (this._isTimeStopped) {
+            this.resumeTime();
+        } else {
+            this.stopTime();
+        }
+    };
 
     BattleScreen.prototype.pauseBattle = function () {
         armada.control().stopListening();
@@ -74,25 +107,23 @@ define([
         this._simulationLoop = null;
         if (this._battleScene) {
             this._battleScene.setShouldAnimate(false);
+            this._battleScene.setShouldUpdateCamera(false);
         }
     };
 
     BattleScreen.prototype.resumeBattle = function () {
-        var prevDate, freq;
+        var freq;
         document.body.style.cursor = this._battleCursor || 'default';
         if (this._simulationLoop === null) {
-            prevDate = new Date();
-            freq = 60;
-
+            this._prevDate = new Date();
+            freq = 60; ///TODO: hardcoded
             if (this._battleScene) {
-                this._battleScene.setShouldAnimate(true);
+                if (!this._isTimeStopped) {
+                    this._battleScene.setShouldAnimate(true);
+                }
+                this._battleScene.setShouldUpdateCamera(true);
             }
-            this._simulationLoop = setInterval(function () {
-                var curDate = new Date();
-                armada.control().control();
-                this._level.tick(curDate - prevDate);
-                prevDate = curDate;
-            }.bind(this), 1000 / freq);
+            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / freq);
             armada.control().startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",

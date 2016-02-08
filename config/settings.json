@@ -92,6 +92,9 @@
                         "name": "pause",
                         "description": "Pause the game"
                     }, {
+                        "name": "stopTime",
+                        "description": "Stop the time in the game, with controls still available"
+                    }, {
                         "name": "switchToPilotMode",
                         "description": "Switch to pilot mode"
                     }, {
@@ -369,6 +372,9 @@
                     }, {
                         "action": "pause",
                         "key": "p"
+                    }, {
+                        "action": "stopTime",
+                        "key": "o"
                     }, {
                         "action": "switchToPilotMode",
                         "key": "m"

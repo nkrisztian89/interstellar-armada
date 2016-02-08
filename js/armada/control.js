@@ -1641,6 +1641,9 @@ define([
             // the BattleScreen class
             armada.getScreen().showMessage("Game paused.");
         });
+        this.setActionFunction("stopTime", true, function () {
+            armada.getScreen().toggleTime();
+        });
         // switching to pilot mode
         this.setActionFunction("switchToPilotMode", true, function () {
             armada.control().switchToPilotMode(self._level.getPilotedSpacecraft());

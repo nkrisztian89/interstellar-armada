@@ -5295,6 +5295,10 @@ define([
          * @type Boolean
          */
         this._shouldAnimate = true;
+        /**
+         * @type Boolean
+         */
+        this._shouldUpdateCamera = true;
         this.firstRender = true;
         this._drawnTriangles = 0;
         this._contexts = [];
@@ -5374,6 +5378,18 @@ define([
      */
     Scene.prototype.setShouldAnimate = function (value) {
         this._shouldAnimate = value;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    Scene.prototype.shouldUpdateCamera = function () {
+        return this._shouldUpdateCamera;
+    };
+    /**
+     * @param {Boolean} value
+     */
+    Scene.prototype.setShouldUpdateCamera = function (value) {
+        this._shouldUpdateCamera = value;
     };
     /**
      * Appends a new visual object to the list of background objects.
@@ -5693,7 +5709,7 @@ define([
     Scene.prototype.render = function (context, dt) {
         var i, j, _length_, gl, camOri, cameraZ, clear;
         application.log("Rendering scene...", 3);
-        this.activeCamera.update(this._shouldAnimate ? dt : 0);
+        this.activeCamera.update(this._shouldUpdateCamera ? dt : 0);
         this._drawnTriangles = 0;
         gl = context.gl;
         // ensuring that transformation matrices are only calculated once for 
