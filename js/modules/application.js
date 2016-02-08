@@ -90,28 +90,37 @@ define(function () {
          * @param {Object<String,String>} folders
          */
         setFolders: function (folders) {
-            var fileType = "", folder = "", start = -1, end = -1, substitutedFolder = "";
+            var fileType = "", resolveFolder = function (folder, fType, referringFolderFileTypes) {
+                var start = -1, end = -1, substitutedFolder = "", substitutedFolderFileType = "";
+                referringFolderFileTypes = referringFolderFileTypes || [];
+                while (folder.indexOf("{{") >= 0) {
+                    if (folder.indexOf("}}") >= 0) {
+                        start = folder.indexOf("{{");
+                        end = folder.indexOf("}}");
+                        substitutedFolderFileType = folder.substring(start + 2, end);
+                        substitutedFolder = folders[substitutedFolderFileType];
+                        if (substitutedFolder) {
+                            if (referringFolderFileTypes.indexOf(substitutedFolderFileType) < 0) {
+                                folder = folder.replace(folder.substring(start, Math.min(end + 3, folder.length)), resolveFolder(substitutedFolder, substitutedFolderFileType, referringFolderFileTypes.concat(fType)));
+                            } else {
+                                this.showError("Circular reference detected among the following folders: " + referringFolderFileTypes.concat(fType).join(", "), "severe");
+                                return null;
+                            }
+                        } else {
+                            this.showError("Invalid folder name specified! Cannot find referenced folder '" + folder.substring(start + 2, end) + "' in " + folder + "!", "severe");
+                            return null;
+                        }
+                    } else {
+                        this.showError("Invalid folder name specified! Cannot resolve: '" + folder + "'", "severe", "References to other folders must be surrounded by {{ and }}.");
+                        return null;
+                    }
+                }
+                return folder;
+            }.bind(this);
             _folders = {};
             for (fileType in folders) {
                 if (folders.hasOwnProperty(fileType)) {
-                    folder = folders[fileType];
-                    while (folder.indexOf("{{") >= 0) {
-                        if (folder.indexOf("}}/") >= 0) {
-                            start = folder.indexOf("{{");
-                            end = folder.indexOf("}}/");
-                            substitutedFolder = folders[folder.substring(start + 2, end)];
-                            if (substitutedFolder) {
-                                folder = folder.replace(folder.substring(start, end + 3), substitutedFolder);
-                            } else {
-                                this.showError("Invalid folder name specified! Cannot find referenced folder '" + folder.substring(start + 2, end) + "' in " + folder + "!", "severe");
-                                break;
-                            }
-                        } else {
-                            this.showError("Invalid folder name specified! Cannot resolve: '" + folder + "'", "severe", "References to other folders must be surrounded by {{ and }}.");
-                            break;
-                        }
-                    }
-                    _folders[fileType] = folder;
+                    _folders[fileType] = resolveFolder(folders[fileType], fileType);
                 }
             }
         },
