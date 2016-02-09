@@ -1094,7 +1094,7 @@ define([
      * @param {String} name The name of the context.
      * @param {HTMLCanvasElement} canvas The canvas for which the context is to be
      * created.
-     * @param {Boolean} antialiasing Whether antialising should be turned on for
+     * @param {Boolean} [antialiasing=false] Whether antialising should be turned on for
      * this context. If the WebGL implementation does not support antialiasing, this
      * will have no effect.
      * @param {String} filtering What kind of texture filtering should be used for
@@ -1119,7 +1119,7 @@ define([
          * Whether antialiasing is enabled for the WebGL context.
          * @type Boolean
          */
-        this._antialiasing = antialiasing;
+        this._antialiasing = (antialiasing === true);
         /**
          * What filtering is used for 2D textures. Supported values are: bilinear,
          * trilinear and anisotropic. Attempting to create the context with anisotropic

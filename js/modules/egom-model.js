@@ -1252,13 +1252,13 @@ define([
          * @name ModelContextProperties#wireframe
          * @type Boolean
          */
-        this.wireframe = null;
+        this.wireframe = false;
         /**
          * Whether the solid model is used in the context.
          * @name ModelContextProperties#wireframe
          * @type Boolean
          */
-        this.solid = null;
+        this.solid = false;
         /**
          * The minimum LOD with which this model has been added to the context.
          * The vertex buffer data should be filled with the mesh data starting

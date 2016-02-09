@@ -25,19 +25,16 @@ define([
         asyncResource.AsyncResource.call(this);
         /**
          * The JSON object storing the default graphics settings.
-         * @name GraphicsContext#_dataJSON
          * @type Object
          */
         this._dataJSON = null;
         /**
          * The current antialiasing setting.
-         * @name GraphicsContext#_antialiasing
          * @type Boolean
          */
-        this._antialiasing = null;
+        this._antialiasing = false;
         /**
          * The current texture filtering setting.
-         * @name GraphicsContext#_filtering
          * @type String
          */
         this._filtering = null;
@@ -65,7 +62,7 @@ define([
          * @name GraphicsContext#_shadowMapping
          * @type Boolean
          */
-        this._shadowMapping = null;
+        this._shadowMapping = false;
         /**
          * The resolution of the shadow map textures (both width and height, in
          * texels)
@@ -114,6 +111,7 @@ define([
             this._dataJSON = dataJSON;
         }
         // set the default settings
+        //TODO: hardcoded
         this._antialiasing = false;
         this._filtering = "bilinear";
         this._shaderComplexity = "normal";
@@ -153,7 +151,7 @@ define([
                 // will not use unnecesarily high detail, even if the screen is big
                 limit = dataJSON.levelOfDetailSettings.lodLoadProfile.limits[i];
                 if ((window.innerWidth < limit.screenSizeLessThan) &&
-                      (this._maxLoadedLOD > limit.level)) {
+                        (this._maxLoadedLOD > limit.level)) {
                     this._maxLoadedLOD = limit.level;
                 }
             }
@@ -166,11 +164,11 @@ define([
             lodDisplayLimits[limit.level + 1] = limit.objectSizeLessThan;
         }
         this._lodContext = new budaScene.LODContext(
-              dataJSON.levelOfDetailSettings.lodDisplayProfile.maxLevel,
-              lodDisplayLimits,
-              dataJSON.levelOfDetailSettings.lodDisplayProfile.compensateForObjectSize,
-              dataJSON.levelOfDetailSettings.lodDisplayProfile.referenceSize,
-              dataJSON.levelOfDetailSettings.lodDisplayProfile.minimumRelativeSize);
+                dataJSON.levelOfDetailSettings.lodDisplayProfile.maxLevel,
+                lodDisplayLimits,
+                dataJSON.levelOfDetailSettings.lodDisplayProfile.compensateForObjectSize,
+                dataJSON.levelOfDetailSettings.lodDisplayProfile.referenceSize,
+                dataJSON.levelOfDetailSettings.lodDisplayProfile.minimumRelativeSize);
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
@@ -248,7 +246,7 @@ define([
                 break;
             default:
                 application.showError("Attempting to set texture filtering to: '" + value + "', which is not a supported option.",
-                      "minor", "Filtering has been instead set to bilinear.");
+                        "minor", "Filtering has been instead set to bilinear.");
                 this._filtering = "bilinear";
         }
         localStorage.interstellarArmada_graphics_filtering = this._filtering;
@@ -296,7 +294,7 @@ define([
                 break;
             default:
                 application.showError("Attempting to set complexity to: '" + value + "', which is not a supported option.",
-                      "minor", "Shader complexity has been instead set to normal.");
+                        "minor", "Shader complexity has been instead set to normal.");
                 this._shaderComplexity = "normal";
         }
         localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;

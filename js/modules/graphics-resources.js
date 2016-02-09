@@ -36,7 +36,7 @@ define([
         /**
          * @type Boolean
          */
-        this._useMipmap = dataJSON.useMipmap;
+        this._useMipmap = (dataJSON.useMipmap === true);
         /**
          * @type Object.<String, String>
          */
@@ -194,8 +194,8 @@ define([
         if (this._images[type]) {
             this._managedTextures[type] = this._managedTextures[type] || {};
             this._managedTextures[type][quality] =
-                  this._managedTextures[type][quality] ||
-                  new managedGL.ManagedTexture(this.getName(), this._images[type][quality], this._useMipmap);
+                    this._managedTextures[type][quality] ||
+                    new managedGL.ManagedTexture(this.getName(), this._images[type][quality], this._useMipmap);
             return this._managedTextures[type][quality];
         }
         application.showError("The requested texture '" + this.getName() + "' has no type '" + type + "' available!");
@@ -425,13 +425,13 @@ define([
          */
         this._model = null;
         this._singleLODFiles = dataJSON.files.filter(
-              function (element) {
-                  return (element.lod !== undefined);
-              });
+                function (element) {
+                    return (element.lod !== undefined);
+                });
         this._multiLODFiles = dataJSON.files.filter(
-              function (element) {
-                  return (element.maxLOD !== undefined);
-              });
+                function (element) {
+                    return (element.maxLOD !== undefined);
+                });
     }
     ModelResource.prototype = new resourceManager.GenericResource();
     ModelResource.prototype.constructor = ModelResource;

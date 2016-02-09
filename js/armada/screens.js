@@ -917,21 +917,21 @@ define([
          * @name ControlsScreen#_settingShiftState
          * @type Boolean
          */
-        this._settingShiftState = null;
+        this._settingShiftState = false;
         /**
          * While the user sets a new key, this property tells if control is pressed
          * down.
          * @name ControlsScreen#_settingCtrlState
          * @type Boolean
          */
-        this._settingCtrlState = null;
+        this._settingCtrlState = false;
         /**
          * While the user sets a new key, this property tells if alt is pressed
          * down.
          * @name ControlsScreen#_settingAltState
          * @type Boolean
          */
-        this._settingAltState = null;
+        this._settingAltState = false;
     }
 
     ControlsScreen.prototype = new screens.HTMLScreen();

@@ -88,13 +88,13 @@ define([
          * @name LODContext#compensateForObjectSize
          * @type Boolean
          */
-        this.compensateForObjectSize = compensateForObjectSize;
+        this.compensateForObjectSize = (compensateForObjectSize === true);
         /**
          * The size that should be taken as is, when compensation is enabled.
          * @name LODContext#referenceSize
          * @type Number
          */
-        this.referenceSize = referenceSize || 100;
+        this.referenceSize = referenceSize || 100; //TODO: hardcoded
         /**
          * If the relative size of a object inside a parent (compared to the 
          * size of the parent) is smaller than this value, this value will be 
@@ -102,7 +102,7 @@ define([
          * @name LODContext#minimumRelativeSize
          * @type Number
          */
-        this.minimumRelativeSize = minimumRelativeSize || 0.05;
+        this.minimumRelativeSize = minimumRelativeSize || 0.05; //TODO: hardcoded
     }
     // #########################################################################
     /**
@@ -154,7 +154,7 @@ define([
          * Cache value to store whether the object is situated within its 
          * parent's boundaries, as the parent's values can be used for certain 
          * calculations in this case.
-         * @type Boolean
+         * @type Boolean|null
          */
         this._insideParent = null;
         /**
@@ -905,7 +905,7 @@ define([
          * @name RenderableObject#_wasRendered
          * @type Boolean
          */
-        this._wasRendered = null;
+        this._wasRendered = false;
         /**
          * The shader to use while rendering this object.
          * @name RenderableObject#_shader
@@ -1246,7 +1246,7 @@ define([
          * The cached value marking whether the object fell within the shadow
          * cast frustum during the last calculation.
          * @name RenderableObject3D#_insideShadowCastFrustum
-         * @type Boolean
+         * @type Boolean|null
          */
         this._insideShadowCastFrustum = null;
         /**
@@ -1459,7 +1459,7 @@ define([
          * @name ShadedLODMesh#_wireframe
          * @type Boolean
          */
-        this._wireframe = wireframe;
+        this._wireframe = (wireframe === true);
         /**
          * The model currently chosen for rendering. Acts as a cached reference
          * to be used after the proper model has been chosen for a frame.
@@ -1787,7 +1787,7 @@ define([
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Array<ParticleState>} states The list of states this particle will go through during its lifespan.
      * If only one state is given, the particle will stay forever in that state
-     * @param {boolean} looping Whether to start over from the first state once the last one is reached (or to delete the particle)
+     * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
      */
     function Particle(model, shader, texture, positionMatrix, states, looping) {
         var i;
@@ -1842,7 +1842,7 @@ define([
          * Whether to start over from the first state once the last one is reached (or to delete the particle)
          * @type Boolean
          */
-        this._looping = looping;
+        this._looping = (looping === true);
         /**
          * Time passed since the current state has been reached, in milliseconds
          * @type Number
@@ -2409,9 +2409,9 @@ define([
      * @param {Float32Array} velocityMatrix The 4x4 translation matrix describing the velocity of the particle system (m/s)
      * @param {Array<ParticleEmitter>} emitters The list of emitters that will be used to generate particles
      * @param {Number} duration For how long should the particle system be active (milliseconds)
-     * @param {Boolean} keepAlive Whether to keep the particle system alive after the duration has expired.
+     * @param {Boolean} [keepAlive=false] Whether to keep the particle system alive after the duration has expired.
      * Emitters that are set to produce particles forever will keep on doing so.
-     * @param {Boolean} carriesParticles Whether to carry the emitted particles as subnodes in the scene graph or
+     * @param {Boolean} [carriesParticles=false] Whether to carry the emitted particles as subnodes in the scene graph or
      * add them directly to the scene root.
      */
     function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles) {
@@ -2441,13 +2441,13 @@ define([
          * Emitters that are set to produce particles forever will keep on doing so.
          * @type Boolean
          */
-        this._keepAlive = keepAlive;
+        this._keepAlive = (keepAlive === true);
         /**
          * Whether to carry the emitted particles as subnodes in the scene graph or
          * add them directly to the scene root.
          * @type Boolean
          */
-        this._carriesParticles = carriesParticles;
+        this._carriesParticles = (carriesParticles === true);
     }
     ParticleSystem.prototype = new RenderableObject3D();
     ParticleSystem.prototype.constructor = ParticleSystem;
@@ -2762,7 +2762,7 @@ define([
          * Whether the movement of the camera is limited to a certain range on axis X
          * @type Boolean
          */
-        this._xIsConfined = confines && confines[0];
+        this._xIsConfined = (confines && confines[0]) ? true : false;
         /**
          * The minimum value of the X coordinate of the camera, if confined on axis X
          * @type Number
@@ -2777,7 +2777,7 @@ define([
          * Whether the movement of the camera is limited to a certain range on axis Y
          * @type Boolean
          */
-        this._yIsConfined = confines && confines[1];
+        this._yIsConfined = (confines && confines[1]) ? true : false;
         /**
          * The minimum value of the Y coordinate of the camera, if confined on axis Y
          * @type Number
@@ -2792,7 +2792,7 @@ define([
          * Whether the movement of the camera is limited to a certain range on axis Z
          * @type Boolean
          */
-        this._zIsConfined = confines && confines[2];
+        this._zIsConfined = (confines && confines[2]) ? true : false;
         /**
          * The minimum value of the Z coordinate of the camera, if confined on axis Z
          * @type Number

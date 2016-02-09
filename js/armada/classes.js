@@ -45,7 +45,6 @@ define([
                 "The property was either not specified, or it was specified with a wrong type or an invalid value." +
                 (((typeof classInstance._name) === "string") ?
                         "The error happened while initializing '" + classInstance._name + "'" : ""));
-        return null;
     }
     // ##############################################################################
     /**
@@ -1308,7 +1307,7 @@ define([
          * Whether turning the view should happen in FPS mode (around axes relative to the followed object / world, and not the camera itself)
          * @type Boolean
          */
-        this._fps = dataJSON ? ((typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false) : null;
+        this._fps = dataJSON ? ((typeof dataJSON.fps) === "boolean" ? dataJSON.fps : false) : false;
         /**
          * The initial (horizontal) Field Of View of the view in degrees. If null, the default value will be acquired from the logic module
          * upon the creation of a camera configuration based on this view.
@@ -1325,12 +1324,12 @@ define([
          * Whether the position of the view is changeable by the player.
          * @type Boolean
          */
-        this._movable = dataJSON ? ((typeof dataJSON.movable) === "boolean" ? dataJSON.movable : showMissingPropertyError(this, "movable")) : null;
+        this._movable = dataJSON ? ((typeof dataJSON.movable) === "boolean" ? dataJSON.movable : showMissingPropertyError(this, "movable")) : false;
         /**
          * Whether the direction of the view is changeable by the player.
          * @type Boolean
          */
-        this._turnable = dataJSON ? ((typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : showMissingPropertyError(this, "turnable")) : null;
+        this._turnable = dataJSON ? ((typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : showMissingPropertyError(this, "turnable")) : false;
         /**
          * The translation matrix describing the relative position to the object.
          * @type Float32Array
@@ -1374,7 +1373,7 @@ define([
          * Whether the camera configurations based on these view should reset to defaults whenever their camera leaves their confined area
          * @type Boolean
          */
-        this._resetsWhenLeavingConfines = dataJSON ? ((typeof dataJSON.resetsWhenLeavingConfines) === "boolean" ? dataJSON.resetsWhenLeavingConfines : false) : null;
+        this._resetsWhenLeavingConfines = dataJSON ? ((typeof dataJSON.resetsWhenLeavingConfines) === "boolean" ? dataJSON.resetsWhenLeavingConfines : false) : false;
         /**
          * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
          * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration

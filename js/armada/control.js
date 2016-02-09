@@ -63,17 +63,17 @@ define([
          * Whether shift should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._shiftState = (shiftState === undefined) ? null : (shiftState || (this._key === "shift"));
+        this._shiftState = (shiftState === undefined) ? false : (shiftState || (this._key === "shift"));
         /**
          * Whether ctrl should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._ctrlState = (ctrlState === undefined) ? null : (ctrlState || (this._key === "ctrl"));
+        this._ctrlState = (ctrlState === undefined) ? false : (ctrlState || (this._key === "ctrl"));
         /**
          * Whether alt should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._altState = (altState === undefined) ? null : (altState || (this._key === "alt"));
+        this._altState = (altState === undefined) ? false : (altState || (this._key === "alt"));
         // if a JSON object was specified, initialize the properties from there
         if ((typeof dataJSONOrActionName) === "object") {
             this.loadFromJSON(dataJSONOrActionName);
@@ -508,7 +508,7 @@ define([
          * @type Boolean
          * @default false
          */
-        this._measuredFromCenter = null;
+        this._measuredFromCenter = false;
         // if a JSON object was specified, initialize the properties from there
         if (dataJSON !== undefined) {
             this.loadFromJSON(dataJSON);
@@ -604,34 +604,32 @@ define([
      * value is an integer.
      * @param {Boolean[]} currentlyPressedButtons The current press state of the 
      * mouse buttons. Arrangement: [left,middle,right]
-     * @param {Number} xFromCenter The current X coordinate of the mouse relative to 
-     * the center.
-     * @param {Number} yFromCenter The current Y coordinate of the mouse relative to 
-     * the center.
-     * @param {Number} deltaX The change of the X coordinate of the mouse since the 
-     * last time trigger was checked.
-     * @param {Number} deltaY The change of the Y coordinate of the mouse since the 
-     * last time trigger was checked.
+     * @param {Number[2]} mousePosition The current [x,y] position of the mouse on the screen
+     * @param {Number[2]} mousePositionChange The difference of the current position from the one at the previous trigger check ([x,y])
+     * @param {Number[2]} screenCenter The coordinates of the center of the screen ([x,y])
      * @returns {Number} Whether the action was triggerend and with what intensity.
      * Zero means the action was not triggered, a positive value represents the 
      * intensity.
      */
-    MouseBinding.prototype.getTriggeredIntensity = function (currentlyPressedButtons, xFromCenter, yFromCenter, deltaX, deltaY) {
+    MouseBinding.prototype.getTriggeredIntensity = function (currentlyPressedButtons, mousePosition, mousePositionChange, screenCenter) {
         var relativeX, relativeY;
         // first if this is a button assignment, check the state of the appropriate
         // mouse button
         if (this._button > 0) {
             return (currentlyPressedButtons[this._button] === true) ? 1 : -1;
         }
+        if (!mousePosition) {
+            return 0;
+        }
         // check movement on X and Y axes
         // movement in the negative direction is represented by '-1' value of _moveX/Y,
         // therefore multiplying with the actual movement will be positive if it was
         // in the same direction
-        relativeX = this._measuredFromCenter ? xFromCenter : deltaX;
+        relativeX = this._measuredFromCenter ? mousePosition[0] - screenCenter[0] : mousePositionChange[0];
         if (this._moveX !== 0) {
             return relativeX * this._moveX;
         }
-        relativeY = this._measuredFromCenter ? yFromCenter : deltaY;
+        relativeY = this._measuredFromCenter ? mousePosition[1] - screenCenter[1] : mousePositionChange[1];
         if (this._moveY !== 0) {
             return relativeY * this._moveY;
         }
@@ -688,7 +686,7 @@ define([
          * Arrangement: [left,middle,right]
          * @type Boolean[3]
          */
-        this._currentlyPressedButtons = new Array(3);
+        this._currentlyPressedButtons = [false, false, false];
         /**
          * Stores the center of the screen, relative to which the mouse coordinates
          * can be considered by bindings (instead of the change in mouse position) 
@@ -696,17 +694,17 @@ define([
          * continuously for e.g. continuous turning.
          * @type Number[2]
          */
-        this._screenCenter = [null, null];
+        this._screenCenter = [0, 0];
         /**
          * The current mouse position as obtained from the mouse event.
          * @type Number[2]
          */
-        this._mousePosition = [null, null];
+        this._mousePosition = null;
         /**
          * The change in mouse position since the last time the inputs were processed.
          * @type Number[2]
          */
-        this._mousePositionChange = [null, null];
+        this._mousePositionChange = [0, 0];
         /**
          * The intensity of actions derived from the speed of the mouse movement
          * will be multiplied by this factor.
@@ -752,6 +750,8 @@ define([
      */
     MouseInputInterpreter.prototype.setScreenCenter = function (x, y) {
         this._screenCenter = [x, y];
+        this._mousePosition = null;
+        this._mousePositionChange = [0, 0];
     };
     /**
      * Returns of the name of the device this interpreter monitors. Every input
@@ -904,7 +904,7 @@ define([
      * @param {MouseEvent} event
      */
     MouseInputInterpreter.prototype.handleMouseMove = function (event) {
-        if (this._mousePosition[0] !== null) {
+        if (this._mousePosition !== null) {
             this._mousePositionChange = [
                 this._mousePositionChange[0] + (event.clientX - this._mousePosition[0]),
                 this._mousePositionChange[1] + (event.clientY - this._mousePosition[1])
@@ -921,7 +921,7 @@ define([
      */
     MouseInputInterpreter.prototype.startListening = function () {
         this.cancelPressedButtons();
-        this._mousePosition = [null, null];
+        this._mousePosition = null;
         this._mousePositionChange = [0, 0];
         var self = this;
         document.onmousedown = function (e) {
@@ -973,10 +973,9 @@ define([
                     actionIntensity =
                             this._bindings[bindingActionName].getTriggeredIntensity(
                             this._currentlyPressedButtons,
-                            this._mousePosition[0] - this._screenCenter[0],
-                            this._mousePosition[1] - this._screenCenter[1],
-                            this._mousePositionChange[0],
-                            this._mousePositionChange[1]);
+                            this._mousePosition,
+                            this._mousePositionChange,
+                            this._screenCenter);
                     if (actionIntensity >= 0) {
                         addActionByBinding(actionsByBindings, {
                             name: bindingActionName,

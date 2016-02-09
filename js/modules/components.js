@@ -73,7 +73,7 @@ define([
         this._element = document.getElementById(this._name);
         if (!this._element) {
             application.showError("Cannot initialize component: '" + this._name + "'!", "severe",
-                  "No element can be found on the page with a corresponding ID!");
+                    "No element can be found on the page with a corresponding ID!");
         } else {
             this._displayStyle = this._element.style.display;
         }
@@ -167,7 +167,7 @@ define([
          * @name ExternalComponent#_cssLoaded
          * @type Boolean
          */
-        this._cssLoaded = null;
+        this._cssLoaded = false;
         /**
          * A function to be executed automatically when the model is loaded from the 
          * external HTML file. Private, as this is automatically set to initialization

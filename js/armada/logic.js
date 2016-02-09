@@ -468,7 +468,7 @@ define([
          * @name LogicContext#_databaseModelRotation
          * @type Boolean
          */
-        this._databaseModelRotation = null;
+        this._databaseModelRotation = false;
         /**
          * A descriptor object of how many random ships of each class should be added to the test 
          * scene
@@ -479,7 +479,7 @@ define([
          * Whether projectiles can hit the same ship that fired them
          * @type Boolean
          */
-        this._selfFire = null;
+        this._selfFire = false;
         /**
          * (enum LogicContext.prototype.AutoTargeting) What mode is auto targeting set to (by default)
          * @type String 
@@ -799,9 +799,9 @@ define([
      * @param {Object} dataJSON
      */
     LogicContext.prototype.loadFromJSON = function (dataJSON) {
-        this._databaseModelRotation = dataJSON.database.modelRotation;
+        this._databaseModelRotation = (dataJSON.database.modelRotation === true);
         this._randomShips = dataJSON.battle.randomShips;
-        this._selfFire = dataJSON.battle.selfFire;
+        this._selfFire = (dataJSON.battle.selfFire === true);
         this._autoTargeting =
                 utils.getSafeEnumValue(LogicContext.prototype.AutoTargeting, dataJSON.battle.autoTargeting) ||
                 application.showError(
@@ -863,7 +863,7 @@ define([
          * and change position and/or orientation with it, even after they have been emitted
          * @type Boolean
          */
-        this._carriesParticles = carriesParticles;
+        this._carriesParticles = (carriesParticles === true);
         /**
          * Holds a reference to the particle system that is used to visualize the explosion.
          * @type ParticleSystem
