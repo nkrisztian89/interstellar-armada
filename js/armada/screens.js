@@ -973,30 +973,23 @@ define([
      */
     ControlsScreen.prototype.handleKeyUpWhileSetting = function (event) {
         // if we released shift, ctrl or alt, update their state
-        // (assigning shift, ctrl or alt as a single key to an action is not allowed
-        // at the moment, as assigning them to a continuous action would break
-        // functionality of other continuous actions that the user would wish to
-        // apply simultaneously, since after the press the shift/ctrl/alt state
-        // would be different)
         if (event.keyCode === 16) {
             this._settingShiftState = false;
         } else if (event.keyCode === 17) {
             this._settingCtrlState = false;
         } else if (event.keyCode === 18) {
             this._settingAltState = false;
-        } else {
-            // if it was any other key, respect the shift, ctrl, alt states and set the
-            // new key for the action
-            var interpreter = armada.control().getInterpreter("keyboard");
-            interpreter.setAndStoreKeyBinding(new control.KeyBinding(
-                    this._actionUnderSetting,
-                    utils.getKeyOfCode(event.keyCode),
-                    this._settingShiftState,
-                    this._settingCtrlState,
-                    this._settingAltState
-                    ));
-            this.stopKeySetting();
         }
+        // respect the shift, ctrl, alt states and set the new key for the action
+        var interpreter = armada.control().getInterpreter("keyboard");
+        interpreter.setAndStoreKeyBinding(new control.KeyBinding(
+                this._actionUnderSetting,
+                utils.getKeyOfCode(event.keyCode),
+                this._settingShiftState,
+                this._settingCtrlState,
+                this._settingAltState
+                ));
+        this.stopKeySetting();
     };
 
     /**

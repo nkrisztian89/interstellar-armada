@@ -1480,6 +1480,11 @@ define([
                         application.showError("Invalid view configuration ('" + this._name + "'): movesRelativeToObject can only be set if both position and orientation is followed and rotationCenterIsObject is false!") :
                         true) :
                 false;
+        /**
+         * An indicator whether this view should reset to default state when the camera controls are not in focus anymore (after being in focus)
+         * @type Boolean
+         */
+        this._shouldAutoReset = (typeof dataJSON.shouldAutoReset) === "boolean" ? dataJSON.shouldAutoReset : false;
         // further invalid configuration errors
         if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
             application.showError(
@@ -1531,7 +1536,8 @@ define([
                 this._fovRange ? this._fovRange[1] : armada.logic().getDefaultCameraFOVRange()[1],
                 this._span || armada.logic().getDefaultCameraSpan(),
                 this._spanRange ? this._spanRange[0] : armada.logic().getDefaultCameraSpanRange()[0],
-                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1]);
+                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1],
+                this._shouldAutoReset);
     };
     // ##############################################################################
     /**
@@ -1620,7 +1626,8 @@ define([
                 this._fovRange ? this._fovRange[1] : armada.logic().getDefaultCameraFOVRange()[1],
                 this._span || armada.logic().getDefaultCameraSpan(),
                 this._spanRange ? this._spanRange[0] : armada.logic().getDefaultCameraSpanRange()[0],
-                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1]);
+                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1],
+                false);
     };
     // ##############################################################################
     /**

@@ -3710,8 +3710,10 @@ define([
      * camera. In meters.
      * @param {Number} minSpan The minimum span that can be set for a camera using this configuration.
      * @param {Number} maxSpan The maximum span that can be set for a camera using this configuration.
+     * @param {Boolean} shouldAutoReset An indicator whether this configuration should automatically reset to default state when the camera 
+     * switches to it or when the camera controls go out of focus (after being in focus)
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, span, minSpan, maxSpan, shouldAutoReset) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * An optional, descriptive name of this configuration by which it can be found and referred to.
@@ -3771,6 +3773,12 @@ define([
          */
         this._maxSpan = maxSpan;
         /**
+         * An indicator whether this configuration should automatically reset to default state when the camera switches to it or when the 
+         * camera controls go out of focus (after being in focus)
+         * @type Boolean
+         */
+        this._shouldAutoReset = shouldAutoReset;
+        /**
          * A reference to the camera that currently uses this configuration
          * @type Camera
          */
@@ -3809,6 +3817,9 @@ define([
         this._camera = value;
         this._positionConfiguration.setCamera(value, doNotReset);
         this._orientationConfiguration.setCamera(value);
+        if (this._camera && this._shouldAutoReset && !doNotReset) {
+            this.resetToDefaults(true);
+        }
     };
     /**
      * Sets a new relative (or absolute, depending on the configuration properties) position matrix for this configuration.
@@ -3935,6 +3946,14 @@ define([
     CameraConfiguration.prototype.increaseSpan = function () {
         this.setSpan(this._span * Constants.SPAN_INCREASE_FACTOR, true);
         return this._span;
+    };
+    /**
+     * Returns whether this configuration should automatically reset to default state when the camera switches to it or when the camera 
+     * controls go out of focus (after being in focus)
+     * @returns {Boolean}
+     */
+    CameraConfiguration.prototype.shouldAutoReset = function () {
+        return this._shouldAutoReset;
     };
     /**
      * Resets all configuration values to their initial state (including position, orientation, field of view and span configuration)

@@ -63,17 +63,17 @@ define([
          * Whether shift should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._shiftState = (shiftState === undefined) ? null : shiftState;
+        this._shiftState = (shiftState === undefined) ? null : (shiftState || (this._key === "shift"));
         /**
          * Whether ctrl should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._ctrlState = (ctrlState === undefined) ? null : ctrlState;
+        this._ctrlState = (ctrlState === undefined) ? null : (ctrlState || (this._key === "ctrl"));
         /**
          * Whether alt should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._altState = (altState === undefined) ? null : altState;
+        this._altState = (altState === undefined) ? null : (altState || (this._key === "alt"));
         // if a JSON object was specified, initialize the properties from there
         if ((typeof dataJSONOrActionName) === "object") {
             this.loadFromJSON(dataJSONOrActionName);
@@ -88,9 +88,9 @@ define([
     KeyBinding.prototype.loadFromJSON = function (dataJSON) {
         this._actionName = dataJSON.action;
         this.setKey(dataJSON.key);
-        this._shiftState = (dataJSON.shift === true);
-        this._ctrlState = (dataJSON.ctrl === true);
-        this._altState = (dataJSON.alt === true);
+        this._shiftState = (dataJSON.shift === true) || (this._key === "shift");
+        this._ctrlState = (dataJSON.ctrl === true) || (this._key === "ctrl");
+        this._altState = (dataJSON.alt === true) || (this._key === "alt");
         this.updateKeyString();
     };
     /**
@@ -151,8 +151,7 @@ define([
     };
     /**
      * Returns if pressing shift is part of the key combination assigned in this
-     * key binding. (if not, the binding is only triggered when shift is NOT being
-     * pressed)
+     * key binding.
      * @returns {Boolean}
      */
     KeyBinding.prototype.getShiftState = function () {
@@ -160,8 +159,7 @@ define([
     };
     /**
      * Returns if pressing ctrl is part of the key combination assigned in this
-     * key binding. (if not, the binding is only triggered when ctrl is NOT being
-     * pressed)
+     * key binding. 
      * @returns {Boolean}
      */
     KeyBinding.prototype.getCtrlState = function () {
@@ -169,8 +167,7 @@ define([
     };
     /**
      * Returns if pressing alt is part of the key combination assigned in this
-     * key binding. (if not, the binding is only triggered when alt is NOT being
-     * pressed)
+     * key binding. 
      * @returns {Boolean}
      */
     KeyBinding.prototype.getAltState = function () {
@@ -183,13 +180,13 @@ define([
      */
     KeyBinding.prototype.updateKeyString = function () {
         this._keyString = this._key;
-        if (this._shiftState) {
+        if (this._shiftState && (this._key !== "shift")) {
             this._keyString = "shift + " + this._keyString;
         }
-        if (this._ctrlState) {
+        if ((this._ctrlState) && (this._key !== "ctrl")) {
             this._keyString = "ctrl + " + this._keyString;
         }
-        if (this._altState) {
+        if ((this._altState) && (this._key !== "alt")) {
             this._keyString = "alt + " + this._keyString;
         }
     };
@@ -211,19 +208,16 @@ define([
      */
     KeyBinding.prototype.isTriggered = function (currentlyPressedKeys) {
         return (currentlyPressedKeys[this._keyCode] &&
-                (currentlyPressedKeys[16] === this._shiftState) &&
-                (currentlyPressedKeys[17] === this._ctrlState) &&
-                (currentlyPressedKeys[18] === this._altState));
+                (currentlyPressedKeys[16] || !this._shiftState) &&
+                (currentlyPressedKeys[17] || !this._ctrlState) &&
+                (currentlyPressedKeys[18] || !this._altState));
     };
     /**
      * Returns whether this binding has the same key configuration as the passed one (and so it conflicts with it)
      * @param {KeyBinding} otherKeyBinding
      */
     KeyBinding.prototype.bindsTheSameControls = function (otherKeyBinding) {
-        return (this._keyCode === otherKeyBinding._keyCode) &&
-                (this._shiftState === otherKeyBinding._shiftState) &&
-                (this._ctrlState === otherKeyBinding._ctrlState) &&
-                (this._altState === otherKeyBinding._altState);
+        return (this._keyCode === otherKeyBinding._keyCode);
     };
     // -------------------------------------------------------------------------
     /**
@@ -627,7 +621,7 @@ define([
         // first if this is a button assignment, check the state of the appropriate
         // mouse button
         if (this._button > 0) {
-            return (currentlyPressedButtons[this._button] === true) ? 1 : 0;
+            return (currentlyPressedButtons[this._button] === true) ? 1 : -1;
         }
         // check movement on X and Y axes
         // movement in the negative direction is represented by '-1' value of _moveX/Y,
@@ -983,7 +977,7 @@ define([
                             this._mousePosition[1] - this._screenCenter[1],
                             this._mousePositionChange[0],
                             this._mousePositionChange[1]);
-                    if ((actionIntensity > 0) || ((this._bindings[bindingActionName].isMeasuredFromCenter() === true) && (actionIntensity === 0))) {
+                    if (actionIntensity >= 0) {
                         addActionByBinding(actionsByBindings, {
                             name: bindingActionName,
                             intensity: (this._bindings[bindingActionName].isMeasuredFromCenter() === true) ?
@@ -1382,6 +1376,11 @@ define([
          */
         this._executed = false;
         /**
+         * Whether the non-triggered action has already been executed after the last trigger.
+         * (non continuous actions will not fire their non-trigger continuously either)
+         */
+        this._nonTriggeredExecuted = true;
+        /**
          * The function to execute when the action is triggered.
          * @type Function
          */
@@ -1401,13 +1400,13 @@ define([
      * @constant 
      * @type Number
      */
-    Action.prototype.INTENSITY_NOT_SPECIFIED = -2;
+    Action.prototype.INTENSITY_NOT_SPECIFIED = -3;
     /**
      * Value for the intensity of an action that has been triggered by a keypress (which does not have fine grades of intensity)
      * @constant 
      * @type Number
      */
-    Action.prototype.INTENSITY_KEYPRESS = -1;
+    Action.prototype.INTENSITY_KEYPRESS = -2;
     /**
      * Returns the name of this action for identification within the program.
      * @returns {String}
@@ -1434,6 +1433,7 @@ define([
         this._triggered = false;
         this._intensity = this.INTENSITY_NOT_SPECIFIED;
         this._executed = false;
+        this._nonTriggeredExecuted = true;
     };
     /**
      * Sets the action's trigger state and intensity.
@@ -1491,11 +1491,16 @@ define([
                 }
                 this._executed = true;
             } else {
-                if (this._executeNonTriggered !== null) {
-                    this._executeNonTriggered();
+                if ((this._triggered === false) && (this._nonTriggeredExecuted === false)) {
+                    if (this._executeNonTriggered !== null) {
+                        this._executeNonTriggered();
+                    }
+                    this._nonTriggeredExecuted = true;
                 }
                 if (this._triggered === false) {
                     this._executed = false;
+                } else {
+                    this._nonTriggeredExecuted = false;
                 }
             }
         }
@@ -1604,22 +1609,40 @@ define([
     /**
      * Executes the list of passed actions. If an action is passed more times, this
      * will still execute it only once.
-     * @param {Object[]} triggeredActions The list of actions in the form of objects
+     * @param {Object[][]} triggeredActions The grouped lists of actions in the form of objects
      * where the 'name' (String) property identifies the name of the action and the
      * (optional) 'intensity' (Number) property determines the intensity with which
-     * the action is to be executed.
+     * the action is to be executed. Actions that have been triggered by the same controls should
+     * be grouped together, and therefore this method expects an array of arrays.
      */
     Controller.prototype.executeActions = function (triggeredActions) {
-        var i, j, actionName;
-        // First set the triggers for the stored action. If the same action is in
-        // the list several times, setting the trigger will have no new effect,
-        // unless an intensity is added.
+        var i, j, actionName, actionIntensity;
+        // first we go through the groups of actions
         for (i = 0; i < triggeredActions.length; i++) {
+            // in each group, if there are multiple actions that this controller can handle then choose the one with the highest intensity
+            // e.g. movement or turning in opposite directions can appear here together if bound to the same axis, but one will have an
+            // intensity of 0
+            actionName = null;
+            actionIntensity = -1;
             for (j = 0; j < triggeredActions[i].length; j++) {
                 if (this._actions[triggeredActions[i][j].name] !== undefined) {
-                    this._actions[triggeredActions[i][j].name].setTriggered(true, triggeredActions[i][j].intensity);
-                    triggeredActions[i] = [];
+                    // non-graded (undefined) intensity always beets the graded ones
+                    if (((triggeredActions[i][j].intensity !== undefined) && (actionIntensity !== undefined) && (triggeredActions[i][j].intensity > actionIntensity)) ||
+                            ((actionIntensity !== undefined) && (triggeredActions[i][j].intensity === undefined))) {
+                        actionName = triggeredActions[i][j].name;
+                        actionIntensity = triggeredActions[i][j].intensity;
+                    }
                 }
+            }
+            // if an action was chosen, set its trigger, but only if it has a non-zero intensity - e.g. turning in opposite directions can
+            // both appear as 0 intensity actions (if bound to the same axis), to indicate that the axis is occupied with those actions even
+            // if no turning has been triggered at the moment - this is why here this action group is cleared here anyway, to ensure that lower
+            // priority controllers will not receive their conflicting actions from the same group
+            if (actionName) {
+                if ((actionIntensity === undefined) || (actionIntensity > 0)) {
+                    this._actions[actionName].setTriggered(true, actionIntensity);
+                }
+                triggeredActions[i] = [];
             }
         }
         // Execute all the stored actions, each exactly once.
@@ -1816,7 +1839,6 @@ define([
                 Controller.prototype.executeActions.call(this, triggeredActions);
             } else {
                 this._controlledSpacecraft = null;
-
             }
         }
     };
@@ -1838,6 +1860,14 @@ define([
         this._controlledCamera = null;
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created.
+        this.setActionFunctions("controlCamera", function () {
+            armada.control().makeControllerPriority(this);
+        }.bind(this), function () {
+            if (this._controlledCamera.getConfiguration().shouldAutoReset()) {
+                this._controlledCamera.transitionToConfigurationDefaults();
+            }
+            armada.control().restoreDefaultControllerPriorityOrder();
+        }.bind(this));
         // turning the camera in the four directions
         this.setActionFunctions("cameraTurnLeft", function (i) {
             this._controlledCamera.turnLeft(i);
@@ -2015,6 +2045,12 @@ define([
          */
         this._controllers = null;
         /**
+         * Has the same references to controllers as the _controllers field, but in the current priority order (when multiple actions are
+         * triggered by the same controls, the action of the controller coming first in the priority queue will be executed)
+         * @type Controller[]
+         */
+        this._controllersPriorityQueue = null;
+        /**
          * Whether the control context is currently listening for user input (through
          * its interpreter objects).
          * @type Boolean
@@ -2127,6 +2163,34 @@ define([
         application.showError("Asked for a controller of type '" + controllerType + "', which does not exist!");
     };
     /**
+     * Makes the passed controller the first in the priority queue, so that if one control would trigger actions of two different 
+     * controllers, one of them being the passed controller, the action belonging to it will be executed. Can only be used with controllers
+     * that have been previously added to the context, calling it with a different controller will have no effect. The other controllers
+     * remain in the default priority order.
+     * @param {Controller} controller
+     */
+    ControlContext.prototype.makeControllerPriority = function (controller) {
+        var i;
+        this._controllersPriorityQueue = [];
+        for (i = 0; i < this._controllers.length; i++) {
+            if (this._controllers[i] === controller) {
+                this._controllersPriorityQueue.push(this._controllers[i]);
+                break;
+            }
+        }
+        for (i = 0; i < this._controllers.length; i++) {
+            if (this._controllers[i] !== controller) {
+                this._controllersPriorityQueue.push(this._controllers[i]);
+            }
+        }
+    };
+    /**
+     * Resets the default priority order of the stored controllers (the order in which they were added).
+     */
+    ControlContext.prototype.restoreDefaultControllerPriorityOrder = function () {
+        this._controllersPriorityQueue = this._controllers;
+    };
+    /**
      * Disables the action with the given name. While disabled, this action will not
      * be passed to the controllers for processing, even if user input would trigger
      * it.
@@ -2159,8 +2223,8 @@ define([
             for (i = 0; i < this._inputInterpreters.length; i++) {
                 triggeredActions = triggeredActions.concat(this._inputInterpreters[i].getTriggeredActions(actionFilterFunction));
             }
-            for (i = 0; i < this._controllers.length; i++) {
-                this._controllers[i].executeActions(triggeredActions);
+            for (i = 0; i < this._controllersPriorityQueue.length; i++) {
+                this._controllersPriorityQueue[i].executeActions(triggeredActions);
             }
         }
     };
@@ -2196,6 +2260,7 @@ define([
                                 "general, fighter, camera.");
                 }
             }
+            this._controllersPriorityQueue = this._controllers;
             this._inputInterpreters = [];
             for (i = 0, n = dataJSON.inputDevices.length; i < n; i++) {
                 switch (dataJSON.inputDevices[i].type) {

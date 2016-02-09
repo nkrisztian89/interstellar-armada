@@ -180,6 +180,10 @@
                 "type": "camera",
                 "actions": [
                     {
+                        "name": "controlCamera",
+                        "description": "Hold this button to control the camera instead of your spacecraft if you have the same controls assigned"
+                    },
+                    {
                         "name": "cameraMoveLeft",
                         "description": "Move the camera to the left (free camera mode)",
                         "continuous": true
@@ -289,6 +293,9 @@
                         "action": "resetSpeed",
                         "key": "0"
                     }, {
+                        "action": "controlCamera",
+                        "key": "shift"
+                    }, {
                         "action": "yawLeft",
                         "key": "left"
                     }, {
@@ -308,46 +315,40 @@
                         "key": "q"
                     }, {
                         "action": "cameraTurnLeft",
-                        "key": "left",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraTurnRight",
-                        "key": "right",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraTurnUp",
-                        "key": "up",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraTurnDown",
-                        "key": "down",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraRollLeft",
-                        "key": "left",
-                        "shift": true
-                    }, {
-                        "action": "cameraRollRight",
-                        "key": "right",
-                        "shift": true
-                    }, {
-                        "action": "cameraMoveLeft",
                         "key": "left"
                     }, {
-                        "action": "cameraMoveRight",
+                        "action": "cameraTurnRight",
                         "key": "right"
                     }, {
-                        "action": "cameraMoveUp",
-                        "key": "page up"
-                    }, {
-                        "action": "cameraMoveDown",
-                        "key": "page down"
-                    }, {
-                        "action": "cameraMoveForward",
+                        "action": "cameraTurnUp",
                         "key": "up"
                     }, {
-                        "action": "cameraMoveBackward",
+                        "action": "cameraTurnDown",
                         "key": "down"
+                    }, {
+                        "action": "cameraRollLeft",
+                        "key": "q"
+                    }, {
+                        "action": "cameraRollRight",
+                        "key": "e"
+                    }, {
+                        "action": "cameraMoveLeft",
+                        "key": "a"
+                    }, {
+                        "action": "cameraMoveRight",
+                        "key": "d"
+                    }, {
+                        "action": "cameraMoveUp",
+                        "key": "r"
+                    }, {
+                        "action": "cameraMoveDown",
+                        "key": "f"
+                    }, {
+                        "action": "cameraMoveForward",
+                        "key": "w"
+                    }, {
+                        "action": "cameraMoveBackward",
+                        "key": "s"
                     }, {
                         "action": "cameraDecreaseFOV",
                         "key": "z"
@@ -416,6 +417,9 @@
                     }, {
                         "action": "fire",
                         "button": "left"
+                    }, {
+                        "action": "nextTarget",
+                        "button": "middle"
                     }, {
                         "action": "yawLeft",
                         "move": "left",
