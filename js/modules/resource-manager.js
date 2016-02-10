@@ -224,15 +224,15 @@ define([
          */
         this._numRequestedResources = 0;
         /**
-         * @type Object.<String, Array.<Function>>
+         * @type Object.<String, Function[]>
          */
         this._onResourceTypeLoadFunctionQueues = {};
         /**
-         * @type Array.<Function>
+         * @type Function[]
          */
         this._onAnyResourceTypeLoadFunctionQueue = [];
         /**
-         * @type Array.<Function>
+         * @type Function[]
          */
         this._onResourceLoadFunctionQueue = [];
     }

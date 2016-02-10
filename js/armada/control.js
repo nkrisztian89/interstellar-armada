@@ -399,19 +399,18 @@ define([
      */
     KeyboardInputInterpreter.prototype.startListening = function () {
         this.cancelPressedKeys();
-        var self = this;
-        document.onkeydown = function (e) {
-            self.handleKeyDown(e);
-        };
-        document.onkeyup = function (e) {
-            self.handleKeyUp(e);
-        };
-        document.onkeypress = function (e) {
-            if (!self.defaultActionEnabledForKey(e.keyCode)) {
-                e.preventDefault();
-                e.stopPropagation();
+        document.onkeydown = function (event) {
+            this.handleKeyDown(event);
+        }.bind(this);
+        document.onkeyup = function (event) {
+            this.handleKeyUp(event);
+        }.bind(this);
+        document.onkeypress = function (event) {
+            if (!this.defaultActionEnabledForKey(event.keyCode)) {
+                event.preventDefault();
+                event.stopPropagation();
             }
-        };
+        }.bind(this);
         this._listening = true;
     };
     /**
@@ -923,22 +922,21 @@ define([
         this.cancelPressedButtons();
         this._mousePosition = null;
         this._mousePositionChange = [0, 0];
-        var self = this;
-        document.onmousedown = function (e) {
-            self.handleMouseDown(e);
-        };
-        document.onmouseup = function (e) {
-            self.handleMouseUp(e);
-        };
-        document.onmousemove = function (e) {
-            self.handleMouseMove(e);
-        };
-        document.onclick = function (e) {
-            e.preventDefault();
+        document.onmousedown = function (event) {
+            this.handleMouseDown(event);
+        }.bind(this);
+        document.onmouseup = function (event) {
+            this.handleMouseUp(event);
+        }.bind(this);
+        document.onmousemove = function (event) {
+            this.handleMouseMove(event);
+        }.bind(this);
+        document.onclick = function (event) {
+            event.preventDefault();
             return false;
         };
-        document.oncontextmenu = function (e) {
-            e.preventDefault();
+        document.oncontextmenu = function (event) {
+            event.preventDefault();
             return false;
         };
         this._listening = true;

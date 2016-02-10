@@ -54,11 +54,11 @@ define([
          */
         this._imagesToLoad = 0;
         /**
-         * @type Object<String, Object<String, Image>>
+         * @type Object.<String, Object.<String, Image>>
          */
         this._images = {};
         /**
-         * @type Object<String, Object<String, ManagedTexture>>
+         * @type Object.<String, Object.<String, ManagedTexture>>
          */
         this._managedTextures = {};
     }
@@ -158,7 +158,7 @@ define([
         application.log("Texture from file: " + params.path + " has been loaded.", 2);
     };
     /**
-     * @returns {Array.<String>}
+     * @returns {String[]}
      */
     TextureResource.prototype.getTypes = function () {
         var type, types = [];
@@ -170,7 +170,7 @@ define([
         return types;
     };
     /**
-     * @returns {Array.<String>}
+     * @returns {String[]}
      */
     TextureResource.prototype.getQualities = function () {
         var quality, qualitities = [];
@@ -214,7 +214,7 @@ define([
          */
         this._basepath = dataJSON.basepath;
         /**
-         * @type Array.<String>
+         * @type String[]
          */
         this._imageNames = dataJSON.imageNames;
         /**
@@ -405,11 +405,11 @@ define([
          */
         this._format = dataJSON.format;
         /**
-         * @type Array.<ModelResource~FileDescriptor>
+         * @type ModelResource~FileDescriptor[]
          */
         this._singleLODFiles = null;
         /**
-         * @type Array.<ModelResource~FileDescriptor>
+         * @type ModelResource~FileDescriptor[]
          */
         this._multiLODFiles = null;
         /**
@@ -470,7 +470,7 @@ define([
     };
     /**
      * @param {Boolean} multiLOD
-     * @returns {Number|null}
+     * @returns {?Number}
      */
     ModelResource.prototype.getMaxLOD = function (multiLOD) {
         var i, result = null;

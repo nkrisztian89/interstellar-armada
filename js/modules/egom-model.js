@@ -1227,7 +1227,7 @@ define([
         /**
          * The mesh ordered by their LOD (the index corresponds to the LOD of
          * the mesh)
-         * @type Array.<Mesh>
+         * @type Mesh[]
          */
         this._meshes = [];
         /**

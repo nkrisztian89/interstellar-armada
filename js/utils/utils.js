@@ -158,7 +158,7 @@ define(function () {
      * @param {Object} enumObject
      * @param {any} value
      * @param {any} [defaultValue]
-     * @returns {any|null}
+     * @returns {}
      */
     exports.getSafeEnumValue = function (enumObject, value, defaultValue) {
         var p;

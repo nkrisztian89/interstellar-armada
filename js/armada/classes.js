@@ -703,7 +703,7 @@ define([
         /**
          * The list of descriptors of the particle emitters that the visual model of the explosion
          * will consist of.
-         * @type Array<ParticleEmitterDescriptor>
+         * @type ParticleEmitterDescriptor[]
          */
         this._particleEmitterDescriptors = null;
         if (dataJSON && dataJSON.particleEmitters) {
@@ -726,7 +726,7 @@ define([
     /**
      * Returns the list of descriptors of the particle emitters that the visual model of the explosion
      * shall consist of.
-     * @returns {Array<ParticleEmitterDescriptor>}
+     * @returns {ParticleEmitterDescriptor[]}
      */
     ExplosionClass.prototype.getParticleEmitterDescriptors = function () {
         return this._particleEmitterDescriptors;
@@ -1924,7 +1924,7 @@ define([
         return this._explosionClass;
     };
     /**
-     * @returns {Array<DamageIndicator>}
+     * @returns {DamageIndicator[]}
      */
     SpacecraftClass.prototype.getDamageIndicators = function () {
         return this._damageIndicators;

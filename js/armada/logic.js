@@ -447,11 +447,11 @@ define([
          * An associative array storing the reusable Environment objects that 
          * describe possible environments for levels. The keys are the names
          * of the environments.
-         * @type Object<String, Environment>
+         * @type Object.<String, Environment>
          */
         this._environments = null;
         /**
-         * @type Array<String>
+         * @type String[]
          */
         this._levelFileNames = null;
         /**
@@ -552,7 +552,7 @@ define([
     /**
      * Sets the array of strings that contains the names of the level descriptor JSON files.
      * The path doesn't need to be included, the files will be looked for in the levels folder.
-     * @param {Array<String>} value
+     * @param {String[]} value
      */
     LogicContext.prototype.setLevelFileNames = function (value) {
         this._levelFileNames = value;
@@ -2126,7 +2126,7 @@ define([
         this._timeElapsedSinceDestruction = -1;
         /**
          * The list of damage indicators that are currently visible on the spacecraft.
-         * @type Array<Explosion>
+         * @type Explosion[]
          */
         this._activeDamageIndicators = [];
         /**
@@ -2294,7 +2294,7 @@ define([
     /**
      * Returns the maximum acceleration the spacecraft can achieve using its
      * currently equipped propulsion system.
-     * @returns {Number|null} The acceleration, in m/s^2. Null, if no propulsion
+     * @returns {?Number} The acceleration, in m/s^2. Null, if no propulsion
      * is equipped.
      */
     Spacecraft.prototype.getMaxAcceleration = function () {

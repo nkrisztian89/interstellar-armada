@@ -84,7 +84,7 @@ define(function () {
          * Sets the associative array containing the folder paths for different file types. The passed object has to contain the folder URLs 
          * by file types, and the URLs can also contain references to another folder URL, specifying the corresponding file type between {{ 
          * and }} signs. Folder names need to end with a /.
-         * @param {Object<String,String>} folders
+         * @param {Object.<String, String>} folders
          */
         setFolders: function (folders) {
             var fileType = "", resolveFolder = function (folder, fType, referringFolderFileTypes) {
@@ -229,18 +229,17 @@ define(function () {
                     "folder: '" + this.getFolder(filetype) :
                     "root folder")
                     + "'...", 2);
-            var self = this,
-                    request = new XMLHttpRequest();
+            var request = new XMLHttpRequest();
             request.onload = function () {
-                self.log("File: '" + filename + "' successfully loaded.", 2);
+                this.log("File: '" + filename + "' successfully loaded.", 2);
                 onload(request);
-            };
+            }.bind(this);
             request.onerror = function () {
-                self.showError("An error occured while trying to load file: '" + filename + "'.", "severe", "The status of the request was: '" + request.statusText + "' when the error happened.");
-            };
+                this.showError("An error occured while trying to load file: '" + filename + "'.", "severe", "The status of the request was: '" + request.statusText + "' when the error happened.");
+            }.bind(this);
             request.ontimeout = function () {
-                self.showError("Request to load the file: '" + filename + "' timed out.", "severe");
-            };
+                this.showError("Request to load the file: '" + filename + "' timed out.", "severe");
+            }.bind(this);
             if (customMimeType) {
                 request.overrideMimeType(customMimeType);
             }
@@ -278,7 +277,6 @@ define(function () {
          * loaded. It gets the XML contents of the file as parameter.
          */
         requestXMLFile: function (filetype, filename, onload) {
-            var self = this;
             this.requestFile(filetype, filename, function (request) {
                 var responseXML = (request.responseXML === null) ?
                         new DOMParser().parseFromString(request.responseText, "application/xml") :
@@ -286,7 +284,7 @@ define(function () {
                 if (responseXML.documentElement.nodeName !== "parsererror") {
                     onload(responseXML);
                 } else {
-                    self.showError("Could not parse XML file: '" + filename + "'.",
+                    this.showError("Could not parse XML file: '" + filename + "'.",
                             "severe", "The file could be loaded, but for some reason the parsing of it has failed. \n" +
                             "The status of the request was: '" + request.statusText + "' when the error happened.\n" +
                             "The text content of the file:\n" +
@@ -294,7 +292,7 @@ define(function () {
                                     request.responseText.slice(0, 120) + "..." :
                                     request.responseText));
                 }
-            }, "application/xml");
+            }.bind(this), "application/xml");
         }
     };
 });

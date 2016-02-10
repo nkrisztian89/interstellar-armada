@@ -149,7 +149,7 @@ define([
          * Cache value to store whether the object is situated within its 
          * parent's boundaries, as the parent's values can be used for certain 
          * calculations in this case.
-         * @type Boolean|null
+         * @type ?Boolean
          */
         this._insideParent = null;
         /**
@@ -204,7 +204,7 @@ define([
         }
         /**
          * Returns a 3D vector describing the position.
-         * @returns {Array.<Number>}
+         * @returns {Number[3]}
          */
         function getPositionVector() {
             return [
@@ -224,7 +224,7 @@ define([
         }
         /**
          * Translates the current position by the given 3D vector.
-         * @param {Array.<Number>} v [x,y,z]
+         * @param {Number[3]} v [x,y,z]
          */
         function translatev(v) {
             this.setPositionMatrix(mat.mul4(this._positionMatrix, mat.translation4v(v)));
@@ -257,7 +257,7 @@ define([
         /**
          * Returns the 3D vector corresponding to the X axis of the current
          * orientation.
-         * @returns {Array.<Number>}
+         * @returns {Number[3]}
          */
         function getXDirectionVector() {
             return [
@@ -269,7 +269,7 @@ define([
         /**
          * Returns the 3D vector corresponding to the Y axis of the current
          * orientation.
-         * @returns {Array.<Number>}
+         * @returns {Number[3]}
          */
         function getYDirectionVector() {
             return [
@@ -281,7 +281,7 @@ define([
         /**
          * Returns the 3D vector corresponding to the Z axis of the current
          * orientation.
-         * @returns {Array.<Number>}
+         * @returns {Number[3]}
          */
         function getZDirectionVector() {
             return [
@@ -293,7 +293,7 @@ define([
         /**
          * Rotates the current orientation around the given axis by the given
          * angle.
-         * @param {Array.<Number>} axis The 3D vector of the axis.
+         * @param {Number[3]} axis The 3D vector of the axis.
          * @param {Number} angle Angle in radians.
          */
         function rotate(axis, angle) {
@@ -544,7 +544,7 @@ define([
         this._parent = null;
         /**
          * The list of subnodes (children) this node is connected to.
-         * @type Array.<RenderableNode>
+         * @type RenderableNode[]
          */
         this._subnodes = [];
         /**
@@ -561,7 +561,7 @@ define([
         this._renderParameters = new RenderParameters();
         /**
          * A list of camera configurations that are associated with this node.
-         * @type Array<CameraConfiguration>
+         * @type CameraConfiguration[]
          */
         this._cameraConfigurations = [];
     }
@@ -716,7 +716,7 @@ define([
     /**
      * Returns a list of the associated camera configurations that have the specified name.
      * @param {String} name
-     * @returns {Array<CameraConfiguration>}
+     * @returns {CameraConfiguration[]}
      */
     RenderableNode.prototype.getCameraConfigurationsWithName = function (name) {
         var result = [], i;
@@ -1231,7 +1231,7 @@ define([
         /**
          * The cached value marking whether the object fell within the shadow
          * cast frustum during the last calculation.
-         * @type Boolean|null
+         * @type ?Boolean
          */
         this._insideShadowCastFrustum = null;
         /**
@@ -1632,7 +1632,7 @@ define([
      * instead of solid.
      * @param {Number} [lod] If given, only this specific LOD (if available) 
      * will be used for rendering this model
-     * @param {Array.<{name:String,length:Number}>} parameterArrays The list of 
+     * @param {{name:String,length:Number}[]} parameterArrays The list of 
      * names to identify the parameter arrays later when setting their values, 
      * and the lengths of the arrays.
      * The uniform variables will be identified by this name prefixed with "u_".
@@ -1767,7 +1767,7 @@ define([
      * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {Texture} texture The texture that should be bound while rendering this object.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
-     * @param {Array<ParticleState>} states The list of states this particle will go through during its lifespan.
+     * @param {ParticleState[]} states The list of states this particle will go through during its lifespan.
      * If only one state is given, the particle will stay forever in that state
      * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
      */
@@ -1811,7 +1811,7 @@ define([
          * the particle statically stays in that state. If multiple states are stored, the _looping
          * field specifies whether the particle starts over from the first state or is deleted after the
          * last state has been reached.
-         * @type Array<ParticleState>
+         * @type ParticleState[]
          */
         this._states = states || [];
         /**
@@ -1905,7 +1905,7 @@ define([
     };
     /**
      * Returns the list of particle states this particle goes through during its lifespan.
-     * @returns {Array<ParticleState>}
+     * @returns {ParticleState[]}
      */
     Particle.prototype.getStates = function () {
         return this._states;
@@ -2175,7 +2175,7 @@ define([
     /**
      * Returns the array of particles emitted by this emitter in the past dt milliseconds 
      * @param {Number} dt The time passed since this function was last called, in milliseconds
-     * @returns {Array<Particle>} The array of the emitted particles
+     * @returns {Particle[]} The array of the emitted particles
      */
     ParticleEmitter.prototype.emitParticles = function (dt) {
         var particles, i;
@@ -2389,7 +2389,7 @@ define([
      * @extends RenderableObject3D
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position of the center of the particle system (meters)
      * @param {Float32Array} velocityMatrix The 4x4 translation matrix describing the velocity of the particle system (m/s)
-     * @param {Array<ParticleEmitter>} emitters The list of emitters that will be used to generate particles
+     * @param {ParticleEmitter[]} emitters The list of emitters that will be used to generate particles
      * @param {Number} duration For how long should the particle system be active (milliseconds)
      * @param {Boolean} [keepAlive=false] Whether to keep the particle system alive after the duration has expired.
      * Emitters that are set to produce particles forever will keep on doing so.
@@ -2405,7 +2405,7 @@ define([
         this._velocityMatrix = velocityMatrix;
         /**
          * The list of emitters that will be used to generate particles
-         * @type Array<ParticleEmitter>
+         * @type ParticleEmitter[]
          */
         this._emitters = emitters;
         /**
@@ -2654,7 +2654,7 @@ define([
      * is possible as well
      * @param {Boolean} movesRelativeToObject If true, the movement of the camera will happen along the axes of the orientation of the first
      * followed object (if any)
-     * @param {Array<Object3D>} followedObjects The list of objects the camera's position should follow. Setting no objects means the set 
+     * @param {Object3D[]} followedObjects The list of objects the camera's position should follow. Setting no objects means the set 
      * position is absolute, setting multiple objects means the average of their positions will be followed.
      * @param {Boolean} startsWithRelativePosition Whether only at the start and at default resets should the position be calculated as
      * relative (and not follow the followed objects continuously)
@@ -2696,7 +2696,7 @@ define([
          * The list of objects the camera is following. If empty, the camera is free to move around
          * or has a constant absolute position if fixed. If more than one object is in the list, the camera
          * follows the point in space which is the average of the positions of the objects.
-         * @type Array<Object3D>
+         * @type Object3D[]
          */
         this._followedObjects = followedObjects || [];
         /**
@@ -2873,7 +2873,7 @@ define([
     /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
      * whether this conifugation is set to follow the same list of objects.
-     * @param {Array<Object3D>} [objects]
+     * @param {Object3D[]} [objects]
      * @returns {Boolean}
      */
     CameraPositionConfiguration.prototype.followsObjects = function (objects) {
@@ -3153,7 +3153,7 @@ define([
      * @param {Boolean} pointsTowardsObjects Whether the camera orientation should be calculated so that it always faces the followed objects
      * @param {Boolean} fps Whether the camera should work in "FPS-mode", by being turnable along 2 axes (of a base coordinate system, that
      * can be specified at the time of calculation)
-     * @param {Array<Object3D>} followedObjects The list of objects the camera's orientation should follow. Setting no objects means the set 
+     * @param {Object3D[]} followedObjects The list of objects the camera's orientation should follow. Setting no objects means the set 
      * orientation is absolute, setting multiple objects means the orientation of the first one will be followed. (as of now, can be changed
      * later to utilize all orientations)
      * @param {Float32Array} orientationMatrix The starting relative (if objects are followed) or world (if not) orientation of the camera.
@@ -3201,7 +3201,7 @@ define([
          * turn around or has a constant absolute orientation if fixed. If more than one object is in the 
          * list, the camera orientation is relative to the average orientatio of the objects (or points
          * towards their average position).
-         * @type Array<Object3D>
+         * @type Object3D[]
          */
         this._followedObjects = followedObjects || [];
         /**
@@ -3396,7 +3396,7 @@ define([
     /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
      * whether this conifugation is set to follow the same list of objects.
-     * @param {Array<Object3D>} [objects]
+     * @param {Object3D[]} [objects]
      * @returns {Boolean}
      */
     CameraOrientationConfiguration.prototype.followsObjects = function (objects) {
@@ -3406,7 +3406,7 @@ define([
     };
     /**
      * Sets the list of followed object to the passed one.
-     * @param {Array<Object3D>} followedObjects
+     * @param {Object3D[]} followedObjects
      * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
     CameraOrientationConfiguration.prototype.setFollowedObjects = function (followedObjects, doNotNotifyCamera) {
@@ -4464,7 +4464,7 @@ define([
     };
     /**
      * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (yawing) to the left.
-     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     * @param {?Number} [intensity] An optional intensity with which the turn should be carried out.
      */
     Camera.prototype.turnLeft = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -4486,7 +4486,7 @@ define([
     };
     /**
      * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (yawing) to the right.
-     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     * @param {?Number} [intensity] An optional intensity with which the turn should be carried out.
      */
     Camera.prototype.turnRight = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -4508,7 +4508,7 @@ define([
     };
     /**
      * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (pitching) upwards.
-     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     * @param {?Number} [intensity] An optional intensity with which the turn should be carried out.
      */
     Camera.prototype.turnUp = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -4530,7 +4530,7 @@ define([
     };
     /**
      * Calling this in a simulation step means that in this step, the controller of the camera wants it to be turning (pitching) downwards.
-     * @param {Number|null} [intensity] An optional intensity with which the turn should be carried out.
+     * @param {?Number} [intensity] An optional intensity with which the turn should be carried out.
      */
     Camera.prototype.turnDown = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -4552,7 +4552,7 @@ define([
     };
     /**
      * Calling this in a simulation step means that in this step, the controller of the camera wants it to be rolling to the left.
-     * @param {Number|null} [intensity] An optional intensity with which the roll should be carried out.
+     * @param {?Number} [intensity] An optional intensity with which the roll should be carried out.
      */
     Camera.prototype.rollLeft = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -4574,7 +4574,7 @@ define([
     };
     /**
      * Calling this in a simulation step means that in this step, the controller of the camera wants it to be rolling to the right.
-     * @param {Number|null} [intensity] An optional intensity with which the roll should be carried out.
+     * @param {?Number} [intensity] An optional intensity with which the roll should be carried out.
      */
     Camera.prototype.rollRight = function (intensity) {
         if ((intensity === undefined) || (intensity === null)) {
@@ -5303,31 +5303,30 @@ define([
         this.firstRender = true;
         this._drawnTriangles = 0;
         this._contexts = [];
-        var self = this;
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
         this.uniformValueFunctions.u_numLights = function () {
-            return self.lights.length;
-        };
+            return this.lights.length;
+        }.bind(this);
         this.uniformValueFunctions.u_lights = function () {
-            return self.lights;
-        };
+            return this.lights;
+        }.bind(this);
         this.uniformValueFunctions.u_cameraMatrix = function () {
-            return self.activeCamera.getCameraMatrix();
-        };
+            return this.activeCamera.getCameraMatrix();
+        }.bind(this);
         this.uniformValueFunctions.u_cameraOrientationMatrix = function () {
-            return self.activeCamera.getInverseOrientationMatrix();
-        };
+            return this.activeCamera.getInverseOrientationMatrix();
+        }.bind(this);
         this.uniformValueFunctions.u_projMatrix = function () {
-            return self.activeCamera.getProjectionMatrix();
-        };
+            return this.activeCamera.getProjectionMatrix();
+        }.bind(this);
         this.uniformValueFunctions.u_eyePos = function () {
-            return new Float32Array(self.activeCamera.getPositionVector());
-        };
+            return new Float32Array(this.activeCamera.getPositionVector());
+        }.bind(this);
         this.uniformValueFunctions.u_shadows = function () {
-            return self._shadowMappingEnabled;
-        };
+            return this._shadowMappingEnabled;
+        }.bind(this);
     }
 
     Scene.prototype.setShadowMapping = function (params) {
@@ -5570,7 +5569,7 @@ define([
     /**
      * Returns a list of the associated camera configurations that have the specified name.
      * @param {String} name
-     * @returns {Array<CameraConfiguration>}
+     * @returns {CameraConfiguration[]}
      */
     Scene.prototype.getCameraConfigurationsWithName = function (name) {
         var result = [], i;

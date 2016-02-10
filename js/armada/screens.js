@@ -42,14 +42,12 @@ define([
 
         this._crosshair = this.registerSimpleComponent("crosshair");
 
-        var self = this;
-
         this._loadingBox = this.registerExternalComponent(new components.LoadingBox(name + "_loadingBox", "loadingbox.html", "loadingbox.css"));
         this._infoBox = this.registerExternalComponent(new components.InfoBox(name + "_infoBox", "infobox.html", "infobox.css", function () {
-            self.pauseBattle();
-        }, function () {
-            self.resumeBattle();
-        }));
+            this.pauseBattle();
+        }.bind(this), function () {
+            this.resumeBattle();
+        }.bind(this)));
 
         /**
          * @type Level
@@ -431,23 +429,21 @@ define([
     DatabaseScreen.prototype._initializeComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);
 
-        var self = this;
-
         this._backButton.getElement().onclick = function () {
-            self.stopRevealLoop();
-            self.stopRotationLoop();
-            if (self.isSuperimposed()) {
-                self._game.closeSuperimposedScreen();
+            this.stopRevealLoop();
+            this.stopRotationLoop();
+            if (this.isSuperimposed()) {
+                this._game.closeSuperimposedScreen();
             } else {
-                self._game.setCurrentScreen('mainMenu');
+                this._game.setCurrentScreen('mainMenu');
             }
-        };
+        }.bind(this);
         this._prevButton.getElement().onclick = function () {
-            self.selectPreviousShip();
-        };
+            this.selectPreviousShip();
+        }.bind(this);
         this._nextButton.getElement().onclick = function () {
-            self.selectNextShip();
-        };
+            this.selectNextShip();
+        }.bind(this);
     };
 
     /**
@@ -790,13 +786,12 @@ define([
     GraphicsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
 
-        var self = this;
         this._backButton.getElement().onclick = function () {
-            armada.graphics().setAntialiasing((self._antialiasingSelector.getSelectedValue() === "on"));
-            armada.graphics().setFiltering(self._filteringSelector.getSelectedValue());
-            armada.graphics().setMaxLOD(self._lodSelector.getSelectedIndex());
-            armada.graphics().setShaderComplexity(self._shaderComplexitySelector.getSelectedValue());
-            armada.graphics().setShadowMapping((self._shadowMappingSelector.getSelectedValue() === "on"));
+            armada.graphics().setAntialiasing((this._antialiasingSelector.getSelectedValue() === "on"));
+            armada.graphics().setFiltering(this._filteringSelector.getSelectedValue());
+            armada.graphics().setMaxLOD(this._lodSelector.getSelectedIndex());
+            armada.graphics().setShaderComplexity(this._shaderComplexitySelector.getSelectedValue());
+            armada.graphics().setShadowMapping((this._shadowMappingSelector.getSelectedValue() === "on"));
             armada.graphics().setShadowQuality((function (v) {
                 var mapping = {
                     "low": 1024,
@@ -804,7 +799,7 @@ define([
                     "high": 4096
                 };
                 return mapping[v];
-            }(self._shadowQualitySelector.getSelectedValue())));
+            }(this._shadowQualitySelector.getSelectedValue())));
             armada.graphics().setShadowDistance((function (v) {
                 var mapping = {
                     "very close": 2,
@@ -814,53 +809,52 @@ define([
                     "very far": 6
                 };
                 return mapping[v];
-            }(self._shadowDistanceSelector.getSelectedValue())));
-            if (self.isSuperimposed()) {
-                self._game.closeSuperimposedScreen();
+            }(this._shadowDistanceSelector.getSelectedValue())));
+            if (this.isSuperimposed()) {
+                this._game.closeSuperimposedScreen();
             } else {
-                self._game.setCurrentScreen('settings');
+                this._game.setCurrentScreen('settings');
             }
             return false;
-        };
+        }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
             armada.graphics().restoreDefaults();
-            self.updateValues();
+            this.updateValues();
             return false;
-        };
+        }.bind(this);
         this._shaderComplexitySelector.onChange = function () {
-            if (self._shaderComplexitySelector.getSelectedValue() === "normal") {
-                self._shadowMappingSelector.show();
-                self._shadowMappingSelector.onChange();
+            if (this._shaderComplexitySelector.getSelectedValue() === "normal") {
+                this._shadowMappingSelector.show();
+                this._shadowMappingSelector.onChange();
             } else {
-                self._shadowMappingSelector.hide();
-                self._shadowQualitySelector.hide();
-                self._shadowDistanceSelector.hide();
+                this._shadowMappingSelector.hide();
+                this._shadowQualitySelector.hide();
+                this._shadowDistanceSelector.hide();
             }
-        };
+        }.bind(this);
         this._shadowMappingSelector.onChange = function () {
-            if (self._shadowMappingSelector.getSelectedValue() === "on") {
-                if (self._shaderComplexitySelector.getSelectedValue() === "normal") {
-                    self._shadowQualitySelector.show();
-                    self._shadowDistanceSelector.show();
+            if (this._shadowMappingSelector.getSelectedValue() === "on") {
+                if (this._shaderComplexitySelector.getSelectedValue() === "normal") {
+                    this._shadowQualitySelector.show();
+                    this._shadowDistanceSelector.show();
                 }
             } else {
-                self._shadowQualitySelector.hide();
-                self._shadowDistanceSelector.hide();
+                this._shadowQualitySelector.hide();
+                this._shadowDistanceSelector.hide();
             }
-        };
+        }.bind(this);
 
         this.updateValues();
     };
 
     GraphicsScreen.prototype.updateValues = function () {
-        var self = this;
         armada.graphics().executeWhenReady(function () {
-            self._antialiasingSelector.selectValue((armada.graphics().getAntialiasing() === true) ? "on" : "off");
-            self._filteringSelector.selectValue(armada.graphics().getFiltering());
-            self._lodSelector.selectValueWithIndex(armada.graphics().getMaxLoadedLOD());
-            self._shaderComplexitySelector.selectValue(armada.graphics().getShaderComplexity());
-            self._shadowMappingSelector.selectValue((armada.graphics().getShadowMapping() === true) ? "on" : "off");
-            self._shadowQualitySelector.selectValue((function (v) {
+            this._antialiasingSelector.selectValue((armada.graphics().getAntialiasing() === true) ? "on" : "off");
+            this._filteringSelector.selectValue(armada.graphics().getFiltering());
+            this._lodSelector.selectValueWithIndex(armada.graphics().getMaxLoadedLOD());
+            this._shaderComplexitySelector.selectValue(armada.graphics().getShaderComplexity());
+            this._shadowMappingSelector.selectValue((armada.graphics().getShadowMapping() === true) ? "on" : "off");
+            this._shadowQualitySelector.selectValue((function (v) {
                 switch (v) {
                     case 1024:
                         return "low";
@@ -872,7 +866,7 @@ define([
                         return "medium";
                 }
             }((armada.graphics().getShadowQuality()))));
-            self._shadowDistanceSelector.selectValue((function (v) {
+            this._shadowDistanceSelector.selectValue((function (v) {
                 switch (v) {
                     case 2:
                         return "very close";
@@ -888,7 +882,7 @@ define([
                         return "medium";
                 }
             }((armada.graphics().getShadowDistance()))));
-        });
+        }.bind(this));
     };
 
     /**
@@ -1039,22 +1033,21 @@ define([
     ControlsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
 
-        var self = this;
         this._backButton.getElement().onclick = function () {
-            self.stopKeySetting();
-            if (self._game.getCurrentScreen().isSuperimposed()) {
-                self._game.closeSuperimposedScreen();
+            this.stopKeySetting();
+            if (this._game.getCurrentScreen().isSuperimposed()) {
+                this._game.closeSuperimposedScreen();
             } else {
-                self._game.setCurrentScreen('settings');
+                this._game.setCurrentScreen('settings');
             }
             return false;
-        };
+        }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
-            self.stopKeySetting();
+            this.stopKeySetting();
             armada.control().restoreDefaults();
-            self.generateTables();
+            this.generateTables();
             return false;
-        };
+        }.bind(this);
 
         this.generateTables();
     };
@@ -1141,15 +1134,14 @@ define([
 
         this._versionParagraph.setContent("Application version: " + armada.getVersion());
 
-        var self = this;
         this._backButton.getElement().onclick = function () {
-            if (self._game.getCurrentScreen().isSuperimposed()) {
-                self._game.closeSuperimposedScreen();
+            if (this._game.getCurrentScreen().isSuperimposed()) {
+                this._game.closeSuperimposedScreen();
             } else {
-                self._game.setCurrentScreen('mainMenu');
+                this._game.setCurrentScreen('mainMenu');
             }
             return false;
-        };
+        }.bind(this);
     };
 
     // -------------------------------------------------------------------------
