@@ -68,14 +68,12 @@ define([
     function LODContext(maxEnabledLOD, thresholds, compensateForObjectSize, referenceSize, minimumRelativeSize) {
         /**
          * The highest renderable LOD.
-         * @name LODContext#maxEnabledLOD
          * @type type Number
          */
         this.maxEnabledLOD = maxEnabledLOD;
         /**
          * The threshold for each LOD that a renderable object must exceed (in 
          * size) to be drawn with that LOD.
-         * @name LODContext#thresholds
          * @type Number[]
          */
         this.thresholds = thresholds;
@@ -85,13 +83,11 @@ define([
          * smaller, and smallers ones as bigger.
          * This is used to make better LOD decisions for objects spanning a wide
          * range of sizes, but having more similar size details.
-         * @name LODContext#compensateForObjectSize
          * @type Boolean
          */
         this.compensateForObjectSize = (compensateForObjectSize === true);
         /**
          * The size that should be taken as is, when compensation is enabled.
-         * @name LODContext#referenceSize
          * @type Number
          */
         this.referenceSize = referenceSize || 100; //TODO: hardcoded
@@ -99,7 +95,6 @@ define([
          * If the relative size of a object inside a parent (compared to the 
          * size of the parent) is smaller than this value, this value will be 
          * used instead to calculate the relative visible size.
-         * @name LODContext#minimumRelativeSize
          * @type Number
          */
         this.minimumRelativeSize = minimumRelativeSize || 0.05; //TODO: hardcoded
@@ -895,26 +890,22 @@ define([
     function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask) {
         /**
          * A reference to the node holding this object.
-         * @name RenderableObject#_node
          * @type RenderableNode
          */
         this._node = null;
         /**
          * A flag marking whether this object has been rendered in the current
          * frame already.
-         * @name RenderableObject#_wasRendered
          * @type Boolean
          */
         this._wasRendered = false;
         /**
          * The shader to use while rendering this object.
-         * @name RenderableObject#_shader
          * @type Shader
          */
         this._shader = shader;
         /**
          * The textures this object uses, ordered by their roles/types.
-         * @name RenderableObject#_textures
          * @type Object.<String, Texture|Cubemap>
          */
         this._textures = {};
@@ -922,28 +913,24 @@ define([
          * The functions to call when calculating the values of uniform 
          * variables before assigning them, ordered by the names of the 
          * variables.
-         * @name RenderableObject#_uniformValueFunctions
          * @type Object.<String, Function>
          */
         this._uniformValueFunctions = {};
         /**
          * Flag, whether this object should be rendered when the depth mask is 
          * on.
-         * @name RenderableObject#_isRenderedWithDepthMask
          * @type Boolean
          */
         this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
         /**
          * Flag, whether this object should be rendered when the depth mask is 
          * off.
-         * @name RenderableObject#_isRenderedWithoutDepthMask
          * @type Boolean
          */
         this._isRenderedWithoutDepthMask = renderedWithoutDepthMask === undefined ? true : renderedWithoutDepthMask;
         /**
          * Flag, whether this object is no longer valid and can be used to store
          * a new object.
-         * @name RenderableObject#_canBeReused
          * @type Boolean
          */
         this._canBeReused = false;
@@ -1238,21 +1225,18 @@ define([
         /**
          * The cached value of the size of this object on the screen from the 
          * last frustum calculation.
-         * @name RenderableObject3D#_visibleSize
          * @type {width: Number, height: Number}
          */
         this._visibleSize = {width: -1, height: -1};
         /**
          * The cached value marking whether the object fell within the shadow
          * cast frustum during the last calculation.
-         * @name RenderableObject3D#_insideShadowCastFrustum
          * @type Boolean|null
          */
         this._insideShadowCastFrustum = null;
         /**
          * If the visible width or height of the object is below this limit, it
          * will not be rendered. (measured in pixels)
-         * @name RenderableObject3D#_smallestSizeWhenDrawn
          * @type Number
          */
         this._smallestSizeWhenDrawn = 0;
@@ -1450,20 +1434,17 @@ define([
         /**
          * Stores all the models representing this mesh at different levels of
          * detail.
-         * @name ShadedLODMesh#_model
          * @type Model
          */
         this._model = model;
         /**
          * Whether or not the rendering mode of this mesh is wireframe.
-         * @name ShadedLODMesh#_wireframe
          * @type Boolean
          */
         this._wireframe = (wireframe === true);
         /**
          * The model currently chosen for rendering. Acts as a cached reference
          * to be used after the proper model has been chosen for a frame.
-         * @name ShadedLODMesh#_currentLOD
          * @type Number
          */
         this._currentLOD = this.LOD_NOT_SET;
@@ -1471,21 +1452,18 @@ define([
          * Stores the size of the largest model (of any LOD) representing this
          * object. It is the double of the (absolute) largest coordinate found 
          * among the vertices of the model.
-         * @name ShadedLODMesh#_modelSize
          * @type Number
          */
         this._modelSize = 0;
         /**
          * The factors to use when calculating compensated LOD sizes, order by
          * the reference sizes.
-         * @name ShadedLODMesh#_lodSizeFactors
          * @type Object.<String, Number>
          */
         this._lodSizeFactors = {};
         /**
          * If a static LOD is chosen, the model is always rendered using this 
          * LOD (or the closest available one)
-         * @name ShadedLODMesh#_staticLOD
          * @type Number
          */
         this._staticLOD = (lod !== undefined) ? lod : this.LOD_NOT_SET;
@@ -1665,7 +1643,6 @@ define([
         ShadedLODMesh.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod);
         /**
          * The values of the parameter arrays.
-         * @name ParameterizedMesh#_parameterArrays
          * @type Object.<String, Float32Array>
          */
         this._parameterArrays = {};

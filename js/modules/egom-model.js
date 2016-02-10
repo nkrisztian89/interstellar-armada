@@ -23,30 +23,23 @@ define([
     var _supportedVersions = ["2.0", "2.1", "2.2"];
 
     /**
-     * @name Vertex
-     * @alias Egom.Vertex
-     * @private
      * @class Represents a vertex in 3D space.
      * @param {Number[3]} position Position vector.
      * @param {Number[2]} texCoords Texture coordinates.
-     * @returns {Vertex}
      */
     function Vertex(position, texCoords) {
         /**
          * The X coordinate of the vertex.
-         * @name Vertex#x
          * @type Number
          */
         this.x = position[0];
         /**
          * The Y coordinate of the vertex.
-         * @name Vertex#y
          * @type Number
          */
         this.y = position[1];
         /**
          * The Z coordinate of the vertex.
-         * @name Vertex#z
          * @type Number
          */
         this.z = position[2];
@@ -54,13 +47,11 @@ define([
         texCoords = texCoords || [this.x, this.y];
         /**
          * The U (horizontal) texture coordinate of the vertex.
-         * @name Vertex#u
          * @type Number
          */
         this.u = texCoords[0];
         /**
          * The V (vertical) texture coordinate of the vertex.
-         * @name Vertex#v
          * @type Number
          */
         this.v = texCoords[1];
@@ -99,56 +90,44 @@ define([
     };
 
     /**
-     * @name Line
-     * @alias Egom.Line
-     * @private
      * @class Represents a line connecting two vertices in a model.
      * @param {Number} a The index of the starting vertex of the line.
      * @param {Number} b The index of the end vertex of the line.
      * @param {Number[3]} color The color of the line. ([red, green, blue])
      * @param {Number} luminosity The luminosity of the line. (0.0-1.0)
      * @param {Number[3]} normal The normal vector associated with the line.
-     * @returns {Line}
      */
     function Line(a, b, color, luminosity, normal) {
         /**
          * The index (in the model) of the starting vertex of the line.
-         * @name Line#a
          * @type Number
          */
         this.a = a;
         /**
          * The index (in the model) of the end vertex of the line.
-         * @name Line#b
          * @type Number
          */
         this.b = b;
         /**
          * The color of the line for rendering. ([red, green, blue])
-         * @name Line#color
          * @type Number
          */
         this.color = color;
         /**
          * The luminosity of the line for rendering. (0.0-1.0)
-         * @name Line#luminosity
          * @type Number
          */
         this.luminosity = luminosity;
         /**
          * The normal vector associated with the line for shading.
-         * @name Line#normal
          * @type Number[3]
          */
         this.normal = normal;
     }
 
     /**
-     * @name Triangle
-     * @alias Egom.Triangle
-     * @private
      * @class Represents a triangular face between 3 vertices of a model.
-     * @param {Model} model The model to which this triangle is added.
+     * @param {Mesh} model The model to which this triangle is added.
      * @param {Number} a The index of the first vertex.
      * @param {Number} b The index of the second vertex.
      * @param {Number} c The index of the third vertex.
@@ -161,55 +140,46 @@ define([
      * If the three vertives are the same, it is enough to pass an array with only
      * one element.
      * @param {Number} [groupIndex] The index of the group this triangle belongs to.
-     * @returns {Triangle}
      */
     function Triangle(model, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex) {
         /**
          * The model to which this triangle is added.
-         * @name Triangle#_mesh
          * @type Mesh
          */
         this._mesh = model;
         /**
          * The index (in the model) of the first vertex of the triangle.
-         * @name Triangle#a
          * @type Number
          */
         this.a = a;
         /**
          * The index (in the model) of the second vertex of the triangle.
-         * @name Triangle#b
          * @type Number
          */
         this.b = b;
         /**
          * The index (in the model) of the third vertex of the triangle.
-         * @name Triangle#c
          * @type Number
          */
         this.c = c;
         /**
          * The RGBA color of the triangle. ([red, green, blue, alpha])
-         * @name Triangle#color
          * @type Number[4]
          */
         this.color = color;
         /**
          * The luminosity of the triangle. (0.0-1.0)
-         * @name Triangle#luminosity
          * @type Number
          */
         this.luminosity = luminosity;
         /**
          * The shininess (exponent) of the triangle for phong shading.
-         * @name Triangle#shininess
          * @type Number
          */
         this.shininess = shininess;
         /**
          * The texture coordinates of the triangle's vertices. Format: 
          * [[a.u,a.v],[b.u,b.v],[c.u,c.v]]
-         * @name Triangle#texCoords
          * @type Number[3][2]
          */
         this.texCoords = texCoords;
@@ -217,14 +187,12 @@ define([
          * The normal vector(s) of the triangle's vertices. May have one (uniform
          * normal across the triangle) or three (different normal per vertex)
          * elements.
-         * @name Triangle#_normals
          * @type Number[][3]
          */
         this._normals = normals || vec.normal3(vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
         /**
          * The index of the group this triangle belongs to. (for setting different
          * uniform values for certain triangle groups of the model while rendering)
-         * @name Triangle#groupIndex
          * @type Number
          */
         this.groupIndex = groupIndex || 0;
@@ -242,111 +210,94 @@ define([
     /**
      * @class Stores the attributes that a mesh has associated with a managed
      * WebGL context.
-     * @returns {MeshContextProperties}
      */
     function MeshContextProperties() {
         /**
          * The index marking where the data belonging to the lines of this 
          * model starts in the vertex buffer objects.
-         * @name ModelContextProperties#bufferStartWireframe
          * @type Number
          */
         this.bufferStartWireframe = 0;
         /**
          * The index marking where the data belonging to the triangles of this 
          * model starts in the vertex buffer objects.
-         * @name ModelContextProperties#bufferStartSolid
          * @type Number
          */
         this.bufferStartSolid = 0;
         /**
          * The index marking where the data belonging to the transparent 
          * triangles of this model starts in the vertex buffer objects.
-         * @name ModelContextProperties#bufferStartTransparent
          * @type Number
          */
         this.bufferStartTransparent = 0;
     }
 
     /**
-     * A single, specific mesh consisting of lines (for wireframe rendering) and 
+     * @class A single, specific mesh consisting of lines (for wireframe rendering) and 
      * triangles (for solid rendering) that connect 3D vertices. Multiple such
      * meshes that represent the same 3D model on different levels of detail
      * are grouped together in the Model class.
-     * @returns {Mesh}
      */
     function Mesh() {
         /**
          * The array of vertices of the model. These can be referenced by index
          * when defining lines or triangles.
-         * @name Mesh#_vertices
          * @type Vertex[]
          */
         this._vertices = [];
         /**
          * The array of lines of the model for wireframe rendering.
-         * @name Mesh#_lines
          * @type Line[]
          */
         this._lines = [];
         /**
          * The array of triangles of the model for solid rendering.
-         * @name Mesh#_triangles
          * @type Triangle[]
          */
         this._triangles = [];
         /**
          * The size of the model. It is the double of the (absolute) largest coordinate
          * found among the vertices.
-         * @name Mesh#_size
          * @type Number
          */
         this._size = 0;
         /**
          * The largest positive X coordinate found among the vertices.
-         * @name Mesh#_maxX
          * @type Number
          */
         this._maxX = 0;
         /**
          * The largest negative X coordinate found among the vertices.
-         * @name Mesh#_minX
          * @type Number
          */
         this._minX = 0;
         /**
          * The largest positive Y coordinate found among the vertices.
-         * @name Mesh#_maxY
          * @type Number
          */
         this._maxY = 0;
         /**
          * The largest negative Y coordinate found among the vertices.
-         * @name Mesh#_minY
          * @type Number
          */
         this._minY = 0;
         /**
          * The largest positive Z coordinate found among the vertices.
-         * @name Mesh#_maxZ
          * @type Number
          */
         this._maxZ = 0;
         /**
          * The largest negative Z coordinate found among the vertices.
-         * @name Mesh#_minZ
          * @type Number
          */
         this._minZ = 0;
         /**
          * The number of opaque triangles this model contains.
-         * @name Mesh#_nOpaqueTriangles
          * @type Number
          */
         this._nOpaqueTriangles = 0;
         /**
          * The number of transparent triangles this model contains.
-         * @name Mesh#_nTransparentTriangles
          * @type Number
          */
         this._nTransparentTriangles = 0;
@@ -354,31 +305,26 @@ define([
          * An associative array storing ModelContextProperties objects for each
          * context this mesh is associated with, organized by the names of the
          * contexts.
-         * @name Mesh#_contextProperties
          * @type Object.<String, MeshContextProperties>
          */
         this._contextProperties = {};
         /**
          * The default texture coordinates for newly added triangles and quads.
-         * @name Mesh#_texCoords
          * @type Number[4][2]
          */
         this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
         /**
          * The default luminosity value for newly added lines and triangles.
-         * @name Mesh#_luminosity
          * @type Number
          */
         this._luminosity = 0;
         /**
          * The default shininess value for newly added lines and triangles.
-         * @name Mesh#_shininess
          * @type Number
          */
         this._shininess = 0;
         /**
          * The default group index for newly added triangles and lines.
-         * @name Mesh#_currentGroupIndex
          * @type Number
          */
         this._currentGroupIndex = 0;
@@ -386,7 +332,6 @@ define([
          * A property for convenience and optimization, all filler null vectors
          * point to this object instead of creating a separate vertex object
          * for each.
-         * @name Mesh#_nullVertex
          * @type Vertex
          */
         this._nullVertex = new Vertex([0.0, 0.0, 0.0]);
@@ -1249,13 +1194,11 @@ define([
     function ModelContextProperties() {
         /**
          * Whether the wireframe model is used in the context.
-         * @name ModelContextProperties#wireframe
          * @type Boolean
          */
         this.wireframe = false;
         /**
          * Whether the solid model is used in the context.
-         * @name ModelContextProperties#wireframe
          * @type Boolean
          */
         this.solid = false;
@@ -1263,7 +1206,6 @@ define([
          * The minimum LOD with which this model has been added to the context.
          * The vertex buffer data should be filled with the mesh data starting
          * from this LOD, when the context is initialized.
-         * @name ModelContextProperties#minLOD
          * @type Number
          */
         this.minLOD = 0;
@@ -1271,14 +1213,12 @@ define([
          * The maximum LOD with which this model has been added to the context.
          * The vertex buffer data should be filled with the mesh data up to this 
          * LOD, when the context is initialized.
-         * @name ModelContextProperties#maxLOD
          * @type Number
          */
         this.maxLOD = 0;
     }
 
     /**
-     * @name Model
      * @class Combines different Mesh object into one, multi-LOD 3D model and
      * provides functionality for loading these different LODs from a single or
      * multiple files.
@@ -1287,21 +1227,18 @@ define([
         /**
          * The mesh ordered by their LOD (the index corresponds to the LOD of
          * the mesh)
-         * @name Model#_meshes
          * @type Array.<Mesh>
          */
         this._meshes = [];
         /**
          * The minimum LOD for which this model currently stores info. It is set
          * when mesh info is loaded from a file.
-         * @name Model#_minLOD
          * @type Number
          */
         this._minLOD = this.LOD_NOT_SET;
         /**
          * The maximum LOD for which this model currently stores info. It is set
          * when mesh info is loaded from a file.
-         * @name Model#_maxLOD
          * @type Number
          */
         this._maxLOD = this.LOD_NOT_SET;
@@ -1309,37 +1246,31 @@ define([
          * A convenience property holding a reference to the currently edited
          * mesh, in case a single LOD is set to be edited. Editing operations
          * affect only this mesh, if it is set.
-         * @name Model#_editedMesh
          * @type Mesh
          */
         this._editedMesh = null;
         /**
          * Editing operations affect the meshes equal to or above this LOD.
-         * @name Model#_minEditedLOD
          * @type Number
          */
         this._minEditedLOD = 0;
         /**
          * Editing operations affect the meshes up to this LOD.
-         * @name Model#_maxEditedLOD
          * @type Number
          */
         this._maxEditedLOD = 0;
         /**
          * The name of this model.
-         * @name Model#_name
          * @type String
          */
         this._name = null;
         /**
          * The object storing the info (meta) properties of the model.
-         * @name Model#_infoProperties
          * @type Object
          */
         this._infoProperties = {};
         /**
          * The length of one model-space unit in meters.
-         * @name Model#_scale
          * @type Number
          */
         this._scale = 1;
@@ -1347,7 +1278,6 @@ define([
          * An associative array storing ModelContextProperties objects for each
          * context this model is associated with, organized by the names of the
          * contexts.
-         * @name Model#_contextProperties
          * @type Object.<String, ModelContextProperties>
          */
         this._contextProperties = {};

@@ -907,28 +907,24 @@ define([
         /**
          * The name of the action currently being set (to get triggered by a new 
          * key). If null, the user is not setting any actions.
-         * @name ControlsScreen#_actionUnderSetting
          * @type String
          */
         this._actionUnderSetting = null;
         /**
          * While the user sets a new key, this property tells if shift is pressed
          * down.
-         * @name ControlsScreen#_settingShiftState
          * @type Boolean
          */
         this._settingShiftState = false;
         /**
          * While the user sets a new key, this property tells if control is pressed
          * down.
-         * @name ControlsScreen#_settingCtrlState
          * @type Boolean
          */
         this._settingCtrlState = false;
         /**
          * While the user sets a new key, this property tells if alt is pressed
          * down.
-         * @name ControlsScreen#_settingAltState
          * @type Boolean
          */
         this._settingAltState = false;
@@ -1132,7 +1128,6 @@ define([
 
         this._backButton = this.registerSimpleComponent("backButton");
         /**
-         * @name AboutScreen#_versionParagraph
          * @type SimpleComponent
          */
         this._versionParagraph = this.registerSimpleComponent("versionParagraph");

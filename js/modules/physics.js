@@ -28,25 +28,21 @@ define([
     function Force(id, strength, direction, duration) {
         /**
          * Can be used to identify and update a force that changes over time.
-         * @name Force#_id
          * @type String
          */
         this._id = id;
         /**
          * Magnitude of the force, in newtons.
-         * @name Force#_strength
          * @type Number
          */
         this._strength = strength;
         /**
          * Attack direction vector of the force. Always normalized.
-         * @name Force#_direction
          * @type Number[3]
          */
         this._direction = vec.normal3(direction);
         /**
          * For how much more time is this force in effect, in milliseconds.
-         * @name Force#_duration
          * @type Number
          */
         this._duration = duration;
@@ -112,25 +108,21 @@ define([
     function Torque(id, strength, axis, duration) {
         /**
          * Can be used to identify and update a torque that changes over time.
-         * @name Torque#_id
          * @type String
          */
         this._id = id;
         /**
          * Magnitude of the torque, in kg*rad/s^2.
-         * @name Torque#_strength
          * @type Number
          */
         this._strength = strength;
         /**
          * Axis of the spinning which this torque accelerates. Always normalized.
-         * @name Torque#_axis
          * @type Number[3]
          */
         this._axis = vec.normal3(axis);
         /**
          * For how much more time is this torque in effect, in milliseconds.
-         * @name Torque#_duration
          * @type Number
          */
         this._duration = duration;
@@ -201,41 +193,35 @@ define([
         /**
          * The 4x4 translation matrix describing the position of the body 
          * (relative to its parent).
-         * @name Body#_positionMatrix
          * @type Float32Array
          */
         this._positionMatrix = positionMatrix;
         /**
          * The 4x4 rotation matrix describing the orientation of the body 
          * (relative to its parent).
-         * @name Body#_orientationMatrix
          * @type Float32Array
          */
         this._orientationMatrix = orientationMatrix;
         /**
          * The cached inverse of the model matrix of the body.
-         * @name Body#_modelMatrixInverse
          * @type Float32Array
          */
         this._modelMatrixInverse = null;
         /**
          * The size of the box this body represents along the X axis, in relative 
          * (unoriented) space.
-         * @name Body#_width
          * @type Number
          */
         this._width = dimensions[0];
         /**
          * The size of the box this body represents along the Y axis, in relative 
          * (unoriented) space.
-         * @name Body#_height
          * @type Number
          */
         this._height = dimensions[1];
         /**
          * The size of the box this body represents along the Z axis, in relative 
          * (unoriented) space.
-         * @name Body#_depth
          * @type Number
          */
         this._depth = dimensions[2];
@@ -312,9 +298,9 @@ define([
     Body.prototype.checkHit = function (relativePositionVector) {
         relativePositionVector = vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse());
         return (
-              (relativePositionVector[0] >= -this._width * 0.5) && (relativePositionVector[0] <= this._width * 0.5) &&
-              (relativePositionVector[1] >= -this._height * 0.5) && (relativePositionVector[1] <= this._height * 0.5) &&
-              (relativePositionVector[2] >= -this._depth * 0.5) && (relativePositionVector[2] <= this._depth * 0.5));
+                (relativePositionVector[0] >= -this._width * 0.5) && (relativePositionVector[0] <= this._width * 0.5) &&
+                (relativePositionVector[1] >= -this._height * 0.5) && (relativePositionVector[1] <= this._height * 0.5) &&
+                (relativePositionVector[2] >= -this._depth * 0.5) && (relativePositionVector[2] <= this._depth * 0.5));
     };
     // #########################################################################
     /**
@@ -330,51 +316,43 @@ define([
      * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix 
      * describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
-     * @returns {PhysicalObject}
      */
     function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies) {
         /**
          * The mass in kilograms.
-         * @name PhysicalObject#_mass
          * @type Number
          */
         this._mass = mass;
         /**
          * The 4x4 translation matrix describing the position of the object.
          * (meters, world space)
-         * @name PhysicalObject#_positionMatrix
          * @type Float32Array
          */
         this._positionMatrix = positionMatrix;
         /**
          * The 4x4 rotation matrix describing the orientation of the object.
-         * @name PhysicalObject#_orientationMatrix
          * @type Float32Array
          */
         this._orientationMatrix = orientationMatrix;
         /**
          * The 4x4 scaling matrix describing the scale of the object.
-         * @name PhysicalObject#_scalingMatrix
          * @type Float32Array
          */
         this._scalingMatrix = scalingMatrix;
         /**
          * The cached inverse of the orientation matrix.
-         * @name Body#_rotationMatrixInverse
          * @type Float32Array
          */
         this._rotationMatrixInverse = null;
         /**
          * The cached inverse of the model (position + orientation + scaling) 
          * matrix.
-         * @name Body#_modelMatrixInverse
          * @type Float32Array
          */
         this._modelMatrixInverse = null;
         /**
          * The 4x4 translation matrix describing the velocity of the object.
          * (m/s)
-         * @name PhysicalObject#_velocityMatrix
          * @type Float32Array
          */
         this._velocityMatrix = initialVelocityMatrix;
@@ -382,33 +360,28 @@ define([
          * The 4x4 rotation matrix describing the rotation the current angular
          * velocity of the object causes over 5 milliseconds. (because rotation
          * is performed in steps as matrix rotation cannot be interpolated)
-         * @name PhysicalObject#_angularVelocityMatrix
          * @type Float32Array
          */
         this._angularVelocityMatrix = mat.identity4();
         /**
          * The list of forces affecting this object.
-         * @name PhysicalObject#_forces
          * @type Force[]
          */
         this._forces = [];
         /**
          * The list of torques affecting this object.
-         * @name PhysicalObject#_torques
          * @type Torque[]
          */
         this._torques = [];
         /**
          * The list of bodies the structure of this object is comprised of. (for
          * hit/collision check)
-         * @name PhysicalObject#_bodies
          * @type Body[]
          */
         this._bodies = bodies || [];
         /**
          * The cached size of the whole srtucture (the distance between the
          * center of the object and the farthest point of its bodies)
-         * @name PhysicalObject#_bodySize
          * @type Number
          */
         this._bodySize = -1;
@@ -518,10 +491,10 @@ define([
      */
     PhysicalObject.prototype.getModelMatrixInverse = function () {
         this._modelMatrixInverse = this._modelMatrixInverse || mat.mul4(
-              mat.mul4(
-                    mat.inverseOfTranslation4(this._positionMatrix),
-                    this.getRotationMatrixInverse()),
-              mat.inverseOfScaling4(this._scalingMatrix));
+                mat.mul4(
+                        mat.inverseOfTranslation4(this._positionMatrix),
+                        this.getRotationMatrixInverse()),
+                mat.inverseOfScaling4(this._scalingMatrix));
         return this._modelMatrixInverse;
     };
     // #########################################################################
@@ -582,19 +555,19 @@ define([
      */
     PhysicalObject.prototype.addForceAndTorque = function (position, direction, strength, duration) {
         var
-              leverDir = vec.normal3(position),
-              parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
-              perpendicularForce = vec.sub3(direction, parallelForce);
+                leverDir = vec.normal3(position),
+                parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
+                perpendicularForce = vec.sub3(direction, parallelForce);
         this.addForce(new Force(
-              "",
-              strength,
-              direction,
-              duration));
+                "",
+                strength,
+                direction,
+                duration));
         this.addTorque(new Torque(
-              "",
-              strength * vec.length3(perpendicularForce) * vec.length3(position),
-              vec.normal3(vec.cross3(perpendicularForce, leverDir)),
-              duration));
+                "",
+                strength * vec.length3(perpendicularForce) * vec.length3(position),
+                vec.normal3(vec.cross3(perpendicularForce, leverDir)),
+                duration));
     };
     /**
      * Calculates the size of the structure of this physical object and stores 
@@ -606,8 +579,8 @@ define([
         for (i = 0; i < this._bodies.length; i++) {
             bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
             halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.matrix3from4(mat.mul4(
-                  this._orientationMatrix,
-                  this._bodies[i].getOrientationMatrix())));
+                    this._orientationMatrix,
+                    this._bodies[i].getOrientationMatrix())));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, halfDim)));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [halfDim[0], halfDim[1], -halfDim[2]])));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.add3(bodyPos, [halfDim[0], -halfDim[1], halfDim[2]])));
@@ -669,12 +642,12 @@ define([
                 if (t > 0) {
                     a = this._forces[i].getAccelerationVector(this._mass);
                     this.setPositionMatrix(mat.mul4(
-                          this._positionMatrix,
-                          mat.translation4v(vec.scaled3(a, 1 / 2 * t * t))));
+                            this._positionMatrix,
+                            mat.translation4v(vec.scaled3(a, 1 / 2 * t * t))));
                     // calculate the caused acceleration to update the velocity matrix
                     accelerationMatrix = mat.mul4(
-                          accelerationMatrix,
-                          mat.translation4v(vec.scaled3(a, t)));
+                            accelerationMatrix,
+                            mat.translation4v(vec.scaled3(a, t)));
                 }
             }
             // update velocity matrix
@@ -693,12 +666,12 @@ define([
                 t = this._torques[i].getExertionDuration(dt) / 1000; // t is in seconds
                 if (t > 0) {
                     this.setOrientationMatrix(mat.mul4(
-                          this._orientationMatrix,
-                          this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t)));
+                            this._orientationMatrix,
+                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t)));
                     // angular acceleration matrix stores angular acceleration for 5ms
                     angularAccMatrix = mat.mul4(
-                          angularAccMatrix,
-                          this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, t / 200));
+                            angularAccMatrix,
+                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, t / 200));
                 }
             }
             // update angular velocity matrix

@@ -29,24 +29,20 @@ define([
         /**
          * The name of the component. The id attribute of the HTML5 element must 
          * have the same value.
-         * @name SimpleComponent#_name
          * @type String
          */
         this._name = name;
         /**
          * The DOM object of the wrapped HTML element.
-         * @name SimpleComponent#_element
          * @type HTMLElement
          */
         this._element = null;
         /**
          * The (initial) display CSS property of the HTML element.
-         * @name SimpleComponent#_displayStyle
          * @type String
          */
         this._displayStyle = null;
     }
-    ;
 
     /**
      * Returns the wrapped HTML element.
@@ -131,40 +127,34 @@ define([
         asyncResource.AsyncResource.call(this);
         /**
          * The name of the component to be identified by.
-         * @name ExternalComponent#name
          * @type String
          */
         this._name = name;
         /**
          * The filename of the HTML document where the structure of the component 
          * should be defined.
-         * @name ExternalComponent#_source
          * @type String
          */
         this._source = htmlFilename;
         /**
          * The DOM model of the structure of this element.
-         * @name ExternalComponent#_model
          * @type HTMLDocument
          */
         this._model = null;
         /**
          * The root HTML element of the structure of this component.
-         * @name ExternalComponent#_rootElement
          * @type HTMLElement
          */
         this._rootElement = null;
         /**
          * The initial value of the CSS display property of the root element. Store 
          * to enable us to restore it after hiding it with display: none.
-         * @name ExternalComponent#_rootElementDefaultDisplayMode
          * @type String
          */
         this._rootElementDefaultDisplayMode = null;
         /**
          * A flag that marks whether loading the correspoding CSS stylesheet has 
          * finished.
-         * @name ExternalComponent#_cssLoaded
          * @type Boolean
          */
         this._cssLoaded = false;
@@ -176,18 +166,17 @@ define([
          * state is set to true at that point, and actions can be queued by external
          * objects to be executed at that point, by executeWhenReady, since this
          * class is a subclass of {@link Resource}.
-         * @name ExternalComponent#_onModelLoad
          * @type Function
          */
         this._onModelLoad = function () {
+            application.log("External component '" + this._name + "' has been loaded, with no onLoad handler set.", 3);
         };
         /**
          * The array of contained simple components. The components in this array
          * are automatically managed (initialization and reset).
-         * @name ExternalComponent#_simpleComponents
          * @type SimpleComponent[]
          */
-        this._simpleComponents = new Array();
+        this._simpleComponents = [];
         // Subclasses will call this constructor to set their prototype without any
         // parameters, therefore make sure we don't attempt to load from "undefined"
         // source.
@@ -347,13 +336,11 @@ define([
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
          * A wrapper for the HTML5 progress element contained in the loading box.
-         * @name LoadingBox#_progress
          * @type SimpleComponent
          */
         this._progress = this.registerSimpleComponent("progress");
         /**
          * A wrapper for the HTML p element contained in the loading box.
-         * @name LoadingBox#_status
          * @type SimpleComponent
          */
         this._status = this.registerSimpleComponent("status");
@@ -410,25 +397,21 @@ define([
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
          * A wrapper for the HTML p element in the info box, that shows the message.
-         * @name InfoBox#_message
          * @type SimpleComponent
          */
         this._message = this.registerSimpleComponent("message");
         /**
          * A wrapper for the a element in the info box that represents the OK button.
-         * @name InfoBox#_okButton
          * @type SimpleComponent
          */
         this._okButton = this.registerSimpleComponent("okButton");
         /**
          * A function that will be run every time box is shown.
-         * @name InfoBox#_onShow
          * @type Function
          */
         this._onShow = (onShow !== undefined) ? onShow : null;
         /**
          * A function that will be run every time box is hidden.
-         * @name InfoBox#_onHide
          * @type Function
          */
         this._onHide = (onHide !== undefined) ? onHide : null;
@@ -438,7 +421,6 @@ define([
          * shown to allow closing it by pressing enter, not just clicking on the button.
          * This needs to be a privileged method so that it can always access the 
          * original info box object through 'self', no matter where is it called from.
-         * @name InfoBox#_handleKeyUp
          * @type Function
          * @param {KeyboardEvent} event
          */
@@ -520,7 +502,6 @@ define([
         /**
          * An array of the available menu options, each described by an object with 
          * a caption (String) and an action (Function) property.
-         * @name MenuComponent#_menuOptions
          * @type Object[]
          */
         this._menuOptions = menuOptions;
@@ -593,39 +574,33 @@ define([
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
          * The name of the property that can be set using this selector.
-         * @name Selector#_propertyName
          * @type String
          */
         this._propertyName = propertyName;
         /**
          * The list of possible values that can be selected with this selector.
-         * @name Selector#_valueList
          * @type String[]
          */
         this._valueList = valueList;
         /**
          * The index of the currently selected value.
-         * @name Selector#_valueIndex
          * @type Number
          */
         this._valueIndex = 0;
         /**
          * A wrapper for the HTML element containing the label caption for the property
          * this selector sets.
-         * @name Selector#_propertyLabel
          * @type SimpleComponent
          */
         this._propertyLabel = this.registerSimpleComponent("property");
         /**
          * A wrapper for the HTML element which serves as the selector button to select
          * from the available values.
-         * @name Selector#_valueSelector
          * @type SimpleComponent
          */
         this._valueSelector = this.registerSimpleComponent("value");
         /**
          * A function to execute when the selected value has been changed.
-         * @name Selector#onChange
          * @type Function
          */
         this.onChange = null;

@@ -208,19 +208,16 @@ define([
     function DustCloud(dustCloudClass) {
         /**
          * The class storing the general characteristics of this cloud.
-         * @name DustCloud#_class
          * @type DustCloudClass
          */
         this._class = dustCloudClass;
         /**
          * The array of particles this cloud consists of.
-         * @name DustCloud#_particles
          * @type DustParticle[]
          */
         this._particles = null;
         /**
          * The renderable object representing this cloud in the scene.
-         * @name DustCloud#_visualModel
          * @type PointCloud
          */
         this._visualModel = null;
@@ -320,25 +317,21 @@ define([
     function Environment(dataJSON) {
         /**
          * The list of skyboxes this environment contains as background.
-         * @name Environment#_skyboxes
          * @type Skybox[]
          */
         this._skyboxes = null;
         /**
          * The list of background objects (stars, nebulae) this environment contains.
-         * @name Environment#_backgroundObjects
          * @type BackgroundObject[]
          */
         this._backgroundObjects = null;
         /**
          * The list of dust clouds this environment contains.
-         * @name Environment#_dustClouds
          * @type DustCloud[]
          */
         this._dustClouds = null;
         /**
          * The camera relative to which the environment is rendered.
-         * @name Environment#_camera
          * @type Camera
          */
         this._camera = null;
@@ -454,8 +447,7 @@ define([
          * An associative array storing the reusable Environment objects that 
          * describe possible environments for levels. The keys are the names
          * of the environments.
-         * @name LogicContext#_environments
-         * @type Object
+         * @type Object<String, Environment>
          */
         this._environments = null;
         /**
@@ -465,7 +457,6 @@ define([
         /**
          * Whether the rotation of models (both automatic and manual) is enabled
          * on the database screen.
-         * @name LogicContext#_databaseModelRotation
          * @type Boolean
          */
         this._databaseModelRotation = false;
@@ -1607,19 +1598,16 @@ define([
     function ManeuveringComputer(spacecraft) {
         /**
          * The spacecraft the thrusters of which this computer controls.
-         * @name ManeuveringComputer#_spacecraft
          * @type Spacecraft
          */
         this._spacecraft = spacecraft;
         /**
          * Whether automatic inertia (drift) compensation is turned on.
-         * @name ManeuveringComputer#_compensated
          * @type Boolean
          */
         this._compensated = true;
         /**
          * Whether automatic turning restriction is turned on.
-         * @name ManeuveringComputer#_restricted
          * @type Boolean
          */
         this._restricted = false;
@@ -1628,7 +1616,6 @@ define([
          * relative angular velocity matrix on the yawing (XY) plane. The computer
          * will use the yawing thursters to reach this angle.
          * (representing rad/5ms turn)
-         * @name ManeuveringComputer#_yawTarget
          * @type Number
          */
         this._yawTarget = 0;
@@ -1637,7 +1624,6 @@ define([
          * relative angular velocity matrix on the pitching (YZ) plane. The computer
          * will use the pitching thursters to reach this angle.
          * (representing rad/5ms turn)
-         * @name ManeuveringComputer#_pitchTarget
          * @type Number
          */
         this._pitchTarget = 0;
@@ -1646,7 +1632,6 @@ define([
          * relative angular velocity matrix on the rolling (XZ) plane. The computer
          * will use the rolling thursters to reach this angle. 
          * (representing rad/5ms turn)
-         * @name ManeuveringComputer#_rollTarget
          * @type Number
          */
         this._rollTarget = 0;
@@ -1654,7 +1639,6 @@ define([
          * The target speed along the Y axis (in model space). The computer will
          * use forward and reverse thrusters to reach this speed if interia
          * compensation is turned on. (in m/s)
-         * @name ManeuveringComputer#_speedTarget
          * @type Number
          */
         this._speedTarget = 0;
@@ -1662,7 +1646,6 @@ define([
          * The target speed along the X axis (in model space). The computer will
          * use left and right thrusters to reach this speed if interia
          * compensation is turned on. (in m/s)
-         * @name ManeuveringComputer#_strafeTarget
          * @type Number
          */
         this._strafeTarget = 0;
@@ -1670,21 +1653,18 @@ define([
          * The target speed along the Z axis (in model space). The computer will
          * use dorsal and lateral thrusters to reach this speed if interia
          * compensation is turned on. (in m/s)
-         * @name ManeuveringComputer#_liftTarget
          * @type Number
          */
         this._liftTarget = 0;
         /**
          * How much speed should be added to the target when the pilot accelerates
          * continuously for one second, in m/s.
-         * @name ManeuveringComputer#_speedIncrementPerSecond
          * @type Number
          */
         this._speedIncrementPerSecond = 50; //TODO: hardcoded
         /**
          * How much speed should be added to the target in one control step when
          * the pilot is using continuous acceleration. (in m/s)
-         * @name ManeuveringComputer#_speedIncrement
          * @type Number
          */
         this._speedIncrement = 1; //TODO: hardcoded
@@ -1692,7 +1672,6 @@ define([
          * The maximum angle between vectors of the relative angular acceleration 
          * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
          * (representing rad/5ms turn)
-         * @name ManeuveringComputer#_turningLimit
          * @type Number
          */
         this._turningLimit = 0;

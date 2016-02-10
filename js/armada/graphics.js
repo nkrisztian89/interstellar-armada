@@ -40,33 +40,28 @@ define([
         this._filtering = null;
         /**
          * The maximum level of detail for which the model files should be loaded.
-         * @name GraphicsContext#_maxLoadedLOD
          * @type Number
          */
         this._maxLoadedLOD = 0;
         /**
          * The currently active LOD context.
-         * @name GraphicsContext#_maxLoadedLOD
          * @type LODContext
          */
         this._lodContext = null;
         /**
          * The preferred complexity level of shader. "normal" uses the regular
          * shaders, "simple" uses the fallback shaders.
-         * @name GraphicsContext#_shaderComplexity
          * @type String
          */
         this._shaderComplexity = null;
         /**
          * Whether shadow mapping is currently enabled.
-         * @name GraphicsContext#_shadowMapping
          * @type Boolean
          */
         this._shadowMapping = false;
         /**
          * The resolution of the shadow map textures (both width and height, in
          * texels)
-         * @name GraphicsContext#_shadowQuality
          * @type Number
          */
         this._shadowQuality = 0;
@@ -74,22 +69,18 @@ define([
          * The list of ranges (distance from center to the sides, in game world
          * space coordinates) that the shadow maps generated for one light source
          * should cover. Must be in ascending order.
-         * @name GraphicsContext#_shadowRanges
          * @type Number[]
-         * 
          */
         this._shadowRanges = null;
         /**
          * How far the shadow maps should be rendered: the number of ranges that
          * should be used from the _shadowRanges list.
-         * @name GraphicsContext#_shadowDistance
          * @type Number
          */
         this._shadowDistance = 0;
         /**
          * The depth coverage of each shadow map should equal twice the range of the
          * shadow map multiplied by this factor.
-         * @name GraphicsContext#_shadowDepthRatio
          * @type Number
          */
         this._shadowDepthRatio = 0;

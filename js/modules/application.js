@@ -29,7 +29,6 @@ define(function () {
             /**
              * The associative array storing the names of the folders of the application, 
              * indexed by the types of files they contain.
-             * @name Application#_folders
              * @type Object.<String,String>
              */
             _folders = null,
@@ -40,7 +39,6 @@ define(function () {
              * files always take effect when refreshing the game page. It causes all
              * files to be grabbed every time even if no changes occured, so it is 
              * important to set it to false for releases.
-             * @name Application#_bypassFileCaching
              * @type Boolean
              */
             _fileCacheBypassEnabled = true,
@@ -49,7 +47,6 @@ define(function () {
              * messages with this is lower verbosity level will be displayed, and
              * therefore level 0 is the lowest (logging off) verbosity level. This
              * property is used for debugging, and should be set to 0 for releases.
-             * @name Application#_logVerbosity
              * @type Number
              */
             _logVerbosity = 0,

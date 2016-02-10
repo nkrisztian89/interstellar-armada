@@ -488,25 +488,21 @@ define([
         HTMLScreen.call(this, name, source);
         /**
          * @see MenuComponent
-         * @name MenuScreen#_menuOptions 
          * @type Object[]
          */
         this._menuOptions = menuOptions;
         /**
          * The ID of the HTML element inside of which the menu will be added. If
          * undefined, it will be appended to the document body.
-         * @name MenuScreen#_menuContainerID 
          * @type String
          */
         this._menuContainerID = menuContainerID;
         /**
          * The component generating the HTML menu.
-         * @name MenuScreen#_menuComponent 
          * @type MenuComponent
          */
         this._menuComponent = this.registerExternalComponent(new components.MenuComponent(name + "_menu", "menucomponent.html", this._menuOptions), this._menuContainerID);
     }
-    ;
 
     MenuScreen.prototype = new HTMLScreen();
     MenuScreen.prototype.constructor = MenuScreen;
