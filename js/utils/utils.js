@@ -115,7 +115,7 @@ define(function () {
                 (key[0] === "#" ?
                         parseInt(key.slice(1), 10) :
                         _keyCodeTable[key]) :
-                null;
+                -1;
     };
     /**
      * Returns the key in human readable string form corresponding to the key code

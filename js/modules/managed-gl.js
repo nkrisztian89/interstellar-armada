@@ -711,7 +711,7 @@ define([
          * was / should be bound to.
          * @type Number
          */
-        this._textureLocation = null;
+        this._textureLocation = this.TEXTURE_LOCATION_NOT_SET;
         /**
          * The WebGL handle for the render buffer object created for this buffer's
          * depth attachment.
@@ -719,6 +719,12 @@ define([
          */
         this._renderBufferID = null;
     }
+    /**
+     * Value for texture bind locations that have not been explicitly set
+     * @constant
+     * @type Number
+     */
+    FrameBuffer.prototype.TEXTURE_LOCATION_NOT_SET = -1;
     /**
      * Returns the name of this buffer.
      * @returns {String}
@@ -1194,7 +1200,7 @@ define([
          * WebGL implementation.
          * @type Number
          */
-        this._maxBoundTextures = null;
+        this._maxBoundTextures = 0;
         /**
          * When all texture unit places has been taken, new textures will be bound
          * to this rotating index so that subsequent binds will not replace each other
@@ -1207,39 +1213,39 @@ define([
          * the context that is bigger should fail.
          * @type Number
          */
-        this._maxTextureSize = null;
+        this._maxTextureSize = 0;
         /**
          * The maximum supported cubemap texture size. Attempting to add a 
          * cubemap texture to the context that is bigger should fail.
          * @type Number
          */
-        this._maxCubemapSize = null;
+        this._maxCubemapSize = 0;
         /**
          * The maximum supported render buffer size. Attempting to create a 
          * render buffer in the context that is bigger should fail.
          * @type Number
          */
-        this._maxRenderbufferSize = null;
+        this._maxRenderbufferSize = 0;
         /**
          * The number of supported vertex attributes.
          * @type Number
          */
-        this._maxVertexAttributes = null;
+        this._maxVertexAttributes = 0;
         /**
          * The number of supported uniform vectors in the vertex shader.
          * @type Number
          */
-        this._maxVertexShaderUniforms = null;
+        this._maxVertexShaderUniforms = 0;
         /**
          * The number of supported uniform vectors in the fragment shader.
          * @type Number
          */
-        this._maxFragmentShaderUniforms = null;
+        this._maxFragmentShaderUniforms = 0;
         /**
          * The number of supported varying vectors in shader programs.
          * @type Number
          */
-        this._maxVaryings = null;
+        this._maxVaryings = 0;
         application.log("Initializing WebGL context...", 1);
         // creating the WebGLRenderingContext
         contextParameters = {alpha: true, antialias: antialiasing};
@@ -1571,27 +1577,26 @@ define([
      * Binds the given {@link Texture} or {@link Cubemap} resource or the texture
      * associated to the given {@link FrameBuffer} resource to the given texture unit index.
      * @param {ManagedTexture|ManagedCubemap|FrameBuffer} texture The resource to bind for rendering.
-     * @param {Number|Boolean} place To which activeTexture place is the texture to be bound.
+     * @param {Number} place To which activeTexture place is the texture to be bound.
      * If omitted, the texture will be bound to any free unit if one is available, and 
      * to a unit with a rotating index, if no free units are available. If a specific
      * index is given, that index will be reserved for this texture, and will not be
-     * automatically assigned during later binds. If the boolean value "true" is given,
-     * an automatic index will be bound as if no index was specified, but that index will
-     * be reserved for the texture.
+     * automatically assigned during later binds.
+     * @param {Boolean} reservePlace If true, an automatic index will be bound as if 
+     * no index was specified, but that index will be reserved for the texture.
      * @return {Number} The texture unit index the texture was bound to.
      */
-    ManagedGLContext.prototype.bindTexture = function (texture, place) {
-        // if a specific place or "true" was given for the bind, reserve that 
+    ManagedGLContext.prototype.bindTexture = function (texture, place, reservePlace) {
+        // if a specific place was given for the bind, reserve that 
         // (or the automatically found) place for this texture
-        var reserved = (place !== undefined);
-        // if no specific index or "true"  was specified for the bind, determine 
-        // the bind locaton automatically
-        if ((place === undefined) || (place === true)) {
+        var reserved = (place !== undefined) || reservePlace;
+        // if needed, determine the bind locaton automatically
+        if (place === undefined) {
             // find out if there is a preferred bind location
             place = texture.getTextureBindLocation(this);
             // if there is no preferred location or another texture is bound to the preferred location,
             // find the first free place, and bind the texture there
-            if ((place === undefined) || (place === null) || (this._boundTextures[place].texture !== texture)) {
+            if ((place === undefined) || (place === FrameBuffer.prototype.TEXTURE_LOCATION_NOT_SET) || (this._boundTextures[place].texture !== texture)) {
                 place = 0;
                 while ((place < this._maxBoundTextures) && (place < this._boundTextures.length) && (this._boundTextures[place] !== undefined)) {
                     place++;

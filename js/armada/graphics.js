@@ -43,7 +43,7 @@ define([
          * @name GraphicsContext#_maxLoadedLOD
          * @type Number
          */
-        this._maxLoadedLOD = null;
+        this._maxLoadedLOD = 0;
         /**
          * The currently active LOD context.
          * @name GraphicsContext#_maxLoadedLOD
@@ -69,7 +69,7 @@ define([
          * @name GraphicsContext#_shadowQuality
          * @type Number
          */
-        this._shadowQuality = null;
+        this._shadowQuality = 0;
         /**
          * The list of ranges (distance from center to the sides, in game world
          * space coordinates) that the shadow maps generated for one light source
@@ -85,14 +85,14 @@ define([
          * @name GraphicsContext#_shadowDistance
          * @type Number
          */
-        this._shadowDistance = null;
+        this._shadowDistance = 0;
         /**
          * The depth coverage of each shadow map should equal twice the range of the
          * shadow map multiplied by this factor.
          * @name GraphicsContext#_shadowDepthRatio
          * @type Number
          */
-        this._shadowDepthRatio = null;
+        this._shadowDepthRatio = 0;
     }
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;

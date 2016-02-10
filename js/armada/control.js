@@ -479,7 +479,7 @@ define([
          * @type Number
          * @default 0
          */
-        this._button = null;
+        this._button = 0;
         /**
          * What kind of horizontal mouse movement needs to take place to trigger 
          * this binding.
@@ -490,7 +490,7 @@ define([
          * @type Number
          * @default 0
          */
-        this._moveX = null;
+        this._moveX = 0;
         /**
          * What kind of vertical mouse movement needs to take place to trigger 
          * this binding.
@@ -501,7 +501,7 @@ define([
          * @type Number
          * @default 0
          */
-        this._moveY = null;
+        this._moveY = 0;
         /**
          * Whether the movement (displacement) should be calculated relative to the
          * screen (canvas) center (or relative to the previous mouse position).
@@ -710,20 +710,20 @@ define([
          * will be multiplied by this factor.
          * @type Number
          */
-        this._moveSensitivity = null;
+        this._moveSensitivity = 0;
         /**
          * The intensity of actions derived from displacement of the mouse from the
          * center will be multiplied by this factor.
          * @type Number
          */
-        this._displacementSensitivity = null;
+        this._displacementSensitivity = 0;
         /**
          * The actions the would derive their intensity from displacement of the mouse 
          * from the center will not be triggered unless the displacement exceeds this
          * magnitude (in pixels).
          * @type Number
          */
-        this._displacementDeadzone = null;
+        this._displacementDeadzone = 0;
         /**
          * An associative array storing the active mouse bindings by the names of the
          * actions that they are associated to.

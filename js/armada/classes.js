@@ -372,7 +372,7 @@ define([
          * The size to scale the particle with when rendering.
          * @type Number
          */
-        this._size = dataJSON ? (dataJSON.size || 1) : null;
+        this._size = dataJSON ? (dataJSON.size || 1) : 0;
         /**
          * The color that can be passed to the shader to modulate the texture with
          * while rendering. [red,green,blue, alpha]
@@ -489,7 +489,7 @@ define([
          * class is instantiated.
          * @type Number
          */
-        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || showMissingPropertyError(this, "numberOfParticles")) : null;
+        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || showMissingPropertyError(this, "numberOfParticles")) : 0;
         /**
          * The color of the particles in the dust clouds of this class.
          * @type Number[3]
@@ -500,7 +500,7 @@ define([
          * from the camera along any axis.
          * @type Number
          */
-        this._range = dataJSON ? (dataJSON.range || showMissingPropertyError(this, "range")) : null;
+        this._range = dataJSON ? (dataJSON.range || showMissingPropertyError(this, "range")) : 0;
     };
     /**
      * @override
@@ -562,37 +562,37 @@ define([
          * The maximum angle that the velocity vector of the emitted particles can differ from the main direction / plane.
          * @type Number
          */
-        this._directionSpread = (dataJSON && ((this._type === "unidirectional") || (this._type === "planar"))) ? (dataJSON.directionSpread || 0) : null;
+        this._directionSpread = (dataJSON && ((this._type === "unidirectional") || (this._type === "planar"))) ? (dataJSON.directionSpread || 0) : 0;
         /**
          * The (average) starting velocity of the emitted particles. m/s
          * @type Number
          */
-        this._velocity = dataJSON ? (dataJSON.velocity || 0) : null;
+        this._velocity = dataJSON ? (dataJSON.velocity || 0) : 0;
         /**
          * The size of the random range within the particle velocities are generated. m/s
          * @type Number
          */
-        this._velocitySpread = dataJSON ? (dataJSON.velocitySpread || 0) : null;
+        this._velocitySpread = dataJSON ? (dataJSON.velocitySpread || 0) : 0;
         /**
          * The number of particles emitted right after the creation of the emitter
          * @type Number
          */
-        this._initialNumber = dataJSON ? (dataJSON.initialNumber || 0) : null;
+        this._initialNumber = dataJSON ? (dataJSON.initialNumber || 0) : 0;
         /**
          * The number of particles emitted at the end of  each spawning round
          * @type Number
          */
-        this._spawnNumber = dataJSON ? (dataJSON.spawnNumber || 0) : null;
+        this._spawnNumber = dataJSON ? (dataJSON.spawnNumber || 0) : 0;
         /**
          * The duration of one spawning round (milliseconds)
          * @type Number
          */
-        this._spawnTime = dataJSON ? (dataJSON.spawnTime || 1) : null;
+        this._spawnTime = dataJSON ? (dataJSON.spawnTime || 1) : 0;
         /**
          * The duration while new particles are emitted after the emitter has been created. (milliseconds)
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration !== undefined ? dataJSON.duration : 1) : null;
+        this._duration = dataJSON ? (dataJSON.duration !== undefined ? dataJSON.duration : 1) : 0;
         /**
          * The list of states that the generated particles should go through.
          * @type ParticleState[]
@@ -789,12 +789,12 @@ define([
          * The amount of damage this projectile causes when it hits a spacecraft.
          * @type Number
          */
-        this._damage = dataJSON ? (dataJSON.damage || 0) : null;
+        this._damage = dataJSON ? (dataJSON.damage || 0) : 0;
         /**
          * The size by which the model representing the projectile will be scaled.
          * @type Number
          */
-        this._size = dataJSON ? (dataJSON.size || 1) : null;
+        this._size = dataJSON ? (dataJSON.size || 1) : 0;
         /**
          * How many perpendicular planes should be part of the projectile model, and 
          * where are they positioned. (the array of positions)
@@ -806,13 +806,13 @@ define([
          * shot from weapons.
          * @type Number
          */
-        this._mass = dataJSON ? (dataJSON.mass || showMissingPropertyError(this, "mass")) : null;
+        this._mass = dataJSON ? (dataJSON.mass || showMissingPropertyError(this, "mass")) : 0;
         /**
          * The length of life of the projectile in milliseconds, after which it will 
          * disappear.
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration || showMissingPropertyError(this, "duration")) : null;
+        this._duration = dataJSON ? (dataJSON.duration || showMissingPropertyError(this, "duration")) : 0;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
@@ -896,7 +896,7 @@ define([
          * measured in newtons.
          * @type Number
          */
-        this._force = dataJSON ? (dataJSON.force || showMissingPropertyError(this, "force")) : null;
+        this._force = dataJSON ? (dataJSON.force || showMissingPropertyError(this, "force")) : 0;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
          * @type Number[3]
@@ -950,12 +950,12 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : null;
+        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : 0;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
-        this._cooldown = dataJSON ? (dataJSON.cooldown || showMissingPropertyError(this, "cooldown")) : null;
+        this._cooldown = dataJSON ? (dataJSON.cooldown || showMissingPropertyError(this, "cooldown")) : 0;
         /**
          * The list of barrels of this weapon.
          * @type Barrel[]
@@ -1036,20 +1036,20 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : null;
+        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : 0;
         /**
          * The strength of the force applied to the ship when the thrusters are 
          * fired in one direction, measured in newtons.
          * @type Number
          */
-        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || showMissingPropertyError(this, "thrust")) : null;
+        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || showMissingPropertyError(this, "thrust")) : 0;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
          * used to turn it, in kg*rad/s^2 (mass is considered instead of a
          * calculated coefficient based on shape, for simplicity)
          * @type Number
          */
-        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || showMissingPropertyError(this, "angularThrust")) : null;
+        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || showMissingPropertyError(this, "angularThrust")) : 0;
     };
     /**
      * 
@@ -1171,7 +1171,7 @@ define([
         /**
          * @type Number
          */
-        this.maxGrade = dataJSON ? (dataJSON.maxGrade || showMissingPropertyError(this, "maxGrade")) : null;
+        this.maxGrade = dataJSON ? (dataJSON.maxGrade || showMissingPropertyError(this, "maxGrade")) : 0;
     }
     // ##############################################################################
     /**
@@ -1193,7 +1193,7 @@ define([
          * The thruster particle at this slot will be shown scaled to this size.
          * @type Number
          */
-        this.size = dataJSON ? (dataJSON.size || 1.0) : null;
+        this.size = dataJSON ? (dataJSON.size || 1.0) : 0;
         /**
          * The list of uses this thruster has. Possible uses are: 
          * (direction:) 
@@ -1210,7 +1210,7 @@ define([
          * index, allowing to manipulate their appearance using uniform arrays.
          * @type Number
          */
-        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : showMissingPropertyError(this, "groupIndex")) : null;
+        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : showMissingPropertyError(this, "groupIndex")) : 0;
     }
     // ##############################################################################
     /**
@@ -1641,7 +1641,7 @@ define([
          * The amount of hull integrity below which this indicator should be presented. (percentage)
          * @type Number
          */
-        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || showMissingPropertyError(this, "hullIntegrity")) : null;
+        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || showMissingPropertyError(this, "hullIntegrity")) : 0;
         /**
          * The class of the explosion that should be created to display this indicator.
          * @type ExplosionClass

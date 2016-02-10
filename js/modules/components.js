@@ -608,7 +608,7 @@ define([
          * @name Selector#_valueIndex
          * @type Number
          */
-        this._valueIndex = null;
+        this._valueIndex = 0;
         /**
          * A wrapper for the HTML element containing the label caption for the property
          * this selector sets.

@@ -149,7 +149,7 @@ define([
         /**
          * @type Number
          */
-        this._size = size !== undefined ? size : 1;
+        this._size = (size !== undefined) ? size : 1;
         /**
          * Cache value to store whether the object is situated within its 
          * parent's boundaries, as the parent's values can be used for certain 
@@ -1466,7 +1466,7 @@ define([
          * @name ShadedLODMesh#_currentLOD
          * @type Number
          */
-        this._currentLOD = null;
+        this._currentLOD = this.LOD_NOT_SET;
         /**
          * Stores the size of the largest model (of any LOD) representing this
          * object. It is the double of the (absolute) largest coordinate found 
@@ -1486,9 +1486,9 @@ define([
          * If a static LOD is chosen, the model is always rendered using this 
          * LOD (or the closest available one)
          * @name ShadedLODMesh#_staticLOD
-         * @type Number|null
+         * @type Number
          */
-        this._staticLOD = lod !== undefined ? lod : null;
+        this._staticLOD = (lod !== undefined) ? lod : this.LOD_NOT_SET;
         this.setUniformValueFunction("u_modelMatrix", function () {
             return this.getModelMatrix();
         });
@@ -1498,6 +1498,12 @@ define([
     }
     ShadedLODMesh.prototype = new RenderableObject3D();
     ShadedLODMesh.prototype.constructor = ShadedLODMesh;
+    /**
+     * The value for LOD levels that have not been set (chosen) yet
+     * @constant
+     * @type Number
+     */
+    ShadedLODMesh.prototype.LOD_NOT_SET = -1;
     /**
      * @override
      * @param {ManagedGLContext} context
@@ -1539,15 +1545,14 @@ define([
      */
     ShadedLODMesh.prototype.getCurrentLOD = function (renderParameters) {
         var visibleSize, lodSize, i;
-        if (this._currentLOD === null) {
-            if (this._staticLOD !== null) {
+        if (this._currentLOD === this.LOD_NOT_SET) {
+            if (this._staticLOD !== this.LOD_NOT_SET) {
                 this._currentLOD = this._model.getClosestAvailableLOD(this._staticLOD);
             } else {
                 visibleSize = this.getSizeInPixels(renderParameters);
                 lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
-                this._currentLOD = -1;
                 for (i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
-                    if ((this._currentLOD === -1) || ((i <= renderParameters.lodContext.maxEnabledLOD) && ((this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
+                    if ((this._currentLOD === this.LOD_NOT_SET) || ((i <= renderParameters.lodContext.maxEnabledLOD) && ((this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
                             ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
                             ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
                             ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
@@ -1564,8 +1569,8 @@ define([
      */
     ShadedLODMesh.prototype.resetForNewFrame = function () {
         RenderableObject3D.prototype.resetForNewFrame.call(this);
-        if (this._staticLOD === null) {
-            this._currentLOD = null;
+        if (this._staticLOD === this.LOD_NOT_SET) {
+            this._currentLOD = this.LOD_NOT_SET;
         }
     };
     /**
@@ -1624,7 +1629,7 @@ define([
      * @returns {Number}
      */
     ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function () {
-        return (this._wireframe === false) && (this._currentLOD) ? this._model.getNumTriangles(this._currentLOD) : 0;
+        return (this._wireframe === false) && (this._currentLOD !== this.LOD_NOT_SET) ? this._model.getNumTriangles(this._currentLOD) : 0;
     };
     // #########################################################################
     /**
@@ -1755,24 +1760,24 @@ define([
     // #########################################################################
     /**
      * @struct Stores the attributes of a particle for a given state
-     * @param {number[4]} color
-     * @param {number} size
-     * @param {number} timeToReach
+     * @param {Number[4]} color
+     * @param {Number} size
+     * @param {Number} timeToReach
      */
     function ParticleState(color, size, timeToReach) {
         /**
          * When in this state, the particle is rendered using this color for modulation of the texture color
-         * @type number[4]
+         * @type Number[4]
          */
         this.color = color;
         /**
          * When in this state, the particle is rendered in this size
-         * @type number
+         * @type Number
          */
         this.size = size;
         /**
          * How many milliseconds does it take for the particle to transition to this state
-         * @type number
+         * @type Number
          */
         this.timeToReach = timeToReach;
     }
@@ -2149,9 +2154,9 @@ define([
         this._particleConstructor = particleConstructor;
         /**
          * The duration of the life of the emitted particles (milliseconds). This is a cache variable.
-         * @type Number|Null
+         * @type Number
          */
-        this._particleDuration = null;
+        this._particleDuration = -1;
     }
     /**
      * Returns the duration of particle generation in milliseconds. If zero, particle generation will 
@@ -2167,7 +2172,7 @@ define([
      */
     ParticleEmitter.prototype.getParticleDuration = function () {
         var i, particleStates;
-        if (this._particleDuration === null) {
+        if (this._particleDuration === -1) {
             this._particleDuration = 0;
             particleStates = this._particleConstructor().getStates();
             for (i = 0; i < particleStates.length; i++) {
@@ -5754,7 +5759,7 @@ define([
             for (i = 0; i < this.lights.length; i++) {
                 if (this.lights[i].castsShadows) {
                     for (j = 0; j < this._shadowMapRanges.length; j++) {
-                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), true);
+                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), undefined, true);
                     }
                 }
             }

@@ -251,21 +251,21 @@ define([
          * @name ModelContextProperties#bufferStartWireframe
          * @type Number
          */
-        this.bufferStartWireframe = null;
+        this.bufferStartWireframe = 0;
         /**
          * The index marking where the data belonging to the triangles of this 
          * model starts in the vertex buffer objects.
          * @name ModelContextProperties#bufferStartSolid
          * @type Number
          */
-        this.bufferStartSolid = null;
+        this.bufferStartSolid = 0;
         /**
          * The index marking where the data belonging to the transparent 
          * triangles of this model starts in the vertex buffer objects.
          * @name ModelContextProperties#bufferStartTransparent
          * @type Number
          */
-        this.bufferStartTransparent = null;
+        this.bufferStartTransparent = 0;
     }
 
     /**
@@ -1266,7 +1266,7 @@ define([
          * @name ModelContextProperties#minLOD
          * @type Number
          */
-        this.minLOD = null;
+        this.minLOD = 0;
         /**
          * The maximum LOD with which this model has been added to the context.
          * The vertex buffer data should be filled with the mesh data up to this 
@@ -1274,7 +1274,7 @@ define([
          * @name ModelContextProperties#maxLOD
          * @type Number
          */
-        this.maxLOD = null;
+        this.maxLOD = 0;
     }
 
     /**
@@ -1297,14 +1297,14 @@ define([
          * @name Model#_minLOD
          * @type Number
          */
-        this._minLOD = null;
+        this._minLOD = this.LOD_NOT_SET;
         /**
          * The maximum LOD for which this model currently stores info. It is set
          * when mesh info is loaded from a file.
          * @name Model#_maxLOD
          * @type Number
          */
-        this._maxLOD = null;
+        this._maxLOD = this.LOD_NOT_SET;
         /**
          * A convenience property holding a reference to the currently edited
          * mesh, in case a single LOD is set to be edited. Editing operations
@@ -1352,6 +1352,12 @@ define([
          */
         this._contextProperties = {};
     }
+    /**
+     * The value for LOD levels that have not been set yet
+     * @constant
+     * @type Number
+     */
+    Model.prototype.LOD_NOT_SET = -1;
 
     /**
      * Returns the name of the model. (not the same as the filename - a name can be
@@ -1415,8 +1421,8 @@ define([
      * @param {Number} maxLOD
      */
     Model.prototype.updateLODInfo = function (minLOD, maxLOD) {
-        this._minLOD = this._minLOD === null ? minLOD : (minLOD < this._minLOD ? minLOD : this._minLOD);
-        this._maxLOD = this._maxLOD === null ? maxLOD : (maxLOD > this._maxLOD ? maxLOD : this._maxLOD);
+        this._minLOD = (this._minLOD === this.LOD_NOT_SET) ? minLOD : (minLOD < this._minLOD ? minLOD : this._minLOD);
+        this._maxLOD = (this._maxLOD === this.LOD_NOT_SET) ? maxLOD : (maxLOD > this._maxLOD ? maxLOD : this._maxLOD);
     };
 
     /**
@@ -1772,7 +1778,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getSize = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getSize();
     };
 
@@ -1783,7 +1789,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getMaxX = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getMaxX();
     };
 
@@ -1794,7 +1800,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getMinX = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getMinX();
     };
 
@@ -1805,7 +1811,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getMaxY = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getMaxY();
     };
 
@@ -1816,7 +1822,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getMinY = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getMinY();
     };
 
@@ -1827,7 +1833,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getMaxZ = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getMaxZ();
     };
 
@@ -1838,7 +1844,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getMinZ = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getMinZ();
     };
 
@@ -1849,7 +1855,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getWidth = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getWidth();
     };
 
@@ -1860,7 +1866,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getHeight = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getHeight();
     };
 
@@ -1871,7 +1877,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getDepth = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getDepth();
     };
 
@@ -1881,7 +1887,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getWidthInMeters = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getWidth(lod) * this._scale;
     };
 
@@ -1891,7 +1897,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getHeightInMeters = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getHeight(lod) * this._scale;
     };
 
@@ -1901,7 +1907,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getDepthInMeters = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getDepth(lod) * this._scale;
     };
 
@@ -1911,7 +1917,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getNumOpaqueTriangles = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getNumOpaqueTriangles();
     };
 
@@ -1921,7 +1927,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getNumTransparentTriangles = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getNumTransparentTriangles();
     };
 
@@ -1931,7 +1937,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getNumTriangles = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getNumTriangles();
     };
 
@@ -1948,8 +1954,8 @@ define([
      */
     Model.prototype.addToContext = function (context, wireframe) {
         application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
-        this._minLOD = this._minLOD || 0;
-        this._maxLOD = this._maxLOD || 0;
+        this._minLOD = (this._minLOD !== this.LOD_NOT_SET) ? this._minLOD : 0;
+        this._maxLOD = (this._maxLOD !== this.LOD_NOT_SET) ? this._maxLOD : 0;
         // get the already stored properties for easier access
         var props = this._contextProperties[context.getName()];
         // If the model hasn't been added to this context at all yet, add it with
@@ -2014,7 +2020,7 @@ define([
      * @returns {Object}
      */
     Model.prototype.getBufferData = function (wireframe, startIndex, lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getBufferData(wireframe, startIndex);
     };
 
@@ -2045,7 +2051,7 @@ define([
      * @returns {Number} The number of vertices for which data has been added.
      */
     Model.prototype.loadToVertexBuffers = function (context, startIndex, lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         var props = this._contextProperties[context.getName()];
         return this.getMeshWithLOD(lod).loadToVertexBuffers(context, startIndex, props.wireframe, props.solid);
     };
@@ -2065,7 +2071,7 @@ define([
      * @param {Number} [lod=0]
      */
     Model.prototype.render = function (context, wireframe, opaque, lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         this.getMeshWithLOD(lod).render(context, wireframe, opaque);
     };
 

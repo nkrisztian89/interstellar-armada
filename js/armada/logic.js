@@ -489,7 +489,7 @@ define([
          * The default starting field of view value for camera configurations, in degrees
          * @type Number
          */
-        this._defaultCameraFOV = null;
+        this._defaultCameraFOV = 0;
         /**
          * The default minimum and maximum field of view values for camera configurations, in degrees
          * @type Number[2]
@@ -499,7 +499,7 @@ define([
          * The default starting span value for camera configurations, in meters
          * @type Number
          */
-        this._defaultCameraSpan = null;
+        this._defaultCameraSpan = 0;
         /**
          * The default minimum and maximum span values for camera configurations, in meters
          * @type Number[2]
@@ -1680,14 +1680,14 @@ define([
          * @name ManeuveringComputer#_speedIncrementPerSecond
          * @type Number
          */
-        this._speedIncrementPerSecond = 50;
+        this._speedIncrementPerSecond = 50; //TODO: hardcoded
         /**
          * How much speed should be added to the target in one control step when
          * the pilot is using continuous acceleration. (in m/s)
          * @name ManeuveringComputer#_speedIncrement
          * @type Number
          */
-        this._speedIncrement = 1;
+        this._speedIncrement = 1; //TODO: hardcoded
         /**
          * The maximum angle between vectors of the relative angular acceleration 
          * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
@@ -1695,7 +1695,7 @@ define([
          * @name ManeuveringComputer#_turningLimit
          * @type Number
          */
-        this._turningLimit = null;
+        this._turningLimit = 0;
         this.updateSpeedIncrementPerSecond();
         this.updateTurningLimit();
     }
@@ -2093,7 +2093,7 @@ define([
          * projectile, and when it hits zero, the spacecraft explodes.
          * @type Number
          */
-        this._hitpoints = null;
+        this._hitpoints = 0;
         /**
          * The renderable node that represents this spacecraft in a scene.
          * @type ParameterizedMesh
@@ -2326,13 +2326,13 @@ define([
     /**
      * Returns the maximum angular acceleration the spacecraft can achieve using
      * its currently equipped propulsion system.
-     * @returns {Number|null} The angular acceleration, in rad/s^2. Null, if
+     * @returns {Number} The angular acceleration, in rad/s^2. Zero, if
      * no propulsion is equipped.
      */
     Spacecraft.prototype.getMaxAngularAcceleration = function () {
         return this._propulsion ?
                 this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
-                null;
+                0;
     };
     /**
      * Returns the maximum turning rate the spacecraft can keep at the passed
