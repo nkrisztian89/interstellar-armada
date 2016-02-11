@@ -17,10 +17,10 @@ define([
     "modules/components",
     "modules/screens",
     "modules/buda-scene",
+    "modules/control",
     "armada/armada",
-    "armada/logic",
-    "armada/control"
-], function (utils, vec, mat, application, components, screens, budaScene, armada, logic, control) {
+    "armada/logic"
+], function (utils, vec, mat, application, components, screens, budaScene, control, armada, logic) {
     "use strict";
 
     /**
@@ -933,7 +933,7 @@ define([
      * @param {String} actionName
      */
     ControlsScreen.prototype.refreshKeyForAction = function (actionName) {
-        document.getElementById(actionName).innerHTML = armada.control().getInterpreter("keyboard").getControlStringForAction(actionName);
+        document.getElementById(actionName).innerHTML = armada.control().getInputInterpreter("keyboard").getControlStringForAction(actionName);
         document.getElementById(actionName).className = "clickable";
     };
 
@@ -971,7 +971,7 @@ define([
             this._settingAltState = false;
         }
         // respect the shift, ctrl, alt states and set the new key for the action
-        var interpreter = armada.control().getInterpreter("keyboard");
+        var interpreter = armada.control().getInputInterpreter("keyboard");
         interpreter.setAndStoreBinding(new control.KeyBinding(
                 this._actionUnderSetting,
                 utils.getKeyOfCode(event.keyCode),

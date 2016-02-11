@@ -186,5 +186,22 @@ define(function () {
         }
         return result;
     };
+    /**
+     * Returns the key of a property of the given object that has the given value, if any.
+     * @param {Object} obj
+     * @param {} value
+     * @returns {String}
+     */
+    exports.getKeyOfValue = function (obj, value) {
+        var key;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                if (obj[key] === value) {
+                    return key;
+                }
+            }
+        }
+        return null;
+    };
     return exports;
 });

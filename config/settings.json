@@ -454,7 +454,15 @@
             {
                 "type": "joystick",
                 "sensitivityProfile": {
-                    "turnSensitivity": 0.0075
+                    "actionGroups": [
+                        {
+                            "sensitivityFactor": 0.0075,
+                            "actionNames": ["yawLeft", "yawRight", "pitchUp", "pitchDown", "rollLeft", "rollRight"]
+                        }, {
+                            "staticSensitivity": true,
+                            "actionNames": ["cameraTurnLeft", "cameraTurnRight", "cameraTurnUp", "cameraTurnDown", "cameraRollLeft", "cameraRollRight"]
+                        }
+                    ]
                 },
                 "bindings": [
                     {

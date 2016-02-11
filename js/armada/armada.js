@@ -188,7 +188,7 @@ define([
             _screenManager = new screenManager.ScreenManager();
             _graphicsContext = new graphics.GraphicsContext();
             _logicContext = new logic.LogicContext();
-            _controlContext = new control.ControlContext();
+            _controlContext = new control.ArmadaControlContext();
 
             application.requestConfigLoad(graphicsResources);
 
