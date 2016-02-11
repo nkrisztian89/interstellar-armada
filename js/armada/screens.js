@@ -972,13 +972,12 @@ define([
         }
         // respect the shift, ctrl, alt states and set the new key for the action
         var interpreter = armada.control().getInterpreter("keyboard");
-        interpreter.setAndStoreKeyBinding(new control.KeyBinding(
+        interpreter.setAndStoreBinding(new control.KeyBinding(
                 this._actionUnderSetting,
                 utils.getKeyOfCode(event.keyCode),
                 this._settingShiftState,
                 this._settingCtrlState,
-                this._settingAltState
-                ));
+                this._settingAltState));
         this.stopKeySetting();
     };
 

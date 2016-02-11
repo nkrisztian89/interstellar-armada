@@ -70,7 +70,7 @@ define([
          * @returns undefined
          */
         this._onModelLoad = function () {
-            application.log("Model of the screen '" + this._name + "' has been loaded, with no onModelLoad handler set.");
+            application.log("Model of the screen '" + this._name + "' has been loaded, with no onModelLoad handler set.", 2);
         };
         // source will be undefined when setting the prototypes for inheritance
         if (source !== undefined) {

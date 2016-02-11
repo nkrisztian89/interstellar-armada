@@ -106,6 +106,12 @@
                     }, {
                         "name": "toggleTextVisibility",
                         "description": "Toggle the visibility of the texts on screen"
+                    }, {
+                        "name": "toggleMouseControls",
+                        "description": "Disable / enable mouse controls"
+                    }, {
+                        "name": "toggleJoystickControls",
+                        "description": "Disable / enable joystick controls"
                     }
                 ]
             },
@@ -391,6 +397,12 @@
                     }, {
                         "action": "toggleTextVisibility",
                         "key": "i"
+                    }, {
+                        "action": "toggleMouseControls",
+                        "key": "l"
+                    }, {
+                        "action": "toggleJoystickControls",
+                        "key": "k"
                     }
                 ]
             },

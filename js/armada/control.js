@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -25,7 +25,322 @@ define([
     "use strict";
     // #########################################################################
     /**
+     * @class A generic superclass for classes that represent the bindig of certain controls to an action.
+     * A subclass should be created for each specific input device that implements setting, loading, saving,
+     * comparing control settings for the binding and checking the action trigger state.
+     * @param {(Object|String)} dataJSONOrActionName
+     */
+    function ControlBinding(dataJSONOrActionName) {
+        /**
+         * Name of the action the stored control is assigned to. {@link Controller}s
+         * will process this name and execute the appropriate action.
+         * @type String
+         */
+        this._actionName = ((typeof dataJSONOrActionName) === "string" ?
+                dataJSONOrActionName :
+                null);
+        // if a JSON object was specified, initialize the properties from there
+        if ((typeof dataJSONOrActionName) === "object") {
+            this.loadFromJSON(dataJSONOrActionName);
+        }
+    }
+    /**
+     * Returns the name of the action assigned in this binding. Has to be a name
+     * that can be processed by the appropriate {@link Controller}s.
+     * @returns {String}
+     */
+    ControlBinding.prototype.getActionName = function () {
+        return this._actionName;
+    };
+    /**
+     * Returns a string describing the control assigned to the action in this binding.
+     * @returns {String}
+     */
+    ControlBinding.prototype.getControlString = function () {
+        application.showError("Cannot get control string of generic control binding!");
+        return null;
+    };
+    /**
+     * Loads the properties of this binding from a JSON object. Needs to be overridden for each specific binding
+     * subclass to load their properties.
+     * @param {Object} dataJSON
+     */
+    ControlBinding.prototype.loadFromJSON = function (dataJSON) {
+        this._actionName = dataJSON.action;
+    };
+    /**
+     * Saves the properties of this binding to local storage. Needs to be overridden for each specific binding
+     * subclass to save their properties.
+     */
+    ControlBinding.prototype.saveToLocalStorage = function () {
+        application.showError("Cannot save generic control binding to local storage!");
+    };
+    /**
+     * Loads the properties of this binding from local storage. Needs to be overridden for each specific binding
+     * subclass to load their properties.
+     */
+    ControlBinding.prototype.loadFromLocalStorage = function () {
+        application.showError("Cannot load generic control binding from local storage!");
+    };
+    /**
+     * Removes the properties of this binding from local storage. Needs to be overridden for each specific binding
+     * subclass to remove their properties.
+     */
+    ControlBinding.prototype.removeFromLocalStorage = function () {
+        application.showError("Cannot remove generic control binding from local storage!");
+    };
+    /**
+     * Needs to be ovverridden to check whether this binding binds the same controls as another binding of the same type.
+     */
+    ControlBinding.prototype.bindsTheSameControls = function () {
+        application.showError("Cannot check if generic control binds the same controls as another binding!");
+        return true;
+    };
+    // #########################################################################
+    /**
+     * @class A generic common superclass for input interpreters which needs to be subclassed for each different input device.
+     * This class provides the common general functionality. The subclasses need to add their model of the input device's state,
+     * additional operations for saving / loading its settings and a managing the trigger state check for the stored bindings.
+     * @param {Function} bindingClass The constructor function of the binding class this interpreter will use (has te be a subclass
+     * of ControlBinding)
+     * @param {Object} dataJSON If given, any specific interpreter settings can be loaded from this JSON object
+     */
+    function InputInterpreter(bindingClass, dataJSON) {
+        /**
+         * Whether the interpreter is currently listening for input (the event  handlers are set) and is updating
+         * the internal state it holds about its input device.
+         * A listening interpreter will also disable most default actions for the input device it is listening to.
+         * @type Boolean
+         */
+        this._listening = false;
+        /**
+         * Whether the interpreter is currently processing the input state it maintains to trigger actions based on its
+         * stored binding. If the interpreter is not listening, processing is not possible, but the enabled state can
+         * be set and is stored independently.
+         * @type Boolean
+         */
+        this._enabled = true;
+        /**
+         * The constructor function of the binding class this interpreter uses (a subclass of ControlBinding).
+         * @type Function
+         */
+        this._bindingClass = bindingClass;
+        /**
+         * An associative array storing the active bindings by the names of the actions that they are associated to.
+         * @type Object.<String, ControlBinding>
+         */
+        this._bindings = {};
+        // if a JSON was specified, initialize the bindings from there
+        if (dataJSON !== undefined) {
+            this.loadFromJSON(dataJSON);
+        }
+    }
+    /**
+     * Returns a descriptive name of the device this interpreter handles to show for the user.
+     * @returns {String}
+     */
+    InputInterpreter.prototype.getDeviceName = function () {
+        return "Generic";
+    };
+    /**
+     * Whether the interpreter is currently listening for input (and thus also intercepting it, preventing most default actions)
+     * @returns {Boolean}
+     */
+    InputInterpreter.prototype.isListening = function () {
+        return this._listening;
+    };
+    /**
+     * Makes the interpreter start intercepting events related to its input device to update the internal state it stores about it as well
+     * as prevent default actions for these events. If the interpreter is also enabled, it will also be able to query it for the list and
+     * intensities of the actions that are triggered based on the current input state and its bindings.
+     * Needs to be overridden to set add the setting of event handlers and other optional settings.
+     */
+    InputInterpreter.prototype.startListening = function () {
+        this._listening = true;
+    };
+    /**
+     * The interpreter will stop listening after calling this method, canceling any event handlers related to its input device. Since its
+     * stored state of the device will not be updated any more, attempting to get the list of triggered actions will result in an empty
+     * array, even if th interpeter is enabled.
+     * Needs to be overridden to set add the canceling of event handlers and other optional settings.
+     */
+    InputInterpreter.prototype.stopListening = function () {
+        this._listening = false;
+    };
+    /**
+     * Changes the listening state of the interpreter to its opposite.
+     */
+    InputInterpreter.prototype.toggleListening = function () {
+        if (this._listening) {
+            this.stopListening();
+        } else {
+            this.startListening();
+        }
+    };
+    /**
+     * Returns whether the interpreter is currently at enabled state, meaning it can be queried for triggered actions (if it is currently
+     * also in listening state)
+     * @returns {Boolean}
+     */
+    InputInterpreter.prototype.isEnabled = function () {
+        return this._enabled;
+    };
+    /**
+     * Sets the interpreter to enabled state, in which it will return the list of triggered actions and their intensities when queried,
+     * but only if it is also set to listen to events.
+     * @returns {Boolean}
+     */
+    InputInterpreter.prototype.enable = function () {
+        this._enabled = true;
+    };
+    /**
+     * Sets the interpreter to disabled state, in which it will not return any triggered actions when queried, even if it is listening
+     * to events and keeping its model of the input device state updated.
+     * @returns {Boolean}
+     */
+    InputInterpreter.prototype.disable = function () {
+        this._enabled = false;
+    };
+    /**
+     * Changes the enabled state of the interpreter to its opposite.
+     */
+    InputInterpreter.prototype.toggleEnabled = function () {
+        if (this._enabled) {
+            this.disable();
+        } else {
+            this.enable();
+        }
+    };
+    /**
+     * If there is no control bound yet to the action associated with the passed 
+     * binding, adds the binding. If there already is a binding, overwrites it with
+     * the passed binding, as there can be no two different controls bound to the
+     * same action for now. This method is for setting default bindings.
+     * @param {ControlBinding} binding
+     */
+    InputInterpreter.prototype.setBinding = function (binding) {
+        this._bindings[binding.getActionName()] = binding;
+    };
+    /**
+     * Sets (adds or overwrites) the binding associated with the action of the 
+     * passed binding, and also stores the binding in HTML5 local storage. This 
+     * method is for setting custom local bindings.
+     * @param {ControlBinding} binding
+     */
+    InputInterpreter.prototype.setAndStoreBinding = function (binding) {
+        this.setBinding(binding);
+        binding.saveToLocalStorage();
+    };
+    /**
+     * Loads the properties of the interpreter such as the (default) bindings
+     * from the passed JSON object.
+     * @param {Object} dataJSON
+     */
+    InputInterpreter.prototype.loadFromJSON = function (dataJSON) {
+        var i;
+        for (i = 0; i < dataJSON.bindings.length; i++) {
+            this.setBinding(new this._bindingClass(dataJSON.bindings[i]));
+        }
+    };
+    /**
+     * Loads the properties of the interpreter such as the (custom local) bindings
+     * from HTML5 local storage.
+     */
+    InputInterpreter.prototype.loadFromLocalStorage = function () {
+        var actionName;
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].loadFromLocalStorage();
+            }
+        }
+    };
+    /**
+     * Removes custom bindings stored in HTML5 local storage.
+     */
+    InputInterpreter.prototype.removeFromLocalStorage = function () {
+        var actionName;
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                this._bindings[actionName].removeFromLocalStorage();
+            }
+        }
+    };
+    /**
+     * Returns a string describing the control assigned to the action with the passed name.
+     * @param {String} actionName
+     * @returns {String}
+     */
+    InputInterpreter.prototype.getControlStringForAction = function (actionName) {
+        if (this._bindings[actionName] !== undefined) {
+            return this._bindings[actionName].getControlString();
+        }
+        return "";
+    };
+    /**
+     * @typedef {Object} ActionTrigger
+     * @property {String} name
+     * @property {Number} [intensity]
+     */
+    /**
+     * Adds a new triggered action to the group that was triggered by the same controls
+     * @param {Array} actionsByBindings A list of groups of triggered actions, where each group was triggered by the same controls
+     * @param {(ActionTrigger|null)} action
+     * @param {Binding} binding The binding that triggered the action
+     */
+    InputInterpreter.prototype._addActionByBinding = function (actionsByBindings, action, binding) {
+        var i;
+        if (!action) {
+            return;
+        }
+        for (i = 0; i < actionsByBindings.length; i++) {
+            if (binding.bindsTheSameControls(actionsByBindings[i].binding)) {
+                actionsByBindings[i].actions.push(action);
+                return;
+            }
+        }
+        actionsByBindings.push({
+            binding: binding,
+            actions: [action]
+        });
+    };
+    /**
+     * Needs to be overridden to check whether the action with the supplied name is triggered based on the currently maintained input state
+     * and if yes, with what intensity. (if it has a specific intensity)
+     * @param {String} actionName
+     * @returns {(ActionTrigger|null)} Null, if the action is not triggered
+     */
+    InputInterpreter.prototype.checkAction = function (actionName) {
+        application.showError("Cannot check if action '" + actionName + "' is triggered with a generic input interpreter!");
+    };
+    /**
+     * Returns the list of currently triggered actions based on the internally stored input device state and the control bindings.
+     * @param {Function} [actionFilterFunction] If given, every triggered action will be tested against this function (by passing its name
+     * as a parameter), and only added to the resulting list if the function returns true.
+     * @returns {Object[][]} The lists of action names and intensities, grouped by the triggering controls (if two actions were triggered
+     * by the same controls, they will be in the same array, and the result itself is an array of such arrays. The name (String) property 
+     * stores the action's name and the intensity (Number) property the intensity.
+     */
+    InputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
+        var result = [], actionName, actionsByBindings = [], i;
+        if (!this.isListening() || !this.isEnabled()) {
+            return result;
+        }
+        for (actionName in this._bindings) {
+            if (this._bindings.hasOwnProperty(actionName)) {
+                if (!actionFilterFunction || actionFilterFunction(actionName)) {
+                    this._addActionByBinding(actionsByBindings, this.checkAction(actionName), this._bindings[actionName]);
+                }
+            }
+        }
+        for (i = 0; i < actionsByBindings.length; i++) {
+            result.push(actionsByBindings[i].actions);
+        }
+        return result;
+    };
+    // #########################################################################
+    /**
      * @class Represents a key (combination) - action association.
+     * @extends ControlBinding
      * @param {Object|String} [dataJSONOrActionName] If a string is given, it will
      * be taken as the name of the action to be assigned. Otherwise it is taken as
      * a JSON object storing all the properties.
@@ -39,14 +354,6 @@ define([
      * combination (next to the primary key being pressed).
      */
     function KeyBinding(dataJSONOrActionName, key, shiftState, ctrlState, altState) {
-        /**
-         * Name of the action that is assigned to the key (combination). {@link Controller}s
-         * will process this name and execute the appropriate action.
-         * @type String
-         */
-        this._actionName = ((typeof dataJSONOrActionName) === "string" ?
-                dataJSONOrActionName :
-                null);
         /**
          * The string representation of the key. 
          * @see KeyboardInputInterpreter#getKeyCodeTable
@@ -74,26 +381,25 @@ define([
          * @type Boolean
          */
         this._altState = (altState === undefined) ? false : (altState || (this._key === "alt"));
-        // if a JSON object was specified, initialize the properties from there
-        if ((typeof dataJSONOrActionName) === "object") {
-            this.loadFromJSON(dataJSONOrActionName);
-        }
-        this.updateKeyString();
-        application.log("Created key binding: " + this._actionName + " - " + this._keyString, 3);
+        ControlBinding.call(this, dataJSONOrActionName);
+        application.log("Created key binding: " + this._actionName + " - " + this.getControlString(), 3);
     }
+    KeyBinding.prototype = new ControlBinding();
+    KeyBinding.prototype.constructor = KeyBinding;
     /**
+     * @override
      * Loads the properties of the key binding as stored in the passed JSON object.
      * @param {Object} dataJSON
      */
     KeyBinding.prototype.loadFromJSON = function (dataJSON) {
-        this._actionName = dataJSON.action;
+        ControlBinding.prototype.loadFromJSON.call(this, dataJSON);
         this.setKey(dataJSON.key);
         this._shiftState = (dataJSON.shift === true) || (this._key === "shift");
         this._ctrlState = (dataJSON.ctrl === true) || (this._key === "ctrl");
         this._altState = (dataJSON.alt === true) || (this._key === "alt");
-        this.updateKeyString();
     };
     /**
+     * @override
      * Saves the properties of this key binding to HTML5 local storage.
      */
     KeyBinding.prototype.saveToLocalStorage = function () {
@@ -103,6 +409,7 @@ define([
         localStorage['interstellarArmada_control_' + this._actionName + '_alt'] = this._altState;
     };
     /**
+     * @override
      * Loads the properties of the key binding if they are stored in the HTML5 local
      * storage object.
      */
@@ -112,10 +419,10 @@ define([
             this._shiftState = (localStorage['interstellarArmada_control_' + this._actionName + '_shift'] === "true");
             this._ctrlState = (localStorage['interstellarArmada_control_' + this._actionName + '_ctrl'] === "true");
             this._altState = (localStorage['interstellarArmada_control_' + this._actionName + '_alt'] === "true");
-            this.updateKeyString();
         }
     };
     /**
+     * @override
      * Removes the properties of this key binding from the HTML5 local storage.
      */
     KeyBinding.prototype.removeFromLocalStorage = function () {
@@ -123,14 +430,6 @@ define([
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_shift');
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_ctrl');
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_alt');
-    };
-    /**
-     * Returns the name of the action assigned in this key binding. Has to be a name
-     * that can be processed by the appropriate {@link Controller}s.
-     * @returns {String}
-     */
-    KeyBinding.prototype.getActionName = function () {
-        return this._actionName;
     };
     /**
      * Returns the string representation of the key assigned in this key binding.
@@ -174,29 +473,23 @@ define([
         return this._altState;
     };
     /**
-     * Updates the key string property that describes the combination assign in this
-     * key binding (with shift, ctrl, alt states). It is automatically called when
-     * a new primary key is set with setKey().
-     */
-    KeyBinding.prototype.updateKeyString = function () {
-        this._keyString = this._key;
-        if (this._shiftState && (this._key !== "shift")) {
-            this._keyString = "shift + " + this._keyString;
-        }
-        if ((this._ctrlState) && (this._key !== "ctrl")) {
-            this._keyString = "ctrl + " + this._keyString;
-        }
-        if ((this._altState) && (this._key !== "alt")) {
-            this._keyString = "alt + " + this._keyString;
-        }
-    };
-    /**
-     * Returns a string representing the whole key combination complete with shift,
-     * ctrl, alt states and the primary key.
+     * @override
+     * Returns a string that describes the key combination that is bound to the action in this binding to show to the user.
      * @returns {String}
      */
-    KeyBinding.prototype.getKeyString = function () {
-        return this._keyString;
+    KeyBinding.prototype.getControlString = function () {
+        var result;
+        result = this._key;
+        if (this._shiftState && (this._key !== "shift")) {
+            result = "shift + " + result;
+        }
+        if ((this._ctrlState) && (this._key !== "ctrl")) {
+            result = "ctrl + " + result;
+        }
+        if ((this._altState) && (this._key !== "alt")) {
+            result = "alt + " + result;
+        }
+        return result;
     };
     /**
      * Returns if the key combination is triggered according to the keyboard state
@@ -213,42 +506,25 @@ define([
                 (currentlyPressedKeys[18] || !this._altState));
     };
     /**
+     * @override
      * Returns whether this binding has the same key configuration as the passed one (and so it conflicts with it)
      * @param {KeyBinding} otherKeyBinding
      */
     KeyBinding.prototype.bindsTheSameControls = function (otherKeyBinding) {
         return (this._keyCode === otherKeyBinding._keyCode);
     };
-    // -------------------------------------------------------------------------
-    /**
-     * Adds a new triggered action to the group that was triggered by the same controls
-     * @param {Array} actionsByBindings A list of groups of triggered actions, where each group was triggered by the same controls
-     * @param {Object} action
-     * @param {KeyBinding|MouseBinding|GamepadBinding} binding The binding that triggered the action
-     */
-    function addActionByBinding(actionsByBindings, action, binding) {
-        var i;
-        for (i = 0; i < actionsByBindings.length; i++) {
-            if (binding.bindsTheSameControls(actionsByBindings[i].binding)) {
-                actionsByBindings[i].actions.push(action);
-                return;
-            }
-        }
-        actionsByBindings.push({
-            binding: binding,
-            actions: [action]
-        });
-    }
     // #########################################################################
     /**
      * @class Monitors the keyboard inputs and stores the current state of which
      * keys are pressed. Can load and store key bindings and based on the current
      * state and the key bindings, determine the list of currently triggered actions
      * that controllers can/should execute.
+     * @extends InputInterpreter
      * @param {Object} [dataJSON] Upon initialization, it can load the key bindings from
      * this JSON object if specified.
      */
     function KeyboardInputInterpreter(dataJSON) {
+        InputInterpreter.call(this, KeyBinding, dataJSON);
         /**
          * An array indicating the current pressed state of each key on the keyboard. 
          * The index in the array corresponds to the keyCode property of the event 
@@ -256,24 +532,11 @@ define([
          * @type Boolean[256]
          */
         this._currentlyPressedKeys = new Array(256);
-        /**
-         * An associative array storing the active key bindings by the names of the
-         * actions that they are associated to.
-         * @type Object
-         */
-        this._bindings = {};
-        /**
-         * Whether the interpreter is currently listening for input (the event  handlers
-         * are set).
-         * @type Boolean
-         */
-        this._listening = false;
-        // if a JSON was specified, initialize the bindings from there
-        if (dataJSON !== undefined) {
-            this.loadFromJSON(dataJSON);
-        }
     }
+    KeyboardInputInterpreter.prototype = new InputInterpreter();
+    KeyboardInputInterpreter.prototype.constructor = KeyboardInputInterpreter;
     /**
+     * @override
      * Returns of the name of the device this interpreter monitors. Every input
      * interpreter should implement this function.
      * @returns {String}
@@ -289,74 +552,6 @@ define([
      */
     KeyboardInputInterpreter.prototype.defaultActionEnabledForKey = function (keyCode) {
         return ["f5", "f11", 'escape'].indexOf(utils.getKeyOfCode(keyCode)) >= 0;
-    };
-    /**
-     * If there is no key bound yet to the action associated with the passed key
-     * binding, adds the binding. If there already is a binding, overwrites it with
-     * the passed binding, as there can be no two key combinations be bound to the
-     * same action for now. This method is for setting default bindings.
-     * @see KeyboardInputInterpreter#setAndStoreKeyBinding
-     * @param {KeyBinding} keyBinding
-     */
-    KeyboardInputInterpreter.prototype.setKeyBinding = function (keyBinding) {
-        this._bindings[keyBinding.getActionName()] = keyBinding;
-    };
-    /**
-     * Sets (adds or overwrites) the key binding associated with the action of the 
-     * passed binding, and also stores the binding in HTML5 local storage. This 
-     * method is for setting custom local bindings.
-     * @see KeyboardInputInterpreter#setKeyBinding
-     * @param {KeyBinding} keyBinding
-     */
-    KeyboardInputInterpreter.prototype.setAndStoreKeyBinding = function (keyBinding) {
-        this.setKeyBinding(keyBinding);
-        keyBinding.saveToLocalStorage();
-    };
-    /**
-     * Returns a string describing the key combination assigned to the action with
-     * the passed name.
-     * @param {String} actionName
-     * @returns {String}
-     */
-    KeyboardInputInterpreter.prototype.getControlStringForAction = function (actionName) {
-        if (this._bindings[actionName] !== undefined) {
-            return this._bindings[actionName].getKeyString();
-        }
-        return "";
-    };
-    /**
-     * Loads the properties of the interpreter such as the (default) key bindings
-     * from the passed JSON object.
-     * @param {Object} dataJSON
-     */
-    KeyboardInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
-        var i;
-        for (i = 0; i < dataJSON.bindings.length; i++) {
-            this.setKeyBinding(new KeyBinding(dataJSON.bindings[i]));
-        }
-    };
-    /**
-     * Loads the properties of the interpreter such as the (custom local) key bindings
-     * from HTML5 local storage.
-     */
-    KeyboardInputInterpreter.prototype.loadFromLocalStorage = function () {
-        var actionName;
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].loadFromLocalStorage();
-            }
-        }
-    };
-    /**
-     * Removes custom key bindings stored in HTML5 local storage.
-     */
-    KeyboardInputInterpreter.prototype.removeFromLocalStorage = function () {
-        var actionName;
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].removeFromLocalStorage();
-            }
-        }
     };
     /**
      * Updates the internally stored state of the keyboard, marking all keys as 
@@ -393,11 +588,13 @@ define([
         }
     };
     /**
+     * @override
      * Sets the event handlers on the document to start updating the stored internal
      * state on key presses and releases. The triggered actions can be queried from
      * this interpreter after this function has been called.
      */
     KeyboardInputInterpreter.prototype.startListening = function () {
+        InputInterpreter.prototype.startListening.call(this);
         this.cancelPressedKeys();
         document.onkeydown = function (event) {
             this.handleKeyDown(event);
@@ -411,63 +608,39 @@ define([
                 event.stopPropagation();
             }
         }.bind(this);
-        this._listening = true;
     };
     /**
+     * @override
      * Cancels the event handlers on the document that update the internal state.
      * The triggered actions cannot be queried from this interpreter after this 
      * function has been called.
      */
     KeyboardInputInterpreter.prototype.stopListening = function () {
+        InputInterpreter.prototype.stopListening.call(this);
         document.onkeydown = null;
         document.onkeyup = null;
         this.cancelPressedKeys();
-        this._listening = false;
     };
     /**
-     * Returns the list of currently triggered actions based on the internally stored
-     * keyboard state and key (combination) bindings.
-     * @param {Function} [actionFilterFunction] If given, every triggered action will be tested against this function (by passing its name
-     * as a parameter), and only added to the resulting list if the function returns true.
-     * @returns {Object[][]} The lists of action names and intensities, grouped by the triggering controls (if two actions were triggered
-     * by the same controls, they will be in the same array, and the result itself is an array of such arrays. The name (String) property 
-     * stores the action's name and the intensity (Number) property the intensity.
+     * @override
+     * Checks if the action with the supplied name is triggered based on the current input state.
+     * @param {String} actionName
+     * @returns {(ActionTrigger|null)} Null, if the action is not triggered
      */
-    KeyboardInputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
-        var result, keyBindingActionName, actionsByBindings = [], i;
-        if (this._listening) {
-            result = [];
-            for (keyBindingActionName in this._bindings) {
-                if (this._bindings.hasOwnProperty(keyBindingActionName)) {
-                    if (!actionFilterFunction || actionFilterFunction(keyBindingActionName)) {
-                        if (this._bindings[keyBindingActionName].isTriggered(this._currentlyPressedKeys)) {
-                            addActionByBinding(actionsByBindings, {
-                                name: keyBindingActionName
-                            }, this._bindings[keyBindingActionName]);
-                        }
-                    }
-                }
-            }
-            for (i = 0; i < actionsByBindings.length; i++) {
-                result.push(actionsByBindings[i].actions);
-            }
-            return result;
-        }
-        application.showError("Cannot query the triggered action when the " + this.getDeviceName() + " interpreter is not listening for user input!");
+    KeyboardInputInterpreter.prototype.checkAction = function (actionName) {
+        return (this._bindings[actionName].isTriggered(this._currentlyPressedKeys)) ?
+                {name: actionName} :
+                null;
     };
     // #########################################################################
     /**
      * @class Represents the assignment of a mouse action (such as move, click...) 
      * to an in-game action. (such as fire)
+     * @extends ControlBinding
      * @param {Object} [dataJSON] If given, the properties will be initialized from
      * the data stored in this JSON object.
      */
     function MouseBinding(dataJSON) {
-        /**
-         * Name of the in-game action the mouse action is bound to.
-         * @type String
-         */
-        this._actionName = null;
         /**
          * Which mouse button should be pressed to trigger this binding.
          * Possible values:
@@ -508,17 +681,17 @@ define([
          * @default false
          */
         this._measuredFromCenter = false;
-        // if a JSON object was specified, initialize the properties from there
-        if (dataJSON !== undefined) {
-            this.loadFromJSON(dataJSON);
-        }
+        ControlBinding.call(this, dataJSON);
     }
+    MouseBinding.prototype = new ControlBinding();
+    MouseBinding.prototype.constructor = MouseBinding;
     /**
+     * @override
      * Loads the properties of the key binding as stored in the passed JSON object.
      * @param {Object} dataJSON
      */
     MouseBinding.prototype.loadFromJSON = function (dataJSON) {
-        this._actionName = dataJSON.action;
+        ControlBinding.prototype.loadFromJSON.call(this, dataJSON);
         switch (dataJSON.button) {
             case "left":
                 this._button = 1;
@@ -551,6 +724,7 @@ define([
         this._measuredFromCenter = (dataJSON.fromCenter === true);
     };
     /**
+     * @override
      * Saves the properties of this mouse binding to HTML5 local storage.
      */
     MouseBinding.prototype.saveToLocalStorage = function () {
@@ -560,6 +734,7 @@ define([
         localStorage['interstellarArmada_control_' + this._actionName + '_measuredFromCenter'] = this._measuredFromCenter;
     };
     /**
+     * @override
      * Loads the properties of the mouse binding if they are stored in the HTML5 local
      * storage object.
      */
@@ -572,6 +747,7 @@ define([
         }
     };
     /**
+     * @override
      * Removes the properties of this mouse binding from the HTML5 local storage.
      */
     MouseBinding.prototype.removeFromLocalStorage = function () {
@@ -581,20 +757,39 @@ define([
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_measuredFromCenter');
     };
     /**
-     * Returns the name of the action assigned in this key binding. Has to be a name
-     * that can be processed by the appropriate {@link Controller}s.
-     * @returns {String}
-     */
-    MouseBinding.prototype.getActionName = function () {
-        return this._actionName;
-    };
-    /**
      * Returns if the binding trigger intensity depends on the displacement of the
      * mouse from the center of the screen.
      * @returns {Boolean}
      */
     MouseBinding.prototype.isMeasuredFromCenter = function () {
         return this._measuredFromCenter;
+    };
+    /**
+     * @override
+     * Returns a string representation describing the mouse action the user needs
+     * to perform to trigger this binding.
+     * @returns {String}
+     */
+    MouseBinding.prototype.getControlString = function () {
+        switch (this._button) {
+            case 1:
+                return "left click";
+            case 2:
+                return "middle click";
+            case 3:
+                return "right click";
+        }
+        var result = this._measuredFromCenter ? " from center" : "";
+        if (this._moveX < 0) {
+            result = "move left" + result;
+        } else if (this._moveX > 0) {
+            result = "move right" + result;
+        } else if (this._moveY < 0) {
+            result = "move up" + result;
+        } else if (this._moveY > 0) {
+            result = "move down" + result;
+        }
+        return result;
     };
     /**
      * Returns how much is the mouse action  triggered according to the current mouse 
@@ -634,32 +829,7 @@ define([
         }
     };
     /**
-     * Returns a string representation describing the mouse action the user needs
-     * to perform to trigger this binding.
-     * @returns {String}
-     */
-    MouseBinding.prototype.getControlString = function () {
-        switch (this._button) {
-            case 1:
-                return "left click";
-            case 2:
-                return "middle click";
-            case 3:
-                return "right click";
-        }
-        var result = this._measuredFromCenter ? " from center" : "";
-        if (this._moveX < 0) {
-            result = "move left" + result;
-        } else if (this._moveX > 0) {
-            result = "move right" + result;
-        } else if (this._moveY < 0) {
-            result = "move up" + result;
-        } else if (this._moveY > 0) {
-            result = "move down" + result;
-        }
-        return result;
-    };
-    /**
+     * @override
      * Returns whether this binding has the same control (button/axis) configuration as the passed one (and so it conflicts with it)
      * @param {MouseBinding} otherMouseBinding
      */
@@ -670,14 +840,13 @@ define([
     };
     // #########################################################################
     /**
-     * Creates a mouse interpreter object.
      * @class Monitors the mouse inputs and stores the current state of the mouse. 
      * Can load and store mouse bindings and based on the current state and the 
      * bindings, determine the list of currently triggered actions that controllers 
      * can/should execute.
+     * @extends InputInterpreter
      * @param {Object} [dataJSON] Upon initialization, it can load the mouse bindings from
      * this JSON object if specified.
-     * @returns {MouseInputInterpreter}
      */
     function MouseInputInterpreter(dataJSON) {
         /**
@@ -723,23 +892,10 @@ define([
          * @type Number
          */
         this._displacementDeadzone = 0;
-        /**
-         * An associative array storing the active mouse bindings by the names of the
-         * actions that they are associated to.
-         * @type Object
-         */
-        this._bindings = {};
-        /**
-         * Whether the interpreter is currently listening for input (the event  handlers
-         * are set).
-         * @type Boolean
-         */
-        this._listening = false;
-        // if a JSON object was specified, initialize the bindings from there
-        if (dataJSON !== undefined) {
-            this.loadFromJSON(dataJSON);
-        }
+        InputInterpreter.call(this, MouseBinding, dataJSON);
     }
+    MouseInputInterpreter.prototype = new InputInterpreter();
+    MouseInputInterpreter.prototype.constructor = InputInterpreter;
     /**
      * Updates the screen center relative to which the mouse position is sent to the
      * binding to check if they are triggered. Needs to be called when the center
@@ -753,34 +909,13 @@ define([
         this._mousePositionChange = [0, 0];
     };
     /**
+     * @override
      * Returns of the name of the device this interpreter monitors. Every input
      * interpreter should implement this function.
      * @returns {String}
      */
     MouseInputInterpreter.prototype.getDeviceName = function () {
         return "Mouse";
-    };
-    /**
-     * If there is no mouse action bound yet to the in-game action associated with 
-     * the passed binding, adds the binding. If there already is a binding, overwrites 
-     * it with the passed binding, as there can be no two mouse actions be bound to the
-     * same in-game action for now. This method is for setting default bindings.
-     * @see MouseInputInterpreter#setAndStoreBinding
-     * @param {MouseBinding} binding
-     */
-    MouseInputInterpreter.prototype.setBinding = function (binding) {
-        this._bindings[binding.getActionName()] = binding;
-    };
-    /**
-     * Sets (adds or overwrites) the mouse binding associated with the in-game action of the 
-     * passed binding, and also stores the binding in HTML5 local storage. This 
-     * method is for setting custom local bindings.
-     * @see MouseInputInterpreter#setBinding
-     * @param {MouseBinding} binding
-     */
-    MouseInputInterpreter.prototype.setAndStoreBinding = function (binding) {
-        this.setBinding(binding);
-        binding.saveToLocalStorage();
     };
     /**
      * Sets the mouse move sensitivity and stores the setting in HTML5 local storage.
@@ -807,37 +942,24 @@ define([
         localStorage.interstellarArmada_control_mouse_displacementDeadzone = this._displacementDeadzone;
     };
     /**
-     * Returns a string describing the mouse actions assigned to the action with
-     * the passed name.
-     * @param {String} actionName
-     * @returns {String}
-     */
-    MouseInputInterpreter.prototype.getControlStringForAction = function (actionName) {
-        if (this._bindings[actionName] !== undefined) {
-            return this._bindings[actionName].getControlString();
-        }
-        return "";
-    };
-    /**
+     * @override
      * Loads the properties of the interpreter such as the (default) mouse bindings
      * from the passed JSON object.
      * @param {Object} dataJSON
      */
     MouseInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
-        var i;
+        InputInterpreter.prototype.loadFromJSON.call(this, dataJSON);
         this._moveSensitivity = dataJSON.sensitivityProfile.moveSensitivity;
         this._displacementSensitivity = dataJSON.sensitivityProfile.displacementSensitivity;
         this._displacementDeadzone = dataJSON.sensitivityProfile.displacementDeadzone;
-        for (i = 0; i < dataJSON.bindings.length; i++) {
-            this.setBinding(new MouseBinding(dataJSON.bindings[i]));
-        }
     };
     /**
+     * @override
      * Loads the properties of the interpreter such as the (custom local) mouse bindings
      * from HTML5 local storage.
      */
     MouseInputInterpreter.prototype.loadFromLocalStorage = function () {
-        var actionName;
+        InputInterpreter.prototype.loadFromLocalStorage.call(this);
         if (localStorage.interstellarArmada_control_mouse_moveSensitivity !== undefined) {
             this._moveSensitivity = parseFloat(localStorage.interstellarArmada_control_mouse_moveSensitivity);
         }
@@ -847,25 +969,16 @@ define([
         if (localStorage.interstellarArmada_control_mouse_displacementDeadzone !== undefined) {
             this._displacementDeadzone = parseInt(localStorage.interstellarArmada_control_mouse_displacementDeadzone, 10);
         }
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].loadFromLocalStorage();
-            }
-        }
     };
     /**
+     * @override
      * Removes custom mouse bindings stored in HTML5 local storage.
      */
     MouseInputInterpreter.prototype.removeFromLocalStorage = function () {
-        var actionName;
+        InputInterpreter.prototype.removeFromLocalStorage.call(this);
         localStorage.removeItem("interstellarArmada_control_mouse_moveSensitivity");
         localStorage.removeItem("interstellarArmada_control_mouse_displacementSensitivity");
         localStorage.removeItem("interstellarArmada_control_mouse_displacementDeadzone");
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].removeFromLocalStorage();
-            }
-        }
     };
     /**
      * Updates the internally stored state of the mouse buttons, marking all buttons 
@@ -904,6 +1017,8 @@ define([
      */
     MouseInputInterpreter.prototype.handleMouseMove = function (event) {
         if (this._mousePosition !== null) {
+            // we add up all movements of the mouse and null it out after every query for triggered actions, so all movements between two
+            // queries are considered
             this._mousePositionChange = [
                 this._mousePositionChange[0] + (event.clientX - this._mousePosition[0]),
                 this._mousePositionChange[1] + (event.clientY - this._mousePosition[1])
@@ -914,11 +1029,13 @@ define([
         this._mousePosition = [event.clientX, event.clientY];
     };
     /**
+     * @override
      * Sets the event handlers on the document to start updating the stored internal
      * state of the mouse. The triggered actions can be queried from this interpreter 
      * after this function has been called.
      */
     MouseInputInterpreter.prototype.startListening = function () {
+        InputInterpreter.prototype.startListening.call(this);
         this.cancelPressedButtons();
         this._mousePosition = null;
         this._mousePositionChange = [0, 0];
@@ -939,24 +1056,49 @@ define([
             event.preventDefault();
             return false;
         };
-        this._listening = true;
     };
     /**
+     * @override
      * Cancels the event handlers on the document that update the internal state.
      * The triggered actions cannot be queried from this interpreter after this 
      * function has been called.
      */
     MouseInputInterpreter.prototype.stopListening = function () {
+        InputInterpreter.prototype.stopListening.call(this);
         document.onmousedown = null;
         document.onmouseup = null;
         document.onmousemove = null;
         document.onclick = null;
         document.oncontextmenu = null;
-        this._listening = false;
+        this.cancelPressedButtons();
+        this._mousePosition = null;
+        this._mousePositionChange = [0, 0];
     };
     /**
-     * Returns the list of currently triggered actions and their intensity based on 
-     * the internally stored mouse state and mouse bindings.
+     * @override
+     * Checks if the action with the supplied name is triggered based on the current input state.
+     * @param {String} actionName
+     * @returns {(ActionTrigger|null)} Null, if the action is not triggered
+     */
+    MouseInputInterpreter.prototype.checkAction = function (actionName) {
+        var actionIntensity =
+                this._bindings[actionName].getTriggeredIntensity(
+                this._currentlyPressedButtons,
+                this._mousePosition,
+                this._mousePositionChange,
+                this._screenCenter);
+        return (actionIntensity >= 0) ?
+                {
+                    name: actionName,
+                    intensity: (this._bindings[actionName].isMeasuredFromCenter() === true) ?
+                            Math.max(0, (actionIntensity - this._displacementDeadzone) * this._displacementSensitivity) :
+                            (actionIntensity * this._moveSensitivity)
+                } :
+                null;
+    };
+    /**
+     * @override
+     * Returns the list of currently triggered actions based on the internally stored input device state and the control bindings.
      * @param {Function} [actionFilterFunction] If given, every triggered action will be tested against this function (by passing its name
      * as a parameter), and only added to the resulting list if the function returns true.
      * @returns {Object[][]} The lists of action names and intensities, grouped by the triggering controls (if two actions were triggered
@@ -964,46 +1106,20 @@ define([
      * stores the action's name and the intensity (Number) property the intensity.
      */
     MouseInputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
-        var result = [], bindingActionName, actionIntensity, actionsByBindings = [], i;
-        for (bindingActionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(bindingActionName)) {
-                if (!actionFilterFunction || actionFilterFunction(bindingActionName)) {
-                    actionIntensity =
-                            this._bindings[bindingActionName].getTriggeredIntensity(
-                            this._currentlyPressedButtons,
-                            this._mousePosition,
-                            this._mousePositionChange,
-                            this._screenCenter);
-                    if (actionIntensity >= 0) {
-                        addActionByBinding(actionsByBindings, {
-                            name: bindingActionName,
-                            intensity: (this._bindings[bindingActionName].isMeasuredFromCenter() === true) ?
-                                    Math.max(0, (actionIntensity - this._displacementDeadzone) * this._displacementSensitivity) :
-                                    (actionIntensity * this._moveSensitivity)
-                        }, this._bindings[bindingActionName]);
-                    }
-                }
-            }
-        }
+        var result = InputInterpreter.prototype.getTriggeredActions.call(this, actionFilterFunction);
+        // null out the mouse movements added up since the last query
         this._mousePositionChange = [0, 0];
-        for (i = 0; i < actionsByBindings.length; i++) {
-            result.push(actionsByBindings[i].actions);
-        }
         return result;
     };
     // #########################################################################
     /**
      * @class Represents the assignment of a gamepad/joystick action (moving an 
      * axis or pressing a button) to an in-game action. (such as fire)
+     * @extends ControlBinding
      * @param {Object} [dataJSON] If given, the properties will be initialized from
      * the data stored in this JSON object.
      */
     function GamepadBinding(dataJSON) {
-        /**
-         * Name of the in-game action the gamepad action is bound to.
-         * @type String
-         */
-        this._actionName = null;
         /**
          * Which mouse button should be pressed to trigger this binding.
          * @type Number
@@ -1019,11 +1135,10 @@ define([
          * @type Boolean
          */
         this._axisPositive = false;
-        // if a JSON object was specified, initialize the properties from there
-        if (dataJSON !== undefined) {
-            this.loadFromJSON(dataJSON);
-        }
+        ControlBinding.call(this, dataJSON);
     }
+    GamepadBinding.prototype = new ControlBinding();
+    GamepadBinding.prototype.constructor = GamepadBinding;
     /**
      * Button index value for no button set
      * @constant
@@ -1037,11 +1152,12 @@ define([
      */
     GamepadBinding.prototype.AXIS_NONE = -1;
     /**
+     * @override
      * Loads the properties of the binding as stored in the passed JSON object.
      * @param {Object} dataJSON
      */
     GamepadBinding.prototype.loadFromJSON = function (dataJSON) {
-        this._actionName = dataJSON.action;
+        ControlBinding.prototype.loadFromJSON.call(this, dataJSON);
         if ((typeof dataJSON.button) === "number") {
             this._button = dataJSON.button;
         }
@@ -1051,6 +1167,7 @@ define([
         }
     };
     /**
+     * @override
      * Saves the properties of this binding to HTML5 local storage.
      */
     GamepadBinding.prototype.saveToLocalStorage = function () {
@@ -1059,6 +1176,7 @@ define([
         localStorage['interstellarArmada_control_' + this._actionName + '_gamepad_axisPositive'] = this._axisPositive;
     };
     /**
+     * @override
      * Loads the properties of the binding if they are stored in the HTML5 local
      * storage object.
      */
@@ -1070,20 +1188,13 @@ define([
         }
     };
     /**
+     * @override
      * Removes the properties of this binding from the HTML5 local storage.
      */
     GamepadBinding.prototype.removeFromLocalStorage = function () {
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_gamepad_button');
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_gamepad_axisIndex');
         localStorage.removeItem('interstellarArmada_control_' + this._actionName + '_gamepad_axisPositive');
-    };
-    /**
-     * Returns the name of the action assigned in this binding. Has to be a name
-     * that can be processed by the appropriate {@link Controller}s.
-     * @returns {String}
-     */
-    GamepadBinding.prototype.getActionName = function () {
-        return this._actionName;
     };
     /**
      * Returns how much is the gamepad action  triggered according to the current gamepad 
@@ -1112,6 +1223,7 @@ define([
         return 0;
     };
     /**
+     * @override
      * Returns a string representation describing the action the user needs
      * to perform to trigger this binding.
      * @returns {String}
@@ -1126,6 +1238,7 @@ define([
         return "";
     };
     /**
+     * @override
      * Returns whether this binding has the same control (button/axis) configuration as the passed one (and so it conflicts with it)
      * @param {GamepadBinding} otherGamepadBinding
      */
@@ -1140,114 +1253,43 @@ define([
      * Can load and store gamepad bindings and based on the current state and the 
      * bindings, determine the list of currently triggered actions that controllers 
      * can/should execute.
+     * @extends InputInterpreter
      * @param {Object} [dataJSON] Upon initialization, it can load the bindings from
      * this JSON object if specified.
-     * @returns {GamepadInputInterpreter}
      */
     function GamepadInputInterpreter(dataJSON) {
-        this._deviceType = "Joystick";
         /**
          * A reference to the gamepad(/joystick) this interpreter is listening to.
          * @type Gamepad
          */
         this._gamepad = null;
         /**
-         * An associative array storing the active gamepad bindings by the names of the
-         * actions that they are associated to.
-         * @type Object
-         */
-        this._bindings = {};
-        /**
-         * Whether the interpreter is currently listening for input.
-         * @type Boolean
-         */
-        this._listening = false;
-        /**
          * Used for yaw, pitch, roll
          * @type Number
          */
         this._turnSensitivity = 1;
-        // if a JSON object was specified, initialize the bindings from there
-        if (dataJSON !== undefined) {
-            this.loadFromJSON(dataJSON);
-        }
+        InputInterpreter.call(this, GamepadBinding, dataJSON);
     }
+    GamepadInputInterpreter.prototype = new InputInterpreter();
+    GamepadInputInterpreter.prototype.constructor = GamepadInputInterpreter;
     /**
+     * @override
      * Returns of the name of the device this interpreter monitors. Every input
      * interpreter should implement this function.
      * @returns {String}
      */
     GamepadInputInterpreter.prototype.getDeviceName = function () {
-        return this._deviceType;
+        return "Joystick";
     };
     /**
-     * If there is no gamepad action bound yet to the in-game action associated with 
-     * the passed binding, adds the binding. If there already is a binding, overwrites 
-     * it with the passed binding, as there can be no two gamepad actions be bound to the
-     * same in-game action for now. This method is for setting default bindings.
-     * @see GamepadInputInterpreter#setAndStoreBinding
-     * @param {MouseBinding} binding
-     */
-    GamepadInputInterpreter.prototype.setBinding = function (binding) {
-        this._bindings[binding.getActionName()] = binding;
-    };
-    /**
-     * Sets (adds or overwrites) the gamepad binding associated with the in-game action of the 
-     * passed binding, and also stores the binding in HTML5 local storage. This 
-     * method is for setting custom local bindings.
-     * @see GamepadInputInterpreter#setBinding
-     * @param {GamepadBinding} binding
-     */
-    GamepadInputInterpreter.prototype.setAndStoreBinding = function (binding) {
-        this.setBinding(binding);
-        binding.saveToLocalStorage();
-    };
-    /**
-     * Returns a string describing the gamepad action assigned to the action with
-     * the passed name.
-     * @param {String} actionName
-     * @returns {String}
-     */
-    GamepadInputInterpreter.prototype.getControlStringForAction = function (actionName) {
-        if (this._bindings[actionName] !== undefined) {
-            return this._bindings[actionName].getControlString();
-        }
-        return "";
-    };
-    /**
+     * @override
      * Loads the properties of the interpreter such as the (default) gamepad bindings
      * from the passed JSON object.
      * @param {Object} dataJSON
      */
     GamepadInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
-        var i;
+        InputInterpreter.prototype.loadFromJSON.call(this, dataJSON);
         this._turnSensitivity = dataJSON.sensitivityProfile.turnSensitivity;
-        for (i = 0; i < dataJSON.bindings.length; i++) {
-            this.setBinding(new GamepadBinding(dataJSON.bindings[i]));
-        }
-    };
-    /**
-     * Loads the properties of the interpreter such as the (custom local) gamepad bindings
-     * from HTML5 local storage.
-     */
-    GamepadInputInterpreter.prototype.loadFromLocalStorage = function () {
-        var actionName;
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].loadFromLocalStorage();
-            }
-        }
-    };
-    /**
-     * Removes custom mouse bindings stored in HTML5 local storage.
-     */
-    GamepadInputInterpreter.prototype.removeFromLocalStorage = function () {
-        var actionName;
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].removeFromLocalStorage();
-            }
-        }
     };
     /**
      * An event handler for the event that fires when a new gamepad is connected. Stores the received Gamepad object for use
@@ -1259,26 +1301,56 @@ define([
         }
     };
     /**
+     * @override
      * Sets the event handlers to grab a gamepad object for this interpreter
      * once it has become available for the web application.
      * The triggered actions can be queried from this interpreter after this 
      * method has been called.
      */
     GamepadInputInterpreter.prototype.startListening = function () {
+        InputInterpreter.prototype.startListening.call(this);
         window.addEventListener("gamepadconnected", function (event) {
             this.handleGamepadConnected(event);
         }.bind(this));
-        this._listening = true;
     };
     /**
+     * @override
+     * The input state will not be updated after this call.
      * The triggered actions cannot be queried from this interpreter after this 
      * function has been called.
      */
     GamepadInputInterpreter.prototype.stopListening = function () {
+        InputInterpreter.prototype.stopListening.call(this);
         window.ongamepadconnected = null;
-        this._listening = false;
+        this._gamepad = null;
     };
     /**
+     * @override
+     * Checks if the action with the supplied name is triggered based on the current input state.
+     * @param {String} actionName
+     * @returns {(ActionTrigger|null)} Null, if the action is not triggered
+     */
+    GamepadInputInterpreter.prototype.checkAction = function (actionName) {
+        var actionIntensity, isTurnAction, isCameraTurnAction;
+        actionIntensity = this._bindings[actionName].getTriggeredIntensity(this._gamepad);
+        if (actionIntensity > 0) {
+            isTurnAction =
+                    (actionName === "yawLeft" || actionName === "yawRight" ||
+                            actionName === "pitchUp" || actionName === "pitchDown" ||
+                            actionName === "rollLeft" || actionName === "rollRight");
+            isCameraTurnAction =
+                    (actionName === "cameraTurnLeft" || actionName === "cameraTurnRight" ||
+                            actionName === "cameraTurnUp" || actionName === "cameraTurnDown" ||
+                            actionName === "cameraRollLeft" || actionName === "cameraRollRight");
+            return {
+                name: actionName,
+                intensity: (isTurnAction ? (actionIntensity * this._turnSensitivity) : (isCameraTurnAction ? undefined : actionIntensity))
+            };
+        }
+        return null;
+    };
+    /**
+     * @override
      * Returns the list of currently triggered actions and their intensity based on 
      * the internally stored gamepad state and gamepad bindings.
      * @param {Function} [actionFilterFunction] If given, every triggered action will be tested against this function (by passing its name
@@ -1288,7 +1360,12 @@ define([
      * stores the action's name and the intensity (Number) property the intensity.
      */
     GamepadInputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
-        var result = [], bindingActionName, actionIntensity, isTurnAction, isCameraTurnAction, i, actionsByBindings = [], gamepads;
+        var gamepads;
+        if (!this.isListening()) {
+            return [];
+        }
+        // Firefox continuously updates the Gamepad object obtained from the gamepadconnected event, but it has to be manually
+        // refreshed for Chrome to get an up-to-date state, so we do it right before the query
         gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
         if (gamepads && (gamepads.length > 0)) {
             this._gamepad = gamepads[0];
@@ -1296,32 +1373,9 @@ define([
             this._gamepad = null;
         }
         if (this._gamepad) {
-            for (bindingActionName in this._bindings) {
-                if (this._bindings.hasOwnProperty(bindingActionName)) {
-                    if (!actionFilterFunction || actionFilterFunction(bindingActionName)) {
-                        actionIntensity = this._bindings[bindingActionName].getTriggeredIntensity(this._gamepad);
-                        if (actionIntensity > 0) {
-                            isTurnAction =
-                                    (bindingActionName === "yawLeft" || bindingActionName === "yawRight" ||
-                                            bindingActionName === "pitchUp" || bindingActionName === "pitchDown" ||
-                                            bindingActionName === "rollLeft" || bindingActionName === "rollRight");
-                            isCameraTurnAction =
-                                    (bindingActionName === "cameraTurnLeft" || bindingActionName === "cameraTurnRight" ||
-                                            bindingActionName === "cameraTurnUp" || bindingActionName === "cameraTurnDown" ||
-                                            bindingActionName === "cameraRollLeft" || bindingActionName === "cameraRollRight");
-                            addActionByBinding(actionsByBindings, {
-                                name: bindingActionName,
-                                intensity: (isTurnAction ? (actionIntensity * this._turnSensitivity) : (isCameraTurnAction ? undefined : actionIntensity))
-                            }, this._bindings[bindingActionName]);
-                        }
-                    }
-                }
-            }
-            for (i = 0; i < actionsByBindings.length; i++) {
-                result.push(actionsByBindings[i].actions);
-            }
+            return InputInterpreter.prototype.getTriggeredActions.call(this, actionFilterFunction);
         }
-        return result;
+        return [];
     };
     // #########################################################################
     /**
@@ -1697,6 +1751,21 @@ define([
         // toggling the visibility of texts on screen
         this.setActionFunction("toggleTextVisibility", true, function () {
             armada.getScreen().toggleTextVisibility();
+        });
+        // toggling the mouse controls
+        this.setActionFunction("toggleMouseControls", true, function () {
+            armada.control().getInterpreter("mouse").toggleEnabled();
+            if (armada.control().isInPilotMode()) {
+                if (armada.control().getInterpreter("mouse").isEnabled()) {
+                    document.body.style.cursor = 'crosshair';
+                } else {
+                    document.body.style.cursor = 'default';
+                }
+            }
+        });
+        // toggling the joystick controls
+        this.setActionFunction("toggleJoystickControls", true, function () {
+            armada.control().getInterpreter("joystick").toggleEnabled();
         });
     }
     GeneralController.prototype = new Controller();
@@ -2079,6 +2148,12 @@ define([
          * @type Object
          */
         this._disabledActions = {};
+        /**
+         * Whether the context is currently in the mode for controlling a spacecraft as a pilot (as opposed to spectator mode, controlling
+         * a free camera)
+         * @type Boolean
+         */
+        this._pilotingMode = false;
     }
     ControlContext.prototype = new asyncResource.AsyncResource();
     ControlContext.prototype.constructor = ControlContext;
@@ -2346,14 +2421,22 @@ define([
         });
     };
     /**
-     * Switches to piloting game mode, putting the player in the pilot seat of the
-     * given spacecraft.
+     * Returns whether the context is currently in the mode for controlling a spacecraft as a pilot (as opposed to spectator mode, 
+     * controlling a free camera)
+     * @returns {Boolean}
+     */
+    ControlContext.prototype.isInPilotMode = function () {
+        return this._pilotingMode;
+    };
+    /**
+     * Switches to piloting game mode, putting the player in the pilot seat of the given spacecraft.
      * @param {Spacecraft} pilotedSpacecraft
      */
     ControlContext.prototype.switchToPilotMode = function (pilotedSpacecraft) {
-        if (!pilotedSpacecraft) {
+        if (!pilotedSpacecraft || this._pilotingMode) {
             return;
         }
+        this._pilotingMode = true;
         this._fighterController.setControlledSpacecraft(pilotedSpacecraft);
         this._cameraController.setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
         this.disableAction("followNext");
@@ -2361,7 +2444,9 @@ define([
         armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
         armada.getScreen().showCrosshair();
         armada.getScreen().showUI();
-        document.body.style.cursor = 'crosshair';
+        if (armada.control().getInterpreter("mouse").isEnabled()) {
+            document.body.style.cursor = 'crosshair';
+        }
     };
     /**
      * Switches to spectator mode, in which the player can freely move the camera
@@ -2369,6 +2454,7 @@ define([
      * @param {Boolean} [freeCamera=false] Whether to set the camera free at the current position and location.
      */
     ControlContext.prototype.switchToSpectatorMode = function (freeCamera) {
+        this._pilotingMode = false;
         this._fighterController.setControlledSpacecraft(null);
         if (freeCamera) {
             this._cameraController.setToFreeCamera(false);
