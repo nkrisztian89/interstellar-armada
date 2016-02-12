@@ -50,13 +50,13 @@ body {
 }
 
 .withBackgroundSign {
-    background-image: url(../pictures/empire_back_dark350.png);
+    background-image: url(../images/empire_back_dark350.png);
     background-position: center top;
     background-repeat: no-repeat;
 }
 
 .withSmallBackgroundSign {
-    background-image: url(../pictures/empire_back_dark200.png);
+    background-image: url(../images/empire_back_dark200.png);
     background-position: center top;
     background-repeat: no-repeat;
 }
@@ -131,8 +131,8 @@ body {
     display: block;
     padding: 0.4em;
     background: 
-        url(../pictures/empire_white50.png) left center,
-        url(../pictures/empire_white50.png) right center;
+        url(../images/empire_white50.png) left center,
+        url(../images/empire_white50.png) right center;
     background-color: #111111;
     background-repeat: no-repeat;
     box-sizing: border-box; 

@@ -1,4 +1,4 @@
-![Logo](http://nkrisztian89.github.io/interstellar-armada/pictures/thumb.png)
+![Logo](http://nkrisztian89.github.io/interstellar-armada/images/thumb.png)
 
 Intro
 =====
