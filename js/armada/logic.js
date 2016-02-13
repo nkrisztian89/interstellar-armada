@@ -423,7 +423,7 @@ define([
     /**
      * @class A class responsible for loading and storing game logic related 
      * settings and data as well and provide an interface to access them.
-     * @returns {LogicContext}
+     * @extends AsyncResource
      */
     function LogicContext() {
         asyncResource.AsyncResource.call(this);

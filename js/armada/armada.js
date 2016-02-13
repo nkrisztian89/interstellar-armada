@@ -10,247 +10,134 @@
 /*global define, require, location, document, JSON */
 
 /**
- * @param application This module augments the generic application module with functonality specific to the Interstellar Armada game
+ * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
  */
 define([
-    "modules/application"
-], function (application) {
+    "modules/game"
+], function (game) {
     "use strict";
-
     // add private variables specific to Interstellar Armada
-
     var
             /**
-             * Manages the texture, cubemap, shader and model resources of the game.
-             * @type ResourceManager
-             */
-            _resourceManager = null,
-            /**
-             * Manages the HTML screens of the game (such as menu, battle, database...)
-             * @type ScreenManager
-             */
-            _screenManager = null,
-            /**
-             * The graphics context of the game, that can be used to access and 
-             * manipulate graphical resources.
+             * The graphics context of the game, that can be used to access and manipulate graphical resources.
              * @type GraphicsContext
              */
             _graphicsContext = null,
             /**
-             * The logic context of the game, containing the domain specific model (e.g.
-             * what classes of spaceships are there)
+             * The logic context of the game, containing the domain specific model (e.g. what classes of spaceships are there)
              * @type LogicContext
              */
-            _logicContext = null,
-            /**
-             * The control context of the game, that can be used to bind input controls
-             * to in-game actions.
-             * @type ControlContext
-             */
-            _controlContext = null;
-
+            _logicContext = null;
+    game.setGameName("Interstellar Armada");
+    game.setStartScreenName("mainMenu");
+    game.setConfigFolder("config/");
+    game.setConfigFileName("config.json");
     // -------------------------------------------------------------------------
-    // Private methods
-
-    /**
-     * Sends an asynchronous request to get the JSON file describing the game
-     * settings and sets the callback function to set them.
-     * @param {String} settingsFileURL
-     */
-    application.requestSettingsLoad = function (settingsFileURL) {
-        application.requestTextFile("config", settingsFileURL, function (settingsText) {
-            var settingsJSON = JSON.parse(settingsText);
-            application.log("Loading game settings...", 1);
-            _graphicsContext.loadFromJSON(settingsJSON.graphics);
-            _graphicsContext.loadFromLocalStorage();
-            _logicContext.loadFromJSON(settingsJSON.logic);
-            _controlContext.loadFromJSON(settingsJSON.control);
-            _controlContext.loadFromLocalStorage();
-        });
+    // Overridden protected methods
+    game._loadGameSettings = function (settingsJSON) {
+        // load defaults from the JSON files and then overwrite with local preferences (of which only differences from defaults are stored)
+        _graphicsContext.loadFromJSON(settingsJSON.graphics);
+        _graphicsContext.loadFromLocalStorage();
+        _logicContext.loadFromJSON(settingsJSON.logic);
     };
-
-    application.requestConfigLoad = function (graphicsResourceManager) {
-        application.requestTextFile("config/", "config.json", function (configText) {
-            var configJSON = JSON.parse(configText);
-            application.log("Loading game configuration...");
-            application.setFolders(configJSON.folders);
-            application.setLogVerbosity(configJSON.logVerbosity);
-            application.setVersion(configJSON.version);
-
-            application.log("Game version is: " + application.getVersion(), 1);
-
-            _resourceManager.requestConfigLoad(configJSON.dataFileURLs.resources, "data", {
-                "textures": graphicsResourceManager.TextureResource,
-                "cubemaps": graphicsResourceManager.CubemapResource,
-                "shaders": graphicsResourceManager.ShaderResource,
-                "models": graphicsResourceManager.ModelResource
-            });
-            _logicContext.setClassesSourceFileName(configJSON.dataFileURLs.classes);
-            _logicContext.setEnvironmentsSourceFileName(configJSON.dataFileURLs.environments);
-            _logicContext.setLevelFileNames(configJSON.levels);
-            application.requestSettingsLoad(configJSON.configFileURLs.settings);
-        });
+    game._loadGameConfiguration = function (configJSON) {
+        _logicContext.setClassesSourceFileName(configJSON.dataFileURLs.classes);
+        _logicContext.setEnvironmentsSourceFileName(configJSON.dataFileURLs.environments);
+        _logicContext.setLevelFileNames(configJSON.levels);
     };
-
-    application.buildScreens = function () {
-        require(["modules/screens", "armada/screens"], function (screens, armadaScreens) {
-            _screenManager.addScreen(new screens.MenuScreen("mainMenu", "menu.html", [{
+    game._buildScreensAndExecuteCallback = function (screens, callback) {
+        require(["armada/screens"], function (armadaScreens) {
+            game.screenManager().addScreen(new screens.MenuScreen("mainMenu", "menu.html", [{
                     caption: "New game",
                     action: function () {
-                        _screenManager.setCurrentScreen("battle");
-                        _screenManager.getCurrentScreen().startNewBattle(_logicContext.getLevelFileName(0));
+                        game.screenManager().setCurrentScreen("battle");
+                        game.screenManager().getCurrentScreen().startNewBattle(_logicContext.getLevelFileName(0));
                     }
                 }, {
                     caption: "Database",
                     action: function () {
-                        _screenManager.setCurrentScreen("database");
+                        game.screenManager().setCurrentScreen("database");
                     }
                 }, {
                     caption: "Settings",
                     action: function () {
-                        _screenManager.setCurrentScreen("settings");
+                        game.screenManager().setCurrentScreen("settings");
                     }
                 }, {
                     caption: "About",
                     action: function () {
-                        _screenManager.setCurrentScreen("about");
+                        game.screenManager().setCurrentScreen("about");
                     }
                 }], "menuContainer"));
-            _screenManager.addScreen(new armadaScreens.BattleScreen("battle", "battle.html"));
-            _screenManager.addScreen(new armadaScreens.DatabaseScreen("database", "database.html"));
-            _screenManager.addScreen(new screens.MenuScreen("settings", "menu.html", [{
+            game.screenManager().addScreen(new armadaScreens.BattleScreen("battle", "battle.html"));
+            game.screenManager().addScreen(new armadaScreens.DatabaseScreen("database", "database.html"));
+            game.screenManager().addScreen(new screens.MenuScreen("settings", "menu.html", [{
                     caption: "Graphics settings",
                     action: function () {
-                        _screenManager.setCurrentScreen("graphics");
+                        game.screenManager().setCurrentScreen("graphics");
                     }
                 }, {
                     caption: "Control settings",
                     action: function () {
-                        _screenManager.setCurrentScreen("controls");
+                        game.screenManager().setCurrentScreen("controls");
                     }
                 }, {
                     caption: "Back",
                     action: function () {
-                        _screenManager.setCurrentScreen("mainMenu");
+                        game.screenManager().setCurrentScreen("mainMenu");
                     }
                 }], "menuContainer"));
-            _screenManager.addScreen(new armadaScreens.GraphicsScreen("graphics", "graphics.html"));
-            _screenManager.addScreen(new armadaScreens.ControlsScreen("controls", "controls.html"));
-            _screenManager.addScreen(new armadaScreens.AboutScreen("about", "about.html"));
-            _screenManager.addScreen(new screens.MenuScreen("ingameMenu", "ingame-menu.html", [{
+            game.screenManager().addScreen(new armadaScreens.GraphicsScreen("graphics", "graphics.html"));
+            game.screenManager().addScreen(new armadaScreens.ControlsScreen("controls", "controls.html"));
+            game.screenManager().addScreen(new armadaScreens.AboutScreen("about", "about.html"));
+            game.screenManager().addScreen(new screens.MenuScreen("ingameMenu", "ingame-menu.html", [{
                     caption: "Resume game",
                     action: function () {
-                        _screenManager.closeSuperimposedScreen();
-                        _screenManager.getCurrentScreen().resumeBattle();
+                        game.screenManager().closeSuperimposedScreen();
+                        game.screenManager().getCurrentScreen().resumeBattle();
                     }
                 }, {
                     caption: "Controls",
                     action: function () {
-                        _screenManager.setCurrentScreen("controls", true, [64, 64, 64], 0.5);
+                        game.screenManager().setCurrentScreen("controls", true, [64, 64, 64], 0.5);
                     }
                 }, {
                     caption: "Quit to main menu",
                     action: function () {
-                        _screenManager.setCurrentScreen("mainMenu");
+                        game.screenManager().setCurrentScreen("mainMenu");
                     }
                 }], "menuContainer"));
-
-            // hide the splash screen
-            document.body.firstElementChild.style.display = "none";
-            _screenManager.setCurrentScreen("mainMenu");
+            callback();
         });
     };
-
-    // -------------------------------------------------------------------------
-    // Public methods
-    /** 
-     * Initializes the game: builds up the screens, loads settings and displays the main menu.
-     */
-    application.initialize = function () {
-        application.log("Initializing Interstellar Armada...");
-        if (location.protocol === "file:") {
-            this.showError("Trying to run the game from the local filesystem!", "critical",
-                    "This application can only be run through a web server. " +
-                    "If you wish to run it from your own computer, you have to install, set up " +
-                    "and start a web server first. You have to put the folder containing the files of this game " +
-                    "(assume it is called 'armada') to the HTML serving folder of the web server, then " +
-                    "you can start the game by entering 'localhost/armada' in your browser's address bar.");
-            return;
-        }
+    game._startInitializationAndExecuteCallback = function (callback) {
         require([
-            "modules/graphics-resources",
-            "modules/screen-manager",
             "armada/graphics",
             "armada/logic",
             "armada/control"
-        ], function (graphicsResources, screenManager, graphics, logic, control) {
-            _resourceManager = new graphicsResources.GraphicsResourceManager();
-            _screenManager = new screenManager.ScreenManager();
+        ], function (graphics, logic, control) {
             _graphicsContext = new graphics.GraphicsContext();
             _logicContext = new logic.LogicContext();
-            _controlContext = new control.ArmadaControlContext();
-
-            application.requestConfigLoad(graphicsResources);
-
-            application.buildScreens();
+            game.setControlContextClass(control.ArmadaControlContext);
+            callback();
         });
     };
+    // -------------------------------------------------------------------------
+    // Public methods
     // Shortcuts
     /**
      * A shortcut to the graphics context of the game.
      * @returns {GraphicsContext}
      */
-    application.graphics = function () {
+    game.graphics = function () {
         return _graphicsContext;
-    };
-    /**
-     * A shortcut to the graphics resource manager of the game.
-     * @returns {ResourceManager}
-     */
-    application.resources = function () {
-        return _resourceManager;
-    };
-    /**
-     * A shortcut to the control context of the game.
-     * @returns {ControlContext}
-     */
-    application.control = function () {
-        return _controlContext;
     };
     /**
      * A shortcut to the logic context of the game.
      * @returns {LogicContext}
      */
-    application.logic = function () {
+    game.logic = function () {
         return _logicContext;
     };
-    // globally available functions
-    /**
-     * Returns the current screen of the game or the screen with the given name.
-     * @param {String} [screenName] If specified, the function will return the
-     * screen having this name. If omitted the function returns the current screen.
-     * @returns {screens.GameScreen}
-     */
-    application.getScreen = function (screenName) {
-        return screenName ?
-                _screenManager.getScreen(screenName) :
-                _screenManager.getCurrentScreen();
-    };
-    /**
-     * Switches to the given screen.
-     * @param {String} screenName The name of the screen to activate.
-     * @param {Boolean} [superimpose=false] Whether to superimpose the screen 
-     * on top of the current screen(s), or just switch over to it.
-     * @param {Number[3]} [backgroundColor] When superimposing, this color
-     * will be used for the background. Format: [red, green, blue], where 
-     * each component has to be a value between 0 and 255.
-     * @param {Number} [backgroundOpacity] When superimposing, this opacity
-     * will be used for the background. A real number, 0.0 is completely
-     * transparent, 1.0 is completely opaque.
-     */
-    application.setScreen = function (screenName, superimpose, backgroundColor, backgroundOpacity) {
-        _screenManager.setCurrentScreen(screenName, superimpose, backgroundColor, backgroundOpacity);
-    };
-
-    return application;
+    return game;
 });
