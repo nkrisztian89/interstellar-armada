@@ -710,6 +710,8 @@ define([
                 this._itemDescription.setContent(
                         shipClass.getDescription() + "<br/>" +
                         "<br/>" +
+                        shipClass.getSpacecraftType().getDescription() + "<br/>" +
+                        "<br/>" +
                         "Length: " + (((this._itemLengthInMeters) < 100) ?
                                 (this._itemLengthInMeters).toPrecision(3)
                                 : Math.round(this._itemLengthInMeters)) +

@@ -1,13 +1,20 @@
+div.databaseContainer {
+}
+
 div.itemDataSheet {
-    display: inline-block;
+    display: table;
     vertical-align: top;
     padding: 1em;
-    width: 275px;
+    min-width: 300px;
+    max-width: 600px;
+    text-align: left;
 }
 
 div.itemView {
     display: inline-block;
+    height: 100%;
     padding: 1em;
+    float: right;
 }
 
 .withSubtitle {

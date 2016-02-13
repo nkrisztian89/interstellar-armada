@@ -27,7 +27,22 @@ body {
     font-size: 16px;
     margin: 0;
     padding: 0;
-    border: 5px transparent;;
+    border: 5px transparent;
+}
+
+/* Put a wrapper div of this class around an element to be centered that has no fixed height */
+.pageGhost {
+    text-align: center;
+    height: 100%;
+    white-space: nowrap;
+}
+
+.pageGhost:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    margin-right: -0.25em; /* Adjusts spacing to avoid horizontal scrollbar */
 }
 
 .outerContainer {
@@ -47,6 +62,7 @@ body {
     padding: 1em;
     margin-bottom: 1em;
     margin-top: 1em;
+    white-space: normal;
 }
 
 .withBackgroundSign {
@@ -67,6 +83,15 @@ body {
     margin-right: auto;
 }
 
+/* This centering works on elements of any height, but requires a wrapper with the pageGhost class around the element */
+.anyHeightCentered {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+/* This centering works only on fixed-height elements */
 .centered {
     position: absolute;
     top: 0; bottom: 0;
@@ -237,6 +262,7 @@ img {
 
 p {
     font-size: 14px;
+    text-align: left;
 }
 
 h1 {
@@ -260,6 +286,12 @@ h3 {
     padding: 10px;
 }
 
+.clear:after {
+    clear: both;
+    content: "";
+    display: table;
+}
+
 /* Styling of determinate progress bars */
 progress[value] {
     /* Reset the default appearance */
@@ -269,7 +301,7 @@ progress[value] {
 
     /* Get rid of default border in Firefox. */
     border: none;
-    
+
     /* Styling of the container in Firefox */
     background-color: #444444;
     border-radius: 3px;
@@ -278,9 +310,9 @@ progress[value] {
 
 /* Styling of the container in Webkit browsers */
 progress[value]::-webkit-progress-bar {
-  background-color: #444444;
-  border-radius: 3px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
+    background-color: #444444;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
 }
 
 /* Styling of the value bar in Webkit browsers */

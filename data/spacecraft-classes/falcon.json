@@ -2,7 +2,7 @@
     "name": "falcon",
     "type": "interceptor",
     "fullName": "Falcon",
-    "description": "The latest generation of interceptors, which recently became the new standard in the fleets of the Galactic Empire. Excellent for dogfighting, with a thin cross-section making it difficult to hit, a good variety of battle equipment it can carry and an effective jammer arrangement.",
+    "description": "The latest generation of interceptors, which recently became the new standard in the fleets of the Galactic Empire. Excellent for dogfighting, with a thin cross-section making it difficult to hit and a good variety of battle equipment it can carry.",
     "showInDatabase": true,
     "hitpoints": 20,
     "model": "falcon",

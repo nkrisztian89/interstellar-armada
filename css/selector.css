@@ -21,6 +21,7 @@ div.selectorButtonContainer {
 div.selectorPropertyContainer {
     font-size: 11pt;
     display: table-cell;
+    text-align: left;
     vertical-align: middle;
     width: 250px;
     margin: 0;
