@@ -7,7 +7,8 @@
     "hitpoints": 500,
     "model": "aries",
     "shader": "ship",
-    "texture": "falcon",
+    "texture": "aries",
+    "groupZeroLuminosity": 1.0,
     "mass": 800000,
     "bodies": [
         {
@@ -240,23 +241,9 @@
             "position": [0, -160, 26]
         },
         {
-            "name": "top",
-            "fov": 60,
-            "followsPosition": true,
-            "movable": false,
-            "turnable": false,
-            "rotationCenterIsObject": false,
-            "position": [0, 40, 400],
-            "rotations": [
-                {
-                    "axis": "X",
-                    "degrees": 90
-                }
-            ]
-        },
-        {
             "name": "bridge",
             "fov": 60,
+            "fps": true,
             "followsPosition": true,
             "movable": false,
             "turnable": true,

@@ -89,6 +89,34 @@
             }
         },
         {
+            "name": "viper",
+            "basepath": "",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "viper",
+                "specular": "falcon_specular",
+                "emissive": "falcon_luminosity"
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "aries",
+            "basepath": "aries",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
             "name": "libra",
             "basepath": "libra",
             "format": "png",

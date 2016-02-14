@@ -1728,6 +1728,11 @@ define([
             showMissingPropertyError(this, "bodies");
         }
         /**
+         * What should the luminosity of group zero vertices be set to after creating a visual model for an instance of this ship class.
+         * @type Number
+         */
+        this._groupZeroLuminosity = dataJSON.groupZeroLuminosity || 0;
+        /**
          * The slots where weapons can be equipped on the ship.
          * @type WeaponSlot[]
          */
@@ -1892,6 +1897,12 @@ define([
      */
     SpacecraftClass.prototype.getBodies = function () {
         return this._bodies;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getGroupZeroLuminosity = function () {
+        return this._groupZeroLuminosity;
     };
     /**
      * @returns {WeaponSlot[]}

@@ -23,6 +23,13 @@ define([
 ], function (utils, vec, mat, application, components, screens, budaScene, control, armada, logic) {
     "use strict";
 
+    var Constants = {
+        DEFAULT_DATABASE_MODEL_ROTATION: true,
+        DEFAULT_DATABASE_BACKGROUND_COLOR: [0, 0, 0, 0],
+        DEFAULT_DATABASE_WIREFRAME_COLOR: [1, 0, 0, 1],
+        DEFAULT_DATABASE_SHOW_SOLID_MODEL: true
+    };
+
     /**
      * @class Represents the battle screen.
      * @extends screens.HTMLScreenWithCanvases
@@ -364,6 +371,18 @@ define([
         }.bind(this));
     };
 
+    function _modelRotation() {
+        return ((armada.logic().getDatabaseSetting("modelRotation") !== undefined) ?
+                armada.logic().getDatabaseSetting("modelRotation") :
+                Constants.DEFAULT_DATABASE_MODEL_ROTATION);
+    }
+
+    function _showSolidModel() {
+        return ((armada.logic().getDatabaseSetting("showSolidModel") !== undefined) ?
+                armada.logic().getDatabaseSetting("showSolidModel") :
+                Constants.DEFAULT_DATABASE_SHOW_SOLID_MODEL);
+    }
+
     /**
      * Defines a database screen object.
      * @class Represents the database screen.
@@ -471,11 +490,12 @@ define([
     };
 
     DatabaseScreen.prototype.startRevealLoop = function () {
-        var prevDate = new Date();
+        var prevDate = new Date(),
+                maxRevealState = _showSolidModel() ? 2.0 : 1.0;
         this._revealLoop = setInterval(function () {
             var curDate = new Date();
-            if (this._revealState < 2.0) {
-                this._revealState += (curDate - prevDate) / 1000 / 2;
+            if (this._revealState < maxRevealState) {
+                this._revealState = Math.min(this._revealState + (curDate - prevDate) / 1000 / 2, maxRevealState);
             } else {
                 this.stopRevealLoop();
             }
@@ -539,7 +559,7 @@ define([
         this._scene = new budaScene.Scene(
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
-                [0, 0, 0, 0], true,
+                armada.logic().getDatabaseSetting("backgroundColor") || Constants.DEFAULT_DATABASE_BACKGROUND_COLOR, true,
                 armada.graphics().getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
@@ -568,7 +588,7 @@ define([
         // when the user presses the mouse on the canvas, he can start rotating the model
         // by moving the mouse
         canvas.onmousedown = function (e) {
-            if (armada.logic().getDatabaseModelRotation()) {
+            if (_modelRotation()) {
                 this._mousePos = [e.screenX, e.screenY];
                 // automatic rotation should stop for the time of manual rotation
                 this.stopRotationLoop();
@@ -678,6 +698,9 @@ define([
                 this._solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
                     return this._itemLength / 10;
                 }, this);
+                if (!_showSolidModel()) {
+                    this._solidModel.getNode().hide();
+                }
             }.bind(this));
 
             // add the ship to the scene in line drawing mode as well
@@ -687,7 +710,7 @@ define([
                 this._wireframeModel.getNode().setShader(armada.resources().getShader("oneColorReveal").getManagedShader());
                 // set the necessary uniform functions for the one colored reveal shader
                 this._wireframeModel.setUniformValueFunction("u_color", function () {
-                    return [0.0, 1.0, 0.0, 1.0];
+                    return armada.logic().getDatabaseSetting("wireframeColor") || Constants.DEFAULT_DATABASE_WIREFRAME_COLOR;
                 });
                 this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
                     return (this._revealState <= 1.0);
@@ -737,10 +760,10 @@ define([
                 this._revealState = 0.0;
 
                 var singleRender = true;
-                if (armada.logic().getDatabaseModelRotation()) {
+                if (_modelRotation()) {
                     this.startRotationLoop();
                     singleRender = false;
-                }
+                } 
                 if (armada.graphics().getShaderComplexity() === "normal") {
                     this.startRevealLoop();
                     singleRender = false;

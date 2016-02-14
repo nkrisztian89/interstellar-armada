@@ -455,11 +455,10 @@ define([
          */
         this._levelFileNames = null;
         /**
-         * Whether the rotation of models (both automatic and manual) is enabled
-         * on the database screen.
-         * @type Boolean
+         * An object storing all the database settings.
+         * @type {modelRotation: Boolean, backgroundColor: Number[4], wireframeColor: Number[4], showSolidModel: Boolean}
          */
-        this._databaseModelRotation = false;
+        this._databaseSettings = false;
         /**
          * A descriptor object of how many random ships of each class should be added to the test 
          * scene
@@ -558,12 +557,11 @@ define([
         this._levelFileNames = value;
     };
     /**
-     * Returns whether the rotation (both automatic and manual) of models on the
-     * database screen is currently turned on.
-     * @returns {Boolean}
+     * Returns the database settings value for the passed setting key.
+     * @param {Boolean|Number[4]} settingName
      */
-    LogicContext.prototype.getDatabaseModelRotation = function () {
-        return this._databaseModelRotation;
+    LogicContext.prototype.getDatabaseSetting = function (settingName) {
+        return this._databaseSettings[settingName];
     };
     /**
      * Returns how many random ships of each class should be added to the test battle scene
@@ -790,7 +788,7 @@ define([
      * @param {Object} dataJSON
      */
     LogicContext.prototype.loadFromJSON = function (dataJSON) {
-        this._databaseModelRotation = (dataJSON.database.modelRotation === true);
+        this._databaseSettings = dataJSON.database;
         this._randomShips = dataJSON.battle.randomShips;
         this._selfFire = (dataJSON.battle.selfFire === true);
         this._autoTargeting =
@@ -2652,6 +2650,7 @@ define([
                     (wireframe === true),
                     lod,
                     [{name: "luminosityFactors", length: 20}]);
+            this._visualModel.setParameter("luminosityFactors", 0, this._class.getGroupZeroLuminosity());
             node = scene.addObject(this._visualModel);
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {
