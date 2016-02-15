@@ -24,6 +24,7 @@ define([
     "use strict";
 
     var Constants = {
+        DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND: 60,
         DEFAULT_DATABASE_MODEL_ROTATION: true,
         DEFAULT_DATABASE_BACKGROUND_COLOR: [0, 0, 0, 0],
         DEFAULT_DATABASE_WIREFRAME_COLOR: [1, 0, 0, 1],
@@ -117,18 +118,16 @@ define([
     };
 
     BattleScreen.prototype.resumeBattle = function () {
-        var freq;
         document.body.style.cursor = this._battleCursor || 'default';
         if (this._simulationLoop === null) {
             this._prevDate = new Date();
-            freq = 60; ///TODO: hardcoded
             if (this._battleScene) {
                 if (!this._isTimeStopped) {
                     this._battleScene.setShouldAnimate(true);
                 }
                 this._battleScene.setShouldUpdateCamera(true);
             }
-            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / freq);
+            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (armada.logic().getBattleSimulationStepsPerSecond() || Constants.DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND));
             armada.control().startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
@@ -323,7 +322,7 @@ define([
         this._level.requestLoadFromFile(levelSourceFilename, function () {
             var freq, canvas;
             this.updateStatus("loading additional configuration...", 5);
-            this._level.addRandomShips(armada.logic().getRandomShips(), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true);
+            this._level.addRandomShips(armada.logic().getRandomShips(), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true); //TODO: hardcoded
 
             this.updateStatus("building scene...", 10);
             canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
@@ -344,7 +343,7 @@ define([
             armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
                 this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
             }.bind(this));
-            freq = 60;
+            freq = 60; //TODO: hardcoded
             armada.resources().executeWhenReady(function () {
                 this._battleScene.setShadowMapping({
                     enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
@@ -763,7 +762,7 @@ define([
                 if (_modelRotation()) {
                     this.startRotationLoop();
                     singleRender = false;
-                } 
+                }
                 if (armada.graphics().getShaderComplexity() === "normal") {
                     this.startRevealLoop();
                     singleRender = false;

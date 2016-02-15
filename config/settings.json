@@ -65,6 +65,7 @@
             "showSolidModel": true
         },
         "battle": {
+            "simulationStepsPerSecond": 60,
             "randomShips": {
                 "falcon": 3,
                 "viper": 2,

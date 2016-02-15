@@ -117,6 +117,20 @@
             }
         },
         {
+            "name": "taurus",
+            "basepath": "taurus",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
             "name": "libra",
             "basepath": "libra",
             "format": "png",

@@ -251,6 +251,7 @@
             "movable": true,
             "turnable": true,
             "rotationCenterIsObject": false,
+            "betaRange": [-80, 50],
             "position": [0, 40, 6.7],
             "confines": [[-5, 5], [30, 41.2], [6.6, 6.6]]
         },

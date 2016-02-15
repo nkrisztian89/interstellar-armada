@@ -7,7 +7,8 @@
     "hitpoints": 1200,
     "model": "taurus",
     "shader": "ship",
-    "texture": "falcon",
+    "texture": "taurus",
+    "groupZeroLuminosity": 1.0,
     "mass": 2200000,
     "bodies": [
         {
@@ -331,54 +332,60 @@
     "views": [
         {
             "name": "near",
-            "fov": 60,
+            "fov": 40,
+            "fovRange": [40, 40],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -20, 26.5]
+            "position": [0, 8, 24]
         },
         {
-            "name": "far",
-            "fov": 60,
-            "followsPosition": true,
-            "movable": false,
-            "turnable": false,
-            "rotationCenterIsObject": true,
-            "position": [0, -165, 26.5]
-        },
-        {
-            "name": "top",
-            "fov": 60,
-            "followsPosition": true,
-            "movable": false,
-            "turnable": false,
-            "rotationCenterIsObject": false,
-            "position": [0, 60, 500],
-            "rotations": [
-                {
-                    "axis": "X",
-                    "degrees": 90
-                }
-            ]
-        },
-        {
-            "name": "bridge",
-            "fov": 60,
+            "name": "center",
+            "fps": true,
+            "fov": 40,
+            "fovRange": [40, 40],
             "followsPosition": true,
             "movable": false,
             "turnable": true,
+            "alphaRange": [-45,45],
+            "betaRange": [-10,20],
             "rotationCenterIsObject": false,
-            "position": [0, 38, 16]
+            "position": [0, 15, 2],
+            "shouldAutoReset": true
+        },
+        {
+            "name": "far",
+            "fov": 55,
+            "fovRange": [55, 55],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -255, 60]
+        },
+        {
+            "name": "bridge",
+            "fps": true,
+            "fov": 45,
+            "fovRange": [45, 45],
+            "followsPosition": true,
+            "movable": true,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "betaRange": [-80, 50],
+            "position": [0, 35, 15.9],
+            "confines": [[-6, 6], [28, 37.6], [15.9, 15.9]]
         },
         {
             "name": "front",
-            "fov": 60,
+            "fov": 55,
+            "fovRange": [55, 55],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 155, 13.5],
+            "position": [0, 200, 60],
             "rotations": [
                 {
                     "axis": "Z",
@@ -392,23 +399,41 @@
         },
         {
             "name": "free",
-            "fov": 60,
+            "fov": 45,
+            "fovRange": [30, 60],
             "followsPosition": true,
-            "movable": false,
+            "movable": true,
             "turnable": true,
             "rotationCenterIsObject": true,
-            "position": [0, -185, 0]
+            "distanceRange": [120, 320],
+            "position": [0, -175, 0]
+        },
+        {
+            "name": "flyby",
+            "fps": true,
+            "fov": 45,
+            "fovRange": [45, 45],
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": false,
+            "turnable": false,
+            "position": [115, 400, 50],
+            "distanceRange": [120, 580]
         },
         {
             "name": "target",
-            "fov": 60,
+            "fov": 55,
+            "fovRange": [55, 55],
             "fps": true,
             "followsPosition": true,
             "lookAt": "target",
-            "movable": false,
+            "movable": true,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -165, 40]
+            "position": [0, -185, 45],
+            "distanceRange": [150, 320]
         }
     ],
     "equipmentProfiles": [

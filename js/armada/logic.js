@@ -460,6 +460,11 @@ define([
          */
         this._databaseSettings = false;
         /**
+         * The steps per second rate with which the logic simulation for the battle should be carried out
+         * @type Number
+         */
+        this._battleSimulationStepsPerSecond = 0;
+        /**
          * A descriptor object of how many random ships of each class should be added to the test 
          * scene
          * @type Object
@@ -569,6 +574,13 @@ define([
      */
     LogicContext.prototype.getRandomShips = function () {
         return this._randomShips;
+    };
+    /**
+     * Returns the frames per second rate with which the logic simulation for the battle should be carried out
+     * @returns {Number}
+     */
+    LogicContext.prototype.getBattleSimulationStepsPerSecond = function () {
+        return this._battleSimulationStepsPerSecond;
     };
     /**
      * Returns whether projectiles can hit the same ship that fired them
@@ -789,6 +801,7 @@ define([
      */
     LogicContext.prototype.loadFromJSON = function (dataJSON) {
         this._databaseSettings = dataJSON.database;
+        this._battleSimulationStepsPerSecond = (dataJSON.battle.simulationStepsPerSecond);
         this._randomShips = dataJSON.battle.randomShips;
         this._selfFire = (dataJSON.battle.selfFire === true);
         this._autoTargeting =
