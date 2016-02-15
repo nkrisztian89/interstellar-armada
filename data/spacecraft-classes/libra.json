@@ -8,7 +8,7 @@
     "model": "libra",
     "shader": "ship",
     "texture": "libra",
-    "mass": 25000000,
+    "mass": 250000000,
     "bodies": [
         {
             "position": [0, 250, 0],

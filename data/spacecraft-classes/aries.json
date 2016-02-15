@@ -9,7 +9,7 @@
     "shader": "ship",
     "texture": "aries",
     "groupZeroLuminosity": 1.0,
-    "mass": 800000,
+    "mass": 9000000,
     "bodies": [
         {
             "position": [0, 70, 0],

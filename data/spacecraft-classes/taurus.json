@@ -9,7 +9,7 @@
     "shader": "ship",
     "texture": "taurus",
     "groupZeroLuminosity": 1.0,
-    "mass": 2200000,
+    "mass": 20000000,
     "bodies": [
         {
             "position": [0, 65, 55],

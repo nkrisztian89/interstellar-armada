@@ -1,12 +1,17 @@
 div.databaseContainer {
+    max-width: 900px;
+    padding: 1em;
 }
 
 div.itemDataSheet {
     display: table;
+    min-width: 12em;
     vertical-align: top;
-    padding: 1em;
-    min-width: 300px;
-    max-width: 600px;
+    text-align: left;
+}
+
+div.itemDescriptionContainer {
+    display: inline;
     text-align: left;
 }
 

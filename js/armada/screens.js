@@ -396,6 +396,7 @@ define([
 
         this._itemName = this.registerSimpleComponent("itemName");
         this._itemType = this.registerSimpleComponent("itemType");
+        this._itemStats = this.registerSimpleComponent("itemStats");
         this._itemDescription = this.registerSimpleComponent("itemDescription");
 
         this._backButton = this.registerSimpleComponent("backButton");
@@ -662,6 +663,7 @@ define([
             var shipClass = armada.logic().getSpacecraftClassesInArray(true)[this._itemIndex];
             this._itemName.setContent(shipClass.getFullName());
             this._itemType.setContent(shipClass.getSpacecraftType().getFullName());
+            this._itemStats.setContent("");
             this._itemDescription.setContent("Loading...");
 
             // create a ship that can be used to add the models (ship with default weapons
@@ -729,18 +731,16 @@ define([
                 this._itemLength = this._item.getVisualModel()._model.getHeight();
                 this._itemLengthInMeters = this._item.getVisualModel()._model.getHeightInMeters();
                 this._itemFront = this._item.getVisualModel()._model.getMaxY();
+                this._itemStats.setContent(
+                        "Length: " + utils.getLengthString(this._itemLengthInMeters) + "<br/>" +
+                        "Mass: " + utils.getMassString(shipClass.getMass()) + "<br/>" +
+                        "Armor: " + shipClass.getHitpoints() + "<br/>" +
+                        "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
+                        "Thrusters: " + shipClass.getThrusterSlots().length);
                 this._itemDescription.setContent(
                         shipClass.getDescription() + "<br/>" +
                         "<br/>" +
-                        shipClass.getSpacecraftType().getDescription() + "<br/>" +
-                        "<br/>" +
-                        "Length: " + (((this._itemLengthInMeters) < 100) ?
-                                (this._itemLengthInMeters).toPrecision(3)
-                                : Math.round(this._itemLengthInMeters)) +
-                        " m<br/>" +
-                        "Armor: " + shipClass.getHitpoints() + "</br>" +
-                        "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
-                        "Thrusters: " + shipClass.getThrusterSlots().length);
+                        shipClass.getSpacecraftType().getDescription());
                 // this will create the GL context if needed or update it with the new
                 // data if it already exists
                 this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));

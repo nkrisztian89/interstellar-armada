@@ -1261,7 +1261,7 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
-            "referenceMass": 800000,
+            "referenceMass": 9000000,
             "thrust": 15,
             "angularThrust": 40
         },
@@ -1271,7 +1271,7 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
-            "referenceMass": 2200000,
+            "referenceMass": 20000000,
             "thrust": 10,
             "angularThrust": 30
         },
@@ -1281,9 +1281,9 @@
             "texture": "flare",
             "color": [0.0, 0.8, 1.0, 1.0],
             "grade": 1,
-            "referenceMass": 25000000,
-            "thrust": 5,
-            "angularThrust": 5
+            "referenceMass": 250000000,
+            "thrust": 8,
+            "angularThrust": 8
         }
     ],
     "spacecraftTypes": [

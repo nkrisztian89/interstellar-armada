@@ -203,5 +203,33 @@ define(function () {
         }
         return null;
     };
+    /**
+     * Returns a string describing a length (distance) in human-readable form based on its value in meters.
+     * @param {Number} lengthInMeters
+     * @returns {String}
+     */
+    exports.getLengthString = function (lengthInMeters) {
+        return (lengthInMeters < 2000) ?
+                ((lengthInMeters < 100) ?
+                        lengthInMeters.toPrecision(3) + " m"
+                        : Math.round(lengthInMeters) + " m") :
+                ((lengthInMeters < 100000) ?
+                        (lengthInMeters / 1000).toPrecision(3) + " km"
+                        : Math.round(lengthInMeters / 1000) + " km");
+    };
+    /**
+     * Returns a string describing a mass (weight) in human-readable form based on its value in kilograms.
+     * @param {Number} massInKilograms
+     * @returns {String}
+     */
+    exports.getMassString = function (massInKilograms) {
+        return (massInKilograms < 2000) ?
+                ((massInKilograms < 100) ?
+                        massInKilograms.toPrecision(3) + " kg"
+                        : Math.round(massInKilograms) + " kg") :
+                ((massInKilograms < 100000) ?
+                        (massInKilograms / 1000).toPrecision(3) + " t"
+                        : Math.round(massInKilograms / 1000) + " t");
+    };
     return exports;
 });

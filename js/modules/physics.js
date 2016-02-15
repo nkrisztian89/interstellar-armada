@@ -679,7 +679,7 @@ define([
             // correct matrix inaccuracies and close to zero values resulting from
             // floating point operations
             this._velocityMatrix = mat.straightened(this._velocityMatrix, 0.0001);
-            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, 0.00002);
+            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, 0.00001); //TODO: hardcoded
             this._correctMatrices();
         }
     };
