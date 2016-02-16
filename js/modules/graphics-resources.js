@@ -367,6 +367,12 @@ define([
         }
     };
     /**
+     * @returns {String}
+     */
+    ShaderResource.prototype.getFallbackShaderName = function () {
+        return this._fallbackShaderName;
+    };
+    /**
      * @returns {ManagedShader}
      */
     ShaderResource.prototype.getManagedShader = function () {
@@ -618,6 +624,13 @@ define([
      */
     GraphicsResourceManager.prototype.getShader = function (name) {
         return this.getResource("shaders", name);
+    };
+    /**
+     * @param {String} name
+     * @returns {ShaderResource}
+     */
+    GraphicsResourceManager.prototype.getFallbackShader = function (name) {
+        return this.getResource("shaders", this.getResource("shaders", name, {doNotLoad: true}).getFallbackShaderName(), {allowNullResult: true}) || this.getShader(name);
     };
     /**
      * @param {String} name

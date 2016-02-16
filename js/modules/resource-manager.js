@@ -156,7 +156,9 @@ define([
     };
     /**
      * @param {String} resourceName
-     * @param {Object} params
+     * @param {Object} params The parameters to be passed for the loading of the resource (and also for the check whether a reload is 
+     * required). Every resource type can use their specific parameters for the check or the loading. If the general parameter "doNotLoad"
+     * is set to true, the method will not initiate a loading of the resource, only return the resource object.
      * @returns {GenericResource}
      */
     ResourceHolder.prototype.getResource = function (resourceName, params) {
@@ -168,16 +170,17 @@ define([
             return null;
         }
         resource = this._resources[resourceName];
-
-        if (resource.requiresReload(params)) {
-            this._numRequestedResources++;
-            this.resetReadyState();
-            resource.executeWhenReady(function () {
-                this._numLoadedResources++;
-                if (this.allResourcesAreLoaded()) {
-                    this.setToReady();
-                }
-            }.bind(this));
+        if (!params || !params.doNotLoad) {
+            if (resource.requiresReload(params)) {
+                this._numRequestedResources++;
+                this.resetReadyState();
+                resource.executeWhenReady(function () {
+                    this._numLoadedResources++;
+                    if (this.allResourcesAreLoaded()) {
+                        this.setToReady();
+                    }
+                }.bind(this));
+            }
         }
         return resource;
     };
@@ -301,7 +304,9 @@ define([
     /**
      * @param {String} resourceType
      * @param {String} resourceName
-     * @param {Object} params
+     * @param {Object} params The parameters to be passed for the loading of the resource (and also for the check whether a reload is 
+     * required). Every resource type can use their specific parameters for the check or the loading. If the general parameter "doNotLoad"
+     * is set to true, the method will not initiate a loading of the resource, only return the resource object.
      * @returns {GenericResource}
      */
     ResourceManager.prototype.getResource = function (resourceType, resourceName, params) {
@@ -313,15 +318,16 @@ define([
             }
             return null;
         }
-
-        if (resource.requiresReload(params)) {
-            this._numRequestedResources++;
-            this.resetReadyState();
-            resource.request(params);
-            resource.executeWhenReady(function () {
-                this._numLoadedResources++;
-                this._onResourceLoad(resourceType, resourceName);
-            }.bind(this));
+        if (!params || !params.doNotLoad) {
+            if (resource.requiresReload(params)) {
+                this._numRequestedResources++;
+                this.resetReadyState();
+                resource.request(params);
+                resource.executeWhenReady(function () {
+                    this._numLoadedResources++;
+                    this._onResourceLoad(resourceType, resourceName);
+                }.bind(this));
+            }
         }
         return resource;
     };

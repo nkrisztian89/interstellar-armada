@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -9,11 +9,18 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, parseFloat, window, localStorage */
 
+/**
+ * @param application Using the application module for error displaying functionality
+ * @param asyncResource GraphicsContext is an AsynchResource subclass
+ * @param budaScene The graphics context creates and stores a default LODContext
+ * @param armada The resource manager of armada is accessed to load fallback shaders if needed
+ */
 define([
     "modules/application",
     "modules/async-resource",
-    "modules/buda-scene"
-], function (application, asyncResource, budaScene) {
+    "modules/buda-scene",
+    "armada/armada"
+], function (application, asyncResource, budaScene, armada) {
     "use strict";
     /**
      * @class A graphics context for other modules, to be used to pass the 
@@ -354,6 +361,15 @@ define([
      */
     GraphicsContext.prototype.getShadowDepthRatio = function () {
         return this._shadowDepthRatio;
+    };
+    GraphicsContext.prototype.getShader = function (shaderName) {
+        //TODO: implement with enum
+        switch (this.getShaderComplexity()) {
+            case "normal":
+                return armada.resources().getShader(shaderName);
+            case "simple":
+                return armada.resources().getFallbackShader(shaderName);
+        }
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

@@ -62,7 +62,8 @@
             "modelRotation": true,
             "backgroundColor": [0, 0, 0, 0],
             "wireframeColor": [0, 1, 0, 1],
-            "showSolidModel": true
+            "showSolidModel": true,
+            "modelRevealAnimation": true
         },
         "battle": {
             "simulationStepsPerSecond": 60,

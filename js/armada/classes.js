@@ -139,9 +139,7 @@ define([
      * 
      */
     ShadedClass.prototype.acquireResources = function () {
-        if (this._shader === null) {
-            this._shader = armada.resources().getShader(this._shaderName);
-        }
+        this._shader = armada.graphics().getShader(this._shaderName);
     };
     /**
      * 

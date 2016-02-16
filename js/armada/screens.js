@@ -23,13 +23,19 @@ define([
 ], function (utils, vec, mat, application, components, screens, budaScene, control, armada, logic) {
     "use strict";
 
-    var Constants = {
+    var _constants = {
         DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND: 60,
         DEFAULT_DATABASE_MODEL_ROTATION: true,
         DEFAULT_DATABASE_BACKGROUND_COLOR: [0, 0, 0, 0],
         DEFAULT_DATABASE_WIREFRAME_COLOR: [1, 0, 0, 1],
-        DEFAULT_DATABASE_SHOW_SOLID_MODEL: true
+        DEFAULT_DATABASE_SHOW_WIREFRAME_MODEL: true,
+        DEFAULT_DATABASE_SHOW_SOLID_MODEL: true,
+        DEFAULT_DATABASE_MODEL_REVEAL_ANIMATION: true
     };
+
+    function _shouldUseShadowMapping() {
+        return armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal");
+    }
 
     /**
      * @class Represents the battle screen.
@@ -127,7 +133,7 @@ define([
                 }
                 this._battleScene.setShouldUpdateCamera(true);
             }
-            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (armada.logic().getBattleSimulationStepsPerSecond() || Constants.DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND));
+            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (armada.logic().getBattleSimulationStepsPerSecond() || _constants.DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND));
             armada.control().startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
@@ -326,8 +332,8 @@ define([
 
             this.updateStatus("building scene...", 10);
             canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
-            if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
-                armada.resources().getShader("shadowMapping");
+            if (_shouldUseShadowMapping()) {
+                armada.graphics().getShader("shadowMapping");
             }
             this._battleScene = new budaScene.Scene(
                     0, 0, canvas.width, canvas.height,
@@ -345,13 +351,17 @@ define([
             }.bind(this));
             freq = 60; //TODO: hardcoded
             armada.resources().executeWhenReady(function () {
-                this._battleScene.setShadowMapping({
-                    enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
-                    shader: armada.graphics().getShadowMapping() ? armada.resources().getShader("shadowMapping").getManagedShader() : null,
-                    textureSize: armada.graphics().getShadowQuality(),
-                    ranges: armada.graphics().getShadowRanges(),
-                    depthRatio: armada.graphics().getShadowDepthRatio()
-                });
+                if (_shouldUseShadowMapping()) {
+                    this._battleScene.setShadowMapping({
+                        enable: true,
+                        shader: armada.graphics().getShader("shadowMapping").getManagedShader(),
+                        textureSize: armada.graphics().getShadowQuality(),
+                        ranges: armada.graphics().getShadowRanges(),
+                        depthRatio: armada.graphics().getShadowDepthRatio()
+                    });
+                } else {
+                    this._battleScene.setShadowMapping(null);
+                }
                 this.updateStatus("initializing WebGL...", 75);
                 this.clearSceneCanvasBindings();
                 this.bindSceneToCanvas(this._battleScene, this.getScreenCanvas("battleCanvas"));
@@ -373,13 +383,28 @@ define([
     function _modelRotation() {
         return ((armada.logic().getDatabaseSetting("modelRotation") !== undefined) ?
                 armada.logic().getDatabaseSetting("modelRotation") :
-                Constants.DEFAULT_DATABASE_MODEL_ROTATION);
+                _constants.DEFAULT_DATABASE_MODEL_ROTATION);
     }
 
     function _showSolidModel() {
         return ((armada.logic().getDatabaseSetting("showSolidModel") !== undefined) ?
                 armada.logic().getDatabaseSetting("showSolidModel") :
-                Constants.DEFAULT_DATABASE_SHOW_SOLID_MODEL);
+                _constants.DEFAULT_DATABASE_SHOW_SOLID_MODEL);
+    }
+
+    function _showWireframeModel() {
+        return ((armada.logic().getDatabaseSetting("showWireframeModel") !== undefined) ?
+                armada.logic().getDatabaseSetting("showWireframeModel") :
+                ((armada.graphics().getShaderComplexity() === "normal") ?
+                        _constants.DEFAULT_DATABASE_SHOW_WIREFRAME_MODEL :
+                        !_showSolidModel()));
+    }
+
+    function _shouldReveal() {
+        return (armada.graphics().getShaderComplexity() === "normal") &&
+                ((armada.logic().getDatabaseSetting("modelRevealAnimation") !== undefined) ?
+                        armada.logic().getDatabaseSetting("modelRevealAnimation") :
+                        _constants.DEFAULT_DATABASE_MODEL_REVEAL_ANIMATION);
     }
 
     /**
@@ -491,7 +516,8 @@ define([
 
     DatabaseScreen.prototype.startRevealLoop = function () {
         var prevDate = new Date(),
-                maxRevealState = _showSolidModel() ? 2.0 : 1.0;
+                maxRevealState = _showSolidModel() ? 2.2 : 1.0;
+        this._revealState = _showWireframeModel() ? 0.0 : 1.0;
         this._revealLoop = setInterval(function () {
             var curDate = new Date();
             if (this._revealState < maxRevealState) {
@@ -506,16 +532,24 @@ define([
     DatabaseScreen.prototype.startRotationLoop = function () {
         var prevDate = new Date();
         // turn the ship to start the rotation facing the camera
-        this._solidModel.setOrientationMatrix(mat.identity4());
-        this._solidModel.rotate([0.0, 0.0, 1.0], Math.PI);
-        this._solidModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
-        this._wireframeModel.setOrientationMatrix(mat.identity4());
-        this._wireframeModel.rotate([0.0, 0.0, 1.0], Math.PI);
-        this._wireframeModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
+        if (this._solidModel) {
+            this._solidModel.setOrientationMatrix(mat.identity4());
+            this._solidModel.rotate([0.0, 0.0, 1.0], Math.PI);
+            this._solidModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
+        }
+        if (this._wireframeModel) {
+            this._wireframeModel.setOrientationMatrix(mat.identity4());
+            this._wireframeModel.rotate([0.0, 0.0, 1.0], Math.PI);
+            this._wireframeModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
+        }
         this._rotationLoop = setInterval(function () {
             var curDate = new Date();
-            this._solidModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
-            this._wireframeModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            if (this._solidModel) {
+                this._solidModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            }
+            if (this._wireframeModel) {
+                this._wireframeModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
+            }
             prevDate = curDate;
         }.bind(this), 1000 / 60); ///TODO: hardcoded value
     };
@@ -551,15 +585,15 @@ define([
 
         this.resizeCanvas(this._name + "_databaseCanvas");
         var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
-        if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
-            armada.resources().getShader("shadowMapping");
+        if (_shouldUseShadowMapping()) {
+            armada.graphics().getShader("shadowMapping");
         }
         // create a new scene and add a directional light source which will not change
         // while different objects are shown
         this._scene = new budaScene.Scene(
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
-                armada.logic().getDatabaseSetting("backgroundColor") || Constants.DEFAULT_DATABASE_BACKGROUND_COLOR, true,
+                armada.logic().getDatabaseSetting("backgroundColor") || _constants.DEFAULT_DATABASE_BACKGROUND_COLOR, true,
                 armada.graphics().getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
@@ -567,14 +601,16 @@ define([
             this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
         }.bind(this));
         armada.resources().executeWhenReady(function () {
-            if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
+            if (_shouldUseShadowMapping()) {
                 this._scene.setShadowMapping({
-                    enable: armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal"),
-                    shader: armada.graphics().getShadowMapping() ? armada.resources().getShader("shadowMapping").getManagedShader() : null,
+                    enable: true,
+                    shader: armada.graphics().getShader("shadowMapping").getManagedShader(),
                     textureSize: armada.graphics().getShadowQuality(),
                     ranges: [],
                     depthRatio: armada.graphics().getShadowDepthRatio()
                 });
+            } else {
+                this._scene.setShadowMapping(null);
             }
             this.updateStatus("", 100);
             this._loadingBox.hide();
@@ -595,10 +631,14 @@ define([
                 // the mouse might go out from over the canvas during rotation, so register the
                 // move event handler on the document body
                 document.body.onmousemove = function (e) {
-                    this._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
-                    this._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
-                    this._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
-                    this._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
+                    if (this._solidModel) {
+                        this._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
+                        this._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
+                    }
+                    if (this._wireframeModel) {
+                        this._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
+                        this._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
+                    }
                     this._mousePos = [e.screenX, e.screenY];
                 }.bind(this);
                 // once the user releases the mouse button, the event handlers should be cancelled
@@ -676,53 +716,57 @@ define([
                     "default"
                     );
             // request the required shaders from the resource manager
-            armada.resources().getShader("oneColorReveal");
-            if (armada.graphics().getShadowMapping()) {
-                armada.resources().getShader("shadowMapReveal");
+            armada.graphics().getShader("oneColorReveal");
+            if (_shouldUseShadowMapping()) {
+                armada.graphics().getShader("shadowMapReveal");
             } else {
-                armada.resources().getShader("simpleReveal");
+                armada.graphics().getShader("simpleReveal");
             }
-            // add the ship to the scene in triangle drawing mode
-            this._item.addToScene(this._scene, armada.graphics().getMaxLoadedLOD(), false, {weapons: true}, function (model) {
-                this._solidModel = model;
-                // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-                this._solidModel.getNode().setShader(armada.graphics().getShadowMapping() ?
-                        armada.resources().getShader("shadowMapReveal").getManagedShader()
-                        : armada.resources().getShader("simpleReveal").getManagedShader());
-                // set the necessary uniform functions for the reveal shader
-                this._solidModel.setUniformValueFunction("u_revealFront", function () {
-                    return true;
-                });
-                this._solidModel.setUniformValueFunction("u_revealStart", function () {
-                    return this._itemFront - ((this._revealState - 1.0) * this._itemLength * 1.1);
-                }, this);
-                this._solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
-                    return this._itemLength / 10;
-                }, this);
-                if (!_showSolidModel()) {
-                    this._solidModel.getNode().hide();
-                }
-            }.bind(this));
-
-            // add the ship to the scene in line drawing mode as well
-            this._item.addToScene(this._scene, armada.graphics().getMaxLoadedLOD(), true, {weapons: true}, function (model) {
-                this._wireframeModel = model;
-                // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-                this._wireframeModel.getNode().setShader(armada.resources().getShader("oneColorReveal").getManagedShader());
-                // set the necessary uniform functions for the one colored reveal shader
-                this._wireframeModel.setUniformValueFunction("u_color", function () {
-                    return armada.logic().getDatabaseSetting("wireframeColor") || Constants.DEFAULT_DATABASE_WIREFRAME_COLOR;
-                });
-                this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
-                    return (this._revealState <= 1.0);
-                }, this);
-                this._wireframeModel.setUniformValueFunction("u_revealStart", function () {
-                    return this._itemFront - ((this._revealState > 1.0 ? (this._revealState - 1.0) : this._revealState) * this._itemLength * 1.1);
-                }, this);
-                this._wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
-                    return (this._revealState <= 1.0) ? (this._itemLength / 10) : 0;
-                }, this);
-            }.bind(this));
+            if (_showSolidModel()) {
+                // add the ship to the scene in triangle drawing mode
+                this._item.addToScene(this._scene, armada.graphics().getMaxLoadedLOD(), false, {weapons: true}, function (model) {
+                    this._solidModel = model;
+                    // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
+                    this._solidModel.getNode().setShader(_shouldUseShadowMapping() ?
+                            armada.graphics().getShader("shadowMapReveal").getManagedShader()
+                            : armada.graphics().getShader("simpleReveal").getManagedShader());
+                    // set the necessary uniform functions for the reveal shader
+                    this._solidModel.setUniformValueFunction("u_revealFront", function () {
+                        return true;
+                    });
+                    this._solidModel.setUniformValueFunction("u_revealStart", function () {
+                        return this._itemFront - ((this._revealState - 1.0) * this._itemLength * 1.1);
+                    }, this);
+                    this._solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
+                        return this._itemLength / 10;
+                    }, this);
+                }.bind(this));
+            } else {
+                this._solidModel = null;
+            }
+            if (_showWireframeModel()) {
+                // add the ship to the scene in line drawing mode as well
+                this._item.addToScene(this._scene, armada.graphics().getMaxLoadedLOD(), true, {weapons: true}, function (model) {
+                    this._wireframeModel = model;
+                    // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
+                    this._wireframeModel.getNode().setShader(armada.graphics().getShader("oneColorReveal").getManagedShader());
+                    // set the necessary uniform functions for the one colored reveal shader
+                    this._wireframeModel.setUniformValueFunction("u_color", function () {
+                        return armada.logic().getDatabaseSetting("wireframeColor") || _constants.DEFAULT_DATABASE_WIREFRAME_COLOR;
+                    });
+                    this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
+                        return (this._revealState <= 1.0);
+                    }, this);
+                    this._wireframeModel.setUniformValueFunction("u_revealStart", function () {
+                        return this._itemFront - ((this._revealState > 1.0 ? (this._revealState - 1.0) : this._revealState) * this._itemLength * 1.1);
+                    }, this);
+                    this._wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
+                        return (this._revealState <= 1.0) ? (this._itemLength / 10) : 0;
+                    }, this);
+                }.bind(this));
+            } else {
+                this._wireframeModel = null;
+            }
 
             // set the callback for when the potentially needed additional file resources have 
             // been loaded
@@ -746,7 +790,7 @@ define([
                 this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
                 this._scene.activeCamera.moveToPosition([0, 0, this._item.getVisualModel().getScaledSize()], 0);
-                if (armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal")) {
+                if (_shouldUseShadowMapping()) {
                     this._scene.setShadowMapRanges([
                         0.5 * this._item.getVisualModel().getScaledSize(),
                         this._item.getVisualModel().getScaledSize()
@@ -756,22 +800,22 @@ define([
                     this._scene.disableShadowMapping();
                 }
 
-                this._revealState = 0.0;
-
                 var singleRender = true;
                 if (_modelRotation()) {
                     this.startRotationLoop();
                     singleRender = false;
                 }
-                if (armada.graphics().getShaderComplexity() === "normal") {
+                if (_shouldReveal()) {
                     this.startRevealLoop();
                     singleRender = false;
+                } else {
+                    this._revealState = 2.2;
                 }
                 if (singleRender) {
                     this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
                     this.render();
                 } else {
-                    this.startRenderLoop(1000 / 60);
+                    this.startRenderLoop(1000 / 60); //TODO: hardcoded
                 }
 
                 document.body.style.cursor = 'default';
