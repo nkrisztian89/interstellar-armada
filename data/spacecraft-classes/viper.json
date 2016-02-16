@@ -334,7 +334,7 @@
             "alphaRange": [-120, 120],
             "betaRange": [-80, 45],
             "rotationCenterIsObject": false,
-            "position": [0, 8.4, 1.95],
+            "position": [0, 8.25, 1.90],
             "shouldAutoReset": true
         },
         {
@@ -386,7 +386,7 @@
             "name": "target",
             "fps": true,
             "fov": 55,
-            "fovRange": [55, 55],
+            "fovRange": [30, 55],
             "followsPosition": true,
             "lookAt": "target",
             "movable": true,

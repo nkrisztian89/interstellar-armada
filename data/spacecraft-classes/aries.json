@@ -304,7 +304,7 @@
             "name": "target",
             "fps": true,
             "fov": 55,
-            "fovRange": [55, 55],
+            "fovRange": [30, 55],
             "followsPosition": true,
             "lookAt": "target",
             "movable": true,

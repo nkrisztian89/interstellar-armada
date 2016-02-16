@@ -8,6 +8,7 @@
     "model": "libra",
     "shader": "ship",
     "texture": "libra",
+    "groupZeroLuminosity": 1.0,
     "mass": 250000000,
     "bodies": [
         {
@@ -469,54 +470,35 @@
     "views": [
         {
             "name": "near",
-            "fov": 60,
+            "fps": true,
+            "fov": 40,
+            "fovRange": [40, 40],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
-            "rotationCenterIsObject": true,
-            "position": [0, -165, 135]
+            "rotationCenterIsObject": false,
+            "position": [0, -145, 115]
         },
         {
             "name": "far",
-            "fov": 60,
-            "followsPosition": true,
-            "movable": false,
-            "turnable": false,
-            "rotationCenterIsObject": true,
-            "position": [0, -1350, 235]
-        },
-        {
-            "name": "top",
-            "fov": 60,
-            "followsPosition": true,
-            "movable": false,
-            "turnable": false,
-            "rotationCenterIsObject": false,
-            "position": [0, 165, 2335],
-            "rotations": [
-                {
-                    "axis": "X",
-                    "degrees": 90
-                }
-            ]
-        },
-        {
-            "name": "front-hangar",
-            "fov": 60,
+            "fps": true,
+            "fov": 55,
+            "fovRange": [55, 55],
             "followsPosition": true,
             "movable": false,
             "turnable": true,
-            "rotationCenterIsObject": false,
-            "position": [0, 400, -30]
+            "rotationCenterIsObject": true,
+            "position": [0, -1150, 250]
         },
         {
             "name": "front",
-            "fov": 60,
+            "fov": 55,
+            "fovRange": [55, 55],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [0, 850, 100],
+            "position": [0, 1250, 500],
             "rotations": [
                 {
                     "axis": "Z",
@@ -529,28 +511,50 @@
             ]
         },
         {
-            "name": "back-hangar",
-            "fov": 60,
+            "name": "front-hangar",
+            "fps": true,
+            "fov": 40,
+            "fovRange": [40, 40],
             "followsPosition": true,
             "movable": false,
             "turnable": true,
             "rotationCenterIsObject": false,
-            "position": [-30, -280, 0],
+            "betaRange": [-45, 45],
+            "position": [0, 400, -30],
+            "shouldAutoReset": true
+        },
+        {
+            "name": "back-hangar",
+            "fps": true,
+            "fov": 55,
+            "fovRange": [55, 55],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "betaRange": [-80, 50],
+            "position": [-20, -267, 3],
             "rotations": [
                 {
+                    "axis": "X",
+                    "degrees": 5
+                },
+                {
                     "axis": "Z",
-                    "degrees": -90
+                    "degrees": -95
                 }
             ]
         },
         {
             "name": "cannon",
-            "fov": 90,
+            "fps": true,
+            "fov": 60,
+            "fovRange": [30, 60],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": false,
-            "position": [145, 50, 16],
+            "position": [142, 50, 19],
             "rotations": [
                 {
                     "axis": "Z",
@@ -559,24 +563,54 @@
             ]
         },
         {
-            "name": "free",
+            "name": "turrets",
+            "fps": true,
             "fov": 60,
+            "fovRange": [30, 60],
             "followsPosition": true,
             "movable": false,
             "turnable": true,
+            "rotationCenterIsObject": false,
+            "betaRange": [-90, 0],
+            "position": [0, 50, 82]
+        },
+        {
+            "name": "free",
+            "fov": 45,
+            "fovRange": [30, 60],
+            "followsPosition": true,
+            "movable": true,
+            "turnable": true,
             "rotationCenterIsObject": true,
+            "distanceRange": [700, 2000],
             "position": [0, -1050, 0]
+        },
+        {
+            "name": "flyby",
+            "fps": true,
+            "fov": 45,
+            "fovRange": [45, 45],
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": false,
+            "turnable": false,
+            "position": [650, 1700, 250],
+            "distanceRange": [650, 2400]
         },
         {
             "name": "target",
             "fps": true,
-            "fov": 60,
+            "fov": 55,
+            "fovRange": [30, 55],
             "followsPosition": true,
             "lookAt": "target",
-            "movable": false,
+            "movable": true,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -750, 240]
+            "position": [0, -750, 240],
+            "distanceRange": [700, 1300]
         }
     ],
     "equipmentProfiles": [
