@@ -94,6 +94,11 @@ define([
                  */
                 HITBOX_TEXTURE_NAME: "white",
                 /**
+                 * The shader resource with this name will be used for hitboxes when they are displayed.
+                 * @type Number
+                 */
+                HITBOX_SHADER_NAME: "lambert-with-luminosity",
+                /**
                  * The size of the parameter array that stores the luminosity factors for the various indexed triangle groups on spacecrafts
                  * This should be same as the uniform array size in the shader (TODO: get that)
                  * @type Number
@@ -2662,7 +2667,7 @@ define([
                         _constants.HITBOX_COLOR)),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
-                        this._class.getShader(),
+                        armada.resources().getShader(_constants.HITBOX_SHADER_NAME).getManagedShader(),
                         this.getHitboxTextures(),
                         mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
                         this._class.getBodies()[index].getOrientationMatrix(),
@@ -2674,6 +2679,7 @@ define([
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
+            armada.resources().getShader(_constants.HITBOX_SHADER_NAME);
             armada.resources().getTexture(_constants.HITBOX_TEXTURE_NAME);
         }
         this._class.acquireResources(params);
