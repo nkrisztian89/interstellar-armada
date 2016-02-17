@@ -105,16 +105,6 @@ define([
                  */
                 LUMINOSITY_FACTORS_ARRAY_LENGTH: 20,
                 /**
-                 * The default texture quality to use (TODO: get this from a setting)
-                 * @type String
-                 */
-                TEXTURE_QUALITY: "normal",
-                /**
-                 * The default texture quality prefence list to use (TODO: get this from a setting)
-                 * @type String[]
-                 */
-                TEXTURE_QUALITY_PREFERENCE_LIST: ["normal"],
-                /**
                  * Determines how long should spacecrafts be displayed during their explosion (as a ratio compared to the explosion duration)
                  * @type Number
                  */
@@ -199,7 +189,7 @@ define([
                 layerParticle = new budaScene.BackgroundBillboard(
                         layers[i].getModel(),
                         layers[i].getShader(),
-                        layers[i].getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
+                        layers[i].getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
                         layers[i].getColor(),
                         layers[i].getSize(),
                         mat.translation4v(vec.scaled3(this._direction, _constants.BACKGROUND_OBJECT_DISTANCE)));
@@ -963,7 +953,7 @@ define([
         return function () {
             return new budaScene.Particle(emitterDescriptor.getModel(),
                     emitterDescriptor.getShader(),
-                    emitterDescriptor.getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
+                    emitterDescriptor.getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
                     mat.identity4(),
                     emitterDescriptor.getParticleStates(),
                     false);
@@ -1154,7 +1144,7 @@ define([
         this._visualModel = this._visualModel || new budaScene.Billboard(
                 this._class.getModel(),
                 this._class.getShader(),
-                this._class.getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
+                this._class.getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
                 this._class.getSize(),
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix());
@@ -1321,7 +1311,7 @@ define([
             this._visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTextures(_constants.TEXTURE_QUALITY_PREFERENCE_LIST),
+                    this._class.getTextures(armada.graphics().getTextureQualityPreferenceList()),
                     this._slot.positionMatrix,
                     this._slot.orientationMatrix,
                     mat.identity4(),
@@ -1343,7 +1333,7 @@ define([
         return budaScene.dynamicParticle(
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
-                projectileClass.getMuzzleFlash().getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
+                projectileClass.getMuzzleFlash().getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getSize(),
                 muzzleFlashPosMatrix,
@@ -1472,7 +1462,7 @@ define([
             this._visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
-                    this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
+                    this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
                     this._propulsionClass.getThrusterBurnParticle().getColor(),
                     this._slot.size,
                     mat.translation4v(this._slot.positionVector));
@@ -2424,11 +2414,11 @@ define([
      */
     Spacecraft.prototype.getHitboxTextures = function () {
         var i, textureTypes,
-                textureResource = armada.resources().getTexture(_constants.HITBOX_TEXTURE_NAME), 
+                textureResource = armada.resources().getTexture(_constants.HITBOX_TEXTURE_NAME),
                 result = {};
         textureTypes = textureResource.getTypes();
         for (i = 0; i < textureTypes.length; i++) {
-            result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], _constants.TEXTURE_QUALITY);
+            result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], armada.graphics().getTextureQuality());
         }
         return result;
     };
@@ -2734,7 +2724,7 @@ define([
             this._visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTextures(_constants.TEXTURE_QUALITY_PREFERENCE_LIST),
+                    this._class.getTextures(armada.graphics().getTextureQualityPreferenceList()),
                     this._physicalModel.getPositionMatrix(),
                     this._physicalModel.getOrientationMatrix(),
                     mat.scaling4(this._class.getModel().getScale()),
@@ -2991,7 +2981,7 @@ define([
                 }
             } else {
                 this._timeElapsedSinceDestruction += dt;
-                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() * _constants.SHIP_SHOW_TIME_RATIO_DURING_EXPLOSION)) { 
+                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() * _constants.SHIP_SHOW_TIME_RATIO_DURING_EXPLOSION)) {
                     this.destroy();
                     return;
                 }

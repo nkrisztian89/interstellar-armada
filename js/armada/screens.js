@@ -16,11 +16,13 @@ define([
     "modules/application",
     "modules/components",
     "modules/screens",
+    "modules/managed-gl",
     "modules/buda-scene",
     "modules/control",
     "armada/armada",
-    "armada/logic"
-], function (utils, vec, mat, application, components, screens, budaScene, control, armada, logic) {
+    "armada/logic",
+    "armada/graphics"
+], function (utils, vec, mat, application, components, screens, managedGL, budaScene, control, armada, logic, graphics) {
     "use strict";
 
     var _constants = {
@@ -837,15 +839,58 @@ define([
     function GraphicsScreen(name, source) {
         screens.HTMLScreen.call(this, name, source);
 
-        this._backButton = this.registerSimpleComponent("backButton");
-        this._defaultsButton = this.registerSimpleComponent("defaultsButton");
-        this._antialiasingSelector = this.registerExternalComponent(new components.Selector(name + "_aaSelector", "selector.html", "selector.css", "Anti-aliasing:", ["on", "off"]), "settingsDiv");
-        this._filteringSelector = this.registerExternalComponent(new components.Selector(name + "_filteringSelector", "selector.html", "selector.css", "Texture filtering:", ["bilinear", "trilinear", "anisotropic"]), "settingsDiv");
-        this._lodSelector = this.registerExternalComponent(new components.Selector(name + "_lodSelector", "selector.html", "selector.css", "Model details:", ["very low", "low", "medium", "high", "very high"]), "settingsDiv");
-        this._shaderComplexitySelector = this.registerExternalComponent(new components.Selector(name + "_shaderComplexitySelector", "selector.html", "selector.css", "Shaders:", ["normal", "simple"]), "settingsDiv");
-        this._shadowMappingSelector = this.registerExternalComponent(new components.Selector(name + "_shadowMappingSelector", "selector.html", "selector.css", "Shadows:", ["on", "off"]), "settingsDiv");
-        this._shadowQualitySelector = this.registerExternalComponent(new components.Selector(name + "_shadowQualitySelector", "selector.html", "selector.css", "Shadow quality:", ["low", "medium", "high"]), "settingsDiv");
-        this._shadowDistanceSelector = this.registerExternalComponent(new components.Selector(name + "_shadowDistanceSelector", "selector.html", "selector.css", "Shadow distance:", ["very close", "close", "medium", "far", "very far"]), "settingsDiv");
+        /**
+         * @type ExternalComponent
+         */
+        this._backButton = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._defaultsButton = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._antialiasingSelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._filteringSelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._textureQualitySelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._lodSelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._shaderComplexitySelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._shadowMappingSelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._shadowQualitySelector = null;
+        /**
+         * @type ExternalComponent
+         */
+        this._shadowDistanceSelector = null;
+        armada.graphics().executeWhenReady(function () {
+            this._backButton = this.registerSimpleComponent("backButton");
+            this._defaultsButton = this.registerSimpleComponent("defaultsButton");
+            this._antialiasingSelector = this.registerExternalComponent(new components.Selector(name + "_aaSelector", "selector.html", "selector.css", "Anti-aliasing:", ["on", "off"]), "settingsDiv");
+            this._filteringSelector = this.registerExternalComponent(new components.Selector(name + "_filteringSelector", "selector.html", "selector.css", "Texture filtering:", utils.getEnumValues(managedGL.TextureFiltering)), "settingsDiv");
+            this._textureQualitySelector = this.registerExternalComponent(new components.Selector(name + "_textureQualitySelector", "selector.html", "selector.css", "Texture quality:", utils.getEnumValues(armada.graphics().getTextureQualityPreferenceList()).reverse()), "settingsDiv");
+            this._lodSelector = this.registerExternalComponent(new components.Selector(name + "_lodSelector", "selector.html", "selector.css", "Model details:", ["very low", "low", "medium", "high", "very high"]), "settingsDiv");
+            this._shaderComplexitySelector = this.registerExternalComponent(new components.Selector(name + "_shaderComplexitySelector", "selector.html", "selector.css", "Shaders:", utils.getEnumValues(graphics.ShaderComplexity)), "settingsDiv");
+            this._shadowMappingSelector = this.registerExternalComponent(new components.Selector(name + "_shadowMappingSelector", "selector.html", "selector.css", "Shadows:", ["on", "off"]), "settingsDiv");
+            this._shadowQualitySelector = this.registerExternalComponent(new components.Selector(name + "_shadowQualitySelector", "selector.html", "selector.css", "Shadow quality:", ["low", "medium", "high"]), "settingsDiv");
+            this._shadowDistanceSelector = this.registerExternalComponent(new components.Selector(name + "_shadowDistanceSelector", "selector.html", "selector.css", "Shadow distance:", ["very close", "close", "medium", "far", "very far"]), "settingsDiv");
+        }.bind(this));
     }
 
     GraphicsScreen.prototype = new screens.HTMLScreen();
@@ -857,14 +902,15 @@ define([
         this._backButton.getElement().onclick = function () {
             armada.graphics().setAntialiasing((this._antialiasingSelector.getSelectedValue() === "on"));
             armada.graphics().setFiltering(this._filteringSelector.getSelectedValue());
+            armada.graphics().setTextureQuality(this._textureQualitySelector.getSelectedValue());
             armada.graphics().setMaxLOD(this._lodSelector.getSelectedIndex());
             armada.graphics().setShaderComplexity(this._shaderComplexitySelector.getSelectedValue());
             armada.graphics().setShadowMapping((this._shadowMappingSelector.getSelectedValue() === "on"));
             armada.graphics().setShadowQuality((function (v) {
                 var mapping = {
-                    "low": 1024,
-                    "medium": 2048,
-                    "high": 4096
+                    "low": graphics.ShadowMapQuality.LOW,
+                    "medium": graphics.ShadowMapQuality.MEDIUM,
+                    "high": graphics.ShadowMapQuality.HIGH
                 };
                 return mapping[v];
             }(this._shadowQualitySelector.getSelectedValue())));
@@ -919,16 +965,17 @@ define([
         armada.graphics().executeWhenReady(function () {
             this._antialiasingSelector.selectValue((armada.graphics().getAntialiasing() === true) ? "on" : "off");
             this._filteringSelector.selectValue(armada.graphics().getFiltering());
+            this._textureQualitySelector.selectValue(armada.graphics().getTextureQuality());
             this._lodSelector.selectValueWithIndex(armada.graphics().getMaxLoadedLOD());
             this._shaderComplexitySelector.selectValue(armada.graphics().getShaderComplexity());
             this._shadowMappingSelector.selectValue((armada.graphics().getShadowMapping() === true) ? "on" : "off");
             this._shadowQualitySelector.selectValue((function (v) {
                 switch (v) {
-                    case 1024:
+                    case graphics.ShadowMapQuality.LOW:
                         return "low";
-                    case 2048:
+                    case graphics.ShadowMapQuality.MEDIUM:
                         return "medium";
-                    case 4096:
+                    case graphics.ShadowMapQuality.HIGH:
                         return "high";
                     default:
                         return "medium";

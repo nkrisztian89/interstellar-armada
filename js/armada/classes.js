@@ -328,15 +328,16 @@ define([
      * @returns {Object.<String, ManagedTexture>} 
      */
     TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
-        var i, types, qualities, mostFittingQuality, mostFittingQualityIndex, result;
+        var i, types, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
         result = {};
         types = this._texture.getTypes();
         qualities = this._texture.getQualities();
         mostFittingQualityIndex = -1;
         for (i = 0; i < qualities.length; i++) {
-            if ((mostFittingQualityIndex === -1) || (i < mostFittingQualityIndex)) {
-                mostFittingQualityIndex = i;
-                mostFittingQuality = qualities[i];
+            index = qualityPreferenceList.indexOf(qualities[i]);
+            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
+                mostFittingQualityIndex = index;
+                mostFittingQuality = qualityPreferenceList[index];
             }
         }
         if (mostFittingQualityIndex === -1) {

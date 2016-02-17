@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -19,7 +19,17 @@ define([
 ], function (utils, vec, mat, application, managedGL) {
     "use strict";
     var makeObject3DMixinClassFunction, makeObject3DMixinClass,
-            Constants = {
+            _constants = {
+                /**
+                 * For new LOD contexts, this will be the default value for the reference size
+                 * @type Number
+                 */
+                DEFAULT_LOD_REFERENCE_SIZE: 100,
+                /**
+                 * For new LOD contexts, this wil be the default value for the minimum relative size
+                 * @type Number
+                 */
+                DEFAULT_LOD_MINIMUM_RELATIVE_SIZE: 0.05,
                 /**
                  * When decreased by one step, the field of view of a camera will be multiplied by this factor
                  * @type Number
@@ -41,7 +51,7 @@ define([
                  */
                 SPAN_INCREASE_FACTOR: 1.05
             };
-    Object.freeze(Constants);
+    Object.freeze(_constants);
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -90,14 +100,14 @@ define([
          * The size that should be taken as is, when compensation is enabled.
          * @type Number
          */
-        this.referenceSize = referenceSize || 100; //TODO: hardcoded
+        this.referenceSize = referenceSize || _constants.DEFAULT_LOD_REFERENCE_SIZE;
         /**
          * If the relative size of a object inside a parent (compared to the 
          * size of the parent) is smaller than this value, this value will be 
          * used instead to calculate the relative visible size.
          * @type Number
          */
-        this.minimumRelativeSize = minimumRelativeSize || 0.05; //TODO: hardcoded
+        this.minimumRelativeSize = minimumRelativeSize || _constants.DEFAULT_LOD_MINIMUM_RELATIVE_SIZE;
     }
     // #########################################################################
     /**
@@ -3870,7 +3880,7 @@ define([
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
     CameraConfiguration.prototype.decreaseFOV = function () {
-        this.setFOV(this._fov * Constants.FOV_DECREASE_FACTOR, true);
+        this.setFOV(this._fov * _constants.FOV_DECREASE_FACTOR, true);
         return this._fov;
     };
     /**
@@ -3878,7 +3888,7 @@ define([
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
     CameraConfiguration.prototype.increaseFOV = function () {
-        this.setFOV(this._fov * Constants.FOV_INCREASE_FACTOR, true);
+        this.setFOV(this._fov * _constants.FOV_INCREASE_FACTOR, true);
         return this._fov;
     };
     /**
@@ -3918,7 +3928,7 @@ define([
      * @returns {Number} The resulting new value of the span. (in meters)
      */
     CameraConfiguration.prototype.decreaseSpan = function () {
-        this.setSpan(this._span * Constants.SPAN_DECREASE_FACTOR, true);
+        this.setSpan(this._span * _constants.SPAN_DECREASE_FACTOR, true);
         return this._span;
     };
     /**
@@ -3926,7 +3936,7 @@ define([
      * @returns {Number} The resulting new value of the span. (in meters)
      */
     CameraConfiguration.prototype.increaseSpan = function () {
-        this.setSpan(this._span * Constants.SPAN_INCREASE_FACTOR, true);
+        this.setSpan(this._span * _constants.SPAN_INCREASE_FACTOR, true);
         return this._span;
     };
     /**

@@ -3,6 +3,8 @@
         "context": {
             "antialiasing": true,
             "filtering": "trilinear",
+            "textureQualityPreferenceList": ["normal", "low"],
+            "textureQuality": "normal",
             "shadowMapping": true,
             "shadows": {
                 "quality": 2048,

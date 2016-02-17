@@ -10,18 +10,96 @@
 /*global define, parseFloat, window, localStorage */
 
 /**
+ * @param types Used for type checking JSON settings
  * @param application Using the application module for error displaying functionality
  * @param asyncResource GraphicsContext is an AsynchResource subclass
+ * @param managedGL Used for checking valid texture filtering values
  * @param budaScene The graphics context creates and stores a default LODContext
  * @param armada The resource manager of armada is accessed to load fallback shaders if needed
  */
 define([
+    "utils/types",
     "modules/application",
     "modules/async-resource",
+    "modules/managed-gl",
     "modules/buda-scene",
     "armada/armada"
-], function (application, asyncResource, budaScene, armada) {
+], function (types, application, asyncResource, managedGL, budaScene, armada) {
     "use strict";
+    var
+            /**
+             * @enum {String}
+             * An enumeration storing the possible values for the shader complexity setting
+             */
+            ShaderComplexity = {
+                SIMPLE: "simple",
+                NORMAL: "normal"
+            },
+    /**
+     * @enum {Number}
+     * An enumeration storing the possible values for shadow map quality, with the raw values describing the exact shadow map texture size
+     */
+    ShadowMapQuality = {
+        LOW: 1024,
+        MEDIUM: 2048,
+        HIGH: 4096
+    },
+    _constants = {
+        /**
+         * The default antialiasing setting
+         * @type Boolean
+         */
+        DEFAULT_ANTIALIASING: false,
+        /**
+         * The default texture filtering setting
+         * @type String
+         */
+        DEFAULT_FILTERING: managedGL.TextureFiltering.BILINEAR,
+        /**
+         * The default texture quality preference list
+         * @type String[]
+         */
+        DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST: ["high", "normal", "low"],
+        /**
+         * The default shader complexity setting
+         * @type String
+         */
+        DEFAULT_SHADER_COMPLEXITY: ShaderComplexity.NORMAL,
+        /**
+         * Whether shadow mapping should be enabled by default
+         * @type Boolean
+         */
+        DEFAULT_SHADOW_MAPPING_ENABLED: false,
+        /**
+         * The default shadow quality setting
+         * @type Number
+         */
+        DEFAULT_SHADOW_QUALITY: ShadowMapQuality.MEDIUM,
+        /**
+         * The default shadow map ranges
+         * @type Number[]
+         */
+        DEFAULT_SHADOW_MAP_RANGES: [40, 125, 250, 500, 1000, 2000],
+        /**
+         * The default number of shadow map ranges to use
+         * @type Number
+         */
+        DEFAULT_SHADOW_DISTANCE: 3,
+        /**
+         * The default depth ratio for shadow mapping
+         * @type Number
+         */
+        DEFAULT_SHADOW_DEPTH_RATIO: 1.5,
+        /**
+         * When saving to or loading from local storage, this separator will be used for arrays to convert them to/from string
+         * @type String
+         */
+        ARRAY_ELEMENT_SEPARATOR: ", "
+    };
+    Object.freeze(ShaderComplexity);
+    Object.freeze(ShadowMapQuality);
+    Object.freeze(_constants);
+    // ############################################################################################
     /**
      * @class A graphics context for other modules, to be used to pass the 
      * important properties of the current graphics environment to functions that
@@ -55,6 +133,16 @@ define([
          * @type LODContext
          */
         this._lodContext = null;
+        /**
+         * The currently set texture quality.
+         * @type String
+         */
+        this._textureQuality = null;
+        /**
+         * The currenalt set texture quality preference list.
+         * @type String[]
+         */
+        this._textureQualityPreferenceList = null;
         /**
          * The preferred complexity level of shader. "normal" uses the regular
          * shaders, "simple" uses the fallback shaders.
@@ -109,33 +197,39 @@ define([
             this._dataJSON = dataJSON;
         }
         // set the default settings
-        //TODO: hardcoded
-        this._antialiasing = false;
-        this._filtering = "bilinear";
-        this._shaderComplexity = "normal";
-        this._shadowMapping = false;
-        this._shadowQuality = 2048;
-        this._shadowRanges = [40, 125, 250, 500, 1000, 2000];
-        this._shadowDistance = 3;
-        this._shadowDepthRatio = 1.5;
+        this._antialiasing = _constants.DEFAULT_ANTIALIASING;
+        this._filtering = _constants.DEFAULT_FILTERING;
+        this._textureQualityPreferenceList = _constants.DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST;
+        this._textureQuality = this._textureQualityPreferenceList[0];
+        this._shaderComplexity = _constants.DEFAULT_SHADER_COMPLEXITY;
+        this._shadowMapping = _constants.DEFAULT_SHADOW_MAPPING_ENABLED;
+        this._shadowQuality = _constants.DEFAULT_SHADOW_QUALITY;
+        this._shadowRanges = _constants.DEFAULT_SHADOW_MAP_RANGES;
+        this._shadowDistance = _constants.DEFAULT_SHADOW_DISTANCE;
+        this._shadowDepthRatio = _constants.DEFAULT_SHADOW_DEPTH_RATIO;
         // overwrite with the settings from the data JSON, if present
-        if (typeof dataJSON.shaders.complexity === "string") {
-            this._shaderComplexity = dataJSON.shaders.complexity;
+        if (typeof dataJSON.shaders === "object") {
+            this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, _constants.DEFAULT_SHADER_COMPLEXITY);
         }
         if (typeof dataJSON.context === "object") {
-            if (typeof dataJSON.context.antialiasing === "boolean") {
-                this._antialiasing = dataJSON.context.antialiasing;
+            this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
+            this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, dataJSON.context.filtering, _constants.DEFAULT_FILTERING);
+            if (typeof dataJSON.context.textureQualityPreferenceList === "array") {
+                this._textureQualityPreferenceList = dataJSON.context.textureQualityPreferenceList;
+                if (dataJSON.context.textureQuality && (dataJSON.context.textureQualityPreferenceList[0] !== dataJSON.context.textureQuality)) {
+                    application.showError("Conflicting graphics setting: a different texture quality is set than the one the preference list starts with!");
+                }
             }
-            if (typeof dataJSON.context.filtering === "string") {
-                this._filtering = dataJSON.context.filtering;
+            if (dataJSON.context.textureQuality) {
+                this._textureQuality = types.getEnumValue("texture quality", this._textureQualityPreferenceList, dataJSON.context.textureQuality, this._textureQualityPreferenceList[0]);
             }
-            if (typeof dataJSON.context.shadowMapping === "boolean") {
-                this._shadowMapping = dataJSON.context.shadowMapping;
+            this._shadowMapping = types.getBooleanValue("shadow mapping", dataJSON.context.shadowMapping);
+            if (this._shadowMapping) {
                 if (typeof dataJSON.context.shadows === "object") {
-                    this._shadowQuality = dataJSON.context.shadows.quality;
+                    this._shadowQuality = types.getEnumValue("shadow quality", ShadowMapQuality, dataJSON.context.shadows.quality, _constants.DEFAULT_SHADOW_QUALITY);
                     this._shadowRanges = dataJSON.context.shadows.ranges;
-                    this._shadowDistance = dataJSON.context.shadows.numRanges;
-                    this._shadowDepthRatio = dataJSON.context.shadows.depthRatio;
+                    this._shadowDistance = types.getNumberValueInRange("shadow distance", dataJSON.context.shadows.numRanges, 0, this._shadowRanges.length, _constants.DEFAULT_SHADOW_DISTANCE);
+                    this._shadowDepthRatio = types.getNumberValue("shadow depth ratio", dataJSON.context.shadows.depthRatio);
                 }
             }
         }
@@ -176,7 +270,13 @@ define([
             this._antialiasing = (localStorage.interstellarArmada_graphics_antialiasing === "true");
         }
         if (localStorage.interstellarArmada_graphics_filtering !== undefined) {
-            this._filtering = localStorage.interstellarArmada_graphics_filtering;
+            this.setFiltering(localStorage.interstellarArmada_graphics_filtering);
+        }
+        if (localStorage.interstellarArmada_graphics_textureQualityPreferenceList !== undefined) {
+            this.setTextureQualityPreferenceList(localStorage.interstellarArmada_graphics_textureQualityPreferenceList.split(_constants.ARRAY_ELEMENT_SEPARATOR));
+        }
+        if (localStorage.interstellarArmada_graphics_textureQuality !== undefined) {
+            this.setTextureQuality(localStorage.interstellarArmada_graphics_textureQuality);
         }
         if (localStorage.interstellarArmada_graphics_maxLOD !== undefined) {
             this.setMaxLOD(parseInt(localStorage.interstellarArmada_graphics_maxLOD, 10));
@@ -188,10 +288,10 @@ define([
             this._shadowMapping = (localStorage.interstellarArmada_graphics_shadowMapping === "true");
         }
         if (localStorage.interstellarArmada_graphics_shadowQuality !== undefined) {
-            this._shadowQuality = (parseInt(localStorage.interstellarArmada_graphics_shadowQuality, 10));
+            this.setShadowQuality(parseInt(localStorage.interstellarArmada_graphics_shadowQuality, 10));
         }
         if (localStorage.interstellarArmada_graphics_shadowDistance !== undefined) {
-            this._shadowDistance = (parseInt(localStorage.interstellarArmada_graphics_shadowDistance, 10));
+            this.setShadowDistance(parseInt(localStorage.interstellarArmada_graphics_shadowDistance, 10));
         }
         this.setToReady();
     };
@@ -203,6 +303,8 @@ define([
         this.loadFromJSON(this._dataJSON, true);
         localStorage.removeItem("interstellarArmada_graphics_antialiasing");
         localStorage.removeItem("interstellarArmada_graphics_filtering");
+        localStorage.removeItem("interstellarArmada_graphics_textureQualityPreferenceList");
+        localStorage.removeItem("interstellarArmada_graphics_textureQuality");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");
         localStorage.removeItem("interstellarArmada_graphics_shaderComplexity");
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
@@ -236,18 +338,56 @@ define([
      * @param {String} value Possible values: bilinear, trilinear, anisotropic.
      */
     GraphicsContext.prototype.setFiltering = function (value) {
-        switch (value) {
-            case "bilinear":
-            case "trilinear":
-            case "anisotropic":
-                this._filtering = value;
-                break;
-            default:
-                application.showError("Attempting to set texture filtering to: '" + value + "', which is not a supported option.",
-                        "minor", "Filtering has been instead set to bilinear.");
-                this._filtering = "bilinear";
-        }
+        this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, value, _constants.DEFAULT_FILTERING);
         localStorage.interstellarArmada_graphics_filtering = this._filtering;
+    };
+    /**
+     * Returns the current texture quality preference list setting.
+     * @returns {String[]}
+     */
+    GraphicsContext.prototype.getTextureQualityPreferenceList = function () {
+        return this._textureQualityPreferenceList;
+    };
+    /**
+     * Sets a new texture quality preference list setting.
+     * @param {String[]} value
+     */
+    GraphicsContext.prototype.setTextureQualityPreferenceList = function (value) {
+        this._textureQualityPreferenceList = value;
+        localStorage.interstellarArmada_graphics_textureQualityPreferenceList = this._textureQualityPreferenceList.join(_constants.ARRAY_ELEMENT_SEPARATOR);
+    };
+    /**
+     * Returns the current texture quality setting.
+     * @returns {String}
+     */
+    GraphicsContext.prototype.getTextureQuality = function () {
+        return this._textureQuality;
+    };
+    /**
+     * Sets a new texture quality setting.
+     * @param {String} value
+     */
+    GraphicsContext.prototype.setTextureQuality = function (value) {
+        var i, newPreferenceList = [], adding = false;
+        this._textureQuality = types.getEnumValue("texture quality", this._textureQualityPreferenceList, value, this._textureQualityPreferenceList[0]);
+        localStorage.interstellarArmada_graphics_textureQuality = this._textureQuality;
+        // creating a new preference list that preserves the same order but starts with the newly set texture quality
+        for (i = 0; i < this._textureQualityPreferenceList.length; i++) {
+            if (this._textureQualityPreferenceList[i] === this._textureQuality) {
+                adding = true;
+            }
+            if (adding) {
+                newPreferenceList.push(this._textureQualityPreferenceList[i]);
+            }
+        }
+        for (i = 0; i < this._textureQualityPreferenceList.length; i++) {
+            if (this._textureQualityPreferenceList[i] === this._textureQuality) {
+                this.setTextureQualityPreferenceList(newPreferenceList);
+                return;
+            }
+            newPreferenceList.push(this._textureQualityPreferenceList[i]);
+        }
+        this.setTextureQualityPreferenceList(newPreferenceList);
     };
     /**
      * Returns the maximum detail level for which the corresponding model files
@@ -285,16 +425,7 @@ define([
      * @param {String} value Possible values: normal, simple.
      */
     GraphicsContext.prototype.setShaderComplexity = function (value) {
-        switch (value) {
-            case "normal":
-            case "simple":
-                this._shaderComplexity = value;
-                break;
-            default:
-                application.showError("Attempting to set complexity to: '" + value + "', which is not a supported option.",
-                        "minor", "Shader complexity has been instead set to normal.");
-                this._shaderComplexity = "normal";
-        }
+        this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, value, _constants.DEFAULT_SHADER_COMPLEXITY);
         localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;
     };
     /**
@@ -324,7 +455,7 @@ define([
      * @param {Number} value
      */
     GraphicsContext.prototype.setShadowQuality = function (value) {
-        this._shadowQuality = value;
+        this._shadowQuality = types.getEnumValue("shadow quality", ShadowMapQuality, value, _constants.DEFAULT_SHADOW_QUALITY);
         localStorage.interstellarArmada_graphics_shadowQuality = this._shadowQuality;
     };
     /**
@@ -352,7 +483,7 @@ define([
      * @param {Number} value
      */
     GraphicsContext.prototype.setShadowDistance = function (value) {
-        this._shadowDistance = value;
+        this._shadowDistance = types.getNumberValueInRange("shadow distance", value, 0, this._shadowRanges.length, _constants.DEFAULT_SHADOW_DISTANCE);
         localStorage.interstellarArmada_graphics_shadowDistance = this._shadowDistance;
     };
     /**
@@ -363,17 +494,21 @@ define([
         return this._shadowDepthRatio;
     };
     GraphicsContext.prototype.getShader = function (shaderName) {
-        //TODO: implement with enum
         switch (this.getShaderComplexity()) {
-            case "normal":
+            case ShaderComplexity.NORMAL:
                 return armada.resources().getShader(shaderName);
-            case "simple":
+            case ShaderComplexity.SIMPLE:
                 return armada.resources().getFallbackShader(shaderName);
+            default:
+                application.showError("Unhandled shader complexity level: '" + this.getShaderComplexity() + "' - no corresponding shader set for this level!");
+                return null;
         }
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        ShaderComplexity: ShaderComplexity,
+        ShadowMapQuality: ShadowMapQuality,
         GraphicsContext: GraphicsContext
     };
 });

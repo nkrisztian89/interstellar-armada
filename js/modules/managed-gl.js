@@ -29,6 +29,17 @@ define([
     "modules/async-resource"
 ], function (application, asyncResource) {
     "use strict";
+    var
+            /**
+             * @enum {String}
+             * An enumeration storing the possible values for texture filtering
+             */
+            TextureFiltering = {
+                BILINEAR: "bilinear",
+                TRILINEAR: "trilinear",
+                ANISOTROPIC: "anisotropic"
+            };
+    Object.freeze(TextureFiltering);
     /**
      * Displays information about an error that has occured in relation with WebGL,
      * adding some basic WebGL support info for easier troubleshooting.
@@ -152,11 +163,11 @@ define([
             if (this._mipmap === false) {
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             } else {
-                if (context.getFiltering() === "bilinear") {
+                if (context.getFiltering() === TextureFiltering.BILINEAR) {
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-                } else if (context.getFiltering() === "trilinear") {
+                } else if (context.getFiltering() === TextureFiltering.TRILINEAR) {
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-                } else if (context.getFiltering() === "anisotropic") {
+                } else if (context.getFiltering() === TextureFiltering.ANISOTROPIC) {
                     gl.texParameterf(gl.TEXTURE_2D, context.getAnisotropicFilter().TEXTURE_MAX_ANISOTROPY_EXT, 4);
                 }
                 gl.generateMipmap(gl.TEXTURE_2D);
@@ -1645,6 +1656,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        TextureFiltering: TextureFiltering,
         ManagedTexture: ManagedTexture,
         ManagedCubemap: ManagedCubemap,
         ManagedShader: ManagedShader,
