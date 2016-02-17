@@ -888,13 +888,10 @@ define([
          */
         this._projectileClass = dataJSON ? (armada.logic().getProjectileClass(dataJSON.projectile || showMissingPropertyError(this, "projectile")) || application.crash()) : null;
         /**
-         * The force with which the barrel shoots the projectile (used for initial 
-         * acceleration, resulting in the speed of the projectile)
-         * The force is applied on the projectile for burst time (TIME_UNIT), and is
-         * measured in newtons.
+         * The relative velocity that a projectile shot from this barrel should gain from the force of firing.
          * @type Number
          */
-        this._force = dataJSON ? (dataJSON.force || showMissingPropertyError(this, "force")) : 0;
+        this._velocity = dataJSON ? (dataJSON.velocity || showMissingPropertyError(this, "velocity")) : 0;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
          * @type Number[3]
@@ -908,10 +905,11 @@ define([
         return this._projectileClass;
     };
     /**
+     * @param {Number} duration In milliseconds
      * @returns {Number}
      */
-    Barrel.prototype.getForce = function () {
-        return this._force;
+    Barrel.prototype.getForceForDuration = function (duration) {
+        return this._velocity * this._projectileClass.getMass() / (duration / 1000);
     };
     /**
      * @returns {Number[3]}

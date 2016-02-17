@@ -1,6 +1,6 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file 
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -9,11 +9,35 @@
 /*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
+/**
+ * @param vec Used for vector operations
+ * @param mat Used for matrix operations
+ */
 define([
     "utils/vectors",
     "utils/matrices"
 ], function (vec, mat) {
     "use strict";
+    var _constants = {
+        /**
+         * The angular velocity matrix of a physical object stores the rotation that happens during this duration at the current angular
+         * velocity of the object. In milliseconds.
+         * @type Number
+         */
+        ANGULAR_VELOCITY_MATRIX_DURATION: 5,
+        /**
+         * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the velocity matrix.
+         * @type Number
+         */
+        VELOCITY_MATRIX_ERROR_THRESHOLD: 0.0001,
+        /**
+         * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the angular velocity matrix.
+         * @type Number
+         */
+        ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD: 0.00001
+    };
+    Object.freeze(_constants);
+    // #########################################################################
     /**
      * @class Represents a force affecting a physical object, causing it to 
      * accelerate at a constant rate in the direction of the force.
@@ -22,8 +46,8 @@ define([
      * @param {Number} strength The strength of the force in newtons.
      * @param {Number[]} direction The vector describing the direction in which
      * the force creates the acceleration.
-     * @param {Number} duration The duration while the force is still in effect, 
-     * given in milliseconds.
+     * @param {Number} [duration] The duration while the force is still in effect, 
+     * given in milliseconds. If omitted, the force will be created as continuous.
      */
     function Force(id, strength, direction, duration) {
         /**
@@ -46,8 +70,13 @@ define([
          * @type Number
          */
         this._duration = duration;
+        /**
+         * Whether this force is continuous - it is exerted continuously while being renewed in each simulation step, but will cease 
+         * existing as soon as it is not renewed
+         * @type Boolean
+         */
+        this._continuous = (duration === undefined);
     }
-    // #########################################################################
     // direct getters and setters
     /**
      * Returns the force ID.
@@ -56,28 +85,32 @@ define([
     Force.prototype.getID = function () {
         return this._id;
     };
-    // #########################################################################
     // methods
     /**
      * Updates the properties of the force to the passed ones.
      * @param {Number} strength
      * @param {Number[3]} direction
-     * @param {Number} duration
+     * @param {Number} [duration] If omitted, the force will be renewed as continuous.
      */
     Force.prototype.renew = function (strength, direction, duration) {
         this._strength = strength;
         this._direction = vec.normal3(direction);
         this._duration = duration;
+        this._continuous = (duration === undefined);
     };
     /**
      * Returns the duration for how long this force have been exerted if the
      * given amount of time has passed since the last check. Also decreases the
      * remaining duration of the force.
      * @param {Number} dt Elapsed time in milliseconds.
-     * @returns {Number} The duration of the exertion of this force in 
-     * milliseconds.
+     * @returns {Number} The duration of the exertion of this force in milliseconds.
      */
     Force.prototype.getExertionDuration = function (dt) {
+        if (this._continuous) {
+            this._continuous = false;
+            this._duration = 0;
+            return dt;
+        }
         if (this._duration > 0.1) {
             var t = Math.min(this._duration, dt);
             this._duration -= dt;
@@ -102,8 +135,8 @@ define([
      * properties can be subsequently renewed.
      * @param {Number} strength The strength of the torque in kg*rad/s^2.
      * @param {Number[]} axis The vector describing the axis of spinning.
-     * @param {Number} duration The duration while the torque is still in effect,
-     * given in milliseconds.
+     * @param {Number} [duration] The duration while the torque is still in effect,
+     * given in milliseconds. If omitted, the torque will be created as continuous.
      */
     function Torque(id, strength, axis, duration) {
         /**
@@ -126,8 +159,13 @@ define([
          * @type Number
          */
         this._duration = duration;
+        /**
+         * Whether this torque is continuous - it is exerted continuously while being renewed in each simulation step, but will cease 
+         * existing as soon as it is not renewed
+         * @type Boolean
+         */
+        this._continuous = (duration === undefined);
     }
-    // #########################################################################
     // direct getters and setters
     /**
      * Returns the torque ID.
@@ -136,18 +174,18 @@ define([
     Torque.prototype.getID = function () {
         return this._id;
     };
-    // #########################################################################
     // methods
     /**
      * Updates the properties of the torque to the passed ones.
      * @param {Number} strength
      * @param {Number[3]} axis
-     * @param {Number} duration
+     * @param {Number} [duration] If omitted, the torque will be renewed as continuous
      */
     Torque.prototype.renew = function (strength, axis, duration) {
         this._strength = strength;
         this._axis = axis;
         this._duration = duration;
+        this._continuous = (duration === undefined);
     };
     /**
      * Returns the duration for how long this torque have been exerted if the
@@ -158,6 +196,11 @@ define([
      * milliseconds.
      */
     Torque.prototype.getExertionDuration = function (dt) {
+        if (this._continuous) {
+            this._continuous = false;
+            this._duration = 0;
+            return dt;
+        }
         if (this._duration > 0.1) {
             var t = Math.min(this._duration, dt);
             this._duration -= dt;
@@ -226,7 +269,6 @@ define([
          */
         this._depth = dimensions[2];
     }
-    // #########################################################################
     // direct getters and setters
     /**
      * Return the 4x4 translation matrix describing the position of the body 
@@ -268,7 +310,6 @@ define([
     Body.prototype.getDepth = function () {
         return this._depth;
     };
-    // #########################################################################
     // indirect getters and setters
     /**
      * Returns the inverse of the model matrix (the matrix representing both the
@@ -286,7 +327,6 @@ define([
     Body.prototype.getHalfDimensions = function () {
         return [this._width * 0.5, this._height * 0.5, this._depth * 0.5];
     };
-    // #########################################################################
     // methods
     /**
      * Checks whether a particular point in space is located inside this body.
@@ -358,7 +398,7 @@ define([
         this._velocityMatrix = initialVelocityMatrix;
         /**
          * The 4x4 rotation matrix describing the rotation the current angular
-         * velocity of the object causes over 5 milliseconds. (because rotation
+         * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation
          * is performed in steps as matrix rotation cannot be interpolated)
          * @type Float32Array
          */
@@ -387,7 +427,6 @@ define([
         this._bodySize = -1;
         this._calculateBodySize();
     }
-    // #########################################################################
     // direct getters and setters
     /**
      * The mass of the physical object in kilograms.
@@ -428,7 +467,7 @@ define([
     };
     /**
      * Returns the 4x4 rotation matrix describing the rotation the current angular
-     * velocity of the object causes over 5 milliseconds.
+     * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds.
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getAngularVelocityMatrix = function () {
@@ -448,7 +487,6 @@ define([
     PhysicalObject.prototype.addTorque = function (torque) {
         this._torques.push(torque);
     };
-    // #########################################################################
     // indirect getters and setters
     /**
      * Sets the position for this object to the passed matrix.
@@ -497,17 +535,16 @@ define([
                 mat.inverseOfScaling4(this._scalingMatrix));
         return this._modelMatrixInverse;
     };
-    // #########################################################################
     // methods
     /**
      * Checks the forces for one with the given ID, if it exists, renews its
      * properties, if it does not, adds a new force with the given parameters. It
      * will renew the first force found with the given ID, if more than one exists.
      * @param {String} forceID The ID of the force to look for
-     * @param {number} strength The new strength of the force in newtons.
-     * @param {number[]} direction The vector describing the new direction of the force.
-     * @param {number} duration The force will either created with, or renewed to
-     * last for this duration.
+     * @param {Number} strength The new strength of the force in newtons.
+     * @param {Number[]} direction The vector describing the new direction of the force.
+     * @param {Number} [duration] The force will either created with, or renewed to
+     * last for this duration. If omitted, the force will be created or renewed as continuous.
      */
     PhysicalObject.prototype.addOrRenewForce = function (forceID, strength, direction, duration) {
         var i, found = false;
@@ -527,10 +564,10 @@ define([
      * properties, if it does not, adds a new torque with the given parameters. It
      * will renew the first torque found with the given ID, if more than one exists.
      * @param {String} torqueID The ID of the torque to look for
-     * @param {number} strength The strength of the torque.
-     * @param {number[]} axis The vector describing the axis of the torque.
-     * @param {number} duration The torque will either created with, or renewed to
-     * last for this duration.
+     * @param {Number} strength The strength of the torque.
+     * @param {Number[]} axis The vector describing the axis of the torque.
+     * @param {Number} [duration] The torque will either created with, or renewed to
+     * last for this duration. If omitted, the torque will be created or renewed as continuous.
      */
     PhysicalObject.prototype.addOrRenewTorque = function (torqueID, strength, axis, duration) {
         var i, found = false;
@@ -548,10 +585,11 @@ define([
     /**
      * Simulates a force affecting the object that has an arbitrary point and direction
      * of attack, potentially affecting both the linear and angular momentum of the object.
-     * @param {number[3]} position Point of attack relative to this object (meters)
-     * @param {number[3]} direction Unit vector of the direction of the force to apply
-     * @param {number} strength Overall strength of the force in newtons
-     * @param {number} duration The force and torque will be exterted for this duration (milliseconds)
+     * @param {Number[3]} position Point of attack relative to this object (meters)
+     * @param {Number[3]} direction Unit vector of the direction of the force to apply
+     * @param {Number} strength Overall strength of the force in newtons
+     * @param {Number} [duration] The force and torque will be exterted for this duration (milliseconds)
+     * If omitted, they will be created as continuous.
      */
     PhysicalObject.prototype.addForceAndTorque = function (position, direction, strength, duration) {
         var
@@ -654,9 +692,9 @@ define([
             this._velocityMatrix = mat.mul4(this._velocityMatrix, accelerationMatrix);
             // the same process with rotation and torques
             // the angular velocity matrix represents the rotation that happens
-            // during the course of 5 milliseconds (since rotation cannot be
+            // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
             // interpolated easily, for that quaternions should be used)
-            for (i = 0; i + 2 < dt; i += 5) {
+            for (i = 0; (i + _constants.ANGULAR_VELOCITY_MATRIX_DURATION / 2) < dt; i += _constants.ANGULAR_VELOCITY_MATRIX_DURATION) {
                 this.setOrientationMatrix(mat.mul4(this._orientationMatrix, this._angularVelocityMatrix));
             }
             // calculate the rotation that happened as a result of the angular
@@ -668,18 +706,18 @@ define([
                     this.setOrientationMatrix(mat.mul4(
                             this._orientationMatrix,
                             this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t)));
-                    // angular acceleration matrix stores angular acceleration for 5ms
+                    // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
                     angularAccMatrix = mat.mul4(
                             angularAccMatrix,
-                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, t / 200));
+                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, _constants.ANGULAR_VELOCITY_MATRIX_DURATION * t / 1000));
                 }
             }
             // update angular velocity matrix
             this._angularVelocityMatrix = mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
             // correct matrix inaccuracies and close to zero values resulting from
             // floating point operations
-            this._velocityMatrix = mat.straightened(this._velocityMatrix, 0.0001);
-            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, 0.00001); //TODO: hardcoded
+            this._velocityMatrix = mat.straightened(this._velocityMatrix, _constants.VELOCITY_MATRIX_ERROR_THRESHOLD);
+            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, _constants.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
             this._correctMatrices();
         }
     };
@@ -689,6 +727,11 @@ define([
         Body: Body,
         Force: Force,
         Torque: Torque,
-        PhysicalObject: PhysicalObject
+        PhysicalObject: PhysicalObject,
+        // constants
+        ANGULAR_VELOCITY_MATRIX_DURATION: _constants.ANGULAR_VELOCITY_MATRIX_DURATION,
+        ANGULAR_VELOCITY_MATRIX_DURATION_S: _constants.ANGULAR_VELOCITY_MATRIX_DURATION / 1000,
+        VELOCITY_MATRIX_ERROR_THRESHOLD: _constants.VELOCITY_MATRIX_ERROR_THRESHOLD,
+        ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD: _constants.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD
     };
 });

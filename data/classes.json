@@ -1168,7 +1168,7 @@
             "barrels": [
                 {
                     "projectile": "plasma",
-                    "force": 4000,
+                    "velocity": 200,
                     "position": [0, 10, 0]
                 }
             ]
@@ -1183,22 +1183,22 @@
             "barrels": [
                 {
                     "projectile": "plasma",
-                    "force": 5000,
+                    "velocity": 250,
                     "position": [2, 25, 10]
                 },
                 {
                     "projectile": "plasma",
-                    "force": 5000,
+                    "velocity": 250,
                     "position": [-2, 25, 10]
                 },
                 {
                     "projectile": "plasma",
-                    "force": 5000,
+                    "velocity": 250,
                     "position": [2, 25, 14]
                 },
                 {
                     "projectile": "plasma",
-                    "force": 5000,
+                    "velocity": 250,
                     "position": [-2, 25, 14]
                 }
             ]
@@ -1213,7 +1213,7 @@
             "barrels": [
                 {
                     "projectile": "proton",
-                    "force": 30000,
+                    "velocity": 300,
                     "position": [0, 100, 0]
                 }
             ]
@@ -1228,7 +1228,7 @@
             "barrels": [
                 {
                     "projectile": "ion",
-                    "force": 200000,
+                    "velocity": 350,
                     "position": [0, 320, 0]
                 }
             ]

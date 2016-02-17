@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -9,6 +9,20 @@
 /*jslint nomen: true, white: true, plusplus: true */
 /*global define, Element, this */
 
+/**
+ * 
+ * @param utils
+ * @param vec
+ * @param mat
+ * @param application
+ * @param asyncResource
+ * @param egomModel
+ * @param resourceManager
+ * @param physics
+ * @param budaScene
+ * @param armada
+ * @param classes
+ */
 define([
     "utils/utils",
     "utils/vectors",
@@ -25,23 +39,83 @@ define([
 ], function (utils, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
     "use strict";
     var
-            /**
-             * The length of impulse-like events in milliseconds (such as thruster bursts or 
-             * weapon shots)
-             * @type Number
-             */
-            timeBurstLength = 50,
-            /**
-             * The length of time while muzzle flashes are visible (and shrinking).
-             * @type Number
-             */
-            muzzleFlashTimeLength = 500,
-            /**
-             * Default seed to use for generating random numbers to alloc consistent
-             * and comparable testing.
-             * @type Number
-             */
-            defaultRandomSeed = 4718;
+            _constants = {
+                /**
+                 * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
+                 * @type Number
+                 */
+                BACKGROUND_OBJECT_DISTANCE: 4500,
+                /**
+                 * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
+                 * @type Number
+                 */
+                MOMENT_DURATION: 1,
+                /**
+                 * The length of time while muzzle flashes are visible (and shrinking), in milliseconds
+                 * @type Number
+                 */
+                MUZZLE_FLASH_DURATION: 500,
+                /**
+                 * When turning, (maneuvering computers of) spacecrafts allow the turn rate to accelerate for a maximum of this duration 
+                 * (around each axis), in seconds.
+                 * @type Number
+                 */
+                TURN_ACCELERATION_DURATION_S: 0.5,
+                /**
+                 * Default seed to use for generating random numbers to alloc consistent and comparable testing.
+                 * @type Number
+                 */
+                DEFAULT_RANDOM_SEED: 4718,
+                /**
+                 * The classes source file will be looked for in the folder registered for this file type
+                 * @type String
+                 */
+                CLASSES_SOURCE_FILE_TYPE: "data",
+                /**
+                 * The maximum level (and corresponding particle size factor) for thrusters that is used to accelerate the controlled ship 
+                 * (next to potentially also rotating it)
+                 * @type Number
+                 */
+                MAX_MOVE_BURN_LEVEL: 0.5,
+                /**
+                 * The maximum level (and corresponding particle size factor) for thrusters that is used to accelerate the rotation of the 
+                 * controlled ship (next to potentially also accelerating its movement)
+                 * @type Number
+                 */
+                MAX_TURN_BURN_LEVEL: 0.35,
+                /**
+                 * When displayed, hitboxes will be modulated with this color.
+                 * @type Number[4]
+                 */
+                HITBOX_COLOR: [0.0, 0.5, 0.5, 0.5],
+                /**
+                 * The texture resource with this name will be applied to hitboxes when they are displayed.
+                 * @type Number
+                 */
+                HITBOX_TEXTURE_NAME: "white",
+                /**
+                 * The size of the parameter array that stores the luminosity factors for the various indexed triangle groups on spacecrafts
+                 * This should be same as the uniform array size in the shader (TODO: get that)
+                 * @type Number
+                 */
+                LUMINOSITY_FACTORS_ARRAY_LENGTH: 20,
+                /**
+                 * The default texture quality to use (TODO: get this from a setting)
+                 * @type String
+                 */
+                TEXTURE_QUALITY: "normal",
+                /**
+                 * The default texture quality prefence list to use (TODO: get this from a setting)
+                 * @type String[]
+                 */
+                TEXTURE_QUALITY_PREFERENCE_LIST: ["normal"],
+                /**
+                 * Determines how long should spacecrafts be displayed during their explosion (as a ratio compared to the explosion duration)
+                 * @type Number
+                 */
+                SHIP_SHOW_TIME_RATIO_DURING_EXPLOSION: 0.25
+            };
+    Object.freeze(_constants);
     // ##############################################################################
     /**
      * @class Represents a skybox that can be added to a scene to render the
@@ -99,10 +173,10 @@ define([
          * A unit length vector pointing in the direction of this object.
          * @type Number[3]
          */
-        this._position = [
-            Math.cos(degreesAlpha / 180 * Math.PI) * Math.cos(degreesBeta / 180 * Math.PI),
-            Math.sin(degreesAlpha / 180 * Math.PI) * Math.cos(degreesBeta / 180 * Math.PI),
-            Math.sin(degreesBeta / 180 * Math.PI)
+        this._direction = [
+            Math.cos(Math.radians(degreesAlpha)) * Math.cos(Math.radians(degreesBeta)),
+            Math.sin(Math.radians(degreesAlpha)) * Math.cos(Math.radians(degreesBeta)),
+            Math.sin(Math.radians(degreesBeta))
         ];
     }
     /**
@@ -111,7 +185,7 @@ define([
      * @param {Scene} scene
      */
     BackgroundObject.prototype.addToScene = function (scene) {
-        scene.addLightSource(new budaScene.LightSource(this._class.getLightColor(), this._position));
+        scene.addLightSource(new budaScene.LightSource(this._class.getLightColor(), this._direction));
         this._class.acquireResources();
         armada.resources().executeWhenReady(function () {
             var i, layers, layerParticle;
@@ -120,10 +194,10 @@ define([
                 layerParticle = new budaScene.BackgroundBillboard(
                         layers[i].getModel(),
                         layers[i].getShader(),
-                        layers[i].getTexture("emissive", "normal"),
+                        layers[i].getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
                         layers[i].getColor(),
                         layers[i].getSize(),
-                        mat.translation4v(vec.scaled3(this._position, 4500)));
+                        mat.translation4v(vec.scaled3(this._direction, _constants.BACKGROUND_OBJECT_DISTANCE)));
                 layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);
             }
@@ -134,7 +208,7 @@ define([
      */
     BackgroundObject.prototype.destroy = function () {
         this._class = null;
-        this._position = null;
+        this._direction = null;
     };
     // ##############################################################################
     /**
@@ -340,7 +414,6 @@ define([
             this.loadFromJSON(dataJSON);
         }
     }
-    // #########################################################################
     // methods
     /**
      * Loads all the data about this environment stored in the passed JSON object.
@@ -753,7 +826,7 @@ define([
      * initiate the loading of reusable environments when ready.
      */
     LogicContext.prototype.requestClassesLoad = function () {
-        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, "data", {
+        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, _constants.CLASSES_SOURCE_FILE_TYPE, {
             "skyboxClasses": classes.SkyboxClass,
             "backgroundObjectClasses": classes.BackgroundObjectClass,
             "dustCloudClasses": classes.DustCloudClass,
@@ -885,7 +958,7 @@ define([
         return function () {
             return new budaScene.Particle(emitterDescriptor.getModel(),
                     emitterDescriptor.getShader(),
-                    emitterDescriptor.getTexture("emissive", "normal"),
+                    emitterDescriptor.getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
                     mat.identity4(),
                     emitterDescriptor.getParticleStates(),
                     false);
@@ -1076,7 +1149,7 @@ define([
         this._visualModel = this._visualModel || new budaScene.Billboard(
                 this._class.getModel(),
                 this._class.getShader(),
-                this._class.getTexture("emissive", "normal"),
+                this._class.getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
                 this._class.getSize(),
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix());
@@ -1133,7 +1206,7 @@ define([
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     velocity = vec.length3(velocityVector);
                     velocityDir = vec.normal3(velocityVector);
-                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000, 1);
+                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000 / _constants.MOMENT_DURATION, _constants.MOMENT_DURATION);
 
                     explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1), true);
                     explosion.addToScene(this._visualModel.getNode().getScene());
@@ -1181,6 +1254,7 @@ define([
         this._visualModel = null;
         this._physicalModel = null;
     };
+    // #########################################################################
     /**
      * @class Represents a weapon on a spacecraft.
      * @param {WeaponClass} weaponClass The class storing the general 
@@ -1242,7 +1316,7 @@ define([
             this._visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTextures(["normal"]),
+                    this._class.getTextures(_constants.TEXTURE_QUALITY_PREFERENCE_LIST),
                     this._slot.positionMatrix,
                     this._slot.orientationMatrix,
                     mat.identity4(),
@@ -1264,11 +1338,11 @@ define([
         return budaScene.dynamicParticle(
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
-                projectileClass.getMuzzleFlash().getTexture("emissive", "normal"),
+                projectileClass.getMuzzleFlash().getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getSize(),
                 muzzleFlashPosMatrix,
-                muzzleFlashTimeLength);
+                _constants.MUZZLE_FLASH_DURATION);
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
@@ -1332,7 +1406,7 @@ define([
                         projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
-                        new physics.Force("", barrels[i].getForce(), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], timeBurstLength));
+                        new physics.Force("", barrels[i].getForceForDuration(_constants.MOMENT_DURATION), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _constants.MOMENT_DURATION));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
                 // create the counter-force affecting the firing ship
@@ -1341,12 +1415,13 @@ define([
                                 mat.translationVector3(projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
-                        barrels[i].getForce(),
-                        timeBurstLength
+                        barrels[i].getForceForDuration(_constants.MOMENT_DURATION),
+                        _constants.MOMENT_DURATION
                         );
             }
         }
     };
+    // #########################################################################
     /**
      * @class Represents a thruster on a spacecraft.
      * @param {PropulsionClass} propulsionClass
@@ -1374,8 +1449,7 @@ define([
          */
         this._shipModel = null;
         /**
-         * The level of intensity this thuster is currently used with. (0 is off,
-         * 1 is maximum)
+         * The level of intensity this thuster is currently used with. (0 is off, 1 is maximum)
          * @type Number
          */
         this._burnLevel = 0;
@@ -1393,7 +1467,7 @@ define([
             this._visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
-                    this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", "normal"),
+                    this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", _constants.TEXTURE_QUALITY), //TODO: hardcoded
                     this._propulsionClass.getThrusterBurnParticle().getColor(),
                     this._slot.size,
                     mat.translation4v(this._slot.positionVector));
@@ -1410,7 +1484,7 @@ define([
         // set the size of the particle that shows the burn
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
-        this._shipModel.setParameter("luminosityFactors", this._slot.group, Math.min(1.0, 2 * this._burnLevel));
+        this._shipModel.setParameter("luminosityFactors", this._slot.group, Math.min(1.0, this._burnLevel / _constants.MAX_MOVE_BURN_LEVEL));
     };
     /**
      * Sets the burn level of this thruster to zero.
@@ -1427,6 +1501,7 @@ define([
         this._burnLevel += value;
         this._updateVisuals();
     };
+    // #########################################################################
     /**
      * @class Represents the propulsion system equipped to a spacecraft.
      * @param {PropulsionClass} propulsionClass The class describing the general
@@ -1563,42 +1638,43 @@ define([
                 yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
                 pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
         if (this._thrusterUses.forward.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("forwardThrust", 2 * this._class.getThrust() * this._thrusterUses.forward.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("forwardThrust", this._class.getThrust() * this._thrusterUses.forward.burn / _constants.MAX_MOVE_BURN_LEVEL, directionVector);
         }
         if (this._thrusterUses.reverse.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -2 * this._class.getThrust() * this._thrusterUses.reverse.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("reverseThrust", -this._class.getThrust() * this._thrusterUses.reverse.burn / _constants.MAX_MOVE_BURN_LEVEL, directionVector);
         }
         if (this._thrusterUses.strafeRight.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", 2 * this._class.getThrust() * this._thrusterUses.strafeRight.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("strafeRightThrust", this._class.getThrust() * this._thrusterUses.strafeRight.burn / _constants.MAX_MOVE_BURN_LEVEL, pitchAxis);
         }
         if (this._thrusterUses.strafeLeft.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -2 * this._class.getThrust() * this._thrusterUses.strafeLeft.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("strafeLeftThrust", -this._class.getThrust() * this._thrusterUses.strafeLeft.burn / _constants.MAX_MOVE_BURN_LEVEL, pitchAxis);
         }
         if (this._thrusterUses.raise.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("raiseThrust", 2 * this._class.getThrust() * this._thrusterUses.raise.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("raiseThrust", this._class.getThrust() * this._thrusterUses.raise.burn / _constants.MAX_MOVE_BURN_LEVEL, yawAxis);
         }
         if (this._thrusterUses.lower.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -2 * this._class.getThrust() * this._thrusterUses.lower.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewForce("lowerThrust", -this._class.getThrust() * this._thrusterUses.lower.burn / _constants.MAX_MOVE_BURN_LEVEL, yawAxis);
         }
         if (this._thrusterUses.yawRight.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", 2 * this._class.getAngularThrust() * this._thrusterUses.yawRight.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("yawRightThrust", this._class.getAngularThrust() * this._thrusterUses.yawRight.burn / _constants.MAX_TURN_BURN_LEVEL, yawAxis);
         }
         if (this._thrusterUses.yawLeft.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -2 * this._class.getAngularThrust() * this._thrusterUses.yawLeft.burn, yawAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("yawLeftThrust", -this._class.getAngularThrust() * this._thrusterUses.yawLeft.burn / _constants.MAX_TURN_BURN_LEVEL, yawAxis);
         }
         if (this._thrusterUses.pitchUp.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -2 * this._class.getAngularThrust() * this._thrusterUses.pitchUp.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("pitchUpThrust", -this._class.getAngularThrust() * this._thrusterUses.pitchUp.burn / _constants.MAX_TURN_BURN_LEVEL, pitchAxis);
         }
         if (this._thrusterUses.pitchDown.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", 2 * this._class.getAngularThrust() * this._thrusterUses.pitchDown.burn, pitchAxis, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("pitchDownThrust", this._class.getAngularThrust() * this._thrusterUses.pitchDown.burn / _constants.MAX_TURN_BURN_LEVEL, pitchAxis);
         }
         if (this._thrusterUses.rollRight.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -2 * this._class.getAngularThrust() * this._thrusterUses.rollRight.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("rollRightThrust", -this._class.getAngularThrust() * this._thrusterUses.rollRight.burn / _constants.MAX_TURN_BURN_LEVEL, directionVector);
         }
         if (this._thrusterUses.rollLeft.burn > 0) {
-            this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", 2 * this._class.getAngularThrust() * this._thrusterUses.rollLeft.burn, directionVector, timeBurstLength);
+            this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", this._class.getAngularThrust() * this._thrusterUses.rollLeft.burn / _constants.MAX_TURN_BURN_LEVEL, directionVector);
         }
     };
+    // #########################################################################
     /**
      * @class A class that can translate higher level maneuvering commands given to
      * a spacecraft (by user input or an AI) to low level thruster commands.
@@ -1626,7 +1702,7 @@ define([
          * The target angle in radian between the identity orientation and the
          * relative angular velocity matrix on the yawing (XY) plane. The computer
          * will use the yawing thursters to reach this angle.
-         * (representing rad/5ms turn)
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
          * @type Number
          */
         this._yawTarget = 0;
@@ -1634,7 +1710,7 @@ define([
          * The target angle in radian between the identity orientation and the
          * relative angular velocity matrix on the pitching (YZ) plane. The computer
          * will use the pitching thursters to reach this angle.
-         * (representing rad/5ms turn)
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
          * @type Number
          */
         this._pitchTarget = 0;
@@ -1642,7 +1718,7 @@ define([
          * The target angle in radian between the identity orientation and the
          * relative angular velocity matrix on the rolling (XZ) plane. The computer
          * will use the rolling thursters to reach this angle. 
-         * (representing rad/5ms turn)
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
          * @type Number
          */
         this._rollTarget = 0;
@@ -1669,20 +1745,22 @@ define([
         this._liftTarget = 0;
         /**
          * How much speed should be added to the target when the pilot accelerates
-         * continuously for one second, in m/s.
+         * continuously for one second, in m/s. This is always updated to be the same
+         * as how much the spacecraft can accelerate with the current propulsion, whenever
+         * a new propulsion is equipped.
          * @type Number
          */
-        this._speedIncrementPerSecond = 50; //TODO: hardcoded
+        this._speedIncrementPerSecond = 0;
         /**
          * How much speed should be added to the target in one control step when
          * the pilot is using continuous acceleration. (in m/s)
          * @type Number
          */
-        this._speedIncrement = 1; //TODO: hardcoded
+        this._speedIncrement = 0;
         /**
          * The maximum angle between vectors of the relative angular acceleration 
          * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
-         * (representing rad/5ms turn)
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
          * @type Number
          */
         this._turningLimit = 0;
@@ -1694,7 +1772,7 @@ define([
      * in one second with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateSpeedIncrementPerSecond = function () {
-        this._speedIncrementPerSecond = this._spacecraft.getMaxAcceleration() || 50;
+        this._speedIncrementPerSecond = this._spacecraft.getMaxAcceleration() || 0;
     };
     /**
      * Updates the calculated speed increment according to how much time has
@@ -1706,10 +1784,10 @@ define([
     };
     /**
      * Updates the turning limit to how much the ship can accelerate its
-     * turning to in half second with the current propulsion system.
+     * turning rate to in TURN_ACCELERATION_DURATION_S seconds with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateTurningLimit = function () {
-        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() / 200 / 2;
+        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() * _constants.TURN_ACCELERATION_DURATION_S * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S;
     };
     /**
      * Returns a string representation of the current flight mode.
@@ -1961,17 +2039,18 @@ define([
      * Sets the burn levels of all the thrusters of the ship according to the
      * current flight mode, flight parameters and control actions issued by the 
      * pilot.
+     * @param {Number} dt The elapsed time in this simulation step, in milliseconds.
      */
-    ManeuveringComputer.prototype.controlThrusters = function () {
+    ManeuveringComputer.prototype.controlThrusters = function (dt) {
         var
                 // grab flight parameters for velocity control
                 relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix(),
                 speed = relativeVelocityMatrix[13],
-                speedThreshold = 0.01,
+                speedThreshold = physics.VELOCITY_MATRIX_ERROR_THRESHOLD,
                 // grab flight parameters for turning control
                 turningMatrix = this._spacecraft.getTurningMatrix(),
-                turnThreshold = 0.00002,
-                // cash possibly restricted turn parameters (in rad/5ms)
+                turnThreshold = physics.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD,
+                // cache possibly restricted turn parameters (in rad/5ms)
                 turningLimit = this._turningLimit,
                 yawTarget = this._yawTarget,
                 pitchTarget = this._pitchTarget,
@@ -1981,7 +2060,7 @@ define([
         // restrict turning according to current speed in restricted mode
         if (this._restricted && (speed !== 0.0)) {
             // restrict the limit if needed (convert from rad/sec to rad/5ms)
-            turningLimit = Math.min(turningLimit, this._spacecraft.getMaxTurnRateAtSpeed(speed) / 200);
+            turningLimit = Math.min(turningLimit, this._spacecraft.getMaxTurnRateAtSpeed(speed) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S);
             //apply the restricted limit
             yawTarget = Math.min(Math.max(yawTarget, -turningLimit), turningLimit);
             pitchTarget = Math.min(Math.max(pitchTarget, -turningLimit), turningLimit);
@@ -1990,46 +2069,46 @@ define([
         yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]]));
         if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("yawRight",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle)));
+                    Math.min(_constants.MAX_TURN_BURN_LEVEL, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle, dt)));
         } else if ((yawTarget - yawAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("yawLeft",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget)));
+                    Math.min(_constants.MAX_TURN_BURN_LEVEL, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget, dt)));
         }
         // controlling pitch
         pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]]));
         if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchUp",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle)));
+                    Math.min(_constants.MAX_TURN_BURN_LEVEL, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle, dt)));
         } else if ((pitchTarget - pitchAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("pitchDown",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget)));
+                    Math.min(_constants.MAX_TURN_BURN_LEVEL, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget, dt)));
         }
         // controlling roll
         rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]]));
         if ((this._rollTarget - rollAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn("rollRight",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle)));
+                    Math.min(_constants.MAX_TURN_BURN_LEVEL, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle, dt)));
         } else if ((this._rollTarget - rollAngle) < -turnThreshold) {
             this._spacecraft.addThrusterBurn("rollLeft",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget)));
+                    Math.min(_constants.MAX_TURN_BURN_LEVEL, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget, dt)));
         }
         // controlling forward/reverse
         if ((this._speedTarget - speed) > speedThreshold) {
             this._spacecraft.addThrusterBurn("forward",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed)));
+                    Math.min(_constants.MAX_MOVE_BURN_LEVEL, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed, dt)));
         } else if ((this._speedTarget - speed) < -speedThreshold) {
             this._spacecraft.addThrusterBurn("reverse",
-                    Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget)));
+                    Math.min(_constants.MAX_MOVE_BURN_LEVEL, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget, dt)));
         }
         // controlling horizontal drift
         if (this._compensated || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeRight",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed)));
+                        Math.min(_constants.MAX_MOVE_BURN_LEVEL, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed, dt)));
             } else if ((this._strafeTarget - speed) < -speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeLeft",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget)));
+                        Math.min(_constants.MAX_MOVE_BURN_LEVEL, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget, dt)));
             }
         }
         // controlling vertical drift
@@ -2037,10 +2116,10 @@ define([
             speed = relativeVelocityMatrix[14];
             if ((this._liftTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("raise",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed)));
+                        Math.min(_constants.MAX_MOVE_BURN_LEVEL, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed, dt)));
             } else if ((this._liftTarget - speed) < -speedThreshold) {
                 this._spacecraft.addThrusterBurn("lower",
-                        Math.min(0.5, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget)));
+                        Math.min(_constants.MAX_MOVE_BURN_LEVEL, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget, dt)));
             }
         }
         // reset the targets, as new controls are needed from the pilot in the
@@ -2334,46 +2413,39 @@ define([
     Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
         return Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed));
     };
+    /**
+     * Returns the managed textures to be used for rendering the hitboxes of this spacecraft, in an associated array, by texture types.
+     * @returns {Object.<String, ManagedTexture>}
+     */
     Spacecraft.prototype.getHitboxTextures = function () {
         var i, textureTypes,
-                textureResource = armada.resources().getTexture("white"),
+                textureResource = armada.resources().getTexture(_constants.HITBOX_TEXTURE_NAME), 
                 result = {};
         textureTypes = textureResource.getTypes();
         for (i = 0; i < textureTypes.length; i++) {
-            result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], "normal");
+            result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], _constants.TEXTURE_QUALITY);
         }
         return result;
     };
     /**
-     * Returns the thruster burn level that is needed to produce the passed
-     * difference in speed using the current propulsion system.
-     * @param {Number} speedDifference The speed different that needs to be produced,
-     * in m/s.
+     * Returns the thruster burn level that is needed to produce the passed difference in speed using the current propulsion system for the
+     * given duration.
+     * @param {Number} speedDifference The speed difference that needs to be produced, in m/s.
+     * @param {Number} duration The length of time during which the difference needs to be produced, in milliseconds
      * @returns {Number}
      */
-    Spacecraft.prototype.getNeededBurnForSpeedChange = function (speedDifference) {
-        // division by 2 because the full thrust is produced at 0.5 burn level
-        // (full burn level is for both turning and accelerating)
-        // final division because one burst of thrust lasts for a small fraction
-        // of a second, while the basic calculation gives the needed thrust for
-        // one second (as units of measurement are SI aligned)
-        return speedDifference * this._physicalModel.getMass() / this._propulsion.getThrust() / 2 / (timeBurstLength / 1000);
+    Spacecraft.prototype.getNeededBurnForSpeedChange = function (speedDifference, duration) {
+        return speedDifference * this._physicalModel.getMass() / this._propulsion.getThrust() * _constants.MAX_MOVE_BURN_LEVEL / (duration / 1000);
     };
     /**
-     * Returns the thruster burn level that is needed to produce the passed 
-     * difference in angular velocity using the current propulsion system.
-     * @param {Number} angularVelocityDifference The angular velocity difference
-     * that needs to be produced, in rad/5ms !!.
+     * Returns the thruster burn level that is needed to produce the passed difference in angular velocity using the current propulsion 
+     * system for the given duration.
+     * @param {Number} angularVelocityDifference The angular velocity difference that needs to be produced, in rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms !!.
+     * * @param {Number} duration The length of time during which the difference needs to be produced, in milliseconds
      * @returns {Number}
      */
-    Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference) {
-        // multiply by 200 to convert given difference from rad/5ms to rad/s
-        // division by 2 because the full angular thrust is produced at 0.5 burn level
-        // (full burn level is for both turning and accelerating) 
-        // final division because one burst of thrust lasts for a small fraction
-        // of a second, while the basic calculation gives the needed thrust for
-        // one second (as units of measurement are SI aligned)
-        return angularVelocityDifference * 200 * this._physicalModel.getMass() / this._propulsion.getAngularThrust() / 2 / (timeBurstLength / 1000);
+    Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference, duration) {
+        return angularVelocityDifference / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * this._physicalModel.getMass() / this._propulsion.getAngularThrust() * _constants.MAX_TURN_BURN_LEVEL / (duration / 1000);
     };
     // methods
     /**
@@ -2587,7 +2659,7 @@ define([
                         this._class.getBodies()[index].getWidth(),
                         this._class.getBodies()[index].getHeight(),
                         this._class.getBodies()[index].getDepth(),
-                        [0.0, 1.0, 1.0, 0.5])),
+                        _constants.HITBOX_COLOR)),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
                         this._class.getShader(),
@@ -2602,7 +2674,7 @@ define([
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
-            armada.resources().getTexture("white");
+            armada.resources().getTexture(_constants.HITBOX_TEXTURE_NAME);
         }
         this._class.acquireResources(params);
     };
@@ -2656,13 +2728,13 @@ define([
             this._visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTextures(["normal"]),
+                    this._class.getTextures(_constants.TEXTURE_QUALITY_PREFERENCE_LIST),
                     this._physicalModel.getPositionMatrix(),
                     this._physicalModel.getOrientationMatrix(),
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    [{name: "luminosityFactors", length: 20}]);
+                    [{name: "luminosityFactors", length: _constants.LUMINOSITY_FACTORS_ARRAY_LENGTH}]);
             this._visualModel.setParameter("luminosityFactors", 0, this._class.getGroupZeroLuminosity());
             node = scene.addObject(this._visualModel);
             // visualize physical model (hitboxes)
@@ -2913,7 +2985,7 @@ define([
                 }
             } else {
                 this._timeElapsedSinceDestruction += dt;
-                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() / 4)) {
+                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() * _constants.SHIP_SHOW_TIME_RATIO_DURING_EXPLOSION)) { 
                     this.destroy();
                     return;
                 }
@@ -2924,7 +2996,7 @@ define([
                 this._weapons[i].simulate(dt);
             }
             if (this._propulsion) {
-                this._maneuveringComputer.controlThrusters();
+                this._maneuveringComputer.controlThrusters(dt);
                 this._propulsion.simulate(dt);
             }
         }
@@ -3096,7 +3168,7 @@ define([
      */
     Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ, randomSeed) {
         var random, shipClass, i, orientation;
-        randomSeed = randomSeed || defaultRandomSeed;
+        randomSeed = randomSeed || _constants.DEFAULT_RANDOM_SEED;
         random = Math.seed(randomSeed);
         for (shipClass in shipNumbersPerClass) {
             if (shipNumbersPerClass.hasOwnProperty(shipClass)) {
