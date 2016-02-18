@@ -419,6 +419,7 @@
         }
     ],
     "explosion": "bomberExplosion",
+    "showTimeRatioDuringExplosion": 0.25,
     "damageIndicators": [
         {
             "hullIntegrity": 25,

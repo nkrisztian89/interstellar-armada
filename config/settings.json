@@ -69,14 +69,23 @@
         },
         "battle": {
             "simulationStepsPerSecond": 60,
+            "turnAccelerationDurationInSeconds": 0.5,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "selfFire": true,
+            "autoTargeting": "hitAndAutoTarget",
             "randomShips": {
                 "falcon": 3,
                 "viper": 2,
                 "aries": 1,
                 "taurus": 1
             },
-            "selfFire": true,
-            "autoTargeting": "hitAndAutoTarget"
+            "hitboxColor": [0.0, 0.5, 0.5, 0.5],
+            "hiboxTexture": "white",
+            "hitboxShader": "lambert-with-luminosity",
+            "targetViewName": "target",
+            "targetChangeTransitonDuration": 300,
+            "targetChangeTransitionStyle": "smooth"
         },
         "camera": {
             "defaultFOV": 40,

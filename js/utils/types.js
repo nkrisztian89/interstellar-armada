@@ -46,7 +46,7 @@ define([
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected boolean, got " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
+        application.showError("Invalid value for '" + name + "'. Expected a boolean, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
         return defaultValue;
     };
     /**
@@ -76,7 +76,7 @@ define([
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected number, got " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
+        application.showError("Invalid value for '" + name + "'. Expected a number, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
         return defaultValue;
     };
     /**
@@ -113,7 +113,7 @@ define([
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected number, got " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
+        application.showError("Invalid value for '" + name + "'. Expected a number, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
         return defaultValue;
     };
     /**
@@ -143,7 +143,7 @@ define([
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected string, got " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
+        application.showError("Invalid value for '" + name + "'. Expected a string, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
         return defaultValue;
     };
     /**
@@ -202,6 +202,153 @@ define([
             }
         }
         return result;
+    };
+    /**
+     * @typedef {Function} Types~ObjectCallback
+     * @param {Object} safeValue
+     * @returns {Boolean}
+     */
+    /**
+     * Returns a type-safe object value. If the given original value is invalid, will show an error message and return the given default 
+     * value.
+     * @param {String} name The name of the variable you are trying to acquire a value for (to show in error messages)
+     * @param {} value The original value to be checked
+     * @param {Object} [defaultValue] If the original value is invalid, this value will be returned instead.
+     * @param {Types~ObjectCallback} [checkFunction] If the type of the value is correct and this function is give, it will be called with the 
+     * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
+     * valid.
+     * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @returns {Boolean}
+     */
+    exports.getObjectValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
+        if (typeof value === "object") {
+            if (checkFunction) {
+                if (!checkFunction(value)) {
+                    application.showError("Invalid value for '" + name + "'" + (checkFailMessage ? (": " + checkFailMessage) : ".") + " Using default value " + defaultValue + " instead.");
+                    return defaultValue;
+                }
+            }
+            return value;
+        }
+        application.showError("Invalid value for '" + name + "'. Expected an object, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
+        return defaultValue;
+    };
+    //TODO: document properly
+    /**
+     * @param {String} name
+     * @param {String} type
+     * @param {} value
+     * @param {} defaultValue
+     * @param {Object} enumObject
+     * @param {Object} arrayProperties
+     * @param {Function} checkFunction
+     * @param {String} checkFailMessage
+     * @returns {}
+     */
+    exports.getValueOfType = function (name, type, value, defaultValue, enumObject, arrayProperties, checkFunction, checkFailMessage) {
+        if (value === undefined) {
+            if (defaultValue !== undefined) {
+                return defaultValue;
+            }
+            application.showError("Missing required value of '" + name + "'!");
+        } else {
+            switch (type) {
+                case "boolean":
+                    return exports.getBooleanValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                case "number":
+                    return exports.getNumberValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                case "string":
+                    return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                case "enum":
+                    if (enumObject) {
+                        return exports.getEnumValue(name, enumObject, value, defaultValue, checkFunction, checkFailMessage);
+                    }
+                    application.showError("Missing enum definition object for '" + name + "'!");
+                    return null;
+                case "object":
+                    return exports.getObjectValue(name, value, defaultValue);
+                case "array":
+                    return exports.getArrayValue(name, value, arrayProperties.elementType, arrayProperties.elementEnumObject, arrayProperties.length, defaultValue, checkFunction, checkFailMessage);
+                default:
+                    application.showError("Unknown type specified for '" + name + "': " + type);
+                    return null;
+            }
+        }
+    };
+    /**
+     * @typedef {Function} Types~ArrayCallback
+     * @param {Array} safeValue
+     * @returns {Boolean}
+     */
+    /**
+     * Returns a type-safe array value. If the given original value is invalid, will show an error message and return the given default 
+     * value.
+     * @param {String} name The name of the variable you are trying to acquire a value for (to show in error messages)
+     * @param {} value The original array to be checked
+     * @param {String} [elementType] If given, the elements of the array will be checked to be of this type
+     * @param {Object} [elementEnumObject] If the elements are to be of enum type, the enum definition object has to be supplied as this parameter
+     * @param {Number} [length] If given, the array will be checked to be of this length
+     * @param {Array} [defaultValue] If the original value is invalid, this value will be returned instead.
+     * @param {Types~ArrayCallback} [checkFunction] If the type of the value is correct and this function is give, it will be called with the 
+     * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
+     * valid.
+     * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Function} [elementCheckFunction] A check function to be run for each element in the array
+     * @param {String} [elementCheckFailMessage] An explanatory error message to show if elements of the array fail their check
+     * @returns {Boolean}
+     */
+    exports.getArrayValue = function (name, value, elementType, elementEnumObject, length, defaultValue, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) {
+        var result = [], resultElement;
+        if (value instanceof Array) {
+            if (length !== undefined) {
+                if (value.length !== length) {
+                    application.showError("Invalid array length for '" + name + "'! Expected a length of " + length + " and got " + value.length + ". Using default value [" + defaultValue.join(", ") + "] instead.");
+                    return defaultValue;
+                }
+            }
+            if (elementType !== undefined) {
+                value.forEach(function (element, index) {
+                    resultElement = exports.getValueOfType(name + "[" + index + "]", elementType, element, null, elementEnumObject, null, elementCheckFunction, elementCheckFailMessage);
+                    if (resultElement !== null) {
+                        result.push(resultElement);
+                    }
+                });
+            }
+            if (checkFunction) {
+                if (!checkFunction(value)) {
+                    application.showError("Invalid value for '" + name + "'" + (checkFailMessage ? (": " + checkFailMessage) : ".") + " Using default value [" + defaultValue.join(", ") + "] instead.");
+                    return defaultValue;
+                }
+            }
+            return value;
+        }
+        application.showError("Invalid value for '" + name + "'. Expected an array, got a(n) " + ((typeof value === "object") ? value.constructor.name : (typeof value)) + " (" + value + "). Using default value [" + defaultValue.join(", ") + "] instead.");
+        return defaultValue;
+    };
+    //TODO: document
+    exports.getVerifiedObject = function (name, value, definitionObject) {
+        var propertyDefinitionName, propertyDefinition, result = {};
+        if (typeof value === "object") {
+            for (propertyDefinitionName in definitionObject) {
+                if (definitionObject.hasOwnProperty(propertyDefinitionName)) {
+                    propertyDefinition = definitionObject[propertyDefinitionName];
+                    result[propertyDefinition.name] = exports.getValueOfType(
+                            name + "." + propertyDefinition.name,
+                            propertyDefinition.type,
+                            value[propertyDefinition.name],
+                            propertyDefinition.defaultValue,
+                            propertyDefinition.enum,
+                            {
+                                elementType: propertyDefinition.elementType,
+                                elementEnumObject: propertyDefinition.elementEnum,
+                                length: propertyDefinition.length
+                            });
+                }
+            }
+            return result;
+        }
+        application.showError("Invalid value for '" + name + "'. Expected an object, got a(n) " + (typeof value) + " (" + value + ").");
+        return null;
     };
     return exports;
 });

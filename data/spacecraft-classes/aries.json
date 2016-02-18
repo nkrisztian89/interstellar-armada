@@ -331,6 +331,7 @@
         }
     ],
     "explosion": "smallShipExplosion",
+    "showTimeRatioDuringExplosion": 0.25,
     "damageIndicators": [
         {
             "hullIntegrity": 25,

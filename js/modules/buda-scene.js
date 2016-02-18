@@ -4049,7 +4049,7 @@ define([
      * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
      * @param {Number} transitionDuration The time the camera should take to transition from one configuration to another by default, in 
      * milliseconds.
-     * @param {Number} transitionStyle (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
+     * @param {String} transitionStyle (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
      * @param {Number} maxSpeed The maximum speed the camera is allowed to move with along an axis by the user. (meters / second)
      * @param {Number} acceleration The acceleration rate of the camera along one axis when controlled (moved) by the user. (m/s^2)
      * @param {Number} deceleration The deceleration rate of the camera along one axis when controlled (stopped) by the user. (m/s^2)
@@ -4097,12 +4097,12 @@ define([
         this._currentConfiguration.setCamera(this);
         /**
          * (enum Camera.prototype.TransitionStyle) The style used for the current configuration transition.
-         * @type Number
+         * @type String
          */
         this._transitionStyle = this.TransitionStyle.NONE;
         /**
          * (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
-         * @type Number
+         * @type String
          */
         this._defaultTransitionStyle = transitionStyle;
         /**
@@ -4230,17 +4230,17 @@ define([
          * No valid value given, a transition with this value will result in an error. This way accidentally not setting a value
          * can be noticed. (for instantly jumping to the new configuration, use a duration of 0)
          */
-        NONE: 0,
+        NONE: "none",
         /**
          * Use a simple linear transition from one configuration to another. The position will move, and the direction will turn
          * in a linear manner.
          */
-        LINEAR: 1,
+        LINEAR: "linear",
         /**
          * Use a calculation resulting in an accelerating change in the first half, and a decelerating change during the second
          * half of the transition.
          */
-        SMOOTH: 2
+        SMOOTH: "smooth"
     };
     Object.freeze(Camera.prototype.TransitionStyle);
     /**

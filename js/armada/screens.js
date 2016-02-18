@@ -26,7 +26,6 @@ define([
     "use strict";
 
     var _constants = {
-        DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND: 60,
         DEFAULT_DATABASE_MODEL_ROTATION: true,
         DEFAULT_DATABASE_BACKGROUND_COLOR: [0, 0, 0, 0],
         DEFAULT_DATABASE_WIREFRAME_COLOR: [1, 0, 0, 1],
@@ -135,7 +134,7 @@ define([
                 }
                 this._battleScene.setShouldUpdateCamera(true);
             }
-            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (armada.logic().getBattleSimulationStepsPerSecond() || _constants.DEFAULT_BATTLE_SIMULATION_STEPS_PER_SECOND));
+            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
             armada.control().startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
@@ -330,7 +329,7 @@ define([
         this._level.requestLoadFromFile(levelSourceFilename, function () {
             var freq, canvas;
             this.updateStatus("loading additional configuration...", 5);
-            this._level.addRandomShips(armada.logic().getRandomShips(), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true); //TODO: hardcoded
+            this._level.addRandomShips(armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true); //TODO: hardcoded
 
             this.updateStatus("building scene...", 10);
             canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();

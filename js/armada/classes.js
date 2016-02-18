@@ -1056,6 +1056,16 @@ define([
          * @type Number
          */
         this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || showMissingPropertyError(this, "angularThrust")) : 0;
+        /**
+         * Maximum thrust for acceleration is applied at this burn level.
+         * @type Number
+         */
+        this._maxMoveBurnLevel = dataJSON ? (dataJSON.maxMoveBurnLevel || showMissingPropertyError(this, "maxMoveBurnLevel")) : 0;
+        /**
+         * Maximum angular thrust for turning is applied at this burn level.
+         * @type Number
+         */
+        this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || showMissingPropertyError(this, "maxTurnBurnLevel")) : 0;
     };
     /**
      * 
@@ -1086,6 +1096,20 @@ define([
      */
     PropulsionClass.prototype.getAngularThrust = function () {
         return this._angularThrust;
+    };
+    /**
+     * Return the level of burn at which maximum thrust is applied.
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getMaxMoveBurnLevel = function () {
+        return this._maxMoveBurnLevel;
+    };
+    /**
+     * Return the level of burn at which maximum angular thrust is applied.
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getMaxTurnBurnLevel = function () {
+        return this._maxTurnBurnLevel;
     };
     // ##############################################################################
     /**
@@ -1835,6 +1859,13 @@ define([
                 (dataJSON.explosion ? armada.logic().getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
                 armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion"));
         /**
+         * How long should spacecraft be displayed during its explosion (as a ratio compared to the explosion duration)
+         * @type Number
+         */
+        this._showTimeRatioDuringExplosion = otherSpacecraftClass ?
+                (dataJSON.showTimeRatioDuringExplosion || otherSpacecraftClass._showTimeRatioDuringExplosion) :
+                (dataJSON.showTimeRatioDuringExplosion || showMissingPropertyError(this, "showTimeRatioDuringExplosion"));
+        /**
          * The damage indicators (fires, sparks) that progressively appear as the ship loses hull integrity
          * @type DamageIndicator[]
          */
@@ -1939,6 +1970,12 @@ define([
      */
     SpacecraftClass.prototype.getExplosionClass = function () {
         return this._explosionClass;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getShowTimeRatioDuringExplosion = function () {
+        return this._showTimeRatioDuringExplosion;
     };
     /**
      * @returns {DamageIndicator[]}

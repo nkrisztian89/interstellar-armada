@@ -1249,7 +1249,9 @@
             "grade": 1,
             "referenceMass": 10000,
             "thrust": 50,
-            "angularThrust": 180
+            "angularThrust": 180,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
         },
         {
             "name": "imperialBomberMk1",
@@ -1259,7 +1261,9 @@
             "grade": 1,
             "referenceMass": 35000,
             "thrust": 30,
-            "angularThrust": 150
+            "angularThrust": 150,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
         },
         {
             "name": "imperialCorvetteMk1",
@@ -1269,7 +1273,9 @@
             "grade": 1,
             "referenceMass": 9000000,
             "thrust": 15,
-            "angularThrust": 40
+            "angularThrust": 40,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
         },
         {
             "name": "imperialFrigateMk1",
@@ -1279,7 +1285,9 @@
             "grade": 1,
             "referenceMass": 20000000,
             "thrust": 10,
-            "angularThrust": 30
+            "angularThrust": 30,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
         },
         {
             "name": "imperialCruiserMk1",
@@ -1289,7 +1297,9 @@
             "grade": 1,
             "referenceMass": 250000000,
             "thrust": 8,
-            "angularThrust": 8
+            "angularThrust": 8,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
         }
     ],
     "spacecraftTypes": [
