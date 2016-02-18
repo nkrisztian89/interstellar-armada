@@ -58,10 +58,31 @@ define([
         return this._name;
     };
     /**
+     * @param {Object} requestParams
      * @returns {Boolean}
      */
-    GenericResource.prototype.isRequested = function () {
-        return this._requested;
+    GenericResource.prototype.isRequested = function (requestParams) {
+        var requestParamName;
+        if (!this._requested) {
+            return false;
+        }
+        if (requestParams) {
+            for (requestParamName in requestParams) {
+                if (requestParams.hasOwnProperty(requestParamName)) {
+                    if (requestParams[requestParamName] !== this._requestParams[requestParamName]) {
+                        return false;
+                    }
+                }
+            }
+            for (requestParamName in this._requestParams) {
+                if (this._requestParams.hasOwnProperty(requestParamName)) {
+                    if (this._requestParams[requestParamName] !== requestParams[requestParamName]) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     };
     /**
      * @param {Object} params
@@ -174,6 +195,7 @@ define([
             if (resource.requiresReload(params)) {
                 this._numRequestedResources++;
                 this.resetReadyState();
+                resource.resetReadyState();
                 resource.executeWhenReady(function () {
                     this._numLoadedResources++;
                     if (this.allResourcesAreLoaded()) {

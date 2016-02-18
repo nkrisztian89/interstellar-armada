@@ -54,7 +54,7 @@ define([
                  * The length of time while muzzle flashes are visible (and shrinking), in milliseconds
                  * @type Number
                  */
-                MUZZLE_FLASH_DURATION: 500,
+                DEFAULT_MUZZLE_FLASH_DURATION: 500,
                 /**
                  * When turning, (maneuvering computers of) spacecrafts allow the turn rate to accelerate for a maximum of this duration 
                  * (around each axis), in seconds.
@@ -1335,9 +1335,9 @@ define([
                 projectileClass.getMuzzleFlash().getShader(),
                 projectileClass.getMuzzleFlash().getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
                 projectileClass.getMuzzleFlash().getColor(),
-                projectileClass.getSize(),
+                projectileClass.getMuzzleFlash().getSize(),
                 muzzleFlashPosMatrix,
-                _constants.MUZZLE_FLASH_DURATION);
+                projectileClass.getMuzzleFlash().getDuration() || _constants.DEFAULT_MUZZLE_FLASH_DURATION);
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
@@ -2045,7 +2045,7 @@ define([
                 // grab flight parameters for turning control
                 turningMatrix = this._spacecraft.getTurningMatrix(),
                 turnThreshold = physics.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD,
-                // cache possibly restricted turn parameters (in rad/5ms)
+                // cache possibly restricted turn parameters (in rad / ANGULAR_VELOCITY_MATRIX_DURATION ms)
                 turningLimit = this._turningLimit,
                 yawTarget = this._yawTarget,
                 pitchTarget = this._pitchTarget,
@@ -2054,7 +2054,7 @@ define([
         this._spacecraft.resetThrusterBurn();
         // restrict turning according to current speed in restricted mode
         if (this._restricted && (speed !== 0.0)) {
-            // restrict the limit if needed (convert from rad/sec to rad/5ms)
+            // restrict the limit if needed (convert from rad/sec to rad / ANGULAR_VELOCITY_MATRIX_DURATION ms)
             turningLimit = Math.min(turningLimit, this._spacecraft.getMaxTurnRateAtSpeed(speed) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S);
             //apply the restricted limit
             yawTarget = Math.min(Math.max(yawTarget, -turningLimit), turningLimit);

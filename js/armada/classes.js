@@ -195,13 +195,11 @@ define([
      */
     ShadedModelClass.prototype.acquireResources = function (params) {
         ShadedClass.prototype.acquireResources.call(this);
-        if (this._model === null) {
-            if (params && params.model) {
-                this._model = armada.resources().getOrAddModel(params.model);
-                this._modelName = this._model.getName();
-            } else {
-                this._model = armada.resources().getModel(this._modelName);
-            }
+        if (params && params.model) {
+            this._model = armada.resources().getOrAddModel(params.model);
+            this._modelName = this._model.getName();
+        } else {
+            this._model = armada.graphics().getModel(this._modelName);
         }
     };
     /**
@@ -378,6 +376,11 @@ define([
          * @type Number[4]
          */
         this._color = dataJSON ? (dataJSON.color || [1, 1, 1, 1]) : null;
+        /**
+         * If given, this can represent the length of time for which a simple (e.g. shrinking) particle is shown
+         * @type Number
+         */
+        this._duration = dataJSON ? dataJSON.duration : null;
     };
     /**
      * @override
@@ -396,6 +399,12 @@ define([
      */
     ParticleDescriptor.prototype.getColor = function () {
         return this._color;
+    };
+    /**
+     * @returns {Number}
+     */
+    ParticleDescriptor.prototype.getDuration = function () {
+        return this._duration;
     };
     // ##############################################################################
     /**
@@ -892,7 +901,7 @@ define([
          * The relative velocity that a projectile shot from this barrel should gain from the force of firing.
          * @type Number
          */
-        this._velocity = dataJSON ? (dataJSON.velocity || showMissingPropertyError(this, "velocity")) : 0;
+        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || showMissingPropertyError(this, "projectileVelocity")) : 0;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
          * @type Number[3]
@@ -910,7 +919,7 @@ define([
      * @returns {Number}
      */
     Barrel.prototype.getForceForDuration = function (duration) {
-        return this._velocity * this._projectileClass.getMass() / (duration / 1000);
+        return this._projectileVelocity * this._projectileClass.getMass() / (duration / 1000);
     };
     /**
      * @returns {Number[3]}

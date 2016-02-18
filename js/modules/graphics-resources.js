@@ -1,8 +1,9 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file 
- * Usage:
- * TODO: explain usage
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various graphics resources,
+ * for which the respective classes are also provided. These classes are based on the classes of ManagedGL and EgomModel.
+ * The provided resource manager is ready to use, can load graphics resource descriptions from a specified JSON file, then mark the 
+ * specific resources for loading (e.g. getTexture(params)) and load them when requested.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -11,6 +12,12 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, Image, window */
 
+/**
+ * @param application Used for file loading, logging and displaying error messages
+ * @param resourceManager This module builds on the functionality of the general resource manager module
+ * @param managedGL Provides resource classes that can load and create for ManagedTextures, ManagedCubeMaps and ManagedShaders
+ * @param egomModel Provides resource classes that can load and create Egom Models
+ */
 define([
     "modules/application",
     "modules/resource-manager",
@@ -18,6 +25,7 @@ define([
     "modules/egom-model"
 ], function (application, resourceManager, managedGL, egomModel) {
     "use strict";
+    // ############################################################################################
     /**
      * @class
      * @augments GenericResource
@@ -91,7 +99,7 @@ define([
      */
     TextureResource.prototype.requiresReload = function (params) {
         var requestedTypes, type, requestedQualities, quality;
-        if (this.isRequested()) {
+        if (this.isRequested(params)) {
             return false;
         }
         params = params || {};
@@ -387,7 +395,6 @@ define([
     /**
      * @typedef {Object} ModelResource~FileDescriptor
      * @property {String} suffix
-     * @property {Number} lod
      * @property {Number} maxLOD
      */
     /**
@@ -399,6 +406,7 @@ define([
         resourceManager.GenericResource.call(this, dataJSON.name);
         if (dataJSON.model) {
             this._model = dataJSON.model;
+            this._files = [];
             this.setToReady();
             return;
         }
@@ -413,11 +421,7 @@ define([
         /**
          * @type ModelResource~FileDescriptor[]
          */
-        this._singleLODFiles = null;
-        /**
-         * @type ModelResource~FileDescriptor[]
-         */
-        this._multiLODFiles = null;
+        this._files = dataJSON.files;
         /**
          * @type Number
          */
@@ -430,83 +434,66 @@ define([
          * @type Model
          */
         this._model = null;
-        this._singleLODFiles = dataJSON.files.filter(
-                function (element) {
-                    return (element.lod !== undefined);
-                });
-        this._multiLODFiles = dataJSON.files.filter(
-                function (element) {
-                    return (element.maxLOD !== undefined);
-                });
+        /**
+         * @type Number
+         */
+        this._maxLoadedLOD = -1;
     }
     ModelResource.prototype = new resourceManager.GenericResource();
     ModelResource.prototype.constructor = ModelResource;
     /**
-     * @param {Boolean} multiLOD
-     * @param {Number} lod
+     * @param {Number} maxLOD
      * @returns {String}
      */
-    ModelResource.prototype._getPath = function (multiLOD, lod) {
+    ModelResource.prototype._getPath = function (maxLOD) {
         var i;
-        if (multiLOD === true) {
-            for (i = 0; i < this._multiLODFiles.length; i++) {
-                if (this._multiLODFiles[i].maxLOD === lod) {
-                    return this._basepath + this._multiLODFiles[i].suffix + "." + this._format;
-                }
-            }
-        } else {
-            for (i = 0; i < this._singleLODFiles.length; i++) {
-                if (this._multiLODFiles[i].lod === lod) {
-                    return this._basepath + this._singleLODFiles[i].suffix + "." + this._format;
-                }
+        for (i = 0; i < this._files.length; i++) {
+            if (this._files[i].maxLOD === maxLOD) {
+                return this._basepath + this._files[i].suffix + "." + this._format;
             }
         }
         return null;
     };
     /**
      * @override
+     * @param {Object} params
      * @returns {Boolean}
      */
-    ModelResource.prototype.requiresReload = function () {
-        // TODO: implement
-        if (this.isRequested()) {
+    ModelResource.prototype.requiresReload = function (params) {
+        if (this.isRequested(params)) {
             return false;
         }
-        return !this.isLoaded();
+        if (this._files.length === 0) {
+            return false;
+        }
+        if (params && (typeof params.maxLOD === "number")) {
+            return params.maxLOD > this._maxLoadedLOD;
+        }
+        if (this.getMaxLOD() !== null) {
+            return this.requiresReload({maxLOD: this.getMaxLOD()});
+        }
+        return false;
     };
     /**
-     * @param {Boolean} multiLOD
-     * @returns {?Number}
+     * @returns {Number|null}
      */
-    ModelResource.prototype.getMaxLOD = function (multiLOD) {
+    ModelResource.prototype.getMaxLOD = function () {
         var i, result = null;
-        if (multiLOD === true) {
-            for (i = 0; i < this._multiLODFiles.length; i++) {
-                if ((result === null) || (this._multiLODFiles[i].maxLOD > result)) {
-                    result = this._multiLODFiles[i].maxLOD;
-                }
+        for (i = 0; i < this._files.length; i++) {
+            if ((result === null) || (this._files[i].maxLOD > result)) {
+                result = this._files[i].maxLOD;
             }
-            return result;
         }
-        if (multiLOD === false) {
-            for (i = 0; i < this._singleLODFiles.length; i++) {
-                if ((result === null) || (this._singleLODFiles[i].lod > result)) {
-                    result = this._singleLODFiles[i].lod;
-                }
-            }
-            return result;
-        }
-        return Math.max(this.getMaxLOD(true), this.getMaxLOD(false));
+        return result;
     };
     /**
-     * @param {Boolean} multiLOD
-     * @param {Number} lod
+     * @param {Number} maxLOD
      */
-    ModelResource.prototype._requestFile = function (multiLOD, lod) {
+    ModelResource.prototype._requestFile = function (maxLOD) {
         this._filesToLoad++;
-        application.requestTextFile("model", this._getPath(multiLOD, lod), function (responseText) {
+        application.requestTextFile("model", this._getPath(maxLOD), function (responseText) {
             this._loadedFiles++;
-            this._onFilesLoad(this._filesToLoad === this._loadedFiles, {multiLOD: multiLOD, lod: lod, text: responseText});
+            this._onFilesLoad(this._filesToLoad === this._loadedFiles, {maxLOD: maxLOD, text: responseText});
         }.bind(this));
     };
     /**
@@ -514,64 +501,30 @@ define([
      * @param {Object} params
      */
     ModelResource.prototype._requestFiles = function (params) {
-        var lod, maxLOD, atLeastOneFileRequested = false;
+        var lod, maxLOD;
         params = params || {};
-        // if multi LOD files were requested
+        // if a maxmimum LOD was requested
         if (params.maxLOD !== undefined) {
-            // first look for the highest quality multi LOD at or below the requested level
+            // first look for the highest LOD file at or below the requested level
             for (lod = params.maxLOD; lod >= 0; lod--) {
-                if (this._getPath(true, lod) !== null) {
-                    this._requestFile(true, lod);
-                    atLeastOneFileRequested = true;
-                    break;
-                }
-            }
-            // if no multi LODs are available at all at or below the requested level, check for higher quality ones
-            if ((lod < 0) && (this._multiLODFiles.length > 0)) {
-                maxLOD = this.getMaxLOD(true);
-                for (lod = params.maxLOD + 1; lod <= maxLOD; lod++) {
-                    if (this._getPath(true, lod) !== null) {
-                        this._requestFile(true, lod);
-                        atLeastOneFileRequested = true;
-                        break;
-                    }
-                }
-            }
-            // if no multi LODs were found at all, or only lower quality than requested, try to fill the gap with single LODs
-            if ((this._multiLODFiles.length === 0) || (lod < params.maxLOD)) {
-                for (lod = lod < 0 ? 0 : lod; lod <= params.maxLOD; lod++) {
-                    if (this._getPath(false, lod) !== null) {
-                        this._requestFile(false, lod);
-                        atLeastOneFileRequested = true;
-                    }
-                }
-                // if there is no other option, try higher quality single LODs
-                if (atLeastOneFileRequested === false) {
-                    if (this._singleLODFiles.length > 0) {
-                        for (lod = params.maxLOD + 1; lod < this.getMaxLOD(false); lod++) {
-                            if (this._getPath(false, lod) !== null) {
-                                this._requestFile(false, lod);
-                                return;
-                            }
-                        }
-                    } else {
-                        application.showError("Could not find any files to load for model: '" + this._name + "'!");
-                    }
-                }
-            }
-            // if single LOD files were requested
-        } else if (params.lod !== undefined) {
-            // first try to load a single LOD at or below the requested level
-            for (lod = params.lod; lod >= 0; lod--) {
-                if (this._getPath(false, lod) !== null) {
-                    this._requestFile(false, lod);
+                if (this._getPath(lod) !== null) {
+                    this._requestFile(lod);
                     return;
                 }
             }
-            // if there wasn't any single LOD found, try the same strategy as with multi LODs
-            this._requestFiles({maxLOD: params.lod});
+            // if no files are available at all at or below the requested LOD level, check for higher quality ones
+            if ((lod < 0) && (this._files.length > 0)) {
+                maxLOD = this.getMaxLOD();
+                for (lod = params.maxLOD + 1; lod <= maxLOD; lod++) {
+                    if (this._getPath(lod) !== null) {
+                        this._requestFile(lod);
+                        return;
+                    }
+                }
+            }
+            application.showError("Could not find any files to load for model: '" + this._name + "'!");
         } else {
-            // if no LOD was specified at all, request files to cover all available LODs
+            // if no LOD was specified, request files to cover all available LODs
             this._requestFiles({maxLOD: this.getMaxLOD()});
         }
     };
@@ -580,9 +533,10 @@ define([
      * @param {Object} params
      */
     ModelResource.prototype._loadData = function (params) {
-        application.log((params.multiLOD ? "Multi-LOD " : "Single-LOD ") + " model file of level " + params.lod + " has been loaded for model '" + this.getName() + "'", 2);
+        application.log("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
         this._model = new egomModel.Model();
-        this._model.loadFromXML(this._getPath(params.multiLOD, params.lod), new window.DOMParser().parseFromString(params.text, "text/xml"), params.lod);
+        this._model.loadFromXML(this._getPath(params.maxLOD), new window.DOMParser().parseFromString(params.text, "text/xml"), params.maxLOD);
+        this._maxLoadedLOD = params.maxLOD;
     };
     /**
      * @returns {Model}

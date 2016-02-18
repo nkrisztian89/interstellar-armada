@@ -59,7 +59,7 @@ define([
          * The default texture quality preference list
          * @type String[]
          */
-        DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST: ["high", "normal", "low"],
+        DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST: ["high", "medium", "low"],
         /**
          * The default shader complexity setting
          * @type String
@@ -89,12 +89,7 @@ define([
          * The default depth ratio for shadow mapping
          * @type Number
          */
-        DEFAULT_SHADOW_DEPTH_RATIO: 1.5,
-        /**
-         * When saving to or loading from local storage, this separator will be used for arrays to convert them to/from string
-         * @type String
-         */
-        ARRAY_ELEMENT_SEPARATOR: ", "
+        DEFAULT_SHADOW_DEPTH_RATIO: 1.5
     };
     Object.freeze(ShaderComplexity);
     Object.freeze(ShadowMapQuality);
@@ -214,10 +209,14 @@ define([
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
             this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, dataJSON.context.filtering, _constants.DEFAULT_FILTERING);
-            if (typeof dataJSON.context.textureQualityPreferenceList === "array") {
-                this._textureQualityPreferenceList = dataJSON.context.textureQualityPreferenceList;
-                if (dataJSON.context.textureQuality && (dataJSON.context.textureQualityPreferenceList[0] !== dataJSON.context.textureQuality)) {
-                    application.showError("Conflicting graphics setting: a different texture quality is set than the one the preference list starts with!");
+            if (dataJSON.context.textureQualityPreferenceList) {
+                if (dataJSON.context.textureQualityPreferenceList instanceof Array) {
+                    this._textureQualityPreferenceList = dataJSON.context.textureQualityPreferenceList;
+                    if (dataJSON.context.textureQuality && (dataJSON.context.textureQualityPreferenceList[0] !== dataJSON.context.textureQuality)) {
+                        application.showError("Conflicting graphics setting: a different texture quality is set than the one the preference list starts with!");
+                    }
+                } else {
+                    application.showError("Expected texture quality preference list as an array, instead got " + dataJSON.context.textureQualityPreferenceList.constructor.name + "!");
                 }
             }
             if (dataJSON.context.textureQuality) {
@@ -272,9 +271,6 @@ define([
         if (localStorage.interstellarArmada_graphics_filtering !== undefined) {
             this.setFiltering(localStorage.interstellarArmada_graphics_filtering);
         }
-        if (localStorage.interstellarArmada_graphics_textureQualityPreferenceList !== undefined) {
-            this.setTextureQualityPreferenceList(localStorage.interstellarArmada_graphics_textureQualityPreferenceList.split(_constants.ARRAY_ELEMENT_SEPARATOR));
-        }
         if (localStorage.interstellarArmada_graphics_textureQuality !== undefined) {
             this.setTextureQuality(localStorage.interstellarArmada_graphics_textureQuality);
         }
@@ -303,8 +299,6 @@ define([
         this.loadFromJSON(this._dataJSON, true);
         localStorage.removeItem("interstellarArmada_graphics_antialiasing");
         localStorage.removeItem("interstellarArmada_graphics_filtering");
-        localStorage.removeItem("interstellarArmada_graphics_textureQualityPreferenceList");
-        localStorage.removeItem("interstellarArmada_graphics_textureQuality");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");
         localStorage.removeItem("interstellarArmada_graphics_shaderComplexity");
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
@@ -354,7 +348,6 @@ define([
      */
     GraphicsContext.prototype.setTextureQualityPreferenceList = function (value) {
         this._textureQualityPreferenceList = value;
-        localStorage.interstellarArmada_graphics_textureQualityPreferenceList = this._textureQualityPreferenceList.join(_constants.ARRAY_ELEMENT_SEPARATOR);
     };
     /**
      * Returns the current texture quality setting.
@@ -493,6 +486,11 @@ define([
     GraphicsContext.prototype.getShadowDepthRatio = function () {
         return this._shadowDepthRatio;
     };
+    /**
+     * Return shader resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
+     * @param {String} shaderName
+     * @returns {ShaderResource}
+     */
     GraphicsContext.prototype.getShader = function (shaderName) {
         switch (this.getShaderComplexity()) {
             case ShaderComplexity.NORMAL:
@@ -503,6 +501,14 @@ define([
                 application.showError("Unhandled shader complexity level: '" + this.getShaderComplexity() + "' - no corresponding shader set for this level!");
                 return null;
         }
+    };
+    /**
+     * Return model resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
+     * @param {String} modelName
+     * @returns {ModelResource}
+     */
+    GraphicsContext.prototype.getModel = function (modelName) {
+        return armada.resources().getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

@@ -312,7 +312,7 @@ define([
                             axis = [0, 0, 1];
                             break;
                     }
-                } else if (typeof jsonArray[i].axis === "array") {
+                } else if (jsonArray[i].axis instanceof Array) {
                     axis = jsonArray[i].axis;
                 }
                 result =
