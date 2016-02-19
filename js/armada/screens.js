@@ -25,15 +25,6 @@ define([
 ], function (utils, vec, mat, application, components, screens, managedGL, budaScene, control, armada, logic, graphics) {
     "use strict";
 
-    var _constants = {
-        DEFAULT_DATABASE_MODEL_ROTATION: true,
-        DEFAULT_DATABASE_BACKGROUND_COLOR: [0, 0, 0, 0],
-        DEFAULT_DATABASE_WIREFRAME_COLOR: [1, 0, 0, 1],
-        DEFAULT_DATABASE_SHOW_WIREFRAME_MODEL: true,
-        DEFAULT_DATABASE_SHOW_SOLID_MODEL: true,
-        DEFAULT_DATABASE_MODEL_REVEAL_ANIMATION: true
-    };
-
     function _shouldUseShadowMapping() {
         return armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal");
     }
@@ -382,30 +373,22 @@ define([
     };
 
     function _modelRotation() {
-        return ((armada.logic().getDatabaseSetting("modelRotation") !== undefined) ?
-                armada.logic().getDatabaseSetting("modelRotation") :
-                _constants.DEFAULT_DATABASE_MODEL_ROTATION);
+        return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.MODEL_ROTATION);
     }
 
     function _showSolidModel() {
-        return ((armada.logic().getDatabaseSetting("showSolidModel") !== undefined) ?
-                armada.logic().getDatabaseSetting("showSolidModel") :
-                _constants.DEFAULT_DATABASE_SHOW_SOLID_MODEL);
+        return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL);
     }
 
     function _showWireframeModel() {
-        return ((armada.logic().getDatabaseSetting("showWireframeModel") !== undefined) ?
-                armada.logic().getDatabaseSetting("showWireframeModel") :
-                ((armada.graphics().getShaderComplexity() === "normal") ?
-                        _constants.DEFAULT_DATABASE_SHOW_WIREFRAME_MODEL :
-                        !_showSolidModel()));
+        return (armada.graphics().getShaderComplexity() === "normal") ?
+                armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.SHOW_WIREFRAME_MODEL) :
+                !_showSolidModel();
     }
 
     function _shouldReveal() {
         return (armada.graphics().getShaderComplexity() === "normal") &&
-                ((armada.logic().getDatabaseSetting("modelRevealAnimation") !== undefined) ?
-                        armada.logic().getDatabaseSetting("modelRevealAnimation") :
-                        _constants.DEFAULT_DATABASE_MODEL_REVEAL_ANIMATION);
+                armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.MODEL_REVEAL_ANIMATION);
     }
 
     /**
@@ -594,7 +577,7 @@ define([
         this._scene = new budaScene.Scene(
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
-                armada.logic().getDatabaseSetting("backgroundColor") || _constants.DEFAULT_DATABASE_BACKGROUND_COLOR, true,
+                armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
                 armada.graphics().getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
@@ -753,7 +736,7 @@ define([
                     this._wireframeModel.getNode().setShader(armada.graphics().getShader("oneColorReveal").getManagedShader());
                     // set the necessary uniform functions for the one colored reveal shader
                     this._wireframeModel.setUniformValueFunction("u_color", function () {
-                        return armada.logic().getDatabaseSetting("wireframeColor") || _constants.DEFAULT_DATABASE_WIREFRAME_COLOR;
+                        return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.WIREFRAME_COLOR);
                     });
                     this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
                         return (this._revealState <= 1.0);

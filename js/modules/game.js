@@ -90,10 +90,10 @@ define([
             /**
              * Sends an asynchronous request to get the JSON file describing the game
              * settings and sets the callback function to set them.
-             * @param {String} settingsFileURL
+             * @param {{folder: String, filename: String}} settingsFileDescriptor
              */
-            _requestSettingsLoad = function (settingsFileURL) {
-                application.requestTextFile("config", settingsFileURL, function (settingsText) {
+            _requestSettingsLoad = function (settingsFileDescriptor) {
+                application.requestTextFile(settingsFileDescriptor.folder, settingsFileDescriptor.filename, function (settingsText) {
                     var settingsJSON = JSON.parse(settingsText);
                     application.log("Loading game settings...", 1);
                     application._loadGameSettings(settingsJSON);
@@ -122,7 +122,7 @@ define([
                         "modules/graphics-resources"
                     ], function (graphicsResources) {
                         _resourceManager = new graphicsResources.GraphicsResourceManager();
-                        _resourceManager.requestConfigLoad(configJSON.dataFileURLs.resources, "data", {
+                        _resourceManager.requestConfigLoad(configJSON.dataFiles.resources.filename, configJSON.dataFiles.resources.folder, {
                             "textures": graphicsResources.TextureResource,
                             "cubemaps": graphicsResources.CubemapResource,
                             "shaders": graphicsResources.ShaderResource,
@@ -131,7 +131,7 @@ define([
                         application._loadGameConfiguration(configJSON);
                         application.log("Game configuration loaded.");
                         _configInitComplete = true;
-                        _requestSettingsLoad(configJSON.configFileURLs.settings);
+                        _requestSettingsLoad(configJSON.configFiles.settings);
                     });
                 });
             },

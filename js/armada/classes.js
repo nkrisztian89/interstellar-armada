@@ -322,13 +322,13 @@ define([
         return this._texture.getManagedTexture(type, quality);
     };
     /**
+     * @param {String[]} types
      * @param {String[]} qualityPreferenceList
      * @returns {Object.<String, ManagedTexture>} 
      */
-    TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
-        var i, types, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
+    TexturedModelClass.prototype.getTexturesOfTypes = function (types, qualityPreferenceList) {
+        var i, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
         result = {};
-        types = this._texture.getTypes();
         qualities = this._texture.getQualities();
         mostFittingQualityIndex = -1;
         for (i = 0; i < qualities.length; i++) {
@@ -346,6 +346,13 @@ define([
             result[types[i]] = this._texture.getManagedTexture(types[i], mostFittingQuality);
         }
         return result;
+    };
+    /**
+     * @param {String[]} qualityPreferenceList
+     * @returns {Object.<String, ManagedTexture>} 
+     */
+    TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
+        return this.getTexturesOfTypes(this._texture.getTypes(), qualityPreferenceList);
     };
     // ##############################################################################
     /**

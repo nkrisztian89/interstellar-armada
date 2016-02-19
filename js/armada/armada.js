@@ -41,9 +41,7 @@ define([
         _logicContext.loadFromJSON(settingsJSON.logic);
     };
     game._loadGameConfiguration = function (configJSON) {
-        _logicContext.setClassesSourceFileName(configJSON.dataFileURLs.classes);
-        _logicContext.setEnvironmentsSourceFileName(configJSON.dataFileURLs.environments);
-        _logicContext.setLevelFileNames(configJSON.levels);
+        _logicContext.loadConfiguration(configJSON.dataFiles);
     };
     game._buildScreensAndExecuteCallback = function (screens, callback) {
         require(["armada/screens"], function (armadaScreens) {

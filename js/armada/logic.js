@@ -11,7 +11,6 @@
 
 /**
  * TODO: comment
- * @param utils
  * @param types
  * @param vec
  * @param mat
@@ -25,7 +24,6 @@
  * @param classes
  */
 define([
-    "utils/utils",
     "utils/types",
     "utils/vectors",
     "utils/matrices",
@@ -38,7 +36,7 @@ define([
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (utils, types, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
+], function (types, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
     "use strict";
     var
             /**
@@ -63,50 +61,142 @@ define([
                  */
                 ALWAYS_WHEN_HIT: "alwaysWhenHit"
             },
+    /**
+     * This object holds the definition objects for custom types that are used for object property verification
+     * @type Object
+     */
+    _customTypes = {
+        COLOR4: {
+            baseType: "array",
+            length: 4,
+            elementType: "number",
+            elementTypeParams: {
+                range: [0, 1]
+            }
+        },
+        DURATION: {
+            baseType: "number",
+            range: [0, undefined]
+        }
+    },
+    /**
+     * This object hold the constant values used in this module
+     * @type Object
+     */
+    //TODO: finish documentation
     _constants = {
+        SKYBOX_CLASS_ARRAY_NAME: "skyboxClasses",
+        BACKGROUND_OBJECT_CLASS_ARRAY_NAME: "backgroundObjectClasses",
+        DUST_CLOUD_CLASS_ARRAY_NAME: "dustCloudClasses",
+        EXPLOSION_CLASS_ARRAY_NAME: "explosionClasses",
+        PROJECTILE_CLASS_ARRAY_NAME: "projectileClasses",
+        WEAPON_CLASS_ARRAY_NAME: "weaponClasses",
+        PROPULSION_CLASS_ARRAY_NAME: "propulsionClasses",
+        SPACECRAFT_TYPE_ARRAY_NAME: "spacecraftTypes",
+        SPACECRAFT_CLASS_ARRAY_NAME: "spacecraftClasses",
         /**
-         * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
-         * @type Number
+         * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
          */
-        BACKGROUND_OBJECT_DISTANCE: 4500,
+        CONFIGURATION: {
+            CLASSES_SOURCE_FILE: {
+                name: "classes",
+                type: "object"
+            },
+            ENVIRONMENTS_SOURCE_FILE: {
+                name: "environments",
+                type: "object"
+            },
+            LEVEL_FILES: {
+                name: "levels",
+                type: "object"
+            }
+        },
         /**
-         * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
-         * @type Number
+         * The definition object for general settings that can be used to verify the data loaded from JSON as well as refer to the 
+         * individual settings later.
+         * @type Object
          */
-        MOMENT_DURATION: 1,
+        GENERAL_SETTINGS: {
+            /**
+             * Default seed to use for generating random numbers to allow consistent and comparable testing.
+             */
+            DEFAULT_RANDOM_SEED: {
+                name: "defaultRandomSeed",
+                type: "number",
+                defaultValue: 4718
+            },
+            LUMINOSITY_FACTORS_ARRAY_NAME: {
+                name: "luminosityFactorsArrayName",
+                type: "string",
+                defaultValue: "luminosityFactors"
+            }
+        },
         /**
-         * The length of time while muzzle flashes are visible (and shrinking), in milliseconds
-         * @type Number
+         * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
+         * individual settings later.
+         * @type Object
          */
-        DEFAULT_MUZZLE_FLASH_DURATION: 500,
+        DATABASE_SETTINGS: {
+            MODEL_ROTATION: {
+                name: "modelRotation",
+                type: "boolean",
+                defaultValue: true
+            },
+            BACKGROUND_COLOR: {
+                name: "backgroundColor",
+                type: _customTypes.COLOR4,
+                defaultValue: [0, 0, 0, 0]
+            },
+            WIREFRAME_COLOR: {
+                name: "wireframeColor",
+                type: _customTypes.COLOR4,
+                defaultValue: [1, 0, 0, 1]
+            },
+            SHOW_WIREFRAME_MODEL: {
+                name: "showWireframeModel",
+                type: "boolean",
+                defaultValue: true
+            },
+            SHOW_SOLID_MODEL: {
+                name: "showSolidModel",
+                type: "boolean",
+                defaultValue: true
+            },
+            MODEL_REVEAL_ANIMATION: {
+                name: "modelRevealAnimation",
+                type: "boolean",
+                defaultValue: true
+            }
+        },
         /**
-         * Default seed to use for generating random numbers to alloc consistent and comparable testing.
-         * @type Number
-         */
-        DEFAULT_RANDOM_SEED: 4718,
-        /**
-         * The classes source file will be looked for in the folder registered for this file type
-         * @type String
-         */
-        CLASSES_SOURCE_FILE_TYPE: "data",
-        /**
-         * The size of the parameter array that stores the luminosity factors for the various indexed triangle groups on spacecrafts
-         * This should be same as the uniform array size in the shader
-         * TODO: get from shader
-         * @type Number
-         */
-        LUMINOSITY_FACTORS_ARRAY_LENGTH: 20,
-        /**
-         * The definition object for battle settings that can be used to verify the data loaded from the JSON as well as refer to the 
+         * The definition object for battle settings that can be used to verify the data loaded from JSON as well as refer to the 
          * individual settings later.
          * @type Object
          */
         BATTLE_SETTINGS: {
-            //TODO: finish comments
+            /**
+             * The simulation loop will be executed this many times per second during the battle
+             */
             SIMULATION_STEPS_PER_SECOND: {
                 name: "simulationStepsPerSecond",
                 type: "number",
                 defaultValue: 60
+            },
+            /**
+             * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
+             */
+            MOMENT_DURATION: {
+                name: "momentDuration",
+                type: _customTypes.DURATION,
+                defaultValue: 1
+            },
+            /**
+             * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
+             */
+            BACKGROUND_OBJECT_DISTANCE: {
+                name: "backgroundObjectDistance",
+                type: "number",
+                defaultValue: 4500
             },
             /**
              * When turning, (maneuvering computers of) spacecrafts allow the turn rate to accelerate for a maximum of this duration 
@@ -114,14 +204,28 @@ define([
              */
             TURN_ACCELERATION_DURATION_S: {
                 name: "turnAccelerationDurationInSeconds",
-                type: "number",
+                type: _customTypes.DURATION,
                 defaultValue: 0.5
             },
+            /**
+             * If a muzzle flash particle has no set duration (by its projectile class), this duration will be applied. In milliseconds
+             */
+            DEFAULT_MUZZLE_FLASH_DURATION: {
+                name: "defaultMuzzleFlashDuration",
+                type: _customTypes.DURATION,
+                defaultValue: 500
+            },
+            /**
+             * If true, spacecrafts can hit themselves with their own projectiles
+             */
             SELF_FIRE: {
                 name: "selfFire",
                 type: "boolean",
                 defaultValue: true
             },
+            /**
+             * The default auto-targeting mode to use
+             */
             AUTO_TARGETING: {
                 name: "autoTargeting",
                 type: "enum",
@@ -133,9 +237,7 @@ define([
              */
             HITBOX_COLOR: {
                 name: "hitboxColor",
-                type: "array",
-                elementType: "number",
-                length: 4,
+                type: _customTypes.COLOR4,
                 defaultValue: [0.0, 0.5, 0.5, 0.5]
             },
             /**
@@ -154,6 +256,9 @@ define([
                 type: "string",
                 defaultValue: "lambert-with-luminosity"
             },
+            /**
+             * The amount of randomly positioned ships to add to the level at start by class
+             */
             RANDOM_SHIPS: {
                 name: "randomShips",
                 type: "object",
@@ -173,7 +278,7 @@ define([
              */
             TARGET_CHANGE_TRANSITION_DURATION: {
                 name: "targetChangeTransitonDuration",
-                type: "number",
+                type: _customTypes.DURATION,
                 defaultValue: 300
             },
             /**
@@ -185,9 +290,40 @@ define([
                 enum: budaScene.Camera.prototype.TransitionStyle,
                 defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
             }
+        },
+        CAMERA_SETTINGS: {
+            DEFAULT_FOV: {
+                name: "defaultFOV",
+                type: "number"
+            },
+            DEFAULT_FOV_RANGE: {
+                name: "defaultFOVRange",
+                type: "array",
+                length: 2
+            },
+            DEFAULT_SPAN: {
+                name: "defaultSpan",
+                type: "number"
+            },
+            DEFAULT_SPAN_RANGE: {
+                name: "defaultSpanRange",
+                type: "array",
+                length: 2
+            },
+            DEFAULT_BASE_ORIENTATION: {
+                name: "defaultBaseOrientation",
+                type: "enum",
+                enum: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+            },
+            DEFAULT_POINT_TO_FALLBACK: {
+                name: "defaultPointToFallback",
+                type: "enum",
+                enum: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
+            }
         }
     };
     Object.freeze(AutoTargeting);
+    Object.freeze(_customTypes);
     Object.freeze(_constants);
     // ##############################################################################
     /**
@@ -214,7 +350,7 @@ define([
             scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
                     this._class.getModel(),
                     this._class.getShader(),
-                    "skybox",
+                    "skybox", //TODO: hardcoded
                     this._class.getCubemap(),
                     scene.activeCamera));
         }.bind(this));
@@ -267,10 +403,10 @@ define([
                 layerParticle = new budaScene.BackgroundBillboard(
                         layers[i].getModel(),
                         layers[i].getShader(),
-                        layers[i].getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
+                        layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                         layers[i].getColor(),
                         layers[i].getSize(),
-                        mat.translation4v(vec.scaled3(this._direction, _constants.BACKGROUND_OBJECT_DISTANCE)));
+                        mat.translation4v(vec.scaled3(this._direction, armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
                 layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);
             }
@@ -407,7 +543,6 @@ define([
                             (Math.random() - 0.5) * 2 * this._class.getRange(),
                             (Math.random() - 0.5) * 2 * this._class.getRange()));
             this._particles.push(particle);
-
         }
         armada.resources().executeWhenReady(function () {
             var j, node;
@@ -574,18 +709,6 @@ define([
     function LogicContext() {
         asyncResource.AsyncResource.call(this);
         /**
-         * The name of the file (without path) that contains the descriptions
-         * of the in-game classes.
-         * @type String
-         */
-        this._classesSourceFileName = null;
-        /**
-         * The name of the file (without path) that contains the descriptions
-         * of the reusable environments.
-         * @type String
-         */
-        this._environmentsSourceFileName = null;
-        /**
          * @type ResourceManagerF
          */
         this._classResourceManager = new resourceManager.ResourceManager();
@@ -597,83 +720,60 @@ define([
          */
         this._environments = null;
         /**
-         * @type String[]
+         * An object storing all the configuration settings. (verified against CONFIGURATION)
+         * @type
          */
-        this._levelFileNames = null;
+        this._configuration = null;
         /**
-         * An object storing all the database settings.
-         * @type {modelRotation: Boolean, backgroundColor: Number[4], wireframeColor: Number[4], showSolidModel: Boolean}
+         * An object storing all the general settings. (verified against GENERAL_SETTINGS)
+         * @type Object
+         */
+        this._generalSettings = null;
+        /**
+         * An object storing all the database settings. (verified against DATABASE_SETTINGS)
+         * @type Object
          */
         this._databaseSettings = null;
         /**
-         * An object storing all the battle settings.
+         * An object storing all the battle settings. (verified against BATTLE_SETTINGS)
          * @type Object
          */
         this._battleSettings = null;
         /**
-         * The default starting field of view value for camera configurations, in degrees
-         * @type Number
+         * An object storing all the camera settings. (verified against CAMERA_SETTINGS)
+         * @type Object
          */
-        this._defaultCameraFOV = 0;
-        /**
-         * The default minimum and maximum field of view values for camera configurations, in degrees
-         * @type Number[2]
-         */
-        this._defaultCameraFOVRange = null;
-        /**
-         * The default starting span value for camera configurations, in meters
-         * @type Number
-         */
-        this._defaultCameraSpan = 0;
-        /**
-         * The default minimum and maximum span values for camera configurations, in meters
-         * @type Number[2]
-         */
-        this._defaultCameraSpanRange = null;
-        /**
-         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The default base orientation mode to use for camera configurations
-         * @type String
-         */
-        this._defaultCameraBaseOrientation = null;
-        /**
-         * (enum CameraOrientationConfiguration.prototype.PointToFallback) The default point-to fallback mode to use for camera configurations
-         * @type String
-         */
-        this._defaultCameraPointToFallback = null;
+        this._cameraSettings = null;
     }
     LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
-    // direct getters and setters
     /**
-     * The game classes will be loaded from the file set here. Give the path to the file relative
-     * to the configuration folder.
-     * @param {String} value
+     * 
+     * @param {Object} configJSON
      */
-    LogicContext.prototype.setClassesSourceFileName = function (value) {
-        this._classesSourceFileName = value;
+    LogicContext.prototype.loadConfiguration = function (configJSON) {
+        this._configuration = types.getVerifiedObject("configuration", configJSON, _constants.CONFIGURATION);
     };
     /**
-     * The game environments will be loaded from the file set here. Give the path to the file relative
-     * to the environment folder.
-     * @param {String} value
+     * Returns the configuration setting value for the passed setting definition object (from CONFIGURATION).
+     * @param {Object} settingDefinitionObject
      */
-    LogicContext.prototype.setEnvironmentsSourceFileName = function (value) {
-        this._environmentsSourceFileName = value;
+    LogicContext.prototype.getConfigurationSetting = function (settingDefinitionObject) {
+        return this._configuration[settingDefinitionObject.name];
     };
     /**
-     * Sets the array of strings that contains the names of the level descriptor JSON files.
-     * The path doesn't need to be included, the files will be looked for in the levels folder.
-     * @param {String[]} value
+     * Returns the general setting value for the passed setting definition object (from GENERAL_SETTINGS).
+     * @param {Object} settingDefinitionObject
      */
-    LogicContext.prototype.setLevelFileNames = function (value) {
-        this._levelFileNames = value;
+    LogicContext.prototype.getGeneralSetting = function (settingDefinitionObject) {
+        return this._generalSettings[settingDefinitionObject.name];
     };
     /**
-     * Returns the database settings value for the passed setting key.
-     * @param {Boolean|Number[4]} settingName
+     * Returns the database setting value for the passed setting definition object (from DATABASE_SETTINGS).
+     * @param {Object} settingDefinitionObject
      */
-    LogicContext.prototype.getDatabaseSetting = function (settingName) {
-        return this._databaseSettings[settingName];
+    LogicContext.prototype.getDatabaseSetting = function (settingDefinitionObject) {
+        return this._databaseSettings[settingDefinitionObject.name];
     };
     /**
      * Returns the battle setting value for the passed setting definition object (from BATTLE_SETTINGS).
@@ -684,32 +784,40 @@ define([
         return this._battleSettings[settingDefinitionObject.name];
     };
     /**
+     * Returns the camera setting value for the passed setting definition object (from CAMERA_SETTINGS).
+     * @param {Object} settingDefinitionObject
+     * @returns {}
+     */
+    LogicContext.prototype.getCameraSetting = function (settingDefinitionObject) {
+        return this._cameraSettings[settingDefinitionObject.name];
+    };
+    /**
      * Returns the default starting field of view value for camera configurations, in degrees
      * @returns {Number}
      */
     LogicContext.prototype.getDefaultCameraFOV = function () {
-        return this._defaultCameraFOV;
+        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_FOV);
     };
     /**
      * Returns the default minimum and maximum field of view values for camera configurations, in degrees
      * @returns {Number[2]}
      */
     LogicContext.prototype.getDefaultCameraFOVRange = function () {
-        return this._defaultCameraFOVRange;
+        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_FOV_RANGE);
     };
     /**
      * Returns the default starting span value for camera configurations, in meters
      * @returns {Number}
      */
     LogicContext.prototype.getDefaultCameraSpan = function () {
-        return this._defaultCameraSpan;
+        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_SPAN);
     };
     /**
      * Returns the default minimum and maximum span values for camera configurations, in meters
      * @returns {Number[2]}
      */
     LogicContext.prototype.getDefaultCameraSpanRange = function () {
-        return this._defaultCameraSpanRange;
+        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_SPAN_RANGE);
     };
     /**
      * (enum CameraOrientationConfiguration.prototype.BaseOrientation) Returns the default base orientation mode to use for camera 
@@ -717,7 +825,7 @@ define([
      * @returns {String}
      */
     LogicContext.prototype.getDefaultCameraBaseOrientation = function () {
-        return this._defaultCameraBaseOrientation;
+        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION);
     };
     /**
      * (enum CameraOrientationConfiguration.prototype.PointToFallback) Returns the default point-to fallback mode to use for camera 
@@ -725,7 +833,7 @@ define([
      * @returns {String}
      */
     LogicContext.prototype.getDefaultCameraPointToFallback = function () {
-        return this._defaultCameraPointToFallback;
+        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
     };
     /**
      * Return the skybox class with the given name if it exists, otherwise null.
@@ -733,7 +841,7 @@ define([
      * @returns {SkyboxClass}
      */
     LogicContext.prototype.getSkyboxClass = function (name) {
-        return this._classResourceManager.getResource("skyboxClasses", name);
+        return this._classResourceManager.getResource(_constants.SKYBOX_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the background object class with the given name if it exists, otherwise null.
@@ -741,7 +849,7 @@ define([
      * @returns {BackgroundObjectClass}
      */
     LogicContext.prototype.getBackgroundObjectClass = function (name) {
-        return this._classResourceManager.getResource("backgroundObjectClasses", name);
+        return this._classResourceManager.getResource(_constants.BACKGROUND_OBJECT_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the dust cloud class with the given name if it exists, otherwise null.
@@ -749,7 +857,7 @@ define([
      * @returns {DustCloudClass}
      */
     LogicContext.prototype.getDustCloudClass = function (name) {
-        return this._classResourceManager.getResource("dustCloudClasses", name);
+        return this._classResourceManager.getResource(_constants.DUST_CLOUD_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the explosion class with the given name if it exists, otherwise null.
@@ -757,7 +865,7 @@ define([
      * @returns {ExplosionClass}
      */
     LogicContext.prototype.getExplosionClass = function (name) {
-        return this._classResourceManager.getResource("explosionClasses", name);
+        return this._classResourceManager.getResource(_constants.EXPLOSION_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the projectile class with the given name if it exists, otherwise null.
@@ -765,7 +873,7 @@ define([
      * @returns {ProjectileClass}
      */
     LogicContext.prototype.getProjectileClass = function (name) {
-        return this._classResourceManager.getResource("projectileClasses", name);
+        return this._classResourceManager.getResource(_constants.PROJECTILE_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the weapon class with the given name if it exists, otherwise null.
@@ -773,7 +881,7 @@ define([
      * @returns {WeaponClass}
      */
     LogicContext.prototype.getWeaponClass = function (name) {
-        return this._classResourceManager.getResource("weaponClasses", name);
+        return this._classResourceManager.getResource(_constants.WEAPON_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the propulsion class with the given name if it exists, otherwise null.
@@ -781,7 +889,7 @@ define([
      * @returns {PropulsionClass}
      */
     LogicContext.prototype.getPropulsionClass = function (name) {
-        return this._classResourceManager.getResource("propulsionClasses", name);
+        return this._classResourceManager.getResource(_constants.PROPULSION_CLASS_ARRAY_NAME, name);
     };
     /**
      * Return the spacecraft type with the given name if it exists, otherwise null.
@@ -789,15 +897,16 @@ define([
      * @returns {SpacecraftType}
      */
     LogicContext.prototype.getSpacecraftType = function (name) {
-        return this._classResourceManager.getResource("spacecraftTypes", name);
+        return this._classResourceManager.getResource(_constants.SPACECRAFT_TYPE_ARRAY_NAME, name);
     };
     /**
      * Return the spacecraft class with the given name if it exists, otherwise null.
      * @param {String} name
-     * @returns {SpacecraftClass}
+     * @param {Boolean} [allowNullResult=false] If false, an error message will be displayed if null is returned.
+     * @returns {SpacecraftClass|null}
      */
-    LogicContext.prototype.getSpacecraftClass = function (name) {
-        return this._classResourceManager.getResource("spacecraftClasses", name);
+    LogicContext.prototype.getSpacecraftClass = function (name, allowNullResult) {
+        return this._classResourceManager.getResource(_constants.SPACECRAFT_CLASS_ARRAY_NAME, name, {allowNullResult: allowNullResult});
     };
     /**
      * Return the reusable environment with the given name if it exists, otherwise null.
@@ -813,7 +922,7 @@ define([
      * @returns {string}
      */
     LogicContext.prototype.getLevelFileName = function (index) {
-        return this._levelFileNames[index];
+        return this.getConfigurationSetting(_constants.CONFIGURATION.LEVEL_FILES).filenames[index];
     };
     // indirect getters and setters
     /**
@@ -825,7 +934,7 @@ define([
         var
                 i,
                 result = [],
-                names = this._classResourceManager.getResourceNames("spacecraftClasses");
+                names = this._classResourceManager.getResourceNames(_constants.SPACECRAFT_CLASS_ARRAY_NAME);
         for (i = 0; i < names.length; i++) {
             if (!forDatabase || this.getSpacecraftClass(names[i]).shouldShowInDatabase()) {
                 result.push(this.getSpacecraftClass(names[i]));
@@ -840,21 +949,24 @@ define([
      * initiate the loading of reusable environments when ready.
      */
     LogicContext.prototype.requestClassesLoad = function () {
-        this._classResourceManager.requestConfigLoad(this._classesSourceFileName, _constants.CLASSES_SOURCE_FILE_TYPE, {
-            "skyboxClasses": classes.SkyboxClass,
-            "backgroundObjectClasses": classes.BackgroundObjectClass,
-            "dustCloudClasses": classes.DustCloudClass,
-            "explosionClasses": classes.ExplosionClass,
-            "projectileClasses": classes.ProjectileClass,
-            "weaponClasses": classes.WeaponClass,
-            "propulsionClasses": classes.PropulsionClass,
-            "spacecraftTypes": classes.SpacecraftType,
-            "spacecraftClasses": classes.SpacecraftClass
-        }, function () {
-            this._classResourceManager.requestAllResources();
-            this._classResourceManager.requestResourceLoad();
-            this.requestEnvironmentsLoad();
-        }.bind(this));
+        var classAssignment = {};
+        classAssignment[_constants.SKYBOX_CLASS_ARRAY_NAME] = classes.SkyboxClass;
+        classAssignment[_constants.BACKGROUND_OBJECT_CLASS_ARRAY_NAME] = classes.BackgroundObjectClass;
+        classAssignment[_constants.DUST_CLOUD_CLASS_ARRAY_NAME] = classes.DustCloudClass;
+        classAssignment[_constants.EXPLOSION_CLASS_ARRAY_NAME] = classes.ExplosionClass;
+        classAssignment[_constants.PROJECTILE_CLASS_ARRAY_NAME] = classes.ProjectileClass;
+        classAssignment[_constants.WEAPON_CLASS_ARRAY_NAME] = classes.WeaponClass;
+        classAssignment[_constants.PROPULSION_CLASS_ARRAY_NAME] = classes.PropulsionClass;
+        classAssignment[_constants.SPACECRAFT_TYPE_ARRAY_NAME] = classes.SpacecraftType;
+        classAssignment[_constants.SPACECRAFT_CLASS_ARRAY_NAME] = classes.SpacecraftClass;
+        this._classResourceManager.requestConfigLoad(
+                this.getConfigurationSetting(_constants.CONFIGURATION.CLASSES_SOURCE_FILE).filename,
+                this.getConfigurationSetting(_constants.CONFIGURATION.CLASSES_SOURCE_FILE).folder,
+                classAssignment, function () {
+                    this._classResourceManager.requestAllResources();
+                    this._classResourceManager.requestResourceLoad();
+                    this.requestEnvironmentsLoad();
+                }.bind(this));
     };
     /**
      * Sends an asynchronous request to grab the file containing the reusable
@@ -862,10 +974,13 @@ define([
      * and set the resource state of this context to ready when done.
      */
     LogicContext.prototype.requestEnvironmentsLoad = function () {
-        application.requestTextFile("environment", this._environmentsSourceFileName, function (responseText) {
-            this.loadEnvironmentsFromJSON(JSON.parse(responseText));
-            this.setToReady();
-        }.bind(this));
+        application.requestTextFile(
+                this.getConfigurationSetting(_constants.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
+                this.getConfigurationSetting(_constants.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
+                function (responseText) {
+                    this.loadEnvironmentsFromJSON(JSON.parse(responseText));
+                    this.setToReady();
+                }.bind(this));
     };
     /**
      * Loads the desciptions of all reusable environments from the passed JSON object,
@@ -887,23 +1002,10 @@ define([
      * @param {Object} dataJSON
      */
     LogicContext.prototype.loadFromJSON = function (dataJSON) {
-        //TODO: verify database settings
-        this._databaseSettings = dataJSON.database;
+        this._generalSettings = types.getVerifiedObject("general", dataJSON.general, _constants.GENERAL_SETTINGS);
+        this._databaseSettings = types.getVerifiedObject("database", dataJSON.database, _constants.DATABASE_SETTINGS);
         this._battleSettings = types.getVerifiedObject("battle", dataJSON.battle, _constants.BATTLE_SETTINGS);
-        this._defaultCameraFOV = dataJSON.camera.defaultFOV || application.showError("camera.defaultFOV definition is missing from settings!");
-        this._defaultCameraFOVRange = dataJSON.camera.defaultFOVRange || application.showError("camera.defaultFOVRange definition is missing from settings!");
-        this._defaultCameraSpan = dataJSON.camera.defaultSpan || application.showError("camera.defaultSpan definition is missing from settings!");
-        this._defaultCameraSpanRange = dataJSON.camera.defaultSpanRange || application.showError("camera.defaultSpanRange definition is missing from settings!");
-        this._defaultCameraBaseOrientation =
-                utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.camera.defaultBaseOrientation) ||
-                application.showError(
-                        "Invalid value '" + dataJSON.battle.defaultBaseOrientation + "' specified for default camera base orientation mode!",
-                        "severe", "Valid values are : " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".");
-        this._defaultCameraPointToFallback =
-                utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.camera.defaultPointToFallback) ||
-                application.showError(
-                        "Invalid value '" + dataJSON.battle.defaultPointToFallback + "' specified for default camera point-to fallback mode!",
-                        "severe", "Valid values are : " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".");
+        this._cameraSettings = types.getVerifiedObject("camera", dataJSON.camera, _constants.CAMERA_SETTINGS);
         this.requestClassesLoad();
     };
     // ##############################################################################
@@ -966,7 +1068,7 @@ define([
         return function () {
             return new budaScene.Particle(emitterDescriptor.getModel(),
                     emitterDescriptor.getShader(),
-                    emitterDescriptor.getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
+                    emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                     mat.identity4(),
                     emitterDescriptor.getParticleStates(),
                     false);
@@ -1157,7 +1259,7 @@ define([
         this._visualModel = this._visualModel || new budaScene.Billboard(
                 this._class.getModel(),
                 this._class.getShader(),
-                this._class.getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
+                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                 this._class.getSize(),
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix());
@@ -1214,11 +1316,9 @@ define([
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     velocity = vec.length3(velocityVector);
                     velocityDir = vec.normal3(velocityVector);
-                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000 / _constants.MOMENT_DURATION, _constants.MOMENT_DURATION);
-
+                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000 / armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION), armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION));
                     explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1), true);
                     explosion.addToScene(this._visualModel.getNode().getScene());
-
                     relPos = vec.mulVec4Mat4(positionVector, hitObjects[i].getVisualModel().getModelMatrixInverse());
                     relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
                     hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(relDir, -1));
@@ -1324,7 +1424,7 @@ define([
             this._visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTextures(armada.graphics().getTextureQualityPreferenceList()),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                     this._slot.positionMatrix,
                     this._slot.orientationMatrix,
                     mat.identity4(),
@@ -1346,11 +1446,11 @@ define([
         return budaScene.dynamicParticle(
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
-                projectileClass.getMuzzleFlash().getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
+                projectileClass.getMuzzleFlash().getTexturesOfTypes(projectileClass.getMuzzleFlash().getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getMuzzleFlash().getSize(),
                 muzzleFlashPosMatrix,
-                projectileClass.getMuzzleFlash().getDuration() || _constants.DEFAULT_MUZZLE_FLASH_DURATION);
+                projectileClass.getMuzzleFlash().getDuration() || armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION));
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
@@ -1414,7 +1514,7 @@ define([
                         projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
-                        new physics.Force("", barrels[i].getForceForDuration(_constants.MOMENT_DURATION), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _constants.MOMENT_DURATION));
+                        new physics.Force("", barrels[i].getForceForDuration(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
                 // create the counter-force affecting the firing ship
@@ -1423,8 +1523,8 @@ define([
                                 mat.translationVector3(projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
-                        barrels[i].getForceForDuration(_constants.MOMENT_DURATION),
-                        _constants.MOMENT_DURATION
+                        barrels[i].getForceForDuration(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)),
+                        armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)
                         );
             }
         }
@@ -1480,7 +1580,7 @@ define([
             this._visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
-                    this._propulsionClass.getThrusterBurnParticle().getTexture("emissive", armada.graphics().getTextureQuality()), //TODO: hardcoded
+                    this._propulsionClass.getThrusterBurnParticle().getTexturesOfTypes(this._propulsionClass.getThrusterBurnParticle().getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                     this._propulsionClass.getThrusterBurnParticle().getColor(),
                     this._slot.size,
                     mat.translation4v(this._slot.positionVector));
@@ -1497,7 +1597,10 @@ define([
         // set the size of the particle that shows the burn
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
-        this._shipModel.setParameter("luminosityFactors", this._slot.group, Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
+        this._shipModel.setParameter(
+                armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                this._slot.group,
+                Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
     };
     /**
      * Sets the burn level of this thruster to zero.
@@ -2789,14 +2892,17 @@ define([
             this._visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTextures(armada.graphics().getTextureQualityPreferenceList()),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
                     this._physicalModel.getPositionMatrix(),
                     this._physicalModel.getOrientationMatrix(),
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    [{name: "luminosityFactors", length: _constants.LUMINOSITY_FACTORS_ARRAY_LENGTH}]);
-            this._visualModel.setParameter("luminosityFactors", 0, this._class.getGroupZeroLuminosity());
+                    [armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)]);
+            this._visualModel.setParameter(
+                    armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                    0,
+                    this._class.getGroupZeroLuminosity());
             node = scene.addObject(this._visualModel);
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {
@@ -3164,7 +3270,7 @@ define([
      * level has been loaded.
      */
     Level.prototype.requestLoadFromFile = function (filename, callback) {
-        application.requestTextFile("level", filename, function (responseText) {
+        application.requestTextFile(armada.logic().getConfigurationSetting(_constants.CONFIGURATION.LEVEL_FILES).folder, filename, function (responseText) {
             this.loadFromJSON(JSON.parse(responseText));
             if (callback) {
                 callback();
@@ -3222,7 +3328,7 @@ define([
      */
     Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ, randomSeed) {
         var random, shipClass, i, orientation;
-        randomSeed = randomSeed || _constants.DEFAULT_RANDOM_SEED;
+        randomSeed = randomSeed || armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
         for (shipClass in shipNumbersPerClass) {
             if (shipNumbersPerClass.hasOwnProperty(shipClass)) {
@@ -3244,7 +3350,7 @@ define([
                                     mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                                     orientation,
                                     this._projectiles,
-                                    "default",
+                                    "default", //TODO: hardcoded
                                     this._spacecrafts));
                 }
             }
@@ -3353,6 +3459,8 @@ define([
     // The public interface of the module
     return {
         BATTLE_SETTINGS: _constants.BATTLE_SETTINGS,
+        DATABASE_SETTINGS: _constants.DATABASE_SETTINGS,
+        CAMERA_SETTINGS: _constants.CAMERA_SETTINGS,
         LogicContext: LogicContext,
         Spacecraft: Spacecraft,
         Level: Level

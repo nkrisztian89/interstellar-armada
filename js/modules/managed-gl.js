@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -38,8 +38,17 @@ define([
                 BILINEAR: "bilinear",
                 TRILINEAR: "trilinear",
                 ANISOTROPIC: "anisotropic"
-            };
+            },
+    _constants = {
+        UNIFORM_NAME_PREFIX: "u_",
+        UNIFORM_NAME_SUFFIX: "",
+        TEXTURE_UNIFORM_NAME_PREFIX: "",
+        TEXTURE_UNIFORM_NAME_SUFFIX: "Texture",
+        CUBEMAP_UNIFORM_NAME_PREFIX: "",
+        CUBEMAP_UNIFORM_NAME_SUFFIX: "Cubemap"
+    };
     Object.freeze(TextureFiltering);
+    Object.freeze(_constants);
     /**
      * Displays information about an error that has occured in relation with WebGL,
      * adding some basic WebGL support info for easier troubleshooting.
@@ -462,6 +471,64 @@ define([
             this.setLocation(context, shader, locationPrefix);
         }
         return this._locations[context.getName()][(locationPrefix || "self")];
+    };
+    /**
+     * If this uniform is an array, returns the length of the array, otherwise returns 0.
+     * @returns {Number}
+     */
+    ShaderUniform.prototype.getArraySize = function () {
+        return this._arraySize;
+    };
+    /**
+     * Returns the name of this uniform with general uniform prefixes and suffixes removed.
+     * @returns {String}
+     */
+    ShaderUniform.prototype.getRawName = function () {
+        var result = this._name, parts;
+        if (_constants.UNIFORM_NAME_PREFIX.length > 0) {
+            parts = result.split(_constants.UNIFORM_NAME_PREFIX);
+            result = parts[parts.length - 1];
+        }
+        if (_constants.UNIFORM_NAME_SUFFIX.length > 0) {
+            result = result.split(_constants.UNIFORM_NAME_SUFFIX)[0];
+        }
+        return result;
+    };
+    /**
+     * If this is a 2D texture sampler, this will return the type of texture it is sampling based on its name (with prefixes and suffixes
+     * removed), otherwise will return null. Uniforms without the proper prefixes and suffixes also return null.
+     * @returns {String|null}
+     */
+    ShaderUniform.prototype.getTextureType = function () {
+        var result, parts;
+        if (this._type !== this.VariableTypes.sampler2D) {
+            return null;
+        }
+        result = this.getRawName();
+        if (_constants.TEXTURE_UNIFORM_NAME_PREFIX.length > 0) {
+            parts = result.split(_constants.TEXTURE_UNIFORM_NAME_PREFIX);
+            if (parts.length < 2) {
+                return null;
+            }
+            result = parts[parts.length - 1];
+        }
+        if (_constants.TEXTURE_UNIFORM_NAME_SUFFIX.length > 0) {
+            parts = result.split(_constants.TEXTURE_UNIFORM_NAME_SUFFIX);
+            if (parts.length < 2) {
+                return null;
+            }
+            result = parts[0];
+        }
+        return result;
+    };
+    /**
+     * @static
+     * Returns a name prefixed and suffixed like general uniform variables.
+     * @param {String} rawName
+     * @returns {String}
+     */
+    ShaderUniform.prototype.getUniformName = function (rawName) {
+        return _constants.UNIFORM_NAME_PREFIX + rawName + _constants.UNIFORM_NAME_SUFFIX;
     };
     /**
      * Sets the value of the shader uniform in the specified GL context to the passed value.
@@ -1100,6 +1167,35 @@ define([
             context.getVertexBuffer(this._attributes[i].name).bind(context, this);
         }
     };
+    /**
+     * If the shader has a uniform array variable with the given name, this will return the length
+     * of that array, otherwise it will return 0.
+     * @param {String} uniformName
+     * @returns {Number}
+     */
+    ManagedShader.prototype.getUniformArrayLength = function (uniformName) {
+        var i;
+        for (i = 0; i < this._uniforms.length; i++) {
+            if (this._uniforms[i].getName() === uniformName) {
+                return this._uniforms[i].getArraySize();
+            }
+        }
+        return 0;
+    };
+    /**
+     * Returns what types of textures does this shader need to be bound, based on the names of its uniform sampler variables.
+     * @returns {Array}
+     */
+    ManagedShader.prototype.getTextureTypes = function () {
+        var i, textureType, result = [];
+        for (i = 0; i < this._uniforms.length; i++) {
+            textureType = this._uniforms[i].getTextureType();
+            if (textureType) {
+                result.push(textureType);
+            }
+        }
+        return result;
+    };
     // ############################################################################################
     /**
      * Creates a managed WebGL context for the given HTML5 canvas element.
@@ -1657,6 +1753,7 @@ define([
     // The public interface of the module
     return {
         TextureFiltering: TextureFiltering,
+        getUniformName: ShaderUniform.prototype.getUniformName,
         ManagedTexture: ManagedTexture,
         ManagedCubemap: ManagedCubemap,
         ManagedShader: ManagedShader,
