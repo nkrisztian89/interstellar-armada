@@ -49,7 +49,27 @@ define([
                  * When increased by one step, the span of a camera will be multiplied by this factor
                  * @type Number
                  */
-                SPAN_INCREASE_FACTOR: 1.05
+                SPAN_INCREASE_FACTOR: 1.05,
+                /**
+                 * The minimum alpha angle for FPS-mode camera configurations that were created without specifying it
+                 * @type Number
+                 */
+                DEFAULT_MIN_ALPHA: -360,
+                /**
+                 * The maximum alpha angle for FPS-mode camera configurations that were created without specifying it
+                 * @type Number
+                 */
+                DEFAULT_MAX_ALPHA: 360,
+                /**
+                 * The minimum beta angle for FPS-mode camera configurations that were created without specifying it
+                 * @type Number
+                 */
+                DEFAULT_MIN_BETA: -90,
+                /**
+                 * The maximum beta angle for FPS-mode camera configurations that were created without specifying it
+                 * @type Number
+                 */
+                DEFAULT_MAX_BETA: 90
             };
     Object.freeze(_constants);
     // #########################################################################
@@ -3177,10 +3197,8 @@ define([
      * @param {Float32Array} orientationMatrix The starting relative (if objects are followed) or world (if not) orientation of the camera.
      * @param {Number} [alpha=0] In FPS-mode, the starting alpha angle (around the Z axis)
      * @param {Number} [beta=0] In FPS-mode, the starting beta angle (around X axis)
-     * @param {Number} [minAlpha=-360] In FPS-mode, the lowest possible value for the alpha angle.
-     * @param {Number} [maxAlpha=360] In FPS-mode, the highest possible value for the alpha angle.
-     * @param {Number} [minBeta=-90] In FPS-mode, the lowest possible value for the beta angle.
-     * @param {Number} [maxBeta=90] In FPS-mode, the highest possible value for the beta angle.
+     * @param {Number[2]} [alphaRange=[DEFAULT_MIN_ALPHA, DEFAULT_MAX_ALPHA]] In FPS-mode, the lowest and highest possible values for the alpha angle.
+     * @param {Number[2]} [betaRange=[DEFAULT_MIN_BETA, DEFAULT_MAX_BETA]] In FPS-mode, the lowest and highest possible values for the beta angle.
      * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be 
      * taken as base when calculating the orientation in FPS-mode.
      * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation 
@@ -3190,7 +3208,7 @@ define([
      * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated 
      * to provide a smooth transition between the non-updated and updated state
      */
-    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, minAlpha, maxAlpha, minBeta, maxBeta, baseOrientation, pointToFallback, isTransitionConfiguration) {
+    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, alphaRange, betaRange, baseOrientation, pointToFallback, isTransitionConfiguration) {
         /**
          * If true, the camera orientation can't be controlled by the player, but is automatically
          * calculated. The absolute orientation might still change e.g. if it is relative to objects
@@ -3266,23 +3284,23 @@ define([
          * cannot be set below it. Can be a negative number. In degrees.
          * @type Number
          */
-        this._minAlpha = (minAlpha !== undefined) ? minAlpha : -360;
+        this._minAlpha = (alphaRange && (alphaRange[0] !== undefined)) ? alphaRange[0] : _constants.DEFAULT_MIN_ALPHA;
         /**
          * If the camera is in FPS mode and not fixed, this value constraints turning it around, as the alpha angle
          * cannot be set above it. In degrees.
          * @type Number
          */
-        this._maxAlpha = (maxAlpha !== undefined) ? maxAlpha : 360;
+        this._maxAlpha = (alphaRange && (alphaRange[1] !== undefined)) ? alphaRange[1] : _constants.DEFAULT_MAX_ALPHA;
         /**
          * See min alpha for explanation. The minimum for the beta angle. In degrees.
          * @type Number
          */
-        this._minBeta = (minBeta !== undefined) ? minBeta : -90;
+        this._minBeta = (betaRange && (betaRange[0] !== undefined)) ? betaRange[0] : _constants.DEFAULT_MIN_BETA;
         /**
          * See max alpha for explanation. The maximum for the beta angle. In degrees.
          * @type Number
          */
-        this._maxBeta = (maxBeta !== undefined) ? maxBeta : 90;
+        this._maxBeta = (betaRange && (betaRange[1] !== undefined)) ? betaRange[1] : _constants.DEFAULT_MAX_ALPHA;
         /**
          * (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be taken as base when calculating 
          * the orientation in FPS-mode.
@@ -3362,10 +3380,8 @@ define([
                 mat.matrix4(this._defaultRelativeOrientationMatrix),
                 this._alpha,
                 this._beta,
-                this._minAlpha,
-                this._maxAlpha,
-                this._minBeta,
-                this._maxBeta,
+                [this._minAlpha, this._maxAlpha],
+                [this._minBeta, this._maxBeta],
                 this._baseOrientation,
                 this._pointToFallback,
                 transitionCopy);
@@ -3703,17 +3719,15 @@ define([
      * @param {CameraPositionConfiguration} positionConfiguration All the settings necessary to calculate the world position.
      * @param {CameraOrientationConfiguration} orientationConfiguration All the settings necessary to calculate the world orientation.
      * @param {Number} fov The starting field of view, in degrees.
-     * @param {Number} minFOV The minimum field of view value that can be set for a camera using this configuration.
-     * @param {Number} maxFOV The maximum field of view value that can be set for a camera using this configuration.
+     * @param {Number} fovRange The minimum and maximum field of view value that can be set for a camera using this configuration.
      * @param {Number} span The starting span of the camera. This is the world-space distance that the camera sees
      * horizontally or vertically at depth 0, depending on camera setting. The other value will be calculated basen on the aspect of the 
      * camera. In meters.
-     * @param {Number} minSpan The minimum span that can be set for a camera using this configuration.
-     * @param {Number} maxSpan The maximum span that can be set for a camera using this configuration.
+     * @param {Number} spanRange The minimum and maximum span that can be set for a camera using this configuration.
      * @param {Boolean} shouldAutoReset An indicator whether this configuration should automatically reset to default state when the camera 
      * switches to it or when the camera controls go out of focus (after being in focus)
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, minFOV, maxFOV, span, minSpan, maxSpan, shouldAutoReset) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, shouldAutoReset) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * An optional, descriptive name of this configuration by which it can be found and referred to.
@@ -3744,12 +3758,12 @@ define([
          * The minimum value to which the field of view can be set in this configuration, in degrees.
          * @type Number
          */
-        this._minFOV = minFOV;
+        this._minFOV = fovRange ? fovRange[0] : 0;
         /**
          * The maximum value to which the field of view can be set in this configuration, in degrees.
          * @type Number
          */
-        this._maxFOV = maxFOV;
+        this._maxFOV = fovRange ? fovRange[1] : 0;
         /**
          * The starting span, in meters is stored so the configuration can be reset to defaults later.
          * @type Number
@@ -3766,12 +3780,12 @@ define([
          * The minimum value to which the span can be set in this configuration, in meters.
          * @type Number
          */
-        this._minSpan = minSpan;
+        this._minSpan = spanRange ? spanRange[0] : 0;
         /**
          * The maximum value to which the span can be set in this configuration, in meters.
          * @type Number
          */
-        this._maxSpan = maxSpan;
+        this._maxSpan = spanRange ? spanRange[1] : 0;
         /**
          * An indicator whether this configuration should automatically reset to default state when the camera switches to it or when the 
          * camera controls go out of focus (after being in focus)
@@ -3799,11 +3813,9 @@ define([
                 this._positionConfiguration.copy(transitionCopy),
                 this._orientationConfiguration.copy(transitionCopy),
                 this._fov,
-                this._minFOV,
-                this._maxFOV,
+                [this._minFOV, this._maxFOV],
                 this._span,
-                this._minSpan,
-                this._maxSpan);
+                [this._minSpan, this._maxSpan]);
         result.setPositionMatrix(mat.matrix4(this.getPositionMatrix()));
         result.setOrientationMatrix(mat.matrix4(this.getOrientationMatrix()));
         return result;
@@ -4038,11 +4050,11 @@ define([
         return new CameraConfiguration(
                 "",
                 new CameraPositionConfiguration(false, false, false, [], false, mat.matrix4(positionMatrix), null, null, false),
-                new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined, undefined, undefined,
+                new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
                         CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
                         CameraOrientationConfiguration.prototype.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
-                fov, minFOV, maxFOV,
-                span, minSpan, maxSpan);
+                fov, [minFOV, maxFOV],
+                span, [minSpan, maxSpan]);
     }
     // #########################################################################
     /**

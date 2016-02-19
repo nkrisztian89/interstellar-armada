@@ -1,9 +1,10 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file 
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
+ * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
+ * @version 2.0
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
@@ -14,11 +15,11 @@
  * @param vec Required for calculating vectors when initializing certain classes
  * @param mat Required for parsing matrices and determining rotation angles
  * @param application Required for error displaying and file loading functionality
- * @param resourceManager All the loadable classes are subclassed from GenericResource
+ * @param resourceManager All the loadable classes are subclassed from GenericResource, and the module manages the loaded classes with a ResourceManager
  * @param egomModel Required for default basic (e.g. particle) models
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
- * @param budaScene Required for parsing camera related enums and creating camera configurations for views
- * @param armada Required for referencing resources and classes, applying defaults settings
+ * @param budaScene Required for parsing camera related enums
+ * @param armada Required for referencing resources
  */
 define([
     "utils/utils",
@@ -32,13 +33,155 @@ define([
     "armada/armada"
 ], function (utils, vec, mat, application, resourceManager, egomModel, physics, budaScene, armada) {
     "use strict";
+    var
+            // ------------------------------------------------------------------------------
+            // enums
+            ParticleEmitterType = {
+                OMNIDIRECTIONAL: "omnidirectional",
+                UNIDIRECTIONAL: "unidirectional",
+                PLANAR: "planar"
+            },
+    ObjectViewLookAtMode = {
+        NONE: "none",
+        SELF: "self",
+        TARGET: "target"
+    },
+    SceneViewLookAtMode = {
+        NONE: "none",
+        ALL: "all"
+    },
+    // ------------------------------------------------------------------------------
+    // constants
+    SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
+            BACKGROUND_OBJECT_CLASS_ARRAY_NAME = "backgroundObjectClasses",
+            DUST_CLOUD_CLASS_ARRAY_NAME = "dustCloudClasses",
+            EXPLOSION_CLASS_ARRAY_NAME = "explosionClasses",
+            PROJECTILE_CLASS_ARRAY_NAME = "projectileClasses",
+            WEAPON_CLASS_ARRAY_NAME = "weaponClasses",
+            PROPULSION_CLASS_ARRAY_NAME = "propulsionClasses",
+            SPACECRAFT_TYPE_ARRAY_NAME = "spacecraftTypes",
+            SPACECRAFT_CLASS_ARRAY_NAME = "spacecraftClasses",
+            SKYBOX_MODEL_NAME = "fvqModel",
+            PARTICLE_MODEL_NAME = "squareModel",
+            DUST_MODEL_NAME = "dust",
+            PROJECTILE_MODEL_NAME_PREFIX = "projectileModel-",
+            // ------------------------------------------------------------------------------
+            // module variables
+            /**
+             * This resource manager will be used to load and access class definitions.
+             * @type ResourceManager
+             */
+            _classManager,
+            /**
+             * Holds the folder ID (not the URL) where the class definition file(s) reside
+             * @type String
+             */
+            _classFolder;
+    // freeting enum objects
+    Object.freeze(ParticleEmitterType);
+    Object.freeze(ObjectViewLookAtMode);
+    Object.freeze(SceneViewLookAtMode);
+    // ------------------------------------------------------------------------------
+    // public functions to access the classes
+    /**
+     * Return the skybox class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SkyboxClass}
+     */
+    function getSkyboxClass(name) {
+        return _classManager.getResource(SKYBOX_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the background object class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {BackgroundObjectClass}
+     */
+    function getBackgroundObjectClass(name) {
+        return _classManager.getResource(BACKGROUND_OBJECT_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the dust cloud class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {DustCloudClass}
+     */
+    function getDustCloudClass(name) {
+        return _classManager.getResource(DUST_CLOUD_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the explosion class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ExplosionClass}
+     */
+    function getExplosionClass(name) {
+        return _classManager.getResource(EXPLOSION_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the projectile class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ProjectileClass}
+     */
+    function getProjectileClass(name) {
+        return _classManager.getResource(PROJECTILE_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the weapon class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {WeaponClass}
+     */
+    function getWeaponClass(name) {
+        return _classManager.getResource(WEAPON_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the propulsion class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {PropulsionClass}
+     */
+    function getPropulsionClass(name) {
+        return _classManager.getResource(PROPULSION_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the spacecraft type with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SpacecraftType}
+     */
+    function getSpacecraftType(name) {
+        return _classManager.getResource(SPACECRAFT_TYPE_ARRAY_NAME, name);
+    }
+    /**
+     * Return the spacecraft class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @param {Boolean} [allowNullResult=false] If false, an error message will be displayed if null is returned.
+     * @returns {SpacecraftClass|null}
+     */
+    function getSpacecraftClass(name, allowNullResult) {
+        return _classManager.getResource(SPACECRAFT_CLASS_ARRAY_NAME, name, {allowNullResult: allowNullResult});
+    }
+    /**
+     * Returns all the available spacecraft classes in an array.
+     * @param {Boolean} forDatabase Whether to return only those classes that should show up in the database
+     * @returns {SpacecraftClass[]}
+     */
+    function getSpacecraftClassesInArray(forDatabase) {
+        var
+                i,
+                result = [],
+                names = _classManager.getResourceNames(SPACECRAFT_CLASS_ARRAY_NAME);
+        for (i = 0; i < names.length; i++) {
+            if (!forDatabase || getSpacecraftClass(names[i]).shouldShowInDatabase()) {
+                result.push(getSpacecraftClass(names[i]));
+            }
+        }
+        return result;
+    }
+    // ------------------------------------------------------------------------------
+    // private functions
     /**
      * Shows an error message explaining that a certain property was not specified when initializing a class, that would be
      * needed for it.
      * @param {Object} classInstance
      * @param {String} propertyName
      */
-    function showMissingPropertyError(classInstance, propertyName) {
+    function _showMissingPropertyError(classInstance, propertyName) {
         application.showError(
                 "Cannot initialize " + classInstance.constructor.name + " without correctly specifying its property '" + propertyName + "'!",
                 "severe",
@@ -53,7 +196,7 @@ define([
      * @param {object} dataJSON
      */
     function GenericClass(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || showMissingPropertyError(this, "name")) : null);
+        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || _showMissingPropertyError(this, "name")) : null);
         /**
          * @type String
          */
@@ -81,7 +224,7 @@ define([
      * @override
      */
     GenericClass.prototype._requestFiles = function () {
-        application.requestTextFile("data", this._source, function (responseText) {
+        application.requestTextFile(_classFolder, this._source, function (responseText) {
             this._onFilesLoad(true, JSON.parse(responseText));
         }.bind(this), 'text/plain; charset=utf-8');
     };
@@ -122,7 +265,7 @@ define([
          */
         this._shaderName = otherShadedClass ?
                 ((dataJSON && dataJSON.shader) ? dataJSON.shader : otherShadedClass._shaderName) :
-                (dataJSON ? (dataJSON.shader || showMissingPropertyError(this, "shader")) : null);
+                (dataJSON ? (dataJSON.shader || _showMissingPropertyError(this, "shader")) : null);
         /**
          * @type ShaderResource
          */
@@ -236,7 +379,7 @@ define([
         /**
          * @type String
          */
-        this._cubemapName = dataJSON ? (dataJSON.cubemap || showMissingPropertyError(this, "cubemap")) : null;
+        this._cubemapName = dataJSON ? (dataJSON.cubemap || _showMissingPropertyError(this, "cubemap")) : null;
         /**
          * @type CubemapResource
          */
@@ -246,7 +389,7 @@ define([
      * @override
      */
     SkyboxClass.prototype.acquireResources = function () {
-        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.fvqModel("fvqModel")});
+        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.fvqModel(SKYBOX_MODEL_NAME)});
         if (this._cubemap === null) {
             this._cubemap = armada.resources().getCubemap(this._cubemapName);
         }
@@ -286,7 +429,7 @@ define([
          */
         this._textureName = otherTexturedModelClass ?
                 ((dataJSON && dataJSON.texture) ? dataJSON.texture : otherTexturedModelClass._textureName) :
-                (dataJSON ? (dataJSON.texture || showMissingPropertyError(this, "texture")) : null);
+                (dataJSON ? (dataJSON.texture || _showMissingPropertyError(this, "texture")) : null);
         /**
          * @type TextureResource
          */
@@ -393,7 +536,7 @@ define([
      * @override
      */
     ParticleDescriptor.prototype.acquireResources = function () {
-        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel("squareModel")});
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel(PARTICLE_MODEL_NAME)});
     };
     /**
      * @returns {Number}
@@ -453,7 +596,7 @@ define([
                     this._layers.push(new ParticleDescriptor(descriptorJSON));
                 }
             } else {
-                showMissingPropertyError(this, "layers");
+                _showMissingPropertyError(this, "layers");
             }
         }
     };
@@ -504,7 +647,7 @@ define([
          * class is instantiated.
          * @type Number
          */
-        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || showMissingPropertyError(this, "numberOfParticles")) : 0;
+        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || _showMissingPropertyError(this, "numberOfParticles")) : 0;
         /**
          * The color of the particles in the dust clouds of this class.
          * @type Number[3]
@@ -515,13 +658,13 @@ define([
          * from the camera along any axis.
          * @type Number
          */
-        this._range = dataJSON ? (dataJSON.range || showMissingPropertyError(this, "range")) : 0;
+        this._range = dataJSON ? (dataJSON.range || _showMissingPropertyError(this, "range")) : 0;
     };
     /**
      * @override
      */
     DustCloudClass.prototype.acquireResources = function () {
-        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.lineModel("dust", [1.0, 1.0, 1.0], this._color)});
+        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.lineModel(DUST_MODEL_NAME, [1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0])});
     };
     /**
      * @returns {Number}
@@ -562,12 +705,11 @@ define([
     ParticleEmitterDescriptor.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
-         * The string description of the type of the described particle emitter. Based on this the proper class
-         * can be instantiated when the emitter object is created. Possible values at the moment:
-         * omnidirectional, unidirectional, planar
+         * (enum ParticleEmitterType) The string description of the type of the described particle emitter. Based on this the proper class
+         * can be instantiated when the emitter object is created.
          * @type String
          */
-        this._type = dataJSON ? (dataJSON.type || "omnidirectional") : null;
+        this._type = dataJSON ? utils.getSafeEnumValue(ParticleEmitterType, dataJSON.type, ParticleEmitterType.OMNIDIRECTIONAL) : null;
         /**
          * The size of the area where the new particles are generated. (meters, [x,y,z])
          * @type Number[3]
@@ -577,7 +719,7 @@ define([
          * The maximum angle that the velocity vector of the emitted particles can differ from the main direction / plane.
          * @type Number
          */
-        this._directionSpread = (dataJSON && ((this._type === "unidirectional") || (this._type === "planar"))) ? (dataJSON.directionSpread || 0) : 0;
+        this._directionSpread = (dataJSON && ((this._type === ParticleEmitterType.UNIDIRECTIONAL) || (this._type === ParticleEmitterType.PLANAR))) ? (dataJSON.directionSpread || 0) : 0;
         /**
          * The (average) starting velocity of the emitted particles. m/s
          * @type Number
@@ -618,7 +760,7 @@ define([
      * @override
      */
     ParticleEmitterDescriptor.prototype.acquireResources = function () {
-        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel("squareModel")});
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel(PARTICLE_MODEL_NAME)});
     };
     /**
      * Returns the string description of the type of the described particle emitter. Based on this the proper class
@@ -821,13 +963,13 @@ define([
          * shot from weapons.
          * @type Number
          */
-        this._mass = dataJSON ? (dataJSON.mass || showMissingPropertyError(this, "mass")) : 0;
+        this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
         /**
          * The length of life of the projectile in milliseconds, after which it will 
          * disappear.
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration || showMissingPropertyError(this, "duration")) : 0;
+        this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : 0;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
@@ -839,20 +981,20 @@ define([
                 dataJSON.muzzleFlash.name = "-";
                 this._muzzleFlash = new ParticleDescriptor(dataJSON.muzzleFlash);
             } else {
-                showMissingPropertyError(this, "muzzleFlash");
+                _showMissingPropertyError(this, "muzzleFlash");
             }
         }
         /**
          * The class of the explosion this spacecraft creates when it hits a spacecraft.
          * @type ExplosionClass
          */
-        this._explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
     };
     /**
      * @override
      */
     ProjectileClass.prototype.acquireResources = function () {
-        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel("projectileModel-" + this.getName(), this._intersectionPositions)});
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel(PROJECTILE_MODEL_NAME_PREFIX + this.getName(), this._intersectionPositions)});
         this._muzzleFlash.acquireResources();
         this._explosionClass.acquireResources();
     };
@@ -903,17 +1045,17 @@ define([
          * The class of the projectile being shot from this barrel.
          * @type ProjectileClass
          */
-        this._projectileClass = dataJSON ? (armada.logic().getProjectileClass(dataJSON.projectile || showMissingPropertyError(this, "projectile")) || application.crash()) : null;
+        this._projectileClass = dataJSON ? (getProjectileClass(dataJSON.projectile || _showMissingPropertyError(this, "projectile")) || application.crash()) : null;
         /**
          * The relative velocity that a projectile shot from this barrel should gain from the force of firing.
          * @type Number
          */
-        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || showMissingPropertyError(this, "projectileVelocity")) : 0;
+        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || _showMissingPropertyError(this, "projectileVelocity")) : 0;
         /**
          * The coordinates of the barrel's position relative to the weapon itself.
          * @type Number[3]
          */
-        this._positionVector = dataJSON ? (dataJSON.position || showMissingPropertyError(this, "position")) : null;
+        this._positionVector = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
     }
     /**
      * @returns {ProjectileClass}
@@ -963,12 +1105,12 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : 0;
+        this._grade = dataJSON ? (dataJSON.grade || _showMissingPropertyError(this, "grade")) : 0;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
-        this._cooldown = dataJSON ? (dataJSON.cooldown || showMissingPropertyError(this, "cooldown")) : 0;
+        this._cooldown = dataJSON ? (dataJSON.cooldown || _showMissingPropertyError(this, "cooldown")) : 0;
         /**
          * The list of barrels of this weapon.
          * @type Barrel[]
@@ -980,7 +1122,7 @@ define([
                     this._barrels.push(new Barrel(dataJSON.barrels[i]));
                 }
             } else {
-                showMissingPropertyError(this, "barrels");
+                _showMissingPropertyError(this, "barrels");
             }
         }
     };
@@ -1049,30 +1191,30 @@ define([
         /**
          * @type Number
          */
-        this._grade = dataJSON ? (dataJSON.grade || showMissingPropertyError(this, "grade")) : 0;
+        this._grade = dataJSON ? (dataJSON.grade || _showMissingPropertyError(this, "grade")) : 0;
         /**
          * The strength of the force applied to the ship when the thrusters are 
          * fired in one direction, measured in newtons.
          * @type Number
          */
-        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || showMissingPropertyError(this, "thrust")) : 0;
+        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || _showMissingPropertyError(this, "thrust")) : 0;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
          * used to turn it, in kg*rad/s^2 (mass is considered instead of a
          * calculated coefficient based on shape, for simplicity)
          * @type Number
          */
-        this._angularThrust = dataJSON ? ((referenceMass * dataJSON.angularThrust / 180 * Math.PI) || showMissingPropertyError(this, "angularThrust")) : 0;
+        this._angularThrust = dataJSON ? ((referenceMass * Math.radians(dataJSON.angularThrust)) || _showMissingPropertyError(this, "angularThrust")) : 0;
         /**
          * Maximum thrust for acceleration is applied at this burn level.
          * @type Number
          */
-        this._maxMoveBurnLevel = dataJSON ? (dataJSON.maxMoveBurnLevel || showMissingPropertyError(this, "maxMoveBurnLevel")) : 0;
+        this._maxMoveBurnLevel = dataJSON ? (dataJSON.maxMoveBurnLevel || _showMissingPropertyError(this, "maxMoveBurnLevel")) : 0;
         /**
          * Maximum angular thrust for turning is applied at this burn level.
          * @type Number
          */
-        this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || showMissingPropertyError(this, "maxTurnBurnLevel")) : 0;
+        this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || _showMissingPropertyError(this, "maxTurnBurnLevel")) : 0;
     };
     /**
      * 
@@ -1140,11 +1282,11 @@ define([
          * The full name of this type as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || showMissingPropertyError(this, "fullName")) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
         /**
          * @type String
          */
-        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : showMissingPropertyError(this, "description")) : null;
+        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : _showMissingPropertyError(this, "description")) : null;
         /**
          * @type String[]
          */
@@ -1173,7 +1315,7 @@ define([
         var i, result;
         result = [];
         for (i = 0; i < this._goodAgainstTypeNames.length; i++) {
-            result.push(armada.logic().getSpacecraftType(this._goodAgainstTypeNames[i]));
+            result.push(getSpacecraftType(this._goodAgainstTypeNames[i]));
         }
     };
     /**
@@ -1183,7 +1325,7 @@ define([
         var i, result;
         result = [];
         for (i = 0; i < this._badAgainstTypeNames.length; i++) {
-            result.push(armada.logic().getSpacecraftType(this._badAgainstTypeNames[i]));
+            result.push(getSpacecraftType(this._badAgainstTypeNames[i]));
         }
     };
     // ##############################################################################
@@ -1198,7 +1340,7 @@ define([
          * The translation matrix for the position of the slot relative to the ship.
          * @type Float32Array
          */
-        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"))) : null;
+        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || _showMissingPropertyError(this, "position"))) : null;
         /**
          * The rotation matrix describing the orientation of the weapon slot 
          * relative to the ship.
@@ -1208,7 +1350,7 @@ define([
         /**
          * @type Number
          */
-        this.maxGrade = dataJSON ? (dataJSON.maxGrade || showMissingPropertyError(this, "maxGrade")) : 0;
+        this.maxGrade = dataJSON ? (dataJSON.maxGrade || _showMissingPropertyError(this, "maxGrade")) : 0;
     }
     // ##############################################################################
     /**
@@ -1222,7 +1364,7 @@ define([
          * The coordinates of the position of the slot relative to the ship.
          * @type Number[4]
          */
-        this.positionVector = dataJSON ? (dataJSON.position || showMissingPropertyError(this, "position")) : null;
+        this.positionVector = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
         if (this.positionVector) {
             this.positionVector.push(1.0);
         }
@@ -1239,7 +1381,7 @@ define([
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
          * @type String[]
          */
-        this.uses = dataJSON ? (dataJSON.uses || showMissingPropertyError(this, "uses")) : null;
+        this.uses = dataJSON ? (dataJSON.uses || _showMissingPropertyError(this, "uses")) : null;
         /**
          * The index of the thruster group this slot belongs to.
          * Members of the same group should have the same uses list. The parts of the
@@ -1247,7 +1389,7 @@ define([
          * index, allowing to manipulate their appearance using uniform arrays.
          * @type Number
          */
-        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : showMissingPropertyError(this, "groupIndex")) : 0;
+        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : _showMissingPropertyError(this, "groupIndex")) : 0;
     }
     // ##############################################################################
     /**
@@ -1261,7 +1403,7 @@ define([
          * The name of the class of the weapon to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -1275,7 +1417,7 @@ define([
          * The name of the class of the propulsion to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -1339,7 +1481,7 @@ define([
          * A desciptive name for the view, e.g. "cockpit"
          * @type String
          */
-        this._name = dataJSON ? (dataJSON.name || showMissingPropertyError(this, "name")) : null;
+        this._name = dataJSON ? (dataJSON.name || _showMissingPropertyError(this, "name")) : null;
         /**
          * Whether turning the view should happen in FPS mode (around axes relative to the followed object / world, and not the camera itself)
          * @type Boolean
@@ -1361,17 +1503,17 @@ define([
          * Whether the position of the view is changeable by the player.
          * @type Boolean
          */
-        this._movable = dataJSON ? ((typeof dataJSON.movable) === "boolean" ? dataJSON.movable : showMissingPropertyError(this, "movable")) : false;
+        this._movable = dataJSON ? ((typeof dataJSON.movable) === "boolean" ? dataJSON.movable : _showMissingPropertyError(this, "movable")) : false;
         /**
          * Whether the direction of the view is changeable by the player.
          * @type Boolean
          */
-        this._turnable = dataJSON ? ((typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : showMissingPropertyError(this, "turnable")) : false;
+        this._turnable = dataJSON ? ((typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : _showMissingPropertyError(this, "turnable")) : false;
         /**
          * The translation matrix describing the relative position to the object.
          * @type Float32Array
          */
-        this._positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || showMissingPropertyError(this, "position"))) : null;
+        this._positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || _showMissingPropertyError(this, "position"))) : null;
         /**
          * The rotation matrix describing the relative orientation to the object. 
          * @type Float32Array
@@ -1438,6 +1580,104 @@ define([
                                 "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
                 null) : null;
     }
+    /**
+     * @returns {String}
+     */
+    GenericView.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    GenericView.prototype.isFPS = function () {
+        return this._fps;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getFOV = function () {
+        return this._fov;
+    };
+    /**
+     * @returns {Number[2]|null}
+     */
+    GenericView.prototype.getFOVRange = function () {
+        return this._fovRange;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getSpan = function () {
+        return this._span;
+    };
+    /**
+     * @returns {Number[2]|null}
+     */
+    GenericView.prototype.getSpanRange = function () {
+        return this._spanRange;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    GenericView.prototype.isMovable = function () {
+        return this._movable;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    GenericView.prototype.isTurnable = function () {
+        return this._turnable;
+    };
+    /**
+     * @returns {Float32Array}
+     */
+    GenericView.prototype.getPositionMatrix = function () {
+        return this._positionMatrix;
+    };
+    /**
+     * @returns {Float32Array}
+     */
+    GenericView.prototype.getOrientationMatrix = function () {
+        return this._orientationMatrix;
+    };
+    /**
+     * @returns {Number[2]}
+     */
+    GenericView.prototype.getAlphaRange = function () {
+        return this._alphaRange;
+    };
+    /**
+     * @returns {Number[2]}
+     */
+    GenericView.prototype.getBetaRange = function () {
+        return this._betaRange;
+    };
+    /**
+     * @returns {Number[3][2]|null}
+     */
+    GenericView.prototype.getConfines = function () {
+        return this._confines;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    GenericView.prototype.resetsWhenLeavingConfines = function () {
+        return this._resetsWhenLeavingConfines;
+    };
+    /**
+     * (enum CameraOrientationConfiguration.prototype.BaseOrientation)
+     * @returns {String}
+     */
+    GenericView.prototype.getBaseOrientation = function () {
+        return this._baseOrientation;
+    };
+    /**
+     * (enum CameraOrientationConfiguration.prototype.PointToFallback)
+     * @returns {String}
+     */
+    GenericView.prototype.getPointToFallback = function () {
+        return this._pointToFallback;
+    };
     // ##############################################################################
     /**
      * @class Describes the parameters of a certain view of an object, based on which
@@ -1452,18 +1692,19 @@ define([
          * to it)
          * @type Boolean
          */
-        this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : showMissingPropertyError(this, "followsPosition");
+        this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : _showMissingPropertyError(this, "followsPosition");
+        dataJSON.lookAt = utils.getSafeEnumValue(ObjectViewLookAtMode, dataJSON.lookAt, ObjectViewLookAtMode.NONE);
         /**
          * Whether the orienration of the view should follow the orientation of the object it is associated with (making the set orientation relative
          * to it). It defaults to true, however, the default changes to false if a lookAt mode is set.
          * @type Boolean
          */
-        this._followsOrientation = (typeof dataJSON.followsOrientation) === "boolean" ? dataJSON.followsOrientation : !dataJSON.lookAt;
+        this._followsOrientation = (typeof dataJSON.followsOrientation) === "boolean" ? dataJSON.followsOrientation : (dataJSON.lookAt === ObjectViewLookAtMode.NONE);
         /**
          * Whether the view's orientation should always be centered on the associated object
          * @type Boolean
          */
-        this._lookAtSelf = (dataJSON.lookAt === "self") ?
+        this._lookAtSelf = (dataJSON.lookAt === ObjectViewLookAtMode.SELF) ?
                 ((this._followsPosition || this._followsOrientation || this._turnable) ?
                         application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition, followsOrientation or turnable are true!") :
                         true) :
@@ -1472,7 +1713,7 @@ define([
          * Whether the view's orientation should always be centered on the target of the associated object
          * @type Boolean
          */
-        this._lookAtTarget = (dataJSON.lookAt === "target") ?
+        this._lookAtTarget = (dataJSON.lookAt === ObjectViewLookAtMode.TARGET) ?
                 ((this._followsOrientation || this._turnable) ?
                         application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation or turnable are true!") :
                         true) :
@@ -1489,7 +1730,7 @@ define([
                         false) :
                 ((this._lookAtSelf || !this._followsPosition) ? // if a conflicting setting has been set, we will default to false, otherwise as explicit setting is needed
                         false :
-                        showMissingPropertyError(this, "rotationCenterIsObject"));
+                        _showMissingPropertyError(this, "rotationCenterIsObject"));
         /**
          * Whether instead of continuously following the object's position, it should only be considered when creating or resetting a camera
          * configuration, and the configuration should have absolute position afterwards
@@ -1505,7 +1746,7 @@ define([
          * @type Number[2]
          */
         this._distanceRange = ((this._rotationCenterIsObject || this._lookAtSelf || this._lookAtTarget) && this._movable) ?
-                (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) :
+                (dataJSON.distanceRange || _showMissingPropertyError(this, "distanceRange")) :
                 (dataJSON.distanceRange || null);
         /**
          * Whether movement of the camera should happen along the axes of the followed object instead of its own
@@ -1535,45 +1776,54 @@ define([
     ObjectView.prototype = new GenericView();
     ObjectView.prototype.constructor = ObjectView;
     /**
-     * Creates and returns a camera configuration set up for following the given object according to the view's
-     * parameters.
-     * @param {Object3D} followedObject The object relative to which the camera 
-     * position and direction has to be interpreted.
-     * @returns {CameraConfiguration} The created camera configuration.
+     * @returns {Boolean}
      */
-    ObjectView.prototype.createCameraConfigurationForObject = function (followedObject) {
-        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._orientationMatrix);
-        positionConfiguration = new budaScene.CameraPositionConfiguration(
-                !this._movable,
-                this._rotationCenterIsObject,
-                this._movesRelativeToObject,
-                (this._followsPosition || this._startsWithRelativePosition) ? [followedObject] : [],
-                this._startsWithRelativePosition,
-                this._positionMatrix,
-                this._distanceRange,
-                this._confines,
-                this._resetsWhenLeavingConfines);
-        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
-                !this._turnable,
-                this._lookAtSelf || this._lookAtTarget,
-                this._fps,
-                (this._lookAtSelf || this._followsOrientation) ? [followedObject] : [],
-                this._orientationMatrix,
-                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
-                this._alphaRange[0], this._alphaRange[1],
-                this._betaRange[0], this._betaRange[1],
-                this._baseOrientation || armada.logic().getDefaultCameraBaseOrientation(),
-                this._pointToFallback || armada.logic().getDefaultCameraPointToFallback());
-        return new budaScene.CameraConfiguration(
-                this._name,
-                positionConfiguration, orientationConfiguration,
-                this._fov || armada.logic().getDefaultCameraFOV(),
-                this._fovRange ? this._fovRange[0] : armada.logic().getDefaultCameraFOVRange()[0],
-                this._fovRange ? this._fovRange[1] : armada.logic().getDefaultCameraFOVRange()[1],
-                this._span || armada.logic().getDefaultCameraSpan(),
-                this._spanRange ? this._spanRange[0] : armada.logic().getDefaultCameraSpanRange()[0],
-                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1],
-                this._shouldAutoReset);
+    ObjectView.prototype.turnsAroundObjects = function () {
+        return this._rotationCenterIsObject;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    ObjectView.prototype.movesRelativeToObject = function () {
+        return this._movesRelativeToObject;
+    };
+    /**
+     * @param {Object3D} followedObject
+     * @returns {Object3D[]}
+     */
+    ObjectView.prototype.getPositionFollowedObjectsForObject = function (followedObject) {
+        return (this._followsPosition || this._startsWithRelativePosition) ? [followedObject] : [];
+    };
+    /**
+     * @returns {Boolean}
+     */
+    ObjectView.prototype.startsWithRelativePosition = function () {
+        return this._startsWithRelativePosition;
+    };
+    /**
+     * @returns {Number[2]|null}
+     */
+    ObjectView.prototype.getDistanceRange = function () {
+        return this._distanceRange;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    ObjectView.prototype.pointsTowardsObjects = function () {
+        return this._lookAtSelf || this._lookAtTarget;
+    };
+    /**
+     * @param {Object3D} followedObject
+     * @returns {Object3D[]}
+     */
+    ObjectView.prototype.getOrientationFollowedObjectsForObject = function (followedObject) {
+        return (this._lookAtSelf || this._followsOrientation) ? [followedObject] : [];
+    };
+    /**
+     * @returns {Boolean}
+     */
+    ObjectView.prototype.shouldAutoReset = function () {
+        return this._shouldAutoReset;
     };
     // ##############################################################################
     /**
@@ -1593,7 +1843,7 @@ define([
          * Whether the view's orientation should always be centered on the average position of all objects in the scene
          * @type Boolean
          */
-        this._lookAtAll = (dataJSON.lookAt === "all") ?
+        this._lookAtAll = (utils.getSafeEnumValue(SceneViewLookAtMode, dataJSON.lookAt, SceneViewLookAtMode.NONE) === SceneViewLookAtMode.ALL) ?
                 ((this._turnAroundAll || this._turnable) ?
                         application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'all' if turnAroundAll or turnable are true!") :
                         true) :
@@ -1602,7 +1852,7 @@ define([
          * The minimum and maximum distance this view can be moved to from the objects it turns around.
          * @type Number[2]
          */
-        this._distanceRange = ((this._turnAroundAll || this._lookAtAll) && this._movable) ? (dataJSON.distanceRange || showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
+        this._distanceRange = ((this._turnAroundAll || this._lookAtAll) && this._movable) ? (dataJSON.distanceRange || _showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
         /**
          * Whether instead of continuously following the object's position, it should only be considered when creating or resetting a camera
          * configuration, and the configuration should have absolute position afterwards
@@ -1627,43 +1877,54 @@ define([
     SceneView.prototype = new GenericView();
     SceneView.prototype.constructor = SceneView;
     /**
-     * Creates and returns a camera configuration set up for according to the view's parameters.
-     * @param {Scene} scene The scene to add the configuration to.
-     * @returns {CameraConfiguration} The created camera configuration.
+     * @returns {Boolean}
      */
-    SceneView.prototype.createCameraConfigurationForScene = function (scene) {
-        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this._orientationMatrix);
-        positionConfiguration = new budaScene.CameraPositionConfiguration(
-                !this._movable,
-                this._turnAroundAll,
-                false,
-                this._turnAroundAll || this._startsWithRelativePosition ? scene.getAll3DObjects() : [],
-                this._startsWithRelativePosition,
-                this._positionMatrix,
-                this._distanceRange,
-                this._confines,
-                this._resetsWhenLeavingConfines);
-        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
-                !this._turnable,
-                this._lookAtAll,
-                this._fps,
-                this._lookAtAll ? scene.getAll3DObjects() : [],
-                this._orientationMatrix,
-                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
-                this._alphaRange[0], this._alphaRange[1],
-                this._betaRange[0], this._betaRange[1],
-                this._baseOrientation || armada.logic().getDefaultCameraBaseOrientation(),
-                this._pointToFallback || armada.logic().getDefaultCameraPointToFallback());
-        return new budaScene.CameraConfiguration(
-                this._name,
-                positionConfiguration, orientationConfiguration,
-                this._fov || armada.logic().getDefaultCameraFOV(),
-                this._fovRange ? this._fovRange[0] : armada.logic().getDefaultCameraFOVRange()[0],
-                this._fovRange ? this._fovRange[1] : armada.logic().getDefaultCameraFOVRange()[1],
-                this._span || armada.logic().getDefaultCameraSpan(),
-                this._spanRange ? this._spanRange[0] : armada.logic().getDefaultCameraSpanRange()[0],
-                this._spanRange ? this._spanRange[1] : armada.logic().getDefaultCameraSpanRange()[1],
-                false);
+    SceneView.prototype.turnsAroundObjects = function () {
+        return this._turnAroundAll;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SceneView.prototype.movesRelativeToObject = function () {
+        return false;
+    };
+    /**
+     * @param {Scene} scene
+     * @returns {Object3D[]}
+     */
+    SceneView.prototype.getPositionFollowedObjectsForScene = function (scene) {
+        return this._turnAroundAll || this._startsWithRelativePosition ? scene.getAll3DObjects() : [];
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SceneView.prototype.startsWithRelativePosition = function () {
+        return this._startsWithRelativePosition;
+    };
+    /**
+     * @returns {Number[2]|null}
+     */
+    SceneView.prototype.getDistanceRange = function () {
+        return this._distanceRange;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SceneView.prototype.pointsTowardsObjects = function () {
+        return this._lookAtAll;
+    };
+    /**
+     * @param {Scene} scene
+     * @returns {Object3D[]}
+     */
+    SceneView.prototype.getOrientationFollowedObjectsForScene = function (scene) {
+        return this._lookAtAll ? scene.getAll3DObjects() : [];
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SceneView.prototype.shouldAutoReset = function () {
+        return false;
     };
     // ##############################################################################
     /**
@@ -1678,12 +1939,12 @@ define([
          * The amount of hull integrity below which this indicator should be presented. (percentage)
          * @type Number
          */
-        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || showMissingPropertyError(this, "hullIntegrity")) : 0;
+        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || _showMissingPropertyError(this, "hullIntegrity")) : 0;
         /**
          * The class of the explosion that should be created to display this indicator.
          * @type ExplosionClass
          */
-        this.explosionClass = dataJSON ? (armada.logic().getExplosionClass(dataJSON.class || showMissingPropertyError(this, "class")) || application.crash()) : null;
+        this.explosionClass = dataJSON ? (getExplosionClass(dataJSON.class || _showMissingPropertyError(this, "class")) || application.crash()) : null;
     }
     // ##############################################################################
     /**
@@ -1712,43 +1973,43 @@ define([
          * @type SpacecraftType
          */
         this._spacecraftType = otherSpacecraftClass ?
-                (dataJSON.type ? armada.logic().getSpacecraftType(dataJSON.type) : otherSpacecraftClass._spacecraftType) :
-                armada.logic().getSpacecraftType(dataJSON.type || showMissingPropertyError(this, "type"));
+                (dataJSON.type ? getSpacecraftType(dataJSON.type) : otherSpacecraftClass._spacecraftType) :
+                getSpacecraftType(dataJSON.type || _showMissingPropertyError(this, "type"));
         /**
          * The full name of this class as displayed in the game.
          * @type String
          */
         this._fullName = otherSpacecraftClass ?
                 (dataJSON.fullName || otherSpacecraftClass._fullName) :
-                (dataJSON.fullName || showMissingPropertyError(this, "fullName"));
+                (dataJSON.fullName || _showMissingPropertyError(this, "fullName"));
         /**
          * The description of this class as can be viewed in the game.
          * @type String
          */
         this._description = otherSpacecraftClass ?
                 (dataJSON.description || otherSpacecraftClass._description) :
-                (dataJSON.description || showMissingPropertyError(this, "description"));
+                (dataJSON.description || _showMissingPropertyError(this, "description"));
         /**
          * Whether this spacecraft class should show up in the database
          * @type Boolean
          */
         this._showInDatabase = otherSpacecraftClass ?
                 (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : otherSpacecraftClass._showInDatabase) :
-                (dataJSON.showInDatabase || showMissingPropertyError(this, "showInDatabase"));
+                (dataJSON.showInDatabase || _showMissingPropertyError(this, "showInDatabase"));
         /**
          * The amount of damage a ship of this class can take before being destroyed.
          * @type Number
          */
         this._hitpoints = otherSpacecraftClass ?
                 (dataJSON.hitpoints || otherSpacecraftClass._hitpoints) :
-                (dataJSON.hitpoints || showMissingPropertyError(this, "hitpoints"));
+                (dataJSON.hitpoints || _showMissingPropertyError(this, "hitpoints"));
         /**
          * The mass of the spacecraft in kilograms.
          * @type Number
          */
         this._mass = otherSpacecraftClass ?
                 (dataJSON.mass || otherSpacecraftClass._mass) :
-                (dataJSON.mass || showMissingPropertyError(this, "mass"));
+                (dataJSON.mass || _showMissingPropertyError(this, "mass"));
         /**
          * The physical bodies that model the spacecraft's shape for hit checks.
          * @type Body[]
@@ -1757,12 +2018,12 @@ define([
         if (dataJSON.bodies) {
             for (i = 0; i < dataJSON.bodies.length; i++) {
                 this._bodies.push(new physics.Body(
-                        mat.translation4v(dataJSON.bodies[i].position || showMissingPropertyError(this, "bodies[i].position")),
+                        mat.translation4v(dataJSON.bodies[i].position || _showMissingPropertyError(this, "bodies[i].position")),
                         mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
                         dataJSON.bodies[i].size));
             }
         } else if (!otherSpacecraftClass) {
-            showMissingPropertyError(this, "bodies");
+            _showMissingPropertyError(this, "bodies");
         }
         /**
          * What should the luminosity of group zero vertices be set to after creating a visual model for an instance of this ship class.
@@ -1777,11 +2038,11 @@ define([
         if (dataJSON.weaponSlots) {
             for (i = 0; i < dataJSON.weaponSlots.length; i++) {
                 if (dataJSON.weaponSlots[i].array) {
-                    startPosition = dataJSON.weaponSlots[i].startPosition || showMissingPropertyError(this, "weaponSlot array startPosition");
-                    translationVector = dataJSON.weaponSlots[i].translationVector || showMissingPropertyError(this, "weaponSlot array translationVector");
+                    startPosition = dataJSON.weaponSlots[i].startPosition || _showMissingPropertyError(this, "weaponSlot array startPosition");
+                    translationVector = dataJSON.weaponSlots[i].translationVector || _showMissingPropertyError(this, "weaponSlot array translationVector");
                     rotations = dataJSON.weaponSlots[i].rotations;
-                    maxGrade = dataJSON.weaponSlots[i].maxGrade || showMissingPropertyError(this, "weaponSlot array maxGrade");
-                    count = dataJSON.weaponSlots[i].count || showMissingPropertyError(this, "weaponSlot array count");
+                    maxGrade = dataJSON.weaponSlots[i].maxGrade || _showMissingPropertyError(this, "weaponSlot array maxGrade");
+                    count = dataJSON.weaponSlots[i].count || _showMissingPropertyError(this, "weaponSlot array count");
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
                             position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
@@ -1799,7 +2060,7 @@ define([
          */
         this._maxPropulsionGrade = otherSpacecraftClass ?
                 (dataJSON.maxPropulsionGrade || otherSpacecraftClass._maxPropulsionGrade) :
-                (dataJSON.maxPropulsionGrade || showMissingPropertyError(this, "maxPropulsionGrade"));
+                (dataJSON.maxPropulsionGrade || _showMissingPropertyError(this, "maxPropulsionGrade"));
         /**
          * The slots where the thrusters are located on the ship.
          * @type ThrusterSlot[]
@@ -1810,10 +2071,10 @@ define([
                 groupIndex = dataJSON.thrusterSlots[i].group;
                 uses = dataJSON.thrusterSlots[i].uses;
                 if (dataJSON.thrusterSlots[i].array) {
-                    startPosition = dataJSON.thrusterSlots[i].startPosition || showMissingPropertyError(this, "thrusterSlot array startPosition");
-                    translationVector = dataJSON.thrusterSlots[i].translationVector || showMissingPropertyError(this, "thrusterSlot array translationVector");
-                    size = dataJSON.thrusterSlots[i].size || showMissingPropertyError(this, "thrusterSlot array size");
-                    count = dataJSON.thrusterSlots[i].count || showMissingPropertyError(this, "thrusterSlot array count");
+                    startPosition = dataJSON.thrusterSlots[i].startPosition || _showMissingPropertyError(this, "thrusterSlot array startPosition");
+                    translationVector = dataJSON.thrusterSlots[i].translationVector || _showMissingPropertyError(this, "thrusterSlot array translationVector");
+                    size = dataJSON.thrusterSlots[i].size || _showMissingPropertyError(this, "thrusterSlot array size");
+                    count = dataJSON.thrusterSlots[i].count || _showMissingPropertyError(this, "thrusterSlot array count");
                     for (j = 0; j < count; j++) {
                         this._thrusterSlots.push(new ThrusterSlot({
                             position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
@@ -1844,7 +2105,7 @@ define([
                 this._views.push(new ObjectView(dataJSON.views[i]));
             }
         } else if (!otherSpacecraftClass) {
-            showMissingPropertyError(this, "views");
+            _showMissingPropertyError(this, "views");
         }
         /**
          * The available equipment profiles (possible sets of equipment that can be
@@ -1863,15 +2124,15 @@ define([
          * @type ExplosionClass
          */
         this._explosionClass = otherSpacecraftClass ?
-                (dataJSON.explosion ? armada.logic().getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
-                armada.logic().getExplosionClass(dataJSON.explosion || showMissingPropertyError(this, "explosion"));
+                (dataJSON.explosion ? getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
+                getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion"));
         /**
          * How long should spacecraft be displayed during its explosion (as a ratio compared to the explosion duration)
          * @type Number
          */
         this._showTimeRatioDuringExplosion = otherSpacecraftClass ?
                 (dataJSON.showTimeRatioDuringExplosion || otherSpacecraftClass._showTimeRatioDuringExplosion) :
-                (dataJSON.showTimeRatioDuringExplosion || showMissingPropertyError(this, "showTimeRatioDuringExplosion"));
+                (dataJSON.showTimeRatioDuringExplosion || _showMissingPropertyError(this, "showTimeRatioDuringExplosion"));
         /**
          * The damage indicators (fires, sparks) that progressively appear as the ship loses hull integrity
          * @type DamageIndicator[]
@@ -1882,7 +2143,7 @@ define([
                 this._damageIndicators.push(new DamageIndicator(dataJSON.damageIndicators[i]));
             }
         } else if (!otherSpacecraftClass) {
-            showMissingPropertyError(this, "damageIndicators");
+            _showMissingPropertyError(this, "damageIndicators");
         }
     };
     /**
@@ -1892,7 +2153,7 @@ define([
     SpacecraftClass.prototype._loadData = function (dataJSON) {
         var baseClass;
         if (dataJSON.basedOn) {
-            baseClass = armada.logic().getSpacecraftClass(dataJSON.basedOn);
+            baseClass = getSpacecraftClass(dataJSON.basedOn);
             baseClass.executeWhenReady(function () {
                 this._overrideData(baseClass, dataJSON);
             }.bind(this));
@@ -2001,19 +2262,53 @@ define([
             this._damageIndicators[i].explosionClass.acquireResources();
         }
     };
+    /**
+     * Sends an asynchronous request to grab the file containing the in-game
+     * class descriptions and sets a callback to load those descriptions and
+     * initiate the loading of reusable environments when ready.
+     * @param {{folder: String, filename: String}} classSourceFileDescriptor
+     * @param {Function} callback
+     */
+    function requestLoad(classSourceFileDescriptor, callback) {
+        var classAssignment = {};
+        classAssignment[SKYBOX_CLASS_ARRAY_NAME] = SkyboxClass;
+        classAssignment[BACKGROUND_OBJECT_CLASS_ARRAY_NAME] = BackgroundObjectClass;
+        classAssignment[DUST_CLOUD_CLASS_ARRAY_NAME] = DustCloudClass;
+        classAssignment[EXPLOSION_CLASS_ARRAY_NAME] = ExplosionClass;
+        classAssignment[PROJECTILE_CLASS_ARRAY_NAME] = ProjectileClass;
+        classAssignment[WEAPON_CLASS_ARRAY_NAME] = WeaponClass;
+        classAssignment[PROPULSION_CLASS_ARRAY_NAME] = PropulsionClass;
+        classAssignment[SPACECRAFT_TYPE_ARRAY_NAME] = SpacecraftType;
+        classAssignment[SPACECRAFT_CLASS_ARRAY_NAME] = SpacecraftClass;
+        _classManager.requestConfigLoad(
+                classSourceFileDescriptor.filename,
+                classSourceFileDescriptor.folder,
+                classAssignment, function () {
+                    _classManager.requestAllResources();
+                    _classManager.requestResourceLoad();
+                    if (callback) {
+                        callback();
+                    }
+                });
+        _classFolder = classSourceFileDescriptor.folder;
+    }
+    _classManager = new resourceManager.ResourceManager();
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        SkyboxClass: SkyboxClass,
-        BackgroundObjectClass: BackgroundObjectClass,
-        DustCloudClass: DustCloudClass,
-        ExplosionClass: ExplosionClass,
-        ProjectileClass: ProjectileClass,
-        WeaponClass: WeaponClass,
-        PropulsionClass: PropulsionClass,
+        ParticleEmitterType: ParticleEmitterType,
+        getSkyboxClass: getSkyboxClass,
+        getBackgroundObjectClass: getBackgroundObjectClass,
+        getDustCloudClass: getDustCloudClass,
+        getExplosionClass: getExplosionClass,
+        getProjectileClass: getProjectileClass,
+        getWeaponClass: getWeaponClass,
+        getPropulsionClass: getPropulsionClass,
+        getSpacecraftType: getSpacecraftType,
+        getSpacecraftClass: getSpacecraftClass,
+        getSpacecraftClassesInArray: getSpacecraftClassesInArray,
         EquipmentProfile: EquipmentProfile,
-        SpacecraftType: SpacecraftType,
         SceneView: SceneView,
-        SpacecraftClass: SpacecraftClass
+        requestLoad: requestLoad
     };
 });

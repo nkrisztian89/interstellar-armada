@@ -80,12 +80,15 @@
             "defaultMuzzleFlashDuration": 500,
             "selfFire": true,
             "autoTargeting": "hitAndAutoTarget",
+            "defaultEquipmentProfileName": "default",
             "randomShips": {
                 "falcon": 3,
                 "viper": 2,
                 "aries": 1,
                 "taurus": 1
             },
+            "randomShipsMapSize": 3000,
+            "randomShipsEquipmentProfileName": "default",
             "hitboxColor": [0.0, 0.5, 0.5, 0.5],
             "hitboxTexture": "white",
             "hitboxShader": "lambert-with-luminosity",

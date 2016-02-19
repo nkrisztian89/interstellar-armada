@@ -162,7 +162,7 @@ define(function () {
      */
     exports.getSafeEnumValue = function (enumObject, value, defaultValue) {
         var p;
-        defaultValue = defaultValue ? this(enumObject, defaultValue) : null;
+        defaultValue = defaultValue ? exports.getSafeEnumValue(enumObject, defaultValue) : null;
         for (p in enumObject) {
             if (enumObject.hasOwnProperty(p)) {
                 if (value === enumObject[p]) {

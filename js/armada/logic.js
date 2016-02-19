@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -10,18 +10,16 @@
 /*global define, Element, this */
 
 /**
- * TODO: comment
- * @param types
- * @param vec
- * @param mat
- * @param application
- * @param asyncResource
- * @param egomModel
- * @param resourceManager
- * @param physics
- * @param budaScene
- * @param armada
- * @param classes
+ * @param types Used for verifying the types of settings loaded from JSON
+ * @param vec Vector operations are needed for several logic functions
+ * @param mat Matrices are widely used for 3D simulation
+ * @param application Used for file loading and logging functionality
+ * @param asyncResource LogicContext is a subclass of AsyncResource
+ * @param egomModel Used for generating 3D models for hitboxes
+ * @param physics Physics simulation is done using this module
+ * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
+ * @param armada Used to access graphics resources, graphics context and current logic context
+ * @param classes Used to load and access the classes of Interstellar Armada
  */
 define([
     "utils/types",
@@ -30,13 +28,12 @@ define([
     "modules/application",
     "modules/async-resource",
     "modules/egom-model",
-    "modules/resource-manager",
     "modules/physics",
     "modules/buda-scene",
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (types, vec, mat, application, asyncResource, egomModel, resourceManager, physics, budaScene, armada, classes) {
+], function (types, vec, mat, application, asyncResource, egomModel, physics, budaScene, armada, classes) {
     "use strict";
     var
             /**
@@ -98,15 +95,6 @@ define([
      */
     //TODO: finish documentation
     _constants = {
-        SKYBOX_CLASS_ARRAY_NAME: "skyboxClasses",
-        BACKGROUND_OBJECT_CLASS_ARRAY_NAME: "backgroundObjectClasses",
-        DUST_CLOUD_CLASS_ARRAY_NAME: "dustCloudClasses",
-        EXPLOSION_CLASS_ARRAY_NAME: "explosionClasses",
-        PROJECTILE_CLASS_ARRAY_NAME: "projectileClasses",
-        WEAPON_CLASS_ARRAY_NAME: "weaponClasses",
-        PROPULSION_CLASS_ARRAY_NAME: "propulsionClasses",
-        SPACECRAFT_TYPE_ARRAY_NAME: "spacecraftTypes",
-        SPACECRAFT_CLASS_ARRAY_NAME: "spacecraftClasses",
         /**
          * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
          */
@@ -259,6 +247,14 @@ define([
                 defaultValue: AutoTargeting.HIT_AND_AUTO_TARGET
             },
             /**
+             * If no profile name is given, new spacecraft are equipped with the profile having this name, if they have such
+             */
+            DEFAULT_EQUIPMENT_PROFILE_NAME: {
+                name: "defaultEquipmentProfileName",
+                type: "string",
+                defaultValue: "default"
+            },
+            /**
              * When displayed, hitboxes will be modulated with this color.
              */
             HITBOX_COLOR: {
@@ -289,6 +285,22 @@ define([
                 name: "randomShips",
                 type: "object",
                 defaultValue: {}
+            },
+            /**
+             * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
+             */
+            RANDOM_SHIPS_MAP_SIZE: {
+                name: "randomShipsMapSize",
+                type: "number",
+                defaultValue: 3000
+            },
+            /**
+             * The added random ships will be equipped with the profile having this name, if they have such
+             */
+            RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME: {
+                name: "randomShipsEquipmentProfileName",
+                type: "string",
+                defaultValue: "default"
             },
             /**
              * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
@@ -657,13 +669,13 @@ define([
         var i;
         this._skyboxes = [];
         for (i = 0; i < dataJSON.skyboxes.length; i++) {
-            this._skyboxes.push(new Skybox(armada.logic().getSkyboxClass(dataJSON.skyboxes[i].class)));
+            this._skyboxes.push(new Skybox(classes.getSkyboxClass(dataJSON.skyboxes[i].class)));
         }
 
         this._backgroundObjects = [];
         for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
             this._backgroundObjects.push(new BackgroundObject(
-                    armada.logic().getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
+                    classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
                     dataJSON.backgroundObjects[i].position.angleAlpha,
                     dataJSON.backgroundObjects[i].position.angleBeta
                     ));
@@ -671,7 +683,7 @@ define([
 
         this._dustClouds = [];
         for (i = 0; i < dataJSON.dustClouds.length; i++) {
-            this._dustClouds.push(new DustCloud(armada.logic().getDustCloudClass(dataJSON.dustClouds[i].class)));
+            this._dustClouds.push(new DustCloud(classes.getDustCloudClass(dataJSON.dustClouds[i].class)));
         }
     };
     /**
@@ -734,10 +746,6 @@ define([
      */
     function LogicContext() {
         asyncResource.AsyncResource.call(this);
-        /**
-         * @type ResourceManagerF
-         */
-        this._classResourceManager = new resourceManager.ResourceManager();
         /**
          * An associative array storing the reusable Environment objects that 
          * describe possible environments for levels. The keys are the names
@@ -862,79 +870,6 @@ define([
         return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
     };
     /**
-     * Return the skybox class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {SkyboxClass}
-     */
-    LogicContext.prototype.getSkyboxClass = function (name) {
-        return this._classResourceManager.getResource(_constants.SKYBOX_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the background object class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {BackgroundObjectClass}
-     */
-    LogicContext.prototype.getBackgroundObjectClass = function (name) {
-        return this._classResourceManager.getResource(_constants.BACKGROUND_OBJECT_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the dust cloud class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {DustCloudClass}
-     */
-    LogicContext.prototype.getDustCloudClass = function (name) {
-        return this._classResourceManager.getResource(_constants.DUST_CLOUD_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the explosion class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {ExplosionClass}
-     */
-    LogicContext.prototype.getExplosionClass = function (name) {
-        return this._classResourceManager.getResource(_constants.EXPLOSION_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the projectile class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {ProjectileClass}
-     */
-    LogicContext.prototype.getProjectileClass = function (name) {
-        return this._classResourceManager.getResource(_constants.PROJECTILE_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the weapon class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {WeaponClass}
-     */
-    LogicContext.prototype.getWeaponClass = function (name) {
-        return this._classResourceManager.getResource(_constants.WEAPON_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the propulsion class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {PropulsionClass}
-     */
-    LogicContext.prototype.getPropulsionClass = function (name) {
-        return this._classResourceManager.getResource(_constants.PROPULSION_CLASS_ARRAY_NAME, name);
-    };
-    /**
-     * Return the spacecraft type with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {SpacecraftType}
-     */
-    LogicContext.prototype.getSpacecraftType = function (name) {
-        return this._classResourceManager.getResource(_constants.SPACECRAFT_TYPE_ARRAY_NAME, name);
-    };
-    /**
-     * Return the spacecraft class with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @param {Boolean} [allowNullResult=false] If false, an error message will be displayed if null is returned.
-     * @returns {SpacecraftClass|null}
-     */
-    LogicContext.prototype.getSpacecraftClass = function (name, allowNullResult) {
-        return this._classResourceManager.getResource(_constants.SPACECRAFT_CLASS_ARRAY_NAME, name, {allowNullResult: allowNullResult});
-    };
-    /**
      * Return the reusable environment with the given name if it exists, otherwise null.
      * @param {String} name
      * @returns {Environment}
@@ -950,50 +885,7 @@ define([
     LogicContext.prototype.getLevelFileName = function (index) {
         return this.getConfigurationSetting(_constants.CONFIGURATION.LEVEL_FILES).filenames[index];
     };
-    // indirect getters and setters
-    /**
-     * Returns all the available spacecraft classes in an array.
-     * @param {Boolean} forDatabase Whether to return only those classes that should show up in the database
-     * @returns {SpacecraftClass[]}
-     */
-    LogicContext.prototype.getSpacecraftClassesInArray = function (forDatabase) {
-        var
-                i,
-                result = [],
-                names = this._classResourceManager.getResourceNames(_constants.SPACECRAFT_CLASS_ARRAY_NAME);
-        for (i = 0; i < names.length; i++) {
-            if (!forDatabase || this.getSpacecraftClass(names[i]).shouldShowInDatabase()) {
-                result.push(this.getSpacecraftClass(names[i]));
-            }
-        }
-        return result;
-    };
     // methods
-    /**
-     * Sends an asynchronous request to grab the file containing the in-game
-     * class descriptions and sets a callback to load those descriptions and
-     * initiate the loading of reusable environments when ready.
-     */
-    LogicContext.prototype.requestClassesLoad = function () {
-        var classAssignment = {};
-        classAssignment[_constants.SKYBOX_CLASS_ARRAY_NAME] = classes.SkyboxClass;
-        classAssignment[_constants.BACKGROUND_OBJECT_CLASS_ARRAY_NAME] = classes.BackgroundObjectClass;
-        classAssignment[_constants.DUST_CLOUD_CLASS_ARRAY_NAME] = classes.DustCloudClass;
-        classAssignment[_constants.EXPLOSION_CLASS_ARRAY_NAME] = classes.ExplosionClass;
-        classAssignment[_constants.PROJECTILE_CLASS_ARRAY_NAME] = classes.ProjectileClass;
-        classAssignment[_constants.WEAPON_CLASS_ARRAY_NAME] = classes.WeaponClass;
-        classAssignment[_constants.PROPULSION_CLASS_ARRAY_NAME] = classes.PropulsionClass;
-        classAssignment[_constants.SPACECRAFT_TYPE_ARRAY_NAME] = classes.SpacecraftType;
-        classAssignment[_constants.SPACECRAFT_CLASS_ARRAY_NAME] = classes.SpacecraftClass;
-        this._classResourceManager.requestConfigLoad(
-                this.getConfigurationSetting(_constants.CONFIGURATION.CLASSES_SOURCE_FILE).filename,
-                this.getConfigurationSetting(_constants.CONFIGURATION.CLASSES_SOURCE_FILE).folder,
-                classAssignment, function () {
-                    this._classResourceManager.requestAllResources();
-                    this._classResourceManager.requestResourceLoad();
-                    this.requestEnvironmentsLoad();
-                }.bind(this));
-    };
     /**
      * Sends an asynchronous request to grab the file containing the reusable
      * environment descriptions and sets a callback to load those descriptions 
@@ -1032,7 +924,9 @@ define([
         this._databaseSettings = types.getVerifiedObject("database", dataJSON.database, _constants.DATABASE_SETTINGS);
         this._battleSettings = types.getVerifiedObject("battle", dataJSON.battle, _constants.BATTLE_SETTINGS);
         this._cameraSettings = types.getVerifiedObject("camera", dataJSON.camera, _constants.CAMERA_SETTINGS);
-        this.requestClassesLoad();
+        classes.requestLoad(this.getConfigurationSetting(_constants.CONFIGURATION.CLASSES_SOURCE_FILE), function () {
+            this.requestEnvironmentsLoad();
+        }.bind(this));
     };
     // ##############################################################################
     /**
@@ -1115,7 +1009,7 @@ define([
         var i, particleEmitters = [], emitter, particleEmitterDescriptors = this._class.getParticleEmitterDescriptors();
         for (i = 0; i < particleEmitterDescriptors.length; i++) {
             switch (particleEmitterDescriptors[i].getType()) {
-                case "omnidirectional":
+                case classes.ParticleEmitterType.OMNIDIRECTIONAL:
                     emitter = new budaScene.OmnidirectionalParticleEmitter(mat.identity4(),
                             this._orientationMatrix,
                             particleEmitterDescriptors[i].getDimensions(),
@@ -1127,7 +1021,7 @@ define([
                             particleEmitterDescriptors[i].getDuration(),
                             this.getEmitterParticleConstructor(i));
                     break;
-                case "unidirectional":
+                case classes.ParticleEmitterType.UNIDIRECTIONAL:
                     emitter = new budaScene.UnidirectionalParticleEmitter(mat.identity4(),
                             this._orientationMatrix,
                             particleEmitterDescriptors[i].getDimensions(),
@@ -1141,7 +1035,7 @@ define([
                             particleEmitterDescriptors[i].getDuration(),
                             this.getEmitterParticleConstructor(i));
                     break;
-                case "planar":
+                case classes.ParticleEmitterType.PLANAR:
                     emitter = new budaScene.PlanarParticleEmitter(mat.identity4(),
                             this._orientationMatrix,
                             particleEmitterDescriptors[i].getDimensions(),
@@ -1155,6 +1049,8 @@ define([
                             particleEmitterDescriptors[i].getDuration(),
                             this.getEmitterParticleConstructor(i));
                     break;
+                default:
+                    application.crash();
             }
             particleEmitters.push(emitter);
         }
@@ -2444,7 +2340,7 @@ define([
         this._maneuveringComputer = new ManeuveringComputer(this);
         this._projectileArray = projectileArray || null;
         // equipping the craft if a profile name was given
-        if (equipmentProfileName !== undefined) {
+        if (equipmentProfileName) {
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
         }
         this._spacecraftArray = spacecraftArray || null;
@@ -2649,7 +2545,7 @@ define([
     Spacecraft.prototype.loadFromJSON = function (dataJSON, projectileArray, spacecraftArray) {
         var equipmentProfile;
         this._init(
-                armada.logic().getSpacecraftClass(dataJSON.class),
+                classes.getSpacecraftClass(dataJSON.class),
                 mat.translation4v(dataJSON.position),
                 mat.rotation4FromJSON(dataJSON.rotations),
                 projectileArray,
@@ -2668,9 +2564,9 @@ define([
                 equipmentProfile = new classes.EquipmentProfile(dataJSON.equipment);
                 this.equipProfile(equipmentProfile);
             }
-            // if there is no equipment tag, attempt to load the profile named "default"    
-        } else if (this._class.getEquipmentProfile("default") !== undefined) {
-            this.equipProfile(this._class.getEquipmentProfile("default"));
+            // if there is no equipment tag, attempt to load the default profile
+        } else if (this._class.getEquipmentProfile(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
+            this.equipProfile(this._class.getEquipmentProfile(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
         }
     };
     /**
@@ -2977,13 +2873,50 @@ define([
         }.bind(this));
     };
     /**
+     * Creates and returns a camera configuration set up for following the spacecraft according to the view's parameters.
+     * @param {ObjectView} view
+     * @returns {CameraConfiguration} The created camera configuration.
+     */
+    Spacecraft.prototype.createCameraConfigurationForView = function (view) {
+        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(view.getOrientationMatrix());
+        positionConfiguration = new budaScene.CameraPositionConfiguration(
+                !view.isMovable(),
+                view.turnsAroundObjects(),
+                view.movesRelativeToObject(),
+                view.getPositionFollowedObjectsForObject(this._visualModel),
+                view.startsWithRelativePosition(),
+                view.getPositionMatrix(),
+                view.getDistanceRange(),
+                view.getConfines(),
+                view.resetsWhenLeavingConfines());
+        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+                !view.isTurnable(),
+                view.pointsTowardsObjects(),
+                view.isFPS(),
+                view.getOrientationFollowedObjectsForObject(this._visualModel),
+                view.getOrientationMatrix(),
+                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
+                view.getAlphaRange(),
+                view.getBetaRange(),
+                view.getBaseOrientation() || armada.logic().getDefaultCameraBaseOrientation(),
+                view.getPointToFallback() || armada.logic().getDefaultCameraPointToFallback());
+        return new budaScene.CameraConfiguration(
+                view.getName(),
+                positionConfiguration, orientationConfiguration,
+                view.getFOV() || armada.logic().getDefaultCameraFOV(),
+                view.getFOVRange() || armada.logic().getDefaultCameraFOVRange(),
+                view.getSpan() || armada.logic().getDefaultCameraSpan(),
+                view.getSpanRange() || armada.logic().getDefaultCameraSpanRange(),
+                view.shouldAutoReset());
+    };
+    /**
      * Adds camera configuration objects that correspond to the views defined for this 
      * spacecraft type and follow this specific spacecraft.
      */
     Spacecraft.prototype._addCameraConfigurationsForViews = function () {
         var i;
         for (i = 0; i < this._class.getViews().length; i++) {
-            this._visualModel.getNode().addCameraConfiguration(this._class.getViews()[i].createCameraConfigurationForObject(this._visualModel));
+            this._visualModel.getNode().addCameraConfiguration(this.createCameraConfigurationForView(this._class.getViews()[i]));
         }
     };
     /**
@@ -3011,15 +2944,19 @@ define([
     /**
      * Equips the spacecraft according to the specifications in the given equipment
      * profile.
-     * @param {EquipmentProfile} equipmentProfile
+     * @param {EquipmentProfile} [equipmentProfile]
      */
     Spacecraft.prototype.equipProfile = function (equipmentProfile) {
         var i;
-        for (i = 0; i < equipmentProfile.getWeaponDescriptors().length; i++) {
-            this.addWeapon(armada.logic().getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
-        }
-        if (equipmentProfile.getPropulsionDescriptor() !== null) {
-            this.addPropulsion(armada.logic().getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+        if (equipmentProfile) {
+            for (i = 0; i < equipmentProfile.getWeaponDescriptors().length; i++) {
+                this.addWeapon(classes.getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
+            }
+            if (equipmentProfile.getPropulsionDescriptor() !== null) {
+                this.addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+            }
+        } else {
+            application.log("WARNING: equipping empty profile on " + this._class.getName() + "!");
         }
     };
     /**
@@ -3372,15 +3309,53 @@ define([
                     }
                     this._spacecrafts.push(
                             new Spacecraft(
-                                    armada.logic().getSpacecraftClass(shipClass),
+                                    classes.getSpacecraftClass(shipClass),
                                     mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                                     orientation,
                                     this._projectiles,
-                                    "default", //TODO: hardcoded
+                                    armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME),
                                     this._spacecrafts));
                 }
             }
         }
+    };
+    /**
+     * Creates and returns a camera configuration for this given view set up according to the scene view's parameters.
+     * @param {SceneView} view
+     * @param {Scene} scene
+     * @returns {CameraConfiguration} The created camera configuration.
+     */
+    Level.prototype.createCameraConfigurationForSceneView = function (view, scene) {
+        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(view.getOrientationMatrix());
+        positionConfiguration = new budaScene.CameraPositionConfiguration(
+                !view.isMovable(),
+                view.turnsAroundObjects(),
+                view.movesRelativeToObject(),
+                view.getPositionFollowedObjectsForScene(scene),
+                view.startsWithRelativePosition(),
+                view.getPositionMatrix(),
+                view.getDistanceRange(),
+                view.getConfines(),
+                view.resetsWhenLeavingConfines());
+        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+                !view.isTurnable(),
+                view.pointsTowardsObjects(),
+                view.isFPS(),
+                view.getOrientationFollowedObjectsForScene(scene),
+                view.getOrientationMatrix(),
+                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
+                view.getAlphaRange(),
+                view.getBetaRange(),
+                view.getBaseOrientation() || armada.logic().getDefaultCameraBaseOrientation(),
+                view.getPointToFallback() || armada.logic().getDefaultCameraPointToFallback());
+        return new budaScene.CameraConfiguration(
+                view.getName(),
+                positionConfiguration, orientationConfiguration,
+                view.getFOV() || armada.logic().getDefaultCameraFOV(),
+                view.getFOVRange() || armada.logic().getDefaultCameraFOVRange(),
+                view.getSpan() || armada.logic().getDefaultCameraSpan(),
+                view.getSpanRange() || armada.logic().getDefaultCameraSpanRange(),
+                view.shouldAutoReset());
     };
     /**
      * Adds renderable objects representing all visual elements of the level to
@@ -3404,7 +3379,7 @@ define([
         }
         armada.resources().executeWhenReady(function () {
             for (i = 0; i < this._views.length; i++) {
-                scene.addCameraConfiguration(this._views[i].createCameraConfigurationForScene(scene));
+                scene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], scene));
                 if (i === 0) {
                     scene.activeCamera.followNode(null, true, 0);
                     scene.activeCamera.update(0);

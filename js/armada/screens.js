@@ -20,13 +20,14 @@ define([
     "modules/buda-scene",
     "modules/control",
     "armada/armada",
+    "armada/classes",
     "armada/logic",
     "armada/graphics"
-], function (utils, vec, mat, application, components, screens, managedGL, budaScene, control, armada, logic, graphics) {
+], function (utils, vec, mat, application, components, screens, managedGL, budaScene, control, armada, classes, logic, graphics) {
     "use strict";
 
     function _shouldUseShadowMapping() {
-        return armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === "normal");
+        return armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === graphics.ShaderComplexity.NORMAL);
     }
 
     /**
@@ -320,7 +321,11 @@ define([
         this._level.requestLoadFromFile(levelSourceFilename, function () {
             var freq, canvas;
             this.updateStatus("loading additional configuration...", 5);
-            this._level.addRandomShips(armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS), 3000, mat.rotation4([0, 0, 1], Math.PI / 2), false, false, true); //TODO: hardcoded
+            this._level.addRandomShips(
+                    armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS),
+                    armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_MAP_SIZE),
+                    mat.rotation4([0, 0, 1], Math.PI / 2),
+                    false, false, true);
 
             this.updateStatus("building scene...", 10);
             canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
@@ -381,13 +386,13 @@ define([
     }
 
     function _showWireframeModel() {
-        return (armada.graphics().getShaderComplexity() === "normal") ?
+        return (armada.graphics().getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ?
                 armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.SHOW_WIREFRAME_MODEL) :
                 !_showSolidModel();
     }
 
     function _shouldReveal() {
-        return (armada.graphics().getShaderComplexity() === "normal") &&
+        return (armada.graphics().getShaderComplexity() === graphics.ShaderComplexity.NORMAL) &&
                 armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.MODEL_REVEAL_ANIMATION);
     }
 
@@ -648,7 +653,7 @@ define([
         // using % operator does not work with -1, reverted to "if"
         this._itemIndex -= 1;
         if (this._itemIndex === -1) {
-            this._itemIndex = armada.logic().getSpacecraftClassesInArray(true).length - 1;
+            this._itemIndex = classes.getSpacecraftClassesInArray(true).length - 1;
         }
         this.loadShip();
     };
@@ -658,7 +663,7 @@ define([
      * screen. Loops around.
      */
     DatabaseScreen.prototype.selectNextShip = function () {
-        this._itemIndex = (this._itemIndex + 1) % armada.logic().getSpacecraftClassesInArray(true).length;
+        this._itemIndex = (this._itemIndex + 1) % classes.getSpacecraftClassesInArray(true).length;
         this.loadShip();
     };
 
@@ -684,7 +689,7 @@ define([
         armada.logic().executeWhenReady(function () {
             // display the data that can be displayed right away, and show loading
             // for the rest
-            var shipClass = armada.logic().getSpacecraftClassesInArray(true)[this._itemIndex];
+            var shipClass = classes.getSpacecraftClassesInArray(true)[this._itemIndex];
             this._itemName.setContent(shipClass.getFullName());
             this._itemType.setContent(shipClass.getSpacecraftType().getFullName());
             this._itemStats.setContent("");
@@ -919,7 +924,7 @@ define([
             return false;
         }.bind(this);
         this._shaderComplexitySelector.onChange = function () {
-            if (this._shaderComplexitySelector.getSelectedValue() === "normal") {
+            if (this._shaderComplexitySelector.getSelectedValue() === graphics.ShaderComplexity.NORMAL) {
                 this._shadowMappingSelector.show();
                 this._shadowMappingSelector.onChange();
             } else {
@@ -930,7 +935,7 @@ define([
         }.bind(this);
         this._shadowMappingSelector.onChange = function () {
             if (this._shadowMappingSelector.getSelectedValue() === "on") {
-                if (this._shaderComplexitySelector.getSelectedValue() === "normal") {
+                if (this._shaderComplexitySelector.getSelectedValue() === graphics.ShaderComplexity.NORMAL) {
                     this._shadowQualitySelector.show();
                     this._shadowDistanceSelector.show();
                 }
