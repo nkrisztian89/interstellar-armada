@@ -14,17 +14,17 @@
  * @param application Using the application module for error displaying functionality
  * @param asyncResource GraphicsContext is an AsynchResource subclass
  * @param managedGL Used for checking valid texture filtering values
+ * @param resources Used to provide resource accessor functions that access resources through this module but add parameters based on current graphics context settings
  * @param budaScene The graphics context creates and stores a default LODContext
- * @param armada The resource manager of armada is accessed to load fallback shaders if needed
  */
 define([
     "utils/types",
     "modules/application",
     "modules/async-resource",
     "modules/managed-gl",
-    "modules/buda-scene",
-    "armada/armada"
-], function (types, application, asyncResource, managedGL, budaScene, armada) {
+    "modules/graphics-resources",
+    "modules/buda-scene"
+], function (types, application, asyncResource, managedGL, resources, budaScene) {
     "use strict";
     var
             /**
@@ -494,9 +494,9 @@ define([
     GraphicsContext.prototype.getShader = function (shaderName) {
         switch (this.getShaderComplexity()) {
             case ShaderComplexity.NORMAL:
-                return armada.resources().getShader(shaderName);
+                return resources.getShader(shaderName);
             case ShaderComplexity.SIMPLE:
-                return armada.resources().getFallbackShader(shaderName);
+                return resources.getFallbackShader(shaderName);
             default:
                 application.showError("Unhandled shader complexity level: '" + this.getShaderComplexity() + "' - no corresponding shader set for this level!");
                 return null;
@@ -508,7 +508,7 @@ define([
      * @returns {ModelResource}
      */
     GraphicsContext.prototype.getModel = function (modelName) {
-        return armada.resources().getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
+        return resources.getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

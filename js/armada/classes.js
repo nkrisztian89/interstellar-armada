@@ -18,6 +18,7 @@
  * @param resourceManager All the loadable classes are subclassed from GenericResource, and the module manages the loaded classes with a ResourceManager
  * @param egomModel Required for default basic (e.g. particle) models
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
+ * @param resources This module accesses graphics resources to assign them to classes when they are initialized
  * @param budaScene Required for parsing camera related enums
  * @param armada Required for referencing resources
  */
@@ -29,9 +30,10 @@ define([
     "modules/resource-manager",
     "modules/egom-model",
     "modules/physics",
+    "modules/graphics-resources",
     "modules/buda-scene",
     "armada/armada"
-], function (utils, vec, mat, application, resourceManager, egomModel, physics, budaScene, armada) {
+], function (utils, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, armada) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -52,18 +54,71 @@ define([
     },
     // ------------------------------------------------------------------------------
     // constants
+    /**
+             * In the class description file, skybox classes will be initialized from the array with this name
+             * @type String
+             */
     SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
+    /**
+             * In the class description file, background object classes will be initialized from the array with this name
+             * @type String
+             */
             BACKGROUND_OBJECT_CLASS_ARRAY_NAME = "backgroundObjectClasses",
+            /**
+             * In the class description file, dust cloud classes will be initialized from the array with this name
+             * @type String
+             */
             DUST_CLOUD_CLASS_ARRAY_NAME = "dustCloudClasses",
+            /**
+             * In the class description file, explosion classes will be initialized from the array with this name
+             * @type String
+             */
             EXPLOSION_CLASS_ARRAY_NAME = "explosionClasses",
+            /**
+             * In the class description file, projectile classes will be initialized from the array with this name
+             * @type String
+             */
             PROJECTILE_CLASS_ARRAY_NAME = "projectileClasses",
+            /**
+             * In the class description file, weapon classes will be initialized from the array with this name
+             * @type String
+             */
             WEAPON_CLASS_ARRAY_NAME = "weaponClasses",
+            /**
+             * In the class description file, propulsion classes will be initialized from the array with this name
+             * @type String
+             */
             PROPULSION_CLASS_ARRAY_NAME = "propulsionClasses",
+            /**
+             * In the class description file, spacecraft types will be initialized from the array with this name
+             * @type String
+             */
             SPACECRAFT_TYPE_ARRAY_NAME = "spacecraftTypes",
+            /**
+             * In the class description file, spacecraft classes will be initialized from the array with this name
+             * @type String
+             */
             SPACECRAFT_CLASS_ARRAY_NAME = "spacecraftClasses",
+            /**
+             * When a model is created for skyboxes, this ID will be given to it, so that all skyboxes can refer to the same model
+             * @type String
+             */
             SKYBOX_MODEL_NAME = "fvqModel",
+            /**
+             * When a model is created for particles, this ID will be given to it, so that all particles can refer to the same model
+             * @type String
+             */
             PARTICLE_MODEL_NAME = "squareModel",
+            /**
+             * When a model is created for dust particles, this ID will be given to it, so that all dust particles can refer to the same model
+             * @type String
+             */
             DUST_MODEL_NAME = "dust",
+            /**
+             * When a model is created for projectiles, this ID will be used as a prefix to the model ID with the following part being dependent of
+             * the parameters of the model, so that projectiles having models with the same parameters can use the same model
+             * @type String
+             */
             PROJECTILE_MODEL_NAME_PREFIX = "projectileModel-",
             // ------------------------------------------------------------------------------
             // module variables
@@ -77,7 +132,7 @@ define([
              * @type String
              */
             _classFolder;
-    // freeting enum objects
+    // freezing enum objects
     Object.freeze(ParticleEmitterType);
     Object.freeze(ObjectViewLookAtMode);
     Object.freeze(SceneViewLookAtMode);
@@ -339,7 +394,7 @@ define([
     ShadedModelClass.prototype.acquireResources = function (params) {
         ShadedClass.prototype.acquireResources.call(this);
         if (params && params.model) {
-            this._model = armada.resources().getOrAddModel(params.model);
+            this._model = resources.getOrAddModel(params.model);
             this._modelName = this._model.getName();
         } else {
             this._model = armada.graphics().getModel(this._modelName);
@@ -391,7 +446,7 @@ define([
     SkyboxClass.prototype.acquireResources = function () {
         ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.fvqModel(SKYBOX_MODEL_NAME)});
         if (this._cubemap === null) {
-            this._cubemap = armada.resources().getCubemap(this._cubemapName);
+            this._cubemap = resources.getCubemap(this._cubemapName);
         }
     };
     /**
@@ -449,7 +504,7 @@ define([
     TexturedModelClass.prototype.acquireResources = function (params) {
         ShadedModelClass.prototype.acquireResources.call(this, params);
         if (this._texture === null) {
-            this._texture = armada.resources().getTexture(this._textureName);
+            this._texture = resources.getTexture(this._textureName);
         }
     };
     /**

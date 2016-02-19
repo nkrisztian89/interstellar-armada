@@ -17,13 +17,14 @@ define([
     "modules/components",
     "modules/screens",
     "modules/managed-gl",
+    "modules/graphics-resources",
     "modules/buda-scene",
     "modules/control",
     "armada/armada",
     "armada/classes",
     "armada/logic",
     "armada/graphics"
-], function (utils, vec, mat, application, components, screens, managedGL, budaScene, control, armada, classes, logic, graphics) {
+], function (utils, vec, mat, application, components, screens, managedGL, resources, budaScene, control, armada, classes, logic, graphics) {
     "use strict";
 
     function _shouldUseShadowMapping() {
@@ -343,11 +344,11 @@ define([
             armada.control().getController("camera").setControlledCamera(this._battleScene.activeCamera);
 
             this.updateStatus("loading graphical resources...", 15);
-            armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
+            resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
                 this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
             }.bind(this));
             freq = 60; //TODO: hardcoded
-            armada.resources().executeWhenReady(function () {
+            resources.executeWhenReady(function () {
                 if (_shouldUseShadowMapping()) {
                     this._battleScene.setShadowMapping({
                         enable: true,
@@ -373,7 +374,7 @@ define([
                 this.startRenderLoop(1000 / freq);
             }.bind(this));
 
-            armada.resources().requestResourceLoad();
+            resources.requestResourceLoad();
         }.bind(this));
     };
 
@@ -586,10 +587,10 @@ define([
                 armada.graphics().getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
-        armada.resources().executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
+        resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
             this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
         }.bind(this));
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             if (_shouldUseShadowMapping()) {
                 this._scene.setShadowMapping({
                     enable: true,
@@ -759,7 +760,7 @@ define([
 
             // set the callback for when the potentially needed additional file resources have 
             // been loaded
-            armada.resources().executeWhenReady(function () {
+            resources.executeWhenReady(function () {
                 // get the length of the ship based on the length of its model
                 this._itemLength = this._item.getVisualModel()._model.getHeight();
                 this._itemLengthInMeters = this._item.getVisualModel()._model.getHeightInMeters();
@@ -811,7 +812,7 @@ define([
             }.bind(this));
 
             // initiate the loading of additional file resources if they are needed
-            armada.resources().requestResourceLoad();
+            resources.requestResourceLoad();
         }.bind(this));
     };
 

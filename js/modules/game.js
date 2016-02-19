@@ -17,13 +17,8 @@ define([
     "modules/application"
 ], function (application) {
     "use strict";
-    // add private variables specific to Interstellar Armada
+    // private variables
     var
-            /**
-             * Manages the texture, cubemap, shader and model resources of the game.
-             * @type ResourceManager
-             */
-            _resourceManager = null,
             /**
              * Manages the HTML screens of the game
              * @type ScreenManager
@@ -121,16 +116,11 @@ define([
                     require([
                         "modules/graphics-resources"
                     ], function (graphicsResources) {
-                        _resourceManager = new graphicsResources.GraphicsResourceManager();
-                        _resourceManager.requestConfigLoad(configJSON.dataFiles.graphics.resources.filename, configJSON.dataFiles.graphics.resources.folder, {
-                            "textures": graphicsResources.TextureResource,
-                            "cubemaps": graphicsResources.CubemapResource,
-                            "shaders": graphicsResources.ShaderResource,
-                            "models": graphicsResources.ModelResource
-                        });
                         application._loadGameConfiguration(configJSON);
-                        application.log("Game configuration loaded.");
-                        _configInitComplete = true;
+                        graphicsResources.requestConfigLoad(configJSON.dataFiles.graphics.resources, function () {
+                            application.log("Game configuration loaded.");
+                            _configInitComplete = true;
+                        });
                         _requestSettingsLoad(configJSON.configFiles.settings);
                     });
                 });
@@ -239,13 +229,6 @@ define([
         });
     };
     // Shortcuts
-    /**
-     * A shortcut to the graphics resource manager of the game.
-     * @returns {ResourceManager}
-     */
-    application.resources = function () {
-        return _resourceManager;
-    };
     /**
      * Getter of the screen manager of the game.
      * @returns {ScreenManager}

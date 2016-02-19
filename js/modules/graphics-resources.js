@@ -13,18 +13,82 @@
 /*global define, Image, window */
 
 /**
+ * @param types Used for verifying enum values
  * @param application Used for file loading, logging and displaying error messages
  * @param resourceManager This module builds on the functionality of the general resource manager module
  * @param managedGL Provides resource classes that can load and create for ManagedTextures, ManagedCubeMaps and ManagedShaders
  * @param egomModel Provides resource classes that can load and create Egom Models
  */
 define([
+    "utils/types",
     "modules/application",
     "modules/resource-manager",
     "modules/managed-gl",
     "modules/egom-model"
-], function (application, resourceManager, managedGL, egomModel) {
+], function (types, application, resourceManager, managedGL, egomModel) {
     "use strict";
+    var
+            // ------------------------------------------------------------------------------
+            // enums
+            /**
+             * @enum {String}
+             * Stores the currently handled shader type values.
+             */
+            ShaderType = {
+                VERTEX: "vertex",
+                FRAGMENT: "fragment"
+            },
+    // ------------------------------------------------------------------------------
+    // constants
+    /**
+     * In the resource description file, texture resources will be initialized from the array with this name
+     * @type String
+     */
+    TEXTURE_ARRAY_NAME = "textures",
+            /**
+             * In the resource description file, cubemap resources will be initialized from the array with this name
+             * @type String
+             */
+            CUBEMAP_ARRAY_NAME = "cubemaps",
+            /**
+             * In the resource description file, shader resources will be initialized from the array with this name
+             * @type String
+             */
+            SHADER_ARRAY_NAME = "shaders",
+            /**
+             * In the resource description file, model resources will be initialized from the array with this name
+             * @type String
+             */
+            MODEL_ARRAY_NAME = "models",
+            /**
+             * When asked to be loaded from files, texture resources will look for the files in the folder with this ID (not URL)
+             * @type String
+             */
+            TEXTURE_FOLDER = "texture",
+            /**
+             * When asked to be loaded from files, cubemap resources will look for the files in the folder with this ID (not URL)
+             * @type String
+             */
+            CUBEMAP_FOLDER = "texture",
+            /**
+             * When asked to be loaded from files, shader resources will look for the files in the folder with this ID (not URL)
+             * @type String
+             */
+            SHADER_FOLDER = "shader",
+            /**
+             * When asked to be loaded from files, model resources will look for the files in the folder with this ID (not URL)
+             * @type String
+             */
+            MODEL_FOLDER = "model",
+            // ------------------------------------------------------------------------------
+            // module variables
+            /**
+             * This graphics resource manager will be used to load and access the graphics resources.
+             * @type GraphicsResourceManager
+             */
+            _resourceManager;
+    // freezing enum objects
+    Object.freeze(ShaderType);
     // ############################################################################################
     /**
      * @class
@@ -151,7 +215,7 @@ define([
                 for (quality in requestedQualities) {
                     if (requestedQualities.hasOwnProperty(quality)) {
                         if (!this._images[type][quality].src) {
-                            this._images[type][quality].src = application.getFileURL("texture", this._getPath(type, quality));
+                            this._images[type][quality].src = application.getFileURL(TEXTURE_FOLDER, this._getPath(type, quality));
                         }
                     }
                 }
@@ -169,13 +233,13 @@ define([
      * @returns {String[]}
      */
     TextureResource.prototype.getTypes = function () {
-        var type, types = [];
+        var type, textureTypes = [];
         for (type in this._typeSuffixes) {
             if (this._typeSuffixes.hasOwnProperty(type)) {
-                types.push(type);
+                textureTypes.push(type);
             }
         }
-        return types;
+        return textureTypes;
     };
     /**
      * @returns {String[]}
@@ -265,7 +329,7 @@ define([
                 this._images[face].onload = onImageLoadFunction;
                 // setting the src property will automatically result in an asynchronous
                 // request to grab the texture file
-                this._images[face].src = application.getFileURL("texture", this._basepath + this._imageNames[face]);
+                this._images[face].src = application.getFileURL(CUBEMAP_FOLDER, this._basepath + this._imageNames[face]);
             }
         }
     };
@@ -351,13 +415,13 @@ define([
      * @override
      */
     ShaderResource.prototype._requestFiles = function () {
-        application.requestTextFile("shader", this._vertexShaderSourcePath, function (responseText) {
-            this._onFilesLoad(this._fragmentShaderSource !== null, {shaderType: "vertex", text: responseText});
+        application.requestTextFile(SHADER_FOLDER, this._vertexShaderSourcePath, function (responseText) {
+            this._onFilesLoad(this._fragmentShaderSource !== null, {shaderType: ShaderType.VERTEX, text: responseText});
             // override the mime type to avoid error messages in Firefox developer
             // consol when it tries to parse as XML
         }.bind(this), 'text/plain; charset=utf-8');
-        application.requestTextFile("shader", this._fragmentShaderSourcePath, function (responseText) {
-            this._onFilesLoad(this._vertexShaderSource !== null, {shaderType: "fragment", text: responseText});
+        application.requestTextFile(SHADER_FOLDER, this._fragmentShaderSourcePath, function (responseText) {
+            this._onFilesLoad(this._vertexShaderSource !== null, {shaderType: ShaderType.FRAGMENT, text: responseText});
         }.bind(this), 'text/plain; charset=utf-8');
     };
     /**
@@ -365,13 +429,15 @@ define([
      * @param {Object} params
      */
     ShaderResource.prototype._loadData = function (params) {
-        switch (params.shaderType) {
-            case "vertex":
+        switch (types.getEnumValue("shaderType", ShaderType, params.shaderType, null)) {
+            case ShaderType.VERTEX:
                 this._vertexShaderSource = params.text;
                 break;
-            case "fragment":
+            case ShaderType.FRAGMENT:
                 this._fragmentShaderSource = params.text;
                 break;
+            default:
+                application.crash();
         }
     };
     /**
@@ -491,7 +557,7 @@ define([
      */
     ModelResource.prototype._requestFile = function (maxLOD) {
         this._filesToLoad++;
-        application.requestTextFile("model", this._getPath(maxLOD), function (responseText) {
+        application.requestTextFile(MODEL_FOLDER, this._getPath(maxLOD), function (responseText) {
             this._loadedFiles++;
             this._onFilesLoad(this._filesToLoad === this._loadedFiles, {maxLOD: maxLOD, text: responseText});
         }.bind(this));
@@ -563,28 +629,28 @@ define([
      * @returns {TextureResource}
      */
     GraphicsResourceManager.prototype.getTexture = function (name) {
-        return this.getResource("textures", name);
+        return this.getResource(TEXTURE_ARRAY_NAME, name);
     };
     /**
      * @param {String} name
      * @returns {CubemapResource}
      */
     GraphicsResourceManager.prototype.getCubemap = function (name) {
-        return this.getResource("cubemaps", name);
+        return this.getResource(CUBEMAP_ARRAY_NAME, name);
     };
     /**
      * @param {String} name
      * @returns {ShaderResource}
      */
     GraphicsResourceManager.prototype.getShader = function (name) {
-        return this.getResource("shaders", name);
+        return this.getResource(SHADER_ARRAY_NAME, name);
     };
     /**
      * @param {String} name
      * @returns {ShaderResource}
      */
     GraphicsResourceManager.prototype.getFallbackShader = function (name) {
-        return this.getResource("shaders", this.getResource("shaders", name, {doNotLoad: true}).getFallbackShaderName(), {allowNullResult: true}) || this.getShader(name);
+        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getFallbackShaderName(), {allowNullResult: true}) || this.getShader(name);
     };
     /**
      * @param {String} name
@@ -592,28 +658,50 @@ define([
      * @returns {ModelResource}
      */
     GraphicsResourceManager.prototype.getModel = function (name, params) {
-        return this.getResource("models", name, params);
+        return this.getResource(MODEL_ARRAY_NAME, name, params);
     };
     /**
      * @param {Model} model
      * @returns {ModelResource}
      */
     GraphicsResourceManager.prototype.getOrAddModel = function (model) {
-        var result = this.getResource("models", model.getName(), {allowNullResult: true});
+        var result = this.getResource(MODEL_ARRAY_NAME, model.getName(), {allowNullResult: true});
         if (!result) {
-            result = this.addResource("models", new ModelResource({
+            result = this.addResource(MODEL_ARRAY_NAME, new ModelResource({
                 "name": model.getName(),
                 "model": model
             }));
         }
         return result;
     };
+    /**
+     * Sends an asynchronous request to grab the file containing the graphics
+     * resource descriptions and sets a callback to load those descriptions as 
+     * well as run a custom callback if given, as well, after the loading has 
+     * been completed.
+     * @param {{folder: String, filename: String}} graphicsResourceFileDescriptor
+     * @param {Function} callback
+     */
+    function requestConfigLoad(graphicsResourceFileDescriptor, callback) {
+        var resourceClassAssignment = {};
+        resourceClassAssignment[TEXTURE_ARRAY_NAME] = TextureResource;
+        resourceClassAssignment[CUBEMAP_ARRAY_NAME] = CubemapResource;
+        resourceClassAssignment[SHADER_ARRAY_NAME] = ShaderResource;
+        resourceClassAssignment[MODEL_ARRAY_NAME] = ModelResource;
+        _resourceManager.requestConfigLoad(graphicsResourceFileDescriptor.filename, graphicsResourceFileDescriptor.folder, resourceClassAssignment, callback);
+    }
+    _resourceManager = new GraphicsResourceManager();
     return {
-        TextureResource: TextureResource,
-        CubemapResource: CubemapResource,
-        ShaderResource: ShaderResource,
-        ModelResource: ModelResource,
-        GraphicsResourceManager: GraphicsResourceManager
+        requestConfigLoad: requestConfigLoad,
+        requestResourceLoad: _resourceManager.requestResourceLoad.bind(_resourceManager),
+        getTexture: _resourceManager.getTexture.bind(_resourceManager),
+        getCubemap: _resourceManager.getCubemap.bind(_resourceManager),
+        getShader: _resourceManager.getShader.bind(_resourceManager),
+        getFallbackShader: _resourceManager.getFallbackShader.bind(_resourceManager),
+        getModel: _resourceManager.getModel.bind(_resourceManager),
+        getOrAddModel: _resourceManager.getOrAddModel.bind(_resourceManager),
+        executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
+        executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager)
     };
 });
 

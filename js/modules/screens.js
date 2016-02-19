@@ -14,6 +14,7 @@
  * @param asyncResource Screens are subclassed from AsyncResource as they are loaded from external XML files
  * @param components Screens contain components
  * @param managedGL Screens having canvases provide the managed GL contexts for them
+ * @param resources Used to clear graphics resource bindings to contexts of removed screens
  * @param armada TODO: this needs to be removed
  */
 define([
@@ -21,8 +22,9 @@ define([
     "modules/async-resource",
     "modules/components",
     "modules/managed-gl",
+    "modules/graphics-resources",
     "armada/armada"
-], function (application, asyncResource, components, managedGL, armada) {
+], function (application, asyncResource, components, managedGL, resources, armada) {
     "use strict";
     // #########################################################################
     /**
@@ -365,7 +367,7 @@ define([
         this._resizeEventListener = null;
         this._canvases = {};
         this.clearSceneCanvasBindings();
-        armada.resources().clearResourceContextBindings();
+        resources.clearResourceContextBindings();
     };
     /**
      * @override

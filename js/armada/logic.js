@@ -17,6 +17,7 @@
  * @param asyncResource LogicContext is a subclass of AsyncResource
  * @param egomModel Used for generating 3D models for hitboxes
  * @param physics Physics simulation is done using this module
+ * @param resource Used to access the loaded graphics resources
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
  * @param armada Used to access graphics resources, graphics context and current logic context
  * @param classes Used to load and access the classes of Interstellar Armada
@@ -29,11 +30,12 @@ define([
     "modules/async-resource",
     "modules/egom-model",
     "modules/physics",
+    "modules/graphics-resources",
     "modules/buda-scene",
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (types, vec, mat, application, asyncResource, egomModel, physics, budaScene, armada, classes) {
+], function (types, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, armada, classes) {
     "use strict";
     var
             /**
@@ -95,6 +97,7 @@ define([
      */
     //TODO: finish documentation
     _constants = {
+        HITBOX_BODY_MODEL_NAME_INFIX: "-body-",
         /**
          * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
          */
@@ -384,7 +387,7 @@ define([
      */
     Skybox.prototype.addToScene = function (scene) {
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
                     this._class.getModel(),
                     this._class.getShader(),
@@ -434,7 +437,7 @@ define([
     BackgroundObject.prototype.addToScene = function (scene) {
         scene.addLightSource(new budaScene.LightSource(this._class.getLightColor(), this._direction));
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             var i, layers, layerParticle;
             layers = this._class.getLayers();
             for (i = 0; i < layers.length; i++) {
@@ -582,7 +585,7 @@ define([
                             (Math.random() - 0.5) * 2 * this._class.getRange()));
             this._particles.push(particle);
         }
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             var j, node;
             this._visualModel = new budaScene.PointCloud(
                     this._class.getShader(),
@@ -1071,7 +1074,7 @@ define([
      */
     Explosion.prototype.addToScene = function (scene, parentNode) {
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             this._createVisualModel();
             if (parentNode) {
                 parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
@@ -1088,7 +1091,7 @@ define([
      */
     Explosion.prototype.addResourcesToScene = function (scene) {
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
         }.bind(this));
@@ -1193,7 +1196,7 @@ define([
      */
     Projectile.prototype.addToScene = function (scene) {
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             this._createVisualModel();
             scene.addObject(this._visualModel);
         }.bind(this));
@@ -1207,7 +1210,7 @@ define([
     Projectile.prototype.addResourcesToScene = function (scene) {
         var explosion;
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             this._createVisualModel();
             scene.addResourcesOfObject(this._visualModel);
             explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
@@ -1341,7 +1344,7 @@ define([
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
         this.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             this._visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
@@ -1391,7 +1394,7 @@ define([
         for (i = 0; i < barrels.length; i++) {
             projectile = new Projectile(barrels[i].getProjectileClass());
             projectile.addResourcesToScene(scene);
-            armada.resources().executeWhenReady(this.getResourceAdderFunction(scene, i).bind(this));
+            resources.executeWhenReady(this.getResourceAdderFunction(scene, i).bind(this));
         }
     };
     /**
@@ -1498,7 +1501,7 @@ define([
      */
     Thruster.prototype.addToScene = function (parentNode) {
         this._propulsionClass.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             this._visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
@@ -2333,7 +2336,7 @@ define([
                 mat.identity4(),
                 this._class.getBodies());
         this._class.acquireResources();
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
         }.bind(this));
         this._weapons = [];
@@ -2504,9 +2507,9 @@ define([
      */
     Spacecraft.prototype.getHitboxTextures = function () {
         var i, textureTypes,
-                textureResource = armada.resources().getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME)),
+                textureResource = resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME)),
                 result = {};
-        textureTypes = armada.resources().getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes();
+        textureTypes = resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes();
         for (i = 0; i < textureTypes.length; i++) {
             result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], armada.graphics().getTextureQuality());
         }
@@ -2738,16 +2741,16 @@ define([
     Spacecraft.prototype._addHitboxModel = function (index) {
         var
                 phyModel =
-                armada.resources().getOrAddModel(
+                resources.getOrAddModel(
                 egomModel.cuboidModel(
-                        this._class.getName() + "-body" + index,
+                        this._class.getName() + _constants.HITBOX_BODY_MODEL_NAME_INFIX + index,
                         this._class.getBodies()[index].getWidth(),
                         this._class.getBodies()[index].getHeight(),
                         this._class.getBodies()[index].getDepth(),
                         armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_COLOR))),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
-                        armada.resources().getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
+                        resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
                         this.getHitboxTextures(),
                         mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
                         this._class.getBodies()[index].getOrientationMatrix(),
@@ -2759,8 +2762,8 @@ define([
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
-            armada.resources().getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
-            armada.resources().getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+            resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
+            resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
         this._class.acquireResources(params);
     };
@@ -2808,7 +2811,7 @@ define([
         if (addSupplements.explosion === true) {
             this._class.getExplosionClass().acquireResources();
         }
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             var node, explosion;
             application.log("Adding spacecraft (" + this._class.getFullName() + ") to scene...", 2);
             this._visualModel = new budaScene.ParameterizedMesh(
@@ -3377,7 +3380,7 @@ define([
             });
             this._hitObjects.push(this._spacecrafts[i]);
         }
-        armada.resources().executeWhenReady(function () {
+        resources.executeWhenReady(function () {
             for (i = 0; i < this._views.length; i++) {
                 scene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], scene));
                 if (i === 0) {
