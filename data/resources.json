@@ -21,6 +21,8 @@
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
                 "emissive": ""
             },
             "qualitySuffixes": {

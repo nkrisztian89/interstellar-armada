@@ -77,6 +77,19 @@ define([
         DURATION: {
             baseType: "number",
             range: [0, undefined]
+        },
+        FILE_DESCRIPTOR: {
+            baseType: "object",
+            properties: {
+                FILENAME: {
+                    name: "filename",
+                    type: "string"
+                },
+                FOLDER: {
+                    name: "folder",
+                    type: "string"
+                }
+            }
         }
     },
     /**
@@ -100,15 +113,28 @@ define([
         CONFIGURATION: {
             CLASSES_SOURCE_FILE: {
                 name: "classes",
-                type: "object"
+                type: _customTypes.FILE_DESCRIPTOR
             },
             ENVIRONMENTS_SOURCE_FILE: {
                 name: "environments",
-                type: "object"
+                type: _customTypes.FILE_DESCRIPTOR
             },
             LEVEL_FILES: {
                 name: "levels",
-                type: "object"
+                type: {
+                    baseType: "object",
+                    properties: {
+                        FOLDER: {
+                            name: "folder",
+                            type: "string"
+                        },
+                        FILENAMES: {
+                            name: "filenames",
+                            type: "array",
+                            elementType: "string"
+                        }
+                    }
+                }
             }
         },
         /**
@@ -229,7 +255,7 @@ define([
             AUTO_TARGETING: {
                 name: "autoTargeting",
                 type: "enum",
-                enum: AutoTargeting,
+                values: AutoTargeting,
                 defaultValue: AutoTargeting.HIT_AND_AUTO_TARGET
             },
             /**
@@ -287,7 +313,7 @@ define([
             TARGET_CHANGE_TRANSITION_STYLE: {
                 name: "targetChangeTransitionStyle",
                 type: "enum",
-                enum: budaScene.Camera.prototype.TransitionStyle,
+                values: budaScene.Camera.prototype.TransitionStyle,
                 defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
             }
         },
@@ -313,12 +339,12 @@ define([
             DEFAULT_BASE_ORIENTATION: {
                 name: "defaultBaseOrientation",
                 type: "enum",
-                enum: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+                values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
             },
             DEFAULT_POINT_TO_FALLBACK: {
                 name: "defaultPointToFallback",
                 type: "enum",
-                enum: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
+                values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
             }
         }
     };
@@ -2584,7 +2610,7 @@ define([
         var i, textureTypes,
                 textureResource = armada.resources().getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME)),
                 result = {};
-        textureTypes = textureResource.getTypes();
+        textureTypes = armada.resources().getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes();
         for (i = 0; i < textureTypes.length; i++) {
             result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], armada.graphics().getTextureQuality());
         }

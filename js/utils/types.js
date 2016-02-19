@@ -30,6 +30,12 @@ define([
     function _showCheckFailError(name, value, defaultValue, checkFailMessage) {
         application.showError("Invalid value for '" + name + "' (" + value + ")" + (checkFailMessage ? (": " + checkFailMessage) : ".") + " Using default value " + defaultValue + " instead.");
     }
+    function _showTypeError(type, name, value, defaultValue) {
+        application.showError(
+                "Invalid value for '" + name +
+                "'. Expected " + type + ", got a(n) " + ((typeof value === "object") ? value.constructor.name : (typeof value)) + " (" + value +
+                "). Using default value " + ((defaultValue instanceof Array) ? ("[" + defaultValue.join(", ") + "]") : ("'" + defaultValue + "'")) + " instead.");
+    }
     /**
      * @typedef {Function} Types~BooleanCallback
      * @param {Boolean} safeValue
@@ -45,20 +51,20 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @returns {Boolean}
+     * @returns {Boolean|null}
      */
     exports.getBooleanValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
         if (typeof value === "boolean") {
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
                 }
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected a boolean, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
-        return defaultValue;
+        _showTypeError("a boolean", name, value, defaultValue);
+        return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
     };
     /**
      * @typedef {Function} Types~NumberCallback
@@ -75,20 +81,20 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @returns {Boolean}
+     * @returns {Number|null}
      */
     exports.getNumberValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
         if (typeof value === "number") {
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
                 }
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected a number, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
-        return defaultValue;
+        _showTypeError("a number", name, value, defaultValue);
+        return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
     };
     /**
      * Returns a type-safe number value falling into a specific range. If the given original value is of invalid type, will show an error 
@@ -103,7 +109,7 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @returns {Boolean}
+     * @returns {Number|null}
      */
     exports.getNumberValueInRange = function (name, value, minValue, maxValue, defaultValue, checkFunction, checkFailMessage) {
         if (typeof value === "number") {
@@ -119,13 +125,13 @@ define([
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getNumberValueInRange(name, defaultValue, minValue, maxValue, null, checkFunction, checkFailMessage) : null;
                 }
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected a number, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
-        return defaultValue;
+        _showTypeError("a number", name, value, defaultValue);
+        return (defaultValue !== null) ? exports.getNumberValueInRange(name, defaultValue, minValue, maxValue, null, checkFunction, checkFailMessage) : null;
     };
     /**
      * @typedef {Function} Types~StringCallback
@@ -142,20 +148,20 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @returns {Boolean}
+     * @returns {String|null}
      */
     exports.getStringValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
         if (typeof value === "string") {
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
                 }
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected a string, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
-        return defaultValue;
+        _showTypeError("a string", name, value, defaultValue);
+        return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
     };
     /**
      * If the given value is one of the possible enumeration values defined in the given enumeration object, it returns it, otherwise shows
@@ -168,51 +174,21 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @returns {}
      */
     exports.getEnumValue = function (name, enumObject, value, defaultValue, checkFunction, checkFailMessage) {
-        value = utils.getSafeEnumValue(enumObject, value);
-        if (value !== null) {
+        var safeValue = utils.getSafeEnumValue(enumObject, value);
+        if (safeValue !== null) {
             if (checkFunction) {
-                if (!checkFunction(value)) {
-                    _showCheckFailError(name, value, defaultValue, checkFailMessage);
+                if (!checkFunction(safeValue)) {
+                    _showCheckFailError(name, safeValue, defaultValue, checkFailMessage);
                     return defaultValue;
                 }
             }
-            return value;
+            return safeValue;
         }
-        application.showError("Unrecognized '" + name + "' value: '" + value + "'. Possible values are are: " + utils.getEnumValues(enumObject).join(", ") + " Default value '" + defaultValue + "' will be used instead.");
+        application.showError("Unrecognized '" + name + "' value: '" + value + "'. Possible values are are: " + utils.getEnumValues(enumObject).join(", ") + ". Default value '" + defaultValue + "' will be used instead.");
         return defaultValue;
-    };
-    /**
-     * Returns an array that contains those elements if the original array that are valid members of the given enumeration object, or if
-     * there are no such elements, returns a new array consisting of the default array's elements. If an element is omitted or the array
-     * is replaced with the default one, shows a warning message to the user.
-     * @param {String} name The name of the variable you are trying to acquire a value for (to show in error messages)
-     * @param {Object} enumObject the object containing the valid enumeration values.
-     * @param {Array} valueArray
-     * @param {Array} defaultValueArray
-     * @returns {Array}
-     */
-    exports.getEnumValueArray = function (name, enumObject, valueArray, defaultValueArray) {
-        var i, result = [], safeValue;
-        for (i = 0; i < valueArray.length; i++) {
-            safeValue = utils.getSafeEnumValue(enumObject, valueArray[i]);
-            if (safeValue) {
-                result.push(safeValue);
-            } else {
-                application.showError(
-                        "Unrecognized " + name + " value: '" + valueArray[i] + "' in array. This value will be left out of the array.",
-                        "minor",
-                        "Possible values are are: " + utils.getEnumValues(enumObject).join(", ") + ".");
-            }
-        }
-        if ((valueArray.length > 0) && result.length === 0) {
-            application.showError("All " + name + " values in the array were unrecognized. The default array ([" + defaultValueArray.join(", ") + "]) will be used instead.");
-            for (i = 0; i < defaultValueArray.length; i++) {
-                result.push(defaultValueArray[i]);
-            }
-        }
-        return result;
     };
     /**
      * @typedef {Function} Types~ObjectCallback
@@ -229,20 +205,20 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @returns {Boolean}
+     * @returns {Object|null}
      */
     exports.getObjectValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
         if (typeof value === "object") {
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getObjectValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
                 }
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected an object, got a(n) " + (typeof value) + " (" + value + "). Using default value " + defaultValue + " instead.");
-        return defaultValue;
+        _showTypeError("an object", name, value, defaultValue);
+        return (defaultValue !== null) ? exports.getObjectValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
     };
     /**
      * Executes type verification on a supplied value based on the passed type information. If the supplied value does not pass the
@@ -257,9 +233,9 @@ define([
      * For number:
      * - (optional) range: an array of 2 optional numbers describing the minimum and maximum of the interval the value should be in
      * For enum:
-     * - (required) enum: the object that defines the valid enum values as its properties
+     * - (required) values: the object that defines the valid enum values as its properties
      * For object:
-     * - (optional) verify: an object to use for verifying the properties of the object
+     * - (optional) properties: an object to use for verifying the properties of the object
      * For array:
      * - (optional) elementType: if given, all elements of the array will be verified to be of this type. Can use the string or custom object
      * format as well
@@ -276,7 +252,7 @@ define([
         typeParams = typeParams || {};
         if (value === undefined) {
             if (defaultValue !== undefined) {
-                return defaultValue;
+                return (defaultValue !== null) ? exports.getValueOfType(name, type, defaultValue, null, typeParams, checkFunction, checkFailMessage) : null;
             }
             application.showError("Missing required value of '" + name + "'!");
         } else {
@@ -294,14 +270,14 @@ define([
                 case "string":
                     return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage);
                 case "enum":
-                    if (typeParams.enum) {
-                        return exports.getEnumValue(name, typeParams.enum, value, defaultValue, checkFunction, checkFailMessage);
+                    if (typeParams.values) {
+                        return exports.getEnumValue(name, typeParams.values, value, defaultValue, checkFunction, checkFailMessage);
                     }
                     application.showError("Missing enum definition object for '" + name + "'!");
                     return null;
                 case "object":
-                    if (typeParams.verify) {
-                        return exports.getVerifiedObject(name, value, typeParams.verify);
+                    if (typeParams.properties) {
+                        return exports.getVerifiedObject(name, value, typeParams.properties);
                     }
                     return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage);
                 case "array":
@@ -340,7 +316,7 @@ define([
             if (length !== undefined) {
                 if (value.length !== length) {
                     application.showError("Invalid array length for '" + name + "'! Expected a length of " + length + " and got " + value.length + ". Using default value [" + defaultValue.join(", ") + "] instead.");
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, length, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
                 }
             }
             if (elementType !== undefined) {
@@ -354,13 +330,13 @@ define([
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, "[" + defaultValue.join(", ") + "]", checkFailMessage);
-                    return defaultValue;
+                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, length, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
                 }
             }
             return value;
         }
-        application.showError("Invalid value for '" + name + "'. Expected an array, got a(n) " + ((typeof value === "object") ? value.constructor.name : (typeof value)) + " (" + value + "). Using default value [" + defaultValue.join(", ") + "] instead.");
-        return defaultValue;
+        _showTypeError("an array", name, value, defaultValue);
+        return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, length, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
     };
     /**
      * Verifies a given object's properties to be of certain types given by a passed object definition object. 
@@ -370,11 +346,12 @@ define([
      * itself, with a name property to identify it, a type property to describe the type (see getValueOfType), an optional defaultValue property,
      * which will cause the property to be added with this value, if it is missing from the original object (if a property without a default
      * value is missing, an error message will be displayed), and any other type parameters that getValueOfType accepts. If the original
-     * object has any additional properties not included in the definition object, they will be discarded from the result
+     * object has any additional properties not included in the definition object, they will be discarded from the result, but an error
+     * message will be shown about them.
      * @returns {Object}
      */
     exports.getVerifiedObject = function (name, value, definitionObject) {
-        var propertyDefinitionName, propertyDefinition, result = {};
+        var propertyName, propertyDefinitionName, propertyDefinition, result = {}, processedProperties = [];
         if (typeof value === "object") {
             for (propertyDefinitionName in definitionObject) {
                 if (definitionObject.hasOwnProperty(propertyDefinitionName)) {
@@ -386,14 +363,22 @@ define([
                             propertyDefinition.defaultValue,
                             {
                                 range: propertyDefinition.range,
-                                enum: propertyDefinition.enum,
+                                values: propertyDefinition.values,
                                 elementType: propertyDefinition.elementType,
                                 elementEnumObject: propertyDefinition.elementEnum,
                                 length: propertyDefinition.length,
-                                verify: propertyDefinition.verify
+                                properties: propertyDefinition.properties
                             },
                             propertyDefinition.check,
                             propertyDefinition.checkFailMessage);
+                    processedProperties.push(propertyDefinition.name);
+                }
+            }
+            for (propertyName in value) {
+                if (value.hasOwnProperty(propertyName)) {
+                    if (processedProperties.indexOf(propertyName) < 0) {
+                        application.showError("Unrecognized property '" + propertyName + "' defined for '" + name + "'. The value of this property cannot be verified and will be discarded.");
+                    }
                 }
             }
             return result;

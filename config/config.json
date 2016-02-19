@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0:136+refactoring-62 (2016.02.19.)",
+    "version": "0.1.0:136+refactoring-63 (2016.02.19.)",
     "logVerbosity": 1,
     "folders": {
         "config": "config/",
@@ -20,23 +20,27 @@
         }
     },
     "dataFiles": {
-        "resources": {
-            "filename": "resources.json",
-            "folder": "data"
+        "graphics": {
+            "resources": {
+                "filename": "resources.json",
+                "folder": "data"
+            }
         },
-        "classes": {
-            "filename": "classes.json",
-            "folder": "data"
-        },
-        "environments": {
-            "filename": "environments.json",
-            "folder": "environment"
-        },
-        "levels": {
-            "folder": "level",
-            "filenames": [
-                "level.json"
-            ]
+        "logic": {
+            "classes": {
+                "filename": "classes.json",
+                "folder": "data"
+            },
+            "environments": {
+                "filename": "environments.json",
+                "folder": "environment"
+            },
+            "levels": {
+                "folder": "level",
+                "filenames": [
+                    "level.json"
+                ]
+            }
         }
     }
 }

@@ -122,7 +122,7 @@ define([
                         "modules/graphics-resources"
                     ], function (graphicsResources) {
                         _resourceManager = new graphicsResources.GraphicsResourceManager();
-                        _resourceManager.requestConfigLoad(configJSON.dataFiles.resources.filename, configJSON.dataFiles.resources.folder, {
+                        _resourceManager.requestConfigLoad(configJSON.dataFiles.graphics.resources.filename, configJSON.dataFiles.graphics.resources.folder, {
                             "textures": graphicsResources.TextureResource,
                             "cubemaps": graphicsResources.CubemapResource,
                             "shaders": graphicsResources.ShaderResource,

@@ -78,8 +78,6 @@
             "backgroundObjectDistance": 4500,
             "turnAccelerationDurationInSeconds": 0.5,
             "defaultMuzzleFlashDuration": 500,
-            "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35,
             "selfFire": true,
             "autoTargeting": "hitAndAutoTarget",
             "randomShips": {
@@ -89,7 +87,7 @@
                 "taurus": 1
             },
             "hitboxColor": [0.0, 0.5, 0.5, 0.5],
-            "hiboxTexture": "white",
+            "hitboxTexture": "white",
             "hitboxShader": "lambert-with-luminosity",
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
