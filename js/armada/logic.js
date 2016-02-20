@@ -1,9 +1,11 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file
+ * @file Stores the current game configuration and settings and provides functions to load and access them as well as constructor functions
+ * for top-level in-game entitites that can be instantiated. Inside it manages the relations among the various in-game objects to simulate
+ * a space battle.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
+ * @version 2.0
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
@@ -20,7 +22,6 @@
  * @param resources Used to access the loaded graphics resources
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
- * @param armada Used to access current logic context
  * @param classes Used to load and access the classes of Interstellar Armada
  */
 define([
@@ -34,10 +35,9 @@ define([
     "modules/graphics-resources",
     "modules/buda-scene",
     "armada/graphics",
-    "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (types, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, armada, classes) {
+], function (types, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, classes) {
     "use strict";
     var
             /**
@@ -94,312 +94,310 @@ define([
         }
     },
     /**
-     * This object hold the constant values used in this module
-     * @type Object
+     * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
+     * the corresponding hitbox model is created
+     * @type String
      */
-    _constants = {
-        /**
-         * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
-         * the corresponding hitbox model is created
-         * @type String
-         */
-        HITBOX_BODY_MODEL_NAME_INFIX: "-body-",
-        /**
-         * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
-         * @type Object
-         */
-        CONFIGURATION: {
-            CLASSES_SOURCE_FILE: {
-                name: "classes",
-                type: _customTypes.FILE_DESCRIPTOR
-            },
-            ENVIRONMENTS_SOURCE_FILE: {
-                name: "environments",
-                type: _customTypes.FILE_DESCRIPTOR
-            },
-            LEVEL_FILES: {
-                name: "levels",
-                type: {
-                    baseType: "object",
-                    properties: {
-                        FOLDER: {
-                            name: "folder",
-                            type: "string"
-                        },
-                        FILENAMES: {
-                            name: "filenames",
-                            type: "array",
-                            elementType: "string"
+    HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
+            /**
+             * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
+             * @type Object
+             */
+            CONFIGURATION = {
+                CLASSES_SOURCE_FILE: {
+                    name: "classes",
+                    type: _customTypes.FILE_DESCRIPTOR
+                },
+                ENVIRONMENTS_SOURCE_FILE: {
+                    name: "environments",
+                    type: _customTypes.FILE_DESCRIPTOR
+                },
+                LEVEL_FILES: {
+                    name: "levels",
+                    type: {
+                        baseType: "object",
+                        properties: {
+                            FOLDER: {
+                                name: "folder",
+                                type: "string"
+                            },
+                            FILENAMES: {
+                                name: "filenames",
+                                type: "array",
+                                elementType: "string"
+                            }
                         }
                     }
                 }
-            }
+            },
+    /**
+     * The definition object for general settings that can be used to verify the data loaded from JSON as well as refer to the 
+     * individual settings later.
+     * @type Object
+     */
+    GENERAL_SETTINGS = {
+        /**
+         * Default seed to use for generating random numbers to allow consistent and comparable testing.
+         */
+        DEFAULT_RANDOM_SEED: {
+            name: "defaultRandomSeed",
+            type: "number",
+            defaultValue: 4718
         },
         /**
-         * The definition object for general settings that can be used to verify the data loaded from JSON as well as refer to the 
-         * individual settings later.
-         * @type Object
+         * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the luminosity
+         * factor values of the various triangle groups.
          */
-        GENERAL_SETTINGS: {
-            /**
-             * Default seed to use for generating random numbers to allow consistent and comparable testing.
-             */
-            DEFAULT_RANDOM_SEED: {
-                name: "defaultRandomSeed",
-                type: "number",
-                defaultValue: 4718
-            },
-            /**
-             * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the luminosity
-             * factor values of the various triangle groups.
-             */
-            LUMINOSITY_FACTORS_ARRAY_NAME: {
-                name: "luminosityFactorsArrayName",
-                type: "string",
-                defaultValue: "luminosityFactors"
-            }
-        },
-        /**
-         * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
-         * individual settings later.
-         * @type Object
-         */
-        DATABASE_SETTINGS: {
-            /**
-             * If true, the models in the database will be rotated automatically as well as can be rotated by the mouse
-             */
-            MODEL_ROTATION: {
-                name: "modelRotation",
-                type: "boolean",
-                defaultValue: true
-            },
-            /**
-             * The background color for the canvas that shows the models in the database
-             */
-            BACKGROUND_COLOR: {
-                name: "backgroundColor",
-                type: _customTypes.COLOR4,
-                defaultValue: [0, 0, 0, 0]
-            },
-            /**
-             * If the wireframe model is visible, it will be colored (homogenously) with this color
-             */
-            WIREFRAME_COLOR: {
-                name: "wireframeColor",
-                type: _customTypes.COLOR4,
-                defaultValue: [1, 0, 0, 1]
-            },
-            /**
-             * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
-             */
-            SHOW_WIREFRAME_MODEL: {
-                name: "showWireframeModel",
-                type: "boolean",
-                defaultValue: true
-            },
-            /**
-             * If true, the solid model will be visible in the database (it will face in after the wireframe model, if that is also visible and reveal is active)
-             */
-            SHOW_SOLID_MODEL: {
-                name: "showSolidModel",
-                type: "boolean",
-                defaultValue: true
-            },
-            /**
-             * If the shaders are not simplified, this setting will toggle the fade-in reveal animation
-             */
-            MODEL_REVEAL_ANIMATION: {
-                name: "modelRevealAnimation",
-                type: "boolean",
-                defaultValue: true
-            }
-        },
-        /**
-         * The definition object for battle settings that can be used to verify the data loaded from JSON as well as refer to the 
-         * individual settings later.
-         * @type Object
-         */
-        BATTLE_SETTINGS: {
-            /**
-             * The simulation loop will be executed this many times per second during the battle
-             */
-            SIMULATION_STEPS_PER_SECOND: {
-                name: "simulationStepsPerSecond",
-                type: "number",
-                defaultValue: 60
-            },
-            /**
-             * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
-             */
-            MOMENT_DURATION: {
-                name: "momentDuration",
-                type: _customTypes.DURATION,
-                defaultValue: 1
-            },
-            /**
-             * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
-             */
-            BACKGROUND_OBJECT_DISTANCE: {
-                name: "backgroundObjectDistance",
-                type: "number",
-                defaultValue: 4500
-            },
-            /**
-             * When turning, (maneuvering computers of) spacecrafts allow the turn rate to accelerate for a maximum of this duration 
-             * (around each axis), in seconds.
-             */
-            TURN_ACCELERATION_DURATION_S: {
-                name: "turnAccelerationDurationInSeconds",
-                type: _customTypes.DURATION,
-                defaultValue: 0.5
-            },
-            /**
-             * If a muzzle flash particle has no set duration (by its projectile class), this duration will be applied. In milliseconds
-             */
-            DEFAULT_MUZZLE_FLASH_DURATION: {
-                name: "defaultMuzzleFlashDuration",
-                type: _customTypes.DURATION,
-                defaultValue: 500
-            },
-            /**
-             * If true, spacecrafts can hit themselves with their own projectiles
-             */
-            SELF_FIRE: {
-                name: "selfFire",
-                type: "boolean",
-                defaultValue: true
-            },
-            /**
-             * The default auto-targeting mode to use
-             */
-            AUTO_TARGETING: {
-                name: "autoTargeting",
-                type: "enum",
-                values: AutoTargeting,
-                defaultValue: AutoTargeting.HIT_AND_AUTO_TARGET
-            },
-            /**
-             * If no profile name is given, new spacecraft are equipped with the profile having this name, if they have such
-             */
-            DEFAULT_EQUIPMENT_PROFILE_NAME: {
-                name: "defaultEquipmentProfileName",
-                type: "string",
-                defaultValue: "default"
-            },
-            /**
-             * When displayed, hitboxes will be modulated with this color.
-             */
-            HITBOX_COLOR: {
-                name: "hitboxColor",
-                type: _customTypes.COLOR4,
-                defaultValue: [0.0, 0.5, 0.5, 0.5]
-            },
-            /**
-             * The texture resource with this name will be applied to hitboxes when they are displayed.
-             */
-            HITBOX_TEXTURE_NAME: {
-                name: "hitboxTexture",
-                type: "string",
-                defaultValue: "white"
-            },
-            /**
-             * The shader resource with this name will be used for hitboxes when they are displayed.
-             */
-            HITBOX_SHADER_NAME: {
-                name: "hitboxShader",
-                type: "string",
-                defaultValue: "lambert-with-luminosity"
-            },
-            /**
-             * The amount of randomly positioned ships to add to the level at start by class
-             */
-            RANDOM_SHIPS: {
-                name: "randomShips",
-                type: "object",
-                defaultValue: {}
-            },
-            /**
-             * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
-             */
-            RANDOM_SHIPS_MAP_SIZE: {
-                name: "randomShipsMapSize",
-                type: "number",
-                defaultValue: 3000
-            },
-            /**
-             * The added random ships will be equipped with the profile having this name, if they have such
-             */
-            RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME: {
-                name: "randomShipsEquipmentProfileName",
-                type: "string",
-                defaultValue: "default"
-            },
-            /**
-             * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
-             * spacecraft)
-             */
-            TARGET_VIEW_NAME: {
-                name: "targetViewName",
-                type: "string",
-                defaultValue: "target"
-            },
-            /**
-             * The duration of camera transitions of target views when the target is changed, in milliseconds
-             */
-            TARGET_CHANGE_TRANSITION_DURATION: {
-                name: "targetChangeTransitonDuration",
-                type: _customTypes.DURATION,
-                defaultValue: 300
-            },
-            /**
-             * The style of camera transitions of target views when the target is changed
-             */
-            TARGET_CHANGE_TRANSITION_STYLE: {
-                name: "targetChangeTransitionStyle",
-                type: "enum",
-                values: budaScene.Camera.prototype.TransitionStyle,
-                defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
-            }
-        },
-        /**
-         * The definition object for camera settings that can be used to verify the data loaded from JSON as well as refer to the 
-         * individual settings later.
-         * @type Object
-         */
-        CAMERA_SETTINGS: {
-            DEFAULT_FOV: {
-                name: "defaultFOV",
-                type: "number"
-            },
-            DEFAULT_FOV_RANGE: {
-                name: "defaultFOVRange",
-                type: "array",
-                length: 2
-            },
-            DEFAULT_SPAN: {
-                name: "defaultSpan",
-                type: "number"
-            },
-            DEFAULT_SPAN_RANGE: {
-                name: "defaultSpanRange",
-                type: "array",
-                length: 2
-            },
-            DEFAULT_BASE_ORIENTATION: {
-                name: "defaultBaseOrientation",
-                type: "enum",
-                values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
-            },
-            DEFAULT_POINT_TO_FALLBACK: {
-                name: "defaultPointToFallback",
-                type: "enum",
-                values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
-            }
+        LUMINOSITY_FACTORS_ARRAY_NAME: {
+            name: "luminosityFactorsArrayName",
+            type: "string",
+            defaultValue: "luminosityFactors"
         }
-    };
+    },
+    /**
+     * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
+     * individual settings later.
+     * @type Object
+     */
+    DATABASE_SETTINGS = {
+        /**
+         * If true, the models in the database will be rotated automatically as well as can be rotated by the mouse
+         */
+        MODEL_ROTATION: {
+            name: "modelRotation",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * The background color for the canvas that shows the models in the database
+         */
+        BACKGROUND_COLOR: {
+            name: "backgroundColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [0, 0, 0, 0]
+        },
+        /**
+         * If the wireframe model is visible, it will be colored (homogenously) with this color
+         */
+        WIREFRAME_COLOR: {
+            name: "wireframeColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [1, 0, 0, 1]
+        },
+        /**
+         * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
+         */
+        SHOW_WIREFRAME_MODEL: {
+            name: "showWireframeModel",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * If true, the solid model will be visible in the database (it will face in after the wireframe model, if that is also visible and reveal is active)
+         */
+        SHOW_SOLID_MODEL: {
+            name: "showSolidModel",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * If the shaders are not simplified, this setting will toggle the fade-in reveal animation
+         */
+        MODEL_REVEAL_ANIMATION: {
+            name: "modelRevealAnimation",
+            type: "boolean",
+            defaultValue: true
+        }
+    },
+    /**
+     * The definition object for battle settings that can be used to verify the data loaded from JSON as well as refer to the 
+     * individual settings later.
+     * @type Object
+     */
+    BATTLE_SETTINGS = {
+        /**
+         * The simulation loop will be executed this many times per second during the battle
+         */
+        SIMULATION_STEPS_PER_SECOND: {
+            name: "simulationStepsPerSecond",
+            type: "number",
+            defaultValue: 60
+        },
+        /**
+         * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
+         */
+        MOMENT_DURATION: {
+            name: "momentDuration",
+            type: _customTypes.DURATION,
+            defaultValue: 1
+        },
+        /**
+         * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
+         */
+        BACKGROUND_OBJECT_DISTANCE: {
+            name: "backgroundObjectDistance",
+            type: "number",
+            defaultValue: 4500
+        },
+        /**
+         * When turning, (maneuvering computers of) spacecrafts allow the turn rate to accelerate for a maximum of this duration 
+         * (around each axis), in seconds.
+         */
+        TURN_ACCELERATION_DURATION_S: {
+            name: "turnAccelerationDurationInSeconds",
+            type: _customTypes.DURATION,
+            defaultValue: 0.5
+        },
+        /**
+         * If a muzzle flash particle has no set duration (by its projectile class), this duration will be applied. In milliseconds
+         */
+        DEFAULT_MUZZLE_FLASH_DURATION: {
+            name: "defaultMuzzleFlashDuration",
+            type: _customTypes.DURATION,
+            defaultValue: 500
+        },
+        /**
+         * If true, spacecrafts can hit themselves with their own projectiles
+         */
+        SELF_FIRE: {
+            name: "selfFire",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * The default auto-targeting mode to use
+         */
+        AUTO_TARGETING: {
+            name: "autoTargeting",
+            type: "enum",
+            values: AutoTargeting,
+            defaultValue: AutoTargeting.HIT_AND_AUTO_TARGET
+        },
+        /**
+         * If no profile name is given, new spacecraft are equipped with the profile having this name, if they have such
+         */
+        DEFAULT_EQUIPMENT_PROFILE_NAME: {
+            name: "defaultEquipmentProfileName",
+            type: "string",
+            defaultValue: "default"
+        },
+        /**
+         * When displayed, hitboxes will be modulated with this color.
+         */
+        HITBOX_COLOR: {
+            name: "hitboxColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [0.0, 0.5, 0.5, 0.5]
+        },
+        /**
+         * The texture resource with this name will be applied to hitboxes when they are displayed.
+         */
+        HITBOX_TEXTURE_NAME: {
+            name: "hitboxTexture",
+            type: "string",
+            defaultValue: "white"
+        },
+        /**
+         * The shader resource with this name will be used for hitboxes when they are displayed.
+         */
+        HITBOX_SHADER_NAME: {
+            name: "hitboxShader",
+            type: "string",
+            defaultValue: "lambert-with-luminosity"
+        },
+        /**
+         * The amount of randomly positioned ships to add to the level at start by class
+         */
+        RANDOM_SHIPS: {
+            name: "randomShips",
+            type: "object",
+            defaultValue: {}
+        },
+        /**
+         * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
+         */
+        RANDOM_SHIPS_MAP_SIZE: {
+            name: "randomShipsMapSize",
+            type: "number",
+            defaultValue: 3000
+        },
+        /**
+         * The added random ships will be equipped with the profile having this name, if they have such
+         */
+        RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME: {
+            name: "randomShipsEquipmentProfileName",
+            type: "string",
+            defaultValue: "default"
+        },
+        /**
+         * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
+         * spacecraft)
+         */
+        TARGET_VIEW_NAME: {
+            name: "targetViewName",
+            type: "string",
+            defaultValue: "target"
+        },
+        /**
+         * The duration of camera transitions of target views when the target is changed, in milliseconds
+         */
+        TARGET_CHANGE_TRANSITION_DURATION: {
+            name: "targetChangeTransitonDuration",
+            type: _customTypes.DURATION,
+            defaultValue: 300
+        },
+        /**
+         * The style of camera transitions of target views when the target is changed
+         */
+        TARGET_CHANGE_TRANSITION_STYLE: {
+            name: "targetChangeTransitionStyle",
+            type: "enum",
+            values: budaScene.Camera.prototype.TransitionStyle,
+            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+        }
+    },
+    /**
+     * The definition object for camera settings that can be used to verify the data loaded from JSON as well as refer to the 
+     * individual settings later.
+     * @type Object
+     */
+    CAMERA_SETTINGS = {
+        DEFAULT_FOV: {
+            name: "defaultFOV",
+            type: "number"
+        },
+        DEFAULT_FOV_RANGE: {
+            name: "defaultFOVRange",
+            type: "array",
+            length: 2
+        },
+        DEFAULT_SPAN: {
+            name: "defaultSpan",
+            type: "number"
+        },
+        DEFAULT_SPAN_RANGE: {
+            name: "defaultSpanRange",
+            type: "array",
+            length: 2
+        },
+        DEFAULT_BASE_ORIENTATION: {
+            name: "defaultBaseOrientation",
+            type: "enum",
+            values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+        },
+        DEFAULT_POINT_TO_FALLBACK: {
+            name: "defaultPointToFallback",
+            type: "enum",
+            values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
+        }
+    },
+    /**
+     * The context storing the current settings and game data that can be accessed through the interface of this module
+     * @type LogicContext
+     */
+    _context;
     Object.freeze(AutoTargeting);
     Object.freeze(_customTypes);
-    Object.freeze(_constants);
     // ##############################################################################
     /**
      * @class Represents a skybox that can be added to a scene to render the
@@ -481,7 +479,7 @@ define([
                         layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         layers[i].getColor(),
                         layers[i].getSize(),
-                        mat.translation4v(vec.scaled3(this._direction, armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
+                        mat.translation4v(vec.scaled3(this._direction, _context.getSetting(BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
                 layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);
             }
@@ -799,22 +797,7 @@ define([
          * An object storing all the general settings. (verified against GENERAL_SETTINGS)
          * @type Object
          */
-        this._generalSettings = null;
-        /**
-         * An object storing all the database settings. (verified against DATABASE_SETTINGS)
-         * @type Object
-         */
-        this._databaseSettings = null;
-        /**
-         * An object storing all the battle settings. (verified against BATTLE_SETTINGS)
-         * @type Object
-         */
-        this._battleSettings = null;
-        /**
-         * An object storing all the camera settings. (verified against CAMERA_SETTINGS)
-         * @type Object
-         */
-        this._cameraSettings = null;
+        this._settings = null;
     }
     LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
@@ -822,8 +805,8 @@ define([
      * 
      * @param {Object} configJSON
      */
-    LogicContext.prototype.loadConfiguration = function (configJSON) {
-        this._configuration = types.getVerifiedObject("configuration", configJSON, _constants.CONFIGURATION);
+    LogicContext.prototype.loadConfigurationFromJSON = function (configJSON) {
+        this._configuration = types.getVerifiedObject("configuration", configJSON, CONFIGURATION);
     };
     /**
      * Returns the configuration setting value for the passed setting definition object (from CONFIGURATION).
@@ -833,62 +816,39 @@ define([
         return this._configuration[settingDefinitionObject.name];
     };
     /**
-     * Returns the general setting value for the passed setting definition object (from GENERAL_SETTINGS).
+     * Returns the setting value for the passed setting definition object.
      * @param {Object} settingDefinitionObject
      */
-    LogicContext.prototype.getGeneralSetting = function (settingDefinitionObject) {
-        return this._generalSettings[settingDefinitionObject.name];
-    };
-    /**
-     * Returns the database setting value for the passed setting definition object (from DATABASE_SETTINGS).
-     * @param {Object} settingDefinitionObject
-     */
-    LogicContext.prototype.getDatabaseSetting = function (settingDefinitionObject) {
-        return this._databaseSettings[settingDefinitionObject.name];
-    };
-    /**
-     * Returns the battle setting value for the passed setting definition object (from BATTLE_SETTINGS).
-     * @param {Object} settingDefinitionObject
-     * @returns {}
-     */
-    LogicContext.prototype.getBattleSetting = function (settingDefinitionObject) {
-        return this._battleSettings[settingDefinitionObject.name];
-    };
-    /**
-     * Returns the camera setting value for the passed setting definition object (from CAMERA_SETTINGS).
-     * @param {Object} settingDefinitionObject
-     * @returns {}
-     */
-    LogicContext.prototype.getCameraSetting = function (settingDefinitionObject) {
-        return this._cameraSettings[settingDefinitionObject.name];
+    LogicContext.prototype.getSetting = function (settingDefinitionObject) {
+        return this._settings[settingDefinitionObject.name];
     };
     /**
      * Returns the default starting field of view value for camera configurations, in degrees
      * @returns {Number}
      */
     LogicContext.prototype.getDefaultCameraFOV = function () {
-        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_FOV);
+        return this.getSetting(CAMERA_SETTINGS.DEFAULT_FOV);
     };
     /**
      * Returns the default minimum and maximum field of view values for camera configurations, in degrees
      * @returns {Number[2]}
      */
     LogicContext.prototype.getDefaultCameraFOVRange = function () {
-        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_FOV_RANGE);
+        return this.getSetting(CAMERA_SETTINGS.DEFAULT_FOV_RANGE);
     };
     /**
      * Returns the default starting span value for camera configurations, in meters
      * @returns {Number}
      */
     LogicContext.prototype.getDefaultCameraSpan = function () {
-        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_SPAN);
+        return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN);
     };
     /**
      * Returns the default minimum and maximum span values for camera configurations, in meters
      * @returns {Number[2]}
      */
     LogicContext.prototype.getDefaultCameraSpanRange = function () {
-        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_SPAN_RANGE);
+        return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN_RANGE);
     };
     /**
      * (enum CameraOrientationConfiguration.prototype.BaseOrientation) Returns the default base orientation mode to use for camera 
@@ -896,7 +856,7 @@ define([
      * @returns {String}
      */
     LogicContext.prototype.getDefaultCameraBaseOrientation = function () {
-        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION);
+        return this.getSetting(CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION);
     };
     /**
      * (enum CameraOrientationConfiguration.prototype.PointToFallback) Returns the default point-to fallback mode to use for camera 
@@ -904,7 +864,7 @@ define([
      * @returns {String}
      */
     LogicContext.prototype.getDefaultCameraPointToFallback = function () {
-        return this.getCameraSetting(_constants.CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
+        return this.getSetting(CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
     };
     /**
      * Return the reusable environment with the given name if it exists, otherwise null.
@@ -920,7 +880,7 @@ define([
      * @returns {string}
      */
     LogicContext.prototype.getLevelFileName = function (index) {
-        return this.getConfigurationSetting(_constants.CONFIGURATION.LEVEL_FILES).filenames[index];
+        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames[index];
     };
     // methods
     /**
@@ -930,8 +890,8 @@ define([
      */
     LogicContext.prototype.requestEnvironmentsLoad = function () {
         application.requestTextFile(
-                this.getConfigurationSetting(_constants.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
-                this.getConfigurationSetting(_constants.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
+                this.getConfigurationSetting(CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
+                this.getConfigurationSetting(CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
                 function (responseText) {
                     this.loadEnvironmentsFromJSON(JSON.parse(responseText));
                     this.setToReady();
@@ -956,12 +916,12 @@ define([
      * referenced files.
      * @param {Object} dataJSON
      */
-    LogicContext.prototype.loadFromJSON = function (dataJSON) {
-        this._generalSettings = types.getVerifiedObject("general", dataJSON.general, _constants.GENERAL_SETTINGS);
-        this._databaseSettings = types.getVerifiedObject("database", dataJSON.database, _constants.DATABASE_SETTINGS);
-        this._battleSettings = types.getVerifiedObject("battle", dataJSON.battle, _constants.BATTLE_SETTINGS);
-        this._cameraSettings = types.getVerifiedObject("camera", dataJSON.camera, _constants.CAMERA_SETTINGS);
-        classes.requestLoad(this.getConfigurationSetting(_constants.CONFIGURATION.CLASSES_SOURCE_FILE), function () {
+    LogicContext.prototype.loadSettingsFromJSON = function (dataJSON) {
+        this._settings = types.getVerifiedObject("general", dataJSON.general, GENERAL_SETTINGS);
+        types.getVerifiedObject("database", dataJSON.database, DATABASE_SETTINGS, this._settings);
+        types.getVerifiedObject("battle", dataJSON.battle, BATTLE_SETTINGS, this._settings);
+        types.getVerifiedObject("camera", dataJSON.camera, CAMERA_SETTINGS, this._settings);
+        classes.requestLoad(this.getConfigurationSetting(CONFIGURATION.CLASSES_SOURCE_FILE), function () {
             this.requestEnvironmentsLoad();
         }.bind(this));
     };
@@ -1270,12 +1230,12 @@ define([
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 physicalHitObject = hitObjects[i].getPhysicalModel();
-                if (physicalHitObject && (armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin)) && (physicalHitObject.checkHit(positionVector, [], 0))) {
+                if (physicalHitObject && (_context.getSetting(BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin)) && (physicalHitObject.checkHit(positionVector, [], 0))) {
                     relPos = vec.sub3(positionVector, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     velocity = vec.length3(velocityVector);
                     velocityDir = vec.normal3(velocityVector);
-                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000 / armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION), armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION));
+                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000 / _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION), _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION));
                     explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1), true);
                     explosion.addToScene(this._visualModel.getNode().getScene());
                     relPos = vec.mulVec4Mat4(positionVector, hitObjects[i].getVisualModel().getModelMatrixInverse());
@@ -1283,7 +1243,7 @@ define([
                     hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(relDir, -1));
                     // auto targeting on hit
                     if (hitObjects[i] !== this._origin) {
-                        switch (armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.AUTO_TARGETING)) {
+                        switch (_context.getSetting(BATTLE_SETTINGS.AUTO_TARGETING)) {
                             case AutoTargeting.HIT_AND_NO_TARGET:
                                 if (!this._origin.getTarget()) {
                                     this._origin.setTarget(hitObjects[i], true);
@@ -1409,7 +1369,7 @@ define([
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getMuzzleFlash().getSize(),
                 muzzleFlashPosMatrix,
-                projectileClass.getMuzzleFlash().getDuration() || armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION));
+                projectileClass.getMuzzleFlash().getDuration() || _context.getSetting(BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION));
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
@@ -1473,7 +1433,7 @@ define([
                         projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
-                        new physics.Force("", barrels[i].getForceForDuration(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)));
+                        new physics.Force("", barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)));
                 p.addToScene(this._visualModel.getNode().getScene());
                 projectiles.push(p);
                 // create the counter-force affecting the firing ship
@@ -1482,8 +1442,8 @@ define([
                                 mat.translationVector3(projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
-                        barrels[i].getForceForDuration(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)),
-                        armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.MOMENT_DURATION)
+                        barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)),
+                        _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)
                         );
             }
         }
@@ -1557,7 +1517,7 @@ define([
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
         this._shipModel.setParameter(
-                armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
                 this._slot.group,
                 Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
     };
@@ -1885,7 +1845,7 @@ define([
      * turning rate to in TURN_ACCELERATION_DURATION_S seconds with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateTurningLimit = function () {
-        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() * armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S;
+        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() * _context.getSetting(BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S;
     };
     /**
      * Updates all stored state variables to reflect the current state of the propulsion on the spacecraft of this computer
@@ -2541,8 +2501,8 @@ define([
      */
     Spacecraft.prototype.getHitboxTextures = function () {
         var
-                textureTypes = resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes(),
-                textureResource = resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+                textureTypes = resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes(),
+                textureResource = resources.getTexture(_context.getSetting(BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         return textureResource.getManagedTexturesOfTypes(textureTypes, graphics.getTextureQualityPreferenceList());
     };
     /**
@@ -2598,8 +2558,8 @@ define([
                 this.equipProfile(equipmentProfile);
             }
             // if there is no equipment tag, attempt to load the default profile
-        } else if (this._class.getEquipmentProfile(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
-            this.equipProfile(this._class.getEquipmentProfile(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
+        } else if (this._class.getEquipmentProfile(_context.getSetting(BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
+            this.equipProfile(this._class.getEquipmentProfile(_context.getSetting(BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
         }
     };
     /**
@@ -2773,14 +2733,14 @@ define([
                 phyModel =
                 resources.getOrAddModel(
                         egomModel.cuboidModel(
-                                this._class.getName() + _constants.HITBOX_BODY_MODEL_NAME_INFIX + index,
+                                this._class.getName() + HITBOX_BODY_MODEL_NAME_INFIX + index,
                                 this._class.getBodies()[index].getWidth(),
                                 this._class.getBodies()[index].getHeight(),
                                 this._class.getBodies()[index].getDepth(),
-                                armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_COLOR))),
+                                _context.getSetting(BATTLE_SETTINGS.HITBOX_COLOR))),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
-                        resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
+                        resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
                         this.getHitboxTextures(),
                         mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
                         this._class.getBodies()[index].getOrientationMatrix(),
@@ -2792,8 +2752,8 @@ define([
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
-            resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
-            resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+            resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME));
+            resources.getTexture(_context.getSetting(BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
         this._class.acquireResources(params);
     };
@@ -2853,9 +2813,9 @@ define([
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    [armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)]);
+                    [_context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)]);
             this._visualModel.setParameter(
-                    armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                    _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
                     0,
                     this._class.getGroupZeroLuminosity());
             node = scene.addObject(this._visualModel);
@@ -2931,15 +2891,15 @@ define([
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 view.getAlphaRange(),
                 view.getBetaRange(),
-                view.getBaseOrientation() || armada.logic().getDefaultCameraBaseOrientation(),
-                view.getPointToFallback() || armada.logic().getDefaultCameraPointToFallback());
+                view.getBaseOrientation() || _context.getDefaultCameraBaseOrientation(),
+                view.getPointToFallback() || _context.getDefaultCameraPointToFallback());
         return new budaScene.CameraConfiguration(
                 view.getName(),
                 positionConfiguration, orientationConfiguration,
-                view.getFOV() || armada.logic().getDefaultCameraFOV(),
-                view.getFOVRange() || armada.logic().getDefaultCameraFOVRange(),
-                view.getSpan() || armada.logic().getDefaultCameraSpan(),
-                view.getSpanRange() || armada.logic().getDefaultCameraSpanRange(),
+                view.getFOV() || _context.getDefaultCameraFOV(),
+                view.getFOVRange() || _context.getDefaultCameraFOVRange(),
+                view.getSpan() || _context.getDefaultCameraSpan(),
+                view.getSpanRange() || _context.getDefaultCameraSpanRange(),
                 view.shouldAutoReset());
     };
     /**
@@ -3011,12 +2971,12 @@ define([
         this._target = target;
         this._autoTarget = auto || false;
         if (this._visualModel) {
-            camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.TARGET_VIEW_NAME));
+            camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(_context.getSetting(BATTLE_SETTINGS.TARGET_VIEW_NAME));
             for (i = 0; i < camConfigs.length; i++) {
                 if (this._visualModel.getNode().getScene().activeCamera.getConfiguration() === camConfigs[i]) {
                     this._visualModel.getNode().getScene().activeCamera.transitionToSameConfiguration(
-                            armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
-                            armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
+                            _context.getSetting(BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
+                            _context.getSetting(BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
                 }
                 camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : [], true);
             }
@@ -3266,7 +3226,7 @@ define([
      * level has been loaded.
      */
     Level.prototype.requestLoadFromFile = function (filename, callback) {
-        application.requestTextFile(armada.logic().getConfigurationSetting(_constants.CONFIGURATION.LEVEL_FILES).folder, filename, function (responseText) {
+        application.requestTextFile(_context.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).folder, filename, function (responseText) {
             this.loadFromJSON(JSON.parse(responseText));
             if (callback) {
                 callback();
@@ -3281,7 +3241,7 @@ define([
         var i, spacecraft;
         application.log("Loading level from JSON file...", 2);
         if (dataJSON.environment.createFrom) {
-            this._environment = armada.logic().getEnvironment(dataJSON.environment.createFrom);
+            this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
             this._ownsEnvironment = false;
         } else {
             this._environment = new Environment(dataJSON.environment);
@@ -3324,7 +3284,7 @@ define([
      */
     Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ, randomSeed) {
         var random, shipClass, i, orientation;
-        randomSeed = randomSeed || armada.logic().getGeneralSetting(_constants.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
+        randomSeed = randomSeed || _context.getSetting(GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
         for (shipClass in shipNumbersPerClass) {
             if (shipNumbersPerClass.hasOwnProperty(shipClass)) {
@@ -3346,7 +3306,7 @@ define([
                                     mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                                     orientation,
                                     this._projectiles,
-                                    armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME),
+                                    _context.getSetting(BATTLE_SETTINGS.RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME),
                                     this._spacecrafts));
                 }
             }
@@ -3379,15 +3339,15 @@ define([
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 view.getAlphaRange(),
                 view.getBetaRange(),
-                view.getBaseOrientation() || armada.logic().getDefaultCameraBaseOrientation(),
-                view.getPointToFallback() || armada.logic().getDefaultCameraPointToFallback());
+                view.getBaseOrientation() || _context.getDefaultCameraBaseOrientation(),
+                view.getPointToFallback() || _context.getDefaultCameraPointToFallback());
         return new budaScene.CameraConfiguration(
                 view.getName(),
                 positionConfiguration, orientationConfiguration,
-                view.getFOV() || armada.logic().getDefaultCameraFOV(),
-                view.getFOVRange() || armada.logic().getDefaultCameraFOVRange(),
-                view.getSpan() || armada.logic().getDefaultCameraSpan(),
-                view.getSpanRange() || armada.logic().getDefaultCameraSpanRange(),
+                view.getFOV() || _context.getDefaultCameraFOV(),
+                view.getFOVRange() || _context.getDefaultCameraFOVRange(),
+                view.getSpan() || _context.getDefaultCameraSpan(),
+                view.getSpanRange() || _context.getDefaultCameraSpanRange(),
                 view.shouldAutoReset());
     };
     /**
@@ -3489,13 +3449,18 @@ define([
         }
         this._hitObjects = null;
     };
+    _context = new LogicContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        BATTLE_SETTINGS: _constants.BATTLE_SETTINGS,
-        DATABASE_SETTINGS: _constants.DATABASE_SETTINGS,
-        CAMERA_SETTINGS: _constants.CAMERA_SETTINGS,
-        LogicContext: LogicContext,
+        BATTLE_SETTINGS: BATTLE_SETTINGS,
+        DATABASE_SETTINGS: DATABASE_SETTINGS,
+        CAMERA_SETTINGS: CAMERA_SETTINGS,
+        loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
+        loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
+        getLevelFileName: _context.getLevelFileName.bind(_context),
+        getSetting: _context.getSetting.bind(_context),
+        executeWhenReady: _context.executeWhenReady.bind(_context),
         Spacecraft: Spacecraft,
         Level: Level
     };

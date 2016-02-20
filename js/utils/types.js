@@ -348,14 +348,18 @@ define([
      * value is missing, an error message will be displayed), and any other type parameters that getValueOfType accepts. If the original
      * object has any additional properties not included in the definition object, they will be discarded from the result, but an error
      * message will be shown about them.
+     * @param {Object} [objectToAppendTo] If given, the resulting verified properties will be appended to this object instead of a new empty one
      * @returns {Object}
      */
-    exports.getVerifiedObject = function (name, value, definitionObject) {
-        var propertyName, propertyDefinitionName, propertyDefinition, result = {}, processedProperties = [];
+    exports.getVerifiedObject = function (name, value, definitionObject, objectToAppendTo) {
+        var propertyName, propertyDefinitionName, propertyDefinition, result = objectToAppendTo || {}, processedProperties = [];
         if (typeof value === "object") {
             for (propertyDefinitionName in definitionObject) {
                 if (definitionObject.hasOwnProperty(propertyDefinitionName)) {
                     propertyDefinition = definitionObject[propertyDefinitionName];
+                    if (result[propertyDefinition.name]) {
+                        application.showError("'" + name + "' already has a property named '" + propertyDefinition.name + "', which will be overridden by a new value!");
+                    }
                     result[propertyDefinition.name] = exports.getValueOfType(
                             name + "." + propertyDefinition.name,
                             propertyDefinition.type,

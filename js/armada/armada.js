@@ -12,19 +12,14 @@
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
  * @param graphics Used to load the graphics settings
+ * @param logic Used to load the configuration and settings of the game and access main functionality
  */
 define([
     "modules/game",
-    "armada/graphics"
-], function (game, graphics) {
+    "armada/graphics",
+    "armada/logic"
+], function (game, graphics, logic) {
     "use strict";
-    // add private variables specific to Interstellar Armada
-    var
-            /**
-             * The logic context of the game, containing the domain specific model (e.g. what classes of spaceships are there)
-             * @type LogicContext
-             */
-            _logicContext = null;
     game.setGameName("Interstellar Armada");
     game.setStartScreenName("mainMenu");
     game.setConfigFolder("config/");
@@ -35,10 +30,10 @@ define([
         // load defaults from the JSON files and then overwrite with local preferences (of which only differences from defaults are stored)
         graphics.loadSettingsFromJSON(settingsJSON.graphics);
         graphics.loadSettingsFromLocalStorage();
-        _logicContext.loadFromJSON(settingsJSON.logic);
+        logic.loadSettingsFromJSON(settingsJSON.logic);
     };
     game._loadGameConfiguration = function (configJSON) {
-        _logicContext.loadConfiguration(configJSON.dataFiles.logic);
+        logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);
     };
     game._buildScreensAndExecuteCallback = function (screens, callback) {
         require(["armada/screens"], function (armadaScreens) {
@@ -46,7 +41,7 @@ define([
                     caption: "New game",
                     action: function () {
                         game.screenManager().setCurrentScreen("battle");
-                        game.screenManager().getCurrentScreen().startNewBattle(_logicContext.getLevelFileName(0));
+                        game.screenManager().getCurrentScreen().startNewBattle(logic.getLevelFileName(0));
                     }
                 }, {
                     caption: "Database",
@@ -107,23 +102,11 @@ define([
     };
     game._startInitializationAndExecuteCallback = function (callback) {
         require([
-            "armada/logic",
             "armada/control"
-        ], function (logic, control) {
-            _logicContext = new logic.LogicContext();
+        ], function (control) {
             game.setControlContextClass(control.ArmadaControlContext);
             callback();
         });
-    };
-    // -------------------------------------------------------------------------
-    // Public methods
-    // Shortcuts
-    /**
-     * A shortcut to the logic context of the game.
-     * @returns {LogicContext}
-     */
-    game.logic = function () {
-        return _logicContext;
     };
     return game;
 });

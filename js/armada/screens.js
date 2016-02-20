@@ -127,7 +127,7 @@ define([
                 }
                 this._battleScene.setShouldUpdateCamera(true);
             }
-            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
             armada.control().startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
@@ -323,8 +323,8 @@ define([
             var freq, canvas;
             this.updateStatus("loading additional configuration...", 5);
             this._level.addRandomShips(
-                    armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS),
-                    armada.logic().getBattleSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_MAP_SIZE),
+                    logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS),
+                    logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_MAP_SIZE),
                     mat.rotation4([0, 0, 1], Math.PI / 2),
                     false, false, true);
 
@@ -373,22 +373,22 @@ define([
     };
 
     function _modelRotation() {
-        return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.MODEL_ROTATION);
+        return logic.getSetting(logic.DATABASE_SETTINGS.MODEL_ROTATION);
     }
 
     function _showSolidModel() {
-        return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL);
+        return logic.getSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL);
     }
 
     function _showWireframeModel() {
         return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ?
-                armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.SHOW_WIREFRAME_MODEL) :
+                logic.getSetting(logic.DATABASE_SETTINGS.SHOW_WIREFRAME_MODEL) :
                 !_showSolidModel();
     }
 
     function _shouldReveal() {
         return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) &&
-                armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.MODEL_REVEAL_ANIMATION);
+                logic.getSetting(logic.DATABASE_SETTINGS.MODEL_REVEAL_ANIMATION);
     }
 
     /**
@@ -577,7 +577,7 @@ define([
         this._scene = new budaScene.Scene(
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
-                armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
+                logic.getSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
                 graphics.getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
@@ -681,7 +681,7 @@ define([
         this._scene.clearNodes();
         this.render();
 
-        armada.logic().executeWhenReady(function () {
+        logic.executeWhenReady(function () {
             // display the data that can be displayed right away, and show loading
             // for the rest
             var shipClass = classes.getSpacecraftClassesInArray(true)[this._itemIndex];
@@ -736,7 +736,7 @@ define([
                     this._wireframeModel.getNode().setShader(graphics.getShader("oneColorReveal").getManagedShader()); //TODO: hardcoded
                     // set the necessary uniform functions for the one colored reveal shader
                     this._wireframeModel.setUniformValueFunction("u_color", function () {
-                        return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.WIREFRAME_COLOR);
+                        return logic.getSetting(logic.DATABASE_SETTINGS.WIREFRAME_COLOR);
                     });
                     this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
                         return (this._revealState <= 1.0);
@@ -889,7 +889,7 @@ define([
             graphics.setShaderComplexity(this._shaderComplexitySelector.getSelectedValue());
             graphics.setShadowMapping((this._shadowMappingSelector.getSelectedValue() === "on"));
             graphics.setShadowQuality((function (v) {
-                var mapping = { //TODO: hardcoded
+                var mapping = {//TODO: hardcoded
                     "low": graphics.ShadowMapQuality.LOW,
                     "medium": graphics.ShadowMapQuality.MEDIUM,
                     "high": graphics.ShadowMapQuality.HIGH
@@ -897,7 +897,7 @@ define([
                 return mapping[v];
             }(this._shadowQualitySelector.getSelectedValue())));
             graphics.setShadowDistance((function (v) {
-                var mapping = { //TODO: hardcoded
+                var mapping = {//TODO: hardcoded
                     "very close": 2,
                     "close": 3,
                     "medium": 4,
