@@ -44,62 +44,64 @@ define([
         MEDIUM: 2048,
         HIGH: 4096
     },
-    _constants = {
-        /**
-         * The default antialiasing setting
-         * @type Boolean
-         */
-        DEFAULT_ANTIALIASING: false,
-        /**
-         * The default texture filtering setting
-         * @type String
-         */
-        DEFAULT_FILTERING: managedGL.TextureFiltering.BILINEAR,
-        /**
-         * The default texture quality preference list
-         * @type String[]
-         */
-        DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST: ["high", "medium", "low"],
-        /**
-         * The default shader complexity setting
-         * @type String
-         */
-        DEFAULT_SHADER_COMPLEXITY: ShaderComplexity.NORMAL,
-        /**
-         * Whether shadow mapping should be enabled by default
-         * @type Boolean
-         */
-        DEFAULT_SHADOW_MAPPING_ENABLED: false,
-        /**
-         * The default shadow quality setting
-         * @type Number
-         */
-        DEFAULT_SHADOW_QUALITY: ShadowMapQuality.MEDIUM,
-        /**
-         * The default shadow map ranges
-         * @type Number[]
-         */
-        DEFAULT_SHADOW_MAP_RANGES: [40, 125, 250, 500, 1000, 2000],
-        /**
-         * The default number of shadow map ranges to use
-         * @type Number
-         */
-        DEFAULT_SHADOW_DISTANCE: 3,
-        /**
-         * The default depth ratio for shadow mapping
-         * @type Number
-         */
-        DEFAULT_SHADOW_DEPTH_RATIO: 1.5
-    };
+    /**
+     * The default antialiasing setting
+     * @type Boolean
+     */
+    DEFAULT_ANTIALIASING = false,
+            /**
+             * The default texture filtering setting
+             * @type String
+             */
+            DEFAULT_FILTERING = managedGL.TextureFiltering.BILINEAR,
+            /**
+             * The default texture quality preference list
+             * @type String[]
+             */
+            DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST = ["high", "medium", "low"],
+            /**
+             * The default shader complexity setting
+             * @type String
+             */
+            DEFAULT_SHADER_COMPLEXITY = ShaderComplexity.NORMAL,
+            /**
+             * Whether shadow mapping should be enabled by default
+             * @type Boolean
+             */
+            DEFAULT_SHADOW_MAPPING_ENABLED = false,
+            /**
+             * The default shadow quality setting
+             * @type Number
+             */
+            DEFAULT_SHADOW_QUALITY = ShadowMapQuality.MEDIUM,
+            /**
+             * The default shadow map ranges
+             * @type Number[]
+             */
+            DEFAULT_SHADOW_MAP_RANGES = [40, 125, 250, 500, 1000, 2000],
+            /**
+             * The default number of shadow map ranges to use
+             * @type Number
+             */
+            DEFAULT_SHADOW_DISTANCE = 3,
+            /**
+             * The default depth ratio for shadow mapping
+             * @type Number
+             */
+            DEFAULT_SHADOW_DEPTH_RATIO = 1.5,
+            /**
+             * 
+             * @type GraphicsContext
+             */
+            _context;
     Object.freeze(ShaderComplexity);
     Object.freeze(ShadowMapQuality);
-    Object.freeze(_constants);
     // ############################################################################################
     /**
      * @class A graphics context for other modules, to be used to pass the 
      * important properties of the current graphics environment to functions that
      * can manipulate it.
-     * @extends asyncResource.AsyncResource
+     * @extends AsyncResource
      */
     function GraphicsContext() {
         asyncResource.AsyncResource.call(this);
@@ -192,23 +194,23 @@ define([
             this._dataJSON = dataJSON;
         }
         // set the default settings
-        this._antialiasing = _constants.DEFAULT_ANTIALIASING;
-        this._filtering = _constants.DEFAULT_FILTERING;
-        this._textureQualityPreferenceList = _constants.DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST;
+        this._antialiasing = DEFAULT_ANTIALIASING;
+        this._filtering = DEFAULT_FILTERING;
+        this._textureQualityPreferenceList = DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST;
         this._textureQuality = this._textureQualityPreferenceList[0];
-        this._shaderComplexity = _constants.DEFAULT_SHADER_COMPLEXITY;
-        this._shadowMapping = _constants.DEFAULT_SHADOW_MAPPING_ENABLED;
-        this._shadowQuality = _constants.DEFAULT_SHADOW_QUALITY;
-        this._shadowRanges = _constants.DEFAULT_SHADOW_MAP_RANGES;
-        this._shadowDistance = _constants.DEFAULT_SHADOW_DISTANCE;
-        this._shadowDepthRatio = _constants.DEFAULT_SHADOW_DEPTH_RATIO;
+        this._shaderComplexity = DEFAULT_SHADER_COMPLEXITY;
+        this._shadowMapping = DEFAULT_SHADOW_MAPPING_ENABLED;
+        this._shadowQuality = DEFAULT_SHADOW_QUALITY;
+        this._shadowRanges = DEFAULT_SHADOW_MAP_RANGES;
+        this._shadowDistance = DEFAULT_SHADOW_DISTANCE;
+        this._shadowDepthRatio = DEFAULT_SHADOW_DEPTH_RATIO;
         // overwrite with the settings from the data JSON, if present
         if (typeof dataJSON.shaders === "object") {
-            this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, _constants.DEFAULT_SHADER_COMPLEXITY);
+            this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, DEFAULT_SHADER_COMPLEXITY);
         }
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
-            this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, dataJSON.context.filtering, _constants.DEFAULT_FILTERING);
+            this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, dataJSON.context.filtering, DEFAULT_FILTERING);
             if (dataJSON.context.textureQualityPreferenceList) {
                 if (dataJSON.context.textureQualityPreferenceList instanceof Array) {
                     this._textureQualityPreferenceList = dataJSON.context.textureQualityPreferenceList;
@@ -225,9 +227,9 @@ define([
             this._shadowMapping = types.getBooleanValue("shadow mapping", dataJSON.context.shadowMapping);
             if (this._shadowMapping) {
                 if (typeof dataJSON.context.shadows === "object") {
-                    this._shadowQuality = types.getEnumValue("shadow quality", ShadowMapQuality, dataJSON.context.shadows.quality, _constants.DEFAULT_SHADOW_QUALITY);
+                    this._shadowQuality = types.getEnumValue("shadow quality", ShadowMapQuality, dataJSON.context.shadows.quality, DEFAULT_SHADOW_QUALITY);
                     this._shadowRanges = dataJSON.context.shadows.ranges;
-                    this._shadowDistance = types.getNumberValueInRange("shadow distance", dataJSON.context.shadows.numRanges, 0, this._shadowRanges.length, _constants.DEFAULT_SHADOW_DISTANCE);
+                    this._shadowDistance = types.getNumberValueInRange("shadow distance", dataJSON.context.shadows.numRanges, 0, this._shadowRanges.length, DEFAULT_SHADOW_DISTANCE);
                     this._shadowDepthRatio = types.getNumberValue("shadow depth ratio", dataJSON.context.shadows.depthRatio);
                 }
             }
@@ -299,6 +301,7 @@ define([
         this.loadFromJSON(this._dataJSON, true);
         localStorage.removeItem("interstellarArmada_graphics_antialiasing");
         localStorage.removeItem("interstellarArmada_graphics_filtering");
+        localStorage.removeItem("interstellarArmada_graphics_textureQuality");
         localStorage.removeItem("interstellarArmada_graphics_maxLOD");
         localStorage.removeItem("interstellarArmada_graphics_shaderComplexity");
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
@@ -332,7 +335,7 @@ define([
      * @param {String} value Possible values: bilinear, trilinear, anisotropic.
      */
     GraphicsContext.prototype.setFiltering = function (value) {
-        this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, value, _constants.DEFAULT_FILTERING);
+        this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, value, DEFAULT_FILTERING);
         localStorage.interstellarArmada_graphics_filtering = this._filtering;
     };
     /**
@@ -418,14 +421,14 @@ define([
      * @param {String} value Possible values: normal, simple.
      */
     GraphicsContext.prototype.setShaderComplexity = function (value) {
-        this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, value, _constants.DEFAULT_SHADER_COMPLEXITY);
+        this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, value, DEFAULT_SHADER_COMPLEXITY);
         localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;
     };
     /**
      * Returns whether shadow mapping is enabled.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.getShadowMapping = function () {
+    GraphicsContext.prototype.isShadowMappingEnabled = function () {
         return this._shadowMapping;
     };
     /**
@@ -448,7 +451,7 @@ define([
      * @param {Number} value
      */
     GraphicsContext.prototype.setShadowQuality = function (value) {
-        this._shadowQuality = types.getEnumValue("shadow quality", ShadowMapQuality, value, _constants.DEFAULT_SHADOW_QUALITY);
+        this._shadowQuality = types.getEnumValue("shadow quality", ShadowMapQuality, value, DEFAULT_SHADOW_QUALITY);
         localStorage.interstellarArmada_graphics_shadowQuality = this._shadowQuality;
     };
     /**
@@ -476,7 +479,7 @@ define([
      * @param {Number} value
      */
     GraphicsContext.prototype.setShadowDistance = function (value) {
-        this._shadowDistance = types.getNumberValueInRange("shadow distance", value, 0, this._shadowRanges.length, _constants.DEFAULT_SHADOW_DISTANCE);
+        this._shadowDistance = types.getNumberValueInRange("shadow distance", value, 0, this._shadowRanges.length, DEFAULT_SHADOW_DISTANCE);
         localStorage.interstellarArmada_graphics_shadowDistance = this._shadowDistance;
     };
     /**
@@ -510,11 +513,53 @@ define([
     GraphicsContext.prototype.getModel = function (modelName) {
         return resources.getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
+    /**
+     * 
+     * @param {String} shaderName
+     * @returns {Object|null}
+     */
+    function getShadowMappingSettingsForShader(shaderName) {
+        return _context.isShadowMappingEnabled() ?
+                {
+                    enable: true,
+                    shader: _context.getShader(shaderName).getManagedShader(),
+                    textureSize: _context.getShadowQuality(),
+                    ranges: _context.getShadowRanges(),
+                    depthRatio: _context.getShadowDepthRatio()
+                } :
+                null;
+    }
+    _context = new GraphicsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         ShaderComplexity: ShaderComplexity,
         ShadowMapQuality: ShadowMapQuality,
-        GraphicsContext: GraphicsContext
+        loadSettingsFromJSON: _context.loadFromJSON.bind(_context),
+        loadSettingsFromLocalStorage: _context.loadFromLocalStorage.bind(_context),
+        restoreDefaults: _context.restoreDefaults.bind(_context),
+        getAntialiasing: _context.getAntialiasing.bind(_context),
+        setAntialiasing: _context.setAntialiasing.bind(_context),
+        getFiltering: _context.getFiltering.bind(_context),
+        setFiltering: _context.setFiltering.bind(_context),
+        getTextureQuality: _context.getTextureQuality.bind(_context),
+        setTextureQuality: _context.setTextureQuality.bind(_context),
+        getTextureQualityPreferenceList: _context.getTextureQualityPreferenceList.bind(_context),
+        setMaxLOD: _context.setMaxLOD.bind(_context),
+        getMaxLoadedLOD: _context.getMaxLoadedLOD.bind(_context),
+        getLODContext: _context.getLODContext.bind(_context),
+        getShaderComplexity: _context.getShaderComplexity.bind(_context),
+        setShaderComplexity: _context.setShaderComplexity.bind(_context),
+        isShadowMappingEnabled: _context.isShadowMappingEnabled.bind(_context),
+        setShadowMapping: _context.setShadowMapping.bind(_context),
+        getShadowQuality: _context.getShadowQuality.bind(_context),
+        setShadowQuality: _context.setShadowQuality.bind(_context),
+        getShadowDistance: _context.getShadowDistance.bind(_context),
+        setShadowDistance: _context.setShadowDistance.bind(_context),
+        getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
+        getShader: _context.getShader.bind(_context),
+        getModel: _context.getModel.bind(_context),
+        getShadowMappingSettingsForShader: getShadowMappingSettingsForShader,
+        executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

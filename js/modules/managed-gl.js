@@ -522,6 +522,33 @@ define([
         return result;
     };
     /**
+     * If this is a cubemap texture sampler, this will return the name of the cubemap it is sampling based on its name (with prefixes and suffixes
+     * removed), otherwise will return null. Uniforms without the proper prefixes and suffixes also return null.
+     * @returns {String|null}
+     */
+    ShaderUniform.prototype.getCubemapName = function () {
+        var result, parts;
+        if (this._type !== this.VariableTypes.sampler2D) {
+            return null;
+        }
+        result = this.getRawName();
+        if (_constants.CUBEMAP_UNIFORM_NAME_PREFIX.length > 0) {
+            parts = result.split(_constants.CUBEMAP_UNIFORM_NAME_PREFIX);
+            if (parts.length < 2) {
+                return null;
+            }
+            result = parts[parts.length - 1];
+        }
+        if (_constants.CUBEMAP_UNIFORM_NAME_SUFFIX.length > 0) {
+            parts = result.split(_constants.CUBEMAP_UNIFORM_NAME_SUFFIX);
+            if (parts.length < 2) {
+                return null;
+            }
+            result = parts[0];
+        }
+        return result;
+    };
+    /**
      * @static
      * Returns a name prefixed and suffixed like general uniform variables.
      * @param {String} rawName
@@ -1192,6 +1219,20 @@ define([
             textureType = this._uniforms[i].getTextureType();
             if (textureType) {
                 result.push(textureType);
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns the names of cubemaps this shader needs to be bound, based on the names of its uniform sampler variables.
+     * @returns {Array}
+     */
+    ManagedShader.prototype.getCubemapNames = function () {
+        var i, cubemapName, result = [];
+        for (i = 0; i < this._uniforms.length; i++) {
+            cubemapName = this._uniforms[i].getCubemapName();
+            if (cubemapName) {
+                result.push(cubemapName);
             }
         }
         return result;

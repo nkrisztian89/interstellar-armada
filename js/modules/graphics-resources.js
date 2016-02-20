@@ -273,6 +273,39 @@ define([
         application.showError("The requested texture '" + this.getName() + "' has no type '" + type + "' available!");
         return null;
     };
+    /**
+     * @param {String[]} types
+     * @param {String[]} qualityPreferenceList
+     * @returns {Object.<String, ManagedTexture>} 
+     */
+    TextureResource.prototype.getManagedTexturesOfTypes = function (types, qualityPreferenceList) {
+        var i, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
+        result = {};
+        qualities = this.getQualities();
+        mostFittingQualityIndex = -1;
+        for (i = 0; i < qualities.length; i++) {
+            index = qualityPreferenceList.indexOf(qualities[i]);
+            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
+                mostFittingQualityIndex = index;
+                mostFittingQuality = qualityPreferenceList[index];
+            }
+        }
+        if (mostFittingQualityIndex === -1) {
+            application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            return null;
+        }
+        for (i = 0; i < types.length; i++) {
+            result[types[i]] = this.getManagedTexture(types[i], mostFittingQuality);
+        }
+        return result;
+    };
+    /**
+     * @param {String[]} qualityPreferenceList
+     * @returns {Object.<String, ManagedTexture>} 
+     */
+    TextureResource.prototype.getManagedTextures = function (qualityPreferenceList) {
+        return this.getManagedTexturesOfTypes(this.getTypes(), qualityPreferenceList);
+    };
     // ############################################################################################x
     /**
      * @class Represents a cube mapped texture resource.
@@ -417,12 +450,10 @@ define([
     ShaderResource.prototype._requestFiles = function () {
         application.requestTextFile(SHADER_FOLDER, this._vertexShaderSourcePath, function (responseText) {
             this._onFilesLoad(this._fragmentShaderSource !== null, {shaderType: ShaderType.VERTEX, text: responseText});
-            // override the mime type to avoid error messages in Firefox developer
-            // consol when it tries to parse as XML
-        }.bind(this), 'text/plain; charset=utf-8');
+        }.bind(this));
         application.requestTextFile(SHADER_FOLDER, this._fragmentShaderSourcePath, function (responseText) {
             this._onFilesLoad(this._vertexShaderSource !== null, {shaderType: ShaderType.FRAGMENT, text: responseText});
-        }.bind(this), 'text/plain; charset=utf-8');
+        }.bind(this));
     };
     /**
      * @override

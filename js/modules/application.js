@@ -26,6 +26,7 @@ define(function () {
     // -------------------------------------------------------------------------
     //Private members
     var
+            DEFAULT_TEXT_MIME_TYPE = "text/plain; charset=utf-8",
             /**
              * The associative array storing the names of the folders of the application, 
              * indexed by the types of files they contain.
@@ -257,12 +258,13 @@ define(function () {
          * @param {String} filename The name of the file (not the full URL!)
          * @param {Function} onload The function to execute when the file has been
          * loaded. It gets the text contents (a String) of the file as parameter.
-         * @param {String} mimeType The MIME type of the file.
+         * @param {String} [mimeType=DEFAULT_TEXT_MIME_TYPE] A string containing 
+         * the MIME type of the file and the optionally the charset to use
          */
         requestTextFile: function (filetype, filename, onload, mimeType) {
             this.requestFile(filetype, filename, function (request) {
                 onload(request.responseText);
-            }, mimeType);
+            }, mimeType || DEFAULT_TEXT_MIME_TYPE);
         },
         /**
          * Issues an asynchronous request to get a XML file and executes a callback

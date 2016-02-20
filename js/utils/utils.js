@@ -12,6 +12,7 @@
 define(function () {
     "use strict";
     var
+    NUMBER_THOUSANDS_DELIMITER = " ",
             exports = {},
             _keyCodeTable = {
                 "backspace": 8,
@@ -204,6 +205,31 @@ define(function () {
         return null;
     };
     /**
+     * Returns a string converted from the given number, padded by "0"s at the beginning, if it has fewer digits than specified
+     * @param {Number} num The number to convert to string
+     * @param {Number} digits The minimum amount of digits the resulting string should contain
+     * @returns {String}
+     */
+    exports.getPaddedStringForNumber = function (num, digits) {
+        var i, result = num.toString();
+        for (i = result.length; i < digits; i++) {
+            result = "0" + result;
+        }
+        return result;
+    };
+    /**
+     * Returns a string converted from the given number, with NUMBER_THOUSANDS_DELIMITER inserted after every 3 digits left of the decimal
+     * mark
+     * @param {Number} num
+     * @returns {String}
+     */
+    exports.getDelimitedStringForNumber = function (num) {
+        if (num >= 1000) {
+            return exports.getDelimitedStringForNumber(Math.floor(num / 1000)) + NUMBER_THOUSANDS_DELIMITER + exports.getPaddedStringForNumber(num % 1000, 3);
+        }
+        return num.toString();
+    };
+    /**
      * Returns a string describing a length (distance) in human-readable form based on its value in meters.
      * @param {Number} lengthInMeters
      * @returns {String}
@@ -211,11 +237,11 @@ define(function () {
     exports.getLengthString = function (lengthInMeters) {
         return (lengthInMeters < 2000) ?
                 ((lengthInMeters < 100) ?
-                        lengthInMeters.toPrecision(3) + " m"
-                        : Math.round(lengthInMeters) + " m") :
+                        lengthInMeters.toPrecision(3) + " m" :
+                        Math.round(lengthInMeters) + " m") :
                 ((lengthInMeters < 100000) ?
-                        (lengthInMeters / 1000).toPrecision(3) + " km"
-                        : Math.round(lengthInMeters / 1000) + " km");
+                        (lengthInMeters / 1000).toPrecision(3) + " km" :
+                        exports.getDelimitedStringForNumber(Math.round(lengthInMeters / 1000)) + " km");
     };
     /**
      * Returns a string describing a mass (weight) in human-readable form based on its value in kilograms.
@@ -225,11 +251,11 @@ define(function () {
     exports.getMassString = function (massInKilograms) {
         return (massInKilograms < 2000) ?
                 ((massInKilograms < 100) ?
-                        massInKilograms.toPrecision(3) + " kg"
-                        : Math.round(massInKilograms) + " kg") :
+                        massInKilograms.toPrecision(3) + " kg" :
+                        Math.round(massInKilograms) + " kg") :
                 ((massInKilograms < 100000) ?
-                        (massInKilograms / 1000).toPrecision(3) + " t"
-                        : Math.round(massInKilograms / 1000) + " t");
+                        (massInKilograms / 1000).toPrecision(3) + " t" :
+                        exports.getDelimitedStringForNumber(Math.round(massInKilograms / 1000)) + " t");
     };
     return exports;
 });

@@ -10,21 +10,21 @@
 /*global define, document, alert, window, setInterval, clearInterval */
 
 /**
+ * @param types Used for handling enum values
  * @param application Used for logging and file loading functionality
  * @param asyncResource Screens are subclassed from AsyncResource as they are loaded from external XML files
  * @param components Screens contain components
  * @param managedGL Screens having canvases provide the managed GL contexts for them
  * @param resources Used to clear graphics resource bindings to contexts of removed screens
- * @param armada TODO: this needs to be removed
  */
 define([
+    "utils/types",
     "modules/application",
     "modules/async-resource",
     "modules/components",
     "modules/managed-gl",
-    "modules/graphics-resources",
-    "armada/armada"
-], function (application, asyncResource, components, managedGL, resources, armada) {
+    "modules/graphics-resources"
+], function (types, application, asyncResource, components, managedGL, resources) {
     "use strict";
     // #########################################################################
     /**
@@ -265,9 +265,11 @@ define([
      * that can create and hold a reference to a managed WebGL context for the canvas.
      * @param {HTMLCanvasElement} canvas The canvas around which this object should
      * be created.
+     * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL context of this canvas
+     * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
      * @returns {ScreenCanvas}
      */
-    function ScreenCanvas(canvas) {
+    function ScreenCanvas(canvas, antialiasing, filtering) {
         /**
          * @type HTMLCanvasElement
          */
@@ -280,6 +282,15 @@ define([
          * @type Boolean
          */
         this._resizeable = canvas.classList.contains("resizeable");
+        /**
+         * @type Boolean
+         */
+        this._antialiasing = antialiasing;
+        /**
+         * enum managedGL.TextureFiltering
+         * @type String
+         */
+        this._filtering = types.getEnumValue("canvas.filtering", managedGL.TextureFiltering, filtering);
         /**
          * @type ManagedGLContext
          */
@@ -307,7 +318,7 @@ define([
      */
     ScreenCanvas.prototype.getManagedContext = function () {
         if (this._context === null) {
-            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, armada.graphics().getAntialiasing(), armada.graphics().getFiltering());
+            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, this._antialiasing, this._filtering);
         }
         return this._context;
     };
@@ -319,9 +330,20 @@ define([
      * @param {String} name The name by which this screen can be identified.
      * @param {String} source The name of the HTML file where the structure of this
      * screen is defined.
+     * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
+     * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvas of this screen
      */
-    function HTMLScreenWithCanvases(name, source) {
+    function HTMLScreenWithCanvases(name, source, antialiasing, filtering) {
         HTMLScreen.call(this, name, source);
+        /**
+         * @type Boolean
+         */
+        this._antialiasing = antialiasing;
+        /**
+         * enum managedGL.TextureFiltering
+         * @type String
+         */
+        this._filtering = source ? types.getEnumValue("HTMLScreenWithCanvases.filtering", managedGL.TextureFiltering, filtering) : null;
         /**
          * @type Object.<String, ScreenCanvas>
          */
@@ -386,7 +408,7 @@ define([
         HTMLScreen.prototype._initializeComponents.call(this);
         canvasElements = document.getElementsByTagName("canvas");
         for (i = 0; i < canvasElements.length; i++) {
-            this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(canvasElements[i]);
+            this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(canvasElements[i], this._antialiasing, this._filtering);
         }
         this._resizeEventListener = function () {
             this.resizeCanvases();

@@ -28,7 +28,7 @@ define([
     "use strict";
 
     function _shouldUseShadowMapping() {
-        return armada.graphics().getShadowMapping() && (armada.graphics().getShaderComplexity() === graphics.ShaderComplexity.NORMAL);
+        return graphics.isShadowMappingEnabled() && (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL);
     }
 
     /**
@@ -39,7 +39,7 @@ define([
      * screen is defined.
      */
     function BattleScreen(name, source) {
-        screens.HTMLScreenWithCanvases.call(this, name, source);
+        screens.HTMLScreenWithCanvases.call(this, name, source, graphics.getAntialiasing(), graphics.getFiltering());
 
         this._stats = this.registerSimpleComponent("stats");
         this._ui = this.registerSimpleComponent("ui");
@@ -331,13 +331,13 @@ define([
             this.updateStatus("building scene...", 10);
             canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
             if (_shouldUseShadowMapping()) {
-                armada.graphics().getShader("shadowMapping");
+                graphics.getShader("shadowMapping"); //TODO: hardcoded
             }
             this._battleScene = new budaScene.Scene(
                     0, 0, canvas.width, canvas.height,
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
-                    armada.graphics().getLODContext());
+                    graphics.getLODContext());
             this._level.addToScene(this._battleScene);
 
             armada.control().getController("general").setLevel(this._level);
@@ -350,13 +350,7 @@ define([
             freq = 60; //TODO: hardcoded
             resources.executeWhenReady(function () {
                 if (_shouldUseShadowMapping()) {
-                    this._battleScene.setShadowMapping({
-                        enable: true,
-                        shader: armada.graphics().getShader("shadowMapping").getManagedShader(),
-                        textureSize: armada.graphics().getShadowQuality(),
-                        ranges: armada.graphics().getShadowRanges(),
-                        depthRatio: armada.graphics().getShadowDepthRatio()
-                    });
+                    this._battleScene.setShadowMapping(graphics.getShadowMappingSettingsForShader("shadowMapping")); //TODO: hardcoded
                 } else {
                     this._battleScene.setShadowMapping(null);
                 }
@@ -387,13 +381,13 @@ define([
     }
 
     function _showWireframeModel() {
-        return (armada.graphics().getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ?
+        return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ?
                 armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.SHOW_WIREFRAME_MODEL) :
                 !_showSolidModel();
     }
 
     function _shouldReveal() {
-        return (armada.graphics().getShaderComplexity() === graphics.ShaderComplexity.NORMAL) &&
+        return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) &&
                 armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.MODEL_REVEAL_ANIMATION);
     }
 
@@ -407,7 +401,7 @@ define([
      * @returns {DatabaseScreen}
      */
     function DatabaseScreen(name, source) {
-        screens.HTMLScreenWithCanvases.call(this, name, source);
+        screens.HTMLScreenWithCanvases.call(this, name, source, graphics.getAntialiasing(), graphics.getFiltering());
 
         this._itemName = this.registerSimpleComponent("itemName");
         this._itemType = this.registerSimpleComponent("itemType");
@@ -576,7 +570,7 @@ define([
         this.resizeCanvas(this._name + "_databaseCanvas");
         var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
         if (_shouldUseShadowMapping()) {
-            armada.graphics().getShader("shadowMapping");
+            graphics.getShader("shadowMapping"); //TODO: hardcoded
         }
         // create a new scene and add a directional light source which will not change
         // while different objects are shown
@@ -584,7 +578,7 @@ define([
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
                 armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
-                armada.graphics().getLODContext());
+                graphics.getLODContext());
         this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
 
         resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
@@ -594,10 +588,10 @@ define([
             if (_shouldUseShadowMapping()) {
                 this._scene.setShadowMapping({
                     enable: true,
-                    shader: armada.graphics().getShader("shadowMapping").getManagedShader(),
-                    textureSize: armada.graphics().getShadowQuality(),
+                    shader: graphics.getShader("shadowMapping").getManagedShader(), //TODO: hardcoded
+                    textureSize: graphics.getShadowQuality(),
                     ranges: [],
-                    depthRatio: armada.graphics().getShadowDepthRatio()
+                    depthRatio: graphics.getShadowDepthRatio()
                 });
             } else {
                 this._scene.setShadowMapping(null);
@@ -703,23 +697,23 @@ define([
                     mat.identity4(),
                     mat.identity4(),
                     null,
-                    "default"
+                    "default" //TODO: hardcoded
                     );
             // request the required shaders from the resource manager
-            armada.graphics().getShader("oneColorReveal");
+            graphics.getShader("oneColorReveal"); //TODO: hardcoded
             if (_shouldUseShadowMapping()) {
-                armada.graphics().getShader("shadowMapReveal");
+                graphics.getShader("shadowMapReveal"); //TODO: hardcoded
             } else {
-                armada.graphics().getShader("simpleReveal");
+                graphics.getShader("simpleReveal"); //TODO: hardcoded
             }
             if (_showSolidModel()) {
                 // add the ship to the scene in triangle drawing mode
-                this._item.addToScene(this._scene, armada.graphics().getMaxLoadedLOD(), false, {weapons: true}, function (model) {
+                this._item.addToScene(this._scene, graphics.getMaxLoadedLOD(), false, {weapons: true}, function (model) {
                     this._solidModel = model;
                     // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
                     this._solidModel.getNode().setShader(_shouldUseShadowMapping() ?
-                            armada.graphics().getShader("shadowMapReveal").getManagedShader()
-                            : armada.graphics().getShader("simpleReveal").getManagedShader());
+                            graphics.getShader("shadowMapReveal").getManagedShader() //TODO: hardcoded
+                            : graphics.getShader("simpleReveal").getManagedShader()); //TODO: hardcoded
                     // set the necessary uniform functions for the reveal shader
                     this._solidModel.setUniformValueFunction("u_revealFront", function () {
                         return true;
@@ -736,10 +730,10 @@ define([
             }
             if (_showWireframeModel()) {
                 // add the ship to the scene in line drawing mode as well
-                this._item.addToScene(this._scene, armada.graphics().getMaxLoadedLOD(), true, {weapons: true}, function (model) {
+                this._item.addToScene(this._scene, graphics.getMaxLoadedLOD(), true, {weapons: true}, function (model) {
                     this._wireframeModel = model;
                     // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-                    this._wireframeModel.getNode().setShader(armada.graphics().getShader("oneColorReveal").getManagedShader());
+                    this._wireframeModel.getNode().setShader(graphics.getShader("oneColorReveal").getManagedShader()); //TODO: hardcoded
                     // set the necessary uniform functions for the one colored reveal shader
                     this._wireframeModel.setUniformValueFunction("u_color", function () {
                         return armada.logic().getDatabaseSetting(logic.DATABASE_SETTINGS.WIREFRAME_COLOR);
@@ -867,12 +861,12 @@ define([
          * @type ExternalComponent
          */
         this._shadowDistanceSelector = null;
-        armada.graphics().executeWhenReady(function () {
+        graphics.executeWhenReady(function () {
             this._backButton = this.registerSimpleComponent("backButton");
             this._defaultsButton = this.registerSimpleComponent("defaultsButton");
             this._antialiasingSelector = this.registerExternalComponent(new components.Selector(name + "_aaSelector", "selector.html", "selector.css", "Anti-aliasing:", ["on", "off"]), "settingsDiv");
             this._filteringSelector = this.registerExternalComponent(new components.Selector(name + "_filteringSelector", "selector.html", "selector.css", "Texture filtering:", utils.getEnumValues(managedGL.TextureFiltering)), "settingsDiv");
-            this._textureQualitySelector = this.registerExternalComponent(new components.Selector(name + "_textureQualitySelector", "selector.html", "selector.css", "Texture quality:", utils.getEnumValues(armada.graphics().getTextureQualityPreferenceList()).reverse()), "settingsDiv");
+            this._textureQualitySelector = this.registerExternalComponent(new components.Selector(name + "_textureQualitySelector", "selector.html", "selector.css", "Texture quality:", utils.getEnumValues(graphics.getTextureQualityPreferenceList()).reverse()), "settingsDiv");
             this._lodSelector = this.registerExternalComponent(new components.Selector(name + "_lodSelector", "selector.html", "selector.css", "Model details:", ["very low", "low", "medium", "high", "very high"]), "settingsDiv");
             this._shaderComplexitySelector = this.registerExternalComponent(new components.Selector(name + "_shaderComplexitySelector", "selector.html", "selector.css", "Shaders:", utils.getEnumValues(graphics.ShaderComplexity)), "settingsDiv");
             this._shadowMappingSelector = this.registerExternalComponent(new components.Selector(name + "_shadowMappingSelector", "selector.html", "selector.css", "Shadows:", ["on", "off"]), "settingsDiv");
@@ -888,22 +882,22 @@ define([
         screens.HTMLScreen.prototype._initializeComponents.call(this);
 
         this._backButton.getElement().onclick = function () {
-            armada.graphics().setAntialiasing((this._antialiasingSelector.getSelectedValue() === "on"));
-            armada.graphics().setFiltering(this._filteringSelector.getSelectedValue());
-            armada.graphics().setTextureQuality(this._textureQualitySelector.getSelectedValue());
-            armada.graphics().setMaxLOD(this._lodSelector.getSelectedIndex());
-            armada.graphics().setShaderComplexity(this._shaderComplexitySelector.getSelectedValue());
-            armada.graphics().setShadowMapping((this._shadowMappingSelector.getSelectedValue() === "on"));
-            armada.graphics().setShadowQuality((function (v) {
-                var mapping = {
+            graphics.setAntialiasing((this._antialiasingSelector.getSelectedValue() === "on"));
+            graphics.setFiltering(this._filteringSelector.getSelectedValue());
+            graphics.setTextureQuality(this._textureQualitySelector.getSelectedValue());
+            graphics.setMaxLOD(this._lodSelector.getSelectedIndex());
+            graphics.setShaderComplexity(this._shaderComplexitySelector.getSelectedValue());
+            graphics.setShadowMapping((this._shadowMappingSelector.getSelectedValue() === "on"));
+            graphics.setShadowQuality((function (v) {
+                var mapping = { //TODO: hardcoded
                     "low": graphics.ShadowMapQuality.LOW,
                     "medium": graphics.ShadowMapQuality.MEDIUM,
                     "high": graphics.ShadowMapQuality.HIGH
                 };
                 return mapping[v];
             }(this._shadowQualitySelector.getSelectedValue())));
-            armada.graphics().setShadowDistance((function (v) {
-                var mapping = {
+            graphics.setShadowDistance((function (v) {
+                var mapping = { //TODO: hardcoded
                     "very close": 2,
                     "close": 3,
                     "medium": 4,
@@ -920,7 +914,7 @@ define([
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
-            armada.graphics().restoreDefaults();
+            graphics.restoreDefaults();
             this.updateValues();
             return false;
         }.bind(this);
@@ -950,17 +944,17 @@ define([
     };
 
     GraphicsScreen.prototype.updateValues = function () {
-        armada.graphics().executeWhenReady(function () {
-            this._antialiasingSelector.selectValue((armada.graphics().getAntialiasing() === true) ? "on" : "off");
-            this._filteringSelector.selectValue(armada.graphics().getFiltering());
-            this._textureQualitySelector.selectValue(armada.graphics().getTextureQuality());
-            this._lodSelector.selectValueWithIndex(armada.graphics().getMaxLoadedLOD());
-            this._shaderComplexitySelector.selectValue(armada.graphics().getShaderComplexity());
-            this._shadowMappingSelector.selectValue((armada.graphics().getShadowMapping() === true) ? "on" : "off");
+        graphics.executeWhenReady(function () {
+            this._antialiasingSelector.selectValue((graphics.getAntialiasing() === true) ? "on" : "off"); //TODO: hardcoded
+            this._filteringSelector.selectValue(graphics.getFiltering());
+            this._textureQualitySelector.selectValue(graphics.getTextureQuality());
+            this._lodSelector.selectValueWithIndex(graphics.getMaxLoadedLOD());
+            this._shaderComplexitySelector.selectValue(graphics.getShaderComplexity());
+            this._shadowMappingSelector.selectValue((graphics.isShadowMappingEnabled() === true) ? "on" : "off");
             this._shadowQualitySelector.selectValue((function (v) {
                 switch (v) {
                     case graphics.ShadowMapQuality.LOW:
-                        return "low";
+                        return "low"; //TODO: hardcoded
                     case graphics.ShadowMapQuality.MEDIUM:
                         return "medium";
                     case graphics.ShadowMapQuality.HIGH:
@@ -968,11 +962,11 @@ define([
                     default:
                         return "medium";
                 }
-            }((armada.graphics().getShadowQuality()))));
+            }((graphics.getShadowQuality()))));
             this._shadowDistanceSelector.selectValue((function (v) {
                 switch (v) {
                     case 2:
-                        return "very close";
+                        return "very close"; //TODO: hardcoded
                     case 3:
                         return "close";
                     case 4:
@@ -984,7 +978,7 @@ define([
                     default:
                         return "medium";
                 }
-            }((armada.graphics().getShadowDistance()))));
+            }((graphics.getShadowDistance()))));
         }.bind(this));
     };
 

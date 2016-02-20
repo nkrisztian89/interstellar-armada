@@ -17,9 +17,10 @@
  * @param asyncResource LogicContext is a subclass of AsyncResource
  * @param egomModel Used for generating 3D models for hitboxes
  * @param physics Physics simulation is done using this module
- * @param resource Used to access the loaded graphics resources
+ * @param resources Used to access the loaded graphics resources
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
- * @param armada Used to access graphics resources, graphics context and current logic context
+ * @param graphics Used to access graphics settings
+ * @param armada Used to access current logic context
  * @param classes Used to load and access the classes of Interstellar Armada
  */
 define([
@@ -32,10 +33,11 @@ define([
     "modules/physics",
     "modules/graphics-resources",
     "modules/buda-scene",
+    "armada/graphics",
     "armada/armada",
     "armada/classes",
     "utils/polyfill"
-], function (types, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, armada, classes) {
+], function (types, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, armada, classes) {
     "use strict";
     var
             /**
@@ -95,11 +97,16 @@ define([
      * This object hold the constant values used in this module
      * @type Object
      */
-    //TODO: finish documentation
     _constants = {
+        /**
+         * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
+         * the corresponding hitbox model is created
+         * @type String
+         */
         HITBOX_BODY_MODEL_NAME_INFIX: "-body-",
         /**
          * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
+         * @type Object
          */
         CONFIGURATION: {
             CLASSES_SOURCE_FILE: {
@@ -142,6 +149,10 @@ define([
                 type: "number",
                 defaultValue: 4718
             },
+            /**
+             * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the luminosity
+             * factor values of the various triangle groups.
+             */
             LUMINOSITY_FACTORS_ARRAY_NAME: {
                 name: "luminosityFactorsArrayName",
                 type: "string",
@@ -154,31 +165,49 @@ define([
          * @type Object
          */
         DATABASE_SETTINGS: {
+            /**
+             * If true, the models in the database will be rotated automatically as well as can be rotated by the mouse
+             */
             MODEL_ROTATION: {
                 name: "modelRotation",
                 type: "boolean",
                 defaultValue: true
             },
+            /**
+             * The background color for the canvas that shows the models in the database
+             */
             BACKGROUND_COLOR: {
                 name: "backgroundColor",
                 type: _customTypes.COLOR4,
                 defaultValue: [0, 0, 0, 0]
             },
+            /**
+             * If the wireframe model is visible, it will be colored (homogenously) with this color
+             */
             WIREFRAME_COLOR: {
                 name: "wireframeColor",
                 type: _customTypes.COLOR4,
                 defaultValue: [1, 0, 0, 1]
             },
+            /**
+             * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
+             */
             SHOW_WIREFRAME_MODEL: {
                 name: "showWireframeModel",
                 type: "boolean",
                 defaultValue: true
             },
+            /**
+             * If true, the solid model will be visible in the database (it will face in after the wireframe model, if that is also visible and reveal is active)
+             */
             SHOW_SOLID_MODEL: {
                 name: "showSolidModel",
                 type: "boolean",
                 defaultValue: true
             },
+            /**
+             * If the shaders are not simplified, this setting will toggle the fade-in reveal animation
+             */
             MODEL_REVEAL_ANIMATION: {
                 name: "modelRevealAnimation",
                 type: "boolean",
@@ -332,6 +361,11 @@ define([
                 defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
             }
         },
+        /**
+         * The definition object for camera settings that can be used to verify the data loaded from JSON as well as refer to the 
+         * individual settings later.
+         * @type Object
+         */
         CAMERA_SETTINGS: {
             DEFAULT_FOV: {
                 name: "defaultFOV",
@@ -391,7 +425,7 @@ define([
             scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
                     this._class.getModel(),
                     this._class.getShader(),
-                    "skybox", //TODO: hardcoded
+                    this._class.getShader().getCubemapNames()[0],
                     this._class.getCubemap(),
                     scene.activeCamera));
         }.bind(this));
@@ -444,7 +478,7 @@ define([
                 layerParticle = new budaScene.BackgroundBillboard(
                         layers[i].getModel(),
                         layers[i].getShader(),
-                        layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                        layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         layers[i].getColor(),
                         layers[i].getSize(),
                         mat.translation4v(vec.scaled3(this._direction, armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
@@ -991,7 +1025,7 @@ define([
         return function () {
             return new budaScene.Particle(emitterDescriptor.getModel(),
                     emitterDescriptor.getShader(),
-                    emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                    emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     mat.identity4(),
                     emitterDescriptor.getParticleStates(),
                     false);
@@ -1184,7 +1218,7 @@ define([
         this._visualModel = this._visualModel || new budaScene.Billboard(
                 this._class.getModel(),
                 this._class.getShader(),
-                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._class.getSize(),
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix());
@@ -1349,7 +1383,7 @@ define([
             this._visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     this._slot.positionMatrix,
                     this._slot.orientationMatrix,
                     mat.identity4(),
@@ -1371,7 +1405,7 @@ define([
         return budaScene.dynamicParticle(
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
-                projectileClass.getMuzzleFlash().getTexturesOfTypes(projectileClass.getMuzzleFlash().getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                projectileClass.getMuzzleFlash().getTexturesOfTypes(projectileClass.getMuzzleFlash().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getMuzzleFlash().getSize(),
                 muzzleFlashPosMatrix,
@@ -1505,7 +1539,7 @@ define([
             this._visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
-                    this._propulsionClass.getThrusterBurnParticle().getTexturesOfTypes(this._propulsionClass.getThrusterBurnParticle().getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                    this._propulsionClass.getThrusterBurnParticle().getTexturesOfTypes(this._propulsionClass.getThrusterBurnParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     this._propulsionClass.getThrusterBurnParticle().getColor(),
                     this._slot.size,
                     mat.translation4v(this._slot.positionVector));
@@ -2506,14 +2540,10 @@ define([
      * @returns {Object.<String, ManagedTexture>}
      */
     Spacecraft.prototype.getHitboxTextures = function () {
-        var i, textureTypes,
-                textureResource = resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME)),
-                result = {};
-        textureTypes = resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes();
-        for (i = 0; i < textureTypes.length; i++) {
-            result[textureTypes[i]] = textureResource.getManagedTexture(textureTypes[i], armada.graphics().getTextureQuality());
-        }
-        return result;
+        var
+                textureTypes = resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes(),
+                textureResource = resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+        return textureResource.getManagedTexturesOfTypes(textureTypes, graphics.getTextureQualityPreferenceList());
     };
     /**
      * Returns the thruster burn level that is needed to produce the passed difference in speed using the current propulsion system for the
@@ -2742,12 +2772,12 @@ define([
         var
                 phyModel =
                 resources.getOrAddModel(
-                egomModel.cuboidModel(
-                        this._class.getName() + _constants.HITBOX_BODY_MODEL_NAME_INFIX + index,
-                        this._class.getBodies()[index].getWidth(),
-                        this._class.getBodies()[index].getHeight(),
-                        this._class.getBodies()[index].getDepth(),
-                        armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_COLOR))),
+                        egomModel.cuboidModel(
+                                this._class.getName() + _constants.HITBOX_BODY_MODEL_NAME_INFIX + index,
+                                this._class.getBodies()[index].getWidth(),
+                                this._class.getBodies()[index].getHeight(),
+                                this._class.getBodies()[index].getDepth(),
+                                armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_COLOR))),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
                         resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
@@ -2760,7 +2790,7 @@ define([
     };
     Spacecraft.prototype.acquireResources = function (lod, hitbox) {
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
-        var params = (lod === undefined) ? {maxLOD: armada.graphics().getMaxLoadedLOD()} : {lod: lod};
+        var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             resources.getShader(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
             resources.getTexture(armada.logic().getBattleSetting(_constants.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
@@ -2817,7 +2847,7 @@ define([
             this._visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     this._class.getShader(),
-                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), armada.graphics().getTextureQualityPreferenceList()),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     this._physicalModel.getPositionMatrix(),
                     this._physicalModel.getOrientationMatrix(),
                     mat.scaling4(this._class.getModel().getScale()),

@@ -83,6 +83,22 @@ define([
                 }
             },
             /**
+             * Sends a request to load the screens module and a callback to build the screens when its loading has finished.
+             * @returns {undefined}
+             */
+            _requestScreenBuild = function () {
+                require([
+                    "modules/screens",
+                    "modules/screen-manager"
+                ], function (screens, screenManager) {
+                    _screenManager = new screenManager.ScreenManager();
+                    application._buildScreensAndExecuteCallback(screens, function () {
+                        _screenInitComplete = true;
+                        _checkInitComplete();
+                    });
+                });
+            },
+            /**
              * Sends an asynchronous request to get the JSON file describing the game
              * settings and sets the callback function to set them.
              * @param {{folder: String, filename: String}} settingsFileDescriptor
@@ -98,7 +114,7 @@ define([
                     _controlContext.loadFromLocalStorage();
                     application.log("Game settings loaded.", 1);
                     _settingsInitComplete = true;
-                    _checkInitComplete();
+                    _requestScreenBuild();
                 });
             },
             /**
@@ -122,22 +138,6 @@ define([
                             _configInitComplete = true;
                         });
                         _requestSettingsLoad(configJSON.configFiles.settings);
-                    });
-                });
-            },
-            /**
-             * Sends a request to load the screens module and a callback to build the screens when its loading has finished.
-             * @returns {undefined}
-             */
-            _requestScreenBuild = function () {
-                require([
-                    "modules/screens",
-                    "modules/screen-manager"
-                ], function (screens, screenManager) {
-                    _screenManager = new screenManager.ScreenManager();
-                    application._buildScreensAndExecuteCallback(screens, function () {
-                        _screenInitComplete = true;
-                        _checkInitComplete();
                     });
                 });
             };
@@ -225,7 +225,6 @@ define([
         }
         application._startInitializationAndExecuteCallback(function () {
             _requestConfigLoad();
-            _requestScreenBuild();
         });
     };
     // Shortcuts

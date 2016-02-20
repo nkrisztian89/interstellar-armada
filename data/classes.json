@@ -1114,7 +1114,7 @@
             "shader": "billboard",
             "texture": "plasma",
             "size": 2.5,
-            "mass": 1,
+            "mass": 3,
             "duration": 5000,
             "intersectionPositions": [0],
             "muzzleFlash": {

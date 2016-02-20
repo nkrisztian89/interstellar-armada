@@ -11,18 +11,15 @@
 
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
+ * @param graphics Used to load the graphics settings
  */
 define([
-    "modules/game"
-], function (game) {
+    "modules/game",
+    "armada/graphics"
+], function (game, graphics) {
     "use strict";
     // add private variables specific to Interstellar Armada
     var
-            /**
-             * The graphics context of the game, that can be used to access and manipulate graphical resources.
-             * @type GraphicsContext
-             */
-            _graphicsContext = null,
             /**
              * The logic context of the game, containing the domain specific model (e.g. what classes of spaceships are there)
              * @type LogicContext
@@ -36,8 +33,8 @@ define([
     // Overridden protected methods
     game._loadGameSettings = function (settingsJSON) {
         // load defaults from the JSON files and then overwrite with local preferences (of which only differences from defaults are stored)
-        _graphicsContext.loadFromJSON(settingsJSON.graphics);
-        _graphicsContext.loadFromLocalStorage();
+        graphics.loadSettingsFromJSON(settingsJSON.graphics);
+        graphics.loadSettingsFromLocalStorage();
         _logicContext.loadFromJSON(settingsJSON.logic);
     };
     game._loadGameConfiguration = function (configJSON) {
@@ -110,11 +107,9 @@ define([
     };
     game._startInitializationAndExecuteCallback = function (callback) {
         require([
-            "armada/graphics",
             "armada/logic",
             "armada/control"
-        ], function (graphics, logic, control) {
-            _graphicsContext = new graphics.GraphicsContext();
+        ], function (logic, control) {
             _logicContext = new logic.LogicContext();
             game.setControlContextClass(control.ArmadaControlContext);
             callback();
@@ -123,13 +118,6 @@ define([
     // -------------------------------------------------------------------------
     // Public methods
     // Shortcuts
-    /**
-     * A shortcut to the graphics context of the game.
-     * @returns {GraphicsContext}
-     */
-    game.graphics = function () {
-        return _graphicsContext;
-    };
     /**
      * A shortcut to the logic context of the game.
      * @returns {LogicContext}

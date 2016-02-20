@@ -20,7 +20,7 @@
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
  * @param resources This module accesses graphics resources to assign them to classes when they are initialized
  * @param budaScene Required for parsing camera related enums
- * @param armada Required for referencing resources
+ * @param graphics Required to access resources according to current graphics settings
  */
 define([
     "utils/utils",
@@ -32,8 +32,8 @@ define([
     "modules/physics",
     "modules/graphics-resources",
     "modules/buda-scene",
-    "armada/armada"
-], function (utils, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, armada) {
+    "armada/graphics"
+], function (utils, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -55,11 +55,11 @@ define([
     // ------------------------------------------------------------------------------
     // constants
     /**
-             * In the class description file, skybox classes will be initialized from the array with this name
-             * @type String
-             */
+     * In the class description file, skybox classes will be initialized from the array with this name
+     * @type String
+     */
     SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
-    /**
+            /**
              * In the class description file, background object classes will be initialized from the array with this name
              * @type String
              */
@@ -281,7 +281,7 @@ define([
     GenericClass.prototype._requestFiles = function () {
         application.requestTextFile(_classFolder, this._source, function (responseText) {
             this._onFilesLoad(true, JSON.parse(responseText));
-        }.bind(this), 'text/plain; charset=utf-8');
+        }.bind(this));
     };
     /**
      * @override
@@ -337,7 +337,7 @@ define([
      * 
      */
     ShadedClass.prototype.acquireResources = function () {
-        this._shader = armada.graphics().getShader(this._shaderName);
+        this._shader = graphics.getShader(this._shaderName);
     };
     /**
      * 
@@ -397,7 +397,7 @@ define([
             this._model = resources.getOrAddModel(params.model);
             this._modelName = this._model.getName();
         } else {
-            this._model = armada.graphics().getModel(this._modelName);
+            this._model = graphics.getModel(this._modelName);
         }
     };
     /**
@@ -525,25 +525,11 @@ define([
      * @returns {Object.<String, ManagedTexture>} 
      */
     TexturedModelClass.prototype.getTexturesOfTypes = function (types, qualityPreferenceList) {
-        var i, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
-        result = {};
-        qualities = this._texture.getQualities();
-        mostFittingQualityIndex = -1;
-        for (i = 0; i < qualities.length; i++) {
-            index = qualityPreferenceList.indexOf(qualities[i]);
-            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
-                mostFittingQualityIndex = index;
-                mostFittingQuality = qualityPreferenceList[index];
-            }
-        }
-        if (mostFittingQualityIndex === -1) {
-            application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+        if (this._texture === null) {
+            this.showResourceAccessError("texture", this._textureName);
             return null;
         }
-        for (i = 0; i < types.length; i++) {
-            result[types[i]] = this._texture.getManagedTexture(types[i], mostFittingQuality);
-        }
-        return result;
+        return this._texture.getManagedTexturesOfTypes(types, qualityPreferenceList);
     };
     /**
      * @param {String[]} qualityPreferenceList
