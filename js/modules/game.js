@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file This module builds on Application, ResourceManager, ScreenManager and Control to provide a template for creating games using the 
+ * @file This module builds on Application and ScreenManager to provide a template for creating games using the 
  * functionality of these modules.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -24,11 +24,6 @@ define([
              * @type ScreenManager
              */
             _screenManager = null,
-            /**
-             * The control context of the game, that can be used to bind input controls to in-game actions.
-             * @type ControlContext
-             */
-            _controlContext = null,
             /**
              * Whether the configuration of the game has finished loading
              * @type Boolean
@@ -64,11 +59,6 @@ define([
              * @type String
              */
             _configFileName = null,
-            /**
-             * The constructor function of the specific control context class used for this game (needs to be a subclass of ControlContext)
-             * @type Function
-             */
-            ControlContextClass = null,
             // -------------------------------------------------------------------------
             // Private methods
             /**
@@ -108,10 +98,6 @@ define([
                     var settingsJSON = JSON.parse(settingsText);
                     application.log("Loading game settings...", 1);
                     application._loadGameSettings(settingsJSON);
-                    _controlContext = new ControlContextClass();
-                    // load defaults from the JSON files and then overwrite with local preferences (of which only differences from defaults are stored)
-                    _controlContext.loadFromJSON(settingsJSON.control);
-                    _controlContext.loadFromLocalStorage();
                     application.log("Game settings loaded.", 1);
                     _settingsInitComplete = true;
                     _requestScreenBuild();
@@ -164,13 +150,6 @@ define([
     application._buildScreensAndExecuteCallback = function () {
         application.showError("You need to override the _buildScreensAndExecuteCallback method!");
     };
-    /**
-     * Override this method to load all modules required to initialize the game and create the game objects that rely on those modules, and
-     * finally execute the callback passed as its single parameter.
-     */
-    application._startInitializationAndExecuteCallback = function () {
-        application.showError("You need to override the _startInitializationAndExecuteCallback method!");
-    };
     // -------------------------------------------------------------------------
     // Public methods
     /**
@@ -202,13 +181,6 @@ define([
     application.setConfigFileName = function (value) {
         _configFileName = value;
     };
-    /**
-     * Sets the constructor function of the specific control context class used for this game (needs to be a subclass of ControlContext)
-     * @param {Function} value
-     */
-    application.setControlContextClass = function (value) {
-        ControlContextClass = value;
-    };
     /** 
      * Initializes the game: builds up the screens, loads settings and displays the start screen.
      */
@@ -223,9 +195,7 @@ define([
                     "you can start the game by entering 'localhost/game' in your browser's address bar.");
             return;
         }
-        application._startInitializationAndExecuteCallback(function () {
-            _requestConfigLoad();
-        });
+        _requestConfigLoad();
     };
     // Shortcuts
     /**
@@ -234,13 +204,6 @@ define([
      */
     application.screenManager = function () {
         return _screenManager;
-    };
-    /**
-     * A shortcut to the control context of the game.
-     * @returns {ControlContext}
-     */
-    application.control = function () {
-        return _controlContext;
     };
     // globally available functions
     /**

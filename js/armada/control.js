@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -12,14 +12,20 @@
 /**
  * @param control This module builds its game-specific functionality on the general control module
  * @param cameraController This module uses the CameraController class made for BudaScene
- * @param armada GeneralController accesses global game functionality
+ * @param game To access screen-changing functionality
  */
 define([
     "modules/control",
     "modules/camera-controller",
-    "armada/armada"
-], function (control, cameraController, armada) {
+    "modules/game"
+], function (control, cameraController, game) {
     "use strict";
+    var
+            /**
+             * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
+             * @type ArmadaControlContext
+             */
+            _context;
     control.setModulePrefix("interstellarArmada_control_");
     // #########################################################################
     /**
@@ -42,25 +48,25 @@ define([
         // properties should be have been created by now.
         // quitting to the menu
         this.setActionFunction("quit", true, function () {
-            armada.getScreen().pauseBattle();
-            armada.setScreen("ingameMenu", true, [64, 64, 64], 0.5);
+            game.getScreen().pauseBattle();
+            game.setScreen("ingameMenu", true, [64, 64, 64], 0.5);
         });
         // pausing the game
         this.setActionFunction("pause", true, function () {
             // showing an info box automatically pauses the game as implemented in
             // the BattleScreen class
-            armada.getScreen().showMessage("Game paused.");
+            game.getScreen().showMessage("Game paused.");
         });
         this.setActionFunction("stopTime", true, function () {
-            armada.getScreen().toggleTime();
+            game.getScreen().toggleTime();
         });
         // switching to pilot mode
         this.setActionFunction("switchToPilotMode", true, function () {
-            armada.control().switchToPilotMode(this._level.getPilotedSpacecraft());
+            _context.switchToPilotMode(this._level.getPilotedSpacecraft());
         }.bind(this));
         // switching to spectator mode
         this.setActionFunction("switchToSpectatorMode", true, function () {
-            armada.control().switchToSpectatorMode(true);
+            _context.switchToSpectatorMode(true);
         });
         // toggling the visibility of hitboxes
         this.setActionFunction("toggleHitboxVisibility", true, function () {
@@ -68,13 +74,13 @@ define([
         }.bind(this));
         // toggling the visibility of texts on screen
         this.setActionFunction("toggleTextVisibility", true, function () {
-            armada.getScreen().toggleTextVisibility();
+            game.getScreen().toggleTextVisibility();
         });
         // toggling the mouse controls
         this.setActionFunction("toggleMouseControls", true, function () {
-            armada.control().getInputInterpreter("mouse").toggleEnabled();
-            if (armada.control().isInPilotMode()) {
-                if (armada.control().getInputInterpreter("mouse").isEnabled()) {
+            _context.getInputInterpreter("mouse").toggleEnabled();
+            if (_context.isInPilotMode()) {
+                if (_context.getInputInterpreter("mouse").isEnabled()) {
                     document.body.style.cursor = 'crosshair';
                 } else {
                     document.body.style.cursor = 'default';
@@ -83,7 +89,7 @@ define([
         });
         // toggling the joystick controls
         this.setActionFunction("toggleJoystickControls", true, function () {
-            armada.control().getInputInterpreter("joystick").toggleEnabled();
+            _context.getInputInterpreter("joystick").toggleEnabled();
         });
     }
     GeneralController.prototype = new control.Controller();
@@ -269,9 +275,9 @@ define([
         this.getController("camera").setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
         this.disableAction("followNext");
         this.disableAction("followPrevious");
-        armada.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
-        armada.getScreen().showCrosshair();
-        armada.getScreen().showUI();
+        game.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
+        game.getScreen().showCrosshair();
+        game.getScreen().showUI();
         if (this.getInputInterpreter("mouse").isEnabled()) {
             document.body.style.cursor = 'crosshair';
         }
@@ -289,14 +295,29 @@ define([
         }
         this.enableAction("followNext");
         this.enableAction("followPrevious");
-        armada.getScreen().setHeaderContent("Spectator mode");
-        armada.getScreen().hideCrosshair();
-        armada.getScreen().hideUI();
+        game.getScreen().setHeaderContent("Spectator mode");
+        game.getScreen().hideCrosshair();
+        game.getScreen().hideUI();
         document.body.style.cursor = 'default';
     };
+    _context = new ArmadaControlContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        ArmadaControlContext: ArmadaControlContext
+        KeyBinding: control.KeyBinding,
+        loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
+        loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
+        loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),
+        restoreDefaults: _context.restoreDefaults.bind(_context),
+        getControllers: _context.getControllers.bind(_context),
+        getController: _context.getController.bind(_context),
+        getInputInterpreters: _context.getInputInterpreters.bind(_context),
+        getInputInterpreter: _context.getInputInterpreter.bind(_context),
+        control: _context.control.bind(_context),
+        startListening: _context.startListening.bind(_context),
+        stopListening: _context.stopListening.bind(_context),
+        setScreenCenter: _context.setScreenCenter.bind(_context),
+        executeWhenReady: _context.executeWhenReady.bind(_context),
+        switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context)
     };
 });

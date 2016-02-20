@@ -19,12 +19,12 @@ define([
     "modules/managed-gl",
     "modules/graphics-resources",
     "modules/buda-scene",
-    "modules/control",
     "armada/armada",
     "armada/classes",
     "armada/logic",
-    "armada/graphics"
-], function (utils, vec, mat, application, components, screens, managedGL, resources, budaScene, control, armada, classes, logic, graphics) {
+    "armada/graphics",
+    "armada/control"
+], function (utils, vec, mat, application, components, screens, managedGL, resources, budaScene, armada, classes, logic, graphics, control) {
     "use strict";
 
     function _shouldUseShadowMapping() {
@@ -76,7 +76,7 @@ define([
 
     BattleScreen.prototype._simulationLoopFunction = function () {
         var curDate = new Date();
-        armada.control().control();
+        control.control();
         if (!this._isTimeStopped) {
             this._level.tick(curDate - this._prevDate);
         }
@@ -106,7 +106,7 @@ define([
     };
 
     BattleScreen.prototype.pauseBattle = function () {
-        armada.control().stopListening();
+        control.stopListening();
         this._battleCursor = document.body.style.cursor;
         document.body.style.cursor = 'default';
         clearInterval(this._simulationLoop);
@@ -128,7 +128,7 @@ define([
                 this._battleScene.setShouldUpdateCamera(true);
             }
             this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
-            armada.control().startListening();
+            control.startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
                     "No action was taken, to avoid double-running the simulation.");
@@ -154,7 +154,7 @@ define([
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);
         var canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
         this._resizeEventListener2 = function () {
-            armada.control().setScreenCenter(canvas.width / 2, canvas.height / 2);
+            control.setScreenCenter(canvas.width / 2, canvas.height / 2);
         };
         window.addEventListener("resize", this._resizeEventListener2);
         this._resizeEventListener2();
@@ -312,7 +312,7 @@ define([
         this.hideCrosshair();
         this._loadingBox.show();
         this.resizeCanvases();
-        armada.control().setScreenCenter(
+        control.setScreenCenter(
                 this.getScreenCanvas("battleCanvas").getCanvasElement().width / 2,
                 this.getScreenCanvas("battleCanvas").getCanvasElement().height / 2);
 
@@ -340,8 +340,8 @@ define([
                     graphics.getLODContext());
             this._level.addToScene(this._battleScene);
 
-            armada.control().getController("general").setLevel(this._level);
-            armada.control().getController("camera").setControlledCamera(this._battleScene.activeCamera);
+            control.getController("general").setLevel(this._level); //TODO: hardcoded
+            control.getController("camera").setControlledCamera(this._battleScene.activeCamera);
 
             this.updateStatus("loading graphical resources...", 15);
             resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
@@ -360,7 +360,7 @@ define([
                 this.updateStatus("", 100);
                 application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                 this._smallHeader.setContent("running an early test of Interstellar Armada, version: " + armada.getVersion());
-                armada.control().switchToSpectatorMode(false);
+                control.switchToSpectatorMode(false);
                 this._battleCursor = document.body.style.cursor;
                 this.showMessage("Ready!");
                 this.getLoadingBox().hide();
@@ -1030,7 +1030,7 @@ define([
      * @param {String} actionName
      */
     ControlsScreen.prototype.refreshKeyForAction = function (actionName) {
-        document.getElementById(actionName).innerHTML = armada.control().getInputInterpreter("keyboard").getControlStringForAction(actionName);
+        document.getElementById(actionName).innerHTML = control.getInputInterpreter("keyboard").getControlStringForAction(actionName); //TODO: hardcoded
         document.getElementById(actionName).className = "clickable";
     };
 
@@ -1068,7 +1068,7 @@ define([
             this._settingAltState = false;
         }
         // respect the shift, ctrl, alt states and set the new key for the action
-        var interpreter = armada.control().getInputInterpreter("keyboard");
+        var interpreter = control.getInputInterpreter("keyboard");
         interpreter.setAndStoreBinding(new control.KeyBinding(
                 this._actionUnderSetting,
                 utils.getKeyOfCode(event.keyCode),
@@ -1134,13 +1134,13 @@ define([
             if (this._game.getCurrentScreen().isSuperimposed()) {
                 this._game.closeSuperimposedScreen();
             } else {
-                this._game.setCurrentScreen('settings');
+                this._game.setCurrentScreen('settings'); //TODO: hardcoded
             }
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
             this.stopKeySetting();
-            armada.control().restoreDefaults();
+            control.restoreDefaults();
             this.generateTables();
             return false;
         }.bind(this);
@@ -1154,10 +1154,10 @@ define([
      * of that key binding.
      */
     ControlsScreen.prototype.generateTables = function () {
-        armada.control().executeWhenReady(function () {
+        control.executeWhenReady(function () {
             var i, j, k, n,
                     tablesContainer = document.getElementById(this._name + "_tablesContainer"),
-                    gameControllers = armada.control().getControllers(),
+                    gameControllers = control.getControllers(),
                     h2Element, tableElement, theadElement, thElement, tbodyElement, actions, trElement, td1Element, td2Element,
                     keySetterFunction = function (self) {
                         return function () {
@@ -1172,9 +1172,9 @@ define([
                 tableElement = document.createElement("table");
                 tableElement.className = "horizontallyCentered outerContainer";
                 theadElement = document.createElement("thead");
-                for (j = 0, n = armada.control().getInputInterpreters().length; j < n; j++) {
+                for (j = 0, n = control.getInputInterpreters().length; j < n; j++) {
                     thElement = document.createElement("th");
-                    thElement.innerHTML = armada.control().getInputInterpreters()[j].getDeviceName();
+                    thElement.innerHTML = control.getInputInterpreters()[j].getDeviceName();
                     theadElement.appendChild(thElement);
                 }
                 theadElement.innerHTML += "<th>Action</th>";
@@ -1182,14 +1182,14 @@ define([
                 actions = gameControllers[i].getActions();
                 for (j = 0; j < actions.length; j++) {
                     trElement = document.createElement("tr");
-                    for (k = 0, n = armada.control().getInputInterpreters().length; k < n; k++) {
+                    for (k = 0, n = control.getInputInterpreters().length; k < n; k++) {
                         td1Element = document.createElement("td");
-                        if (armada.control().getInputInterpreters()[k].getDeviceName() === "Keyboard") {
+                        if (control.getInputInterpreters()[k].getDeviceName() === "Keyboard") {
                             td1Element.setAttribute("id", actions[j].getName());
                             td1Element.className = "clickable";
                             td1Element.onclick = keySetterFunction(this);
                         }
-                        td1Element.innerHTML = armada.control().getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
+                        td1Element.innerHTML = control.getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
                         trElement.appendChild(td1Element);
                     }
                     td2Element = document.createElement("td");

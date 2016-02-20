@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0:136+refactoring-67 (2016.02.20.)",
+    "version": "0.1.0:136+refactoring-68 (2016.02.20.)",
     "logVerbosity": 1,
     "folders": {
         "config": "config/",
@@ -42,5 +42,190 @@
                 ]
             }
         }
+    },
+    "control": {
+        "controllers": [
+            {
+                "type": "general",
+                "actions": [
+                    {
+                        "name": "quit",
+                        "description": "Quit to menu"
+                    }, {
+                        "name": "pause",
+                        "description": "Pause the game"
+                    }, {
+                        "name": "stopTime",
+                        "description": "Stop the time in the game, with controls still available"
+                    }, {
+                        "name": "switchToPilotMode",
+                        "description": "Switch to pilot mode"
+                    }, {
+                        "name": "switchToSpectatorMode",
+                        "description": "Switch to spectator mode"
+                    }, {
+                        "name": "toggleHitboxVisibility",
+                        "description": "Toggle the visibility of hitboxes"
+                    }, {
+                        "name": "toggleTextVisibility",
+                        "description": "Toggle the visibility of the texts on screen"
+                    }, {
+                        "name": "toggleMouseControls",
+                        "description": "Disable / enable mouse controls"
+                    }, {
+                        "name": "toggleJoystickControls",
+                        "description": "Disable / enable joystick controls"
+                    }
+                ]
+            },
+            {
+                "type": "fighter",
+                "actions": [
+                    {
+                        "name": "changeFlightMode",
+                        "description": "Change flight mode"
+                    }, {
+                        "name": "nextTarget",
+                        "description": "Target next spacecraft"
+                    }, {
+                        "name": "fire",
+                        "description": "Fire primary weapons",
+                        "continuous": true
+                    }, {
+                        "name": "forward",
+                        "description": "Forward thrust (free mode) or increase speed",
+                        "continuous": true
+                    }, {
+                        "name": "reverse",
+                        "description": "Reverse thrust (free mode) or decrease speed",
+                        "continuous": true
+                    }, {
+                        "name": "strafeLeft",
+                        "description": "Strafe left",
+                        "continuous": true
+                    }, {
+                        "name": "strafeRight",
+                        "description": "Strafe right",
+                        "continuous": true
+                    }, {
+                        "name": "raise",
+                        "description": "Strafe upwards",
+                        "continuous": true
+                    }, {
+                        "name": "lower",
+                        "description": "Strafe downwards",
+                        "continuous": true
+                    }, {
+                        "name": "resetSpeed",
+                        "description": "Reset speed to zero (compensated mode)"
+                    }, {
+                        "name": "yawLeft",
+                        "description": "Turn to the left",
+                        "continuous": true
+                    }, {
+                        "name": "yawRight",
+                        "description": "Turn to the right",
+                        "continuous": true
+                    }, {
+                        "name": "pitchUp",
+                        "description": "Turn upwards",
+                        "continuous": true
+                    }, {
+                        "name": "pitchDown",
+                        "description": "Turn downwards",
+                        "continuous": true
+                    }, {
+                        "name": "rollLeft",
+                        "description": "Roll to the left",
+                        "continuous": true
+                    }, {
+                        "name": "rollRight",
+                        "description": "Roll to the right",
+                        "continuous": true
+                    }
+                ]
+            },
+            {
+                "type": "camera",
+                "actions": [
+                    {
+                        "name": "controlCamera",
+                        "description": "Hold this button to control the camera instead of your spacecraft if you have the same controls assigned"
+                    },
+                    {
+                        "name": "cameraMoveLeft",
+                        "description": "Move the camera to the left (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveRight",
+                        "description": "Move the camera to the right (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveUp",
+                        "description": "Move the camera upwards (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveDown",
+                        "description": "Move the camera downwards (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveForward",
+                        "description": "Move the camera forward (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveBackward",
+                        "description": "Move the camera backward (free camera mode)",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnLeft",
+                        "description": "Turn the camera to the left",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnRight",
+                        "description": "Turn the camera to the right",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnUp",
+                        "description": "Turn the camera upwards",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnDown",
+                        "description": "Turn the camera downwards",
+                        "continuous": true
+                    }, {
+                        "name": "cameraRollLeft",
+                        "description": "Roll the camera to the left",
+                        "continuous": true
+                    }, {
+                        "name": "cameraRollRight",
+                        "description": "Roll the camera to the right",
+                        "continuous": true
+                    }, {
+                        "name": "cameraDecreaseFOV",
+                        "description": "Zoom in",
+                        "continuous": true
+                    }, {
+                        "name": "cameraIncreaseFOV",
+                        "description": "Zoom out",
+                        "continuous": true
+                    }, {
+                        "name": "followNext",
+                        "description": "Follow next spacecraft. (in spectator mode)"
+                    }, {
+                        "name": "followPrevious",
+                        "description": "Follow previous spacecraft. (in spectator mode)"
+                    }, {
+                        "name": "nextView",
+                        "description": "Change to the next view of the currently followed spacecraft"
+                    }, {
+                        "name": "previousView",
+                        "description": "Change to the previous view of the currently followed spacecraft"
+                    }, {
+                        "name": "resetView",
+                        "description": "Reset the current view to its original state"
+                    }
+                ]
+            }
+        ]
     }
 }

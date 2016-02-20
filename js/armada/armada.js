@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -13,12 +13,14 @@
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
  * @param graphics Used to load the graphics settings
  * @param logic Used to load the configuration and settings of the game and access main functionality
+ * @param control Used to load the control configuration and setings of the game and access main functionality
  */
 define([
     "modules/game",
     "armada/graphics",
-    "armada/logic"
-], function (game, graphics, logic) {
+    "armada/logic",
+    "armada/control"
+], function (game, graphics, logic, control) {
     "use strict";
     game.setGameName("Interstellar Armada");
     game.setStartScreenName("mainMenu");
@@ -31,9 +33,12 @@ define([
         graphics.loadSettingsFromJSON(settingsJSON.graphics);
         graphics.loadSettingsFromLocalStorage();
         logic.loadSettingsFromJSON(settingsJSON.logic);
+        control.loadSettingsFromJSON(settingsJSON.control);
+        control.loadSettingsFromLocalStorage();
     };
     game._loadGameConfiguration = function (configJSON) {
         logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);
+        control.loadConfigurationFromJSON(configJSON.control);
     };
     game._buildScreensAndExecuteCallback = function (screens, callback) {
         require(["armada/screens"], function (armadaScreens) {
@@ -97,14 +102,6 @@ define([
                         game.screenManager().setCurrentScreen("mainMenu");
                     }
                 }], "menuContainer"));
-            callback();
-        });
-    };
-    game._startInitializationAndExecuteCallback = function (callback) {
-        require([
-            "armada/control"
-        ], function (control) {
-            game.setControlContextClass(control.ArmadaControlContext);
             callback();
         });
     };

@@ -2004,32 +2004,39 @@ define([
         }
     };
     /**
-     * Loads the control settings stored in a JSON object.
+     * Loads the control configuration (the controllers) stored in a JSON object.
+     * @param {Object} dataJSON The JSON object that stores the control settings.
+     */
+    ControlContext.prototype.loadConfigurationFromJSON = function (dataJSON) {
+        var i, n;
+        this._controllers = [];
+        for (i = 0, n = dataJSON.controllers.length; i < n; i++) {
+            if (this._controllerTypes[dataJSON.controllers[i].type]) {
+                this.addController(new this._controllerTypes[dataJSON.controllers[i].type](dataJSON.controllers[i]));
+            } else {
+                application.showError("Attempting to load unregistered controller type: '" + dataJSON.controllers[i].type + "'!",
+                        "severe",
+                        (Object.keys(this._controllerTypes).length > 0) ?
+                        ("Every controller to be loaded must be of one of the registered types: " + Object.keys(this._controllerTypes).join(", ") + ".") :
+                        "There are no types registered and thus loading controllers is not possible.");
+            }
+        }
+        this._controllersPriorityQueue = this._controllers;
+    };
+    /**
+     * Loads the control settings (input interpreters with bindings) stored in a JSON object.
      * @param {Object} dataJSON The JSON object that stores the control settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether to only restore the
      * default settings by overwriting the changed ones from the data in the JSON,
      * or to initialize the whole context from zero, creating all the necessary
      * objects.
      */
-    ControlContext.prototype.loadFromJSON = function (dataJSON, onlyRestoreSettings) {
+    ControlContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
         var i, n;
         // if a whole new initialization is needed, create and load all controllers
         // and interpreters from the JSON
         if (!onlyRestoreSettings) {
             this._dataJSON = dataJSON;
-            this._controllers = [];
-            for (i = 0, n = dataJSON.controllers.length; i < n; i++) {
-                if (this._controllerTypes[dataJSON.controllers[i].type]) {
-                    this.addController(new this._controllerTypes[dataJSON.controllers[i].type](dataJSON.controllers[i]));
-                } else {
-                    application.showError("Attempting to load unregistered controller type: '" + dataJSON.controllers[i].type + "'!",
-                            "severe",
-                            (Object.keys(this._controllerTypes).length > 0) ?
-                            ("Every controller to be loaded must be of one of the registered types: " + Object.keys(this._controllerTypes).join(", ") + ".") :
-                            "There are no types registered and thus loading controllers is not possible.");
-                }
-            }
-            this._controllersPriorityQueue = this._controllers;
             this._inputInterpreters = [];
             for (i = 0, n = dataJSON.inputDevices.length; i < n; i++) {
                 if (this._inputInterpreterTypes[dataJSON.inputDevices[i].type]) {
@@ -2054,7 +2061,7 @@ define([
     /**
      * Load custom settings for the stored input interpreters from HTML5 local storage.
      */
-    ControlContext.prototype.loadFromLocalStorage = function () {
+    ControlContext.prototype.loadSettingsFromLocalStorage = function () {
         var i;
         for (i = 0; i < this._inputInterpreters.length; i++) {
             this._inputInterpreters[i].loadFromLocalStorage();
@@ -2066,7 +2073,7 @@ define([
      * loaded.
      */
     ControlContext.prototype.restoreDefaults = function () {
-        this.loadFromJSON(this._dataJSON, true);
+        this.loadSettingsFromJSON(this._dataJSON, true);
     };
     /**
      * Activate all event handlers that listen for user inputs for each stored input
