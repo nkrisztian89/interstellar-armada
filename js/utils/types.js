@@ -229,6 +229,7 @@ define([
      * and any other type parameters directly as its properties
      * @param {} value The original value to be checked
      * @param {} defaultValue The default value to be returned in case the original value fails the verification
+     * @param {Boolean} optional If true, undefined values will be accepted and returned without error, even if there is no default value set
      * @param {Object} [typeParams] The required and optional parameters to define the (constraints of the) type. Current options:
      * For number:
      * - (optional) range: an array of 2 optional numbers describing the minimum and maximum of the interval the value should be in
@@ -248,44 +249,46 @@ define([
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
      * @returns {}
      */
-    exports.getValueOfType = function (name, type, value, defaultValue, typeParams, checkFunction, checkFailMessage) {
+    exports.getValueOfType = function (name, type, value, defaultValue, optional, typeParams, checkFunction, checkFailMessage) {
         typeParams = typeParams || {};
         if (value === undefined) {
             if (defaultValue !== undefined) {
-                return (defaultValue !== null) ? exports.getValueOfType(name, type, defaultValue, null, typeParams, checkFunction, checkFailMessage) : null;
+                return (defaultValue !== null) ? exports.getValueOfType(name, type, defaultValue, null, optional, typeParams, checkFunction, checkFailMessage) : null;
             }
-            application.showError("Missing required value of '" + name + "'!");
-        } else {
-            if (typeof type === "object") {
-                return exports.getValueOfType(name, type.baseType, value, defaultValue, type, checkFunction, checkFailMessage);
+            if (!optional) {
+                application.showError("Missing required value of '" + name + "'!");
             }
-            switch (type) {
-                case "boolean":
-                    return exports.getBooleanValue(name, value, defaultValue, checkFunction, checkFailMessage);
-                case "number":
-                    if (typeParams.range) {
-                        return exports.getNumberValueInRange(name, value, typeParams.range[0], typeParams.range[1], defaultValue, checkFunction, checkFailMessage);
-                    }
-                    return exports.getNumberValue(name, value, defaultValue, checkFunction, checkFailMessage);
-                case "string":
-                    return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage);
-                case "enum":
-                    if (typeParams.values) {
-                        return exports.getEnumValue(name, typeParams.values, value, defaultValue, checkFunction, checkFailMessage);
-                    }
-                    application.showError("Missing enum definition object for '" + name + "'!");
-                    return null;
-                case "object":
-                    if (typeParams.properties) {
-                        return exports.getVerifiedObject(name, value, typeParams.properties);
-                    }
-                    return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage);
-                case "array":
-                    return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams.length, defaultValue, checkFunction, checkFailMessage);
-                default:
-                    application.showError("Unknown type specified for '" + name + "': " + type);
-                    return null;
-            }
+            return undefined;
+        }
+        if (typeof type === "object") {
+            return exports.getValueOfType(name, type.baseType, value, defaultValue, optional, type, checkFunction, checkFailMessage);
+        }
+        switch (type) {
+            case "boolean":
+                return exports.getBooleanValue(name, value, defaultValue, checkFunction, checkFailMessage);
+            case "number":
+                if (typeParams.range) {
+                    return exports.getNumberValueInRange(name, value, typeParams.range[0], typeParams.range[1], defaultValue, checkFunction, checkFailMessage);
+                }
+                return exports.getNumberValue(name, value, defaultValue, checkFunction, checkFailMessage);
+            case "string":
+                return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage);
+            case "enum":
+                if (typeParams.values) {
+                    return exports.getEnumValue(name, typeParams.values, value, defaultValue, checkFunction, checkFailMessage);
+                }
+                application.showError("Missing enum definition object for '" + name + "'!");
+                return null;
+            case "object":
+                if (typeParams.properties) {
+                    return exports.getVerifiedObject(name, value, typeParams.properties);
+                }
+                return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage);
+            case "array":
+                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams.length, defaultValue, checkFunction, checkFailMessage);
+            default:
+                application.showError("Unknown type specified for '" + name + "': " + type);
+                return null;
         }
     };
     /**
@@ -321,7 +324,7 @@ define([
             }
             if (elementType !== undefined) {
                 value.forEach(function (element, index) {
-                    resultElement = exports.getValueOfType(name + "[" + index + "]", elementType, element, null, elementTypeParams, elementCheckFunction, elementCheckFailMessage);
+                    resultElement = exports.getValueOfType(name + "[" + index + "]", elementType, element, null, false, elementTypeParams, elementCheckFunction, elementCheckFailMessage);
                     if (resultElement !== null) {
                         result.push(resultElement);
                     }
@@ -349,11 +352,12 @@ define([
      * object has any additional properties not included in the definition object, they will be discarded from the result, but an error
      * message will be shown about them.
      * @param {Object} [objectToAppendTo] If given, the resulting verified properties will be appended to this object instead of a new empty one
-     * @param {Boolean} [silentDiscard=false] If true, there will be no warning shown about discarded properties
+     * @param {Boolean} [doNotDiscard=false] If true, the properties of the object that are not in the definition will not be discarded
+     * @param {Boolean} [silentDiscard=false] If true, there will be no warning shown about discarded / not defined but included properties
      * @param {String|Object} [propertyType] If given, the type can be omitted from the property definitions and if so, it will be considered to be this type
      * @returns {Object}
      */
-    exports.getVerifiedObject = function (name, value, definitionObject, objectToAppendTo, silentDiscard, propertyType) {
+    exports.getVerifiedObject = function (name, value, definitionObject, objectToAppendTo, doNotDiscard, silentDiscard, propertyType) {
         var propertyName, propertyDefinitionName, propertyDefinition, result = objectToAppendTo || {}, processedProperties = [];
         if (typeof value === "object") {
             for (propertyDefinitionName in definitionObject) {
@@ -367,6 +371,7 @@ define([
                             propertyDefinition.type || propertyType,
                             value[propertyDefinition.name],
                             propertyDefinition.defaultValue,
+                            propertyDefinition.optional,
                             {
                                 range: propertyDefinition.range,
                                 values: propertyDefinition.values,
@@ -380,11 +385,29 @@ define([
                     processedProperties.push(propertyDefinition.name);
                 }
             }
-            if (!silentDiscard) {
+            if (!silentDiscard || doNotDiscard) {
                 for (propertyName in value) {
                     if (value.hasOwnProperty(propertyName)) {
                         if (processedProperties.indexOf(propertyName) < 0) {
-                            application.showError("Unrecognized property '" + propertyName + "' defined for '" + name + "'. The value of this property cannot be verified and will be discarded.");
+                            if (!silentDiscard) {
+                                application.showError(
+                                        "Unrecognized property '" +
+                                        propertyName + "' defined for '" + name +
+                                        "'. The value of this property " +
+                                        (propertyType ? "can be verified only against the default property type" : "cannot be verified ") +
+                                        (doNotDiscard ? "but will be included." : "and will be discarded."));
+                            }
+                            if (doNotDiscard) {
+                                if (propertyType) {
+                                    result[propertyName] = exports.getValueOfType(
+                                            name + "." + propertyName,
+                                            propertyType,
+                                            value[propertyName]);
+                                } else {
+                                    result[propertyName] = value[propertyName];
+                                }
+
+                            }
                         }
                     }
                 }

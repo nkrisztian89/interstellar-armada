@@ -265,5 +265,22 @@ define(function () {
     exports.constantName = function (string) {
         return string.toUpperCase().replace(/ /g, "_");
     };
+    /**
+     * Replaces parts of a string marked by curly braces with the properties of the passed object
+     * that have the same name as indicated between the curly braces and returns the resulting
+     * string. (e.g. Called with "Hello, {name}!", {name: "Peter"} parameters, will return "Hello, Peter!")
+     * @param {String} string
+     * @param {Object} replacements
+     * @returns {String}
+     */
+    exports.formatString = function (string, replacements) {
+        var replacementName, str = string.toString();
+        for (replacementName in replacements) {
+            if (replacements.hasOwnProperty(replacementName)) {
+                str = str.replace(new RegExp("\\{" + replacementName + "\\}", "gi"), replacements[replacementName]);
+            }
+        }
+        return str;
+    };
     return exports;
 });

@@ -53,17 +53,19 @@ define([
      */
     AboutScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
+        this._backButton.getElement().onclick = function () {
+            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+            return false;
+        }.bind(this);
+    };
+    /**
+     * @override
+     */
+    AboutScreen.prototype._updateComponents = function () {
+        screens.HTMLScreen.prototype._updateComponents.call(this);
         this._backButton.setContent(strings.get(strings.ABOUT.BACK));
         this._titleHeading.setContent(strings.get(strings.ABOUT.TITLE));
         this._versionParagraph.setContent(strings.get(strings.ABOUT.VERSION) + game.getVersion());
-        this._backButton.getElement().onclick = function () {
-            if (game.getScreen().isSuperimposed()) {
-                game.closeSuperimposedScreen();
-            } else {
-                game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
-            }
-            return false;
-        }.bind(this);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

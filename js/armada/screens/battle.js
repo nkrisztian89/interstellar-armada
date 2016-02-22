@@ -164,6 +164,10 @@ define([
         this._resizeEventListener2();
     };
 
+    BattleScreen.prototype._updateComponents = function () {
+        screens.HTMLScreenWithCanvases.prototype._updateComponents.call(this);
+    };
+
     /**
      * Getter for the _loadingBox property.
      * @returns {LoadingBox}

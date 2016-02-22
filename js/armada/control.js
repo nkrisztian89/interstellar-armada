@@ -21,6 +21,17 @@ define([
 ], function (control, cameraController, game) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // constants
+            KEYBOARD_NAME = "keyboard",
+            MOUSE_NAME = "mouse",
+            JOYSTICK_NAME = "joystick",
+            GAMEPAD_NAME = JOYSTICK_NAME,
+            GENERAL_CONTROLLER_NAME = "general",
+            FIGHTER_CONTROLLER_NAME = "fighter",
+            CAMERA_CONTROLLER_NAME = "camera",
+            // ------------------------------------------------------------------------------
+            // private variables
             /**
              * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
              * @type ArmadaControlContext
@@ -101,7 +112,7 @@ define([
      * @returns {String}
      */
     GeneralController.prototype.getType = function () {
-        return "General";
+        return "general";
     };
     /**
      * Sets the controlled level to the one passed as parameter.
@@ -208,7 +219,7 @@ define([
      * @returns {String}
      */
     FighterController.prototype.getType = function () {
-        return "Fighter";
+        return "fighter";
     };
     /**
      * Sets the controlled spacecraft (fighter) for this controller. After called,
@@ -245,12 +256,12 @@ define([
          * @type Boolean
          */
         this._pilotingMode = false;
-        this.registerInputInterpreterType("keyboard", control.KeyboardInputInterpreter);
-        this.registerInputInterpreterType("mouse", control.MouseInputInterpreter);
-        this.registerInputInterpreterType("joystick", control.GamepadInputInterpreter);
-        this.registerControllerType("general", GeneralController);
-        this.registerControllerType("fighter", FighterController);
-        this.registerControllerType("camera", cameraController.CameraController);
+        this.registerInputInterpreterType(KEYBOARD_NAME, control.KeyboardInputInterpreter);
+        this.registerInputInterpreterType(MOUSE_NAME, control.MouseInputInterpreter);
+        this.registerInputInterpreterType(JOYSTICK_NAME, control.GamepadInputInterpreter);
+        this.registerControllerType(GENERAL_CONTROLLER_NAME, GeneralController);
+        this.registerControllerType(FIGHTER_CONTROLLER_NAME, FighterController);
+        this.registerControllerType(CAMERA_CONTROLLER_NAME, cameraController.CameraController);
     }
     ArmadaControlContext.prototype = new control.ControlContext();
     ArmadaControlContext.prototype.constructor = ArmadaControlContext;
@@ -304,6 +315,13 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        KEYBOARD_NAME: KEYBOARD_NAME,
+        MOUSE_NAME: MOUSE_NAME,
+        JOYSTICK_NAME: JOYSTICK_NAME,
+        GAMEPAD_NAME: GAMEPAD_NAME,
+        GENERAL_CONTROLLER_NAME: GENERAL_CONTROLLER_NAME,
+        FIGHTER_CONTROLLER_NAME: FIGHTER_CONTROLLER_NAME,
+        CAMERA_CONTROLLER_NAME: CAMERA_CONTROLLER_NAME,
         KeyBinding: control.KeyBinding,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),

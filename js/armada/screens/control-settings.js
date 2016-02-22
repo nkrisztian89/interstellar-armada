@@ -1,243 +1,264 @@
-/* 
- * Copyright (C) 2016 krisztian
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/**
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file This module manages and provides the Control settings screen of the application
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 2.0
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
 /*global define, document */
 
+/**
+ * @param utils Used for formatting strings and for the keycode table
+ * @param screens The controls screen is cubclassed from HTMLScreen
+ * @param game Used for navigation
+ * @param strings Used for translation support
+ * @param armadaScreens Used for common screen constants
+ * @param control Used to access and modify control settings of the game
+ */
 define([
     "utils/utils",
     "modules/screens",
     "modules/game",
+    "armada/strings",
+    "armada/screens/shared",
     "armada/control"
-], function (utils, screens, game, control) {
+], function (utils, screens, game, strings, armadaScreens, control) {
     "use strict";
-
+    var
+            // ------------------------------------------------------------------------------
+            // constants
+            BACK_BUTTON_ID = "backButton",
+            TITLE_HEADING_ID = "title",
+            DEFAULTS_BUTTON_ID = "defaultsButton",
+            TABLES_CONTAINER_ID_SUFFIX = "_tablesContainer",
+            CLICKABLE_CLASS_NAME = "clickable",
+            HIGHLIGHTED_CLASS_NAME = "highlightedItem",
+            TABLE_CLASS_NAME = "horizontallyCentered outerContainer",
+            CONTROL_STRING_DURING_SETTING = "?",
+            SHIFT_CODE = 16,
+            CTRL_CODE = 17,
+            ALT_CODE = 18,
+            // ------------------------------------------------------------------------------
+            // private variables
+            /**
+             * The name of the action currently being set (to get triggered by a new 
+             * key). If null, the user is not setting any actions.
+             * @type String
+             */
+            _actionUnderSetting = null,
+            /**
+             * While the user sets a new key,  tells if shift is being pressed down.
+             * @type Boolean
+             */
+            _settingShiftState = false,
+            /**
+             * While the user sets a new key, tells if control is being pressed down.
+             * @type Boolean
+             */
+            _settingCtrlState = false,
+            /**
+             * While the user sets a new key, tells if alt is being pressed down.
+             * @type Boolean
+             */
+            _settingAltState = false;
+    // ------------------------------------------------------------------------------
+    // private functions    
     /**
-     * Defines a controls screen object.
-     * @class Represents the controls screen, where the user can set up the game
-     * controls.
-     * @extends screens.HTMLScreen
-     * @param {String} name @see GameScreen
-     * @param {String} source @see GameScreen
-     * @returns {ControlsScreen}
-     */
-    function ControlsScreen(name, source) {
-        screens.HTMLScreen.call(this, name, source);
-        this._backButton = this.registerSimpleComponent("backButton");
-        this._defaultsButton = this.registerSimpleComponent("defaultsButton");
-        /**
-         * The name of the action currently being set (to get triggered by a new 
-         * key). If null, the user is not setting any actions.
-         * @type String
-         */
-        this._actionUnderSetting = null;
-        /**
-         * While the user sets a new key, this property tells if shift is pressed
-         * down.
-         * @type Boolean
-         */
-        this._settingShiftState = false;
-        /**
-         * While the user sets a new key, this property tells if control is pressed
-         * down.
-         * @type Boolean
-         */
-        this._settingCtrlState = false;
-        /**
-         * While the user sets a new key, this property tells if alt is pressed
-         * down.
-         * @type Boolean
-         */
-        this._settingAltState = false;
-    }
-
-    ControlsScreen.prototype = new screens.HTMLScreen();
-    ControlsScreen.prototype.constructor = ControlsScreen;
-
-    /**
-     * Refreshes the cell showing the currently set key for the given action in the
-     * UI. (call after the key has changed)
+     * Updates the cell content showing the currently set control for the given action 
+     * @param {String} inputDevice
      * @param {String} actionName
      */
-    ControlsScreen.prototype.refreshKeyForAction = function (actionName) {
-        document.getElementById(actionName).innerHTML = control.getInputInterpreter("keyboard").getControlStringForAction(actionName); //TODO: hardcoded
-        document.getElementById(actionName).className = "clickable";
-    };
-
+    function _updateControlStringForAction(inputDevice, actionName) {
+        document.getElementById(actionName).innerHTML = control.getInputInterpreter(inputDevice).getControlStringForAction(actionName);
+        document.getElementById(actionName).className = CLICKABLE_CLASS_NAME;
+    }
+    /**
+     * Cancels an ongoing key setting by updating the internal state, refreshing the
+     * UI (cancelling highlight and restoring it to show the original key) and cancelling
+     * key event handlers.
+     */
+    function _stopKeySetting() {
+        if (_actionUnderSetting !== null) {
+            _updateControlStringForAction(control.KEYBOARD_NAME, _actionUnderSetting);
+            _actionUnderSetting = null;
+            document.onkeydown = null;
+            document.onkeyup = null;
+        }
+    }
     /**
      * Handler for the keydown event to be active while the user is setting a new key
      * for an action. Updates the shift, control and alt states if one of those keys
      * is pressed, so that key combinations such as "ctrl + left" can be set.
      * @param {KeyboardEvent} event
      */
-    ControlsScreen.prototype.handleKeyDownWhileSetting = function (event) {
-        if (event.keyCode === 16) {
-            this._settingShiftState = true;
+    function handleKeyDownWhileSetting(event) {
+        if (event.keyCode === SHIFT_CODE) {
+            _settingShiftState = true;
         }
-        if (event.keyCode === 17) {
-            this._settingCtrlState = true;
+        if (event.keyCode === CTRL_CODE) {
+            _settingCtrlState = true;
         }
-        if (event.keyCode === 18) {
-            this._settingAltState = true;
+        if (event.keyCode === ALT_CODE) {
+            _settingAltState = true;
         }
-    };
-
+    }
     /**
      * Handler for the keyp event to be active while the user is setting a new key
      * for an action. This actually sets the key to the one that has been released,
      * taking into account the shift, control and alt states as well.
      * @param {KeyboardEvent} event
      */
-    ControlsScreen.prototype.handleKeyUpWhileSetting = function (event) {
+    function handleKeyUpWhileSetting(event) {
         // if we released shift, ctrl or alt, update their state
-        if (event.keyCode === 16) {
-            this._settingShiftState = false;
-        } else if (event.keyCode === 17) {
-            this._settingCtrlState = false;
-        } else if (event.keyCode === 18) {
-            this._settingAltState = false;
+        if (event.keyCode === SHIFT_CODE) {
+            _settingShiftState = false;
+        } else if (event.keyCode === CTRL_CODE) {
+            _settingCtrlState = false;
+        } else if (event.keyCode === ALT_CODE) {
+            _settingAltState = false;
         }
         // respect the shift, ctrl, alt states and set the new key for the action
-        var interpreter = control.getInputInterpreter("keyboard");
+        var interpreter = control.getInputInterpreter(control.KEYBOARD_NAME);
         interpreter.setAndStoreBinding(new control.KeyBinding(
-                this._actionUnderSetting,
+                _actionUnderSetting,
                 utils.getKeyOfCode(event.keyCode),
-                this._settingShiftState,
-                this._settingCtrlState,
-                this._settingAltState));
-        this.stopKeySetting();
-    };
-
-    /**
-     * Cancels an ongoing key setting by updating the internal state, refreshing the
-     * UI (cancelling highlight and restoring it to show the original key) and cancelling
-     * key event handlers.
-     */
-    ControlsScreen.prototype.stopKeySetting = function () {
-        if (this._actionUnderSetting !== null) {
-            this.refreshKeyForAction(this._actionUnderSetting);
-            this._actionUnderSetting = null;
-            document.onkeydown = null;
-            document.onkeyup = null;
-        }
-    };
-
+                _settingShiftState,
+                _settingCtrlState,
+                _settingAltState));
+        _stopKeySetting();
+    }
     /**
      * Starts setting a new key for an action. Highlights the passed element and
      * sets up the key event handlers to update the action represented by this
      * element.
      * @param {Element} tdElement
      */
-    ControlsScreen.prototype.startKeySetting = function (tdElement) {
+    function startKeySetting(tdElement) {
         var actionName = tdElement.getAttribute("id");
         // if we are already in the process of setting this action, just cancel it,
         // so setting an action can be cancelled by clicking on the same cell again
-        if (this._actionUnderSetting === actionName) {
-            this.stopKeySetting();
+        if (_actionUnderSetting === actionName) {
+            _stopKeySetting();
             // otherwise cancel if we are in a process of setting another action, and 
             // then start setting this one
         } else {
-            this.stopKeySetting();
-            this._actionUnderSetting = actionName;
-            tdElement.innerHTML = "?";
-            tdElement.className = "highlightedItem";
-            this._settingShiftState = false;
-            this._settingCtrlState = false;
-            this._settingAltState = false;
+            _stopKeySetting();
+            _actionUnderSetting = actionName;
+            tdElement.innerHTML = CONTROL_STRING_DURING_SETTING;
+            tdElement.className = HIGHLIGHTED_CLASS_NAME;
+            _settingShiftState = false;
+            _settingCtrlState = false;
+            _settingAltState = false;
             document.onkeydown = function (event) {
-                this.handleKeyDownWhileSetting(event);
-            }.bind(this);
+                handleKeyDownWhileSetting(event);
+            };
             document.onkeyup = function (event) {
-                this.handleKeyUpWhileSetting(event);
-            }.bind(this);
+                handleKeyUpWhileSetting(event);
+            };
         }
-    };
-
+    }
+    // ##############################################################################
     /**
-     * Initializes the buttons and adds the table showing the current control settings.
+     * @class Represents the controls screen, where the user can set up the game
+     * controls.
+     * @extends HTMLScreen
+     */
+    function ControlsScreen() {
+        screens.HTMLScreen.call(this, armadaScreens.CONTROLS_SCREEN_NAME, armadaScreens.CONTROLS_SCREEN_SOURCE);
+        /**
+         * @type SimpleComponent
+         */
+        this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._titleHeading = this.registerSimpleComponent(TITLE_HEADING_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
+    }
+    ControlsScreen.prototype = new screens.HTMLScreen();
+    ControlsScreen.prototype.constructor = ControlsScreen;
+    /**
+     * @override
      */
     ControlsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
-
         this._backButton.getElement().onclick = function () {
-            this.stopKeySetting();
-            if (game.getScreen().isSuperimposed()) {
-                game.closeSuperimposedScreen();
-            } else {
-                game.setScreen('settings'); //TODO: hardcoded
-            }
+            _stopKeySetting();
+            game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
-            this.stopKeySetting();
+            _stopKeySetting();
             control.restoreDefaults();
-            this.generateTables();
+            this._generateTables();
             return false;
         }.bind(this);
-
-        this.generateTables();
     };
-
+    /**
+     * @override
+     */
+    ControlsScreen.prototype._updateComponents = function () {
+        screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._backButton.setContent(strings.get(strings.CONTROLS.BACK));
+        this._titleHeading.setContent(strings.get(strings.CONTROLS.TITLE));
+        this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
+        this._generateTables();
+    };
     /**
      * Adds the table showing available actions and their assigned keys as well as
      * sets up a click handler for the cells showing the keys to initiate a change
      * of that key binding.
      */
-    ControlsScreen.prototype.generateTables = function () {
+    ControlsScreen.prototype._generateTables = function () {
         control.executeWhenReady(function () {
             var i, j, k, n,
-                    tablesContainer = document.getElementById(this._name + "_tablesContainer"),
+                    tablesContainer = document.getElementById(this._name + TABLES_CONTAINER_ID_SUFFIX),
                     gameControllers = control.getControllers(),
                     h2Element, tableElement, theadElement, thElement, tbodyElement, actions, trElement, td1Element, td2Element,
-                    keySetterFunction = function (self) {
-                        return function () {
-                            self.startKeySetting(this);
-                        };
+                    actionStringDefinitionObject = {},
+                    keySetterFunction = function () {
+                        startKeySetting(this);
                     };
             tablesContainer.innerHTML = "";
             for (i = 0; i < gameControllers.length; i++) {
                 h2Element = document.createElement("h2");
-                h2Element.innerHTML = gameControllers[i].getType() + " controls";
+                h2Element.innerHTML = utils.formatString(
+                        strings.get(strings.CONTROLS.CONTROLLER_TYPE_HEADING),
+                        {controllerType: strings.get(strings.CONTOLLER.PREFIX, gameControllers[i].getType())});
                 tablesContainer.appendChild(h2Element);
                 tableElement = document.createElement("table");
-                tableElement.className = "horizontallyCentered outerContainer";
+                tableElement.className = TABLE_CLASS_NAME;
                 theadElement = document.createElement("thead");
                 for (j = 0, n = control.getInputInterpreters().length; j < n; j++) {
                     thElement = document.createElement("th");
-                    thElement.innerHTML = control.getInputInterpreters()[j].getDeviceName();
+                    thElement.innerHTML = strings.get(strings.INPUT.DEVICE_NAME_PREFIX, control.getInputInterpreters()[j].getDeviceName());
                     theadElement.appendChild(thElement);
                 }
-                theadElement.innerHTML += "<th>Action</th>";
+                theadElement.innerHTML += "<th>" + strings.get(strings.CONTROLS.ACTION) + "</th>";
                 tbodyElement = document.createElement("tbody");
                 actions = gameControllers[i].getActions();
+                for (j = 0; j < actions.length; j++) {
+                    actionStringDefinitionObject[actions[j].getName()] = strings.ACTION_DESCRIPTIONS.PREFIX.name + actions[j].getName();
+                }
                 for (j = 0; j < actions.length; j++) {
                     trElement = document.createElement("tr");
                     for (k = 0, n = control.getInputInterpreters().length; k < n; k++) {
                         td1Element = document.createElement("td");
-                        if (control.getInputInterpreters()[k].getDeviceName() === "Keyboard") {
+                        if (control.getInputInterpreters()[k].getDeviceName() === control.KEYBOARD_NAME) {
                             td1Element.setAttribute("id", actions[j].getName());
-                            td1Element.className = "clickable";
-                            td1Element.onclick = keySetterFunction(this);
+                            td1Element.className = CLICKABLE_CLASS_NAME;
+                            td1Element.onclick = keySetterFunction;
                         }
                         td1Element.innerHTML = control.getInputInterpreters()[k].getControlStringForAction(actions[j].getName());
                         trElement.appendChild(td1Element);
                     }
                     td2Element = document.createElement("td");
-                    td2Element.innerHTML = actions[j].getDescription();
+                    td2Element.innerHTML = strings.get(strings.ACTION_DESCRIPTIONS.PREFIX, actions[j].getName());
                     trElement.appendChild(td2Element);
                     tbodyElement.appendChild(trElement);
                 }
@@ -247,8 +268,9 @@ define([
             }
         }.bind(this));
     };
-
+    // -------------------------------------------------------------------------
+    // The public interface of the module
     return {
-        ControlsScreen: ControlsScreen
+        controlsScreen: new ControlsScreen()
     };
 });

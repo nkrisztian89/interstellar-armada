@@ -551,7 +551,7 @@ define([
      * @returns {String}
      */
     KeyboardInputInterpreter.prototype.getDeviceName = function () {
-        return "Keyboard";
+        return "keyboard";
     };
     /**
      * Returns whether the default browser actions for the key of the passed code
@@ -924,7 +924,7 @@ define([
      * @returns {String}
      */
     MouseInputInterpreter.prototype.getDeviceName = function () {
-        return "Mouse";
+        return "mouse";
     };
     /**
      * Sets the mouse move sensitivity and stores the setting in HTML5 local storage.
@@ -1328,7 +1328,7 @@ define([
      * @returns {String}
      */
     GamepadInputInterpreter.prototype.getDeviceName = function () {
-        return "Joystick";
+        return "joystick";
     };
     /**
      * @override

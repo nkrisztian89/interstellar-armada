@@ -58,7 +58,7 @@ define([
             game.addScreen(new database.DatabaseScreen("database", "database.html"));
             game.addScreen(menus.settingsMenuScreen);
             game.addScreen(graphicsScreen.graphicsScreen);
-            game.addScreen(new controlsScreen.ControlsScreen("controls", "controls.html"));
+            game.addScreen(controlsScreen.controlsScreen);
             game.addScreen(aboutScreen.aboutScreen);
             game.addScreen(menus.ingameMenuScreen);
             callback();

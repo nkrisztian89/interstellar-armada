@@ -114,12 +114,37 @@ define(function () {
         this._currentScreen.hide();
         this._currentScreen = this._coveredScreens.pop();
     };
+    /**
+     * If the current screen was superimposed, closes it, otherwise simply navigates to
+     * (sets) the screen with the given name.
+     * @param {String} screenName
+     */
+    ScreenManager.prototype.closeOrNavitageTo = function (screenName) {
+        if (this.getCurrentScreen().isSuperimposed()) {
+            this.closeSuperimposedScreen();
+        } else {
+            this.setCurrentScreen(screenName);
+        }
+    };
+    /**
+     * Updates the components on all screens to reflect the application's current state.
+     */
+    ScreenManager.prototype.updateAllScreens = function () {
+        var screenName;
+        for (screenName in this._screens) {
+            if (this._screens.hasOwnProperty(screenName)) {
+                this._screens[screenName].updateScreen();
+            }
+        }
+    };
     _screenManager = new ScreenManager();
     return {
         getCurrentScreen: _screenManager.getCurrentScreen.bind(_screenManager),
         getScreen: _screenManager.getScreen.bind(_screenManager),
         addScreen: _screenManager.addScreen.bind(_screenManager),
         setCurrentScreen: _screenManager.setCurrentScreen.bind(_screenManager),
-        closeSuperimposedScreen: _screenManager.closeSuperimposedScreen.bind(_screenManager)
+        closeSuperimposedScreen: _screenManager.closeSuperimposedScreen.bind(_screenManager),
+        closeOrNavitageTo: _screenManager.closeOrNavitageTo.bind(_screenManager),
+        updateAllScreens: _screenManager.updateAllScreens.bind(_screenManager)
     };
 });

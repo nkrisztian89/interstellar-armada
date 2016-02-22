@@ -26,6 +26,7 @@ define(function () {
         GRAPHICS_SCREEN_NAME: "graphics",
         GRAPHICS_SCREEN_SOURCE: "graphics.html",
         CONTROLS_SCREEN_NAME: "controls",
+        CONTROLS_SCREEN_SOURCE: "controls.html",
         ABOUT_SCREEN_NAME: "about",
         ABOUT_SCREEN_SOURCE: "about.html",
         INGAME_MENU_SCREEN_NAME: "ingameMenu",

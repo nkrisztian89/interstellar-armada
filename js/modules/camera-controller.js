@@ -147,7 +147,7 @@ define([
      * @returns {String}
      */
     CameraController.prototype.getType = function () {
-        return "Camera";
+        return "camera";
     };
     /**
      * Sets the controlled camera for this controller. After called, all controls 

@@ -42,6 +42,7 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             BACK_BUTTON_ID = "backButton",
+            TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
             AA_SELECTOR_ID_SUFFIX = "_aaSelector",
             FILTERING_SELECTOR_ID_SUFFIX = "_filteringSelector",
@@ -117,11 +118,15 @@ define([
         /**
          * @type SimpleComponent
          */
-        this._backButton = null;
+        this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
         /**
          * @type SimpleComponent
          */
-        this._defaultsButton = null;
+        this._titleHeading = this.registerSimpleComponent(TITLE_HEADING_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
         /**
          * @type ExternalComponent
          */
@@ -158,30 +163,28 @@ define([
             return element[0];
         };
         graphics.executeWhenReady(function () {
-            this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
-            this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
-            this._antialiasingSelector = this.registerSelector(AA_SELECTOR_ID_SUFFIX,
+            this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.ANTIALIASING),
                     SETTING_ON_OFF);
-            this._filteringSelector = this.registerSelector(FILTERING_SELECTOR_ID_SUFFIX,
+            this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.FILTERING),
                     SETTING_FILTERING_VALUES.map(mapCaption));
-            this._textureQualitySelector = this.registerSelector(TEXTURE_QUALITY_SELECTOR_ID_SUFFIX,
+            this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.TEXTURE_QUALITY),
                     SETTING_TEXTURE_QUALITY_VALUES.map(mapCaption));
-            this._lodSelector = this.registerSelector(LOD_SELECTOR_ID_SUFFIX,
+            this._lodSelector = this._registerSelector(LOD_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.MODEL_DETAILS),
                     SETTING_FULL_RANGE_VALUES.map(mapCaption));
-            this._shaderComplexitySelector = this.registerSelector(SHADER_COMPLEXITY_SELECTOR_ID_SUFFIX,
+            this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.SHADERS),
                     SETTING_SHADER_COMPLEXITY_VALUES.map(mapCaption));
-            this._shadowMappingSelector = this.registerSelector(SHADOW_MAPPING_SELECTOR_ID_SUFFIX,
+            this._shadowMappingSelector = this._registerSelector(SHADOW_MAPPING_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.SHADOWS),
                     SETTING_ON_OFF);
-            this._shadowQualitySelector = this.registerSelector(SHADOW_QUALITY_SELECTOR_ID_SUFFIX,
+            this._shadowQualitySelector = this._registerSelector(SHADOW_QUALITY_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.SHADOW_QUALITY),
                     SETTING_SHADOW_QUALITY_VALUES.map(mapCaption));
-            this._shadowDistanceSelector = this.registerSelector(SHADOW_DISTANCE_SELECTOR_ID_SUFFIX,
+            this._shadowDistanceSelector = this._registerSelector(SHADOW_DISTANCE_SELECTOR_ID_SUFFIX,
                     strings.get(strings.GRAPHICS.SHADOW_DISTANCE),
                     SETTING_SHADOW_DISTANCE_VALUES.map(mapCaption));
         }.bind(this));
@@ -194,7 +197,7 @@ define([
      * @param {String[]} valueList
      * @returns {Selector}
      */
-    GraphicsScreen.prototype.registerSelector = function (nameSuffix, propertyName, valueList) {
+    GraphicsScreen.prototype._registerSelector = function (nameSuffix, propertyName, valueList) {
         return this.registerExternalComponent(
                 new components.Selector(
                         armadaScreens.GRAPHICS_SCREEN_NAME + nameSuffix,
@@ -209,7 +212,6 @@ define([
      */
     GraphicsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
-        this._backButton.setContent(strings.get(strings.GRAPHICS.BACK));
         this._backButton.getElement().onclick = function () {
             graphics.setAntialiasing((this._antialiasingSelector.getSelectedIndex() === SETTING_ON_INDEX));
             graphics.setFiltering(SETTING_FILTERING_VALUES[this._filteringSelector.getSelectedIndex()][1]);
@@ -226,7 +228,6 @@ define([
             }
             return false;
         }.bind(this);
-        this._defaultsButton.setContent(strings.get(strings.GRAPHICS.DEFAULTS));
         this._defaultsButton.getElement().onclick = function () {
             graphics.restoreDefaults();
             this.updateValues();
@@ -253,12 +254,21 @@ define([
                 this._shadowDistanceSelector.hide();
             }
         }.bind(this);
-        this.updateValues();
+    };
+    /**
+     * @override
+     */
+    GraphicsScreen.prototype._updateComponents = function () {
+        screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._backButton.setContent(strings.get(strings.GRAPHICS.BACK));
+        this._titleHeading.setContent(strings.get(strings.GRAPHICS.TITLE));
+        this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
+        this._updateValues();
     };
     /**
      * Updates the component states based on the current graphics settings
      */
-    GraphicsScreen.prototype.updateValues = function () {
+    GraphicsScreen.prototype._updateValues = function () {
         graphics.executeWhenReady(function () {
             var findIndexOf = function (value, array) {
                 return array.findIndex(function (element) {

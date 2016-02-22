@@ -210,6 +210,20 @@ define([
             // otherwise just leave it undefined, nothing to pass to the method below
             this.addExternalComponent(this._externalComponents[i].component, parentNode);
         }
+        this._updateComponents();
+    };
+    /**
+     * Override this to update the state of components on this screen to be up-to-date with the
+     * application state.
+     */
+    HTMLScreen.prototype._updateComponents = function () {
+        application.log("Screen '" + this._name + "' is getting updated.");
+    };
+    /**
+     * Updates all components on this screen to be up-to-date with the application state.
+     */
+    HTMLScreen.prototype.updateScreen = function () {
+        this._updateComponents();
     };
     /**
      * @param {String} simpleComponentName

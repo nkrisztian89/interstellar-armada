@@ -27,7 +27,8 @@ define([
     };
     strings.SETTINGS = {
         GRAPHICS: {name: "settings.graphics"},
-        CONTROLS: {name: "settings.controls"}
+        CONTROLS: {name: "settings.controls"},
+        DEFAULTS: {name: "settings.defaults"}
     };
     strings.INGAME_MENU = {
         RESUME: {name: "ingameMenu.resume"},
@@ -51,7 +52,7 @@ define([
     };
     strings.GRAPHICS = {
         BACK: {name: "graphics.back"},
-        DEFAULTS: {name: "graphics.defaults"},
+        TITLE: {name: "graphics.title"},
         ANTIALIASING: {name: "graphics.antialiasing"},
         FILTERING: {name: "graphics.filtering"},
         BILINEAR: {name: "graphics.bilinear"},
@@ -68,6 +69,27 @@ define([
         SHADOW_DISTANCE_MEDIUM: {name: "graphics.shadowDistanceMedium"},
         SHADOW_DISTANCE_FAR: {name: "graphics.shadowDistanceFar"},
         SHADOW_DISTANCE_VERY_FAR: {name: "graphics.shadowDistanceVeryFar"}
+    };
+    strings.CONTOLLER = {
+        PREFIX: {name: "controller.", optional: true},
+        GENERAL: {name: "controller.general"},
+        FIGHTER: {name: "controller.fighter"},
+        CAMERA: {name: "controller.camera"}
+    };
+    strings.INPUT = {
+        DEVICE_NAME_PREFIX: {name: "inputDevice.", optional: true},
+        DEVICE_KEYBOARD: {name: "inputDevice.keyboard"},
+        DEVICE_MOUSE: {name: "inputDevice.mouse"},
+        DEVICE_JOYSTICK: {name: "inputDevice.joystick"}
+    };
+    strings.CONTROLS = {
+        BACK: {name: "controls.back"},
+        TITLE: {name: "controls.title"},
+        CONTROLLER_TYPE_HEADING: {name: "controls.controllerHeading"},
+        ACTION: {name: "controls.action"}
+    };
+    strings.ACTION_DESCRIPTIONS = {
+        PREFIX: {name: "actionDescriptions.", optional: true}
     };
     return strings;
 });

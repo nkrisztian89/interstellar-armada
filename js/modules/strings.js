@@ -30,20 +30,25 @@ define([
              * 
              * @type Object
              */
-            _strings = {};
+            _requiredStrings = {},
+            /**
+             * 
+             * @type Object
+             */
+            _allStrings = {};
     /**
      * 
      * @param {String} value
      */
     exports.setLanguage = function (value) {
-        if (_strings.hasOwnProperty(value)) {
+        if (_allStrings.hasOwnProperty(value)) {
             _currentLanguage = value;
         } else {
             application.showError("Cannot set language to '" + value + "', as there are no strings loaded for that language!");
         }
     };
     exports.languageIsLoaded = function (language) {
-        return _strings.hasOwnProperty(language);
+        return _allStrings.hasOwnProperty(language);
     };
     /**
      * @param {String} language
@@ -52,12 +57,13 @@ define([
      */
     exports.loadStrings = function (language, stringsJSON, stringDefinitions) {
         var categoryName;
-        _strings[language] = {};
+        _requiredStrings[language] = {};
         for (categoryName in stringDefinitions) {
             if (stringDefinitions.hasOwnProperty(categoryName) && (typeof stringDefinitions[categoryName] === "object")) {
-                types.getVerifiedObject("strings." + categoryName, stringsJSON, stringDefinitions[categoryName], _strings[language], true, "string");
+                types.getVerifiedObject("strings." + categoryName, stringsJSON, stringDefinitions[categoryName], _requiredStrings[language], false, true, "string");
             }
         }
+        _allStrings[language] = types.getVerifiedObject("strings." + categoryName, stringsJSON, {}, null, true, true, "string");
         if (!_currentLanguage) {
             exports.setLanguage(language);
         }
@@ -65,9 +71,10 @@ define([
     /**
      * 
      * @param {Object} stringDefinitionObject
+     * @param {String} [suffix]
      */
-    exports.get = function (stringDefinitionObject) {
-        return _strings[_currentLanguage][stringDefinitionObject.name] || stringDefinitionObject.name;
+    exports.get = function (stringDefinitionObject, suffix) {
+        return _allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")] || stringDefinitionObject.name + (suffix || "");
     };
     return exports;
 });

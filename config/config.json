@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0:136+refactoring-69 (2016.02.22.)",
+    "version": "0.1.0:136+refactoring-70 (2016.02.22.)",
     "logVerbosity": 1,
     "folders": {
         "config": "config/",
@@ -60,32 +60,23 @@
                 "type": "general",
                 "actions": [
                     {
-                        "name": "quit",
-                        "description": "Quit to menu"
+                        "name": "quit"
                     }, {
-                        "name": "pause",
-                        "description": "Pause the game"
+                        "name": "pause"
                     }, {
-                        "name": "stopTime",
-                        "description": "Stop the time in the game, with controls still available"
+                        "name": "stopTime"
                     }, {
-                        "name": "switchToPilotMode",
-                        "description": "Switch to pilot mode"
+                        "name": "switchToPilotMode"
                     }, {
-                        "name": "switchToSpectatorMode",
-                        "description": "Switch to spectator mode"
+                        "name": "switchToSpectatorMode"
                     }, {
-                        "name": "toggleHitboxVisibility",
-                        "description": "Toggle the visibility of hitboxes"
+                        "name": "toggleHitboxVisibility"
                     }, {
-                        "name": "toggleTextVisibility",
-                        "description": "Toggle the visibility of the texts on screen"
+                        "name": "toggleTextVisibility"
                     }, {
-                        "name": "toggleMouseControls",
-                        "description": "Disable / enable mouse controls"
+                        "name": "toggleMouseControls"
                     }, {
-                        "name": "toggleJoystickControls",
-                        "description": "Disable / enable joystick controls"
+                        "name": "toggleJoystickControls"
                     }
                 ]
             },
@@ -93,65 +84,49 @@
                 "type": "fighter",
                 "actions": [
                     {
-                        "name": "changeFlightMode",
-                        "description": "Change flight mode"
+                        "name": "changeFlightMode"
                     }, {
-                        "name": "nextTarget",
-                        "description": "Target next spacecraft"
+                        "name": "nextTarget"
                     }, {
                         "name": "fire",
-                        "description": "Fire primary weapons",
                         "continuous": true
                     }, {
                         "name": "forward",
-                        "description": "Forward thrust (free mode) or increase speed",
                         "continuous": true
                     }, {
                         "name": "reverse",
-                        "description": "Reverse thrust (free mode) or decrease speed",
                         "continuous": true
                     }, {
                         "name": "strafeLeft",
-                        "description": "Strafe left",
                         "continuous": true
                     }, {
                         "name": "strafeRight",
-                        "description": "Strafe right",
                         "continuous": true
                     }, {
                         "name": "raise",
-                        "description": "Strafe upwards",
                         "continuous": true
                     }, {
                         "name": "lower",
-                        "description": "Strafe downwards",
                         "continuous": true
                     }, {
-                        "name": "resetSpeed",
-                        "description": "Reset speed to zero (compensated mode)"
+                        "name": "resetSpeed"
                     }, {
                         "name": "yawLeft",
-                        "description": "Turn to the left",
                         "continuous": true
                     }, {
                         "name": "yawRight",
-                        "description": "Turn to the right",
                         "continuous": true
                     }, {
                         "name": "pitchUp",
-                        "description": "Turn upwards",
                         "continuous": true
                     }, {
                         "name": "pitchDown",
-                        "description": "Turn downwards",
                         "continuous": true
                     }, {
                         "name": "rollLeft",
-                        "description": "Roll to the left",
                         "continuous": true
                     }, {
                         "name": "rollRight",
-                        "description": "Roll to the right",
                         "continuous": true
                     }
                 ]
@@ -160,80 +135,60 @@
                 "type": "camera",
                 "actions": [
                     {
-                        "name": "controlCamera",
-                        "description": "Hold this button to control the camera instead of your spacecraft if you have the same controls assigned"
+                        "name": "controlCamera"
                     },
                     {
                         "name": "cameraMoveLeft",
-                        "description": "Move the camera to the left (free camera mode)",
                         "continuous": true
                     }, {
                         "name": "cameraMoveRight",
-                        "description": "Move the camera to the right (free camera mode)",
                         "continuous": true
                     }, {
                         "name": "cameraMoveUp",
-                        "description": "Move the camera upwards (free camera mode)",
                         "continuous": true
                     }, {
                         "name": "cameraMoveDown",
-                        "description": "Move the camera downwards (free camera mode)",
                         "continuous": true
                     }, {
                         "name": "cameraMoveForward",
-                        "description": "Move the camera forward (free camera mode)",
                         "continuous": true
                     }, {
                         "name": "cameraMoveBackward",
-                        "description": "Move the camera backward (free camera mode)",
                         "continuous": true
                     }, {
                         "name": "cameraTurnLeft",
-                        "description": "Turn the camera to the left",
                         "continuous": true
                     }, {
                         "name": "cameraTurnRight",
-                        "description": "Turn the camera to the right",
                         "continuous": true
                     }, {
                         "name": "cameraTurnUp",
-                        "description": "Turn the camera upwards",
                         "continuous": true
                     }, {
                         "name": "cameraTurnDown",
-                        "description": "Turn the camera downwards",
                         "continuous": true
                     }, {
                         "name": "cameraRollLeft",
-                        "description": "Roll the camera to the left",
                         "continuous": true
                     }, {
                         "name": "cameraRollRight",
-                        "description": "Roll the camera to the right",
                         "continuous": true
                     }, {
                         "name": "cameraDecreaseFOV",
-                        "description": "Zoom in",
                         "continuous": true
                     }, {
                         "name": "cameraIncreaseFOV",
-                        "description": "Zoom out",
                         "continuous": true
                     }, {
-                        "name": "followNext",
-                        "description": "Follow next spacecraft. (in spectator mode)"
+                        "name": "followNext"
                     }, {
-                        "name": "followPrevious",
-                        "description": "Follow previous spacecraft. (in spectator mode)"
+                        "name": "followPrevious"
                     }, {
-                        "name": "nextView",
-                        "description": "Change to the next view of the currently followed spacecraft"
+                        "name": "nextView"
                     }, {
-                        "name": "previousView",
-                        "description": "Change to the previous view of the currently followed spacecraft"
+                        "name": "previousView"
                     }, {
-                        "name": "resetView",
-                        "description": "Reset the current view to its original state"
+                        "name": "resetView"
                     }
                 ]
             }
