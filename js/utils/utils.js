@@ -12,7 +12,7 @@
 define(function () {
     "use strict";
     var
-    NUMBER_THOUSANDS_DELIMITER = " ",
+            NUMBER_THOUSANDS_DELIMITER = " ",
             exports = {},
             _keyCodeTable = {
                 "backspace": 8,
@@ -256,6 +256,14 @@ define(function () {
                 ((massInKilograms < 100000) ?
                         (massInKilograms / 1000).toPrecision(3) + " t" :
                         exports.getDelimitedStringForNumber(Math.round(massInKilograms / 1000)) + " t");
+    };
+    /**
+     * Converts the string to all uppercase and replaces spaces with underscores
+     * @param {String} string
+     * @returns {String}
+     */
+    exports.constantName = function (string) {
+        return string.toUpperCase().replace(/ /g, "_");
     };
     return exports;
 });

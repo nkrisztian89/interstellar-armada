@@ -1,10 +1,20 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file This module builds on Application and ScreenManager to provide a template for creating games using the 
- * functionality of these modules.
+ * @file This module builds on Application to provide a template for creating games.
+ * To use, just augment this module, calling
+ * - setGameName()
+ * - setStartScreenName()
+ * - setConfigFolder()
+ * - setConfigFileName()
+ * with the appropriate parameters and overriding
+ * - _loadGameSettingsAndExecuteCallback()
+ * - _loadGameConfigurationAndExecuteCallback()
+ * - _buildScreensAndExecuteCallback()
+ * with the appropriate operations.
+ * The, call initialize() to run the game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
+ * @version 2.0
  */
 
 /*jslint nomen: true, white: true */
@@ -12,18 +22,17 @@
 
 /**
  * @param application This module augments the generic application module
+ * @param screenManager Used to provide and further expose screen management for the game
+ * @param strings Used to provide internationalization support
  */
 define([
-    "modules/application"
-], function (application) {
+    "modules/application",
+    "modules/screen-manager",
+    "modules/strings"
+], function (application, screenManager, strings) {
     "use strict";
     // private variables
     var
-            /**
-             * Manages the HTML screens of the game
-             * @type ScreenManager
-             */
-            _screenManager = null,
             /**
              * Whether the configuration of the game has finished loading
              * @type Boolean
@@ -59,6 +68,7 @@ define([
              * @type String
              */
             _configFileName = null,
+            _stringsFileDescriptors = null,
             // -------------------------------------------------------------------------
             // Private methods
             /**
@@ -69,7 +79,7 @@ define([
                     application.log("Initialization of " + _gameName + " completed.");
                     // hide the splash screen
                     document.body.firstElementChild.style.display = "none";
-                    _screenManager.setCurrentScreen(_startScreenName);
+                    screenManager.setCurrentScreen(_startScreenName);
                 }
             },
             /**
@@ -77,15 +87,9 @@ define([
              * @returns {undefined}
              */
             _requestScreenBuild = function () {
-                require([
-                    "modules/screens",
-                    "modules/screen-manager"
-                ], function (screens, screenManager) {
-                    _screenManager = new screenManager.ScreenManager();
-                    application._buildScreensAndExecuteCallback(screens, function () {
-                        _screenInitComplete = true;
-                        _checkInitComplete();
-                    });
+                application._buildScreensAndExecuteCallback(function () {
+                    _screenInitComplete = true;
+                    _checkInitComplete();
                 });
             },
             /**
@@ -97,10 +101,11 @@ define([
                 application.requestTextFile(settingsFileDescriptor.folder, settingsFileDescriptor.filename, function (settingsText) {
                     var settingsJSON = JSON.parse(settingsText);
                     application.log("Loading game settings...", 1);
-                    application._loadGameSettings(settingsJSON);
-                    application.log("Game settings loaded.", 1);
-                    _settingsInitComplete = true;
-                    _requestScreenBuild();
+                    application._loadGameSettingsAndExecuteCallback(settingsJSON, function () {
+                        application.log("Game settings loaded.", 1);
+                        _settingsInitComplete = true;
+                        _requestScreenBuild();
+                    });
                 });
             },
             /**
@@ -115,15 +120,17 @@ define([
                     application.setLogVerbosity(configJSON.logVerbosity);
                     application.setVersion(configJSON.version);
                     application.log("Game version is: " + application.getVersion(), 1);
+                    _stringsFileDescriptors = configJSON.configFiles.strings;
                     require([
                         "modules/graphics-resources"
                     ], function (graphicsResources) {
-                        application._loadGameConfiguration(configJSON);
-                        graphicsResources.requestConfigLoad(configJSON.dataFiles.graphics.resources, function () {
-                            application.log("Game configuration loaded.");
-                            _configInitComplete = true;
+                        application._loadGameConfigurationAndExecuteCallback(configJSON, function () {
+                            graphicsResources.requestConfigLoad(configJSON.dataFiles.graphics.resources, function () {
+                                application.log("Game configuration loaded.");
+                                _configInitComplete = true;
+                            });
+                            _requestSettingsLoad(configJSON.configFiles.settings);
                         });
-                        _requestSettingsLoad(configJSON.configFiles.settings);
                     });
                 });
             };
@@ -133,19 +140,19 @@ define([
      * Override this method to initialize the game settings from a JSON object that is loaded from the settings file and will be passed as
      * its single parameter when called.
      */
-    application._loadGameSettings = function () {
+    application._loadGameSettingsAndExecuteCallback = function () {
         application.showError("You need to override the _loadGameSettings method!");
     };
     /**
      * Override this method to initialize the game configuration from a JSON object that is loaded from the configuration file and will be 
      * passed as its single parameter when called.
      */
-    application._loadGameConfiguration = function () {
+    application._loadGameConfigurationAndExecuteCallback = function () {
         application.showError("You need to override the _loadGameConfiguration method!");
     };
     /**
-     * Override this method to initialize the game screens. When called, it will receive the screens module as its first parameter and a 
-     * callback that needs to be executed after the loading is complete as a second parameter.
+     * Override this method to initialize the game screens. When called, it will receive a callback that needs to be executed after the 
+     * loading is complete as its single parameter.
      */
     application._buildScreensAndExecuteCallback = function () {
         application.showError("You need to override the _buildScreensAndExecuteCallback method!");
@@ -181,6 +188,41 @@ define([
     application.setConfigFileName = function (value) {
         _configFileName = value;
     };
+    /**
+     * If needed, launches an asynchronous request to load the language file for the given language and changes
+     * the language of the application to it when it is loaded, then executes the callback. If the
+     * language file had already been loaded previously, just switches the language and executes the
+     * callback.
+     * @param {String} language A string identifier of the language
+     * @param {Object} stringDefinitions An object definition object for verification, that contains the 
+     * (property) definitions of the strings, organized into categories. The required format:
+     * stringDefinitions.(categoryName).(stringDefinitionName).name = (stringID)
+     * Where categoryName and stringDefinitionName are any identifiers that can be later used to obtain the loaded
+     * string value, and stringID needs to be the same string as the key for the string in the JSON file to load.
+     * @param {Function} callback The callback to execute after the language has been changed. It will get one parameter,
+     * which will indicate whether it is being executed in the asynchronously
+     * @returns {Boolean} Whether the language change could be initiated
+     */
+    application.requestLanguageChange = function (language, stringDefinitions, callback) {
+        if (!_stringsFileDescriptors || !_stringsFileDescriptors[language]) {
+            application.showError("Cannot change application language to '" + language + "' as there is no strings file set for this langauge!");
+            return false;
+        }
+        if (strings.languageIsLoaded(language)) {
+            strings.setLanguage(language);
+            callback(false);
+        } else {
+            application.requestTextFile(
+                    _stringsFileDescriptors[language].folder,
+                    _stringsFileDescriptors[language].filename,
+                    function (responseText) {
+                        strings.loadStrings(language, JSON.parse(responseText), stringDefinitions);
+                        strings.setLanguage(language);
+                        callback(true);
+                    });
+        }
+        return true;
+    };
     /** 
      * Initializes the game: builds up the screens, loads settings and displays the start screen.
      */
@@ -197,40 +239,12 @@ define([
         }
         _requestConfigLoad();
     };
-    // Shortcuts
-    /**
-     * Getter of the screen manager of the game.
-     * @returns {ScreenManager}
-     */
-    application.screenManager = function () {
-        return _screenManager;
-    };
     // globally available functions
-    /**
-     * Returns the current screen of the game or the screen with the given name.
-     * @param {String} [screenName] If specified, the function will return the
-     * screen having this name. If omitted the function returns the current screen.
-     * @returns {screens.GameScreen}
-     */
-    application.getScreen = function (screenName) {
-        return screenName ?
-                _screenManager.getScreen(screenName) :
-                _screenManager.getCurrentScreen();
-    };
-    /**
-     * Switches to the given screen.
-     * @param {String} screenName The name of the screen to activate.
-     * @param {Boolean} [superimpose=false] Whether to superimpose the screen 
-     * on top of the current screen(s), or just switch over to it.
-     * @param {Number[3]} [backgroundColor] When superimposing, this color
-     * will be used for the background. Format: [red, green, blue], where 
-     * each component has to be a value between 0 and 255.
-     * @param {Number} [backgroundOpacity] When superimposing, this opacity
-     * will be used for the background. A real number, 0.0 is completely
-     * transparent, 1.0 is completely opaque.
-     */
-    application.setScreen = function (screenName, superimpose, backgroundColor, backgroundOpacity) {
-        _screenManager.setCurrentScreen(screenName, superimpose, backgroundColor, backgroundOpacity);
-    };
+    // explosing the screen manager functionality, so when using this module, it does not have to be
+    // used separately as well
+    application.getScreen = screenManager.getScreen;
+    application.setScreen = screenManager.setCurrentScreen;
+    application.addScreen = screenManager.addScreen;
+    application.closeSuperimposedScreen = screenManager.closeSuperimposedScreen;
     return application;
 });

@@ -49,7 +49,7 @@ define([
         // quitting to the menu
         this.setActionFunction("quit", true, function () {
             game.getScreen().pauseBattle();
-            game.setScreen("ingameMenu", true, [64, 64, 64], 0.5);
+            game.setScreen("ingameMenu", true, [0.25, 0.25, 0.25, 0.5]);
         });
         // pausing the game
         this.setActionFunction("pause", true, function () {

@@ -349,9 +349,11 @@ define([
      * object has any additional properties not included in the definition object, they will be discarded from the result, but an error
      * message will be shown about them.
      * @param {Object} [objectToAppendTo] If given, the resulting verified properties will be appended to this object instead of a new empty one
+     * @param {Boolean} [silentDiscard=false] If true, there will be no warning shown about discarded properties
+     * @param {String|Object} [propertyType] If given, the type can be omitted from the property definitions and if so, it will be considered to be this type
      * @returns {Object}
      */
-    exports.getVerifiedObject = function (name, value, definitionObject, objectToAppendTo) {
+    exports.getVerifiedObject = function (name, value, definitionObject, objectToAppendTo, silentDiscard, propertyType) {
         var propertyName, propertyDefinitionName, propertyDefinition, result = objectToAppendTo || {}, processedProperties = [];
         if (typeof value === "object") {
             for (propertyDefinitionName in definitionObject) {
@@ -362,7 +364,7 @@ define([
                     }
                     result[propertyDefinition.name] = exports.getValueOfType(
                             name + "." + propertyDefinition.name,
-                            propertyDefinition.type,
+                            propertyDefinition.type || propertyType,
                             value[propertyDefinition.name],
                             propertyDefinition.defaultValue,
                             {
@@ -378,10 +380,12 @@ define([
                     processedProperties.push(propertyDefinition.name);
                 }
             }
-            for (propertyName in value) {
-                if (value.hasOwnProperty(propertyName)) {
-                    if (processedProperties.indexOf(propertyName) < 0) {
-                        application.showError("Unrecognized property '" + propertyName + "' defined for '" + name + "'. The value of this property cannot be verified and will be discarded.");
+            if (!silentDiscard) {
+                for (propertyName in value) {
+                    if (value.hasOwnProperty(propertyName)) {
+                        if (processedProperties.indexOf(propertyName) < 0) {
+                            application.showError("Unrecognized property '" + propertyName + "' defined for '" + name + "'. The value of this property cannot be verified and will be discarded.");
+                        }
                     }
                 }
             }

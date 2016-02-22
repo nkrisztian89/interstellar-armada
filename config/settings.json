@@ -1,4 +1,7 @@
 {
+    "general": {
+        "language": "English"
+    },
     "graphics": {
         "context": {
             "antialiasing": true,

@@ -1,8 +1,9 @@
 {
-    "version": "0.1.0:136+refactoring-68 (2016.02.20.)",
+    "version": "0.1.0:136+refactoring-69 (2016.02.22.)",
     "logVerbosity": 1,
     "folders": {
         "config": "config/",
+        "strings": "{{config}}/strings/",
         "css": "css/",
         "data": "data/",
         "screen": "{{data}}/screens/",
@@ -17,6 +18,16 @@
         "settings": {
             "filename": "settings.json",
             "folder": "config"
+        },
+        "strings": {
+            "English": {
+                "filename": "strings.json",
+                "folder": "strings"
+            },
+            "Hungarian": {
+                "filename": "strings-hu.json",
+                "folder": "strings"
+            }
         }
     },
     "dataFiles": {

@@ -57,8 +57,6 @@ define([
          * @type Element
          */
         this._container = null;
-        //TODO: move this to an ArmadaScreen / ArmadaScreenWithCanvases class
-        this._game = null;
         /**
          * @type SimpleComponent[]
          */
@@ -81,10 +79,6 @@ define([
     }
     HTMLScreen.prototype = new asyncResource.AsyncResource();
     HTMLScreen.prototype.constructor = HTMLScreen;
-
-    HTMLScreen.prototype.setGame = function (game) {
-        this._game = game;
-    };
     /**
      * Initiates the asynchronous loading of the screen's structure from the
      * external HTML file.
@@ -149,13 +143,16 @@ define([
     /**
      * Superimposes the screen on the current page, by appending a full screen
      * container and the screen structure as its child inside it.
-     * @param {Number[3]} backgroundColor The color of the full screen background. ([r,g,b],
-     * where all color components should be 0-255)
-     * @param {Number} backgroundOpacity The opacity of the background (0.0-1.0)
+     * @param {Number[4]} backgroundColor The color of the full screen background. ([r,g,b,a],
+     * where all color components should be 0-1)
      */
-    HTMLScreen.prototype.superimposeOnPage = function (backgroundColor, backgroundOpacity) {
+    HTMLScreen.prototype.superimposeOnPage = function (backgroundColor) {
         this.executeWhenReady(function () {
-            this._background.style.backgroundColor = "rgba(" + backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + "," + backgroundOpacity + ")";
+            this._background.style.backgroundColor = "rgba(" +
+                    Math.round(backgroundColor[0] * 255) + "," +
+                    Math.round(backgroundColor[1] * 255) + "," +
+                    Math.round(backgroundColor[2] * 255) + "," +
+                    backgroundColor[3] + ")";
             this._background.style.display = "block";
             document.body.appendChild(this._background);
             document.body.appendChild(this._container);

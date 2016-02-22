@@ -21,6 +21,8 @@
  along with this file.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+/*jslint plusplus: true */
+
 (function polyfill() {
     "use strict";
 
@@ -70,6 +72,16 @@
 
     Math.degrees = function (radians) {
         return radians * 180 / Math.PI;
+    };
+
+    Array.prototype.findIndex = Array.prototype.findIndex || function (test) {
+        var i;
+        for (i = 0; i < this.length; i++) {
+            if (test(this[i], i, this)) {
+                return i;
+            }
+        }
+        return undefined;
     };
 
 }());
