@@ -13,18 +13,129 @@
  * @param utils Used for the keycode and getting key of property value utility functions
  * @param application Used for logging and error displaying functionality
  * @param asyncResource ControlContext is a subclass of AsyncResource
+ * @param strings For translation support of control strings
  */
 define([
     "utils/utils",
     "modules/application",
-    "modules/async-resource"
-], function (utils, application, asyncResource) {
+    "modules/async-resource",
+    "modules/strings"
+], function (utils, application, asyncResource, strings) {
     "use strict";
+    var
+            // ----------------------------------------------------------------------
+            // enums
+            MouseButtonName = {
+                NONE: "none",
+                LEFT: "left",
+                MIDDLE: "middle",
+                RIGHT: "right"
+            },
+    // ----------------------------------------------------------------------
+    // constants
+    SHIFT_CODE = 16,
+            CTRL_CODE = 17,
+            ALT_CODE = 18,
+            CONTROL_STRING_COMBINE = " + ",
+            KEY_SUFFIX = "_key",
+            SHIFT_STATE_SUFFIX = "_shift",
+            CTRL_STATE_SUFFIX = "_ctrl",
+            ALT_STATE_SUFFIX = "_alt",
+            /**
+             * The index of the element is the index of the button
+             * @type Array
+             */
+            MOUSE_BUTTON_NAMES = [
+                MouseButtonName.NONE,
+                MouseButtonName.LEFT,
+                MouseButtonName.MIDDLE,
+                MouseButtonName.RIGHT
+            ],
+            DIRECTION_LEFT = "left",
+            DIRECTION_RIGHT = "right",
+            DIRECTION_UP = "up",
+            DIRECTION_DOWN = "down",
+            MOUSE_BUTTON_INDEX_SUFFIX = "_button",
+            MOUSE_MOVE_X_SUFFIX = "_moveX",
+            MOUSE_MOVE_Y_SUFFIX = "_moveY",
+            MOUSE_FROM_CENTER_SUFFIX = "_measuredFromCenter",
+            MOUSE_SCROLL_X_SUFFIX = "_scrollX",
+            MOUSE_SCROLL_Y_SUFFIX = "_scrollY",
+            GAMEPAD_BUTTON_INDEX_SUFFIX = "_gamepad_button",
+            GAMEPAD_AXIS_INDEX_SUFFIX = "_gamepad_axisIndex",
+            GAMEPAD_AXIS_POSITIVE_SUFFIX = "_gamepad_axisPositive",
+            // ----------------------------------------------------------------------
+            // string definitions for translation of control strings
+            KEY_STRING_PREFIX = {name: "key."},
+    MOUSE_LEFT_BUTTON = {
+        name: "mouse.leftButton",
+        defaultValue: "left click"
+    },
+    MOUSE_RIGHT_BUTTON = {
+        name: "mouse.rightButton",
+        defaultValue: "right click"
+    },
+    MOUSE_MIDDLE_BUTTON = {
+        name: "mouse.middleButton",
+        defaultValue: "middle click"
+    },
+    MOUSE_FROM_CENTER = {
+        name: "mouse.fromCenter",
+        defaultValue: "{move} {toDirection} from center"
+    },
+    MOUSE_NOT_FROM_CENTER = {
+        name: "mouse.notFromCenter",
+        defaultValue: "{move} {toDirection}"
+    },
+    MOUSE_MOVE = {
+        name: "mouse.move",
+        defaultValue: "move"
+    },
+    MOUSE_DIRECTION_LEFT = {
+        name: "mouse.leftDirection",
+        defaultValue: "left"
+    },
+    MOUSE_DIRECTION_RIGHT = {
+        name: "mouse.rightDirection",
+        defaultValue: "right"
+    },
+    MOUSE_DIRECTION_UP = {
+        name: "mouse.upDirection",
+        defaultValue: "up"
+    },
+    MOUSE_DIRECTION_DOWN = {
+        name: "mouse.downDirection",
+        defaultValue: "down"
+    },
+    MOUSE_SCROLL = {
+        name: "mouse.scroll",
+        defaultValue: "scroll"
+    },
+    JOYSTICK_BUTTON = {
+        name: "joystick.button",
+        defaultValue: "button {index}"
+    },
+    JOYSTICK_AXIS = {
+        name: "joystick.axis",
+        defaultValue: "axis {index} {direction}"
+    },
+    JOYSTICK_DIRECTION_POSITIVE = {
+        name: "joystick.positiveDirection",
+        defaultValue: "positive"
+    },
+    JOYSTICK_DIRECTION_NEGATIVE = {
+        name: "joystick.negativeDirection",
+        defaultValue: "negative"
+    },
+    // -------------------------------------------------------------------------
+    // private variables
     /**
      * When saving to or loading from local storage, the names of any settings of this module will be prefixed by this string.
      * @type String
      */
-    var _modulePrefix = "";
+    _modulePrefix = "";
+    // -------------------------------------------------------------------------
+    // functions
     /**
      * Sets a prefix string to be used before the setting names when saving to or loading from local storage.
      * @param {String} value
@@ -32,7 +143,7 @@ define([
     function setModulePrefix(value) {
         _modulePrefix = value;
     }
-// #########################################################################
+    // #########################################################################
     /**
      * @class A generic superclass for classes that represent the bindig of certain controls to an action.
      * A subclass should be created for each specific input device that implements setting, loading, saving,
@@ -379,17 +490,17 @@ define([
          * Whether shift should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._shiftState = (shiftState === undefined) ? false : (shiftState || (this._key === "shift"));
+        this._shiftState = (shiftState === undefined) ? false : (shiftState || (this._keyCode === SHIFT_CODE));
         /**
          * Whether ctrl should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._ctrlState = (ctrlState === undefined) ? false : (ctrlState || (this._key === "ctrl"));
+        this._ctrlState = (ctrlState === undefined) ? false : (ctrlState || (this._keyCode === CTRL_CODE));
         /**
          * Whether alt should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._altState = (altState === undefined) ? false : (altState || (this._key === "alt"));
+        this._altState = (altState === undefined) ? false : (altState || (this._keyCode === ALT_CODE));
         ControlBinding.call(this, dataJSONOrActionName);
         application.log("Created key binding: " + this._actionName + " - " + this.getControlString(), 3);
     }
@@ -403,19 +514,19 @@ define([
     KeyBinding.prototype.loadFromJSON = function (dataJSON) {
         ControlBinding.prototype.loadFromJSON.call(this, dataJSON);
         this.setKey(dataJSON.key);
-        this._shiftState = (dataJSON.shift === true) || (this._key === "shift");
-        this._ctrlState = (dataJSON.ctrl === true) || (this._key === "ctrl");
-        this._altState = (dataJSON.alt === true) || (this._key === "alt");
+        this._shiftState = (dataJSON.shift === true) || (this._keyCode === SHIFT_CODE);
+        this._ctrlState = (dataJSON.ctrl === true) || (this._keyCode === CTRL_CODE);
+        this._altState = (dataJSON.alt === true) || (this._keyCode === ALT_CODE);
     };
     /**
      * @override
      * Saves the properties of this key binding to HTML5 local storage.
      */
     KeyBinding.prototype.saveToLocalStorage = function () {
-        localStorage[_modulePrefix + this._actionName + '_key'] = this._key;
-        localStorage[_modulePrefix + this._actionName + '_shift'] = this._shiftState;
-        localStorage[_modulePrefix + this._actionName + '_ctrl'] = this._ctrlState;
-        localStorage[_modulePrefix + this._actionName + '_alt'] = this._altState;
+        localStorage[_modulePrefix + this._actionName + KEY_SUFFIX] = this._key;
+        localStorage[_modulePrefix + this._actionName + SHIFT_STATE_SUFFIX] = this._shiftState;
+        localStorage[_modulePrefix + this._actionName + CTRL_STATE_SUFFIX] = this._ctrlState;
+        localStorage[_modulePrefix + this._actionName + ALT_STATE_SUFFIX] = this._altState;
     };
     /**
      * @override
@@ -423,11 +534,11 @@ define([
      * storage object.
      */
     KeyBinding.prototype.loadFromLocalStorage = function () {
-        if (localStorage[_modulePrefix + this._actionName + '_key'] !== undefined) {
-            this.setKey(localStorage[_modulePrefix + this._actionName + '_key']);
-            this._shiftState = (localStorage[_modulePrefix + this._actionName + '_shift'] === "true");
-            this._ctrlState = (localStorage[_modulePrefix + this._actionName + '_ctrl'] === "true");
-            this._altState = (localStorage[_modulePrefix + this._actionName + '_alt'] === "true");
+        if (localStorage[_modulePrefix + this._actionName + KEY_SUFFIX] !== undefined) {
+            this.setKey(localStorage[_modulePrefix + this._actionName + KEY_SUFFIX]);
+            this._shiftState = (localStorage[_modulePrefix + this._actionName + SHIFT_STATE_SUFFIX] === "true");
+            this._ctrlState = (localStorage[_modulePrefix + this._actionName + CTRL_STATE_SUFFIX] === "true");
+            this._altState = (localStorage[_modulePrefix + this._actionName + ALT_STATE_SUFFIX] === "true");
         }
     };
     /**
@@ -435,10 +546,10 @@ define([
      * Removes the properties of this key binding from the HTML5 local storage.
      */
     KeyBinding.prototype.removeFromLocalStorage = function () {
-        localStorage.removeItem(_modulePrefix + this._actionName + '_key');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_shift');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_ctrl');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_alt');
+        localStorage.removeItem(_modulePrefix + this._actionName + KEY_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + SHIFT_STATE_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + CTRL_STATE_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + ALT_STATE_SUFFIX);
     };
     /**
      * Returns the string representation of the key assigned in this key binding.
@@ -487,16 +598,22 @@ define([
      * @returns {String}
      */
     KeyBinding.prototype.getControlString = function () {
-        var result;
-        result = this._key;
-        if (this._shiftState && (this._key !== "shift")) {
-            result = "shift + " + result;
+        var result, modifier;
+        result = strings.get(KEY_STRING_PREFIX, this._key, this._key);
+        if (this._shiftState && (this._keyCode !== SHIFT_CODE)) {
+            modifier = utils.getKeyOfCode(SHIFT_CODE);
+            modifier = strings.get(KEY_STRING_PREFIX, modifier, modifier);
+            result = modifier + CONTROL_STRING_COMBINE + result;
         }
-        if ((this._ctrlState) && (this._key !== "ctrl")) {
-            result = "ctrl + " + result;
+        if ((this._ctrlState) && (this._keyCode !== CTRL_CODE)) {
+            modifier = utils.getKeyOfCode(CTRL_CODE);
+            modifier = strings.get(KEY_STRING_PREFIX, modifier, modifier);
+            result = modifier + CONTROL_STRING_COMBINE + result;
         }
-        if ((this._altState) && (this._key !== "alt")) {
-            result = "alt + " + result;
+        if ((this._altState) && (this._keyCode !== ALT_CODE)) {
+            modifier = utils.getKeyOfCode(ALT_CODE);
+            modifier = strings.get(KEY_STRING_PREFIX, modifier, modifier);
+            result = modifier + CONTROL_STRING_COMBINE + result;
         }
         return result;
     };
@@ -510,9 +627,9 @@ define([
      */
     KeyBinding.prototype.isTriggered = function (currentlyPressedKeys) {
         return (currentlyPressedKeys[this._keyCode] &&
-                (currentlyPressedKeys[16] || !this._shiftState) &&
-                (currentlyPressedKeys[17] || !this._ctrlState) &&
-                (currentlyPressedKeys[18] || !this._altState));
+                (currentlyPressedKeys[SHIFT_CODE] || !this._shiftState) &&
+                (currentlyPressedKeys[CTRL_CODE] || !this._ctrlState) &&
+                (currentlyPressedKeys[ALT_CODE] || !this._altState));
     };
     /**
      * @override
@@ -660,7 +777,7 @@ define([
          * @type Number
          * @default 0
          */
-        this._button = 0;
+        this._buttonIndex = 0;
         /**
          * What kind of horizontal mouse movement needs to take place to trigger 
          * this binding.
@@ -677,8 +794,8 @@ define([
          * this binding.
          * Possible values:
          * 0: none
-         * -1: movement downward
-         * 1: movement upward
+         * -1: movement upward
+         * 1: movement downward
          * @type Number
          * @default 0
          */
@@ -690,6 +807,26 @@ define([
          * @default false
          */
         this._measuredFromCenter = false;
+        /**
+         * What kind of mouse scrolling needs to take place on the X axis to trigger this binding.
+         * Possible values:
+         * 0: none
+         * -1: scroll left
+         * 1: scroll right
+         * @type Number
+         * @default 0
+         */
+        this._scrollX = 0;
+        /**
+         * What kind of mouse scrolling needs to take place on the Y axis to trigger this binding.
+         * Possible values:
+         * 0: none
+         * 1: scroll downward
+         * -1: scroll upward
+         * @type Number
+         * @default 0
+         */
+        this._scrollY = 0;
         ControlBinding.call(this, dataJSON);
     }
     MouseBinding.prototype = new ControlBinding();
@@ -701,46 +838,52 @@ define([
      */
     MouseBinding.prototype.loadFromJSON = function (dataJSON) {
         ControlBinding.prototype.loadFromJSON.call(this, dataJSON);
-        switch (dataJSON.button) {
-            case "left":
-                this._button = 1;
-                break;
-            case "middle":
-                this._button = 2;
-                break;
-            case "right":
-                this._button = 3;
-                break;
-            default:
-                this._button = 0;
-        }
+        this._buttonIndex = MOUSE_BUTTON_NAMES.indexOf(dataJSON.button);
         this._moveX = 0;
         this._moveY = 0;
         switch (dataJSON.move) {
-            case "left":
+            case DIRECTION_LEFT:
                 this._moveX = -1;
                 break;
-            case "right":
+            case DIRECTION_RIGHT:
                 this._moveX = 1;
                 break;
-            case "up":
+            case DIRECTION_UP:
                 this._moveY = -1;
                 break;
-            case "down":
+            case DIRECTION_DOWN:
                 this._moveY = 1;
                 break;
         }
         this._measuredFromCenter = (dataJSON.fromCenter === true);
+        this._scrollX = 0;
+        this._scrollY = 0;
+        switch (dataJSON.scroll) {
+            case DIRECTION_LEFT:
+                this._scrollX = -1;
+                break;
+            case DIRECTION_RIGHT:
+                this._scrollX = 1;
+                break;
+            case DIRECTION_UP:
+                this._scrollY = -1;
+                break;
+            case DIRECTION_DOWN:
+                this._scrollY = 1;
+                break;
+        }
     };
     /**
      * @override
      * Saves the properties of this mouse binding to HTML5 local storage.
      */
     MouseBinding.prototype.saveToLocalStorage = function () {
-        localStorage[_modulePrefix + this._actionName + '_button'] = this._button;
-        localStorage[_modulePrefix + this._actionName + '_moveX'] = this._moveX;
-        localStorage[_modulePrefix + this._actionName + '_moveY'] = this._moveY;
-        localStorage[_modulePrefix + this._actionName + '_measuredFromCenter'] = this._measuredFromCenter;
+        localStorage[_modulePrefix + this._actionName + MOUSE_BUTTON_INDEX_SUFFIX] = this._buttonIndex;
+        localStorage[_modulePrefix + this._actionName + MOUSE_MOVE_X_SUFFIX] = this._moveX;
+        localStorage[_modulePrefix + this._actionName + MOUSE_MOVE_Y_SUFFIX] = this._moveY;
+        localStorage[_modulePrefix + this._actionName + MOUSE_FROM_CENTER_SUFFIX] = this._measuredFromCenter;
+        localStorage[_modulePrefix + this._actionName + MOUSE_SCROLL_X_SUFFIX] = this._scrollX;
+        localStorage[_modulePrefix + this._actionName + MOUSE_SCROLL_Y_SUFFIX] = this._scrollY;
     };
     /**
      * @override
@@ -748,11 +891,13 @@ define([
      * storage object.
      */
     MouseBinding.prototype.loadFromLocalStorage = function () {
-        if (localStorage[_modulePrefix + this._actionName + '_button'] !== undefined) {
-            this._button = parseInt(localStorage[_modulePrefix + this._actionName + '_button'], 10);
-            this._moveX = parseInt(localStorage[_modulePrefix + this._actionName + '_moveX'], 10);
-            this._moveY = parseInt(localStorage[_modulePrefix + this._actionName + '_moveY'], 10);
-            this._measuredFromCenter = (localStorage[_modulePrefix + this._actionName + '_measuredFromCenter'] === "true");
+        if (localStorage[_modulePrefix + this._actionName + MOUSE_BUTTON_INDEX_SUFFIX] !== undefined) {
+            this._buttonIndex = parseInt(localStorage[_modulePrefix + this._actionName + MOUSE_BUTTON_INDEX_SUFFIX], 10);
+            this._moveX = parseInt(localStorage[_modulePrefix + this._actionName + MOUSE_MOVE_X_SUFFIX], 10);
+            this._moveY = parseInt(localStorage[_modulePrefix + this._actionName + MOUSE_MOVE_Y_SUFFIX], 10);
+            this._measuredFromCenter = (localStorage[_modulePrefix + this._actionName + MOUSE_FROM_CENTER_SUFFIX] === "true");
+            this._scrollX = parseInt(localStorage[_modulePrefix + this._actionName + MOUSE_SCROLL_X_SUFFIX], 10);
+            this._scrollY = parseInt(localStorage[_modulePrefix + this._actionName + MOUSE_SCROLL_Y_SUFFIX], 10);
         }
     };
     /**
@@ -760,10 +905,12 @@ define([
      * Removes the properties of this mouse binding from the HTML5 local storage.
      */
     MouseBinding.prototype.removeFromLocalStorage = function () {
-        localStorage.removeItem(_modulePrefix + this._actionName + '_button');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_moveX');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_moveY');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_measuredFromCenter');
+        localStorage.removeItem(_modulePrefix + this._actionName + MOUSE_BUTTON_INDEX_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + MOUSE_MOVE_X_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + MOUSE_MOVE_Y_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + MOUSE_FROM_CENTER_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + MOUSE_SCROLL_X_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + MOUSE_SCROLL_Y_SUFFIX);
     };
     /**
      * Returns if the binding trigger intensity depends on the displacement of the
@@ -780,23 +927,50 @@ define([
      * @returns {String}
      */
     MouseBinding.prototype.getControlString = function () {
-        switch (this._button) {
-            case 1:
-                return "left click";
-            case 2:
-                return "middle click";
-            case 3:
-                return "right click";
+        var result = "", direction = null;
+        switch (MOUSE_BUTTON_NAMES[this._buttonIndex]) {
+            case MouseButtonName.LEFT:
+                return strings.get(MOUSE_LEFT_BUTTON, "", MOUSE_LEFT_BUTTON.defaultValue);
+            case MouseButtonName.MIDDLE:
+                return strings.get(MOUSE_MIDDLE_BUTTON, "", MOUSE_MIDDLE_BUTTON.defaultValue);
+            case MouseButtonName.RIGHT:
+                return strings.get(MOUSE_RIGHT_BUTTON, "", MOUSE_RIGHT_BUTTON.defaultValue);
         }
-        var result = this._measuredFromCenter ? " from center" : "";
+        result = this._measuredFromCenter ?
+                strings.get(MOUSE_FROM_CENTER, "", MOUSE_FROM_CENTER.defaultValue) :
+                strings.get(MOUSE_NOT_FROM_CENTER, "", MOUSE_NOT_FROM_CENTER.defaultValue);
         if (this._moveX < 0) {
-            result = "move left" + result;
+            direction = strings.get(MOUSE_DIRECTION_LEFT, "", MOUSE_DIRECTION_LEFT.defaultValue);
         } else if (this._moveX > 0) {
-            result = "move right" + result;
+            direction = strings.get(MOUSE_DIRECTION_RIGHT, "", MOUSE_DIRECTION_RIGHT.defaultValue);
         } else if (this._moveY < 0) {
-            result = "move up" + result;
+            direction = strings.get(MOUSE_DIRECTION_UP, "", MOUSE_DIRECTION_UP.defaultValue);
         } else if (this._moveY > 0) {
-            result = "move down" + result;
+            direction = strings.get(MOUSE_DIRECTION_DOWN, "", MOUSE_DIRECTION_DOWN.defaultValue);
+        }
+        if (direction) {
+            result = utils.formatString(result, {
+                move: strings.get(MOUSE_MOVE, "", MOUSE_MOVE.defaultValue),
+                toDirection: direction
+            });
+            return result;
+        }
+        direction = null;
+        result = strings.get(MOUSE_NOT_FROM_CENTER, "", MOUSE_NOT_FROM_CENTER.defaultValue);
+        if (this._scrollX < 0) {
+            direction = strings.get(MOUSE_DIRECTION_LEFT, "", MOUSE_DIRECTION_LEFT.defaultValue);
+        } else if (this._scrollX > 0) {
+            direction = strings.get(MOUSE_DIRECTION_RIGHT, "", MOUSE_DIRECTION_RIGHT.defaultValue);
+        } else if (this._scrollY < 0) {
+            direction = strings.get(MOUSE_DIRECTION_UP, "", MOUSE_DIRECTION_UP.defaultValue);
+        } else if (this._scrollY > 0) {
+            direction = strings.get(MOUSE_DIRECTION_DOWN, "", MOUSE_DIRECTION_DOWN.defaultValue);
+        }
+        if (direction) {
+            result = utils.formatString(result, {
+                move: strings.get(MOUSE_SCROLL, "", MOUSE_SCROLL.defaultValue),
+                toDirection: direction
+            });
         }
         return result;
     };
@@ -810,16 +984,17 @@ define([
      * @param {Number[2]} mousePosition The current [x,y] position of the mouse on the screen
      * @param {Number[2]} mousePositionChange The difference of the current position from the one at the previous trigger check ([x,y])
      * @param {Number[2]} screenCenter The coordinates of the center of the screen ([x,y])
+     * @param {Number[2]} scrollChange The change in scroll position from the one at the previous trigger check ([x,y])
      * @returns {Number} Whether the action was triggerend and with what intensity.
      * Zero means the action was not triggered, a positive value represents the 
      * intensity.
      */
-    MouseBinding.prototype.getTriggeredIntensity = function (currentlyPressedButtons, mousePosition, mousePositionChange, screenCenter) {
+    MouseBinding.prototype.getTriggeredIntensity = function (currentlyPressedButtons, mousePosition, mousePositionChange, screenCenter, scrollChange) {
         var relativeX, relativeY;
         // first if this is a button assignment, check the state of the appropriate
         // mouse button
-        if (this._button > 0) {
-            return (currentlyPressedButtons[this._button] === true) ? 1 : -1;
+        if (this._buttonIndex > 0) {
+            return (currentlyPressedButtons[this._buttonIndex] === true) ? 1 : -1;
         }
         if (!mousePosition) {
             return 0;
@@ -836,6 +1011,12 @@ define([
         if (this._moveY !== 0) {
             return relativeY * this._moveY;
         }
+        if (this._scrollX !== 0) {
+            return scrollChange[0] * this._scrollX;
+        }
+        if (this._scrollY !== 0) {
+            return scrollChange[1] * this._scrollY;
+        }
     };
     /**
      * @override
@@ -843,9 +1024,11 @@ define([
      * @param {MouseBinding} otherMouseBinding
      */
     MouseBinding.prototype.bindsTheSameControls = function (otherMouseBinding) {
-        return (this._button === otherMouseBinding._button) &&
+        return (this._buttonIndex === otherMouseBinding._buttonIndex) &&
                 (((this._moveX === 0) && (otherMouseBinding._moveX === 0)) || ((this._moveX * otherMouseBinding._moveX) !== 0)) &&
-                (((this._moveY === 0) && (otherMouseBinding._moveY === 0)) || ((this._moveY * otherMouseBinding._moveY) !== 0));
+                (((this._moveY === 0) && (otherMouseBinding._moveY === 0)) || ((this._moveY * otherMouseBinding._moveY) !== 0)) &&
+                (((this._scrollX === 0) && (otherMouseBinding._scrollX === 0)) || ((this._scrollX * otherMouseBinding._scrollX) !== 0)) &&
+                (((this._scrollY === 0) && (otherMouseBinding._scrollY === 0)) || ((this._scrollY * otherMouseBinding._scrollY) !== 0));
     };
     // #########################################################################
     /**
@@ -883,6 +1066,11 @@ define([
          */
         this._mousePositionChange = [0, 0];
         /**
+         * The scrolling that happened on axes X and Y since the last time the inputs were processed.
+         * @type Number[2]
+         */
+        this._scrollChange = [0, 0];
+        /**
          * The intensity of actions derived from the speed of the mouse movement
          * will be multiplied by this factor.
          * @type Number
@@ -916,6 +1104,7 @@ define([
         this._screenCenter = [x, y];
         this._mousePosition = null;
         this._mousePositionChange = [0, 0];
+        this._scrollChange = [0, 0];
     };
     /**
      * @override
@@ -1038,6 +1227,15 @@ define([
         this._mousePosition = [event.clientX, event.clientY];
     };
     /**
+     * An event handler for the wheel event , updating the stored scrolling state
+     * @param {WheelEvent} event
+     */
+    MouseInputInterpreter.prototype.handleWheel = function (event) {
+        // changes are accumulated and reset to zero when processed
+        this._scrollChange[0] += event.deltaX;
+        this._scrollChange[1] += event.deltaY;
+    };
+    /**
      * @override
      * Sets the event handlers on the document to start updating the stored internal
      * state of the mouse. The triggered actions can be queried from this interpreter 
@@ -1056,6 +1254,9 @@ define([
         }.bind(this);
         document.onmousemove = function (event) {
             this.handleMouseMove(event);
+        }.bind(this);
+        document.onwheel = function (event) {
+            this.handleWheel(event);
         }.bind(this);
         document.onclick = function (event) {
             event.preventDefault();
@@ -1077,11 +1278,13 @@ define([
         document.onmousedown = null;
         document.onmouseup = null;
         document.onmousemove = null;
+        document.onwheel = null;
         document.onclick = null;
         document.oncontextmenu = null;
         this.cancelPressedButtons();
         this._mousePosition = null;
         this._mousePositionChange = [0, 0];
+        this._scrollChange = [0, 0];
     };
     /**
      * @override
@@ -1095,7 +1298,8 @@ define([
                 this._currentlyPressedButtons,
                 this._mousePosition,
                 this._mousePositionChange,
-                this._screenCenter);
+                this._screenCenter,
+                this._scrollChange);
         return (actionIntensity >= 0) ?
                 {
                     name: actionName,
@@ -1118,6 +1322,7 @@ define([
         var result = InputInterpreter.prototype.getTriggeredActions.call(this, actionFilterFunction);
         // null out the mouse movements added up since the last query
         this._mousePositionChange = [0, 0];
+        this._scrollChange = [0, 0];
         return result;
     };
     // #########################################################################
@@ -1180,9 +1385,9 @@ define([
      * Saves the properties of this binding to HTML5 local storage.
      */
     GamepadBinding.prototype.saveToLocalStorage = function () {
-        localStorage[_modulePrefix + this._actionName + '_gamepad_button'] = this._button;
-        localStorage[_modulePrefix + this._actionName + '_gamepad_axisIndex'] = this._axisIndex;
-        localStorage[_modulePrefix + this._actionName + '_gamepad_axisPositive'] = this._axisPositive;
+        localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX] = this._button;
+        localStorage[_modulePrefix + this._actionName + GAMEPAD_AXIS_INDEX_SUFFIX] = this._axisIndex;
+        localStorage[_modulePrefix + this._actionName + GAMEPAD_AXIS_POSITIVE_SUFFIX] = this._axisPositive;
     };
     /**
      * @override
@@ -1190,10 +1395,10 @@ define([
      * storage object.
      */
     GamepadBinding.prototype.loadFromLocalStorage = function () {
-        if (localStorage[_modulePrefix + this._actionName + '_gamepad_button'] !== undefined) {
-            this._button = parseInt(localStorage[_modulePrefix + this._actionName + '_gamepad_axisIndex'], 10);
-            this._axisIndex = parseInt(localStorage[_modulePrefix + this._actionName + '_gamepad_button'], 10);
-            this._axisPositive = (localStorage[_modulePrefix + this._actionName + '_gamepad_axisPositive'] === "true");
+        if (localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX] !== undefined) {
+            this._button = parseInt(localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX], 10);
+            this._axisIndex = parseInt(localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX], 10);
+            this._axisPositive = (localStorage[_modulePrefix + this._actionName + GAMEPAD_AXIS_POSITIVE_SUFFIX] === "true");
         }
     };
     /**
@@ -1201,9 +1406,9 @@ define([
      * Removes the properties of this binding from the HTML5 local storage.
      */
     GamepadBinding.prototype.removeFromLocalStorage = function () {
-        localStorage.removeItem(_modulePrefix + this._actionName + '_gamepad_button');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_gamepad_axisIndex');
-        localStorage.removeItem(_modulePrefix + this._actionName + '_gamepad_axisPositive');
+        localStorage.removeItem(_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + GAMEPAD_AXIS_INDEX_SUFFIX);
+        localStorage.removeItem(_modulePrefix + this._actionName + GAMEPAD_AXIS_POSITIVE_SUFFIX);
     };
     /**
      * Returns how much is the gamepad action  triggered according to the current gamepad 
@@ -1239,10 +1444,14 @@ define([
      */
     GamepadBinding.prototype.getControlString = function () {
         if (this._button !== this.BUTTON_NONE) {
-            return "button " + this._button;
+            return utils.formatString(strings.get(JOYSTICK_BUTTON, "", JOYSTICK_BUTTON.defaultValue), {index: (this._button + 1)});
         }
         if (this._axisIndex !== this.AXIS_NONE) {
-            return "axis " + this._axisIndex + " " + (this._axisPositive ? "positive" : "negative");
+            return utils.formatString(strings.get(JOYSTICK_AXIS, "", JOYSTICK_AXIS.defaultValue), {
+                index: (this._axisIndex + 1),
+                direction: (this._axisPositive ?
+                        strings.get(JOYSTICK_DIRECTION_POSITIVE, "", JOYSTICK_DIRECTION_POSITIVE.defaultValue) :
+                        strings.get(JOYSTICK_DIRECTION_NEGATIVE, "", JOYSTICK_DIRECTION_NEGATIVE.defaultValue))});
         }
         return "";
     };

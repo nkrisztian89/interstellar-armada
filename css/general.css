@@ -197,11 +197,8 @@ li {
 }
 
 a {
-    color: #000000;
+    color: #FFFFFF;
     text-decoration: none;
-    text-shadow:
-        #00FF00 0 0 0.2em,
-        #00FF00 0 0 0.2em;
     font-weight: bold;
     font-variant: small-caps;
 }
@@ -237,6 +234,9 @@ a.button {
 
 a:hover {
     color: #FFFFFF;
+    text-shadow:
+        #00FF00 0 0 0.2em,
+        #00FF00 0 0 0.2em;
 }
 
 a.button:hover {

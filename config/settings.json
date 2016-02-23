@@ -293,6 +293,21 @@
                         "action": "pitchUp",
                         "move": "up",
                         "fromCenter": true
+                    }, {
+                        "action": "cameraDecreaseFOV",
+                        "scroll": "up"
+                    }, {
+                        "action": "cameraIncreaseFOV",
+                        "scroll": "down"
+                    }, {
+                        "action": "nextView",
+                        "button": "middle"
+                    }, {
+                        "action": "followNext",
+                        "button": "left"
+                    }, {
+                        "action": "followPrevious",
+                        "button": "right"
                     }
                 ]
             },

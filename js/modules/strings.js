@@ -72,9 +72,21 @@ define([
      * 
      * @param {Object} stringDefinitionObject
      * @param {String} [suffix]
+     * @param {String} [defaultValue]
+     * @returns {String}
      */
-    exports.get = function (stringDefinitionObject, suffix) {
-        return _allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")] || stringDefinitionObject.name + (suffix || "");
+    exports.get = function (stringDefinitionObject, suffix, defaultValue) {
+        return (_allStrings[_currentLanguage] && _allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")]) ||
+                defaultValue || (stringDefinitionObject.name + (suffix || ""));
+    };
+    /**
+     * 
+     * @param {Object} stringDefinitionObject
+     * @param {String} [suffix]
+     * @returns {Boolean}
+     */
+    exports.has = function (stringDefinitionObject, suffix) {
+        return _allStrings[_currentLanguage] && (_allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")] !== undefined);
     };
     return exports;
 });
