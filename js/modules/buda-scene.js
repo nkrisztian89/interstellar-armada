@@ -19,59 +19,56 @@ define([
 ], function (utils, vec, mat, application, managedGL) {
     "use strict";
     var makeObject3DMixinClassFunction, makeObject3DMixinClass,
-            _constants = {
-                /**
-                 * For new LOD contexts, this will be the default value for the reference size
-                 * @type Number
-                 */
-                DEFAULT_LOD_REFERENCE_SIZE: 100,
-                /**
-                 * For new LOD contexts, this wil be the default value for the minimum relative size
-                 * @type Number
-                 */
-                DEFAULT_LOD_MINIMUM_RELATIVE_SIZE: 0.05,
-                /**
-                 * When decreased by one step, the field of view of a camera will be multiplied by this factor
-                 * @type Number
-                 */
-                FOV_DECREASE_FACTOR: 0.95,
-                /**
-                 * When increased by one step, the field of view of a camera will be multiplied by this factor
-                 * @type Number
-                 */
-                FOV_INCREASE_FACTOR: 1.05,
-                /**
-                 * When decreased by one step, the span of a camera will be multiplied by this factor
-                 * @type Number
-                 */
-                SPAN_DECREASE_FACTOR: 0.95,
-                /**
-                 * When increased by one step, the span of a camera will be multiplied by this factor
-                 * @type Number
-                 */
-                SPAN_INCREASE_FACTOR: 1.05,
-                /**
-                 * The minimum alpha angle for FPS-mode camera configurations that were created without specifying it
-                 * @type Number
-                 */
-                DEFAULT_MIN_ALPHA: -360,
-                /**
-                 * The maximum alpha angle for FPS-mode camera configurations that were created without specifying it
-                 * @type Number
-                 */
-                DEFAULT_MAX_ALPHA: 360,
-                /**
-                 * The minimum beta angle for FPS-mode camera configurations that were created without specifying it
-                 * @type Number
-                 */
-                DEFAULT_MIN_BETA: -90,
-                /**
-                 * The maximum beta angle for FPS-mode camera configurations that were created without specifying it
-                 * @type Number
-                 */
-                DEFAULT_MAX_BETA: 90
-            };
-    Object.freeze(_constants);
+            /**
+             * For new LOD contexts, this will be the default value for the reference size
+             * @type Number
+             */
+            DEFAULT_LOD_REFERENCE_SIZE = 100,
+            /**
+             * For new LOD contexts, this wil be the default value for the minimum relative size
+             * @type Number
+             */
+            DEFAULT_LOD_MINIMUM_RELATIVE_SIZE = 0.05,
+            /**
+             * When decreased by one step, the field of view of a camera will be multiplied by this factor
+             * @type Number
+             */
+            FOV_DECREASE_FACTOR = 0.95,
+            /**
+             * When increased by one step, the field of view of a camera will be multiplied by this factor
+             * @type Number
+             */
+            FOV_INCREASE_FACTOR = 1.05,
+            /**
+             * When decreased by one step, the span of a camera will be multiplied by this factor
+             * @type Number
+             */
+            SPAN_DECREASE_FACTOR = 0.95,
+            /**
+             * When increased by one step, the span of a camera will be multiplied by this factor
+             * @type Number
+             */
+            SPAN_INCREASE_FACTOR = 1.05,
+            /**
+             * The minimum alpha angle for FPS-mode camera configurations that were created without specifying it
+             * @type Number
+             */
+            DEFAULT_MIN_ALPHA = -360,
+            /**
+             * The maximum alpha angle for FPS-mode camera configurations that were created without specifying it
+             * @type Number
+             */
+            DEFAULT_MAX_ALPHA = 360,
+            /**
+             * The minimum beta angle for FPS-mode camera configurations that were created without specifying it
+             * @type Number
+             */
+            DEFAULT_MIN_BETA = -90,
+            /**
+             * The maximum beta angle for FPS-mode camera configurations that were created without specifying it
+             * @type Number
+             */
+            DEFAULT_MAX_BETA = 90;
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -120,14 +117,14 @@ define([
          * The size that should be taken as is, when compensation is enabled.
          * @type Number
          */
-        this.referenceSize = referenceSize || _constants.DEFAULT_LOD_REFERENCE_SIZE;
+        this.referenceSize = referenceSize || DEFAULT_LOD_REFERENCE_SIZE;
         /**
          * If the relative size of a object inside a parent (compared to the 
          * size of the parent) is smaller than this value, this value will be 
          * used instead to calculate the relative visible size.
          * @type Number
          */
-        this.minimumRelativeSize = minimumRelativeSize || _constants.DEFAULT_LOD_MINIMUM_RELATIVE_SIZE;
+        this.minimumRelativeSize = minimumRelativeSize || DEFAULT_LOD_MINIMUM_RELATIVE_SIZE;
     }
     // #########################################################################
     /**
@@ -3284,23 +3281,23 @@ define([
          * cannot be set below it. Can be a negative number. In degrees.
          * @type Number
          */
-        this._minAlpha = (alphaRange && (alphaRange[0] !== undefined)) ? alphaRange[0] : _constants.DEFAULT_MIN_ALPHA;
+        this._minAlpha = (alphaRange && (alphaRange[0] !== undefined)) ? alphaRange[0] : DEFAULT_MIN_ALPHA;
         /**
          * If the camera is in FPS mode and not fixed, this value constraints turning it around, as the alpha angle
          * cannot be set above it. In degrees.
          * @type Number
          */
-        this._maxAlpha = (alphaRange && (alphaRange[1] !== undefined)) ? alphaRange[1] : _constants.DEFAULT_MAX_ALPHA;
+        this._maxAlpha = (alphaRange && (alphaRange[1] !== undefined)) ? alphaRange[1] : DEFAULT_MAX_ALPHA;
         /**
          * See min alpha for explanation. The minimum for the beta angle. In degrees.
          * @type Number
          */
-        this._minBeta = (betaRange && (betaRange[0] !== undefined)) ? betaRange[0] : _constants.DEFAULT_MIN_BETA;
+        this._minBeta = (betaRange && (betaRange[0] !== undefined)) ? betaRange[0] : DEFAULT_MIN_BETA;
         /**
          * See max alpha for explanation. The maximum for the beta angle. In degrees.
          * @type Number
          */
-        this._maxBeta = (betaRange && (betaRange[1] !== undefined)) ? betaRange[1] : _constants.DEFAULT_MAX_ALPHA;
+        this._maxBeta = (betaRange && (betaRange[1] !== undefined)) ? betaRange[1] : DEFAULT_MAX_BETA;
         /**
          * (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be taken as base when calculating 
          * the orientation in FPS-mode.
@@ -3900,7 +3897,7 @@ define([
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
     CameraConfiguration.prototype.decreaseFOV = function () {
-        this.setFOV(this._fov * _constants.FOV_DECREASE_FACTOR, true);
+        this.setFOV(this._fov * FOV_DECREASE_FACTOR, true);
         return this._fov;
     };
     /**
@@ -3908,7 +3905,7 @@ define([
      * @returns {Number} The resulting new value of the field of view. (in degrees)
      */
     CameraConfiguration.prototype.increaseFOV = function () {
-        this.setFOV(this._fov * _constants.FOV_INCREASE_FACTOR, true);
+        this.setFOV(this._fov * FOV_INCREASE_FACTOR, true);
         return this._fov;
     };
     /**
@@ -3948,7 +3945,7 @@ define([
      * @returns {Number} The resulting new value of the span. (in meters)
      */
     CameraConfiguration.prototype.decreaseSpan = function () {
-        this.setSpan(this._span * _constants.SPAN_DECREASE_FACTOR, true);
+        this.setSpan(this._span * SPAN_DECREASE_FACTOR, true);
         return this._span;
     };
     /**
@@ -3956,7 +3953,7 @@ define([
      * @returns {Number} The resulting new value of the span. (in meters)
      */
     CameraConfiguration.prototype.increaseSpan = function () {
-        this.setSpan(this._span * _constants.SPAN_INCREASE_FACTOR, true);
+        this.setSpan(this._span * SPAN_INCREASE_FACTOR, true);
         return this._span;
     };
     /**

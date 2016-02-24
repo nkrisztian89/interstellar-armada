@@ -18,25 +18,23 @@ define([
     "utils/matrices"
 ], function (vec, mat) {
     "use strict";
-    var _constants = {
-        /**
-         * The angular velocity matrix of a physical object stores the rotation that happens during this duration at the current angular
-         * velocity of the object. In milliseconds.
-         * @type Number
-         */
-        ANGULAR_VELOCITY_MATRIX_DURATION: 5,
-        /**
-         * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the velocity matrix.
-         * @type Number
-         */
-        VELOCITY_MATRIX_ERROR_THRESHOLD: 0.0001,
-        /**
-         * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the angular velocity matrix.
-         * @type Number
-         */
-        ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD: 0.00001
-    };
-    Object.freeze(_constants);
+    var
+            /**
+             * The angular velocity matrix of a physical object stores the rotation that happens during this duration at the current angular
+             * velocity of the object. In milliseconds.
+             * @type Number
+             */
+            ANGULAR_VELOCITY_MATRIX_DURATION = 5,
+            /**
+             * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the velocity matrix.
+             * @type Number
+             */
+            VELOCITY_MATRIX_ERROR_THRESHOLD = 0.0001,
+            /**
+             * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the angular velocity matrix.
+             * @type Number
+             */
+            ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD = 0.00001;
     // #########################################################################
     /**
      * @class Represents a force affecting a physical object, causing it to 
@@ -694,7 +692,7 @@ define([
             // the angular velocity matrix represents the rotation that happens
             // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
             // interpolated easily, for that quaternions should be used)
-            for (i = 0; (i + _constants.ANGULAR_VELOCITY_MATRIX_DURATION / 2) < dt; i += _constants.ANGULAR_VELOCITY_MATRIX_DURATION) {
+            for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION / 2) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
                 this.setOrientationMatrix(mat.mul4(this._orientationMatrix, this._angularVelocityMatrix));
             }
             // calculate the rotation that happened as a result of the angular
@@ -709,15 +707,15 @@ define([
                     // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
                     angularAccMatrix = mat.mul4(
                             angularAccMatrix,
-                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, _constants.ANGULAR_VELOCITY_MATRIX_DURATION * t / 1000));
+                            this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t / 1000));
                 }
             }
             // update angular velocity matrix
             this._angularVelocityMatrix = mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
             // correct matrix inaccuracies and close to zero values resulting from
             // floating point operations
-            this._velocityMatrix = mat.straightened(this._velocityMatrix, _constants.VELOCITY_MATRIX_ERROR_THRESHOLD);
-            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, _constants.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+            this._velocityMatrix = mat.straightened(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
+            this._angularVelocityMatrix = mat.straightened(this._angularVelocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
             this._correctMatrices();
         }
     };
@@ -729,9 +727,9 @@ define([
         Torque: Torque,
         PhysicalObject: PhysicalObject,
         // constants
-        ANGULAR_VELOCITY_MATRIX_DURATION: _constants.ANGULAR_VELOCITY_MATRIX_DURATION,
-        ANGULAR_VELOCITY_MATRIX_DURATION_S: _constants.ANGULAR_VELOCITY_MATRIX_DURATION / 1000,
-        VELOCITY_MATRIX_ERROR_THRESHOLD: _constants.VELOCITY_MATRIX_ERROR_THRESHOLD,
-        ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD: _constants.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD
+        ANGULAR_VELOCITY_MATRIX_DURATION: ANGULAR_VELOCITY_MATRIX_DURATION,
+        ANGULAR_VELOCITY_MATRIX_DURATION_S: ANGULAR_VELOCITY_MATRIX_DURATION / 1000,
+        VELOCITY_MATRIX_ERROR_THRESHOLD: VELOCITY_MATRIX_ERROR_THRESHOLD,
+        ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD: ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD
     };
 });

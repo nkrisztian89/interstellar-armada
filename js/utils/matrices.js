@@ -17,13 +17,12 @@ define([
 ], function (vec) {
     "use strict";
 
-    var mat = {}, _constants = {
-        /**
-         * Used as error threshold - numbers larger than this can be exchanged for the number 1 in certain places
-         * @type Number
-         */
-        CLOSE_TO_ONE_THRESHOLD: 0.99999
-    };
+    var mat = {},
+            /**
+             * Used as error threshold - numbers larger than this can be exchanged for the number 1 in certain places
+             * @type Number
+             */
+            CLOSE_TO_ONE_THRESHOLD = 0.99999;
     // -----------------------------------------------------------------------------
     // Functions that create new matrices
     /**
@@ -524,7 +523,7 @@ define([
      */
     mat.getVectorYawAndPitch = function (v) {
         var pitchVector, result = {};
-        if (Math.abs(v[2]) > _constants.CLOSE_TO_ONE_THRESHOLD) {
+        if (Math.abs(v[2]) > CLOSE_TO_ONE_THRESHOLD) {
             result.yaw = 0;
             result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
@@ -550,7 +549,7 @@ define([
      */
     mat.getYawAndPitch = function (m) {
         var pitchMatrix, result = {};
-        if (Math.abs(m [6]) > _constants.CLOSE_TO_ONE_THRESHOLD) {
+        if (Math.abs(m [6]) > CLOSE_TO_ONE_THRESHOLD) {
             result.yaw = 0;
             result.pitch = (m [6] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
@@ -579,7 +578,7 @@ define([
         dot = vec.dot3([0, 1, 0], mat.getRowB43(m));
         // if the angle of the two Y vectors is (around) 0 or 180 degrees, their cross product will be of zero length
         // and we cannot use it as a rotation axis, therefore fall back to axis Z in this case
-        if (Math.abs(dot) > _constants.CLOSE_TO_ONE_THRESHOLD) {
+        if (Math.abs(dot) > CLOSE_TO_ONE_THRESHOLD) {
             result.alphaAxis = [0, 0, 1];
             result.alpha = dot > 0 ? 0 : Math.PI;
         } else {
@@ -594,7 +593,7 @@ define([
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
         dot = vec.dot3([1, 0, 0], mat.getRowA43(halfMatrix));
-        if (Math.abs(dot) > _constants.CLOSE_TO_ONE_THRESHOLD) {
+        if (Math.abs(dot) > CLOSE_TO_ONE_THRESHOLD) {
             result.gammaAxis = [0, 1, 0];
             result.gamma = dot > 0 ? 0 : Math.PI;
         } else {

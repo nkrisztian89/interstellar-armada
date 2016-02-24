@@ -39,16 +39,13 @@ define([
                 TRILINEAR: "trilinear",
                 ANISOTROPIC: "anisotropic"
             },
-    _constants = {
-        UNIFORM_NAME_PREFIX: "u_",
-        UNIFORM_NAME_SUFFIX: "",
-        TEXTURE_UNIFORM_NAME_PREFIX: "",
-        TEXTURE_UNIFORM_NAME_SUFFIX: "Texture",
-        CUBEMAP_UNIFORM_NAME_PREFIX: "",
-        CUBEMAP_UNIFORM_NAME_SUFFIX: "Cubemap"
-    };
+    UNIFORM_NAME_PREFIX = "u_",
+            UNIFORM_NAME_SUFFIX = "",
+            TEXTURE_UNIFORM_NAME_PREFIX = "",
+            TEXTURE_UNIFORM_NAME_SUFFIX = "Texture",
+            CUBEMAP_UNIFORM_NAME_PREFIX = "",
+            CUBEMAP_UNIFORM_NAME_SUFFIX = "Cubemap";
     Object.freeze(TextureFiltering);
-    Object.freeze(_constants);
     /**
      * Displays information about an error that has occured in relation with WebGL,
      * adding some basic WebGL support info for easier troubleshooting.
@@ -485,12 +482,12 @@ define([
      */
     ShaderUniform.prototype.getRawName = function () {
         var result = this._name, parts;
-        if (_constants.UNIFORM_NAME_PREFIX.length > 0) {
-            parts = result.split(_constants.UNIFORM_NAME_PREFIX);
+        if (UNIFORM_NAME_PREFIX.length > 0) {
+            parts = result.split(UNIFORM_NAME_PREFIX);
             result = parts[parts.length - 1];
         }
-        if (_constants.UNIFORM_NAME_SUFFIX.length > 0) {
-            result = result.split(_constants.UNIFORM_NAME_SUFFIX)[0];
+        if (UNIFORM_NAME_SUFFIX.length > 0) {
+            result = result.split(UNIFORM_NAME_SUFFIX)[0];
         }
         return result;
     };
@@ -505,15 +502,15 @@ define([
             return null;
         }
         result = this.getRawName();
-        if (_constants.TEXTURE_UNIFORM_NAME_PREFIX.length > 0) {
-            parts = result.split(_constants.TEXTURE_UNIFORM_NAME_PREFIX);
+        if (TEXTURE_UNIFORM_NAME_PREFIX.length > 0) {
+            parts = result.split(TEXTURE_UNIFORM_NAME_PREFIX);
             if (parts.length < 2) {
                 return null;
             }
             result = parts[parts.length - 1];
         }
-        if (_constants.TEXTURE_UNIFORM_NAME_SUFFIX.length > 0) {
-            parts = result.split(_constants.TEXTURE_UNIFORM_NAME_SUFFIX);
+        if (TEXTURE_UNIFORM_NAME_SUFFIX.length > 0) {
+            parts = result.split(TEXTURE_UNIFORM_NAME_SUFFIX);
             if (parts.length < 2) {
                 return null;
             }
@@ -532,15 +529,15 @@ define([
             return null;
         }
         result = this.getRawName();
-        if (_constants.CUBEMAP_UNIFORM_NAME_PREFIX.length > 0) {
-            parts = result.split(_constants.CUBEMAP_UNIFORM_NAME_PREFIX);
+        if (CUBEMAP_UNIFORM_NAME_PREFIX.length > 0) {
+            parts = result.split(CUBEMAP_UNIFORM_NAME_PREFIX);
             if (parts.length < 2) {
                 return null;
             }
             result = parts[parts.length - 1];
         }
-        if (_constants.CUBEMAP_UNIFORM_NAME_SUFFIX.length > 0) {
-            parts = result.split(_constants.CUBEMAP_UNIFORM_NAME_SUFFIX);
+        if (CUBEMAP_UNIFORM_NAME_SUFFIX.length > 0) {
+            parts = result.split(CUBEMAP_UNIFORM_NAME_SUFFIX);
             if (parts.length < 2) {
                 return null;
             }
@@ -555,7 +552,7 @@ define([
      * @returns {String}
      */
     ShaderUniform.prototype.getUniformName = function (rawName) {
-        return _constants.UNIFORM_NAME_PREFIX + rawName + _constants.UNIFORM_NAME_SUFFIX;
+        return UNIFORM_NAME_PREFIX + rawName + UNIFORM_NAME_SUFFIX;
     };
     /**
      * Sets the value of the shader uniform in the specified GL context to the passed value.
