@@ -7,10 +7,11 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, require, location, document, JSON */
+/*global define, require, location, document, JSON, localStorage */
 
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
+ * @param constants Used to access the language setting location in the local storage
  * @param graphics Used to load the graphics settings
  * @param logic Used to load the configuration and settings of the game and access main functionality
  * @param control Used to load the control configuration and setings of the game and access main functionality
@@ -18,13 +19,16 @@
  */
 define([
     "modules/game",
+    "armada/constants",
     "armada/graphics",
     "armada/logic",
     "armada/control",
     "armada/strings"
-], function (game, graphics, logic, control, strings) {
+], function (game, constants, graphics, logic, control, strings) {
     "use strict";
-    game.setGameName("Interstellar Armada");
+    // -------------------------------------------------------------------------
+    // setting game properties
+    game.setGameName(constants.GAME_NAME);
     game.setStartScreenName("mainMenu");
     game.setConfigFolder("config/");
     game.setConfigFileName("config.json");
@@ -37,7 +41,7 @@ define([
         logic.loadSettingsFromJSON(settingsJSON.logic);
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
-        game.requestLanguageChange(settingsJSON.general.language, strings, callback);
+        game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, callback);
     };
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
         logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);
@@ -49,14 +53,16 @@ define([
             "armada/screens/menus",
             "armada/screens/battle",
             "armada/screens/database",
+            "armada/screens/general-settings",
             "armada/screens/graphics-settings",
             "armada/screens/control-settings",
             "armada/screens/about"
-        ], function (menus, battle, database, graphicsScreen, controlsScreen, aboutScreen) {
+        ], function (menus, battle, database, generalSettings, graphicsScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(new battle.BattleScreen("battle", "battle.html"));
             game.addScreen(new database.DatabaseScreen("database", "database.html"));
             game.addScreen(menus.settingsMenuScreen);
+            game.addScreen(generalSettings.generalSettingsScreen);
             game.addScreen(graphicsScreen.graphicsScreen);
             game.addScreen(controlsScreen.controlsScreen);
             game.addScreen(aboutScreen.aboutScreen);

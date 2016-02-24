@@ -10,7 +10,7 @@
 
 define(function () {
     "use strict";
-    // constants to be accessable to all screen
+    // constants to be accessable to all screens
     return {
         SELECTOR_SOURCE: "selector.html",
         SELECTOR_CSS: "selector.css",
@@ -23,6 +23,8 @@ define(function () {
         SETTINGS_SCREEN_NAME: "settings",
         SETTINGS_SCREEN_SOURCE: "menu.html",
         SETTINGS_MENU_CONTAINER_ID: "menuContainer",
+        GENERAL_SETTINGS_SCREEN_NAME: "generalSettings",
+        GENERAL_SETTINGS_SOURCE: "general-settings.html",
         GRAPHICS_SCREEN_NAME: "graphics",
         GRAPHICS_SCREEN_SOURCE: "graphics.html",
         CONTROLS_SCREEN_NAME: "controls",

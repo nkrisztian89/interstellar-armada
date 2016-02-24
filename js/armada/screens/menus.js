@@ -9,6 +9,13 @@
 /*jslint nomen: true, white: true*/
 /*global define */
 
+/**
+ * @param screens
+ * @param game
+ * @param armadaScreens
+ * @param logic
+ * @param strings
+ */
 define([
     "modules/screens",
     "modules/game",
@@ -22,23 +29,23 @@ define([
                 armadaScreens.MAIN_MENU_SCREEN_NAME,
                 armadaScreens.MAIN_MENU_SCREEN_SOURCE,
                 [{
-                        caption: strings.get(strings.MAIN_MENU.NEW_GAME),
+                        id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
                             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
                             game.getScreen().startNewBattle(logic.getLevelFileName(0));
                         }
                     }, {
-                        caption: strings.get(strings.MAIN_MENU.DATABASE),
+                        id: strings.MAIN_MENU.DATABASE.name,
                         action: function () {
                             game.setScreen(armadaScreens.DATABASE_SCREEN_NAME);
                         }
                     }, {
-                        caption: strings.get(strings.MAIN_MENU.SETTINGS),
+                        id: strings.MAIN_MENU.SETTINGS.name,
                         action: function () {
                             game.setScreen(armadaScreens.SETTINGS_SCREEN_NAME);
                         }
                     }, {
-                        caption: strings.get(strings.MAIN_MENU.ABOUT),
+                        id: strings.MAIN_MENU.ABOUT.name,
                         action: function () {
                             game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                         }
@@ -47,17 +54,22 @@ define([
                 armadaScreens.SETTINGS_SCREEN_NAME,
                 armadaScreens.SETTINGS_SCREEN_SOURCE,
                 [{
-                        caption: strings.get(strings.SETTINGS.GRAPHICS),
+                        id: strings.SETTINGS.GENERAL.name,
+                        action: function () {
+                            game.setScreen(armadaScreens.GENERAL_SETTINGS_SCREEN_NAME);
+                        }
+                    }, {
+                        id: strings.SETTINGS.GRAPHICS.name,
                         action: function () {
                             game.setScreen(armadaScreens.GRAPHICS_SCREEN_NAME);
                         }
                     }, {
-                        caption: strings.get(strings.SETTINGS.CONTROLS),
+                        id: strings.SETTINGS.CONTROLS.name,
                         action: function () {
                             game.setScreen(armadaScreens.CONTROLS_SCREEN_NAME);
                         }
                     }, {
-                        caption: strings.get(strings.SCREEN.BACK),
+                        id: strings.SCREEN.BACK.name,
                         action: function () {
                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                         }
@@ -66,18 +78,18 @@ define([
                 armadaScreens.INGAME_MENU_SCREEN_NAME,
                 armadaScreens.INGAME_MENU_SCREEN_SOURCE,
                 [{
-                        caption: strings.get(strings.INGAME_MENU.RESUME),
+                        id: strings.INGAME_MENU.RESUME.name,
                         action: function () {
                             game.closeSuperimposedScreen();
                             game.getScreen().resumeBattle();
                         }
                     }, {
-                        caption: strings.get(strings.SETTINGS.CONTROLS),
+                        id: strings.SETTINGS.CONTROLS.name,
                         action: function () {
                             game.setScreen(armadaScreens.CONTROLS_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
                         }
                     }, {
-                        caption: strings.get(strings.INGAME_MENU.QUIT),
+                        id: strings.INGAME_MENU.QUIT.name,
                         action: function () {
                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                         }

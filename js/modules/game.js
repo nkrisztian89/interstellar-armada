@@ -68,6 +68,15 @@ define([
              * @type String
              */
             _configFileName = null,
+            /**
+             * Storing the default value for the language setting so that it can be restored if needed
+             * @type String
+             */
+            _defaultLanguage = null,
+            /**
+             * The associative array of strings files descriptors, storing them by the language IDs
+             * @type Object.<String, {folder: String, filename: String}>
+             */
             _stringsFileDescriptors = null,
             // -------------------------------------------------------------------------
             // Private methods
@@ -120,6 +129,7 @@ define([
                     application.setLogVerbosity(configJSON.logVerbosity);
                     application.setVersion(configJSON.version);
                     application.log("Game version is: " + application.getVersion(), 1);
+                    _defaultLanguage = configJSON.defaultLanguage;
                     _stringsFileDescriptors = configJSON.configFiles.strings;
                     require([
                         "modules/graphics-resources"
@@ -189,6 +199,28 @@ define([
         _configFileName = value;
     };
     /**
+     * Returns the default language of the game
+     * @returns {String}
+     */
+    application.getDefaultLanguage = function () {
+        return _defaultLanguage;
+    };
+    /**
+     * Returns the currently used language
+     * @returns {String}
+     */
+    application.getLanguage = function () {
+        return strings.getLanguage();
+    };
+    /**
+     * Returns the list of languages (language ID strings) for which there is a strings file defined. (it is now checked whether the 
+     * specified file exists)
+     * @returns {Array}
+     */
+    application.getLanguages = function () {
+        return Object.keys(_stringsFileDescriptors);
+    };
+    /**
      * If needed, launches an asynchronous request to load the language file for the given language and changes
      * the language of the application to it when it is loaded, then executes the callback. If the
      * language file had already been loaded previously, just switches the language and executes the
@@ -210,6 +242,7 @@ define([
         }
         if (strings.languageIsLoaded(language)) {
             strings.setLanguage(language);
+            screenManager.updateAllScreens();
             callback(false);
         } else {
             application.requestTextFile(
@@ -218,6 +251,7 @@ define([
                     function (responseText) {
                         strings.loadStrings(language, JSON.parse(responseText), stringDefinitions);
                         strings.setLanguage(language);
+                        screenManager.updateAllScreens();
                         callback(true);
                     });
         }

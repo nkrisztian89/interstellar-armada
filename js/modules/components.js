@@ -13,13 +13,19 @@
  * @param utils Used for formatted strings when setting component content
  * @param application Used for logging, displaying errors and loading files.
  * @param asyncResource Used for managing asynchronous loading of components from files (subclassing AsyncResource)
+ * @param strings Used for translation support
  */
 define([
     "utils/utils",
     "modules/application",
-    "modules/async-resource"
-], function (utils, application, asyncResource) {
+    "modules/async-resource",
+    "modules/strings"
+], function (utils, application, asyncResource, strings) {
     "use strict";
+    var
+            // ------------------------------------------------------------------------------
+            // constants
+            ELEMENT_ID_SEPARATOR = "_";
     // #########################################################################
     /**
      * @class A wrapper class around a regular HTML5 element, that makes it easier
@@ -32,7 +38,7 @@ define([
     function SimpleComponent(name) {
         /**
          * The name of the component. The id attribute of the HTML5 element must 
-         * have the same value.
+         * have the same value for successful initialization.
          * @type String
          */
         this._name = name;
@@ -47,6 +53,14 @@ define([
          */
         this._displayStyle = null;
     }
+    /**
+     * Renames the component - changes both the stored name and the ID of the associated HTML element
+     * @param {String} newName
+     */
+    SimpleComponent.prototype.rename = function (newName) {
+        this._name = newName;
+        this._element.setAttribute("id", newName);
+    };
     /**
      * Returns the wrapped HTML element.
      * @returns {HTMLElement}
@@ -93,8 +107,7 @@ define([
     };
     /**
      * Nulls the element and the display style. Needs te be called if the element
-     * has been removed from the current document (automatically called by {@link
-     * GameScreen}).
+     * has been removed from the current document.
      */
     SimpleComponent.prototype.resetComponent = function () {
         this._element = null;
@@ -240,7 +253,7 @@ define([
             // overall uniqueness)
             namedElements = this._model.body.querySelectorAll("[id]");
             for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].setAttribute("id", this._name + "_" + namedElements[i].getAttribute("id"));
+                namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
             }
             if (this._cssLoaded === true) {
                 this._onModelLoad();
@@ -272,6 +285,14 @@ define([
         }
     };
     /**
+     * Returns the ID of the passed element without the prefix referencing to this component
+     * @param {Element} element
+     * @returns {String}
+     */
+    ExternalComponent.prototype._getOriginalElementID = function (element) {
+        return element.getAttribute("id").substr(this._name.length + ELEMENT_ID_SEPARATOR.length);
+    };
+    /**
      * Setting the properties that will be used to easier access DOM elements later.
      * In subclasses, this method should be overloaded if custom properties need
      * to be initialized (registered simple components are already imitialized here
@@ -284,15 +305,31 @@ define([
         }
     };
     /**
+     * If possible, updates the inner HTML text of the child elements to the translation in the current language.
+     * (it is possible, if the child element was given an ID that is a valid translation key)
+     */
+    ExternalComponent.prototype.updateComponents = function () {
+        var i, elements;
+        if (this._rootElement) {
+            elements = this._rootElement.querySelectorAll("[id]");
+            for (i = 0; i < elements.length; i++) {
+                elements[i].innerHTML = strings.get({
+                    name: this._getOriginalElementID(elements[i]),
+                    defaultValue: elements[i].innerHTML
+                });
+            }
+        }
+    };
+    /**
      * Adds a new simple component with the specified name (prefixed with the name
      * of this component, as id attributes are also prefixed when the component is
      * appended to the document), and also returns it.
-     * @param {SimpleComponent} simpleComponentName This name will be automatically
+     * @param {String} simpleComponentName This name will be automatically
      * prefixed with the external component's name when the simple component is created.
      * @returns {SimpleComponent}
      */
     ExternalComponent.prototype.registerSimpleComponent = function (simpleComponentName) {
-        var component = new SimpleComponent(this._name + "_" + simpleComponentName);
+        var component = new SimpleComponent(this._name + ELEMENT_ID_SEPARATOR + simpleComponentName);
         this._simpleComponents.push(component);
         return component;
     };
@@ -469,7 +506,8 @@ define([
     // #########################################################################
     /**
      * @typedef {Object} MenuComponent~MenuOption
-     * @property {String} caption
+     * @property {String} [caption]
+     * @property {String} [id] If given, will be used as translation key to update the menu option's caption when the component is updated
      * @property {Function} action
      */
     /**
@@ -519,9 +557,12 @@ define([
         ExternalComponent.prototype._initializeComponents.call(this);
         for (i = 0; i < this._menuOptions.length; i++) {
             aElement = document.createElement("a");
+            if (this._menuOptions[i].id) {
+                aElement.id = this._name + ELEMENT_ID_SEPARATOR + this._menuOptions[i].id;
+            }
             aElement.href = "#";
             aElement.className = "menu button";
-            aElement.innerHTML = this._menuOptions[i].caption;
+            aElement.innerHTML = this._menuOptions[i].caption || strings.get({name: this._menuOptions[i].id});
             // we need to generate an appropriate handler function here for each
             // menu element (cannot directly create it here as they would all use
             // the same index as i would be a closure)
@@ -542,18 +583,18 @@ define([
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
      * @param {String} cssFilename See ExternalComponent.
-     * @param {String} propertyName The name of the property that can be set using
-     * this selector.
+     * @param {{caption: String, id: String}} propertyLabelDescriptor The caption and id of the property label element that is displayed on this
+     * selector, indicating what property can be set with it
      * @param {String[]} valueList The list of possible values that can be selected
      * for the property.
      */
-    function Selector(name, htmlFilename, cssFilename, propertyName, valueList) {
+    function Selector(name, htmlFilename, cssFilename, propertyLabelDescriptor, valueList) {
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
          * The name of the property that can be set using this selector.
-         * @type String
+         * @type {caption: String, id: String}
          */
-        this._propertyName = propertyName;
+        this._propertyLabelDescriptor = propertyLabelDescriptor;
         /**
          * The list of possible values that can be selected with this selector.
          * @type String[]
@@ -590,7 +631,10 @@ define([
      */
     Selector.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
-        this._propertyLabel.setContent(this._propertyName);
+        if (this._propertyLabelDescriptor.id) {
+            this._propertyLabel.rename(this._name + ELEMENT_ID_SEPARATOR + this._propertyLabelDescriptor.id);
+        }
+        this._propertyLabel.setContent(this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}));
         this._valueSelector.setContent(this._valueList[0]);
         this._valueIndex = 0;
         this._valueSelector.getElement().onclick = function () {
@@ -654,6 +698,16 @@ define([
         this.executeWhenReady(function () {
             this.selectValueWithIndex((this._valueIndex + 1) % this._valueList.length);
         });
+    };
+    /**
+     * 
+     * @param {String[]} valueList
+     */
+    Selector.prototype.setValueList = function (valueList) {
+        this._valueList = valueList;
+        if (this._valueIndex >= this._valueList.length) {
+            this._valueIndex = 0;
+        }
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

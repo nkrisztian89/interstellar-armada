@@ -37,7 +37,14 @@ define([
              */
             _allStrings = {};
     /**
-     * 
+     * Returns the currently used language
+     * @returns {String}
+     */
+    exports.getLanguage = function () {
+        return _currentLanguage;
+    };
+    /**
+     * After calling this, strings will be returned in the given language (if loaded)
      * @param {String} value
      */
     exports.setLanguage = function (value) {

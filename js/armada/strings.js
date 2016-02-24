@@ -26,11 +26,13 @@ define([
         ABOUT: {name: "mainMenu.about"}
     };
     strings.SETTINGS = {
+        GENERAL: {name: "settings.general"},
         GRAPHICS: {name: "settings.graphics"},
         CONTROLS: {name: "settings.controls"},
         DEFAULTS: {name: "settings.defaults"}
     };
     strings.INGAME_MENU = {
+        TITLE: {name: "ingameMenu.title"},
         RESUME: {name: "ingameMenu.resume"},
         QUIT: {name: "ingameMenu.quit"}
     };
@@ -54,6 +56,11 @@ define([
         VERY_HIGH: {name: "setting.veryHigh"},
         NORMAL: {name: "setting.normal"},
         SIMPLE: {name: "setting.simple"}
+    };
+    strings.GENERAL_SETTINGS = {
+        BACK: {name: "generalSettings.backButton"},
+        TITLE: {name: "generalSettings.title"},
+        LANGUAGE: {name: "generalSettings.language"}
     };
     strings.GRAPHICS = {
         BACK: {name: "graphics.back"},

@@ -239,13 +239,16 @@ define([
      */
     HTMLScreen.prototype._updateComponents = function () {
         var translatableElements, i;
-        application.log("Screen '" + this._name + "' is getting updated.");
+        application.log("Screen '" + this._name + "' is getting updated.", 2);
         translatableElements = this._container.querySelectorAll("." + TRANSLATABLE_CLASS_NAME);
         for (i = 0; i < translatableElements.length; i++) {
             translatableElements[i].innerHTML = strings.get({
                 name: this._name + TRANSLATION_KEY_SEPARATOR + this._getOriginalElementID(translatableElements[i]),
                 defaultValue: translatableElements[i].innerHTML
             });
+        }
+        for (i = 0; i < this._externalComponents.length; i++) {
+            this._externalComponents[i].component.updateComponents();
         }
     };
     /**
@@ -259,7 +262,7 @@ define([
      * @returns {SimpleComponent}
      */
     HTMLScreen.prototype.registerSimpleComponent = function (simpleComponentName) {
-        var component = new components.SimpleComponent(this._name + "_" + simpleComponentName);
+        var component = new components.SimpleComponent(this._name + ELEMENT_ID_SEPARATOR + simpleComponentName);
         this._simpleComponents.push(component);
         return component;
     };

@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0:136+refactoring-73 (2016.02.24.)",
+    "version": "0.1.0:136+refactoring-74 (2016.02.24.)",
     "logVerbosity": 1,
     "folders": {
         "config": "config/",
@@ -14,6 +14,7 @@
         "level": "{{data}}/levels/",
         "environment": "{{data}}/levels/environments/"
     },
+    "defaultLanguage": "English",
     "configFiles": {
         "settings": {
             "filename": "settings.json",
@@ -24,7 +25,7 @@
                 "filename": "strings.json",
                 "folder": "strings"
             },
-            "Hungarian": {
+            "magyar": {
                 "filename": "strings-hu.json",
                 "folder": "strings"
             }
