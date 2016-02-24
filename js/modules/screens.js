@@ -16,6 +16,7 @@
  * @param components Screens contain components
  * @param managedGL Screens having canvases provide the managed GL contexts for them
  * @param resources Used to clear graphics resource bindings to contexts of removed screens
+ * @param strings Used to offer translation support
  */
 define([
     "utils/types",
@@ -23,9 +24,21 @@ define([
     "modules/async-resource",
     "modules/components",
     "modules/managed-gl",
-    "modules/graphics-resources"
-], function (types, application, asyncResource, components, managedGL, resources) {
+    "modules/graphics-resources",
+    "modules/strings"
+], function (types, application, asyncResource, components, managedGL, resources, strings) {
     "use strict";
+    var
+            // ------------------------------------------------------------------------------
+            // constants
+            /*
+             * The content of HTML elements with this class on the page will be automatically translated on every update, using
+             * the key <name of the page> " <TRANSLATION_KEY_SEPARATOR> + <id of the element>
+             * @type String
+             */
+            TRANSLATABLE_CLASS_NAME = "translatable",
+            ELEMENT_ID_SEPARATOR = "_",
+            TRANSLATION_KEY_SEPARATOR = ".";
     // #########################################################################
     /**
      * @class Holds the logical model of a screen of the game. The different
@@ -125,7 +138,7 @@ define([
             this._container.innerHTML = this._model.body.innerHTML;
             namedElements = this._container.querySelectorAll("[id]");
             for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].setAttribute("id", this._name + "_" + namedElements[i].getAttribute("id"));
+                namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
             }
             document.body.appendChild(this._background);
             document.body.appendChild(this._container);
@@ -213,11 +226,27 @@ define([
         this._updateComponents();
     };
     /**
-     * Override this to update the state of components on this screen to be up-to-date with the
-     * application state.
+     * @param {Element} element
+     * @returns {String}
+     */
+    HTMLScreen.prototype._getOriginalElementID = function (element) {
+        return element.getAttribute("id").substr(this._name.length + ELEMENT_ID_SEPARATOR.length);
+    };
+    /**
+     * Override this and add the code update the state of components on this screen to be up-to-date with the
+     * application state. This basic method automatically translated the content of all elements having the
+     * TRANSLATABLE_CLASS_NAME class.
      */
     HTMLScreen.prototype._updateComponents = function () {
+        var translatableElements, i;
         application.log("Screen '" + this._name + "' is getting updated.");
+        translatableElements = this._container.querySelectorAll("." + TRANSLATABLE_CLASS_NAME);
+        for (i = 0; i < translatableElements.length; i++) {
+            translatableElements[i].innerHTML = strings.get({
+                name: this._name + TRANSLATION_KEY_SEPARATOR + this._getOriginalElementID(translatableElements[i]),
+                defaultValue: translatableElements[i].innerHTML
+            });
+        }
     };
     /**
      * Updates all components on this screen to be up-to-date with the application state.

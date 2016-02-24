@@ -77,7 +77,9 @@ define([
      */
     exports.get = function (stringDefinitionObject, suffix, defaultValue) {
         return (_allStrings[_currentLanguage] && _allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")]) ||
-                defaultValue || (stringDefinitionObject.name + (suffix || ""));
+                defaultValue ||
+                stringDefinitionObject.defaultValue ||
+                (stringDefinitionObject.name + (suffix || ""));
     };
     /**
      * 

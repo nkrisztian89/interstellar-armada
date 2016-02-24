@@ -18,6 +18,8 @@ define([
     "use strict";
 
     var mat = {},
+            // ----------------------------------------------------------------------
+            // constants
             /**
              * Used as error threshold - numbers larger than this can be exchanged for the number 1 in certain places
              * @type Number

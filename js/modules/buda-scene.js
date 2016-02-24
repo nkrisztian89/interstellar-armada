@@ -19,6 +19,8 @@ define([
 ], function (utils, vec, mat, application, managedGL) {
     "use strict";
     var makeObject3DMixinClassFunction, makeObject3DMixinClass,
+            // ----------------------------------------------------------------------
+            // constants
             /**
              * For new LOD contexts, this will be the default value for the reference size
              * @type Number

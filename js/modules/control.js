@@ -930,45 +930,45 @@ define([
         var result = "", direction = null;
         switch (MOUSE_BUTTON_NAMES[this._buttonIndex]) {
             case MouseButtonName.LEFT:
-                return strings.get(MOUSE_LEFT_BUTTON, "", MOUSE_LEFT_BUTTON.defaultValue);
+                return strings.get(MOUSE_LEFT_BUTTON);
             case MouseButtonName.MIDDLE:
-                return strings.get(MOUSE_MIDDLE_BUTTON, "", MOUSE_MIDDLE_BUTTON.defaultValue);
+                return strings.get(MOUSE_MIDDLE_BUTTON);
             case MouseButtonName.RIGHT:
-                return strings.get(MOUSE_RIGHT_BUTTON, "", MOUSE_RIGHT_BUTTON.defaultValue);
+                return strings.get(MOUSE_RIGHT_BUTTON);
         }
         result = this._measuredFromCenter ?
-                strings.get(MOUSE_FROM_CENTER, "", MOUSE_FROM_CENTER.defaultValue) :
-                strings.get(MOUSE_NOT_FROM_CENTER, "", MOUSE_NOT_FROM_CENTER.defaultValue);
+                strings.get(MOUSE_FROM_CENTER) :
+                strings.get(MOUSE_NOT_FROM_CENTER);
         if (this._moveX < 0) {
-            direction = strings.get(MOUSE_DIRECTION_LEFT, "", MOUSE_DIRECTION_LEFT.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_LEFT);
         } else if (this._moveX > 0) {
-            direction = strings.get(MOUSE_DIRECTION_RIGHT, "", MOUSE_DIRECTION_RIGHT.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_RIGHT);
         } else if (this._moveY < 0) {
-            direction = strings.get(MOUSE_DIRECTION_UP, "", MOUSE_DIRECTION_UP.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_UP);
         } else if (this._moveY > 0) {
-            direction = strings.get(MOUSE_DIRECTION_DOWN, "", MOUSE_DIRECTION_DOWN.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_DOWN);
         }
         if (direction) {
             result = utils.formatString(result, {
-                move: strings.get(MOUSE_MOVE, "", MOUSE_MOVE.defaultValue),
+                move: strings.get(MOUSE_MOVE),
                 toDirection: direction
             });
             return result;
         }
         direction = null;
-        result = strings.get(MOUSE_NOT_FROM_CENTER, "", MOUSE_NOT_FROM_CENTER.defaultValue);
+        result = strings.get(MOUSE_NOT_FROM_CENTER);
         if (this._scrollX < 0) {
-            direction = strings.get(MOUSE_DIRECTION_LEFT, "", MOUSE_DIRECTION_LEFT.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_LEFT);
         } else if (this._scrollX > 0) {
-            direction = strings.get(MOUSE_DIRECTION_RIGHT, "", MOUSE_DIRECTION_RIGHT.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_RIGHT);
         } else if (this._scrollY < 0) {
-            direction = strings.get(MOUSE_DIRECTION_UP, "", MOUSE_DIRECTION_UP.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_UP);
         } else if (this._scrollY > 0) {
-            direction = strings.get(MOUSE_DIRECTION_DOWN, "", MOUSE_DIRECTION_DOWN.defaultValue);
+            direction = strings.get(MOUSE_DIRECTION_DOWN);
         }
         if (direction) {
             result = utils.formatString(result, {
-                move: strings.get(MOUSE_SCROLL, "", MOUSE_SCROLL.defaultValue),
+                move: strings.get(MOUSE_SCROLL),
                 toDirection: direction
             });
         }
@@ -1444,14 +1444,14 @@ define([
      */
     GamepadBinding.prototype.getControlString = function () {
         if (this._button !== this.BUTTON_NONE) {
-            return utils.formatString(strings.get(JOYSTICK_BUTTON, "", JOYSTICK_BUTTON.defaultValue), {index: (this._button + 1)});
+            return utils.formatString(strings.get(JOYSTICK_BUTTON), {index: (this._button + 1)});
         }
         if (this._axisIndex !== this.AXIS_NONE) {
-            return utils.formatString(strings.get(JOYSTICK_AXIS, "", JOYSTICK_AXIS.defaultValue), {
+            return utils.formatString(strings.get(JOYSTICK_AXIS), {
                 index: (this._axisIndex + 1),
                 direction: (this._axisPositive ?
-                        strings.get(JOYSTICK_DIRECTION_POSITIVE, "", JOYSTICK_DIRECTION_POSITIVE.defaultValue) :
-                        strings.get(JOYSTICK_DIRECTION_NEGATIVE, "", JOYSTICK_DIRECTION_NEGATIVE.defaultValue))});
+                        strings.get(JOYSTICK_DIRECTION_POSITIVE) :
+                        strings.get(JOYSTICK_DIRECTION_NEGATIVE))});
         }
         return "";
     };

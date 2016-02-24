@@ -23,12 +23,13 @@ define([
 ], function (game, screens, strings, armadaScreens) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // constants
             BACK_BUTTON_ID = "backButton",
-            TITLE_HEADING_ID = "title",
-            VERSION_PARAGRAPH_ID = "versionParagraph";
+            VERSION_PARAGRAPH_ID = "versionParagraph",
+            ABOUT_AUTHOR_LICENSE_PARAGRAPH_ID = "aboutAuthorLicenseParagraph";
     /**
-     * @class A class to represent the "About" screen in the game. Describes the
-     * dynamic behaviour on that screen.
+     * @class A class to represent the "About" screen in the game. Describes the dynamic behaviour on that screen.
      * @extends HTMLScreen
      */
     function AboutScreen() {
@@ -40,11 +41,12 @@ define([
         /**
          * @type SimpleComponent
          */
-        this._titleHeading = this.registerSimpleComponent(TITLE_HEADING_ID);
+        this._versionParagraph = this.registerSimpleComponent(VERSION_PARAGRAPH_ID);
         /**
          * @type SimpleComponent
          */
-        this._versionParagraph = this.registerSimpleComponent(VERSION_PARAGRAPH_ID);
+        this._aboutAuthorLicenseParagraph = this.registerSimpleComponent(ABOUT_AUTHOR_LICENSE_PARAGRAPH_ID);
+
     }
     AboutScreen.prototype = new screens.HTMLScreen();
     AboutScreen.prototype.constructor = AboutScreen;
@@ -63,9 +65,14 @@ define([
      */
     AboutScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
-        this._backButton.setContent(strings.get(strings.ABOUT.BACK));
-        this._titleHeading.setContent(strings.get(strings.ABOUT.TITLE));
-        this._versionParagraph.setContent(strings.get(strings.ABOUT.VERSION) + game.getVersion());
+        this._versionParagraph.customizeContent({version: game.getVersion()});
+        this._aboutAuthorLicenseParagraph.customizeContent({
+            license: '<a target="_blank" href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GPLv3</a>',
+            github: '<a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada" >github</a>',
+            sansation: '<a target="_blank" href="http://www.dafont.com/sansation.font">Sansation</a>',
+            requireJS: '<a target="_blank" href="http://requirejs.org/">RequireJS</a>',
+            requireJSLicense: '<a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSES) + '</a>'
+        });
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

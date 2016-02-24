@@ -19,6 +19,8 @@ define([
 ], function (vec, mat) {
     "use strict";
     var
+            // ----------------------------------------------------------------------
+            // constants
             /**
              * The angular velocity matrix of a physical object stores the rotation that happens during this duration at the current angular
              * velocity of the object. In milliseconds.

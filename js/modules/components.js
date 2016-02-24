@@ -10,13 +10,15 @@
 /*global define, document */
 
 /**
- * @param application Uses the application module for logging, displaying errors and loading files.
+ * @param utils Used for formatted strings when setting component content
+ * @param application Used for logging, displaying errors and loading files.
  * @param asyncResource Used for managing asynchronous loading of components from files (subclassing AsyncResource)
  */
 define([
+    "utils/utils",
     "modules/application",
     "modules/async-resource"
-], function (application, asyncResource) {
+], function (utils, application, asyncResource) {
     "use strict";
     // #########################################################################
     /**
@@ -53,11 +55,27 @@ define([
         return this._element;
     };
     /**
+     * Returns the inner HTML text content of the wrapped element.
+     * @returns {String}
+     */
+    SimpleComponent.prototype.getContent = function () {
+        return this._element.innerHTML;
+    };
+    /**
      * Sets the inner HTML text content of the wrapped element.
      * @param {String} newContent
+     * @param {Object} [replacements] If given, the newContent string will be used as a format string and the named values given in this
+     * object will be replaced in it
      */
-    SimpleComponent.prototype.setContent = function (newContent) {
-        this._element.innerHTML = newContent;
+    SimpleComponent.prototype.setContent = function (newContent, replacements) {
+        this._element.innerHTML = replacements ? utils.formatString(newContent, replacements) : newContent;
+    };
+    /**
+     * Replaces the named parameters in the inner HTML text content of the wrapped elements to the values defined in the passed object.
+     * @param {Object} replacements
+     */
+    SimpleComponent.prototype.customizeContent = function (replacements) {
+        this._element.innerHTML = utils.formatString(this._element.innerHTML, replacements);
     };
     /**
      * Grabs the element and the display style from the current HTML document. Needs

@@ -35,9 +35,14 @@ define([
         QUIT: {name: "ingameMenu.quit"}
     };
     strings.ABOUT = {
-        BACK: {name: "about.back"},
+        BACK: {name: "about.backButton"},
         TITLE: {name: "about.title"},
-        VERSION: {name: "about.version"}
+        ABOUT_GAME_HEADER: {name: "about.aboutGameHeader"},
+        VERSION_PARAGRAPH: {name: "about.versionParagraph"},
+        ABOUT_GAME_PARAGRAPH: {name: "about.aboutGameParagraph"},
+        ABOUT_AUTHOR_LICENSE_HEADER: {name: "about.aboutAuthorLicenseHeader"},
+        ABOUT_AUTHOR_LICENSE_PARAGRAPH: {name: "about.aboutAuthorLicenseParagraph"},
+        REQUIRE_JS_LICENSES: {name: "about.theNewBSDOrMITLicenses"}
     };
     strings.SETTING = {
         ON: {name: "setting.on"},

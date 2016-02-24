@@ -30,6 +30,8 @@ define([
 ], function (application, asyncResource) {
     "use strict";
     var
+            // ----------------------------------------------------------------------
+            // enums
             /**
              * @enum {String}
              * An enumeration storing the possible values for texture filtering
@@ -39,6 +41,8 @@ define([
                 TRILINEAR: "trilinear",
                 ANISOTROPIC: "anisotropic"
             },
+    // ----------------------------------------------------------------------
+    // constants
     UNIFORM_NAME_PREFIX = "u_",
             UNIFORM_NAME_SUFFIX = "",
             TEXTURE_UNIFORM_NAME_PREFIX = "",
