@@ -66,65 +66,65 @@ define([
             GAMEPAD_AXIS_POSITIVE_SUFFIX = "_gamepad_axisPositive",
             // ----------------------------------------------------------------------
             // string definitions for translation of control strings
-            KEY_STRING_PREFIX = {name: "key."},
+            KEY_STRING_PREFIX = {name: "key" + strings.CATEGORY_SEPARATOR},
     MOUSE_LEFT_BUTTON = {
-        name: "mouse.leftButton",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "leftButton",
         defaultValue: "left click"
     },
     MOUSE_RIGHT_BUTTON = {
-        name: "mouse.rightButton",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "rightButton",
         defaultValue: "right click"
     },
     MOUSE_MIDDLE_BUTTON = {
-        name: "mouse.middleButton",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "middleButton",
         defaultValue: "middle click"
     },
     MOUSE_FROM_CENTER = {
-        name: "mouse.fromCenter",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "fromCenter",
         defaultValue: "{move} {toDirection} from center"
     },
     MOUSE_NOT_FROM_CENTER = {
-        name: "mouse.notFromCenter",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "notFromCenter",
         defaultValue: "{move} {toDirection}"
     },
     MOUSE_MOVE = {
-        name: "mouse.move",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "move",
         defaultValue: "move"
     },
     MOUSE_DIRECTION_LEFT = {
-        name: "mouse.leftDirection",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "leftDirection",
         defaultValue: "left"
     },
     MOUSE_DIRECTION_RIGHT = {
-        name: "mouse.rightDirection",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "rightDirection",
         defaultValue: "right"
     },
     MOUSE_DIRECTION_UP = {
-        name: "mouse.upDirection",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "upDirection",
         defaultValue: "up"
     },
     MOUSE_DIRECTION_DOWN = {
-        name: "mouse.downDirection",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "downDirection",
         defaultValue: "down"
     },
     MOUSE_SCROLL = {
-        name: "mouse.scroll",
+        name: "mouse" + strings.CATEGORY_SEPARATOR + "scroll",
         defaultValue: "scroll"
     },
     JOYSTICK_BUTTON = {
-        name: "joystick.button",
+        name: "joystick" + strings.CATEGORY_SEPARATOR + "button",
         defaultValue: "button {index}"
     },
     JOYSTICK_AXIS = {
-        name: "joystick.axis",
+        name: "joystick" + strings.CATEGORY_SEPARATOR + "axis",
         defaultValue: "axis {index} {direction}"
     },
     JOYSTICK_DIRECTION_POSITIVE = {
-        name: "joystick.positiveDirection",
+        name: "joystick" + strings.CATEGORY_SEPARATOR + "positiveDirection",
         defaultValue: "positive"
     },
     JOYSTICK_DIRECTION_NEGATIVE = {
-        name: "joystick.negativeDirection",
+        name: "joystick" + strings.CATEGORY_SEPARATOR + "negativeDirection",
         defaultValue: "negative"
     },
     // -------------------------------------------------------------------------

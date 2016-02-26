@@ -65,6 +65,11 @@ define([
              */
             DEFAULT_SHADER_COMPLEXITY = ShaderComplexity.NORMAL,
             /**
+             * The name of the default shader to use for rendering shadow maps
+             * @type String
+             */
+            DEFAULT_SHADOW_MAPPING_SHADER_NAME = "shadowMapping",
+            /**
              * Whether shadow mapping should be enabled by default
              * @type Boolean
              */
@@ -147,6 +152,11 @@ define([
          */
         this._shaderComplexity = null;
         /**
+         * The name of the shader to use for rendering shadow maps
+         * @type String
+         */
+        this._shadowMappingShaderName = null;
+        /**
          * Whether shadow mapping is currently enabled.
          * @type Boolean
          */
@@ -199,6 +209,7 @@ define([
         this._textureQualityPreferenceList = DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST;
         this._textureQuality = this._textureQualityPreferenceList[0];
         this._shaderComplexity = DEFAULT_SHADER_COMPLEXITY;
+        this._shadowMappingShaderName = DEFAULT_SHADOW_MAPPING_SHADER_NAME;
         this._shadowMapping = DEFAULT_SHADOW_MAPPING_ENABLED;
         this._shadowQuality = DEFAULT_SHADOW_QUALITY;
         this._shadowRanges = DEFAULT_SHADOW_MAP_RANGES;
@@ -207,6 +218,7 @@ define([
         // overwrite with the settings from the data JSON, if present
         if (typeof dataJSON.shaders === "object") {
             this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, DEFAULT_SHADER_COMPLEXITY);
+            this._shadowMappingShaderName = types.getStringValue("shadow mapping shader name", dataJSON.shaders.shadowMappingShaderName, DEFAULT_SHADOW_MAPPING_SHADER_NAME);
         }
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
@@ -425,6 +437,13 @@ define([
         localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;
     };
     /**
+     * Returns the name of the shader that is to be used for rendering shadow maps
+     * @returns {String|null}
+     */
+    GraphicsContext.prototype.getShadowMappingShaderName = function () {
+        return this._shadowMappingShaderName;
+    };
+    /**
      * Returns whether shadow mapping is enabled.
      * @returns {Boolean}
      */
@@ -514,15 +533,30 @@ define([
         return resources.getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
     /**
-     * 
-     * @param {String} shaderName
+     * Returns whether shadow mapping should be used if all current graphics settings are considered (not just the shadow mapping setting
+     * itself)
+     * @returns {Boolean}
+     */
+    function shouldUseShadowMapping() {
+        return _context.isShadowMappingEnabled() && (_context.getShaderComplexity() === ShaderComplexity.NORMAL);
+    }
+    /**
+     * Returns the resource for the shader that is to be used when rendering shadow maps
+     * @returns {ShaderResource}
+     */
+    function getShadowMappingShader() {
+        return _context.getShader(_context.getShadowMappingShaderName());
+    }
+    /**
+     * Returns a shadow mapping settings descriptor object that can be directly used as parameter for Scene constructors and contains the
+     * state that reflect the current settings stored 
      * @returns {Object|null}
      */
-    function getShadowMappingSettingsForShader(shaderName) {
-        return _context.isShadowMappingEnabled() ?
+    function getShadowMappingSettings() {
+        return shouldUseShadowMapping() ?
                 {
                     enable: true,
-                    shader: _context.getShader(shaderName).getManagedShader(),
+                    shader: getShadowMappingShader().getManagedShader(),
                     textureSize: _context.getShadowQuality(),
                     ranges: _context.getShadowRanges(),
                     depthRatio: _context.getShadowDepthRatio()
@@ -550,6 +584,7 @@ define([
         getLODContext: _context.getLODContext.bind(_context),
         getShaderComplexity: _context.getShaderComplexity.bind(_context),
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
+        getShadowMappingShaderName: _context.getShadowMappingShaderName.bind(_context),
         isShadowMappingEnabled: _context.isShadowMappingEnabled.bind(_context),
         setShadowMapping: _context.setShadowMapping.bind(_context),
         getShadowQuality: _context.getShadowQuality.bind(_context),
@@ -559,7 +594,9 @@ define([
         getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
         getShader: _context.getShader.bind(_context),
         getModel: _context.getModel.bind(_context),
-        getShadowMappingSettingsForShader: getShadowMappingSettingsForShader,
+        shouldUseShadowMapping: shouldUseShadowMapping,
+        getShadowMappingShader: getShadowMappingShader,
+        getShadowMappingSettings: getShadowMappingSettings,
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

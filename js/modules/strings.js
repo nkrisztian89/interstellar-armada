@@ -20,7 +20,14 @@ define([
 ], function (types, application) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // constants
+            CATEGORY_SEPARATOR = ".",
+            // ------------------------------------------------------------------------------
+            // holder for the exported functions
             exports = {},
+            // ------------------------------------------------------------------------------
+            // private variables
             /**
              * 
              * @type String
@@ -54,9 +61,34 @@ define([
             application.showError("Cannot set language to '" + value + "', as there are no strings loaded for that language!");
         }
     };
+    /**
+     * Returns whether a strings file has been loaded for the specified language F
+     * @param {String} language
+     * @returns {Boolean}
+     */
     exports.languageIsLoaded = function (language) {
         return _allStrings.hasOwnProperty(language);
     };
+    /**
+     * Recursively creates a flat JSON object out of the passed one by using concatenated keys (separated by a separator) instead of nested
+     * objects (i.e. {"super": { "sub": "value" }} becomes {"super.sub": "value"})
+     * @param {Object} categoryObject This object gets modified to be flat
+     */
+    function _flatten(categoryObject) {
+        var categoryName, stringName;
+        for (categoryName in categoryObject) {
+            if (categoryObject.hasOwnProperty(categoryName) && (typeof categoryObject[categoryName] === "object")) {
+                _flatten(categoryObject[categoryName]);
+                for (stringName in categoryObject[categoryName]) {
+                    if (categoryObject[categoryName].hasOwnProperty(stringName)) {
+                        categoryObject[categoryName + CATEGORY_SEPARATOR + stringName] = categoryObject[categoryName][stringName];
+                    }
+                }
+                // the original category object is deleted so it will not be processed
+                delete categoryObject[categoryName];
+            }
+        }
+    }
     /**
      * @param {String} language
      * @param {Object} stringsJSON
@@ -65,6 +97,10 @@ define([
     exports.loadStrings = function (language, stringsJSON, stringDefinitions) {
         var categoryName;
         _requiredStrings[language] = {};
+        // first, keys organized into categories are moved up to the first level of the JSON structure, so the processing will need to handle
+        // a simple flat JSON
+        _flatten(stringsJSON);
+        // now we handle the simple flat JSON containing all the strings by their keys
         for (categoryName in stringDefinitions) {
             if (stringDefinitions.hasOwnProperty(categoryName) && (typeof stringDefinitions[categoryName] === "object")) {
                 types.getVerifiedObject("strings." + categoryName, stringsJSON, stringDefinitions[categoryName], _requiredStrings[language], false, true, "string");
@@ -97,5 +133,6 @@ define([
     exports.has = function (stringDefinitionObject, suffix) {
         return _allStrings[_currentLanguage] && (_allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")] !== undefined);
     };
+    exports.CATEGORY_SEPARATOR = CATEGORY_SEPARATOR;
     return exports;
 });

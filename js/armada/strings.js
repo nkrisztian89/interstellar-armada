@@ -36,6 +36,24 @@ define([
         RESUME: {name: "ingameMenu.resume"},
         QUIT: {name: "ingameMenu.quit"}
     };
+    strings.LOADING = {
+        HEADER: {name: "loading.header"},
+        RESOURCES_START: {name: "loading.resourcesStart"},
+        RESOURCE_READY: {name: "loading.resourceReady"},
+        READY: {name: "loading.ready"}
+    };
+    strings.DATABASE = {
+        BACK: {name: "database.backButton"},
+        TITLE: {name: "database.title"},
+        PREV_BUTTON: {name: "database.prevButton"},
+        NEXT_BUTTON: {name: "database.nextButton"},
+        LOADING_INITIALIZING: {name: "database.loading.initializing"},
+        LENGTH: {name: "database.length"},
+        MASS: {name: "database.mass"},
+        ARMOR: {name: "database.armor"},
+        WEAPON_SLOTS: {name: "database.weaponSlots"},
+        THRUSTERS: {name: "database.thrusters"}
+    };
     strings.ABOUT = {
         BACK: {name: "about.backButton"},
         TITLE: {name: "about.title"},
@@ -102,6 +120,10 @@ define([
     };
     strings.ACTION_DESCRIPTIONS = {
         PREFIX: {name: "actionDescriptions.", optional: true}
+    };
+    strings.SPACECRAFT_TYPE = {
+        PREFIX: {name: "spacecraftType.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true}
     };
     return strings;
 });

@@ -141,35 +141,35 @@ define([
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._antialiasingSelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._filteringSelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._textureQualitySelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._lodSelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._shaderComplexitySelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._shadowMappingSelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._shadowQualitySelector = null;
         /**
-         * @type ExternalComponent
+         * @type Selector
          */
         this._shadowDistanceSelector = null;
         graphics.executeWhenReady(function () {

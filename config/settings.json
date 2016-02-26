@@ -14,7 +14,8 @@
             }
         },
         "shaders": {
-            "complexity": "normal"
+            "complexity": "normal",
+            "shadowMappingShaderName": "shadowMapping"
         },
         "levelOfDetailSettings": {
             "lodLoadProfile": {

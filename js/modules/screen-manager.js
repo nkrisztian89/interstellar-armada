@@ -9,7 +9,12 @@
 /*jslint nomen: true, plusplus: true */
 /*global define */
 
-define(function () {
+/**
+ * @param asyncResource ScreenManager is an AsyncResource as it tracks the loading state of the screens it manages
+ */
+define([
+    "modules/async-resource"
+], function (asyncResource) {
     "use strict";
     /**
      * The screen manager instance used to store and access screens
@@ -18,9 +23,10 @@ define(function () {
     var _screenManager;
     /**
      * @class
-     * @returns {ScreenManager}
+     * @extends AsyncResource
      */
     function ScreenManager() {
+        asyncResource.AsyncResource.call(this);
         /**
          * The game's available screens stored in an associative array, with the 
          * keys being the names of the screens.
@@ -41,7 +47,19 @@ define(function () {
          * @default null
          */
         this._currentScreen = null;
+        /**
+         * How many screens have been loaded and are ready to use so far
+         * @type Number
+         */
+        this._screensLoaded = 0;
+        /**
+         * How many screens need to be loaded total
+         * @type Number
+         */
+        this._screensToLoad = 0;
     }
+    ScreenManager.prototype = new asyncResource.AsyncResource();
+    ScreenManager.prototype.constructor = ScreenManager;
     /**
      * Gets the object corresponding to the currently set game screen.
      * @returns {HTMLScreen}
@@ -66,7 +84,13 @@ define(function () {
      * screen's content.
      */
     ScreenManager.prototype.addScreen = function (screen, replace) {
-        var screenName;
+        var screenName, onScreenReadyFunction = function () {
+            this._screensLoaded++;
+            if (this._screensLoaded === this._screensToLoad) {
+                this.setToReady();
+            }
+        }.bind(this);
+        // in replace mode, the current screens are all removed from te page
         if (replace === true) {
             for (screenName in this._screens) {
                 if (this._screens.hasOwnProperty(screenName)) {
@@ -74,12 +98,14 @@ define(function () {
                 }
             }
         }
+        this._screensToLoad++;
         this._screens[screen.getName()] = screen;
         if (replace === true) {
-            screen.replacePageWithScreen();
+            screen.replacePageWithScreen(onScreenReadyFunction);
         } else {
-            screen.addScreenToPage();
+            screen.addScreenToPage(onScreenReadyFunction);
         }
+
     };
     /**
      * Sets the current game screen to the one with the specified name (from the
@@ -145,6 +171,7 @@ define(function () {
         setCurrentScreen: _screenManager.setCurrentScreen.bind(_screenManager),
         closeSuperimposedScreen: _screenManager.closeSuperimposedScreen.bind(_screenManager),
         closeOrNavitageTo: _screenManager.closeOrNavitageTo.bind(_screenManager),
-        updateAllScreens: _screenManager.updateAllScreens.bind(_screenManager)
+        updateAllScreens: _screenManager.updateAllScreens.bind(_screenManager),
+        executeWhenReady: _screenManager.executeWhenReady.bind(_screenManager)
     };
 });

@@ -45,7 +45,7 @@ define([
      * @extends HTMLScreen
      */
     function GeneralSettingsScreen() {
-        screens.HTMLScreen.call(this, armadaScreens.GENERAL_SETTINGS_SCREEN_NAME, armadaScreens.GENERAL_SETTINGS_SOURCE);
+        screens.HTMLScreen.call(this, armadaScreens.GENERAL_SETTINGS_SCREEN_NAME, armadaScreens.GENERAL_SETTINGS_SCREEN_SOURCE);
         /**
          * @type SimpleComponent
          */

@@ -27,6 +27,10 @@ define([
 ], function (game, constants, graphics, logic, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
+    // local variables
+    var _progressBar = document.getElementById("progress");
+    _progressBar.max = 5;
+    // -------------------------------------------------------------------------
     // setting game properties
     game.setGameName(constants.GAME_NAME);
     game.setStartScreenName("mainMenu");
@@ -41,11 +45,13 @@ define([
         logic.loadSettingsFromJSON(settingsJSON.logic);
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
-        game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, callback);
+        _progressBar.value = 2;
+        callback();
     };
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
         logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);
         control.loadConfigurationFromJSON(configJSON.control);
+        _progressBar.value = 1;
         callback();
     };
     game._buildScreensAndExecuteCallback = function (callback) {
@@ -60,14 +66,21 @@ define([
         ], function (menus, battle, database, generalSettings, graphicsScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(new battle.BattleScreen("battle", "battle.html"));
-            game.addScreen(new database.DatabaseScreen("database", "database.html"));
+            game.addScreen(database.databaseScreen);
             game.addScreen(menus.settingsMenuScreen);
             game.addScreen(generalSettings.generalSettingsScreen);
             game.addScreen(graphicsScreen.graphicsScreen);
             game.addScreen(controlsScreen.controlsScreen);
             game.addScreen(aboutScreen.aboutScreen);
             game.addScreen(menus.ingameMenuScreen);
-            callback();
+            _progressBar.value = 3;
+            game.executeWhenAllScreensReady(function () {
+                _progressBar.value = 4;
+                game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, function () {
+                    _progressBar.value = 5;
+                    callback();
+                });
+            });
         });
     };
     return game;

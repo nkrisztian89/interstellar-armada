@@ -79,6 +79,14 @@ define([
          */
         this._externalComponents = [];
         /**
+         * @type Number
+         */
+        this._externalComponentsLoaded = 0;
+        /**
+         * @type Number
+         */
+        this._externalComponentsToLoad = 0;
+        /**
          * @type Function
          * @returns undefined
          */
@@ -103,7 +111,9 @@ define([
             this._model = document.implementation.createHTMLDocument(this._name);
             this._model.documentElement.innerHTML = responseText;
             this._onModelLoad();
-            this.setToReady();
+            if (this._externalComponentsLoaded === this._externalComponentsToLoad) {
+                this.setToReady();
+            }
         }.bind(this));
     };
     /**
@@ -115,16 +125,17 @@ define([
     };
     /**
      * Replaces the current HTML page's body with the sctructure of the screen.
+     * @param {Function} callback
      */
-    HTMLScreen.prototype.replacePageWithScreen = function () {
+    HTMLScreen.prototype.replacePageWithScreen = function (callback) {
         document.body.innerHTML = "";
-        this.addScreenToPage();
+        this.addScreenToPage(callback);
     };
     /**
-     * Appends the content of the screen to the page in an invisible (display: none)
-     * div.
+     * Appends the content of the screen to the page in an invisible (display: none) div.
+     * @param {Function} callback
      */
-    HTMLScreen.prototype.addScreenToPage = function () {
+    HTMLScreen.prototype.addScreenToPage = function (callback) {
         this.executeWhenReady(function () {
             var namedElements, i;
             this._background = document.createElement("div");
@@ -143,6 +154,9 @@ define([
             document.body.appendChild(this._background);
             document.body.appendChild(this._container);
             this._initializeComponents();
+            if (callback) {
+                callback();
+            }
         });
     };
     /**
@@ -272,10 +286,17 @@ define([
      * @returns {ExternalComponent}
      */
     HTMLScreen.prototype.registerExternalComponent = function (screenComponent, parentNodeID) {
+        this._externalComponentsToLoad++;
         this._externalComponents.push({
             component: screenComponent,
             parentNodeID: parentNodeID
         });
+        screenComponent.executeWhenReady(function () {
+            this._externalComponentsLoaded++;
+            if (this._model && (this._externalComponentsLoaded === this._externalComponentsToLoad)) {
+                this.setToReady();
+            }
+        }.bind(this));
         return screenComponent;
     };
     /**
@@ -613,6 +634,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
         HTMLScreen: HTMLScreen,
         HTMLScreenWithCanvases: HTMLScreenWithCanvases,
         MenuScreen: MenuScreen

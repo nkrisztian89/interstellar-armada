@@ -25,10 +25,11 @@ define([
     "modules/screens",
     "modules/buda-scene",
     "modules/graphics-resources",
+    "armada/strings",
     "armada/graphics",
     "armada/logic",
     "armada/control"
-], function (vec, mat, application, components, screens, budaScene, resources, graphics, logic, control) {
+], function (vec, mat, application, components, screens, budaScene, resources, strings, graphics, logic, control) {
     "use strict";
 
     function _shouldUseShadowMapping() {
@@ -54,7 +55,7 @@ define([
 
         this._crosshair = this.registerSimpleComponent("crosshair");
 
-        this._loadingBox = this.registerExternalComponent(new components.LoadingBox(name + "_loadingBox", "loadingbox.html", "loadingbox.css"));
+        this._loadingBox = this.registerExternalComponent(new components.LoadingBox(name + "_loadingBox", "loadingbox.html", "loadingbox.css", strings.LOADING.HEADER.name));
         this._infoBox = this.registerExternalComponent(new components.InfoBox(name + "_infoBox", "infobox.html", "infobox.css", function () {
             this.pauseBattle();
         }.bind(this), function () {
@@ -357,11 +358,7 @@ define([
             }.bind(this));
             freq = 60; //TODO: hardcoded
             resources.executeWhenReady(function () {
-                if (_shouldUseShadowMapping()) {
-                    this._battleScene.setShadowMapping(graphics.getShadowMappingSettingsForShader("shadowMapping")); //TODO: hardcoded
-                } else {
-                    this._battleScene.setShadowMapping(null);
-                }
+                this._battleScene.setShadowMapping(graphics.getShadowMappingSettings());
                 this.updateStatus("initializing WebGL...", 75);
                 this.clearSceneCanvasBindings();
                 this.bindSceneToCanvas(this._battleScene, this.getScreenCanvas("battleCanvas"));

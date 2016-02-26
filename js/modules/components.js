@@ -230,6 +230,7 @@ define([
                 this._cssLoaded = true;
                 if (this._model !== null) {
                     this._onModelLoad();
+                    this.setToReady();
                 }
             }.bind(this);
             cssLink.href = application.getFileURL("css", cssFilename);
@@ -257,6 +258,7 @@ define([
             }
             if (this._cssLoaded === true) {
                 this._onModelLoad();
+                this.setToReady();
             }
         }.bind(this));
     };
@@ -369,8 +371,9 @@ define([
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
      * @param {String} cssFilename See ExternalComponent.
+     * @param {String} [headerID]
      */
-    function LoadingBox(name, htmlFilename, cssFilename) {
+    function LoadingBox(name, htmlFilename, cssFilename, headerID) {
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
          * A wrapper for the HTML5 progress element contained in the loading box.
@@ -382,6 +385,14 @@ define([
          * @type SimpleComponent
          */
         this._status = this.registerSimpleComponent("status");
+        /**
+         * @type SimpleComponent
+         */
+        this._header = this.registerSimpleComponent("header");
+        /**
+         * @type String
+         */
+        this._headerID = headerID;
     }
     LoadingBox.prototype = new ExternalComponent();
     LoadingBox.prototype.constructor = LoadingBox;
@@ -390,6 +401,9 @@ define([
      */
     LoadingBox.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
+        if (this._headerID) {
+            this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+        }
         this.hide();
     };
     /**
@@ -655,7 +669,7 @@ define([
             if (i < this._valueList.length) {
                 this.selectValueWithIndex(i);
             } else {
-                application.showError("Attempted to select value: '" + value + "' for '" + this._propertyName + "', which is not one of the available options.", "minor");
+                application.showError("Attempted to select value: '" + value + "' for '" + this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}) + "', which is not one of the available options.", "minor");
             }
         });
     };

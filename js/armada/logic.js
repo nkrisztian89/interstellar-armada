@@ -1516,10 +1516,12 @@ define([
         // set the size of the particle that shows the burn
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
-        this._shipModel.setParameter(
-                _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
-                this._slot.group,
-                Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
+        if (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) {
+            this._shipModel.setParameter(
+                    _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                    this._slot.group,
+                    Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
+        }
     };
     /**
      * Sets the burn level of this thruster to zero.
@@ -2758,6 +2760,20 @@ define([
         this._class.acquireResources(params);
     };
     /**
+     * @typedef {Object} Spacecraft~Supplements
+     * @property {Boolean} hitboxes
+     * @property {Boolean} weapons
+     * @property {Boolean} thrusterParticles
+     * @property {Boolean} projectileResources
+     * @property {Boolean} explosion
+     * @property {Boolean} cameraConfigurations
+     */
+    /**
+     * @typedef {Function} Spacecraft~addToSceneCallback
+     * @param {ParameterizedMesh} model
+     */
+    /**
+     * @function
      * Creates and adds the renderable objects to represent this spacecraft to
      * the passed scene.
      * @param {budaScene} scene The scene to which the objects will be added.
@@ -2765,21 +2781,12 @@ define([
      * If not given, all available LODs will be added for dynamic LOD rendering.
      * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
      * drawing mode (or in solid).
-     * @param {Object} [addSupplements] An object describing what additional
+     * @param {Spacecraft~Supplements} [addSupplements] An object describing what additional
      * supplementary objects / resources to add to the scene along with the
      * basic representation of the ship. Contains boolean properties for each
      * possible supplement, marking if that particular supplement should be 
-     * added. Supported properties:
-     * <ul>
-     * <li>hitboxes</li>
-     * <li>weapons</li>
-     * <li>thursterParticles</li>
-     * <li>projectileResources</li>
-     * <li>explosion</li>
-     * </ul>
-     * @param {Function} callback
-     * @returns {ParameterizedMesh} The renderable object created to represent the 
-     * spacecraft.
+     * added.
+     * @param {Spacecraft~addToSceneCallback} callback
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, callback) {
         var i;
@@ -2813,11 +2820,13 @@ define([
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    [_context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)]);
-            this._visualModel.setParameter(
-                    _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
-                    0,
-                    this._class.getGroupZeroLuminosity());
+                    (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ? [_context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
+            if (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) {
+                this._visualModel.setParameter(
+                        _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                        0,
+                        this._class.getGroupZeroLuminosity());
+            }
             node = scene.addObject(this._visualModel);
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {

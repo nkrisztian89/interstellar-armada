@@ -38,15 +38,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <link href="css/battle.css" rel="stylesheet" type="text/css"/>
         <link href="css/database.css" rel="stylesheet" type="text/css"/>
         <link href="css/ingame-menu.css" rel="stylesheet" type="text/css"/>
-
-        <script data-main="js/main.js" src="js/libs/require.js"></script>
     </head>
     <body>
         <div class="horizontallyCentered contentWide outerContainer pageContainer">
             <img src="images/thumb.png" alt="Interstellar Armada" />
             <h3>
-                Loading...
+                <progress id="progress" class="horizontallyCentered" value="0" max="100"></progress>
             </h3>
         </div>
+        <script data-main="js/main.js" src="js/libs/require.js"></script>
     </body>
 </html>

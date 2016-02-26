@@ -1,23 +1,29 @@
-/* 
- * Copyright (C) 2016 krisztian
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/**
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 2.0
  */
 
-/*jslint nomen: true, white: true */
+/*jslint nomen: true, white: true, plusplus: true  */
 /*global define, setInterval, clearInterval, document */
 
+/**
+ * 
+ * @param utils
+ * @param mat
+ * @param components
+ * @param screens
+ * @param budaScene
+ * @param game
+ * @param resources
+ * @param armadaScreens
+ * @param strings
+ * @param graphics
+ * @param classes
+ * @param logic
+ */
 define([
     "utils/utils",
     "utils/matrices",
@@ -26,19 +32,108 @@ define([
     "modules/buda-scene",
     "modules/game",
     "modules/graphics-resources",
+    "armada/screens/shared",
+    "armada/strings",
     "armada/graphics",
     "armada/classes",
-    "armada/logic"
-], function (utils, mat, components, screens, budaScene, game, resources, graphics, classes, logic) {
+    "armada/logic",
+    "utils/polyfill"
+], function (utils, mat, components, screens, budaScene, game, resources, armadaScreens, strings, graphics, classes, logic) {
     "use strict";
-
-    function _shouldUseShadowMapping() {
-        return graphics.isShadowMappingEnabled() && (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL);
-    }
-
-    function _modelRotation() {
-        return logic.getSetting(logic.DATABASE_SETTINGS.MODEL_ROTATION);
-    }
+    var
+            // ------------------------------------------------------------------------------
+            // constants
+            REVEAL_FPS = 60,
+            REVEAL_DURATION = 2000,
+            REVEAL_SOLID_DELAY_DURATION = 2000,
+            REVEAL_WIREFRAME_START_STATE = 0,
+            REVEAL_WIREFRAME_END_STATE = 1,
+            REVEAL_SOLID_START_STATE = 1,
+            REVEAL_SOLID_END_STATE = 2.2,
+            ROTATION_FPS = 60,
+            ROTATION_START_ANGLE = 90,
+            ROTATION_RESTART_ANGLE = 180,
+            ROTATION_VIEW_ANGLE = 60,
+            ROTATION_DURATION = 4000,
+            ROTATION_SENSITIVITY = 1,
+            LOOP_CANCELED = -1,
+            ITEM_NAME_HEADER_ID = "itemName",
+            ITEM_TYPE_HEADER_ID = "itemType",
+            ITEM_STATS_PARAGRAPH_ID = "itemStats",
+            ITEM_DESCRIPTION_PARAGRAPH_ID = "itemDescription",
+            BACK_BUTTON_ID = "backButton",
+            PREV_BUTTON_ID = "prevButton",
+            NEXT_BUTTON_ID = "nextButton",
+            LOADING_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "loadingBox",
+            DATABASE_CANVAS_NAME = "databaseCanvas",
+            DATABASE_CANVAS_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + DATABASE_CANVAS_NAME,
+            LIGHT_SOURCES = [
+                {
+                    COLOR: [1.0, 1.0, 1.0],
+                    DIRECTION: [0.0, 1.0, 1.0]
+                },
+                {
+                    COLOR: [0.5, 0.5, 0.5],
+                    DIRECTION: [1.0, 0.0, 0.0]
+                }
+            ],
+            LOADING_INITIAL_PROGRESS = 15,
+            LOADING_RESOURCES_START_PROGRESS = 15,
+            LOADING_RESOURCE_PROGRESS = 60,
+            EQUIPMENT_PROFILE_NAME = "default",
+            // ------------------------------------------------------------------------------
+            // private variables
+            /**
+             * @type Scene
+             */
+            _itemViewScene = null,
+            /**
+             * @type Spacecraft
+             */
+            _currentItem = null,
+            /**
+             * @type Number
+             */
+            _currentItemIndex = 0,
+            /**
+             * @type Number
+             */
+            _revealLoop = -1,
+            /**
+             * @type Number
+             */
+            _revealState = 0,
+            /**
+             * @type Number
+             */
+            _rotationLoop = -1,
+            /**
+             * @type ParameterizedMesh
+             */
+            _solidModel = null,
+            /**
+             * @type ParameterizedMesh
+             */
+            _wireframeModel = null,
+            /**
+             * @type Number[2]
+             */
+            _mousePos = null,
+            /**
+             * @type Number
+             */
+            _currentItemLength = 0,
+            /**
+             * @type Number
+             */
+            _currentItemLengthInMeters = 0,
+            /**
+             * The Y coordinate of the frontmost point of the 3D model of the currently shown item
+             * @type Number
+             */
+            _currentItemFront = 0;
+    // ------------------------------------------------------------------------------
+    // private functions
 
     function _showSolidModel() {
         return logic.getSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL);
@@ -56,80 +151,190 @@ define([
     }
 
     /**
-     * Defines a database screen object.
-     * @class Represents the database screen.
-     * @extends screens.HTMLScreenWithCanvases
-     * @param {String} name The name by which this screen can be identified.
-     * @param {String} source The name of the HTML file where the structure of this
-     * screen is defined.
-     * @returns {DatabaseScreen}
+     * Stops the loop that updates the reveal state (without changing the reveal state itself)
      */
-    function DatabaseScreen(name, source) {
-        screens.HTMLScreenWithCanvases.call(this, name, source, graphics.getAntialiasing(), graphics.getFiltering());
-
-        this._itemName = this.registerSimpleComponent("itemName");
-        this._itemType = this.registerSimpleComponent("itemType");
-        this._itemStats = this.registerSimpleComponent("itemStats");
-        this._itemDescription = this.registerSimpleComponent("itemDescription");
-
-        this._backButton = this.registerSimpleComponent("backButton");
-        this._prevButton = this.registerSimpleComponent("prevButton");
-        this._nextButton = this.registerSimpleComponent("nextButton");
-        this._loadingBox = this.registerExternalComponent(new components.LoadingBox(name + "_loadingBox", "loadingbox.html", "loadingbox.css"));
-
-        this._scene = null;
-        this._item = null;
-        this._itemIndex = null;
-        this._animationLoop = null;
-        this._revealLoop = null;
-        this._rotationLoop = null;
-        this._solidModel = null;
-        this._wireframeModel = null;
-
-        this._mousePos = null;
+    function _stopRevealLoop() {
+        clearInterval(_revealLoop);
+        _revealLoop = LOOP_CANCELED;
     }
-
+    /**
+     * Resets the reveal state and sets a loop to update it according to the current settings
+     */
+    function _startRevealLoop() {
+        var
+                revealStartDate = new Date(),
+                maxRevealState = (_showSolidModel() ? REVEAL_SOLID_END_STATE : REVEAL_WIREFRAME_END_STATE),
+                elapsedTime;
+        _revealState = _showWireframeModel() ? REVEAL_WIREFRAME_START_STATE : REVEAL_SOLID_START_STATE;
+        // creating the reveal function on-the-fly so we can use closures, and as a new loop is not started frequently
+        _revealLoop = setInterval(function () {
+            elapsedTime = new Date() - revealStartDate;
+            // applying the solid reveal delay
+            if (elapsedTime > REVEAL_SOLID_START_STATE * REVEAL_DURATION) {
+                elapsedTime = Math.max(REVEAL_SOLID_START_STATE * REVEAL_DURATION, elapsedTime - REVEAL_SOLID_DELAY_DURATION);
+            }
+            // calculating the current reveal state
+            if (_revealState < maxRevealState) {
+                _revealState = Math.min(elapsedTime / REVEAL_DURATION, maxRevealState);
+            } else {
+                _stopRevealLoop();
+            }
+        }, 1000 / REVEAL_FPS);
+    }
+    /**
+     * Stops the loop that updates the orientation of the shown items automatically (without changing their orientation)
+     */
+    function _stopRotationLoop() {
+        clearInterval(_rotationLoop);
+        _rotationLoop = LOOP_CANCELED;
+    }
+    /*
+     * Start the loop that will keep updating the orientation or the shown items automatically according to the current rotation settings
+     */
+    function _startRotationLoop(startAngle) {
+        var
+                prevDate = new Date(),
+                curDate,
+                startOrientationMatrix = mat.mul4(
+                        mat.rotation4([0.0, 0.0, 1.0], Math.radians(startAngle)),
+                        mat.rotation4([1.0, 0.0, 0.0], Math.radians(ROTATION_VIEW_ANGLE)));
+        // setting the starting orientation
+        if (_solidModel) {
+            _solidModel.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
+        }
+        if (_wireframeModel) {
+            _wireframeModel.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
+        }
+        // setting the loop function
+        _rotationLoop = setInterval(function () {
+            curDate = new Date();
+            if (_solidModel) {
+                _solidModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / ROTATION_DURATION));
+            }
+            if (_wireframeModel) {
+                _wireframeModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / ROTATION_DURATION));
+            }
+            prevDate = curDate;
+        }, 1000 / ROTATION_FPS);
+    }
+    /**
+     * @param {MouseEvent} event
+     */
+    function handleMouseMove(event) {
+        if (_solidModel) {
+            _solidModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_SENSITIVITY));
+            _solidModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_SENSITIVITY));
+        }
+        if (_wireframeModel) {
+            _wireframeModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_SENSITIVITY));
+            _wireframeModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_SENSITIVITY));
+        }
+        _mousePos = [event.screenX, event.screenY];
+    }
+    /**
+     * @param {MouseEvent} event
+     * @returns {Boolean}
+     */
+    function handleMouseUp(event) {
+        document.body.onmousemove = null;
+        document.body.onmouseup = null;
+        _startRotationLoop(ROTATION_RESTART_ANGLE);
+        event.preventDefault();
+        return false;
+    }
+    /**
+     * @param {MouseEvent} event
+     * @returns {Boolean}
+     */
+    function handleMouseDown(event) {
+        if (logic.getSetting(logic.DATABASE_SETTINGS.MODEL_ROTATION)) {
+            _mousePos = [event.screenX, event.screenY];
+            // automatic rotation should stop for the time of manual rotation
+            _stopRotationLoop();
+            // the mouse might go out from over the canvas during rotation, so register the
+            // move event handler on the document body
+            document.body.onmousemove = handleMouseMove;
+            // once the user releases the mouse button, the event handlers should be cancelled
+            // and the automatic rotation started again
+            document.body.onmouseup = handleMouseUp;
+        }
+        event.preventDefault();
+        return false;
+    }
+    // ##############################################################################
+    /**
+     * @class Represents the database screen.
+     * @extends HTMLScreenWithCanvases
+     */
+    function DatabaseScreen() {
+        screens.HTMLScreenWithCanvases.call(this,
+                armadaScreens.DATABASE_SCREEN_NAME,
+                armadaScreens.DATABASE_SCREEN_SOURCE,
+                graphics.getAntialiasing(),
+                graphics.getFiltering());
+        /**
+         * @type SimpleComponent
+         */
+        this._itemNameHeader = this.registerSimpleComponent(ITEM_NAME_HEADER_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._itemTypeHeader = this.registerSimpleComponent(ITEM_TYPE_HEADER_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._itemStatsParagraph = this.registerSimpleComponent(ITEM_STATS_PARAGRAPH_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._itemDescriptionParagraph = this.registerSimpleComponent(ITEM_DESCRIPTION_PARAGRAPH_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._prevButton = this.registerSimpleComponent(PREV_BUTTON_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._nextButton = this.registerSimpleComponent(NEXT_BUTTON_ID);
+        /**
+         * @type LoadingBox
+         */
+        this._loadingBox = this.registerExternalComponent(
+                new components.LoadingBox(
+                        this._name + LOADING_BOX_ID_SUFFIX,
+                        armadaScreens.LOADING_BOX_SOURCE,
+                        armadaScreens.LOADING_BOX_CSS,
+                        strings.LOADING.HEADER.name));
+    }
     DatabaseScreen.prototype = new screens.HTMLScreenWithCanvases();
     DatabaseScreen.prototype.constructor = DatabaseScreen;
-
     /**
-     * Nulls out the components.
+     * @override
+     * Nulls out the components and module objects
      */
     DatabaseScreen.prototype.removeFromPage = function () {
         screens.HTMLScreenWithCanvases.prototype.removeFromPage.call(this);
-
-        this._itemLength = null;
-        this._itemLengthInMeters = null;
-        this._itemFront = null;
-        this._revealState = null;
-
-        this.stopRevealLoop();
-        this.stopRotationLoop();
-        this._item = null;
-        this._itemIndex = null;
-        this._scene = null;
-        this._solidModel = null;
-        this._wireframeModel = null;
-
-        this._mousePos = null;
+        _stopRevealLoop();
+        _stopRotationLoop();
+        _itemViewScene = null; //TODO: proper cleanup of the scene
+        _currentItem = null;
+        _solidModel = null;
+        _wireframeModel = null;
     };
-
     /**
-     * Initializes the components of the parent class, then the additional ones for
-     * this class.
+     * @override
      */
     DatabaseScreen.prototype._initializeComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);
-
         this._backButton.getElement().onclick = function () {
-            this.stopRevealLoop();
-            this.stopRotationLoop();
-            if (this.isSuperimposed()) {
-                game.closeSuperimposedScreen();
-            } else {
-                game.setScreen('mainMenu');
-            }
-        }.bind(this);
+            _stopRevealLoop();
+            _stopRotationLoop();
+            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+        };
         this._prevButton.getElement().onclick = function () {
             this.selectPreviousShip();
         }.bind(this);
@@ -137,15 +342,13 @@ define([
             this.selectNextShip();
         }.bind(this);
     };
-
     /**
-     * Getter for the _loadingBox property.
-     * @returns {LoadingBox}
+     * @override
      */
-    DatabaseScreen.prototype.getLoadingBox = function () {
-        return this._loadingBox;
+    DatabaseScreen.prototype._updateComponents = function () {
+        screens.HTMLScreenWithCanvases.prototype._updateComponents.call(this);
+        // TODO: update item info
     };
-
     /**
      * Uses the loading box to show the status to the user.
      * @param {String} newStatus The status to show on the loading box. If
@@ -161,171 +364,96 @@ define([
             this._loadingBox.updateProgress(newProgress);
         }
     };
-
-    DatabaseScreen.prototype.startRevealLoop = function () {
-        var prevDate = new Date(),
-                maxRevealState = _showSolidModel() ? 2.2 : 1.0;
-        this._revealState = _showWireframeModel() ? 0.0 : 1.0;
-        this._revealLoop = setInterval(function () {
-            var curDate = new Date();
-            if (this._revealState < maxRevealState) {
-                this._revealState = Math.min(this._revealState + (curDate - prevDate) / 1000 / 2, maxRevealState);
+    /**
+     * 
+     */
+    DatabaseScreen.prototype.initializeCanvas = function () {
+        var canvas, i;
+        this._loadingBox.show();
+        this.updateStatus(strings.get(strings.DATABASE.LOADING_INITIALIZING), 0);
+        this.resizeCanvas(this._name + DATABASE_CANVAS_ID_SUFFIX);
+        if (graphics.shouldUseShadowMapping()) {
+            graphics.getShadowMappingShader();
+        }
+        canvas = this.getScreenCanvas(DATABASE_CANVAS_NAME).getCanvasElement();
+        _itemViewScene = new budaScene.Scene(
+                0, 0, canvas.clientWidth, canvas.clientHeight,
+                true, [true, true, true, true],
+                logic.getSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
+                graphics.getLODContext());
+        for (i = 0; i < LIGHT_SOURCES.length; i++) {
+            _itemViewScene.addLightSource(new budaScene.LightSource(LIGHT_SOURCES[i].COLOR, LIGHT_SOURCES[i].DIRECTION));
+        }
+        resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
+            this.updateStatus(
+                    utils.formatString(strings.get(strings.LOADING.RESOURCE_READY), {
+                        resource: resourceName,
+                        loaded: loadedResources,
+                        total: totalResources
+                    }),
+                    LOADING_RESOURCES_START_PROGRESS + (loadedResources / totalResources) * LOADING_RESOURCE_PROGRESS);
+        }.bind(this));
+        resources.executeWhenReady(function () {
+            if (graphics.shouldUseShadowMapping()) {
+                _itemViewScene.setShadowMapping({
+                    enable: true,
+                    shader: graphics.getShadowMappingShader().getManagedShader(),
+                    textureSize: graphics.getShadowQuality(),
+                    ranges: [],
+                    depthRatio: graphics.getShadowDepthRatio()
+                });
             } else {
-                this.stopRevealLoop();
+                _itemViewScene.setShadowMapping(null);
             }
-            prevDate = curDate;
-        }.bind(this), 1000 / 60); ///TODO: hardcoded value
+            this.updateStatus(strings.get(strings.LOADING.READY), 100);
+            this._loadingBox.hide();
+        }.bind(this));
+        this.updateStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_INITIAL_PROGRESS);
+        _currentItemIndex = 0;
+        this.loadShip();
+        // when the user presses the mouse on the canvas, he can start rotating the model
+        // by moving the mouse
+        canvas.onmousedown = handleMouseDown;
     };
-
-    DatabaseScreen.prototype.startRotationLoop = function () {
-        var prevDate = new Date();
-        // turn the ship to start the rotation facing the camera
-        if (this._solidModel) {
-            this._solidModel.setOrientationMatrix(mat.identity4());
-            this._solidModel.rotate([0.0, 0.0, 1.0], Math.PI);
-            this._solidModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
-        }
-        if (this._wireframeModel) {
-            this._wireframeModel.setOrientationMatrix(mat.identity4());
-            this._wireframeModel.rotate([0.0, 0.0, 1.0], Math.PI);
-            this._wireframeModel.rotate([1.0, 0.0, 0.0], 60 / 180 * Math.PI);
-        }
-        this._rotationLoop = setInterval(function () {
-            var curDate = new Date();
-            if (this._solidModel) {
-                this._solidModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
-            }
-            if (this._wireframeModel) {
-                this._wireframeModel.rotate(this._item.getVisualModel().getZDirectionVector(), (curDate - prevDate) / 1000 * Math.PI / 2);
-            }
-            prevDate = curDate;
-        }.bind(this), 1000 / 60); ///TODO: hardcoded value
-    };
-
-    DatabaseScreen.prototype.stopRevealLoop = function () {
-        clearInterval(this._revealLoop);
-        this._revealLoop = null;
-    };
-
-    DatabaseScreen.prototype.stopRotationLoop = function () {
-        clearInterval(this._rotationLoop);
-        this._rotationLoop = null;
-    };
-
+    /**
+     * @override
+     */
     DatabaseScreen.prototype.show = function () {
         screens.HTMLScreenWithCanvases.prototype.show.call(this);
         this.executeWhenReady(function () {
             this.initializeCanvas();
         });
     };
-
+    /**
+     * @override
+     */
     DatabaseScreen.prototype.hide = function () {
         screens.HTMLScreenWithCanvases.prototype.hide.call(this);
         this.executeWhenReady(function () {
-            this._scene.clearNodes();
+            _itemViewScene.clearNodes();
             this.render();
         });
     };
-
-    DatabaseScreen.prototype.initializeCanvas = function () {
-        this._loadingBox.show();
-        this.updateStatus("initializing database...", 0);
-
-        this.resizeCanvas(this._name + "_databaseCanvas");
-        var canvas = this.getScreenCanvas("databaseCanvas").getCanvasElement();
-        if (_shouldUseShadowMapping()) {
-            graphics.getShader("shadowMapping"); //TODO: hardcoded
-        }
-        // create a new scene and add a directional light source which will not change
-        // while different objects are shown
-        this._scene = new budaScene.Scene(
-                0, 0, canvas.clientWidth, canvas.clientHeight,
-                true, [true, true, true, true],
-                logic.getSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
-                graphics.getLODContext());
-        this._scene.addLightSource(new budaScene.LightSource([1.0, 1.0, 1.0], [0.0, 1.0, 1.0]));
-
-        resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
-            this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
-        }.bind(this));
-        resources.executeWhenReady(function () {
-            if (_shouldUseShadowMapping()) {
-                this._scene.setShadowMapping({
-                    enable: true,
-                    shader: graphics.getShader("shadowMapping").getManagedShader(), //TODO: hardcoded
-                    textureSize: graphics.getShadowQuality(),
-                    ranges: [],
-                    depthRatio: graphics.getShadowDepthRatio()
-                });
-            } else {
-                this._scene.setShadowMapping(null);
-            }
-            this.updateStatus("", 100);
-            this._loadingBox.hide();
-        }.bind(this));
-
-        this.updateStatus("loading graphical resources...", 15);
-
-        this._itemIndex = 0;
-        this.loadShip();
-
-        // when the user presses the mouse on the canvas, he can start rotating the model
-        // by moving the mouse
-        canvas.onmousedown = function (e) {
-            if (_modelRotation()) {
-                this._mousePos = [e.screenX, e.screenY];
-                // automatic rotation should stop for the time of manual rotation
-                this.stopRotationLoop();
-                // the mouse might go out from over the canvas during rotation, so register the
-                // move event handler on the document body
-                document.body.onmousemove = function (e) {
-                    if (this._solidModel) {
-                        this._solidModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
-                        this._solidModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
-                    }
-                    if (this._wireframeModel) {
-                        this._wireframeModel.rotate([0.0, 1.0, 0.0], -(e.screenX - this._mousePos[0]) / 180 * Math.PI);
-                        this._wireframeModel.rotate([1.0, 0.0, 0.0], -(e.screenY - this._mousePos[1]) / 180 * Math.PI);
-                    }
-                    this._mousePos = [e.screenX, e.screenY];
-                }.bind(this);
-                // once the user releases the mouse button, the event handlers should be cancelled
-                // and the automatic rotation started again
-                document.body.onmouseup = function (e) {
-                    document.body.onmousemove = null;
-                    document.body.onmouseup = null;
-                    this.startRotationLoop();
-                    e.preventDefault();
-                    return false;
-                }.bind(this);
-            }
-            e.preventDefault();
-            return false;
-        }.bind(this);
-    };
-
     /**
      * Selects and displays the previous spacecraft class from the list on the database
      * screen. Loops around.
      */
     DatabaseScreen.prototype.selectPreviousShip = function () {
         // using % operator does not work with -1, reverted to "if"
-        this._itemIndex -= 1;
-        if (this._itemIndex === -1) {
-            this._itemIndex = classes.getSpacecraftClassesInArray(true).length - 1;
+        _currentItemIndex -= 1;
+        if (_currentItemIndex === -1) {
+            _currentItemIndex = classes.getSpacecraftClassesInArray(true).length - 1;
         }
         this.loadShip();
     };
-
     /**
      * Selects and displays the next spacecraft class from the list on the database
      * screen. Loops around.
      */
     DatabaseScreen.prototype.selectNextShip = function () {
-        this._itemIndex = (this._itemIndex + 1) % classes.getSpacecraftClassesInArray(true).length;
+        _currentItemIndex = (_currentItemIndex + 1) % classes.getSpacecraftClassesInArray(true).length;
         this.loadShip();
     };
-
     /**
      * Load the information and model of the currently selected ship and display
      * them on the page.
@@ -336,128 +464,127 @@ define([
         document.body.style.cursor = 'wait';
         // stop the possible ongoing loops that display the previous ship to avoid
         // null reference
-        this.stopRevealLoop();
-        this.stopRotationLoop();
+        _stopRevealLoop();
+        _stopRotationLoop();
         this.stopRenderLoop();
-
         // clear the previous scene graph and render the empty scene to clear the
-        // background of the canvas to transparent
-        this._scene.clearNodes();
+        // background of the canvas 
+        _itemViewScene.clearNodes();
         this.render();
-
         logic.executeWhenReady(function () {
             // display the data that can be displayed right away, and show loading
             // for the rest
-            var shipClass = classes.getSpacecraftClassesInArray(true)[this._itemIndex];
-            this._itemName.setContent(shipClass.getFullName());
-            this._itemType.setContent(shipClass.getSpacecraftType().getFullName());
-            this._itemStats.setContent("");
-            this._itemDescription.setContent("Loading...");
-
+            var shipClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex];
+            this._itemNameHeader.setContent(shipClass.getFullName());
+            this._itemTypeHeader.setContent(strings.get(
+                    strings.SPACECRAFT_TYPE.PREFIX,
+                    shipClass.getSpacecraftType().getName() + strings.SPACECRAFT_TYPE.NAME_SUFFIX.name,
+                    shipClass.getSpacecraftType().getFullName()));
+            this._itemStatsParagraph.setContent("");
+            this._itemDescriptionParagraph.setContent("Loading...");
             // create a ship that can be used to add the models (ship with default weapons
             // to the scene
-            this._item = new logic.Spacecraft(
+            _currentItem = new logic.Spacecraft(
                     shipClass,
                     mat.identity4(),
                     mat.identity4(),
                     null,
-                    "default" //TODO: hardcoded
-                    );
+                    EQUIPMENT_PROFILE_NAME);
             // request the required shaders from the resource manager
             graphics.getShader("oneColorReveal"); //TODO: hardcoded
-            if (_shouldUseShadowMapping()) {
+            if (graphics.shouldUseShadowMapping()) {
                 graphics.getShader("shadowMapReveal"); //TODO: hardcoded
             } else {
                 graphics.getShader("simpleReveal"); //TODO: hardcoded
             }
             if (_showSolidModel()) {
                 // add the ship to the scene in triangle drawing mode
-                this._item.addToScene(this._scene, graphics.getMaxLoadedLOD(), false, {weapons: true}, function (model) {
-                    this._solidModel = model;
+                _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true}, function (model) {
+                    _solidModel = model;
                     // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-                    this._solidModel.getNode().setShader(_shouldUseShadowMapping() ?
+                    _solidModel.getNode().setShader(graphics.shouldUseShadowMapping() ?
                             graphics.getShader("shadowMapReveal").getManagedShader() //TODO: hardcoded
                             : graphics.getShader("simpleReveal").getManagedShader()); //TODO: hardcoded
                     // set the necessary uniform functions for the reveal shader
-                    this._solidModel.setUniformValueFunction("u_revealFront", function () {
+                    _solidModel.setUniformValueFunction("u_revealFront", function () {
                         return true;
                     });
-                    this._solidModel.setUniformValueFunction("u_revealStart", function () {
-                        return this._itemFront - ((this._revealState - 1.0) * this._itemLength * 1.1);
+                    _solidModel.setUniformValueFunction("u_revealStart", function () {
+                        return _currentItemFront - ((_revealState - 1.0) * _currentItemLength * 1.1);
                     }, this);
-                    this._solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
-                        return this._itemLength / 10;
+                    _solidModel.setUniformValueFunction("u_revealTransitionLength", function () {
+                        return _currentItemLength / 10;
                     }, this);
                 }.bind(this));
             } else {
-                this._solidModel = null;
+                _solidModel = null;
             }
             if (_showWireframeModel()) {
                 // add the ship to the scene in line drawing mode as well
-                this._item.addToScene(this._scene, graphics.getMaxLoadedLOD(), true, {weapons: true}, function (model) {
-                    this._wireframeModel = model;
+                _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, function (model) {
+                    _wireframeModel = model;
                     // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-                    this._wireframeModel.getNode().setShader(graphics.getShader("oneColorReveal").getManagedShader()); //TODO: hardcoded
+                    _wireframeModel.getNode().setShader(graphics.getShader("oneColorReveal").getManagedShader()); //TODO: hardcoded
                     // set the necessary uniform functions for the one colored reveal shader
-                    this._wireframeModel.setUniformValueFunction("u_color", function () {
+                    _wireframeModel.setUniformValueFunction("u_color", function () {
                         return logic.getSetting(logic.DATABASE_SETTINGS.WIREFRAME_COLOR);
                     });
-                    this._wireframeModel.setUniformValueFunction("u_revealFront", function () {
-                        return (this._revealState <= 1.0);
+                    _wireframeModel.setUniformValueFunction("u_revealFront", function () {
+                        return (_revealState <= 1.0);
                     }, this);
-                    this._wireframeModel.setUniformValueFunction("u_revealStart", function () {
-                        return this._itemFront - ((this._revealState > 1.0 ? (this._revealState - 1.0) : this._revealState) * this._itemLength * 1.1);
+                    _wireframeModel.setUniformValueFunction("u_revealStart", function () {
+                        return _currentItemFront - ((_revealState > 1.0 ? (_revealState - 1.0) : _revealState) * _currentItemLength * 1.1);
                     }, this);
-                    this._wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
-                        return (this._revealState <= 1.0) ? (this._itemLength / 10) : 0;
+                    _wireframeModel.setUniformValueFunction("u_revealTransitionLength", function () {
+                        return (_revealState <= 1.0) ? (_currentItemLength / 10) : 0;
                     }, this);
                 }.bind(this));
             } else {
-                this._wireframeModel = null;
+                _wireframeModel = null;
             }
 
             // set the callback for when the potentially needed additional file resources have 
             // been loaded
             resources.executeWhenReady(function () {
                 // get the length of the ship based on the length of its model
-                this._itemLength = this._item.getVisualModel()._model.getHeight();
-                this._itemLengthInMeters = this._item.getVisualModel()._model.getHeightInMeters();
-                this._itemFront = this._item.getVisualModel()._model.getMaxY();
-                this._itemStats.setContent(
-                        "Length: " + utils.getLengthString(this._itemLengthInMeters) + "<br/>" +
-                        "Mass: " + utils.getMassString(shipClass.getMass()) + "<br/>" +
-                        "Armor: " + shipClass.getHitpoints() + "<br/>" +
-                        "Weapon slots: " + shipClass.getWeaponSlots().length + "<br/>" +
-                        "Thrusters: " + shipClass.getThrusterSlots().length);
-                this._itemDescription.setContent(
+                _currentItemLength = _currentItem.getVisualModel()._model.getHeight();
+                _currentItemLengthInMeters = _currentItem.getVisualModel()._model.getHeightInMeters();
+                _currentItemFront = _currentItem.getVisualModel()._model.getMaxY();
+                this._itemStatsParagraph.setContent(
+                        strings.get(strings.DATABASE.LENGTH) + ": " + utils.getLengthString(_currentItemLengthInMeters) + "<br/>" +
+                        strings.get(strings.DATABASE.MASS) + ": " + utils.getMassString(shipClass.getMass()) + "<br/>" +
+                        strings.get(strings.DATABASE.ARMOR) + ": " + shipClass.getHitpoints() + "<br/>" +
+                        strings.get(strings.DATABASE.WEAPON_SLOTS) + ": " + shipClass.getWeaponSlots().length + "<br/>" +
+                        strings.get(strings.DATABASE.THRUSTERS) + ": " + shipClass.getThrusterSlots().length);
+                this._itemDescriptionParagraph.setContent(
                         shipClass.getDescription() + "<br/>" +
                         "<br/>" +
                         shipClass.getSpacecraftType().getDescription());
                 // this will create the GL context if needed or update it with the new
                 // data if it already exists
-                this.bindSceneToCanvas(this._scene, this.getScreenCanvas("databaseCanvas"));
+                this.bindSceneToCanvas(_itemViewScene, this.getScreenCanvas("databaseCanvas"));
                 // set the camera position so that the whole ship nicely fits into the picture
-                this._scene.activeCamera.moveToPosition([0, 0, this._item.getVisualModel().getScaledSize()], 0);
-                if (_shouldUseShadowMapping()) {
-                    this._scene.setShadowMapRanges([
-                        0.5 * this._item.getVisualModel().getScaledSize(),
-                        this._item.getVisualModel().getScaledSize()
+                _itemViewScene.activeCamera.moveToPosition([0, 0, _currentItem.getVisualModel().getScaledSize()], 0);
+                if (graphics.shouldUseShadowMapping()) {
+                    _itemViewScene.setShadowMapRanges([
+                        0.5 * _currentItem.getVisualModel().getScaledSize(),
+                        _currentItem.getVisualModel().getScaledSize()
                     ]);
-                    this._scene.enableShadowMapping();
+                    _itemViewScene.enableShadowMapping();
                 } else {
-                    this._scene.disableShadowMapping();
+                    _itemViewScene.disableShadowMapping();
                 }
 
                 var singleRender = true;
-                if (_modelRotation()) {
-                    this.startRotationLoop();
+                if (logic.getSetting(logic.DATABASE_SETTINGS.MODEL_ROTATION)) {
+                    _startRotationLoop(ROTATION_START_ANGLE);
                     singleRender = false;
                 }
                 if (_shouldReveal()) {
-                    this.startRevealLoop();
+                    _startRevealLoop();
                     singleRender = false;
                 } else {
-                    this._revealState = 2.2;
+                    _revealState = 2.2;
                 }
                 if (singleRender) {
                     this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
@@ -475,6 +602,6 @@ define([
     };
 
     return {
-        DatabaseScreen: DatabaseScreen
+        databaseScreen: new DatabaseScreen()
     };
 });

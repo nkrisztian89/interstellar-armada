@@ -210,7 +210,7 @@ define([
      * @returns {String}
      */
     application.getLanguage = function () {
-        return strings.getLanguage();
+        return strings.getLanguage() || _defaultLanguage;
     };
     /**
      * Returns the list of languages (language ID strings) for which there is a strings file defined. (it is now checked whether the 
@@ -282,5 +282,6 @@ define([
     application.closeSuperimposedScreen = screenManager.closeSuperimposedScreen;
     application.closeOrNavigateTo = screenManager.closeOrNavitageTo;
     application.updateAllScreens = screenManager.updateAllScreens;
+    application.executeWhenAllScreensReady = screenManager.executeWhenReady;
     return application;
 });
