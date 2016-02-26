@@ -66,13 +66,43 @@
             "luminosityFactorsArrayName": "luminosityFactors"
         },
         "database": {
-            "modelAutoRotation": true,
-            "modelMouseRotation": true,
+            "showLoadingBoxFirstTime": true,
+            "showLoadingBoxOnItemChange": true,
             "backgroundColor": [0, 0, 0, 0],
             "wireframeColor": [0, 1, 0, 1],
             "showWireframeModel": true,
+            "wireframeShaderName": "oneColorReveal",
             "showSolidModel": true,
-            "modelRevealAnimation": true
+            "solidShaderName": "shadowMapReveal",
+            "lightSources": [
+                {
+                    "color": [1.0, 1.0, 1.0],
+                    "direction": [0.0, 1.0, 1.0]
+                },
+                {
+                    "color": [1.0, 1.0, 1.0],
+                    "direction": [1.0, 0.0, 0.0]
+                }
+            ],
+            "equipmentProfileName": "default",
+            "startSizeFactor": 1,
+            "minimumSizeFactor": 0.9,
+            "maximumSizeFactor": 1.6,
+            "modelRevealAnimation": true,
+            "revealColor": [1.0, 1.0, 1.0, 1.0],
+            "revealFPS": 60,
+            "revealDuration": 2000,
+            "revealSolidDelayDuration": 2000,
+            "revealTransitionLengthFactor": 0.15,
+            "modelAutoRotation": true,
+            "modelMouseRotation": true,
+            "rotationFPS": 60,
+            "rotationRevealStartAngle": 90,
+            "rotationStartAngle": 180,
+            "rotationViewAngle": 60,
+            "rotationDuration": 4000,
+            "rotationMouseSensitivity": 1.0,
+            "renderFPS": 60
         },
         "battle": {
             "simulationStepsPerSecond": 60,

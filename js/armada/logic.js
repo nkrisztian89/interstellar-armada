@@ -66,75 +66,129 @@ define([
      * This object holds the definition objects for custom types that are used for object property verification
      * @type Object
      */
-    _customTypes = {
-        COLOR4: {
-            baseType: "array",
-            length: 4,
-            elementType: "number",
-            elementTypeParams: {
-                range: [0, 1]
-            }
-        },
-        DURATION: {
-            baseType: "number",
-            range: [0, undefined]
-        },
-        FILE_DESCRIPTOR: {
-            baseType: "object",
-            properties: {
-                FILENAME: {
-                    name: "filename",
-                    type: "string"
-                },
-                FOLDER: {
-                    name: "folder",
-                    type: "string"
-                }
-            }
-        }
-    },
-    /**
-     * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
-     * the corresponding hitbox model is created
-     * @type String
-     */
-    HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
+    _customTypes = {},
+            /**
+             * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
+             * the corresponding hitbox model is created
+             * @type String
+             */
+            HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
             /**
              * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
              * @type Object
              */
-            CONFIGURATION = {
-                CLASSES_SOURCE_FILE: {
-                    name: "classes",
-                    type: _customTypes.FILE_DESCRIPTOR
-                },
-                ENVIRONMENTS_SOURCE_FILE: {
-                    name: "environments",
-                    type: _customTypes.FILE_DESCRIPTOR
-                },
-                LEVEL_FILES: {
-                    name: "levels",
-                    type: {
-                        baseType: "object",
-                        properties: {
-                            FOLDER: {
-                                name: "folder",
-                                type: "string"
-                            },
-                            FILENAMES: {
-                                name: "filenames",
-                                type: "array",
-                                elementType: "string"
-                            }
-                        }
+            CONFIGURATION,
+            /**
+             * The definition object for general settings that can be used to verify the data loaded from JSON as well as refer to the 
+             * individual settings later.
+             * @type Object
+             */
+            GENERAL_SETTINGS,
+            /**
+             * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
+             * individual settings later.
+             * @type Object
+             */
+            DATABASE_SETTINGS,
+            /**
+             * The definition object for battle settings that can be used to verify the data loaded from JSON as well as refer to the 
+             * individual settings later.
+             * @type Object
+             */
+            BATTLE_SETTINGS,
+            /**
+             * The definition object for camera settings that can be used to verify the data loaded from JSON as well as refer to the 
+             * individual settings later.
+             * @type Object
+             */
+            CAMERA_SETTINGS,
+            /**
+             * The context storing the current settings and game data that can be accessed through the interface of this module
+             * @type LogicContext
+             */
+            _context;
+    _customTypes.VECTOR3 = {
+        baseType: "array",
+        length: 3,
+        elementType: "number"
+    };
+    _customTypes.COLOR3 = {
+        baseType: "array",
+        length: 3,
+        elementType: "number",
+        elementTypeParams: {
+            range: [0, 1]
+        }
+    };
+    _customTypes.COLOR4 = {
+        baseType: "array",
+        length: 4,
+        elementType: "number",
+        elementTypeParams: {
+            range: [0, 1]
+        }
+    };
+    _customTypes.DURATION = {
+        baseType: "number",
+        range: [0, undefined]
+    };
+    _customTypes.FILE_DESCRIPTOR = {
+        baseType: "object",
+        properties: {
+            FILENAME: {
+                name: "filename",
+                type: "string"
+            },
+            FOLDER: {
+                name: "folder",
+                type: "string"
+            }
+        }
+    };
+    _customTypes.ANGLE_DEGREES = {
+        baseType: "number",
+        range: [-360, 360]
+    };
+    _customTypes.LIGHT_SOURCE = {
+        baseType: "object",
+        properties: {
+            COLOR: {
+                name: "color",
+                type: _customTypes.COLOR3
+            },
+            DIRECTION: {
+                name: "direction",
+                type: _customTypes.VECTOR3
+            }
+        }
+    };
+    CONFIGURATION = {
+        CLASSES_SOURCE_FILE: {
+            name: "classes",
+            type: _customTypes.FILE_DESCRIPTOR
+        },
+        ENVIRONMENTS_SOURCE_FILE: {
+            name: "environments",
+            type: _customTypes.FILE_DESCRIPTOR
+        },
+        LEVEL_FILES: {
+            name: "levels",
+            type: {
+                baseType: "object",
+                properties: {
+                    FOLDER: {
+                        name: "folder",
+                        type: "string"
+                    },
+                    FILENAMES: {
+                        name: "filenames",
+                        type: "array",
+                        elementType: "string"
                     }
                 }
-            },
-    /**
-     * The definition object for general settings that can be used to verify the data loaded from JSON as well as refer to the 
-     * individual settings later.
-     * @type Object
-     */
+            }
+        }
+    };
     GENERAL_SETTINGS = {
         /**
          * Default seed to use for generating random numbers to allow consistent and comparable testing.
@@ -153,13 +207,114 @@ define([
             type: "string",
             defaultValue: "luminosityFactors"
         }
-    },
-    /**
-     * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
-     * individual settings later.
-     * @type Object
-     */
+    };
     DATABASE_SETTINGS = {
+        /**
+         * Whether to show the loading box when loading the first item after navigating to the database screen
+         */
+        SHOW_LOADING_BOX_FIRST_TIME: {
+            name: "showLoadingBoxFirstTime",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * Whether to show the loading box when switching to another item on the database screen
+         */
+        SHOW_LOADING_BOX_ON_ITEM_CHANGE: {
+            name: "showLoadingBoxOnItemChange",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * The background color for the canvas that shows the models in the database
+         */
+        BACKGROUND_COLOR: {
+            name: "backgroundColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [0, 0, 0, 0]
+        },
+        /**
+         * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
+         */
+        SHOW_WIREFRAME_MODEL: {
+            name: "showWireframeModel",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * The name of the shader to use when rendering the wireframe model
+         */
+        WIREFRAME_SHADER_NAME: {
+            name: "wireframeShaderName",
+            type: "string",
+            defaultValue: "oneColorReveal"
+        },
+        /**
+         * If the wireframe model is visible, it will be colored (homogenously) with this color
+         */
+        WIREFRAME_COLOR: {
+            name: "wireframeColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [1, 0, 0, 1]
+        },
+        /**
+         * If true, the solid model will be visible in the database (it will face in after the wireframe model, if that is also visible and reveal is active)
+         */
+        SHOW_SOLID_MODEL: {
+            name: "showSolidModel",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * The name of the shader to use when rendering the solid model
+         */
+        SOLID_SHADER_NAME: {
+            name: "solidShaderName",
+            type: "string",
+            defaultValue: "shadowMapReveal"
+        },
+        /**
+         * The light sources that will be added to the item view scene in the database
+         */
+        LIGHT_SOURCES: {
+            name: "lightSources",
+            type: "array",
+            elementType: _customTypes.LIGHT_SOURCE,
+            minLength: 1,
+            maxLength: 2
+        },
+        /**
+         * The name of the equipment profile that should be equipped on the spacecrafts shown in the database 
+         */
+        EQUIPMENT_PROFILE_NAME: {
+            name: "equipmentProfileName",
+            type: "string",
+            defaultValue: "default"
+        },
+        /**
+         * The size of every model shown will be multiplied by this factor in the database when switching to it
+         */
+        START_SIZE_FACTOR: {
+            name: "startSizeFactor",
+            type: "number",
+            defaultValue: "1"
+        },
+        /**
+         * If the model size is changed by the user in the database, it cannot go below the original size multiplied by this factor
+         */
+        MIN_SIZE_FACTOR: {
+            name: "minimumSizeFactor",
+            type: "number",
+            defaultValue: "0.9"
+        },
+        /**
+         * If the model size is changed by the user in the database, it cannot go above the original size multiplied by this factor
+         */
+        MAX_SIZE_FACTOR: {
+            name: "maximumSizeFactor",
+            type: "number",
+            defaultValue: "1.6"
+        },
         /**
          * If true, the models in the database will be rotated automatically
          */
@@ -177,36 +332,52 @@ define([
             defaultValue: true
         },
         /**
-         * The background color for the canvas that shows the models in the database
+         * The rotation animation (if turned on) will be carried out at this many frames per second
          */
-        BACKGROUND_COLOR: {
-            name: "backgroundColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0, 0, 0, 0]
+        ROTATION_FPS: {
+            name: "rotationFPS",
+            type: "number",
+            defaultValue: 60
         },
         /**
-         * If the wireframe model is visible, it will be colored (homogenously) with this color
+         * When starting the rotation and the review animations at the same time, the rotation angle will initially be set to this (in degrees)
          */
-        WIREFRAME_COLOR: {
-            name: "wireframeColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1, 0, 0, 1]
+        ROTATION_REVEAL_START_ANGLE: {
+            name: "rotationRevealStartAngle",
+            type: _customTypes.ANGLE_DEGREES,
+            defaultValue: 90
         },
         /**
-         * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
+         * When starting the rotation animation without the reveal animation, the rotation angle will initially be set to this (in degrees)
          */
-        SHOW_WIREFRAME_MODEL: {
-            name: "showWireframeModel",
-            type: "boolean",
-            defaultValue: true
+        ROTATION_START_ANGLE: {
+            name: "rotationStartAngle",
+            type: _customTypes.ANGLE_DEGREES,
+            defaultValue: 180
         },
         /**
-         * If true, the solid model will be visible in the database (it will face in after the wireframe model, if that is also visible and reveal is active)
+         * The viewing angle that remains constant as the models rotate in the database (in degrees)
          */
-        SHOW_SOLID_MODEL: {
-            name: "showSolidModel",
-            type: "boolean",
-            defaultValue: true
+        ROTATION_VIEW_ANGLE: {
+            name: "rotationViewAngle",
+            type: _customTypes.ANGLE_DEGREES,
+            defaultValue: 60
+        },
+        /**
+         * If the automatic rotation is turned on, the model will rotate 360 degrees during this much time, in milliseconds
+         */
+        ROTATION_DURATION: {
+            name: "rotationDuration",
+            type: "number",
+            defaultValue: 4000
+        },
+        /**
+         * If the user rotates the model in the database using the mouse, this will determine the rate or the rotation in degrees / pixels
+         */
+        ROTATION_MOUSE_SENSITIVITY: {
+            name: "rotationMouseSensitivity",
+            type: "number",
+            defaultValue: 1
         },
         /**
          * If the shaders are not simplified, this setting will toggle the fade-in reveal animation
@@ -215,13 +386,56 @@ define([
             name: "modelRevealAnimation",
             type: "boolean",
             defaultValue: true
+        },
+        /**
+         * The models will fade in from this color while being revealed
+         */
+        REVEAL_COLOR: {
+            name: "revealColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [1.0, 1.0, 1.0, 1.0]
+        },
+        /**
+         * The reveal animation will be carried out at this many frames per second
+         */
+        REVEAL_FPS: {
+            name: "revealFPS",
+            type: "number",
+            defaultValue: 60
+        },
+        /**
+         * The amount of time needed for the reveal animation to fully reveal a (wireframe/solid) model, in milliseconds
+         */
+        REVEAL_DURATION: {
+            name: "revealDuration",
+            type: _customTypes.DURATION,
+            defaultValue: 2000
+        },
+        /**
+         * This much delay will be applied between the revealing of the wireframe and the solid models, in milliseconds
+         */
+        REVEAL_SOLID_DELAY_DURATION: {
+            name: "revealSolidDelayDuration",
+            type: _customTypes.DURATION,
+            defaultValue: 2000
+        },
+        /**
+         * The transition from the reveal color to the model color will this much part of the model's length
+         */
+        REVEAL_TRANSITION_LENGTH_FACTOR: {
+            name: "revealTransitionLengthFactor",
+            type: "number",
+            defaultValue: 0.15
+        },
+        /**
+         * The rendering of the item view scene will happen at this many frames per second
+         */
+        RENDER_FPS: {
+            name: "renderFPS",
+            type: "number",
+            defaultValue: 60
         }
-    },
-    /**
-     * The definition object for battle settings that can be used to verify the data loaded from JSON as well as refer to the 
-     * individual settings later.
-     * @type Object
-     */
+    };
     BATTLE_SETTINGS = {
         /**
          * The simulation loop will be executed this many times per second during the battle
@@ -363,12 +577,7 @@ define([
             values: budaScene.Camera.prototype.TransitionStyle,
             defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
         }
-    },
-    /**
-     * The definition object for camera settings that can be used to verify the data loaded from JSON as well as refer to the 
-     * individual settings later.
-     * @type Object
-     */
+    };
     CAMERA_SETTINGS = {
         DEFAULT_FOV: {
             name: "defaultFOV",
@@ -398,12 +607,7 @@ define([
             type: "enum",
             values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
         }
-    },
-    /**
-     * The context storing the current settings and game data that can be accessed through the interface of this module
-     * @type LogicContext
-     */
-    _context;
+    };
     Object.freeze(AutoTargeting);
     Object.freeze(_customTypes);
     // ##############################################################################

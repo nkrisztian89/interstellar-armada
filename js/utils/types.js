@@ -285,7 +285,7 @@ define([
                 }
                 return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage);
             case "array":
-                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams.length, defaultValue, checkFunction, checkFailMessage);
+                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams, defaultValue, checkFunction, checkFailMessage);
             default:
                 application.showError("Unknown type specified for '" + name + "': " + type);
                 return null;
@@ -303,7 +303,7 @@ define([
      * @param {} value The original array to be checked
      * @param {String} [elementType] If given, the elements of the array will be checked to be of this type
      * @param {Object} [elementTypeParams] The type parameters for the elements (e.g. enum for enums, range for numbers, length for arrays)
-     * @param {Number} [length] If given, the array will be checked to be of this length
+     * @param {Number} [arrayParams] Can contain the required minimum, maximum or exact length of the array (minLength, maxLength, length)
      * @param {Array} [defaultValue] If the original value is invalid, this value will be returned instead.
      * @param {Types~ArrayCallback} [checkFunction] If the type of the value is correct and this function is give, it will be called with the 
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
@@ -313,13 +313,21 @@ define([
      * @param {String} [elementCheckFailMessage] An explanatory error message to show if elements of the array fail their check
      * @returns {Boolean}
      */
-    exports.getArrayValue = function (name, value, elementType, elementTypeParams, length, defaultValue, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) {
+    exports.getArrayValue = function (name, value, elementType, elementTypeParams, arrayParams, defaultValue, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) {
         var result = [], resultElement;
         if (value instanceof Array) {
-            if (length !== undefined) {
-                if (value.length !== length) {
-                    application.showError("Invalid array length for '" + name + "'! Expected a length of " + length + " and got " + value.length + ". Using default value [" + defaultValue.join(", ") + "] instead.");
-                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, length, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+            if (arrayParams !== undefined) {
+                if ((arrayParams.length !== undefined) && (value.length !== arrayParams.length)) {
+                    application.showError("Invalid array length for '" + name + "'! Expected a length of " + arrayParams.length + " and got " + value.length + (defaultValue ? (". Using default value [" + defaultValue.join(", ") + "] instead.") : "."));
+                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                }
+                if ((arrayParams.minLength !== undefined) && (value.length < arrayParams.minLength)) {
+                    application.showError("Invalid array length for '" + name + "'! Expected a minimum length of " + arrayParams.minLength + " and got " + value.length + (defaultValue ? (". Using default value [" + defaultValue.join(", ") + "] instead.") : "."));
+                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                }
+                if ((arrayParams.maxLength !== undefined) && (value.length > arrayParams.maxLength)) {
+                    application.showError("Invalid array length for '" + name + "'! Expected a maximum length of " + arrayParams.maxLength + " and got " + value.length + (defaultValue ? (". Using default value [" + defaultValue.join(", ") + "] instead.") : "."));
+                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
                 }
             }
             if (elementType !== undefined) {
@@ -333,13 +341,13 @@ define([
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, "[" + defaultValue.join(", ") + "]", checkFailMessage);
-                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, length, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
                 }
             }
             return value;
         }
         _showTypeError("an array", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, length, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+        return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
     };
     /**
      * Verifies a given object's properties to be of certain types given by a passed object definition object. 
@@ -378,6 +386,8 @@ define([
                                 elementType: propertyDefinition.elementType,
                                 elementEnumObject: propertyDefinition.elementEnum,
                                 length: propertyDefinition.length,
+                                minLength: propertyDefinition.minLength,
+                                maxLength: propertyDefinition.maxLength,
                                 properties: propertyDefinition.properties
                             },
                             propertyDefinition.check,

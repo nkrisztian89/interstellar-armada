@@ -18,8 +18,9 @@ uniform int u_numLights;
 uniform float u_revealStart;
 // whether the front part (larger Y coordinates) of model is the one revealed
 uniform bool u_revealFront;
-// a gradient transition from white color will be added for this length after u_revealStart
+// a gradient transition from u_revealColor will be added for this length after u_revealStart
 uniform float u_revealTransitionLength;
+uniform vec4 u_revealColor;
 
 varying vec2 v_texCoord;
 varying vec3 v_normal;
@@ -82,11 +83,11 @@ void main() {
         // add a u_revealTransitionLength long transition from white to the calculated color from the start of reveal
         if ((u_revealFront==true) && (v_modelPos.y<=u_revealStart+u_revealTransitionLength)) {
             float factor = (v_modelPos.y-u_revealStart)/u_revealTransitionLength;
-            color = color * factor + vec4(1.0,1.0,1.0,1.0) * (1.0-factor);
+            color = color * factor + u_revealColor * (1.0-factor);
         } else
         if ((u_revealFront==false) && (v_modelPos.y>=u_revealStart-u_revealTransitionLength)) {
             float factor = (u_revealStart-v_modelPos.y)/u_revealTransitionLength;
-            color = color * factor + vec4(1.0,1.0,1.0,1.0) * (1.0-factor);
+            color = color * factor + u_revealColor * (1.0-factor);
         }
 
         gl_FragColor = color;

@@ -2,7 +2,8 @@
 
 precision mediump float;
 
-uniform vec4 u_color;	
+uniform vec4 u_color;
+uniform vec4 u_revealColor;
 
 // the Y coordinate in model space from where the fragments are revealed
 uniform float u_revealStart;
@@ -28,11 +29,11 @@ void main() {
         // add a u_revealTransitionLength long transition from white to the calculated color from the start of reveal
         if ((u_revealFront==true) && (v_modelPos.y<=u_revealStart+u_revealTransitionLength)) {
             float factor = (v_modelPos.y-u_revealStart)/u_revealTransitionLength;
-            color = color * factor + vec4(1.0,1.0,1.0,1.0) * (1.0-factor);
+            color = color * factor + u_revealColor * (1.0-factor);
         } else
         if ((u_revealFront==false) && (v_modelPos.y>=u_revealStart-u_revealTransitionLength)) {
             float factor = (u_revealStart-v_modelPos.y)/u_revealTransitionLength;
-            color = color * factor + vec4(1.0,1.0,1.0,1.0) * (1.0-factor);
+            color = color * factor + u_revealColor * (1.0-factor);
         }
 
 	gl_FragColor = color;

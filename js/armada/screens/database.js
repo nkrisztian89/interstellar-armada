@@ -43,20 +43,10 @@ define([
     var
             // ------------------------------------------------------------------------------
             // constants
-            REVEAL_FPS = 60,
-            REVEAL_DURATION = 2000,
-            REVEAL_SOLID_DELAY_DURATION = 2000,
             REVEAL_WIREFRAME_START_STATE = 0,
             REVEAL_WIREFRAME_END_STATE = REVEAL_WIREFRAME_START_STATE + 1,
             REVEAL_SOLID_START_STATE = REVEAL_WIREFRAME_END_STATE,
             REVEAL_SOLID_END_STATE = REVEAL_SOLID_START_STATE + 1,
-            REVEAL_TRANSITION_LENGTH_FACTOR = 0.15,
-            ROTATION_FPS = 60,
-            ROTATION_START_ANGLE = 90,
-            ROTATION_RESTART_ANGLE = 180,
-            ROTATION_VIEW_ANGLE = 60,
-            ROTATION_DURATION = 4000,
-            ROTATION_SENSITIVITY = 1,
             LOOP_CANCELED = -1,
             ITEM_NAME_HEADER_ID = "itemName",
             ITEM_TYPE_HEADER_ID = "itemType",
@@ -68,34 +58,16 @@ define([
             LOADING_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "loadingBox",
             DATABASE_CANVAS_NAME = "databaseCanvas",
             DATABASE_CANVAS_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + DATABASE_CANVAS_NAME,
-            LIGHT_SOURCES = [
-                {
-                    COLOR: [1.0, 1.0, 1.0],
-                    DIRECTION: [0.0, 1.0, 1.0]
-                },
-                {
-                    COLOR: [0.5, 0.5, 0.5],
-                    DIRECTION: [1.0, 0.0, 0.0]
-                }
-            ],
             LOADING_INITIAL_PROGRESS = 15,
             LOADING_RESOURCES_START_PROGRESS = 15,
             LOADING_RESOURCE_PROGRESS = 60,
-            EQUIPMENT_PROFILE_NAME = "default",
-            WIREFRAME_SHADER_NAME = "oneColorReveal",
-            SOLID_SHADER_NAME = "shadowMapReveal",
             UNIFORM_REVEAL_FRONT_NAME = "u_revealFront",
             UNIFORM_REVEAL_START_NAME = "u_revealStart",
             UNIFORM_REVEAL_TRANSITION_LENGTH_NAME = "u_revealTransitionLength",
+            UNIFORM_REVEAL_COLOR_NAME = "u_revealColor",
             UNIFORM_WIREFRAME_COLOR_NAME = "u_color",
             ENLARGE_FACTOR = 1.05,
             SHRINK_FACTOR = 0.95,
-            START_SIZE_FACTOR = 1.0,
-            MIN_SIZE_FACTOR = 0.9,
-            MAX_SIZE_FACTOR = 1.6,
-            RENDER_FPS = 60,
-            SHOW_LOADING_BOX_FIRST_TIME = true,
-            SHOW_LOADING_BOX_ON_ITEM_CHANGE = true,
             SETTINGS = logic.DATABASE_SETTINGS,
             // ------------------------------------------------------------------------------
             // private variables
@@ -184,8 +156,8 @@ define([
      */
     function _showWireframeModel() {
         return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ?
-                logic.getSetting(logic.DATABASE_SETTINGS.SHOW_WIREFRAME_MODEL) :
-                !logic.getSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL);
+                _getSetting(SETTINGS.SHOW_WIREFRAME_MODEL) :
+                !_getSetting(SETTINGS.SHOW_SOLID_MODEL);
     }
     /**
      * A shortcut that returns whether the reveal animation should be rendered according to the current settings
@@ -193,7 +165,7 @@ define([
      */
     function _shouldReveal() {
         return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) &&
-                logic.getSetting(logic.DATABASE_SETTINGS.MODEL_REVEAL_ANIMATION);
+                _getSetting(SETTINGS.MODEL_REVEAL_ANIMATION);
     }
     /**
      * Stops the loop that updates the reveal state (without changing the reveal state itself)
@@ -208,23 +180,23 @@ define([
     function _startRevealLoop() {
         var
                 revealStartDate = new Date(),
-                maxRevealState = (logic.getSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL) ? REVEAL_SOLID_END_STATE : REVEAL_WIREFRAME_END_STATE),
+                maxRevealState = (_getSetting(SETTINGS.SHOW_SOLID_MODEL) ? REVEAL_SOLID_END_STATE : REVEAL_WIREFRAME_END_STATE),
                 elapsedTime;
         _revealState = _showWireframeModel() ? REVEAL_WIREFRAME_START_STATE : REVEAL_SOLID_START_STATE;
         // creating the reveal function on-the-fly so we can use closures, and as a new loop is not started frequently
         _revealLoop = setInterval(function () {
             elapsedTime = new Date() - revealStartDate;
             // applying the solid reveal delay
-            if (elapsedTime > REVEAL_SOLID_START_STATE * REVEAL_DURATION) {
-                elapsedTime = Math.max(REVEAL_SOLID_START_STATE * REVEAL_DURATION, elapsedTime - REVEAL_SOLID_DELAY_DURATION);
+            if (elapsedTime > REVEAL_SOLID_START_STATE * _getSetting(SETTINGS.REVEAL_DURATION)) {
+                elapsedTime = Math.max(REVEAL_SOLID_START_STATE * _getSetting(SETTINGS.REVEAL_DURATION), elapsedTime - _getSetting(SETTINGS.REVEAL_SOLID_DELAY_DURATION));
             }
             // calculating the current reveal state
             if (_revealState < maxRevealState) {
-                _revealState = Math.min(elapsedTime / REVEAL_DURATION, maxRevealState);
+                _revealState = Math.min(elapsedTime / _getSetting(SETTINGS.REVEAL_DURATION), maxRevealState);
             } else {
                 _stopRevealLoop();
             }
-        }, 1000 / REVEAL_FPS);
+        }, 1000 / _getSetting(SETTINGS.REVEAL_FPS));
     }
     /**
      * Stops the loop that updates the orientation of the shown items automatically (without changing their orientation)
@@ -242,7 +214,7 @@ define([
                 curDate,
                 startOrientationMatrix = mat.mul4(
                         mat.rotation4([0.0, 0.0, 1.0], Math.radians(startAngle)),
-                        mat.rotation4([1.0, 0.0, 0.0], Math.radians(ROTATION_VIEW_ANGLE)));
+                        mat.rotation4([1.0, 0.0, 0.0], Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
         // setting the starting orientation
         if (_solidModel) {
             _solidModel.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
@@ -254,20 +226,20 @@ define([
         _rotationLoop = setInterval(function () {
             curDate = new Date();
             if (_solidModel) {
-                _solidModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / ROTATION_DURATION));
+                _solidModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
             }
             if (_wireframeModel) {
-                _wireframeModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / ROTATION_DURATION));
+                _wireframeModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
             }
             prevDate = curDate;
-        }, 1000 / ROTATION_FPS);
+        }, 1000 / _getSetting(SETTINGS.ROTATION_FPS));
     }
     /**
      * Resizes the currently rendered models using the given scale, but making sure their size remains within the set limits
      * @param {Number} scale
      */
     function _scaleModels(scale) {
-        scale = Math.min(Math.max(_currentItemOriginalScale * MIN_SIZE_FACTOR, scale), _currentItemOriginalScale * MAX_SIZE_FACTOR);
+        scale = Math.min(Math.max(_currentItemOriginalScale * _getSetting(SETTINGS.MIN_SIZE_FACTOR), scale), _currentItemOriginalScale * _getSetting(SETTINGS.MAX_SIZE_FACTOR));
         if (_wireframeModel) {
             _wireframeModel.setScalingMatrix(mat.scaling4(scale));
         }
@@ -286,26 +258,29 @@ define([
                 mat.identity4(),
                 mat.identity4(),
                 null,
-                EQUIPMENT_PROFILE_NAME);
+                _getSetting(SETTINGS.EQUIPMENT_PROFILE_NAME));
         // request the required shaders from the resource manager
-        graphics.getShader(WIREFRAME_SHADER_NAME);
-        graphics.getShader(SOLID_SHADER_NAME);
-        if (logic.getSetting(logic.DATABASE_SETTINGS.SHOW_SOLID_MODEL)) {
+        graphics.getShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME));
+        graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));
+        if (_getSetting(SETTINGS.SHOW_SOLID_MODEL)) {
             // add the ship to the scene in triangle drawing mode
             _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true}, function (model) {
                 _solidModel = model;
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-                _solidModel.getNode().setShader(graphics.getShader(SOLID_SHADER_NAME).getManagedShader());
+                _solidModel.getNode().setShader(graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME)).getManagedShader());
                 // set the necessary uniform functions for the reveal shader
                 _solidModel.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
                     return true;
                 });
                 _solidModel.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
-                    return _currentItemFront - ((_revealState - REVEAL_SOLID_START_STATE) * _currentItemLength * (1 + REVEAL_TRANSITION_LENGTH_FACTOR));
+                    return _currentItemFront - ((_revealState - REVEAL_SOLID_START_STATE) * _currentItemLength * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
                 }, this);
                 _solidModel.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
-                    return (_revealState < REVEAL_SOLID_END_STATE) ? _currentItemLength * REVEAL_TRANSITION_LENGTH_FACTOR : 0;
+                    return (_revealState < REVEAL_SOLID_END_STATE) ? _currentItemLength * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
                 }, this);
+                _solidModel.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
+                    return _getSetting(SETTINGS.REVEAL_COLOR);
+                });
             }.bind(this));
         } else {
             _solidModel = null;
@@ -315,21 +290,28 @@ define([
             _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, function (model) {
                 _wireframeModel = model;
                 // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-                _wireframeModel.getNode().setShader(graphics.getShader(WIREFRAME_SHADER_NAME).getManagedShader());
+                _wireframeModel.getNode().setShader(graphics.getShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME)).getManagedShader());
                 // set the necessary uniform functions for the one colored reveal shader
                 _wireframeModel.setUniformValueFunction(UNIFORM_WIREFRAME_COLOR_NAME, function () {
-                    return logic.getSetting(logic.DATABASE_SETTINGS.WIREFRAME_COLOR);
+                    return _getSetting(SETTINGS.WIREFRAME_COLOR);
                 });
                 _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
                     // while revealing the solid model, the wireframe model will disappear starting from the other side
                     return (_revealState <= REVEAL_WIREFRAME_END_STATE);
                 }, this);
                 _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
-                    return _currentItemFront - ((_revealState > REVEAL_WIREFRAME_END_STATE ? (_revealState - REVEAL_WIREFRAME_END_STATE) : _revealState) * _currentItemLength * (1 + REVEAL_TRANSITION_LENGTH_FACTOR));
+                    return _currentItemFront - (
+                            (_revealState > REVEAL_WIREFRAME_END_STATE ?
+                                    (_revealState - REVEAL_WIREFRAME_END_STATE) :
+                                    _revealState)
+                            * _currentItemLength * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
                 }, this);
                 _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
-                    return (_revealState <= REVEAL_WIREFRAME_END_STATE) ? _currentItemLength * REVEAL_TRANSITION_LENGTH_FACTOR : 0;
+                    return (_revealState <= REVEAL_WIREFRAME_END_STATE) ? _currentItemLength * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
                 }, this);
+                _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
+                    return _getSetting(SETTINGS.REVEAL_COLOR);
+                });
             }.bind(this));
         } else {
             _wireframeModel = null;
@@ -341,12 +323,12 @@ define([
      */
     function handleMouseMove(event) {
         if (_solidModel) {
-            _solidModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_SENSITIVITY));
-            _solidModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_SENSITIVITY));
+            _solidModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
+            _solidModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
         }
         if (_wireframeModel) {
-            _wireframeModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_SENSITIVITY));
-            _wireframeModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_SENSITIVITY));
+            _wireframeModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
+            _wireframeModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
         }
         _mousePos = [event.screenX, event.screenY];
     }
@@ -359,7 +341,7 @@ define([
         document.body.onmousemove = null;
         document.body.onmouseup = null;
         if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
-            _startRotationLoop(ROTATION_RESTART_ANGLE);
+            _startRotationLoop(_getSetting(SETTINGS.ROTATION_START_ANGLE));
         }
         event.preventDefault();
         return false;
@@ -583,10 +565,10 @@ define([
      * Carries out the resource loading and scene setup that needs to be done the first time an item is displayed.
      */
     DatabaseScreen.prototype._initializeCanvas = function () {
-        var canvas, i;
+        var canvas, i, lightSources;
         _firstLoad = true;
         document.body.classList.add("wait");
-        if (SHOW_LOADING_BOX_FIRST_TIME) {
+        if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {
             this._loadingBox.show();
         }
         this._updateLoadingStatus(strings.get(strings.DATABASE.LOADING_BOX_INITIALIZING), 0);
@@ -598,12 +580,15 @@ define([
         _itemViewScene = new budaScene.Scene(
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
-                logic.getSetting(logic.DATABASE_SETTINGS.BACKGROUND_COLOR), true,
+                _getSetting(SETTINGS.BACKGROUND_COLOR), true,
                 graphics.getLODContext());
-        for (i = 0; i < LIGHT_SOURCES.length; i++) {
-            _itemViewScene.addLightSource(new budaScene.LightSource(LIGHT_SOURCES[i].COLOR, LIGHT_SOURCES[i].DIRECTION));
+        lightSources = _getSetting(SETTINGS.LIGHT_SOURCES);
+        if (lightSources) {
+            for (i = 0; i < lightSources.length; i++) {
+                _itemViewScene.addLightSource(new budaScene.LightSource(lightSources[i].color, lightSources[i].direction));
+            }
         }
-        if (SHOW_LOADING_BOX_FIRST_TIME) {
+        if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
         }
         resources.executeWhenReady(function () {
@@ -619,7 +604,7 @@ define([
                 _itemViewScene.setShadowMapping(null);
             }
         }.bind(this));
-        if (SHOW_LOADING_BOX_FIRST_TIME) {
+        if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_INITIAL_PROGRESS);
         }
         _currentItemIndex = 0;
@@ -712,7 +697,7 @@ define([
                 }
                 // applying original scale
                 _currentItemOriginalScale = _currentItem.getVisualModel().getScalingMatrix()[0];
-                _scaleModels(_currentItemOriginalScale * START_SIZE_FACTOR);
+                _scaleModels(_currentItemOriginalScale * _getSetting(SETTINGS.START_SIZE_FACTOR));
                 // setting the front that will be used by reveal shaders
                 _currentItemFront = _currentItem.getVisualModel().getMaxY();
                 // if no loops are running, a single render is enough since the scene will be static
@@ -720,11 +705,11 @@ define([
                     this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
                     this.render();
                 } else {
-                    this.startRenderLoop(1000 / RENDER_FPS);
+                    this.startRenderLoop(1000 / _getSetting(SETTINGS.RENDER_FPS));
                 }
                 // starting rotation and reveal loops, as needed
                 if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
-                    _startRotationLoop(ROTATION_START_ANGLE);
+                    _startRotationLoop(_shouldReveal() ? _getSetting(SETTINGS.ROTATION_REVEAL_START_ANGLE) : _getSetting(SETTINGS.ROTATION_START_ANGLE));
                 }
                 if (_shouldReveal()) {
                     _startRevealLoop();
@@ -732,14 +717,15 @@ define([
                     _revealState = REVEAL_SOLID_END_STATE;
                 }
                 document.body.classList.remove("wait");
-                if ((_firstLoad && SHOW_LOADING_BOX_FIRST_TIME) || (!_firstLoad && SHOW_LOADING_BOX_ON_ITEM_CHANGE)) {
+                if ((_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) ||
+                        (!_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_ON_ITEM_CHANGE))) {
                     this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
                     this._loadingBox.hide();
                 }
                 _firstLoad = false;
             }.bind(this), function () {
                 // if the resources are not ready, display the loading box
-                if (!_firstLoad && SHOW_LOADING_BOX_ON_ITEM_CHANGE) {
+                if (!_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_ON_ITEM_CHANGE)) {
                     this._loadingBox.show();
                 }
             }.bind(this),
@@ -751,7 +737,7 @@ define([
             resources.requestResourceLoad();
         }.bind(this), function () {
             // if the game logic is not ready, display the loading box
-            if (!_firstLoad && SHOW_LOADING_BOX_ON_ITEM_CHANGE) {
+            if (!_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_ON_ITEM_CHANGE)) {
                 this._loadingBox.show();
             }
         }.bind(this),
