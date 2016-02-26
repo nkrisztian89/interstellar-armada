@@ -47,12 +47,14 @@ define([
         TITLE: {name: "database.title"},
         PREV_BUTTON: {name: "database.prevButton"},
         NEXT_BUTTON: {name: "database.nextButton"},
-        LOADING_INITIALIZING: {name: "database.loading.initializing"},
+        LOADING_BOX_INITIALIZING: {name: "database.loadingBox.initializing"},
         LENGTH: {name: "database.length"},
         MASS: {name: "database.mass"},
         ARMOR: {name: "database.armor"},
         WEAPON_SLOTS: {name: "database.weaponSlots"},
-        THRUSTERS: {name: "database.thrusters"}
+        THRUSTERS: {name: "database.thrusters"},
+        MISSING_SPACECRAFT_TYPE_DESCRIPTION: {name: "database.missingSpacecraftTypeDescription"},
+        MISSING_SPACECRAFT_CLASS_DESCRIPTION: {name: "database.missingSpacecraftClassDescription"}
     };
     strings.ABOUT = {
         BACK: {name: "about.backButton"},
@@ -121,9 +123,15 @@ define([
     strings.ACTION_DESCRIPTIONS = {
         PREFIX: {name: "actionDescriptions.", optional: true}
     };
+    strings.SPACECRAFT_CLASS = {
+        PREFIX: {name: "spacecraftClass.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
     strings.SPACECRAFT_TYPE = {
         PREFIX: {name: "spacecraftType.", optional: true},
-        NAME_SUFFIX: {name: ".name", optional: true}
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
     };
     return strings;
 });

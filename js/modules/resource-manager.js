@@ -273,6 +273,8 @@ define([
         this._onResourceTypeLoadFunctionQueues = {};
         this._onAnyResourceTypeLoadFunctionQueue = [];
         this._onResourceLoadFunctionQueue = [];
+        this._numRequestedResources = 0;
+        this._numLoadedResources = 0;
     };
     /**
      * @param {String} resourceType

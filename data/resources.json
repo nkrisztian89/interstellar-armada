@@ -194,7 +194,9 @@
         },
         {
             "name": "textured",
-            "fallback": "colored",
+            "fallback": {
+                "simple": "colored"
+            },
             "vertexShaderSource": "mesh/textured.vert",
             "fragmentShaderSource": "mesh/textured.frag",
             "blendType": "mix",
@@ -206,7 +208,9 @@
         },
         {
             "name": "lambert",
-            "fallback": "textured",
+            "fallback": {
+                "simple": "textured"
+            },
             "vertexShaderSource": "mesh/lambert.vert",
             "fragmentShaderSource": "mesh/lambert.frag",
             "blendType": "mix",
@@ -219,7 +223,9 @@
         },
         {
             "name": "lambert-with-luminosity",
-            "fallback": "lambert",
+            "fallback": {
+                "simple": "lambert"
+            },
             "vertexShaderSource": "mesh/lambert-with-luminosity.vert",
             "fragmentShaderSource": "mesh/lambert-with-luminosity.frag",
             "blendType": "mix",
@@ -233,7 +239,9 @@
         },
         {
             "name": "simple",
-            "fallback": "lambert-with-luminosity",
+            "fallback": {
+                "simple": "lambert-with-luminosity"
+            },
             "vertexShaderSource": "mesh/simple.vert",
             "fragmentShaderSource": "mesh/simple.frag",
             "blendType": "mix",
@@ -248,7 +256,9 @@
         },
         {
             "name": "simpleReveal",
-            "fallback": "lambert-with-luminosity",
+            "fallback": {
+                "simple": "lambert-with-luminosity"
+            },
             "vertexShaderSource": "mesh/simpleWithModelPos.vert",
             "fragmentShaderSource": "mesh/simpleReveal.frag",
             "blendType": "mix",
@@ -264,7 +274,9 @@
         },
         {
             "name": "oneColorReveal",
-            "fallback": "oneColor",
+            "fallback": {
+                "simple": "oneColor"
+            },
             "vertexShaderSource": "mesh/oneColorReveal.vert",
             "fragmentShaderSource": "mesh/oneColorReveal.frag",
             "blendType": "mix",
@@ -274,7 +286,9 @@
         },
         {
             "name": "ship",
-            "fallback": "lambert-with-luminosity",
+            "fallback": {
+                "simple": "lambert-with-luminosity"
+            },
             "vertexShaderSource": "mesh/ship.vert",
             "fragmentShaderSource": "mesh/ship.frag",
             "blendType": "mix",
@@ -291,7 +305,10 @@
         },
         {
             "name": "shadowMapReveal",
-            "fallback": "lambert-with-luminosity",
+            "fallback": {
+                "simple": "lambert-with-luminosity",
+                "withoutShadows": "simpleReveal"
+            },
             "vertexShaderSource": "mesh/modelPosShadowMapping.vert",
             "fragmentShaderSource": "mesh/shadowMapReveal.frag",
             "blendType": "mix",

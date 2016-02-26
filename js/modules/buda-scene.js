@@ -902,6 +902,25 @@ define([
         }
         return result;
     };
+    /**
+     * Removes all references stored by this object
+     */
+    RenderableNode.prototype.destroy = function () {
+        var i;
+        this._renderableObject.setNode(null);
+        this._renderableObject = null;
+        this._scene = null;
+        this._parent = null;
+        if (this._subnodes) {
+            for (i = 0; i < this._subnodes.length; i++) {
+                this._subnodes[i].destroy();
+                this._subnodes[i] = null;
+            }
+            this._subnodes = null;
+        }
+        this._renderParameters = null;
+        this._cameraConfigurations = null;
+    };
     // #########################################################################
     /**
      * @class The superclass of all objects that can be rendered on the screen.
@@ -1543,6 +1562,27 @@ define([
             this._lodSizeFactors[referenceSize.toString()] = Math.log10(referenceSize + 10) / Math.log10(this.getScaledSize() + 10);
         }
         return visibleSize * this._lodSizeFactors[referenceSize.toString()];
+    };
+    /**
+     * Returns the height (size on the Y axis) of the largest mesh of the model, measured in mesh coordinates.
+     * @returns {Number}
+     */
+    ShadedLODMesh.prototype.getHeight = function () {
+        return this._model.getHeight();
+    };
+    /**
+     * Returns the height (size on the Y axis) of the largest mesh of the model, measured in meters.
+     * @returns {Number}
+     */
+    ShadedLODMesh.prototype.getHeightInMeters = function () {
+        return this._model.getHeightInMeters();
+    };
+    /**
+     * Returns largest Y coordinate that any of the vertices of any of the meshes of this model have
+     * @returns {Number}
+     */
+    ShadedLODMesh.prototype.getMaxY = function () {
+        return this._model.getMaxY();
     };
     /**
      * Returns the LOD that should be used when rendering using the passed 
@@ -4029,6 +4069,14 @@ define([
     CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects, doNotNotifyCamera) {
         this._orientationConfiguration.setFollowedObjects(targetObjects, doNotNotifyCamera);
     };
+    /**
+     * Removes all references stored by this object
+     */
+    CameraConfiguration.prototype.destroy = function () {
+        this._positionConfiguration = null;
+        this._orientationConfiguration = null;
+        this._camera = null;
+    };
     // -------------------------------------------------------------------------
     /**
      * Returns a new camera configuration which does not follow any objects but can be moved and turned freely and has the specified position, 
@@ -5447,7 +5495,24 @@ define([
         }
     };
     Scene.prototype.clearNodes = function () {
+        var i;
+        if (this._backgroundObjects) {
+            for (i = 0; i < this._backgroundObjects.length; i++) {
+                if (this._backgroundObjects[i]) {
+                    this._backgroundObjects[i].destroy();
+                    this._backgroundObjects[i] = null;
+                }
+            }
+        }
         this._backgroundObjects = [];
+        if (this.objects) {
+            for (i = 0; i < this.objects.length; i++) {
+                if (this.objects[i]) {
+                    this.objects[i].destroy();
+                    this.objects[i] = null;
+                }
+            }
+        }
         this.objects = [];
     };
     Scene.prototype.getAllObjects = function () {

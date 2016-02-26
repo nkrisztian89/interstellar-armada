@@ -1719,6 +1719,18 @@ define([
     GenericView.prototype.getPointToFallback = function () {
         return this._pointToFallback;
     };
+    /*
+     * Removes all references from the object
+     */
+    GenericView.prototype.destroy = function () {
+        this._fovRange = null;
+        this._positionMatrix = null;
+        this._orientationMatrix = null;
+        this._alphaRange = null;
+        this._betaRange = null;
+        this._spanRange = null;
+        this._confines = null;
+    };
     // ##############################################################################
     /**
      * @class Describes the parameters of a certain view of an object, based on which
@@ -1866,6 +1878,13 @@ define([
     ObjectView.prototype.shouldAutoReset = function () {
         return this._shouldAutoReset;
     };
+    /**
+     * @override
+     */
+    ObjectView.prototype.destroy = function () {
+        GenericView.prototype.destroy.call(this);
+        this._distanceRange = null;
+    };
     // ##############################################################################
     /**
      * @class Describes the parameters of a certain view of a scene, based on which a camera configuration can be created and added to the
@@ -1966,6 +1985,13 @@ define([
      */
     SceneView.prototype.shouldAutoReset = function () {
         return false;
+    };
+    /**
+     * @override
+     */
+    SceneView.prototype.destroy = function () {
+        GenericView.prototype.destroy.call(this);
+        this._distanceRange = null;
     };
     // ##############################################################################
     /**

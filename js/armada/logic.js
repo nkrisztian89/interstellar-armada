@@ -161,10 +161,18 @@ define([
      */
     DATABASE_SETTINGS = {
         /**
-         * If true, the models in the database will be rotated automatically as well as can be rotated by the mouse
+         * If true, the models in the database will be rotated automatically
          */
-        MODEL_ROTATION: {
-            name: "modelRotation",
+        MODEL_AUTO_ROTATION: {
+            name: "modelAutoRotation",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
+         * If true, the models in the database can be rotated by the mouse
+         */
+        MODEL_MOUSE_ROTATION: {
+            name: "modelMouseRotation",
             type: "boolean",
             defaultValue: true
         },
@@ -1448,6 +1456,15 @@ define([
             }
         }
     };
+    /**
+     * Removes all references stored by this object
+     */
+    Weapon.prototype.destroy = function () {
+        this._class = null;
+        this._spacecraft = null;
+        this._slot = null;
+        this._visualModel = null;
+    };
     // #########################################################################
     /**
      * @class Represents a thruster on a spacecraft.
@@ -1537,6 +1554,15 @@ define([
     Thruster.prototype.addBurn = function (value) {
         this._burnLevel += value;
         this._updateVisuals();
+    };
+    /**
+     * Removes all references stored by this object
+     */
+    Thruster.prototype.destroy = function () {
+        this._propulsionClass = null;
+        this._slot = null;
+        this._visualModel = null;
+        this._shipModel = null;
     };
     // #########################################################################
     /**
@@ -1724,6 +1750,14 @@ define([
         if (this._thrusterUses.rollLeft.burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", this._class.getAngularThrust() * this._thrusterUses.rollLeft.burn / this._class.getMaxTurnBurnLevel(), directionVector);
         }
+    };
+    /**
+     * Removes all references stored by this object
+     */
+    Propulsion.prototype.destroy = function () {
+        this._class = null;
+        this._drivenPhysicalObject = null;
+        this._thrusterUses = null;
     };
     // #########################################################################
     /**
@@ -2200,6 +2234,12 @@ define([
         this._rollTarget = 0;
         this._strafeTarget = 0;
         this._liftTarget = 0;
+    };
+    /**
+     * Removes all references stored by this object
+     */
+    ManeuveringComputer.prototype.destroy = function () {
+        this._spacecraft = null;
     };
     // #########################################################################
     /**
@@ -3138,9 +3178,23 @@ define([
     Spacecraft.prototype.destroy = function () {
         var i;
         this._class = null;
+        if (this._weapons) {
+            for (i = 0; i < this._weapons.length; i++) {
+                if (this._weapons[i]) {
+                    this._weapons[i].destroy();
+                    this._weapons[i] = null;
+                }
+            }
+        }
         this._weapons = null;
-        this._propulsion = null;
-        this._maneuveringComputer = null;
+        if (this._propulsion) {
+            this._propulsion.destroy();
+            this._propulsion = null;
+        }
+        if (this._maneuveringComputer) {
+            this._maneuveringComputer.destroy();
+            this._maneuveringComputer = null;
+        }
         this._projectileArray = null;
         this._spacecraftArray = null;
         this._target = null;
@@ -3436,8 +3490,15 @@ define([
             this._environment.destroy();
         }
         this._environment = null;
-        this._cameraStartPositionMatrix = null;
-        this._cameraStartOrientationMatrix = null;
+        if (this._views) {
+            for (i = 0; i < this._views.length; i++) {
+                if (this._views[i]) {
+                    this._views[i].destroy();
+                    this._views[i] = null;
+                }
+            }
+            this._spacecrafts = null;
+        }
         if (this._spacecrafts) {
             for (i = 0; i < this._spacecrafts.length; i++) {
                 if (this._spacecrafts[i]) {
@@ -3456,6 +3517,7 @@ define([
             }
             this._projectiles = null;
         }
+        this._pilotedCraft = null;
         this._hitObjects = null;
     };
     _context = new LogicContext();

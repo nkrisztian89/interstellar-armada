@@ -95,6 +95,11 @@ define([
              */
             DEFAULT_SHADOW_DEPTH_RATIO = 1.5,
             /**
+             * Shaders that realize the same function but without shadows should be references among the fallback shaders with this type key
+             * @type String
+             */
+            FALLBACK_TYPE_WITHOUT_SHADOWS = "withoutShadows",
+            /**
              * 
              * @type GraphicsContext
              */
@@ -516,9 +521,12 @@ define([
     GraphicsContext.prototype.getShader = function (shaderName) {
         switch (this.getShaderComplexity()) {
             case ShaderComplexity.NORMAL:
-                return resources.getShader(shaderName);
+                if (this._shadowMapping) {
+                    return resources.getShader(shaderName);
+                }
+                return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS);
             case ShaderComplexity.SIMPLE:
-                return resources.getFallbackShader(shaderName);
+                return resources.getFallbackShader(shaderName, ShaderComplexity.SIMPLE);
             default:
                 application.showError("Unhandled shader complexity level: '" + this.getShaderComplexity() + "' - no corresponding shader set for this level!");
                 return null;

@@ -400,9 +400,9 @@ define([
     function ShaderResource(dataJSON) {
         resourceManager.GenericResource.call(this, dataJSON.name);
         /**
-         * @type String
+         * @type Object
          */
-        this._fallbackShaderName = dataJSON.fallback || null;
+        this._fallbackShaderNames = dataJSON.fallback || null;
         /**
          * @type String
          */
@@ -472,10 +472,11 @@ define([
         }
     };
     /**
+     * @param {String} fallbackType
      * @returns {String}
      */
-    ShaderResource.prototype.getFallbackShaderName = function () {
-        return this._fallbackShaderName;
+    ShaderResource.prototype.getFallbackShaderName = function (fallbackType) {
+        return this._fallbackShaderNames ? this._fallbackShaderNames[fallbackType] : null;
     };
     /**
      * @returns {ManagedShader}
@@ -678,10 +679,11 @@ define([
     };
     /**
      * @param {String} name
+     * @param {String} fallbackType
      * @returns {ShaderResource}
      */
-    GraphicsResourceManager.prototype.getFallbackShader = function (name) {
-        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getFallbackShaderName(), {allowNullResult: true}) || this.getShader(name);
+    GraphicsResourceManager.prototype.getFallbackShader = function (name, fallbackType) {
+        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getFallbackShaderName(fallbackType), {allowNullResult: true}) || this.getShader(name);
     };
     /**
      * @param {String} name

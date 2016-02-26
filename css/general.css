@@ -30,6 +30,11 @@ body {
     border: 5px transparent;
 }
 
+/* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
+body.wait, body.wait * {
+    cursor: wait !important;
+}
+
 /* Put a wrapper div of this class around an element to be centered that has no fixed height */
 .pageGhost {
     text-align: center;

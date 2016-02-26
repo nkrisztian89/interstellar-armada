@@ -1702,113 +1702,161 @@ define([
         return this._scale;
     };
     /**
+     * Calls the given value function by passing it all of the meshes one after the other, and returns the highest value it returns from
+     * these calls. 
+     * @param {Number} [lod] If given, the functon will be called only for the mesh with the given LOD
+     * @param {Function} valueFunction
+     */
+    Model.prototype._getLargestValueOfMeshes = function (lod, valueFunction) {
+        var result, current;
+        if (lod !== undefined) {
+            return valueFunction(this.getMeshWithLOD(lod));
+        }
+        for (lod = this._minLOD; lod < this._maxLOD; lod++) {
+            current = valueFunction(this.getMeshWithLOD(lod));
+            if ((result === undefined) || (current > result)) {
+                result = current;
+            }
+        }
+        return result;
+    };
+    /**
+     * Calls the given value function by passing it all of the meshes one after the other, and returns the lowest value it returns from
+     * these calls. 
+     * @param {Number} [lod] If given, the functon will be called only for the mesh with the given LOD
+     * @param {Function} valueFunction
+     */
+    Model.prototype._getLowestValueOfMeshes = function (lod, valueFunction) {
+        var result, current;
+        if (lod !== undefined) {
+            return valueFunction(this.getMeshWithLOD(lod));
+        }
+        for (lod = this._minLOD; lod < this._maxLOD; lod++) {
+            current = valueFunction(this.getMeshWithLOD(lod));
+            if ((result === undefined) || (current < result)) {
+                result = current;
+            }
+        }
+        return result;
+    };
+    /**
      * Returns the size of the model, which is calculated as the double of the
      * farthest (X,Y or Z) vertex coordinate to be found in the model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getSize = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getSize();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getSize();
+        });
     };
 
     /**
      * Returns the greatest positive X vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMaxX = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMaxX();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMaxX();
+        });
     };
 
     /**
      * Returns the greatest negative X vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMinX = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMinX();
+        return this._getLowestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMinX();
+        });
     };
 
     /**
      * Returns the greatest positive Y vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMaxY = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMaxY();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMaxY();
+        });
     };
 
     /**
      * Returns the greatest negative Y vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMinY = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMinY();
+        return this._getLowestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMinY();
+        });
     };
 
     /**
      * Returns the greatest positive Z vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMaxZ = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMaxZ();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMaxZ();
+        });
     };
 
     /**
      * Returns the greatest negative Z vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMinZ = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMinZ();
+        return this._getLowestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMinZ();
+        });
     };
 
     /**
      * Returns the width of the model, which is calculated as the difference
      * between the smallest and greatest X coordinates found among the vertices.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getWidth = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getWidth();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getWidth();
+        });
     };
 
     /**
      * Returns the height of the model, which is calculated as the difference
      * between the smallest and greatest Y coordinates found among the vertices.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getHeight = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getHeight();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getHeight();
+        });
     };
 
     /**
      * Returns the depth of the model, which is calculated as the difference
      * between the smallest and greatest Z coordinates found among the vertices.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getDepth = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getDepth();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getDepth();
+        });
     };
 
     /**

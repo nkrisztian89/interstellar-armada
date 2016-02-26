@@ -28,14 +28,16 @@
         "title": "In-game database",
         "prevButton": "Previous item",
         "nextButton": "Next item",
-        "loading": {
+        "loadingBox": {
             "initializing": "Initializing database..."
         },
         "length": "Length",
         "mass": "Mass",
         "armor": "Armor",
         "weaponSlots": "Weapon slots",
-        "thrusters": "Thrusters"
+        "thrusters": "Thrusters",
+        "missingSpacecraftTypeDescription": "{originalDescription}",
+        "missingSpacecraftClassDescription": "{originalDescription}"
     },
     "about": {
         "backButton": "Back to menu",

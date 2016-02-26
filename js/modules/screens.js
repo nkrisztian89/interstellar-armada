@@ -323,6 +323,14 @@ define([
             alert(newStatus);
         }
     };
+    /**
+     * Returns the HTML element that is part of this screen and had the given original ID
+     * @param {String} originalElementID
+     * @returns {Element}
+     */
+    HTMLScreen.prototype.getElement = function (originalElementID) {
+        return this._container.querySelector("#" + this._name + ELEMENT_ID_SEPARATOR + originalElementID);
+    };
     // #########################################################################
     /**
      * @class An enhanced canvas element (a wrapper around a regular HTML canvas), 

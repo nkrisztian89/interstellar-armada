@@ -761,7 +761,7 @@ define([
             this._locations[shader.getName()] = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
         }
         var location = this._locations[shader.getName()];
-        if (context.getBoundVertexBuffer(location) !== this) {
+        if ((location >= 0) && (context.getBoundVertexBuffer(location) !== this)) {
             application.log("Binding vertex buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
             context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
             context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
