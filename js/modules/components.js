@@ -435,8 +435,10 @@ define([
      * @param {String} cssFilename See ExternalComponent.
      * @param {Function} [onShow] The function to execute every time the box is shown.
      * @param {Function} [onHide] The function to execute every time the box is hidden.
+     * @param {String} [headerID]
+     * @param {String} [okButtonID]
      */
-    function InfoBox(name, htmlFilename, cssFilename, onShow, onHide) {
+    function InfoBox(name, htmlFilename, cssFilename, onShow, onHide, headerID, okButtonID) {
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
          * A wrapper for the HTML p element in the info box, that shows the message.
@@ -448,6 +450,18 @@ define([
          * @type SimpleComponent
          */
         this._okButton = this.registerSimpleComponent("okButton");
+        /**
+         * @type SimpleComponent
+         */
+        this._header = this.registerSimpleComponent("header");
+        /**
+         * @type String
+         */
+        this._headerID = headerID;
+        /**
+         * @type String
+         */
+        this._okButtonID = okButtonID;
         /**
          * A function that will be run every time box is shown.
          * @type Function
@@ -480,6 +494,12 @@ define([
      */
     InfoBox.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
+        if (this._headerID) {
+            this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+        }
+        if (this._okButtonID) {
+            this._okButton.rename(this._name + ELEMENT_ID_SEPARATOR + this._okButtonID);
+        }
         this._okButton.getElement().onclick = function () {
             this.hide();
             return false;

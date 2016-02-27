@@ -1,23 +1,31 @@
-/* 
- * Copyright (C) 2016 krisztian
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/**
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ * @version 2.0
  */
 
 /*jslint nomen: true, white: true*/
 /*global define, document, setInterval, clearInterval, window*/
+
+/**
+ * @param utils
+ * @param vec
+ * @param mat
+ * @param application
+ * @param components
+ * @param screens
+ * @param budaScene
+ * @param resources
+ * @param strings
+ * @param armadaScreens
+ * @param graphics
+ * @param logic
+ * @param control
+ */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -26,165 +34,255 @@ define([
     "modules/buda-scene",
     "modules/graphics-resources",
     "armada/strings",
+    "armada/screens/shared",
     "armada/graphics",
     "armada/logic",
-    "armada/control"
-], function (vec, mat, application, components, screens, budaScene, resources, strings, graphics, logic, control) {
+    "armada/control",
+    "utils/polyfill"
+], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, logic, control) {
     "use strict";
-
-    function _shouldUseShadowMapping() {
-        return graphics.isShadowMappingEnabled() && (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL);
-    }
-
+    var
+            // ------------------------------------------------------------------------------
+            // constants
+            STATS_PARAGRAPH_ID = "stats",
+            UI_PARAGRAPH_ID = "ui",
+            SMALL_HEADER_ID = "smallHeader",
+            BIG_HEADER_ID = "bigHeader",
+            DEBUG_LABEL_PARAGRAPH_ID = "debugLabel",
+            CROSSHAIR_DIV_ID = "crosshair",
+            LOADING_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "loadingBox",
+            INFO_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "infoBox",
+            BATTLE_CANVAS_ID = "battleCanvas",
+            LOOP_CANCELED = -1,
+            TARGET_INFO_SEPARATOR = "---------------",
+            LOADING_RANDOM_ITEMS_PROGRESS = 5,
+            LOADING_BUILDING_SCENE_PROGRESS = 10,
+            LOADING_RESOURCES_START_PROGRESS = 20,
+            LOADING_RESOURCE_PROGRESS = 60,
+            LOADING_INIT_WEBGL_PROGRESS = LOADING_RESOURCES_START_PROGRESS + LOADING_RESOURCE_PROGRESS,
+            // ------------------------------------------------------------------------------
+            // private variables
+            /**
+             * The level object storing and simulating the game-logic model of the battle
+             * @type Level
+             */
+            _level,
+            /**
+             * The scene that is used to render the battle
+             * @type Scene
+             */
+            _battleScene,
+            /**
+             * The ID of the loop function that is set to run the game simulation
+             * @type Number
+             */
+            _simulationLoop,
+            /**
+             * This stores the value of the cursor as it was used in the battle, while some menu is active
+             * @type String
+             */
+            _battleCursor,
+            /**
+             * Stores the timestamp of the last simulation step
+             * @type Date
+             */
+            _prevDate,
+            /**
+             * Whether the time is stopped in the simulated battle currently
+             * @type Boolean
+             */
+            _isTimeStopped,
+            /**
+             * A function handling the resizing of the window from the battle screen's perspective is stored in this variable
+             * @type Function
+             */
+            _handleResize,
+            /**
+             * The object that will be returned as this module
+             * @type Battle
+             */
+            _battle = {};
+    // ------------------------------------------------------------------------------
+    // private functions
     /**
-     * @class Represents the battle screen.
-     * @extends screens.HTMLScreenWithCanvases
-     * @param {String} name The name by which this screen can be identified.
-     * @param {String} source The name of the HTML file where the structure of this
-     * screen is defined.
+     * Executes one simulation (and control) step for the battle.
      */
-    function BattleScreen(name, source) {
-        screens.HTMLScreenWithCanvases.call(this, name, source, graphics.getAntialiasing(), graphics.getFiltering());
-
-        this._stats = this.registerSimpleComponent("stats");
-        this._ui = this.registerSimpleComponent("ui");
-        this._smallHeader = this.registerSimpleComponent("smallHeader");
-        this._bigHeader = this.registerSimpleComponent("bigHeader");
-
-        this._debugLabel = this.registerSimpleComponent("debugLabel");
-
-        this._crosshair = this.registerSimpleComponent("crosshair");
-
-        this._loadingBox = this.registerExternalComponent(new components.LoadingBox(name + "_loadingBox", "loadingbox.html", "loadingbox.css", strings.LOADING.HEADER.name));
-        this._infoBox = this.registerExternalComponent(new components.InfoBox(name + "_infoBox", "infobox.html", "infobox.css", function () {
-            this.pauseBattle();
-        }.bind(this), function () {
-            this.resumeBattle();
-        }.bind(this)));
-
-        /**
-         * @type Level
-         */
-        this._level = null;
-        /**
-         * @type Scene
-         */
-        this._battleScene = null;
-        this._simulationLoop = null;
-        this._battleCursor = null;
-        this._prevDate = null;
-        this._isTimeStopped = false;
-    }
-
-    BattleScreen.prototype = new screens.HTMLScreenWithCanvases();
-    BattleScreen.prototype.constructor = BattleScreen;
-
-    BattleScreen.prototype._simulationLoopFunction = function () {
+    function _simulationLoopFunction() {
         var curDate = new Date();
         control.control();
-        if (!this._isTimeStopped) {
-            this._level.tick(curDate - this._prevDate);
+        if (!_isTimeStopped) {
+            _level.tick(curDate - _prevDate);
         }
-        this._prevDate = curDate;
-    };
-
-    BattleScreen.prototype.stopTime = function () {
-        this._isTimeStopped = true;
-        if (this._battleScene) {
-            this._battleScene.setShouldAnimate(false);
+        _prevDate = curDate;
+    }
+    /**
+     * Removes the stored renferences to the logic and graphical models of the battle.
+     */
+    function _clearData() {
+        if (_level) {
+            _level.destroy();
         }
-    };
-
-    BattleScreen.prototype.resumeTime = function () {
-        if (this._battleScene) {
-            this._battleScene.setShouldAnimate(true);
+        _level = null;
+        if (_battleScene) {
+            _battleScene.clearNodes();
         }
-        this._isTimeStopped = false;
-    };
-
-    BattleScreen.prototype.toggleTime = function () {
-        if (this._isTimeStopped) {
-            this.resumeTime();
+        _battleScene = null;
+    }
+    // ------------------------------------------------------------------------------
+    // public functions
+    /**
+     * Stops the time in the battle simulation.
+     */
+    function stopTime() {
+        _isTimeStopped = true;
+        if (_battleScene) {
+            _battleScene.setShouldAnimate(false);
+        }
+    }
+    /**
+     * Resumes the time in the battle simulation
+     */
+    function resumeTime() {
+        if (_battleScene) {
+            _battleScene.setShouldAnimate(true);
+        }
+        _isTimeStopped = false;
+    }
+    /**
+     * Changes whether the time is stopped in the simulation to the opposite of the current value
+     */
+    function toggleTime() {
+        if (_isTimeStopped) {
+            resumeTime();
         } else {
-            this.stopTime();
+            stopTime();
         }
-    };
-
-    BattleScreen.prototype.pauseBattle = function () {
+    }
+    /**
+     * Pauses the battle by canceling all control and simulation (e.g. for when a menu is displayed)
+     */
+    function pauseBattle() {
         control.stopListening();
-        this._battleCursor = document.body.style.cursor;
+        _battleCursor = document.body.style.cursor;
         document.body.style.cursor = 'default';
-        clearInterval(this._simulationLoop);
-        this._simulationLoop = null;
-        if (this._battleScene) {
-            this._battleScene.setShouldAnimate(false);
-            this._battleScene.setShouldUpdateCamera(false);
+        clearInterval(_simulationLoop);
+        _simulationLoop = LOOP_CANCELED;
+        if (_battleScene) {
+            _battleScene.setShouldAnimate(false);
+            _battleScene.setShouldUpdateCamera(false);
         }
-    };
-
-    BattleScreen.prototype.resumeBattle = function () {
-        document.body.style.cursor = this._battleCursor || 'default';
-        if (this._simulationLoop === null) {
-            this._prevDate = new Date();
-            if (this._battleScene) {
-                if (!this._isTimeStopped) {
-                    this._battleScene.setShouldAnimate(true);
+    }
+    /**
+     * Resumes the simulation and control of the battle
+     */
+    function resumeBattle() {
+        document.body.style.cursor = _battleCursor || 'default';
+        if (_simulationLoop === LOOP_CANCELED) {
+            _prevDate = new Date();
+            if (_battleScene) {
+                if (!_isTimeStopped) {
+                    _battleScene.setShouldAnimate(true);
                 }
-                this._battleScene.setShouldUpdateCamera(true);
+                _battleScene.setShouldUpdateCamera(true);
             }
-            this._simulationLoop = setInterval(this._simulationLoopFunction.bind(this), 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+            _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
             control.startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
                     "No action was taken, to avoid double-running the simulation.");
         }
-
-    };
-
+    }
+    // ##############################################################################
+    /**
+     * @class Represents the battle screen.
+     * @extends HTMLScreenWithCanvases
+     */
+    function BattleScreen() {
+        screens.HTMLScreenWithCanvases.call(this, armadaScreens.BATTLE_SCREEN_NAME, armadaScreens.BATTLE_SCREEN_SOURCE, graphics.getAntialiasing(), graphics.getFiltering());
+        /**
+         * @type SimpleComponent
+         */
+        this._stats = this.registerSimpleComponent(STATS_PARAGRAPH_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._ui = this.registerSimpleComponent(UI_PARAGRAPH_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._smallHeader = this.registerSimpleComponent(SMALL_HEADER_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._bigHeader = this.registerSimpleComponent(BIG_HEADER_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._debugLabel = this.registerSimpleComponent(DEBUG_LABEL_PARAGRAPH_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._crosshair = this.registerSimpleComponent(CROSSHAIR_DIV_ID);
+        /**
+         * @type LoadingBox
+         */
+        this._loadingBox = this.registerExternalComponent(new components.LoadingBox(
+                this._name + LOADING_BOX_ID_SUFFIX,
+                armadaScreens.LOADING_BOX_SOURCE,
+                armadaScreens.LOADING_BOX_CSS,
+                strings.LOADING.HEADER.name));
+        /**
+         * @type InfoBox
+         */
+        this._infoBox = this.registerExternalComponent(new components.InfoBox(
+                this._name + INFO_BOX_ID_SUFFIX,
+                armadaScreens.INFO_BOX_SOURCE,
+                armadaScreens.INFO_BOX_CSS,
+                function () {
+                    pauseBattle();
+                },
+                function () {
+                    resumeBattle();
+                }.bind(this),
+                strings.INFO_BOX.HEADER.name,
+                strings.INFO_BOX.OK_BUTTON.name));
+    }
+    BattleScreen.prototype = new screens.HTMLScreenWithCanvases();
+    BattleScreen.prototype.constructor = BattleScreen;
+    /**
+     * @override
+     */
     BattleScreen.prototype.hide = function () {
         screens.HTMLScreenWithCanvases.prototype.hide.call(this);
-        this.pauseBattle();
-        if (this._level) {
-            this._level.destroy();
-        }
-        this._level = null;
-        this._battleScene = null;
+        pauseBattle();
+        _clearData();
     };
-
     /**
-     * Initializes the components of the parent class, then the additional ones for
-     * this class (the canvases).
+     * @override
      */
     BattleScreen.prototype._initializeComponents = function () {
+        var canvas;
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);
-        var canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
-        this._resizeEventListener2 = function () {
+        canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
+        _handleResize = function () {
             control.setScreenCenter(canvas.width / 2, canvas.height / 2);
         };
-        window.addEventListener("resize", this._resizeEventListener2);
-        this._resizeEventListener2();
+        window.addEventListener("resize", _handleResize);
+        _handleResize();
     };
-
+    /**
+     * @override
+     */
     BattleScreen.prototype._updateComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._updateComponents.call(this);
     };
-
     /**
-     * Getter for the _loadingBox property.
-     * @returns {LoadingBox}
+     * @override
      */
-    BattleScreen.prototype.getLoadingBox = function () {
-        return this._loadingBox;
+    BattleScreen.prototype.removeFromPage = function () {
+        screens.HTMLScreenWithCanvases.prototype.removeFromPage.call(this);
+        window.removeEventListener("resize", _handleResize);
     };
-
-    /**
-     * Getter for the _infoBox property.
-     * @returns {InfoBox}
-     */
-    BattleScreen.prototype.getInfoBox = function () {
-        return this._infoBox;
-    };
-
     /**
      * Uses the loading box to show the status to the user.
      * @param {String} newStatus The status to show on the loading box. If
@@ -192,7 +290,7 @@ define([
      * @param {Number} newProgress The new value of the progress bar on the loading
      * box. If undefined, the value won't be updated.
      */
-    BattleScreen.prototype.updateStatus = function (newStatus, newProgress) {
+    BattleScreen.prototype._updateLoadingStatus = function (newStatus, newProgress) {
         if (newStatus !== undefined) {
             this._loadingBox.updateStatus(newStatus);
         }
@@ -200,25 +298,52 @@ define([
             this._loadingBox.updateProgress(newProgress);
         }
     };
-
+    /**
+     * Updates the loading box message and progress value to reflect the state given in the parameters.
+     * @param {String} resourceName The name of the resource that have just finished loading
+     * @param {Number} totalResources The number of total resources to be loaded
+     * @param {Number} loadedResources The number of resources that have already been loaded
+     */
+    BattleScreen.prototype._updateLoadingBoxForResourceLoad = function (resourceName, totalResources, loadedResources) {
+        this._updateLoadingStatus(
+                utils.formatString(strings.get(strings.LOADING.RESOURCE_READY), {
+                    resource: resourceName,
+                    loaded: loadedResources,
+                    total: totalResources
+                }),
+                LOADING_RESOURCES_START_PROGRESS + (loadedResources / totalResources) * LOADING_RESOURCE_PROGRESS);
+    };
+    /**
+     * 
+     * @param {String} message
+     */
     BattleScreen.prototype.setDebugLabel = function (message) {
         this._debugLabel.setContent(message);
     };
-
+    /**
+     * Shows the stats (FPS, draw stats) component.
+     */
+    BattleScreen.prototype.showStats = function () {
+        this._stats.show();
+    };
     /**
      * Hides the stats (FPS, draw stats) component.
      */
     BattleScreen.prototype.hideStats = function () {
         this._stats.hide();
     };
-
+    /**
+     * Shows the UI (information about controlled spacecraft) component.
+     */
+    BattleScreen.prototype.showUI = function () {
+        this._ui.show();
+    };
     /**
      * Hides the UI (information about controlled spacecraft) component.
      */
     BattleScreen.prototype.hideUI = function () {
         this._ui.hide();
     };
-
     /**
      * Shows the headers in the top center of the screen.
      */
@@ -226,7 +351,6 @@ define([
         this._bigHeader.show();
         this._smallHeader.show();
     };
-
     /**
      * Hides the headers.
      */
@@ -234,22 +358,18 @@ define([
         this._bigHeader.hide();
         this._smallHeader.hide();
     };
-
     /**
-     * Shows the stats (FPS, draw stats) component.
+     * 
      */
-    BattleScreen.prototype.showStats = function () {
-        this._stats.show();
-    };
-
     BattleScreen.prototype.showCrosshair = function () {
         this._crosshair.show();
     };
-
+    /**
+     * 
+     */
     BattleScreen.prototype.hideCrosshair = function () {
         this._crosshair.hide();
     };
-
     /**
      * Toggles the visibility of the texts (headers and statistics) on the screen.
      * @returns {undefined}
@@ -263,14 +383,6 @@ define([
             this.showStats();
         }
     };
-
-    /**
-     * Shows the UI (information about controlled spacecraft) component.
-     */
-    BattleScreen.prototype.showUI = function () {
-        this._ui.show();
-    };
-
     /**
      * Shows the given message to the user in an information box.
      * @param {String} message
@@ -279,107 +391,117 @@ define([
         this._infoBox.updateMessage(message);
         this._infoBox.show();
     };
-
     /**
      * Updates the big header's content on the screen.
      * @param {String} content
+     * @param {Object} [replacements]
      */
-    BattleScreen.prototype.setHeaderContent = function (content) {
-        this._bigHeader.setContent(content);
+    BattleScreen.prototype.setHeaderContent = function (content, replacements) {
+        this._bigHeader.setContent(content, replacements);
     };
-
-    BattleScreen.prototype.render = function () {
-        var craft;
-        screens.HTMLScreenWithCanvases.prototype.render.call(this);
-        this._stats.setContent(
-                //vec.toString3(this._battleScene.activeCamera.getVelocityVector()) + "<br/>" +
-                this.getFPS() + "<br/>" +
-                this._sceneCanvasBindings[0].scene.getNumberOfDrawnTriangles());
-        craft = this._level ? this._level.getPilotedSpacecraft() : null;
+    /**
+     * Updates the contents of the UI with information about the currently controlled spacecraft
+     */
+    BattleScreen.prototype._updateUI = function () {
+        var craft = _level ? _level.getPilotedSpacecraft() : null;
         if (craft) {
             this._ui.setContent(
-                    this._battleScene.activeCamera.getConfiguration().getName() + " view</br>" +
-                    "Armor: " + craft.getHitpoints() + "/" + craft.getClass().getHitpoints() + "<br/>" +
-                    (craft.getTarget() ? ("target: " + craft.getTarget().getClassName() + " (" + craft.getTarget().getHitpoints() + "/" + craft.getTarget().getClass().getHitpoints() + ")<br/>") : "") +
-                    (craft.getTarget() ? ("distance: " + Math.round(vec.length3(vec.sub3(craft.getTarget().getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector())))) + "<br/>" : "") +
-                    craft.getFlightMode() + " flight mode<br/>" +
-                    "speed: " + craft.getRelativeVelocityMatrix()[13].toFixed() +
-                    ((craft.getFlightMode() !== "free") ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+                    (craft.getTarget() ? (strings.get(strings.BATTLE.HUD_TARGET) + ": " + strings.getSpacecraftClassName(craft.getTarget().getClass()) + " (" + craft.getTarget().getHitpoints() + "/" + craft.getTarget().getClass().getHitpoints() + ")<br/>") : "") +
+                    (craft.getTarget() ? (strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(vec.length3(vec.sub3(craft.getTarget().getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector())))) +
+                            "<br/>" + TARGET_INFO_SEPARATOR + "<br/>" : "") +
+                    utils.formatString(strings.get(strings.BATTLE.HUD_VIEW), {
+                        view: strings.get(strings.OBJECT_VIEW.PREFIX, _battleScene.activeCamera.getConfiguration().getName(), _battleScene.activeCamera.getConfiguration().getName())
+                    }) + "<br/>" +
+                    strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": " + craft.getHitpoints() + "/" + craft.getClass().getHitpoints() + "<br/>" +
+                    utils.formatString(strings.get(strings.BATTLE.HUD_FLIGHT_MODE), {
+                        flightMode: strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode())
+                    }) + "<br/>" +
+                    strings.get(strings.BATTLE.HUD_SPEED) + ": " + craft.getRelativeVelocityMatrix()[13].toFixed() +
+                    ((craft.getFlightMode() !== logic.FlightMode.FREE) ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
         }
     };
-
     /**
-     * 
-     * @param {string} levelSourceFilename
+     * @override
+     */
+    BattleScreen.prototype.render = function () {
+        screens.HTMLScreenWithCanvases.prototype.render.call(this);
+        this._stats.setContent(
+                this.getFPS() + "<br/>" +
+                _battleScene.getNumberOfDrawnTriangles());
+        this._updateUI();
+    };
+    /**
+     * Loads the specified level description file and sets a callback to create a new game-logic model and scene for the simulated battle
+     * based on the level description and current settings
+     * @param {String} levelSourceFilename
      */
     BattleScreen.prototype.startNewBattle = function (levelSourceFilename) {
-        var loadingStartTime;
-        document.body.style.cursor = 'wait';
-        loadingStartTime = new Date();
+        var
+                loadingStartTime = new Date(),
+                canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
+        _clearData();
+        document.body.classList.add("wait");
         this.hideStats();
         this.hideUI();
         this.hideCrosshair();
         this._loadingBox.show();
         this.resizeCanvases();
         control.setScreenCenter(
-                this.getScreenCanvas("battleCanvas").getCanvasElement().width / 2,
-                this.getScreenCanvas("battleCanvas").getCanvasElement().height / 2);
-
-        this._level = new logic.Level();
-
-        this.updateStatus("loading level information...", 0);
-        this._level.requestLoadFromFile(levelSourceFilename, function () {
-            var freq, canvas;
-            this.updateStatus("loading additional configuration...", 5);
-            this._level.addRandomShips(
+                canvas.width / 2,
+                canvas.height / 2);
+        _level = new logic.Level();
+        this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
+        _level.requestLoadFromFile(levelSourceFilename, function () {
+            this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
+            _level.addRandomShips(
                     logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS),
                     logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_MAP_SIZE),
-                    mat.rotation4([0, 0, 1], Math.PI / 2),
-                    false, false, true);
-
-            this.updateStatus("building scene...", 10);
-            canvas = this.getScreenCanvas("battleCanvas").getCanvasElement();
-            if (_shouldUseShadowMapping()) {
-                graphics.getShader("shadowMapping"); //TODO: hardcoded
+                    mat.rotation4([0, 0, 1], Math.radians(logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_HEADING_ANGLE))),
+                    false, false, logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_RANDOM_HEADING));
+            this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
+            if (graphics.shouldUseShadowMapping()) {
+                graphics.getShadowMappingShader();
             }
-            this._battleScene = new budaScene.Scene(
+            _battleScene = new budaScene.Scene(
                     0, 0, canvas.width, canvas.height,
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
                     graphics.getLODContext());
-            this._level.addToScene(this._battleScene);
-
-            control.getController("general").setLevel(this._level); //TODO: hardcoded
-            control.getController("camera").setControlledCamera(this._battleScene.activeCamera);
-
-            this.updateStatus("loading graphical resources...", 15);
-            resources.executeOnResourceLoad(function (resourceName, totalResources, loadedResources) {
-                this.updateStatus("loaded " + resourceName + ", total progress: " + loadedResources + "/" + totalResources, 20 + (loadedResources / totalResources) * 60);
-            }.bind(this));
-            freq = 60; //TODO: hardcoded
+            _level.addToScene(_battleScene);
+            control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
+            control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
+            control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.activeCamera);
+            this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
+            resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             resources.executeWhenReady(function () {
-                this._battleScene.setShadowMapping(graphics.getShadowMappingSettings());
-                this.updateStatus("initializing WebGL...", 75);
-                this.clearSceneCanvasBindings();
-                this.bindSceneToCanvas(this._battleScene, this.getScreenCanvas("battleCanvas"));
-                this.updateStatus("", 100);
-                application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
-                this._smallHeader.setContent("running an early test of Interstellar Armada, version: " + application.getVersion());
-                control.switchToSpectatorMode(false);
-                this._battleCursor = document.body.style.cursor;
-                this.showMessage("Ready!");
-                this.getLoadingBox().hide();
-                this.showStats();
-                this.startRenderLoop(1000 / freq);
+                _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
+                this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
+                utils.executeAsync(function () {
+                    this.clearSceneCanvasBindings();
+                    this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
+                    this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
+                    application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
+                    this._smallHeader.setContent(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
+                    document.body.classList.remove("wait");
+                    control.switchToSpectatorMode(false);
+                    _battleCursor = document.body.style.cursor;
+                    this.showMessage(strings.get(strings.BATTLE.MESSAGE_READY));
+                    this._loadingBox.hide();
+                    this.showStats();
+                    this.startRenderLoop(1000 / logic.getSetting(logic.BATTLE_SETTINGS.RENDER_FPS));
+                }.bind(this));
             }.bind(this));
 
             resources.requestResourceLoad();
         }.bind(this));
     };
-
     // -------------------------------------------------------------------------
     // The public interface of the module
-    return {
-        BattleScreen: BattleScreen
-    };
+    _battle.battleScreen = new BattleScreen();
+    _battle.stopTime = stopTime;
+    _battle.resumeTime = resumeTime;
+    _battle.toggleTime = toggleTime;
+    _battle.pauseBattle = pauseBattle;
+    _battle.resumeBattle = resumeBattle;
+    return _battle;
 });

@@ -102,9 +102,10 @@
             "rotationViewAngle": 60,
             "rotationDuration": 4000,
             "rotationMouseSensitivity": 1.0,
-            "renderFPS": 60
+            "databaseRenderFPS": 60
         },
         "battle": {
+            "battleRenderFPS": 60,
             "simulationStepsPerSecond": 60,
             "momentDuration": 1,
             "backgroundObjectDistance": 4500,
@@ -121,6 +122,8 @@
             },
             "randomShipsMapSize": 3000,
             "randomShipsEquipmentProfileName": "default",
+            "randomShipsHeadingAngle": 90,
+            "randomShipsRandomHeading": true,
             "hitboxColor": [0.0, 0.5, 0.5, 0.5],
             "hitboxTexture": "white",
             "hitboxShader": "lambert-with-luminosity",

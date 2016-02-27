@@ -63,6 +63,24 @@ define([
                 ALWAYS_WHEN_HIT: "alwaysWhenHit"
             },
     /**
+     * @enum {String}
+     * The available flight modes.
+     */
+    FlightMode = {
+        /**
+         * The pilot can freely control all thrusters
+         */
+        FREE: "free",
+        /**
+         * The maneuvering computer automatically adds thrust to compensate for drift and keep the set speed
+         */
+        COMPENSATED: "compensated",
+        /**
+         * Turning faster than it would be possible to comensate for drift is not allowed by the maneuvering computer 
+         */
+        RESTRICTED: "restricted"
+    },
+    /**
      * This object holds the definition objects for custom types that are used for object property verification
      * @type Object
      */
@@ -431,12 +449,20 @@ define([
          * The rendering of the item view scene will happen at this many frames per second
          */
         RENDER_FPS: {
-            name: "renderFPS",
+            name: "databaseRenderFPS",
             type: "number",
             defaultValue: 60
         }
     };
     BATTLE_SETTINGS = {
+        /**
+         * The rendering of the battle scene will happen at this many frames per second
+         */
+        RENDER_FPS: {
+            name: "battleRenderFPS",
+            type: "number",
+            defaultValue: 60
+        },
         /**
          * The simulation loop will be executed this many times per second during the battle
          */
@@ -542,6 +568,22 @@ define([
             name: "randomShipsMapSize",
             type: "number",
             defaultValue: 3000
+        },
+        /**
+         * The added random ships are rotated around the Z axis by this angle (in degrees)
+         */
+        RANDOM_SHIPS_HEADING_ANGLE: {
+            name: "randomShipsHeadingAngle",
+            type: _customTypes.ANGLE_DEGREES,
+            defaultValue: 0
+        },
+        /**
+         * Whether to rotate the added random ships to a random heading (around axis Z)
+         */
+        RANDOM_SHIPS_RANDOM_HEADING: {
+            name: "randomShipsRandomHeading",
+            type: "boolean",
+            defaultValue: true
         },
         /**
          * The added random ships will be equipped with the profile having this name, if they have such
@@ -2099,12 +2141,11 @@ define([
     };
     /**
      * Returns a string representation of the current flight mode.
-     * (free / compensated / restricted)
-     * @returns {String}
+     * @returns {String} enum FlightMode
      */
     ManeuveringComputer.prototype.getFlightMode = function () {
         return this._compensated ?
-                (this._restricted ? "restricted" : "compensated") : "free";
+                (this._restricted ? FlightMode.RESTRICTED : FlightMode.COMPENSATED) : FlightMode.FREE;
     };
     /**
      * Switches to the next flight mode. (free / compensated / restricted)
@@ -3728,6 +3769,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        FlightMode: FlightMode,
         BATTLE_SETTINGS: BATTLE_SETTINGS,
         DATABASE_SETTINGS: DATABASE_SETTINGS,
         CAMERA_SETTINGS: CAMERA_SETTINGS,

@@ -36,11 +36,34 @@ define([
         RESUME: {name: "ingameMenu.resume"},
         QUIT: {name: "ingameMenu.quit"}
     };
+    strings.INFO_BOX = {
+        HEADER: {name: "infoBox.header"},
+        OK_BUTTON: {name: "infoBox.okButton"}
+    };
     strings.LOADING = {
         HEADER: {name: "loading.header"},
         RESOURCES_START: {name: "loading.resourcesStart"},
         RESOURCE_READY: {name: "loading.resourceReady"},
+        INIT_WEBGL: {name: "loading.initWebGL"},
         READY: {name: "loading.ready"}
+    };
+    strings.SPACECRAFT_STATS = {
+        ARMOR: {name: "spacecraftStats.armor"}
+    };
+    strings.BATTLE = {
+        DEVELOPMENT_VERSION_NOTICE: {name: "battle.developmentVersionNotice"},
+        SPECTATOR_MODE: {name: "battle.spectatorMode"},
+        PILOTING_MODE: {name: "battle.pilotingMode"},
+        HUD_TARGET: {name: "battle.hud.target"},
+        HUD_DISTANCE: {name: "battle.hud.distance"},
+        HUD_VIEW: {name: "battle.hud.view"},
+        HUD_FLIGHT_MODE: {name: "battle.hud.flightMode"},
+        HUD_SPEED: {name: "battle.hud.speed"},
+        LOADING_BOX_LOADING_LEVEL: {name: "battle.loadingBox.loadingLevel"},
+        LOADING_BOX_ADDING_RANDOM_ELEMENTS: {name: "battle.loadingBox.addingRandomElements"},
+        LOADING_BOX_BUILDING_SCENE: {name: "battle.loadingBox.buildingScene"},
+        MESSAGE_READY: {name: "battle.message.ready"},
+        MESSAGE_PAUSED: {name: "battle.message.paused"}
     };
     strings.DATABASE = {
         BACK: {name: "database.backButton"},
@@ -50,7 +73,6 @@ define([
         LOADING_BOX_INITIALIZING: {name: "database.loadingBox.initializing"},
         LENGTH: {name: "database.length"},
         MASS: {name: "database.mass"},
-        ARMOR: {name: "database.armor"},
         WEAPON_SLOTS: {name: "database.weaponSlots"},
         THRUSTERS: {name: "database.thrusters"},
         MISSING_SPACECRAFT_TYPE_DESCRIPTION: {name: "database.missingSpacecraftTypeDescription"},
@@ -132,6 +154,32 @@ define([
         PREFIX: {name: "spacecraftType.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},
         DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
+    strings.OBJECT_VIEW = {
+        PREFIX: {name: "objectView.", optional: true}
+    };
+    strings.FLIGHT_MODE = {
+        PREFIX: {name: "flightMode.", optional: true}
+    };
+    /**
+     * A shortcut for getting the translated (if available) or original spacecraft class name.
+     * @param {SpacecraftClass} spacecraftClass
+     * @returns {String}
+     */
+    strings.getSpacecraftClassName = function (spacecraftClass) {
+        return strings.get(
+                strings.SPACECRAFT_CLASS.PREFIX, spacecraftClass.getName() + strings.SPACECRAFT_CLASS.NAME_SUFFIX.name,
+                spacecraftClass.getFullName());
+    };
+    /**
+     * A shortcut for getting the translated (if available) or original spacecraft type name.
+     * @param {SpacecraftType} spacecraftType
+     * @returns {String}
+     */
+    strings.getSpacecraftTypeName = function (spacecraftType) {
+        return strings.get(
+                strings.SPACECRAFT_TYPE.PREFIX, spacecraftType.getName() + strings.SPACECRAFT_TYPE.NAME_SUFFIX.name,
+                spacecraftType.getFullName());
     };
     return strings;
 });

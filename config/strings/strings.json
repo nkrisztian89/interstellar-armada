@@ -17,11 +17,40 @@
         "resume": "Resume game",
         "quit": "Quit to main menu"
     },
+    "infoBox": {
+        "header": "Information",
+        "okButton": "OK"
+    },
     "loading": {
         "header": "Please wait!",
         "resourcesStart": "loading graphical resources...",
         "resourceReady": "loaded {resource}, total progress: {loaded} / {total}...",
+        "initWebGL": "initializing WebGL...",
         "ready": "ready!"
+    },
+    "spacecraftStats": {
+        "armor": "Armor"
+    },
+    "battle": {
+        "developmentVersionNotice": "running an early test of Interstellar Armada, version: {version}",
+        "spectatorMode": "Spectator mode",
+        "pilotingMode": "Piloting {spacecraftClass} {spacecraftType}",
+        "hud": {
+            "target": "target",
+            "distance": "distance",
+            "view": "{view} view",
+            "flightMode": "{flightMode} flight mode",
+            "speed": "speed"
+        },
+        "loadingBox": {
+            "loadingLevel": "loading level information...",
+            "addingRandomElements": "adding random elements...",
+            "buildingScene": "building scene..."
+        },
+        "message": {
+            "ready": "Ready!",
+            "paused": "Game paused."
+        }
     },
     "database": {
         "backButton": "Back to menu",
@@ -33,7 +62,6 @@
         },
         "length": "Length",
         "mass": "Mass",
-        "armor": "Armor",
         "weaponSlots": "Weapon slots",
         "thrusters": "Thrusters",
         "missingSpacecraftTypeDescription": "{originalDescription}",

@@ -15,14 +15,16 @@
  * @param armadaScreens
  * @param logic
  * @param strings
+ * @param battle
  */
 define([
     "modules/screens",
     "modules/game",
     "armada/screens/shared",
     "armada/logic",
-    "armada/strings"
-], function (screens, game, armadaScreens, logic, strings) {
+    "armada/strings",
+    "armada/screens/battle"
+], function (screens, game, armadaScreens, logic, strings, battle) {
     "use strict";
     return {
         mainMenuScreen: new screens.MenuScreen(
@@ -81,7 +83,7 @@ define([
                         id: strings.INGAME_MENU.RESUME.name,
                         action: function () {
                             game.closeSuperimposedScreen();
-                            game.getScreen().resumeBattle();
+                            battle.resumeBattle();
                         }
                     }, {
                         id: strings.SETTINGS.CONTROLS.name,

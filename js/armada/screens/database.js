@@ -396,7 +396,7 @@ define([
     function getStatsFormatString() {
         return strings.get(strings.DATABASE.LENGTH) + ": {length}<br/>" +
                 strings.get(strings.DATABASE.MASS) + ": {mass}<br/>" +
-                strings.get(strings.DATABASE.ARMOR) + ": {armor}<br/>" +
+                strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor}<br/>" +
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
                 strings.get(strings.DATABASE.THRUSTERS) + ": {thrusters}";
     }
@@ -494,19 +494,15 @@ define([
         _currentItemLengthInMeters = _currentItem ? _currentItem.getVisualModel().getHeightInMeters() : 0;
         // full names can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise the stock value is displayed
-        this._itemNameHeader.setContent(strings.get(
-                strings.SPACECRAFT_CLASS.PREFIX, shipClass.getName() + strings.SPACECRAFT_CLASS.NAME_SUFFIX.name,
-                shipClass.getFullName()));
-        this._itemTypeHeader.setContent(strings.get(
-                strings.SPACECRAFT_TYPE.PREFIX, shipClass.getSpacecraftType().getName() + strings.SPACECRAFT_TYPE.NAME_SUFFIX.name,
-                shipClass.getSpacecraftType().getFullName()));
-        this._itemStatsParagraph.setContent(utils.formatString(getStatsFormatString(), {
+        this._itemNameHeader.setContent(strings.getSpacecraftClassName(shipClass));
+        this._itemTypeHeader.setContent(strings.getSpacecraftTypeName(shipClass.getSpacecraftType()));
+        this._itemStatsParagraph.setContent(getStatsFormatString(), {
             length: (_currentItemLengthInMeters && utils.getLengthString(_currentItemLengthInMeters)) || "-",
             mass: utils.getMassString(shipClass.getMass()) || "-",
             armor: shipClass.getHitpoints() || "-",
             weaponSlots: shipClass.getWeaponSlots().length || "-",
             thrusters: shipClass.getThrusterSlots().length || "-"
-        }));
+        });
         // descriptions can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise an info about the missing description is displayed
         this._itemDescriptionParagraph.setContent(

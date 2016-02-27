@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define */
+/*global define, setTimeout */
 
 define(function () {
     "use strict";
@@ -281,6 +281,13 @@ define(function () {
             }
         }
         return str;
+    };
+    /**
+     * Adds the passed function to the event queue without any delay.
+     * @param {Function} functionToExecute
+     */
+    exports.executeAsync = function (functionToExecute) {
+        setTimeout(functionToExecute, 0);
     };
     return exports;
 });

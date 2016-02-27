@@ -3,7 +3,7 @@
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
+ * @version 2.0
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
@@ -13,12 +13,16 @@
  * @param control This module builds its game-specific functionality on the general control module
  * @param cameraController This module uses the CameraController class made for BudaScene
  * @param game To access screen-changing functionality
+ * @param armadaScreens Used for navigation
+ * @param strings Used for translation support
  */
 define([
     "modules/control",
     "modules/camera-controller",
-    "modules/game"
-], function (control, cameraController, game) {
+    "modules/game",
+    "armada/screens/shared",
+    "armada/strings"
+], function (control, cameraController, game, armadaScreens, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -55,22 +59,26 @@ define([
          * @type Level
          */
         this._level = null;
+        /**
+         * @type Battle
+         */
+        this._battle = null;
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should be have been created by now.
         // quitting to the menu
         this.setActionFunction("quit", true, function () {
-            game.getScreen().pauseBattle();
-            game.setScreen("ingameMenu", true, [0.25, 0.25, 0.25, 0.5]);
-        });
+            this._battle.pauseBattle();
+            game.setScreen(armadaScreens.INGAME_MENU_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
+        }.bind(this));
         // pausing the game
         this.setActionFunction("pause", true, function () {
             // showing an info box automatically pauses the game as implemented in
             // the BattleScreen class
-            game.getScreen().showMessage("Game paused.");
+            game.getScreen().showMessage(strings.get(strings.BATTLE.MESSAGE_PAUSED));
         });
         this.setActionFunction("stopTime", true, function () {
-            game.getScreen().toggleTime();
-        });
+            this._battle.toggleTime();
+        }.bind(this));
         // switching to pilot mode
         this.setActionFunction("switchToPilotMode", true, function () {
             _context.switchToPilotMode(this._level.getPilotedSpacecraft());
@@ -89,9 +97,9 @@ define([
         });
         // toggling the mouse controls
         this.setActionFunction("toggleMouseControls", true, function () {
-            _context.getInputInterpreter("mouse").toggleEnabled();
+            _context.getInputInterpreter(MOUSE_NAME).toggleEnabled();
             if (_context.isInPilotMode()) {
-                if (_context.getInputInterpreter("mouse").isEnabled()) {
+                if (_context.getInputInterpreter(MOUSE_NAME).isEnabled()) {
                     document.body.style.cursor = 'crosshair';
                 } else {
                     document.body.style.cursor = 'default';
@@ -100,7 +108,7 @@ define([
         });
         // toggling the joystick controls
         this.setActionFunction("toggleJoystickControls", true, function () {
-            _context.getInputInterpreter("joystick").toggleEnabled();
+            _context.getInputInterpreter(JOYSTICK_NAME).toggleEnabled();
         });
     }
     GeneralController.prototype = new control.Controller();
@@ -120,6 +128,13 @@ define([
      */
     GeneralController.prototype.setLevel = function (level) {
         this._level = level;
+    };
+    /**
+     * Sets the controlled battle to the one passed as parameter.
+     * @param {Battle} battle
+     */
+    GeneralController.prototype.setBattle = function (battle) {
+        this._battle = battle;
     };
     // #########################################################################
     /**
@@ -282,14 +297,17 @@ define([
             return;
         }
         this._pilotingMode = true;
-        this.getController("fighter").setControlledSpacecraft(pilotedSpacecraft);
-        this.getController("camera").setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
+        this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
+        this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
         this.disableAction("followNext");
         this.disableAction("followPrevious");
-        game.getScreen().setHeaderContent("Piloting " + pilotedSpacecraft.getClassName() + " " + pilotedSpacecraft.getTypeName());
+        game.getScreen().setHeaderContent(strings.get(strings.BATTLE.PILOTING_MODE), {
+            spacecraftClass: strings.getSpacecraftClassName(pilotedSpacecraft.getClass()),
+            spacecraftType: strings.getSpacecraftTypeName(pilotedSpacecraft.getClass().getSpacecraftType())
+        });
         game.getScreen().showCrosshair();
         game.getScreen().showUI();
-        if (this.getInputInterpreter("mouse").isEnabled()) {
+        if (this.getInputInterpreter(MOUSE_NAME).isEnabled()) {
             document.body.style.cursor = 'crosshair';
         }
     };
@@ -300,13 +318,13 @@ define([
      */
     ArmadaControlContext.prototype.switchToSpectatorMode = function (freeCamera) {
         this._pilotingMode = false;
-        this.getController("fighter").setControlledSpacecraft(null);
+        this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(null);
         if (freeCamera) {
-            this.getController("camera").setToFreeCamera(false);
+            this.getController(CAMERA_CONTROLLER_NAME).setToFreeCamera(false);
         }
         this.enableAction("followNext");
         this.enableAction("followPrevious");
-        game.getScreen().setHeaderContent("Spectator mode");
+        game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
         game.getScreen().hideCrosshair();
         game.getScreen().hideUI();
         document.body.style.cursor = 'default';

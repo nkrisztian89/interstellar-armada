@@ -42,11 +42,40 @@
         "resume": "Vissza a játékba",
         "quit": "Kilépés a főmenübe"
     },
+    "infoBox": {
+        "header": "Információ",
+        "okButton": "Rendben"
+    },
     "loading": {
         "header": "Kérem várjon!",
         "resourcesStart": "grafikus erőforrások betöltése...",
         "resourceReady": "{resource} betöltve, állapot: {loaded} / {total}...",
+        "initWebGL": "WebGL inicializálása...",
         "ready": "kész!"
+    },
+    "spacecraftStats": {
+        "armor": "Páncélzat"
+    },
+    "battle": {
+        "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",
+        "spectatorMode": "Nézelődő mód",
+        "pilotingMode": "{spacecraftClass} {spacecraftType} irányítása",
+        "hud": {
+            "target": "célpont",
+            "distance": "távolság",
+            "view": "{view} nézet",
+            "flightMode": "{flightMode} repülési mód",
+            "speed": "sebesség"
+        },
+        "loadingBox": {
+            "loadingLevel": "szint leíró fájl betöltése...",
+            "addingRandomElements": "véletlen elemek hozzáadása...",
+            "buildingScene": "színtér felépítése..."
+        },
+        "message": {
+            "ready": "Kész!",
+            "paused": "Játék szüneteltetve."
+        }
     },
     "database": {
         "backButton": "Vissza a menübe",
@@ -58,7 +87,6 @@
         },
         "length": "Hosszúság",
         "mass": "Tömeg",
-        "armor": "Páncélzat",
         "weaponSlots": "Fegyverek",
         "thrusters": "Hajtóműfúvókák",
         "missingSpacecraftTypeDescription": "A leírás nem érhető el ehhez a hajótípushoz ({spacecraftType}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
@@ -198,5 +226,19 @@
         "viper": {
             "name": "Vipera"
         }
+    },
+    "objectView": {
+        "near": "közeli",
+        "far": "távoli",
+        "cockpit": "pilótafülke",
+        "front": "elülső",
+        "free": "szabad",
+        "flyby": "követő",
+        "target": "célpont"
+    },
+    "flightMode": {
+        "free": "szabad",
+        "compensated": "kompenzált",
+        "restricted": "korlátozott"
     }
 }
