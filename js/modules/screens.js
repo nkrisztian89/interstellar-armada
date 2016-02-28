@@ -37,7 +37,7 @@ define([
              * @type String
              */
             TRANSLATABLE_CLASS_NAME = "translatable",
-            ELEMENT_ID_SEPARATOR = "_",
+            ELEMENT_ID_SEPARATOR = components.ELEMENT_ID_SEPARATOR,
             TRANSLATION_KEY_SEPARATOR = ".";
     // #########################################################################
     /**
@@ -134,8 +134,10 @@ define([
     /**
      * Appends the content of the screen to the page in an invisible (display: none) div.
      * @param {Function} callback
+     * @param {Boolean} [keepModelAfterAdding=false] Whether to keep storing the original DOM model
+     * of the screen after adding it to the current document (so that it can be added again later)
      */
-    HTMLScreen.prototype.addScreenToPage = function (callback) {
+    HTMLScreen.prototype.addScreenToPage = function (callback, keepModelAfterAdding) {
         this.executeWhenReady(function () {
             var namedElements, i;
             this._background = document.createElement("div");
@@ -156,6 +158,9 @@ define([
             this._initializeComponents();
             if (callback) {
                 callback();
+            }
+            if (!keepModelAfterAdding) {
+                this._model = null;
             }
         });
     };

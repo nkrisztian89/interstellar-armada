@@ -82,8 +82,10 @@ define([
      * @param {HTMLScreen} screen The new game screen to be added.
      * @param {Boolean} [replace=false] Wether to replace the current page content with this
      * screen's content.
+     * @param {Boolean} [keepModelAfterAdding=false] Whether to keep storing the original DOM model
+     * of the screen after adding it to the current document (so that it can be added again later)
      */
-    ScreenManager.prototype.addScreen = function (screen, replace) {
+    ScreenManager.prototype.addScreen = function (screen, replace, keepModelAfterAdding) {
         var screenName, onScreenReadyFunction = function () {
             this._screensLoaded++;
             if (this._screensLoaded === this._screensToLoad) {
@@ -103,7 +105,7 @@ define([
         if (replace === true) {
             screen.replacePageWithScreen(onScreenReadyFunction);
         } else {
-            screen.addScreenToPage(onScreenReadyFunction);
+            screen.addScreenToPage(onScreenReadyFunction, keepModelAfterAdding);
         }
 
     };

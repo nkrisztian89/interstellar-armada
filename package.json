@@ -1,0 +1,23 @@
+{
+  "name": "armada",
+  "version": "0.1.0",
+  "description": "The Interstellar Armada WebGL space combat game.",
+  "main": "js/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://nkrisztian89@github.com/nkrisztian89/interstellar-armada.git"
+  },
+  "author": "Krisztián Nagy",
+  "license": "GNU GPLv3",
+  "bugs": {
+    "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-requirejs": "^0.4.4"
+  }
+}

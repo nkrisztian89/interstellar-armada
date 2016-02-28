@@ -22,14 +22,114 @@ define([
     "modules/strings"
 ], function (utils, application, asyncResource, strings) {
     "use strict";
+    /**
+     * @typedef ModelLoadInfoObject
+     * Stores a model and its loading state
+     * @property {Boolean} requested
+     * @property {HTMLDocument} model
+     * @property {Function[]} onLoadQueue
+     */
     var
             // ------------------------------------------------------------------------------
             // constants
-            ELEMENT_ID_SEPARATOR = "_";
+            /**
+             * The id attributes of the HTML elements are separated from the name of their
+             * parent components by this string to create their unique ID among the elements
+             * on the same screen
+             * @type String
+             */
+            ELEMENT_ID_SEPARATOR = "_",
+            /**
+             * ID of the folder containing the component source HTML files
+             * @type String
+             */
+            COMPONENT_FOLDER = "component",
+            LOADING_BOX_PROGRESS_ID = "progress",
+            LOADING_BOX_STATUS_PARAGRAPH_ID = "status",
+            LOADING_BOX_HEADER_ID = "header",
+            INFO_BOX_MESSAGE_PARAGRAPH_ID = "message",
+            INFO_BOX_OK_BUTTON_ID = "okButton",
+            INFO_BOX_HEADER_ID = "header",
+            ENTER_CODE = 13,
+            // ------------------------------------------------------------------------------
+            // constants
+            /**
+             * Stores the loaded DOM models and their associated loading states and queued
+             * functions for each HTML file that the components use, by the names of the
+             * files
+             * @type Object.<String, ModelLoadInfoObject>
+             */
+            _modelLoadInfo = {};
+    // ------------------------------------------------------------------------------
+    // private functions
+    // a set of module functions to manage a common pool of DOM models about HTML files
+    // that the components use so they can be reused, as likely components of the same
+    // class will use the same HTML file
+    /**
+     * Returns whether the DOM model has already been loaded and is available for the
+     * HTML file with the passed name
+     * @param {String} sourceFileName
+     * @returns {Boolean}
+     */
+    function _isModelLoadedForSource(sourceFileName) {
+        return _modelLoadInfo[sourceFileName] && !!_modelLoadInfo[sourceFileName].model;
+    }
+    /**
+     * Returns the loaded DOM model for the HTML file with the passed name
+     * @param {String} sourceFileName
+     * @returns {HTMLDocument}
+     */
+    function _getModelForSource(sourceFileName) {
+        return _modelLoadInfo[sourceFileName] && _modelLoadInfo[sourceFileName].model;
+    }
+    /**
+     * Returns whether the loading of the HTML file with the passed name has already been
+     * requested
+     * @param {type} sourceFileName
+     * @returns {Boolean}
+     */
+    function _isModelRequestedForSource(sourceFileName) {
+        return _modelLoadInfo[sourceFileName] && _modelLoadInfo[sourceFileName].requested;
+    }
+    /**
+     * If needed, initiates the loading of the HTML file with the passed name, and makes sure
+     * the callback function is executed once the file has been loaded and its DOM model has
+     * been created. If no loading is needed, the callback is executed right away (synchronously)
+     * @param {String} sourceFileName
+     * @param {Function} callback
+     */
+    function _requestModelForSource(sourceFileName, callback) {
+        if (!_isModelRequestedForSource(sourceFileName)) {
+            _modelLoadInfo[sourceFileName] = {};
+            _modelLoadInfo[sourceFileName].requested = true;
+            _modelLoadInfo[sourceFileName].onLoadQueue = [callback];
+            // send an asynchronous request to grab the HTML file
+            application.requestTextFile(COMPONENT_FOLDER, sourceFileName, function (responseText) {
+                var i;
+                // once the files has been loaded, create annd save the DOM model and execute all
+                // queued functions
+                _modelLoadInfo[sourceFileName].model = document.implementation.createHTMLDocument();
+                _modelLoadInfo[sourceFileName].model.documentElement.innerHTML = responseText;
+                for (i = 0; i < _modelLoadInfo[sourceFileName].onLoadQueue.length; i++) {
+                    _modelLoadInfo[sourceFileName].onLoadQueue[i]();
+                }
+            });
+        } else {
+            // if the model has been requested, but is not loaded yet, put the callback function
+            // in the execution queue
+            if (!_isModelLoadedForSource(sourceFileName)) {
+                _modelLoadInfo[sourceFileName].onLoadQueue.push(callback);
+            }
+            // if we have the model already, execute the callback right away
+            if (callback) {
+                callback();
+            }
+        }
+    }
     // #########################################################################
     /**
      * @class A wrapper class around a regular HTML5 element, that makes it easier
-     * to integrate its functionality into a {@link GameScreen}. Provides several
+     * to integrate its functionality into a screen. Provides several
      * methods that are called automatically by the screen at certain points as well
      * as some that can be called on-demand and only serve to make code more readable.
      * @param {String} name The name of the component. The id attribute of the HTML5
@@ -94,7 +194,7 @@ define([
     /**
      * Grabs the element and the display style from the current HTML document. Needs
      * to be called after the wrapped element has been appended to the document.
-     * (automatically called by {@link GameScreen})
+     * (automatically called by screens after append)
      */
     SimpleComponent.prototype.initComponent = function () {
         this._element = document.getElementById(this._name);
@@ -106,7 +206,7 @@ define([
         }
     };
     /**
-     * Nulls the element and the display style. Needs te be called if the element
+     * Nulls the element and the display style. Needs to be called if the element
      * has been removed from the current document.
      */
     SimpleComponent.prototype.resetComponent = function () {
@@ -136,11 +236,11 @@ define([
     /**
      * @class A reusable component that consist of HTML elements (a fragment of a 
      * HTML document, stored in an external file, hence the name) and can be appended 
-     * to {@link GameScreen}s. Specific components can be the descendants of this 
+     * to screens. Specific components can be the descendants of this 
      * class, and implement their own various methods.
      * @extends AsyncResource
      * @param {String} name The name of the component to be identified by. Names
-     * must be unique within one {@link GameScreen}.
+     * must be unique within one screen.
      * @param {String} htmlFilename The filename of the HTML document where the structure
      * of the component should be defined. The component will be loaded as the first
      * element (and all its children) inside the body tag of this file.
@@ -155,18 +255,12 @@ define([
          */
         this._name = name;
         /**
-         * The filename of the HTML document where the structure of the component 
-         * should be defined.
+         * The filename of the HTML document where the structure of the component should be defined.
          * @type String
          */
-        this._source = htmlFilename;
+        this._htmlFilename = htmlFilename;
         /**
-         * The DOM model of the structure of this element.
-         * @type HTMLDocument
-         */
-        this._model = null;
-        /**
-         * The root HTML element of the structure of this component.
+         * The root HTML element of the structure of this component on the screen it has been added to.
          * @type HTMLElement
          */
         this._rootElement = null;
@@ -185,11 +279,7 @@ define([
         /**
          * A function to be executed automatically when the model is loaded from the 
          * external HTML file. Private, as this is automatically set to initialization
-         * in case that is attempted before model load. The component itself becomes
-         * usable after the initialization is completed as well, therefore the ready
-         * state is set to true at that point, and actions can be queued by external
-         * objects to be executed at that point, by executeWhenReady, since this
-         * class is a subclass of {@link Resource}.
+         * in case that is attempted before model load.
          * @type Function
          */
         this._onModelLoad = function () {
@@ -204,7 +294,7 @@ define([
         // Subclasses will call this constructor to set their prototype without any
         // parameters, therefore make sure we don't attempt to load from "undefined"
         // source.
-        if (htmlFilename !== undefined) {
+        if (htmlFilename) {
             this.requestModelLoad(cssFilename);
         }
     }
@@ -228,7 +318,7 @@ define([
             cssLink.setAttribute("type", "text/css");
             cssLink.onload = function () {
                 this._cssLoaded = true;
-                if (this._model !== null) {
+                if (_isModelLoadedForSource(this._htmlFilename)) {
                     this._onModelLoad();
                     this.setToReady();
                 }
@@ -238,24 +328,8 @@ define([
         } else {
             this._cssLoaded = true;
         }
-        // send an asynchronous request to grab the HTML file containing the DOM of
-        // this component
-        application.requestTextFile("component", this._source, function (responseText) {
-            var namedElements, i;
-            this._model = document.implementation.createHTMLDocument(this._name);
-            this._model.documentElement.innerHTML = responseText;
-            // All elements with an "id" attribute within this structure have to
-            // be renamed to make sure their id does not conflict with other elements
-            // in the main document (such as elements of another instance of the
-            // same external component), when they are appended. Therefore prefix
-            // their id with the name of this component. (which is unique within
-            // a game screen, and is prefixed with the name of the game screen,
-            // which is uniqe within the game, thus fulfilling the requirement of
-            // overall uniqueness)
-            namedElements = this._model.body.querySelectorAll("[id]");
-            for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
-            }
+        // if needed, initiate the request to get the HTML source file
+        _requestModelForSource(this._htmlFilename, function () {
             if (this._cssLoaded === true) {
                 this._onModelLoad();
                 this.setToReady();
@@ -269,16 +343,28 @@ define([
      */
     ExternalComponent.prototype.appendToPage = function (parentNode) {
         var appendToPageFunction = function () {
-            this._rootElement = parentNode.appendChild(document.importNode(this._model.body.firstElementChild, true));
+            var namedElements, i;
+            this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).body.firstElementChild, true));
             this._rootElementDefaultDisplayMode = this._rootElement.style.display;
+            // All elements with an "id" attribute within this structure have to
+            // be renamed to make sure their id does not conflict with other elements
+            // in the main document (such as elements of another instance of the
+            // same external component), when they are appended. Therefore prefix
+            // their id with the name of this component. (which is unique within
+            // a game screen, and is prefixed with the name of the game screen,
+            // which is uniqe within the game, thus fulfilling the requirement of
+            // overall uniqueness)
+            namedElements = this._rootElement.querySelectorAll("[id]");
+            for (i = 0; i < namedElements.length; i++) {
+                namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
+            }
             this._initializeComponents();
-            this.setToReady();
         }.bind(this);
         if (!parentNode) {
             parentNode = document.body;
         }
         // if we have built up the model of the screen already, then load it
-        if (this._model !== null) {
+        if (_isModelLoadedForSource(this._htmlFilename)) {
             appendToPageFunction();
             // if not yet, set the callback function which fires when the model is 
             // loaded
@@ -302,8 +388,10 @@ define([
      */
     ExternalComponent.prototype._initializeComponents = function () {
         var i;
-        for (i = 0; i < this._simpleComponents.length; i++) {
-            this._simpleComponents[i].initComponent();
+        if (this._rootElement) {
+            for (i = 0; i < this._simpleComponents.length; i++) {
+                this._simpleComponents[i].initComponent();
+            }
         }
     };
     /**
@@ -311,13 +399,13 @@ define([
      * (it is possible, if the child element was given an ID that is a valid translation key)
      */
     ExternalComponent.prototype.updateComponents = function () {
-        var i, elements;
+        var i, namedElements;
         if (this._rootElement) {
-            elements = this._rootElement.querySelectorAll("[id]");
-            for (i = 0; i < elements.length; i++) {
-                elements[i].innerHTML = strings.get({
-                    name: this._getOriginalElementID(elements[i]),
-                    defaultValue: elements[i].innerHTML
+            namedElements = this._rootElement.querySelectorAll("[id]");
+            for (i = 0; i < namedElements.length; i++) {
+                namedElements[i].innerHTML = strings.get({
+                    name: this._getOriginalElementID(namedElements[i]),
+                    defaultValue: namedElements[i].innerHTML
                 });
             }
         }
@@ -351,45 +439,51 @@ define([
      * Sets the display CSS property of the root element of the component to show it.
      */
     ExternalComponent.prototype.show = function () {
-        this.executeWhenReady(function () {
+        if (this._rootElement) {
             this._rootElement.style.display = this._rootElementDefaultDisplayMode;
-        }.bind(this));
+        } else {
+            application.log("WARNING! Attempting to show external component " + this._name + " before appending it to the page!");
+        }
     };
     /**
      * Sets the display CSS property of the root element of the component to hide it.
      */
     ExternalComponent.prototype.hide = function () {
-        this.executeWhenReady(function () {
+        if (this._rootElement) {
             this._rootElement.style.display = "none";
-        }.bind(this));
+        } else {
+            application.log("WARNING! Attempting to hide external component " + this._name + " before appending it to the page!");
+        }
     };
     // #########################################################################
     /**
      * @class A loading box component, that has a title, a progress bar and a status
-     * message.
+     * message. Hidden upon initialization by default.
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
      * @param {String} cssFilename See ExternalComponent.
-     * @param {String} [headerID]
+     * @param {String} [headerID] If given, the header element will get this ID
+     * (prefixed with the component name), making it possible to auto-translate it
+     * using the same string key as this ID
      */
     function LoadingBox(name, htmlFilename, cssFilename, headerID) {
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
-         * A wrapper for the HTML5 progress element contained in the loading box.
          * @type SimpleComponent
          */
-        this._progress = this.registerSimpleComponent("progress");
-        /**
-         * A wrapper for the HTML p element contained in the loading box.
-         * @type SimpleComponent
-         */
-        this._status = this.registerSimpleComponent("status");
+        this._progress = this.registerSimpleComponent(LOADING_BOX_PROGRESS_ID);
         /**
          * @type SimpleComponent
          */
-        this._header = this.registerSimpleComponent("header");
+        this._status = this.registerSimpleComponent(LOADING_BOX_STATUS_PARAGRAPH_ID);
         /**
+         * @type SimpleComponent
+         */
+        this._header = this.registerSimpleComponent(LOADING_BOX_HEADER_ID);
+        /**
+         * If set, the header element gets this ID (prefixed with the component 
+         * name), making it possible to auto-translate it using the same string key as this ID
          * @type String
          */
         this._headerID = headerID;
@@ -397,68 +491,97 @@ define([
     LoadingBox.prototype = new ExternalComponent();
     LoadingBox.prototype.constructor = LoadingBox;
     /**
+     * @override
      * Initializes the contained simple components and hides the box.
      */
     LoadingBox.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
-        if (this._headerID) {
-            this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+        if (this._rootElement) {
+            if (this._headerID) {
+                this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+            }
+            this.hide();
         }
-        this.hide();
+    };
+    /**
+     * Updates the maximum value of the progress bar shown on the loading box.
+     * @param {Number} value 
+     */
+    LoadingBox.prototype.setMaxProgress = function (value) {
+        if (this._rootElement) {
+            this._progress.getElement().max = value;
+        } else {
+            application.log("WARNING! Attempting to update the maximum progress value of loading box" + this._name + " before appending it to the page!");
+        }
     };
     /**
      * Updates the value of the progress bar shown on the loading box.
      * @param {Number} value The new value of the progress bar.
      */
     LoadingBox.prototype.updateProgress = function (value) {
-        this.executeWhenReady(function () {
+        if (this._rootElement) {
             this._progress.getElement().value = value;
-        }.bind(this));
+        } else {
+            application.log("WARNING! Attempting to update the progress value of loading box" + this._name + " before appending it to the page!");
+        }
     };
     /**
-     * Updates the status message shown on the loading box.
+     * Updates the status message, and optionally the progress value shown on the loading box.
      * @param {String} status The new status to show.
+     * @param {Object} [replacements] If given the status string will be considered a format string, and its
+     * placeholders will be replaced according to the properties of this object
+     * @param {Number} [progress] The new progress value to show
      */
-    LoadingBox.prototype.updateStatus = function (status) {
-        this.executeWhenReady(function () {
-            this._status.setContent(status);
-        }.bind(this));
+    LoadingBox.prototype.updateStatus = function (status, replacements, progress) {
+        if (this._rootElement) {
+            this._status.setContent(status, replacements);
+            if (progress !== undefined) {
+                this.updateProgress(progress);
+            }
+        } else {
+            application.log("WARNING! Attempting to update the status message of loading box" + this._name + " before appending it to the page!");
+        }
     };
     // #########################################################################
     /**
      * @class An info box component, that has a title, and a message to tell to the
-     * user and appears in the middle of the screen (the corresponding stylesheet 
-     * needs to be statically referenced in the head of index.html as of now)
+     * user. Hidden upon initialization by default.
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
      * @param {String} cssFilename See ExternalComponent.
      * @param {Function} [onShow] The function to execute every time the box is shown.
      * @param {Function} [onHide] The function to execute every time the box is hidden.
-     * @param {String} [headerID]
-     * @param {String} [okButtonID]
+     * @param {String} [headerID] If given, the header element will get this ID
+     * (prefixed with the component name), making it possible to auto-translate it
+     * using the same string key as this ID
+     * @param {String} [okButtonID] If given, the OK button element will get this ID
+     * (prefixed with the component name), making it possible to auto-translate it
+     * using the same string key as this ID
      */
     function InfoBox(name, htmlFilename, cssFilename, onShow, onHide, headerID, okButtonID) {
         ExternalComponent.call(this, name, htmlFilename, cssFilename);
         /**
-         * A wrapper for the HTML p element in the info box, that shows the message.
          * @type SimpleComponent
          */
-        this._message = this.registerSimpleComponent("message");
-        /**
-         * A wrapper for the a element in the info box that represents the OK button.
-         * @type SimpleComponent
-         */
-        this._okButton = this.registerSimpleComponent("okButton");
+        this._message = this.registerSimpleComponent(INFO_BOX_MESSAGE_PARAGRAPH_ID);
         /**
          * @type SimpleComponent
          */
-        this._header = this.registerSimpleComponent("header");
+        this._okButton = this.registerSimpleComponent(INFO_BOX_OK_BUTTON_ID);
         /**
+         * @type SimpleComponent
+         */
+        this._header = this.registerSimpleComponent(INFO_BOX_HEADER_ID);
+        /**
+         * If set, the header element gets this ID (prefixed with the component name), making
+         * it possible to auto-translate it using the same string key as this ID
          * @type String
          */
         this._headerID = headerID;
         /**
+         * If set, the OK button element gets this ID (prefixed with the component name), making
+         * it possible to auto-translate it using the same string key as this ID
          * @type String
          */
         this._okButtonID = okButtonID;
@@ -476,12 +599,12 @@ define([
          * A keyboard event handler that can be added to the document when the box is
          * shown to allow closing it by pressing enter, not just clicking on the button.
          * This needs to be a privileged method so that it can always access the 
-         * original info box object through 'self', no matter where is it called from.
+         * original info box instance, no matter where is it called from.
          * @type Function
          * @param {KeyboardEvent} event
          */
         this._handleKeyUp = function (event) {
-            if (event.keyCode === 13) {
+            if (event.keyCode === ENTER_CODE) {
                 this.hide();
             }
         }.bind(this);
@@ -494,19 +617,21 @@ define([
      */
     InfoBox.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
-        if (this._headerID) {
-            this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+        if (this._rootElement) {
+            if (this._headerID) {
+                this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+            }
+            if (this._okButtonID) {
+                this._okButton.rename(this._name + ELEMENT_ID_SEPARATOR + this._okButtonID);
+            }
+            this._okButton.getElement().onclick = function () {
+                this.hide();
+                return false;
+            }.bind(this);
+            // at initialization, do not yet run the onHide function, since the box has
+            // not been shown yet
+            ExternalComponent.prototype.hide.call(this);
         }
-        if (this._okButtonID) {
-            this._okButton.rename(this._name + ELEMENT_ID_SEPARATOR + this._okButtonID);
-        }
-        this._okButton.getElement().onclick = function () {
-            this.hide();
-            return false;
-        }.bind(this);
-        // at initialization, do not yet run the onHide function, since the box has
-        // not been shown yet
-        ExternalComponent.prototype.hide.call(this);
     };
     /**
      * Shows the info box and executes the _onShow function. (if set)
@@ -514,7 +639,7 @@ define([
     InfoBox.prototype.show = function () {
         ExternalComponent.prototype.show.call(this);
         document.addEventListener("keyup", this._handleKeyUp);
-        if (this._onShow !== null) {
+        if (this._onShow) {
             this._onShow();
         }
     };
@@ -524,18 +649,22 @@ define([
     InfoBox.prototype.hide = function () {
         ExternalComponent.prototype.hide.call(this);
         document.removeEventListener("keyup", this._handleKeyUp);
-        if (this._onHide !== null) {
+        if (this._onHide) {
             this._onHide();
         }
     };
     /**
      * Updates the message shown on the info box.
      * @param {String} message The new message to show.
+     * @param {Object} [replacements] If given the status string will be considered a format string, and its
+     * placeholders will be replaced according to the properties of this object
      */
-    InfoBox.prototype.updateMessage = function (message) {
-        this.executeWhenReady(function () {
-            this._message.setContent(message);
-        }.bind(this));
+    InfoBox.prototype.updateMessage = function (message, replacements) {
+        if (this._rootElement) {
+            this._message.setContent(message, replacements);
+        } else {
+            application.log("WARNING! Attempting to update the message of info box" + this._name + " before appending it to the page!");
+        }
     };
     // #########################################################################
     /**
@@ -589,22 +718,24 @@ define([
     MenuComponent.prototype._initializeComponents = function () {
         var i, aElement, liElement;
         ExternalComponent.prototype._initializeComponents.call(this);
-        for (i = 0; i < this._menuOptions.length; i++) {
-            aElement = document.createElement("a");
-            if (this._menuOptions[i].id) {
-                aElement.id = this._name + ELEMENT_ID_SEPARATOR + this._menuOptions[i].id;
+        if (this._rootElement) {
+            for (i = 0; i < this._menuOptions.length; i++) {
+                aElement = document.createElement("a");
+                if (this._menuOptions[i].id) {
+                    aElement.id = this._name + ELEMENT_ID_SEPARATOR + this._menuOptions[i].id;
+                }
+                aElement.href = "#";
+                aElement.className = "menu button";
+                aElement.innerHTML = this._menuOptions[i].caption || strings.get({name: this._menuOptions[i].id});
+                // we need to generate an appropriate handler function here for each
+                // menu element (cannot directly create it here as they would all use
+                // the same index as i would be a closure)
+                aElement.onclick = this.getMenuClickHandler(i);
+                liElement = document.createElement("li");
+                liElement.className = "transparentContainer";
+                liElement.appendChild(aElement);
+                this._rootElement.appendChild(liElement);
             }
-            aElement.href = "#";
-            aElement.className = "menu button";
-            aElement.innerHTML = this._menuOptions[i].caption || strings.get({name: this._menuOptions[i].id});
-            // we need to generate an appropriate handler function here for each
-            // menu element (cannot directly create it here as they would all use
-            // the same index as i would be a closure)
-            aElement.onclick = this.getMenuClickHandler(i);
-            liElement = document.createElement("li");
-            liElement.className = "transparentContainer";
-            liElement.appendChild(aElement);
-            this._rootElement.appendChild(liElement);
         }
     };
     // #########################################################################
@@ -665,16 +796,18 @@ define([
      */
     Selector.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
-        if (this._propertyLabelDescriptor.id) {
-            this._propertyLabel.rename(this._name + ELEMENT_ID_SEPARATOR + this._propertyLabelDescriptor.id);
+        if (this._rootElement) {
+            if (this._propertyLabelDescriptor.id) {
+                this._propertyLabel.rename(this._name + ELEMENT_ID_SEPARATOR + this._propertyLabelDescriptor.id);
+            }
+            this._propertyLabel.setContent(this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}));
+            this._valueSelector.setContent(this._valueList[0]);
+            this._valueIndex = 0;
+            this._valueSelector.getElement().onclick = function () {
+                this.selectNextValue();
+                return false;
+            }.bind(this);
         }
-        this._propertyLabel.setContent(this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}));
-        this._valueSelector.setContent(this._valueList[0]);
-        this._valueIndex = 0;
-        this._valueSelector.getElement().onclick = function () {
-            this.selectNextValue();
-            return false;
-        }.bind(this);
     };
     /**
      * Selects the value given as parameter from the list of available values.
@@ -746,6 +879,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
         SimpleComponent: SimpleComponent,
         LoadingBox: LoadingBox,
         InfoBox: InfoBox,
