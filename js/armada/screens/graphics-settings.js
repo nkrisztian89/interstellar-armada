@@ -59,7 +59,7 @@ define([
              * @type String[][2]
              */
             _getTextureQualitySettingValues = function () {
-                return utils.getEnumValues(graphics.getTextureQualityPreferenceList()).reverse().map(_getMapToCaptionAndValueFunction(strings.SETTING));
+                return utils.getEnumValues(graphics.getTextureQualities()).reverse().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * In the same format as the other value arrays
@@ -212,7 +212,7 @@ define([
                 new components.Selector(
                         armadaScreens.GRAPHICS_SCREEN_NAME + nameSuffix,
                         armadaScreens.SELECTOR_SOURCE,
-                        armadaScreens.SELECTOR_CSS,
+                        {cssFilename: armadaScreens.SELECTOR_CSS},
                         {id: propertyLabelID},
                         valueList),
                 OPTION_PARENT_ID);
@@ -298,6 +298,13 @@ define([
             this._shadowQualitySelector.selectValueWithIndex(findIndexOf(graphics.getShadowQuality(), _getShadowQualitySettingValues()));
             this._shadowDistanceSelector.selectValueWithIndex(findIndexOf(graphics.getShadowDistance(), _getShadowDistanceSettingValues()));
         }.bind(this));
+    };
+    /**
+     * @override
+     */
+    GraphicsScreen.prototype.show = function () {
+        screens.HTMLScreen.prototype.show.call(this);
+        this._updateValues();
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

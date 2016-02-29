@@ -642,7 +642,17 @@ define([
          * The component generating the HTML menu.
          * @type MenuComponent
          */
-        this._menuComponent = this.registerExternalComponent(new components.MenuComponent(name + "_menu", "menucomponent.html", this._menuOptions), this._menuContainerID);
+        this._menuComponent = this.registerExternalComponent(
+                new components.MenuComponent(
+                        name + "_menu",
+                        "menucomponent.html",
+                        {
+                            menuClassName: "menu",
+                            buttonClassName: "button",
+                            buttonContainerClassName: "transparentContainer"
+                        },
+                        this._menuOptions),
+                this._menuContainerID);
     }
     MenuScreen.prototype = new HTMLScreen();
     MenuScreen.prototype.constructor = MenuScreen;

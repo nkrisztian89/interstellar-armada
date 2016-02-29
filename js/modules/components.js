@@ -23,11 +23,19 @@ define([
 ], function (utils, application, asyncResource, strings) {
     "use strict";
     /**
-     * @typedef ModelLoadInfoObject
+     * @typedef {Object} Components~ModelLoadInfoObject
      * Stores a model and its loading state
      * @property {Boolean} requested
      * @property {HTMLDocument} model
      * @property {Function[]} onLoadQueue
+     */
+    /**
+     * @typedef {Object} Components~LabelDescriptor
+     * Stores the data based on which the text of an HTML element that is used as a
+     * label can be determined.
+     * @property {String} [caption] A static caption to be used on the label.
+     * @property {String} [id] An ID that can be used as a translation key for the
+     * text on the label for auto-translation.
      */
     var
             // ------------------------------------------------------------------------------
@@ -50,6 +58,8 @@ define([
             INFO_BOX_MESSAGE_PARAGRAPH_ID = "message",
             INFO_BOX_OK_BUTTON_ID = "okButton",
             INFO_BOX_HEADER_ID = "header",
+            SELECTOR_PROPERTY_LABEL_ID = "property",
+            SELECTOR_VALUE_BUTTON_ID = "value",
             ENTER_CODE = 13,
             // ------------------------------------------------------------------------------
             // constants
@@ -57,7 +67,7 @@ define([
              * Stores the loaded DOM models and their associated loading states and queued
              * functions for each HTML file that the components use, by the names of the
              * files
-             * @type Object.<String, ModelLoadInfoObject>
+             * @type Object.<String, Components~ModelLoadInfoObject>
              */
             _modelLoadInfo = {};
     // ------------------------------------------------------------------------------
@@ -119,12 +129,31 @@ define([
             // in the execution queue
             if (!_isModelLoadedForSource(sourceFileName)) {
                 _modelLoadInfo[sourceFileName].onLoadQueue.push(callback);
-            }
-            // if we have the model already, execute the callback right away
-            if (callback) {
-                callback();
+            } else {
+                // if we have the model already, execute the callback right away
+                if (callback) {
+                    callback();
+                }
             }
         }
+    }
+    /**
+     * Returns the text that should be shown on a label that uses the passed descriptor.
+     * @param {Components~LabelDescriptor} labelDescriptor
+     * @returns {String}
+     */
+    function _getLabelText(labelDescriptor) {
+        return labelDescriptor.caption || strings.get({name: labelDescriptor.id});
+    }
+    // ------------------------------------------------------------------------------
+    // public functions
+    /**
+     * Deletes the references to DOM models stored for external component sources files.
+     * After all components have been added to the page, these models become unnecessary
+     * and can be deleted.
+     */
+    function clearStoredDOMModels() {
+        _modelLoadInfo = {};
     }
     // #########################################################################
     /**
@@ -234,6 +263,13 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Object} ExternalComponent~Style
+     * A style descriptor for an external component storing the name of the CSS file
+     * associated with the component as well as class names for dynamically created
+     * HTML elements.
+     * @property {String} cssFilename
+     */
+    /**
      * @class A reusable component that consist of HTML elements (a fragment of a 
      * HTML document, stored in an external file, hence the name) and can be appended 
      * to screens. Specific components can be the descendants of this 
@@ -244,10 +280,11 @@ define([
      * @param {String} htmlFilename The filename of the HTML document where the structure
      * of the component should be defined. The component will be loaded as the first
      * element (and all its children) inside the body tag of this file.
-     * @param {String} [cssFilename] The filename of the CSS document which contains
-     * styling rules for the HTML elements of this component.
+     * @param {ExternalComponent~Style} [style] An object storing the name of the CSS
+     * file that contains the styling rules and for this component and the desired classes for  
+     * dynamically created elements.
      */
-    function ExternalComponent(name, htmlFilename, cssFilename) {
+    function ExternalComponent(name, htmlFilename, style) {
         asyncResource.AsyncResource.call(this);
         /**
          * The name of the component to be identified by.
@@ -259,6 +296,12 @@ define([
          * @type String
          */
         this._htmlFilename = htmlFilename;
+        /**
+         * An object storing the name of the CSS file that contains the styling rules and for this 
+         * components and the desired classes for dynamically created elements.
+         * @type ExternalComponent~Style
+         */
+        this._style = style || {};
         /**
          * The root HTML element of the structure of this component on the screen it has been added to.
          * @type HTMLElement
@@ -277,15 +320,6 @@ define([
          */
         this._cssLoaded = false;
         /**
-         * A function to be executed automatically when the model is loaded from the 
-         * external HTML file. Private, as this is automatically set to initialization
-         * in case that is attempted before model load.
-         * @type Function
-         */
-        this._onModelLoad = function () {
-            application.log("External component '" + this._name + "' has been loaded, with no onLoad handler set.", 3);
-        };
-        /**
          * The array of contained simple components. The components in this array
          * are automatically managed (initialization and reset).
          * @type SimpleComponent[]
@@ -295,7 +329,7 @@ define([
         // parameters, therefore make sure we don't attempt to load from "undefined"
         // source.
         if (htmlFilename) {
-            this.requestModelLoad(cssFilename);
+            this.requestModelLoad();
         }
     }
     ExternalComponent.prototype = new asyncResource.AsyncResource();
@@ -303,15 +337,13 @@ define([
     /**
      * Initiates the asynchronous loading of the component's structure from the
      * external HTML file and potential styling from the external CSS style.
-     * @param {String} [cssFilename] The filename of the CSS document which contains
-     * styling rules for the HTML elements of this component.
      */
-    ExternalComponent.prototype.requestModelLoad = function (cssFilename) {
+    ExternalComponent.prototype.requestModelLoad = function () {
         var cssLink;
         // If specified, add a <link> tag pointing to the CSS file containing the 
         // styling of this component. Also check if the CSS file has already been 
         // linked, and only add it if not.
-        if ((cssFilename !== undefined) && (document.head.querySelectorAll("link[href='" + application.getFileURL("css", cssFilename) + "']").length === 0)) {
+        if (this._style.cssFilename && (document.head.querySelectorAll("link[href='" + application.getFileURL("css", this._style.cssFilename) + "']").length === 0)) {
             this._cssLoaded = false;
             cssLink = document.createElement("link");
             cssLink.setAttribute("rel", "stylesheet");
@@ -319,11 +351,10 @@ define([
             cssLink.onload = function () {
                 this._cssLoaded = true;
                 if (_isModelLoadedForSource(this._htmlFilename)) {
-                    this._onModelLoad();
                     this.setToReady();
                 }
             }.bind(this);
-            cssLink.href = application.getFileURL("css", cssFilename);
+            cssLink.href = application.getFileURL("css", this._style.cssFilename);
             document.head.appendChild(cssLink);
         } else {
             this._cssLoaded = true;
@@ -331,46 +362,34 @@ define([
         // if needed, initiate the request to get the HTML source file
         _requestModelForSource(this._htmlFilename, function () {
             if (this._cssLoaded === true) {
-                this._onModelLoad();
                 this.setToReady();
             }
         }.bind(this));
     };
     /**
-     * Appends the component's elements to the current document.
-     * @param {Node} [parentNode=document.body] The component will be appended 
-     * as child of this node.
+     * Appends the component's elements to the current document. This is called by the addExternalComponent
+     * method of the screens when they are added to the page, which happens only after the DOM models for
+     * the screen and all its components have been loaded. Do not call this manually.
+     * @param {Node} [parentNode=document.body] The component will be appended as child of this node.
      */
     ExternalComponent.prototype.appendToPage = function (parentNode) {
-        var appendToPageFunction = function () {
-            var namedElements, i;
-            this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).body.firstElementChild, true));
-            this._rootElementDefaultDisplayMode = this._rootElement.style.display;
-            // All elements with an "id" attribute within this structure have to
-            // be renamed to make sure their id does not conflict with other elements
-            // in the main document (such as elements of another instance of the
-            // same external component), when they are appended. Therefore prefix
-            // their id with the name of this component. (which is unique within
-            // a game screen, and is prefixed with the name of the game screen,
-            // which is uniqe within the game, thus fulfilling the requirement of
-            // overall uniqueness)
-            namedElements = this._rootElement.querySelectorAll("[id]");
-            for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
-            }
-            this._initializeComponents();
-        }.bind(this);
-        if (!parentNode) {
-            parentNode = document.body;
+        var namedElements, i;
+        parentNode = parentNode || document.body;
+        this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).body.firstElementChild, true));
+        this._rootElementDefaultDisplayMode = this._rootElement.style.display;
+        // All elements with an "id" attribute within this structure have to
+        // be renamed to make sure their id does not conflict with other elements
+        // in the main document (such as elements of another instance of the
+        // same external component), when they are appended. Therefore prefix
+        // their id with the name of this component. (which is unique within
+        // a game screen, and is prefixed with the name of the game screen,
+        // which is uniqe within the game, thus fulfilling the requirement of
+        // overall uniqueness)
+        namedElements = this._rootElement.querySelectorAll("[id]");
+        for (i = 0; i < namedElements.length; i++) {
+            namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
         }
-        // if we have built up the model of the screen already, then load it
-        if (_isModelLoadedForSource(this._htmlFilename)) {
-            appendToPageFunction();
-            // if not yet, set the callback function which fires when the model is 
-            // loaded
-        } else {
-            this._onModelLoad = appendToPageFunction;
-        }
+        this._initializeComponents();
     };
     /**
      * Returns the ID of the passed element without the prefix referencing to this component
@@ -392,6 +411,8 @@ define([
             for (i = 0; i < this._simpleComponents.length; i++) {
                 this._simpleComponents[i].initComponent();
             }
+        } else {
+            application.log("WARNING! Attempting to initaialize external component " + this._name + " before appending it to the page! It will be initialized automatically once it is added.");
         }
     };
     /**
@@ -408,6 +429,8 @@ define([
                     defaultValue: namedElements[i].innerHTML
                 });
             }
+        } else {
+            application.log("WARNING! Attempting to update external component " + this._name + " before appending it to the page!");
         }
     };
     /**
@@ -462,13 +485,13 @@ define([
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
-     * @param {String} cssFilename See ExternalComponent.
+     * @param {ExternalComponent~Style} [style] See ExternalComponent.
      * @param {String} [headerID] If given, the header element will get this ID
      * (prefixed with the component name), making it possible to auto-translate it
      * using the same string key as this ID
      */
-    function LoadingBox(name, htmlFilename, cssFilename, headerID) {
-        ExternalComponent.call(this, name, htmlFilename, cssFilename);
+    function LoadingBox(name, htmlFilename, style, headerID) {
+        ExternalComponent.call(this, name, htmlFilename, style);
         /**
          * @type SimpleComponent
          */
@@ -549,7 +572,7 @@ define([
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
-     * @param {String} cssFilename See ExternalComponent.
+     * @param {ExternalComponent~Style} [style] See ExternalComponent.
      * @param {Function} [onShow] The function to execute every time the box is shown.
      * @param {Function} [onHide] The function to execute every time the box is hidden.
      * @param {String} [headerID] If given, the header element will get this ID
@@ -559,8 +582,8 @@ define([
      * (prefixed with the component name), making it possible to auto-translate it
      * using the same string key as this ID
      */
-    function InfoBox(name, htmlFilename, cssFilename, onShow, onHide, headerID, okButtonID) {
-        ExternalComponent.call(this, name, htmlFilename, cssFilename);
+    function InfoBox(name, htmlFilename, style, onShow, onHide, headerID, okButtonID) {
+        ExternalComponent.call(this, name, htmlFilename, style);
         /**
          * @type SimpleComponent
          */
@@ -668,25 +691,26 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {Object} MenuComponent~MenuOption
-     * @property {String} [caption]
-     * @property {String} [id] If given, will be used as translation key to update the menu option's caption when the component is updated
-     * @property {Function} action
+     * @typedef {ExternalComponent~Style} MenuComponent~Style
+     * @property {String} menuClassName
+     * @property {String} buttonClassName
+     * @property {String} buttonContainerClassName
+     */
+    /**
+     * @typedef {Components~LabelDescriptor} MenuComponent~MenuOption
+     * @property {Function} action The function to execute 
      */
     /**
      * @class A component that consists of a container and a list of menu options
-     * inside, which execute given functions when clicked on. As this component
-     * only contains a transparent container and links with a fixed button style
-     * (that is used elsewhere as well), no CSS file can be specified to style it.
+     * inside, which execute given functions when clicked on
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
-     * @param {String} htmlFilename See ExternalComponent.
-     * @param {MenuComponent~MenuOption[]} menuOptions An array of the available menu options, each
-     * described by an object with a caption (String) and an action (Function) 
-     * property.
+     * @param {String} htmlFilename See ExternalComponent
+     * @param {MenuComponent~Style} [style] See ExternalComponent
+     * @param {MenuComponent~MenuOption[]} menuOptions An array of the available menu options
      */
-    function MenuComponent(name, htmlFilename, menuOptions) {
-        ExternalComponent.call(this, name, htmlFilename);
+    function MenuComponent(name, htmlFilename, style, menuOptions) {
+        ExternalComponent.call(this, name, htmlFilename, style);
         /**
          * An array of the available menu options, each described by an object with 
          * a caption (String) and an action (Function) property.
@@ -725,14 +749,14 @@ define([
                     aElement.id = this._name + ELEMENT_ID_SEPARATOR + this._menuOptions[i].id;
                 }
                 aElement.href = "#";
-                aElement.className = "menu button";
-                aElement.innerHTML = this._menuOptions[i].caption || strings.get({name: this._menuOptions[i].id});
+                aElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "");
+                aElement.innerHTML = _getLabelText(this._menuOptions[i]);
                 // we need to generate an appropriate handler function here for each
                 // menu element (cannot directly create it here as they would all use
                 // the same index as i would be a closure)
                 aElement.onclick = this.getMenuClickHandler(i);
                 liElement = document.createElement("li");
-                liElement.className = "transparentContainer";
+                liElement.className = (this._style.buttonContainerClassName || "");
                 liElement.appendChild(aElement);
                 this._rootElement.appendChild(liElement);
             }
@@ -742,22 +766,23 @@ define([
     /**
      * @class A component that consists of a label describing a property, and a
      * button that can be clicked to select from a list of possible values for that
-     * property. (for smaller amount of possible values, as each click will show
-     * the next value, and when the last is reached, the cycle will begin again)
+     * property. (suitable for properties with a small amount of possible values, 
+     * as each click will show the next value, and when the last is reached, the 
+     * cycle will begin again)
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
-     * @param {String} cssFilename See ExternalComponent.
-     * @param {{caption: String, id: String}} propertyLabelDescriptor The caption and id of the property label element that is displayed on this
+     * @param {ExternalComponent~Style} [style] See ExternalComponent.
+     * @param {Components~LabelDescriptor} propertyLabelDescriptor The caption and id of the property label element that is displayed on this
      * selector, indicating what property can be set with it
      * @param {String[]} valueList The list of possible values that can be selected
      * for the property.
      */
-    function Selector(name, htmlFilename, cssFilename, propertyLabelDescriptor, valueList) {
-        ExternalComponent.call(this, name, htmlFilename, cssFilename);
+    function Selector(name, htmlFilename, style, propertyLabelDescriptor, valueList) {
+        ExternalComponent.call(this, name, htmlFilename, style);
         /**
          * The name of the property that can be set using this selector.
-         * @type {caption: String, id: String}
+         * @type Components~LabelDescriptor
          */
         this._propertyLabelDescriptor = propertyLabelDescriptor;
         /**
@@ -775,13 +800,13 @@ define([
          * this selector sets.
          * @type SimpleComponent
          */
-        this._propertyLabel = this.registerSimpleComponent("property");
+        this._propertyLabel = this.registerSimpleComponent(SELECTOR_PROPERTY_LABEL_ID);
         /**
          * A wrapper for the HTML element which serves as the selector button to select
          * from the available values.
          * @type SimpleComponent
          */
-        this._valueSelector = this.registerSimpleComponent("value");
+        this._valueSelector = this.registerSimpleComponent(SELECTOR_VALUE_BUTTON_ID);
         /**
          * A function to execute when the selected value has been changed.
          * @type Function
@@ -800,7 +825,7 @@ define([
             if (this._propertyLabelDescriptor.id) {
                 this._propertyLabel.rename(this._name + ELEMENT_ID_SEPARATOR + this._propertyLabelDescriptor.id);
             }
-            this._propertyLabel.setContent(this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}));
+            this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
             this._valueSelector.setContent(this._valueList[0]);
             this._valueIndex = 0;
             this._valueSelector.getElement().onclick = function () {
@@ -814,7 +839,7 @@ define([
      * @param {String} value
      */
     Selector.prototype.selectValue = function (value) {
-        this.executeWhenReady(function () {
+        if (this._rootElement) {
             var i = 0;
             while ((i < this._valueList.length) && (this._valueList[i] !== value)) {
                 i++;
@@ -824,14 +849,16 @@ define([
             } else {
                 application.showError("Attempted to select value: '" + value + "' for '" + this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}) + "', which is not one of the available options.", "minor");
             }
-        });
+        } else {
+            application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
+        }
     };
     /**
      * Selects the value with the passed index from the list.
      * @param {Number} index
      */
     Selector.prototype.selectValueWithIndex = function (index) {
-        this.executeWhenReady(function () {
+        if (this._rootElement) {
             if (this._valueList.length > index) {
                 this._valueIndex = index;
                 this._valueSelector.setContent(this._valueList[this._valueIndex]);
@@ -841,7 +868,9 @@ define([
             } else {
                 application.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1), "minor");
             }
-        });
+        } else {
+            application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
+        }
     };
     /**
      * Returns the currently selected value.
@@ -862,9 +891,7 @@ define([
      * selects the first one.
      */
     Selector.prototype.selectNextValue = function () {
-        this.executeWhenReady(function () {
-            this.selectValueWithIndex((this._valueIndex + 1) % this._valueList.length);
-        });
+        this.selectValueWithIndex((this._valueIndex + 1) % this._valueList.length);
     };
     /**
      * 
@@ -880,6 +907,7 @@ define([
     // The public interface of the module
     return {
         ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
+        clearStoredDOMModels: clearStoredDOMModels,
         SimpleComponent: SimpleComponent,
         LoadingBox: LoadingBox,
         InfoBox: InfoBox,

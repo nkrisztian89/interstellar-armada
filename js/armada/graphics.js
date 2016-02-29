@@ -55,10 +55,10 @@ define([
              */
             DEFAULT_FILTERING = managedGL.TextureFiltering.BILINEAR,
             /**
-             * The default texture quality preference list
+             * The default texture quality options
              * @type String[]
              */
-            DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST = ["high", "medium", "low"],
+            DEFAULT_TEXTURE_QUALITIES = ["low", "medium", "high"],
             /**
              * The default shader complexity setting
              * @type String
@@ -146,7 +146,12 @@ define([
          */
         this._textureQuality = null;
         /**
-         * The currenalt set texture quality preference list.
+         * The list of all available texture qualities, in ascending order.
+         * @type String[]
+         */
+        this._textureQualities = null;
+        /**
+         * The currently set texture quality preference list.
          * @type String[]
          */
         this._textureQualityPreferenceList = null;
@@ -195,6 +200,26 @@ define([
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
     /**
+     */
+    GraphicsContext.prototype._updateTextureQualityPreferenceList = function () {
+        var i, adding = false;
+        this._textureQualityPreferenceList = [];
+        for (i = this._textureQualities.length - 1; i >= 0; i--) {
+            if (this._textureQualities[i] === this._textureQuality) {
+                adding = true;
+            }
+            if (adding) {
+                this._textureQualityPreferenceList.push(this._textureQualities[i]);
+            }
+        }
+        for (i = this._textureQualities.length - 1; i >= 0; i--) {
+            if (this._textureQualities[i] === this._textureQuality) {
+                return;
+            }
+            this._textureQualityPreferenceList.push(this._textureQualities[i]);
+        }
+    };
+    /**
      * Loads the graphics setting from the data stored in the passed JSON object.
      * @param {Object} dataJSON The JSON object storing the game settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
@@ -211,8 +236,9 @@ define([
         // set the default settings
         this._antialiasing = DEFAULT_ANTIALIASING;
         this._filtering = DEFAULT_FILTERING;
-        this._textureQualityPreferenceList = DEFAULT_TEXTURE_QUALITY_PREFERENCE_LIST;
-        this._textureQuality = this._textureQualityPreferenceList[0];
+        this._textureQualities = DEFAULT_TEXTURE_QUALITIES;
+        this._textureQuality = this._textureQualities[this._textureQualities[this._textureQualities.length - 1]];
+        this._updateTextureQualityPreferenceList();
         this._shaderComplexity = DEFAULT_SHADER_COMPLEXITY;
         this._shadowMappingShaderName = DEFAULT_SHADOW_MAPPING_SHADER_NAME;
         this._shadowMapping = DEFAULT_SHADOW_MAPPING_ENABLED;
@@ -228,19 +254,17 @@ define([
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
             this._filtering = types.getEnumValue("texture filtering", managedGL.TextureFiltering, dataJSON.context.filtering, DEFAULT_FILTERING);
-            if (dataJSON.context.textureQualityPreferenceList) {
-                if (dataJSON.context.textureQualityPreferenceList instanceof Array) {
-                    this._textureQualityPreferenceList = dataJSON.context.textureQualityPreferenceList;
-                    if (dataJSON.context.textureQuality && (dataJSON.context.textureQualityPreferenceList[0] !== dataJSON.context.textureQuality)) {
-                        application.showError("Conflicting graphics setting: a different texture quality is set than the one the preference list starts with!");
-                    }
+            if (dataJSON.context.textureQualities) {
+                if (dataJSON.context.textureQualities instanceof Array) {
+                    this._textureQualities = dataJSON.context.textureQualities;
                 } else {
-                    application.showError("Expected texture quality preference list as an array, instead got " + dataJSON.context.textureQualityPreferenceList.constructor.name + "!");
+                    application.showError("Expected texture quality list as an array, instead got " + dataJSON.context.textureQualities.constructor.name + "!");
                 }
             }
             if (dataJSON.context.textureQuality) {
-                this._textureQuality = types.getEnumValue("texture quality", this._textureQualityPreferenceList, dataJSON.context.textureQuality, this._textureQualityPreferenceList[0]);
+                this._textureQuality = types.getEnumValue("texture quality", this._textureQualities, dataJSON.context.textureQuality, this._textureQualities[this._textureQualities.length - 1]);
             }
+            this._updateTextureQualityPreferenceList();
             this._shadowMapping = types.getBooleanValue("shadow mapping", dataJSON.context.shadowMapping);
             if (this._shadowMapping) {
                 if (typeof dataJSON.context.shadows === "object") {
@@ -356,18 +380,18 @@ define([
         localStorage.interstellarArmada_graphics_filtering = this._filtering;
     };
     /**
+     * Returns the current texture quality list.
+     * @returns {String[]}
+     */
+    GraphicsContext.prototype.getTextureQualities = function () {
+        return this._textureQualities;
+    };
+    /**
      * Returns the current texture quality preference list setting.
      * @returns {String[]}
      */
     GraphicsContext.prototype.getTextureQualityPreferenceList = function () {
         return this._textureQualityPreferenceList;
-    };
-    /**
-     * Sets a new texture quality preference list setting.
-     * @param {String[]} value
-     */
-    GraphicsContext.prototype.setTextureQualityPreferenceList = function (value) {
-        this._textureQualityPreferenceList = value;
     };
     /**
      * Returns the current texture quality setting.
@@ -381,26 +405,10 @@ define([
      * @param {String} value
      */
     GraphicsContext.prototype.setTextureQuality = function (value) {
-        var i, newPreferenceList = [], adding = false;
-        this._textureQuality = types.getEnumValue("texture quality", this._textureQualityPreferenceList, value, this._textureQualityPreferenceList[0]);
+        this._textureQuality = types.getEnumValue("texture quality", this._textureQualities, value, this._textureQualities[this._textureQualities.length - 1]);
         localStorage.interstellarArmada_graphics_textureQuality = this._textureQuality;
-        // creating a new preference list that preserves the same order but starts with the newly set texture quality
-        for (i = 0; i < this._textureQualityPreferenceList.length; i++) {
-            if (this._textureQualityPreferenceList[i] === this._textureQuality) {
-                adding = true;
-            }
-            if (adding) {
-                newPreferenceList.push(this._textureQualityPreferenceList[i]);
-            }
-        }
-        for (i = 0; i < this._textureQualityPreferenceList.length; i++) {
-            if (this._textureQualityPreferenceList[i] === this._textureQuality) {
-                this.setTextureQualityPreferenceList(newPreferenceList);
-                return;
-            }
-            newPreferenceList.push(this._textureQualityPreferenceList[i]);
-        }
-        this.setTextureQualityPreferenceList(newPreferenceList);
+        this._updateTextureQualityPreferenceList();
+
     };
     /**
      * Returns the maximum detail level for which the corresponding model files
@@ -584,6 +592,7 @@ define([
         setAntialiasing: _context.setAntialiasing.bind(_context),
         getFiltering: _context.getFiltering.bind(_context),
         setFiltering: _context.setFiltering.bind(_context),
+        getTextureQualities: _context.getTextureQualities.bind(_context),
         getTextureQuality: _context.getTextureQuality.bind(_context),
         setTextureQuality: _context.setTextureQuality.bind(_context),
         getTextureQualityPreferenceList: _context.getTextureQualityPreferenceList.bind(_context),

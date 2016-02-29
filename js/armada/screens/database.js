@@ -446,7 +446,7 @@ define([
                 new components.LoadingBox(
                         this._name + LOADING_BOX_ID_SUFFIX,
                         armadaScreens.LOADING_BOX_SOURCE,
-                        armadaScreens.LOADING_BOX_CSS,
+                        {cssFilename: armadaScreens.LOADING_BOX_CSS},
                         strings.LOADING.HEADER.name));
     }
     DatabaseScreen.prototype = new screens.HTMLScreenWithCanvases();

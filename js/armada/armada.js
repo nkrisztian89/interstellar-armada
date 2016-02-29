@@ -11,6 +11,7 @@
 
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
+ * @param components Used to clear the cached DOM models of all loaded components after the game has been initialized
  * @param constants Used to access the language setting location in the local storage
  * @param graphics Used to load the graphics settings
  * @param logic Used to load the configuration and settings of the game and access main functionality
@@ -19,12 +20,13 @@
  */
 define([
     "modules/game",
+    "modules/components",
     "armada/constants",
     "armada/graphics",
     "armada/logic",
     "armada/control",
     "armada/strings"
-], function (game, constants, graphics, logic, control, strings) {
+], function (game, components, constants, graphics, logic, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -78,6 +80,7 @@ define([
                 _progressBar.value = 4;
                 game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, function () {
                     _progressBar.value = 5;
+                    components.clearStoredDOMModels();
                     callback();
                 });
             });

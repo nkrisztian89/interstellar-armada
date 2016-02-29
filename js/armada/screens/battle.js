@@ -229,7 +229,7 @@ define([
         this._loadingBox = this.registerExternalComponent(new components.LoadingBox(
                 this._name + LOADING_BOX_ID_SUFFIX,
                 armadaScreens.LOADING_BOX_SOURCE,
-                armadaScreens.LOADING_BOX_CSS,
+                {cssFilename: armadaScreens.LOADING_BOX_CSS},
                 strings.LOADING.HEADER.name));
         /**
          * @type InfoBox
@@ -237,7 +237,7 @@ define([
         this._infoBox = this.registerExternalComponent(new components.InfoBox(
                 this._name + INFO_BOX_ID_SUFFIX,
                 armadaScreens.INFO_BOX_SOURCE,
-                armadaScreens.INFO_BOX_CSS,
+                {cssFilename: armadaScreens.INFO_BOX_CSS},
                 function () {
                     pauseBattle();
                 },

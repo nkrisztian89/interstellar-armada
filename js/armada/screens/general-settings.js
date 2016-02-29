@@ -74,7 +74,7 @@ define([
                 new components.Selector(
                         armadaScreens.GENERAL_SETTINGS_SCREEN_NAME + nameSuffix,
                         armadaScreens.SELECTOR_SOURCE,
-                        armadaScreens.SELECTOR_CSS,
+                        {cssFilename: armadaScreens.SELECTOR_CSS},
                         {id: propertyLabelID},
                         valueList),
                 OPTION_PARENT_ID);
@@ -116,6 +116,13 @@ define([
      */
     GeneralSettingsScreen.prototype._updateValues = function () {
         this._languageSelector.selectValue(game.getLanguage());
+    };
+    /**
+     * @override
+     */
+    GeneralSettingsScreen.prototype.show = function () {
+        screens.HTMLScreen.prototype.show.call(this);
+        this._updateValues();
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
