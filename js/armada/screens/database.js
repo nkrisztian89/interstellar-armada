@@ -55,9 +55,9 @@ define([
             BACK_BUTTON_ID = "backButton",
             PREV_BUTTON_ID = "prevButton",
             NEXT_BUTTON_ID = "nextButton",
-            LOADING_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "loadingBox",
+            LOADING_BOX_ID = "loadingBox",
             DATABASE_CANVAS_NAME = "databaseCanvas",
-            DATABASE_CANVAS_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + DATABASE_CANVAS_NAME,
+            DATABASE_CANVAS_ID = DATABASE_CANVAS_NAME,
             LOADING_INITIAL_PROGRESS = 15,
             LOADING_RESOURCES_START_PROGRESS = 15,
             LOADING_RESOURCE_PROGRESS = 60,
@@ -409,6 +409,11 @@ define([
         screens.HTMLScreenWithCanvases.call(this,
                 armadaScreens.DATABASE_SCREEN_NAME,
                 armadaScreens.DATABASE_SCREEN_SOURCE,
+                {
+                    cssFilename: armadaScreens.DATABASE_SCREEN_CSS,
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
                 graphics.getAntialiasing(),
                 graphics.getFiltering());
         /**
@@ -444,7 +449,7 @@ define([
          */
         this._loadingBox = this.registerExternalComponent(
                 new components.LoadingBox(
-                        this._name + LOADING_BOX_ID_SUFFIX,
+                        LOADING_BOX_ID,
                         armadaScreens.LOADING_BOX_SOURCE,
                         {cssFilename: armadaScreens.LOADING_BOX_CSS},
                         strings.LOADING.HEADER.name));
@@ -568,7 +573,7 @@ define([
             this._loadingBox.show();
         }
         this._updateLoadingStatus(strings.get(strings.DATABASE.LOADING_BOX_INITIALIZING), 0);
-        this.resizeCanvas(this._name + DATABASE_CANVAS_ID_SUFFIX);
+        this.resizeCanvas(this._getElementID(DATABASE_CANVAS_ID));
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }

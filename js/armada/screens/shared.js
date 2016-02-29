@@ -12,20 +12,27 @@ define(function () {
     "use strict";
     // constants to be accessable to all screens
     return {
+        // components
         SELECTOR_SOURCE: "selector.html",
         SELECTOR_CSS: "selector.css",
         LOADING_BOX_SOURCE: "loadingbox.html",
         LOADING_BOX_CSS: "loadingbox.css",
         INFO_BOX_SOURCE: "infobox.html",
         INFO_BOX_CSS: "infobox.css",
+        // general
         SUPERIMPOSE_BACKGROUND_COLOR: [0.25, 0.25, 0.25, 0.5],
+        SCREEN_BACKGROUND_CLASS_NAME: "fullScreenFix",
+        SCREEN_CONTAINER_CLASS_NAME: "fullScreenContainer",
+        // screens
         MAIN_MENU_SCREEN_NAME: "mainMenu",
         MAIN_MENU_SCREEN_SOURCE: "menu.html",
         MAIN_MENU_CONTAINER_ID: "menuContainer",
         BATTLE_SCREEN_NAME: "battle",
         BATTLE_SCREEN_SOURCE: "battle.html",
+        BATTLE_SCREEN_CSS: "battle.css",
         DATABASE_SCREEN_NAME: "database",
         DATABASE_SCREEN_SOURCE: "database.html",
+        DATABASE_SCREEN_CSS: "database.css",
         SETTINGS_SCREEN_NAME: "settings",
         SETTINGS_SCREEN_SOURCE: "menu.html",
         SETTINGS_MENU_CONTAINER_ID: "menuContainer",
@@ -39,6 +46,7 @@ define(function () {
         ABOUT_SCREEN_SOURCE: "about.html",
         INGAME_MENU_SCREEN_NAME: "ingameMenu",
         INGAME_MENU_SCREEN_SOURCE: "ingame-menu.html",
+        INGAME_MENU_SCREEN_CSS: "ingame-menu.css",
         INGAME_MENU_CONTAINER_ID: "menuContainer"
     };
 });

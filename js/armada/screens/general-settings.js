@@ -32,7 +32,7 @@ define([
             // constants
             BACK_BUTTON_ID = "backButton",
             DEFAULTS_BUTTON_ID = "defaultsButton",
-            LANGUAGE_SELECTOR_ID_SUFFIX = "_languageSelector",
+            LANGUAGE_SELECTOR_ID = "languageSelector",
             OPTION_PARENT_ID = "settingsDiv",
             /**
              * Stores the possible language setting options
@@ -45,7 +45,13 @@ define([
      * @extends HTMLScreen
      */
     function GeneralSettingsScreen() {
-        screens.HTMLScreen.call(this, armadaScreens.GENERAL_SETTINGS_SCREEN_NAME, armadaScreens.GENERAL_SETTINGS_SCREEN_SOURCE);
+        screens.HTMLScreen.call(this,
+                armadaScreens.GENERAL_SETTINGS_SCREEN_NAME,
+                armadaScreens.GENERAL_SETTINGS_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                });
         /**
          * @type SimpleComponent
          */
@@ -57,22 +63,22 @@ define([
         /**
          * @type ExternalComponent
          */
-        this._languageSelector = this._registerSelector(LANGUAGE_SELECTOR_ID_SUFFIX,
+        this._languageSelector = this._registerSelector(LANGUAGE_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.LANGUAGE.name,
                 SETTING_LANGUAGE_VALUES);
     }
     GeneralSettingsScreen.prototype = new screens.HTMLScreen();
     GeneralSettingsScreen.prototype.constructor = GeneralSettingsScreen;
     /**
-     * @param {String} nameSuffix
+     * @param {String} name
      * @param {String} propertyLabelID
      * @param {String[]} valueList
      * @returns {Selector}
      */
-    GeneralSettingsScreen.prototype._registerSelector = function (nameSuffix, propertyLabelID, valueList) {
+    GeneralSettingsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList) {
         return this.registerExternalComponent(
                 new components.Selector(
-                        armadaScreens.GENERAL_SETTINGS_SCREEN_NAME + nameSuffix,
+                        name,
                         armadaScreens.SELECTOR_SOURCE,
                         {cssFilename: armadaScreens.SELECTOR_CSS},
                         {id: propertyLabelID},

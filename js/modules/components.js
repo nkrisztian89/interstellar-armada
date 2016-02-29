@@ -52,6 +52,7 @@ define([
              * @type String
              */
             COMPONENT_FOLDER = "component",
+            CSS_FOLDER = "css",
             LOADING_BOX_PROGRESS_ID = "progress",
             LOADING_BOX_STATUS_PARAGRAPH_ID = "status",
             LOADING_BOX_HEADER_ID = "header",
@@ -161,16 +162,21 @@ define([
      * to integrate its functionality into a screen. Provides several
      * methods that are called automatically by the screen at certain points as well
      * as some that can be called on-demand and only serve to make code more readable.
-     * @param {String} name The name of the component. The id attribute of the HTML5
-     * element must have the same value.
+     * @param {String} name The name of the component ot identify it.
+     * @param {String} [elementID]  The id attribute of the HTML5 element this component
+     * wraps. If omitted, it will have the same value as name.
      */
-    function SimpleComponent(name) {
+    function SimpleComponent(name, elementID) {
         /**
-         * The name of the component. The id attribute of the HTML5 element must 
-         * have the same value for successful initialization.
+         * The name of the component. 
          * @type String
          */
         this._name = name;
+        /**
+         * The id attribute of the HTML5 element must have this value for successful initialization.
+         * @type String
+         */
+        this._elementID = elementID || name;
         /**
          * The DOM object of the wrapped HTML element.
          * @type HTMLElement
@@ -183,12 +189,22 @@ define([
         this._displayStyle = null;
     }
     /**
-     * Renames the component - changes both the stored name and the ID of the associated HTML element
-     * @param {String} newName
+     * Return the name that identifies this component (within its screen / external component)
+     * @returns {String}
      */
-    SimpleComponent.prototype.rename = function (newName) {
-        this._name = newName;
-        this._element.setAttribute("id", newName);
+    SimpleComponent.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * Sets a new element ID - either for later initialization or along with resetting the id of the
+     * actual wrapped element.
+     * @param {String} elementID
+     */
+    SimpleComponent.prototype.setElementID = function (elementID) {
+        this._elementID = elementID;
+        if (this._element) {
+            this._element.setAttribute("id", this._elementID);
+        }
     };
     /**
      * Returns the wrapped HTML element.
@@ -226,10 +242,10 @@ define([
      * (automatically called by screens after append)
      */
     SimpleComponent.prototype.initComponent = function () {
-        this._element = document.getElementById(this._name);
+        this._element = document.getElementById(this._elementID);
         if (!this._element) {
             application.showError("Cannot initialize component: '" + this._name + "'!", "severe",
-                    "No element can be found on the page with a corresponding ID!");
+                    "No element can be found on the page with a corresponding ID: '" + this._elementID + "'!");
         } else {
             this._displayStyle = this._element.style.display;
         }
@@ -292,6 +308,12 @@ define([
          */
         this._name = name;
         /**
+         * The root element will be set to this id and the contained named elements will be prefixed
+         * with this id once the component is added to the page.
+         * @type String
+         */
+        this._rootElementID = name;
+        /**
          * The filename of the HTML document where the structure of the component should be defined.
          * @type String
          */
@@ -314,8 +336,7 @@ define([
          */
         this._rootElementDefaultDisplayMode = null;
         /**
-         * A flag that marks whether loading the correspoding CSS stylesheet has 
-         * finished.
+         * A flag that marks whether loading the correspoding CSS stylesheet has finished.
          * @type Boolean
          */
         this._cssLoaded = false;
@@ -334,28 +355,39 @@ define([
     }
     ExternalComponent.prototype = new asyncResource.AsyncResource();
     ExternalComponent.prototype.constructor = ExternalComponent;
+    ExternalComponent.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * The root element will be set to the given id and the contained named elements will be prefixed
+     * with this id once the component is added to the page. This can only be called before the component
+     * is added to the page!
+     * @param {String} rootElementID
+     */
+    ExternalComponent.prototype.setRootElementID = function (rootElementID) {
+        var i;
+        if (!this._rootElement) {
+            this._rootElementID = rootElementID;
+            for (i = 0; i < this._simpleComponents.length; i++) {
+                this._simpleComponents[i].setElementID(this._getElementID(this._simpleComponents[i].getName()));
+            }
+        } else {
+            application.showError("Attempting to change the root element ID for external component '" + this._name + "' after it has already been added to the page!");
+        }
+    };
     /**
      * Initiates the asynchronous loading of the component's structure from the
      * external HTML file and potential styling from the external CSS style.
      */
     ExternalComponent.prototype.requestModelLoad = function () {
-        var cssLink;
-        // If specified, add a <link> tag pointing to the CSS file containing the 
-        // styling of this component. Also check if the CSS file has already been 
-        // linked, and only add it if not.
-        if (this._style.cssFilename && (document.head.querySelectorAll("link[href='" + application.getFileURL("css", this._style.cssFilename) + "']").length === 0)) {
+        if (this._style.cssFilename) {
             this._cssLoaded = false;
-            cssLink = document.createElement("link");
-            cssLink.setAttribute("rel", "stylesheet");
-            cssLink.setAttribute("type", "text/css");
-            cssLink.onload = function () {
+            application.requestCSSFile(CSS_FOLDER, this._style.cssFilename, function () {
                 this._cssLoaded = true;
                 if (_isModelLoadedForSource(this._htmlFilename)) {
                     this.setToReady();
                 }
-            }.bind(this);
-            cssLink.href = application.getFileURL("css", this._style.cssFilename);
-            document.head.appendChild(cssLink);
+            }.bind(this));
         } else {
             this._cssLoaded = true;
         }
@@ -376,6 +408,7 @@ define([
         var namedElements, i;
         parentNode = parentNode || document.body;
         this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).body.firstElementChild, true));
+        this._rootElement.setAttribute("id", this._rootElementID);
         this._rootElementDefaultDisplayMode = this._rootElement.style.display;
         // All elements with an "id" attribute within this structure have to
         // be renamed to make sure their id does not conflict with other elements
@@ -387,9 +420,18 @@ define([
         // overall uniqueness)
         namedElements = this._rootElement.querySelectorAll("[id]");
         for (i = 0; i < namedElements.length; i++) {
-            namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
+            namedElements[i].setAttribute("id", this._getElementID(namedElements[i].getAttribute("id")));
         }
         this._initializeComponents();
+    };
+    /**
+     * Returns appropriately prefixed version of the original, passed ID that would correspond
+     * to the ID of an element of this component.
+     * @param {String} originalElementID
+     * @returns {String}
+     */
+    ExternalComponent.prototype._getElementID = function (originalElementID) {
+        return this._rootElementID + ELEMENT_ID_SEPARATOR + originalElementID;
     };
     /**
      * Returns the ID of the passed element without the prefix referencing to this component
@@ -397,7 +439,7 @@ define([
      * @returns {String}
      */
     ExternalComponent.prototype._getOriginalElementID = function (element) {
-        return element.getAttribute("id").substr(this._name.length + ELEMENT_ID_SEPARATOR.length);
+        return element.getAttribute("id").substr(this._rootElementID.length + ELEMENT_ID_SEPARATOR.length);
     };
     /**
      * Setting the properties that will be used to easier access DOM elements later.
@@ -442,7 +484,7 @@ define([
      * @returns {SimpleComponent}
      */
     ExternalComponent.prototype.registerSimpleComponent = function (simpleComponentName) {
-        var component = new SimpleComponent(this._name + ELEMENT_ID_SEPARATOR + simpleComponentName);
+        var component = new SimpleComponent(simpleComponentName, this._getElementID(simpleComponentName));
         this._simpleComponents.push(component);
         return component;
     };
@@ -521,7 +563,7 @@ define([
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             if (this._headerID) {
-                this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+                this._header.setElementID(this._getElementID(this._headerID));
             }
             this.hide();
         }
@@ -642,10 +684,10 @@ define([
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             if (this._headerID) {
-                this._header.rename(this._name + ELEMENT_ID_SEPARATOR + this._headerID);
+                this._header.setElementID(this._getElementID(this._headerID));
             }
             if (this._okButtonID) {
-                this._okButton.rename(this._name + ELEMENT_ID_SEPARATOR + this._okButtonID);
+                this._okButton.setElementID(this._getElementID(this._okButtonID));
             }
             this._okButton.getElement().onclick = function () {
                 this.hide();
@@ -746,7 +788,7 @@ define([
             for (i = 0; i < this._menuOptions.length; i++) {
                 aElement = document.createElement("a");
                 if (this._menuOptions[i].id) {
-                    aElement.id = this._name + ELEMENT_ID_SEPARATOR + this._menuOptions[i].id;
+                    aElement.id = this._getElementID(this._menuOptions[i].id);
                 }
                 aElement.href = "#";
                 aElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "");
@@ -823,7 +865,7 @@ define([
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             if (this._propertyLabelDescriptor.id) {
-                this._propertyLabel.rename(this._name + ELEMENT_ID_SEPARATOR + this._propertyLabelDescriptor.id);
+                this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
             }
             this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
             this._valueSelector.setContent(this._valueList[0]);

@@ -110,14 +110,14 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
-            AA_SELECTOR_ID_SUFFIX = "_aaSelector",
-            FILTERING_SELECTOR_ID_SUFFIX = "_filteringSelector",
-            TEXTURE_QUALITY_SELECTOR_ID_SUFFIX = "_textureQualitySelector",
-            LOD_SELECTOR_ID_SUFFIX = "_lodSelector",
-            SHADER_COMPLEXITY_SELECTOR_ID_SUFFIX = "_shaderComplexitySelector",
-            SHADOW_MAPPING_SELECTOR_ID_SUFFIX = "_shadowMappingSelector",
-            SHADOW_QUALITY_SELECTOR_ID_SUFFIX = "_shadowQualitySelector",
-            SHADOW_DISTANCE_SELECTOR_ID_SUFFIX = "_shadowDistanceSelector",
+            AA_SELECTOR_ID = "aaSelector",
+            FILTERING_SELECTOR_ID = "filteringSelector",
+            TEXTURE_QUALITY_SELECTOR_ID = "textureQualitySelector",
+            LOD_SELECTOR_ID = "lodSelector",
+            SHADER_COMPLEXITY_SELECTOR_ID = "shaderComplexitySelector",
+            SHADOW_MAPPING_SELECTOR_ID = "shadowMappingSelector",
+            SHADOW_QUALITY_SELECTOR_ID = "shadowQualitySelector",
+            SHADOW_DISTANCE_SELECTOR_ID = "shadowDistanceSelector",
             OPTION_PARENT_ID = "settingsDiv",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
@@ -127,7 +127,13 @@ define([
      * @extends HTMLScreen
      */
     function GraphicsScreen() {
-        screens.HTMLScreen.call(this, armadaScreens.GRAPHICS_SCREEN_NAME, armadaScreens.GRAPHICS_SCREEN_SOURCE);
+        screens.HTMLScreen.call(this,
+                armadaScreens.GRAPHICS_SCREEN_NAME,
+                armadaScreens.GRAPHICS_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                });
         /**
          * @type SimpleComponent
          */
@@ -173,28 +179,28 @@ define([
          */
         this._shadowDistanceSelector = null;
         graphics.executeWhenReady(function () {
-            this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID_SUFFIX,
+            this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
                     _getOnOffSettingValues());
-            this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID_SUFFIX,
+            this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID,
                     strings.GRAPHICS.FILTERING.name,
                     _getFilteringSettingValues().map(_mapCaption));
-            this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID_SUFFIX,
+            this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.TEXTURE_QUALITY.name,
                     _getTextureQualitySettingValues().map(_mapCaption));
-            this._lodSelector = this._registerSelector(LOD_SELECTOR_ID_SUFFIX,
+            this._lodSelector = this._registerSelector(LOD_SELECTOR_ID,
                     strings.GRAPHICS.MODEL_DETAILS.name,
                     _getFullRangeSettingValues().map(_mapCaption));
-            this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID_SUFFIX,
+            this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADERS.name,
                     _getShaderComplexitySettingValues().map(_mapCaption));
-            this._shadowMappingSelector = this._registerSelector(SHADOW_MAPPING_SELECTOR_ID_SUFFIX,
+            this._shadowMappingSelector = this._registerSelector(SHADOW_MAPPING_SELECTOR_ID,
                     strings.GRAPHICS.SHADOWS.name,
                     _getOnOffSettingValues());
-            this._shadowQualitySelector = this._registerSelector(SHADOW_QUALITY_SELECTOR_ID_SUFFIX,
+            this._shadowQualitySelector = this._registerSelector(SHADOW_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_QUALITY.name,
                     _getShadowQualitySettingValues().map(_mapCaption));
-            this._shadowDistanceSelector = this._registerSelector(SHADOW_DISTANCE_SELECTOR_ID_SUFFIX,
+            this._shadowDistanceSelector = this._registerSelector(SHADOW_DISTANCE_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_DISTANCE.name,
                     _getShadowDistanceSettingValues().map(_mapCaption));
         }.bind(this));
@@ -202,15 +208,15 @@ define([
     GraphicsScreen.prototype = new screens.HTMLScreen();
     GraphicsScreen.prototype.constructor = GraphicsScreen;
     /**
-     * @param {String} nameSuffix
+     * @param {String} name
      * @param {String} propertyLabelID
      * @param {String[]} valueList
      * @returns {Selector}
      */
-    GraphicsScreen.prototype._registerSelector = function (nameSuffix, propertyLabelID, valueList) {
+    GraphicsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList) {
         return this.registerExternalComponent(
                 new components.Selector(
-                        armadaScreens.GRAPHICS_SCREEN_NAME + nameSuffix,
+                        name,
                         armadaScreens.SELECTOR_SOURCE,
                         {cssFilename: armadaScreens.SELECTOR_CSS},
                         {id: propertyLabelID},

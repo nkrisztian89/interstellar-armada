@@ -32,7 +32,7 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
-            TABLES_CONTAINER_ID_SUFFIX = "_tablesContainer",
+            TABLES_CONTAINER_ID = "tablesContainer",
             CLICKABLE_CLASS_NAME = "clickable",
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
             TABLE_CLASS_NAME = "horizontallyCentered outerContainer",
@@ -166,7 +166,13 @@ define([
      * @extends HTMLScreen
      */
     function ControlsScreen() {
-        screens.HTMLScreen.call(this, armadaScreens.CONTROLS_SCREEN_NAME, armadaScreens.CONTROLS_SCREEN_SOURCE);
+        screens.HTMLScreen.call(this,
+                armadaScreens.CONTROLS_SCREEN_NAME,
+                armadaScreens.CONTROLS_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                });
         /**
          * @type SimpleComponent
          */
@@ -217,7 +223,7 @@ define([
     ControlsScreen.prototype._generateTables = function () {
         control.executeWhenReady(function () {
             var i, j, k, n,
-                    tablesContainer = document.getElementById(this._name + TABLES_CONTAINER_ID_SUFFIX),
+                    tablesContainer = this.getElement(TABLES_CONTAINER_ID),
                     gameControllers = control.getControllers(),
                     h2Element, tableElement, theadElement, thElement, tbodyElement, actions, trElement, td1Element, td2Element,
                     actionStringDefinitionObject = {},

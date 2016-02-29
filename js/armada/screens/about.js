@@ -33,7 +33,13 @@ define([
      * @extends HTMLScreen
      */
     function AboutScreen() {
-        screens.HTMLScreen.call(this, armadaScreens.ABOUT_SCREEN_NAME, armadaScreens.ABOUT_SCREEN_SOURCE);
+        screens.HTMLScreen.call(this,
+                armadaScreens.ABOUT_SCREEN_NAME,
+                armadaScreens.ABOUT_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                });
         /**
          * @type SimpleComponent
          */

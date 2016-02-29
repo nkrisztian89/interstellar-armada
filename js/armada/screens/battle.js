@@ -50,8 +50,8 @@ define([
             BIG_HEADER_ID = "bigHeader",
             DEBUG_LABEL_PARAGRAPH_ID = "debugLabel",
             CROSSHAIR_DIV_ID = "crosshair",
-            LOADING_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "loadingBox",
-            INFO_BOX_ID_SUFFIX = screens.ELEMENT_ID_SEPARATOR + "infoBox",
+            LOADING_BOX_ID = "loadingBox",
+            INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
             LOOP_CANCELED = -1,
             TARGET_INFO_SEPARATOR = "---------------",
@@ -198,7 +198,16 @@ define([
      * @extends HTMLScreenWithCanvases
      */
     function BattleScreen() {
-        screens.HTMLScreenWithCanvases.call(this, armadaScreens.BATTLE_SCREEN_NAME, armadaScreens.BATTLE_SCREEN_SOURCE, graphics.getAntialiasing(), graphics.getFiltering());
+        screens.HTMLScreenWithCanvases.call(this,
+                armadaScreens.BATTLE_SCREEN_NAME,
+                armadaScreens.BATTLE_SCREEN_SOURCE,
+                {
+                    cssFilename: armadaScreens.BATTLE_SCREEN_CSS,
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                graphics.getAntialiasing(),
+                graphics.getFiltering());
         /**
          * @type SimpleComponent
          */
@@ -227,7 +236,7 @@ define([
          * @type LoadingBox
          */
         this._loadingBox = this.registerExternalComponent(new components.LoadingBox(
-                this._name + LOADING_BOX_ID_SUFFIX,
+                LOADING_BOX_ID,
                 armadaScreens.LOADING_BOX_SOURCE,
                 {cssFilename: armadaScreens.LOADING_BOX_CSS},
                 strings.LOADING.HEADER.name));
@@ -235,7 +244,7 @@ define([
          * @type InfoBox
          */
         this._infoBox = this.registerExternalComponent(new components.InfoBox(
-                this._name + INFO_BOX_ID_SUFFIX,
+                INFO_BOX_ID,
                 armadaScreens.INFO_BOX_SOURCE,
                 {cssFilename: armadaScreens.INFO_BOX_CSS},
                 function () {

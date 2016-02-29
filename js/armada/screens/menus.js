@@ -30,6 +30,10 @@ define([
         mainMenuScreen: new screens.MenuScreen(
                 armadaScreens.MAIN_MENU_SCREEN_NAME,
                 armadaScreens.MAIN_MENU_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
                 [{
                         id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
@@ -55,6 +59,10 @@ define([
         settingsMenuScreen: new screens.MenuScreen(
                 armadaScreens.SETTINGS_SCREEN_NAME,
                 armadaScreens.SETTINGS_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
                 [{
                         id: strings.SETTINGS.GENERAL.name,
                         action: function () {
@@ -79,6 +87,11 @@ define([
         ingameMenuScreen: new screens.MenuScreen(
                 armadaScreens.INGAME_MENU_SCREEN_NAME,
                 armadaScreens.INGAME_MENU_SCREEN_SOURCE,
+                {
+                    cssFilename: armadaScreens.INGAME_MENU_SCREEN_CSS,
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
                 [{
                         id: strings.INGAME_MENU.RESUME.name,
                         action: function () {

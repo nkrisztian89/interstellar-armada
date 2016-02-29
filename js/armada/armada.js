@@ -47,8 +47,10 @@ define([
         logic.loadSettingsFromJSON(settingsJSON.logic);
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
-        _progressBar.value = 2;
-        callback();
+        logic.executeWhenReady(function () {
+            _progressBar.value = 2;
+            callback();
+        });
     };
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
         logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);

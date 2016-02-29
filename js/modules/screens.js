@@ -31,6 +31,8 @@ define([
     var
             // ------------------------------------------------------------------------------
             // constants
+            SCREEN_FOLDER = "screen",
+            CSS_FOLDER = "css",
             /*
              * The content of HTML elements with this class on the page will be automatically translated on every update, using
              * the key <name of the page> " <TRANSLATION_KEY_SEPARATOR> + <id of the element>
@@ -38,86 +40,141 @@ define([
              */
             TRANSLATABLE_CLASS_NAME = "translatable",
             ELEMENT_ID_SEPARATOR = components.ELEMENT_ID_SEPARATOR,
-            TRANSLATION_KEY_SEPARATOR = ".";
+            TRANSLATION_KEY_SEPARATOR = ".",
+            SCREEN_BACKGROUND_ID = "screenBackground",
+            DEFAULT_SCREEN_BACKGROUND_CLASS_NAME = "screenBackground",
+            SCREEN_CONTAINER_ID = "screenContainer",
+            DEFAULT_SCREEN_CONTAINER_CLASS_NAME = "screenContainer";
     // #########################################################################
+    /**
+     * @typedef {Object} HTMLScreen~Style
+     * A style descriptor for an screen storing the name of the CSS file
+     * associated with the component as well as class names for dynamically created
+     * HTML elements.
+     * @property {String} cssFilename
+     * @property {String} backgroundClassName
+     * @property {String} containerClassName
+     */
+    /**
+     * @typedef {Object} HTMLScreen~ExternalComponentBinding
+     * @property {ExternalComponent} component
+     * @property {String} parentNodeID
+     */
     /**
      * @class Holds the logical model of a screen of the game. The different
      * screens should be defined as descendants of this class.
      * @extends AsyncResource
-     * @param {String} name The name by which this screen can be identified.
-     * @param {String} source The name of the HTML file where the structure of this
+     * @param {String} name The name by which this screen can be identified. Needs to be
+     * unique within the same application (ScreenManager). The ID of HTML elements belonging
+     * to this screen will be prefixed by this name.
+     * @param {String} htmlFilename The name of the HTML file where the structure of this
      * screen is defined.
+     * @param {HTMLScreen~Style} [style] The object storing the styling information for this
+     * screen.
      */
-    function HTMLScreen(name, source) {
+    function HTMLScreen(name, htmlFilename, style) {
         asyncResource.AsyncResource.call(this);
         /**
+         * An ID of this screen. The IDs of HTML elements on this screen are prefixed by this name.
          * @type String
          */
         this._name = name;
         /**
+         * The name of the HTML file that stores the source for this page.
          * @type String
          */
-        this._source = source;
+        this._htmlFilename = htmlFilename;
         /**
-         * @type Document
+         * An object storing the name of the CSS file that contains the styling rules and for this 
+         * components and the desired classes for dynamically created elements.
+         * @type HTMLScreen~Style
+         */
+        this._style = style || {};
+        /**
+         * A flag that marks whether loading the correspoding CSS stylesheet has finished.
+         * @type Boolean
+         */
+        this._cssLoaded = false;
+        /**
+         * Stores the model of the screen's DOM structure after it has been loaded and is automatically
+         * cleared (unless explicitly specified otherwise) when the screen is added to the page.
+         * @type HTMLDocument
          */
         this._model = null;
         /**
+         * An HTML element that serves as a background for this page, and is added below the main container
+         * of the screen when that is loaded.
          * @type Element
          */
         this._background = null;
         /**
+         * The DOM structure of the screen is added inside this container element.
          * @type Element
          */
         this._container = null;
         /**
+         * Stores the list of simple components (wrapped HTML elements) on this screen.
          * @type SimpleComponent[]
          */
         this._simpleComponents = [];
         /**
-         * @type ExternalComponent[]
+         * Stores the list of external components (components with their own DOM structure loaded
+         * from external HTML files) on this screen.
+         * @type HTMLScreen~ExternalComponentBinding[]
          */
-        this._externalComponents = [];
+        this._externalComponentBindings = [];
         /**
+         * The number of external components on this page the source files of which have already been loaded.
          * @type Number
          */
         this._externalComponentsLoaded = 0;
         /**
+         * The total number of external components on this screen the source files of which have to be loaded.
          * @type Number
          */
         this._externalComponentsToLoad = 0;
-        /**
-         * @type Function
-         * @returns undefined
-         */
-        this._onModelLoad = function () {
-            application.log("Model of the screen '" + this._name + "' has been loaded, with no onModelLoad handler set.", 2);
-        };
-        // source will be undefined when setting the prototypes for inheritance
-        if (source !== undefined) {
+        // will be undefined when setting the prototypes for inheritance
+        if (htmlFilename) {
             this.requestModelLoad();
         }
     }
     HTMLScreen.prototype = new asyncResource.AsyncResource();
     HTMLScreen.prototype.constructor = HTMLScreen;
     /**
-     * Initiates the asynchronous loading of the screen's structure from the
-     * external HTML file.
+     * Returns whether all external resources needed for this page have already been loaded.
+     * @returns {Boolean}
+     */
+    HTMLScreen.prototype._isLoaded = function () {
+        return this._model && this._cssLoaded && (this._externalComponentsLoaded === this._externalComponentsToLoad);
+    };
+    /**
+     * Initiates the asynchronous loading of the screen's structure and style from the
+     * external HTML and and CSS files.
      */
     HTMLScreen.prototype.requestModelLoad = function () {
-        // send an asynchronous request to grab the HTML file containing the DOM of
-        // this screen
-        application.requestTextFile("screen", this._source, function (responseText) {
+        // send an asynchronous request to grab the HTML file containing the DOM of this screen
+        application.requestTextFile(SCREEN_FOLDER, this._htmlFilename, function (responseText) {
             this._model = document.implementation.createHTMLDocument(this._name);
             this._model.documentElement.innerHTML = responseText;
-            this._onModelLoad();
-            if (this._externalComponentsLoaded === this._externalComponentsToLoad) {
+            if (this._isLoaded()) {
                 this.setToReady();
             }
         }.bind(this));
+        // send a request to load the stylesheet, if needed
+        if (this._style.cssFilename) {
+            this._cssLoaded = false;
+            application.requestCSSFile(CSS_FOLDER, this._style.cssFilename, function () {
+                this._cssLoaded = true;
+                if (this._isLoaded()) {
+                    this.setToReady();
+                }
+            }.bind(this));
+        } else {
+            this._cssLoaded = true;
+        }
     };
     /**
-     * Getter for the _name property.
+     * Returns the name of this screen.
      * @returns {String}
      */
     HTMLScreen.prototype.getName = function () {
@@ -133,28 +190,33 @@ define([
     };
     /**
      * Appends the content of the screen to the page in an invisible (display: none) div.
-     * @param {Function} callback
+     * If some source files for the screen have not been loaded yet, than sets a callback to append the 
+     * screen once all necessary files have been loaded.
+     * @param {Function} [callback] This function will be called after the screen has been added to the page.
      * @param {Boolean} [keepModelAfterAdding=false] Whether to keep storing the original DOM model
      * of the screen after adding it to the current document (so that it can be added again later)
+     * @param {Element} [parentNode=document.body] If given, the screen and its background will be added as
+     * children of this DOM node.
      */
-    HTMLScreen.prototype.addScreenToPage = function (callback, keepModelAfterAdding) {
+    HTMLScreen.prototype.addScreenToPage = function (callback, keepModelAfterAdding, parentNode) {
+        parentNode = parentNode || document.body;
         this.executeWhenReady(function () {
             var namedElements, i;
             this._background = document.createElement("div");
-            this._background.setAttribute("id", this._name + "PageBackground");
-            this._background.className = "fullScreenFix";
+            this._background.setAttribute("id", this._getElementID(SCREEN_BACKGROUND_ID));
+            this._background.className = this._style.backgroundClassName || DEFAULT_SCREEN_BACKGROUND_CLASS_NAME;
             this._background.style.display = "none";
             this._container = document.createElement("div");
-            this._container.setAttribute("id", this._name + "PageContainer");
-            this._container.className = "fullScreenContainer";
+            this._container.setAttribute("id", this._getElementID(SCREEN_CONTAINER_ID));
+            this._container.className = this._style.containerClassName || DEFAULT_SCREEN_CONTAINER_CLASS_NAME;
             this._container.style.display = "none";
             this._container.innerHTML = this._model.body.innerHTML;
             namedElements = this._container.querySelectorAll("[id]");
             for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].setAttribute("id", this._name + ELEMENT_ID_SEPARATOR + namedElements[i].getAttribute("id"));
+                namedElements[i].setAttribute("id", this._getElementID(namedElements[i].getAttribute("id")));
             }
-            document.body.appendChild(this._background);
-            document.body.appendChild(this._container);
+            parentNode.appendChild(this._background);
+            parentNode.appendChild(this._container);
             this._initializeComponents();
             if (callback) {
                 callback();
@@ -168,44 +230,55 @@ define([
      * Displays the screen (makes it visible)
      */
     HTMLScreen.prototype.show = function () {
-        this.executeWhenReady(function () {
+        if (this._container) {
             this._container.style.display = "block";
-        });
+        } else {
+            application.showError("Attempting to show screen '" + this._name + "' before adding it to the page!");
+        }
     };
     /**
      * Superimposes the screen on the current page, by appending a full screen
      * container and the screen structure as its child inside it.
-     * @param {Number[4]} backgroundColor The color of the full screen background. ([r,g,b,a],
-     * where all color components should be 0-1)
+     * @param {Number[4]} [backgroundColor] The color of the page background will be overriden by this
+     * color, if given.([r,g,b,a], where all color components should be 0-1)
+     * @param {Element} [parentNode=document.body] If given, the screen and its background will be set as
+     * children of this DOM node.
      */
-    HTMLScreen.prototype.superimposeOnPage = function (backgroundColor) {
-        this.executeWhenReady(function () {
-            this._background.style.backgroundColor = "rgba(" +
-                    Math.round(backgroundColor[0] * 255) + "," +
-                    Math.round(backgroundColor[1] * 255) + "," +
-                    Math.round(backgroundColor[2] * 255) + "," +
-                    backgroundColor[3] + ")";
+    HTMLScreen.prototype.superimposeOnPage = function (backgroundColor, parentNode) {
+        if (this._container && this._background) {
+            if (backgroundColor) {
+                this._background.style.backgroundColor = "rgba(" +
+                        Math.round(backgroundColor[0] * 255) + "," +
+                        Math.round(backgroundColor[1] * 255) + "," +
+                        Math.round(backgroundColor[2] * 255) + "," +
+                        backgroundColor[3] + ")";
+            }
             this._background.style.display = "block";
-            document.body.appendChild(this._background);
-            document.body.appendChild(this._container);
-            this.show();
-        });
+            parentNode = parentNode || document.body;
+            // appendChild does not clone the element if it is already part of the DOM, in that
+            // case it will be simply moved to become the last child of parentNode
+            parentNode.appendChild(this._background);
+            parentNode.appendChild(this._container);
+        }
+        this.show();
     };
     /**
      * Hides the screen (makes it invisible and not take any screen space)
      */
     HTMLScreen.prototype.hide = function () {
-        this.executeWhenReady(function () {
+        if (this._container && this._background) {
             this._container.style.display = "none";
             this._background.style.display = "none";
-        });
+        } else {
+            application.showError("Attempting to hide screen '" + this._name + "' before adding it to the page!");
+        }
     };
     /**
      * Tells whether the screen is superimposed on top of another one.
      * @returns {Boolean}
      */
     HTMLScreen.prototype.isSuperimposed = function () {
-        return this._background.style.display !== "none";
+        return this._background && (this._background.style.display !== "none");
     };
     /**
      * Executes the necessary actions required when closing the page. This method
@@ -214,16 +287,20 @@ define([
      */
     HTMLScreen.prototype.removeFromPage = function () {
         var i;
-        for (i = 0; i < this._simpleComponents.length; i++) {
-            this._simpleComponents[i].resetComponent();
+        if (this._container && this._background) {
+            for (i = 0; i < this._simpleComponents.length; i++) {
+                this._simpleComponents[i].resetComponent();
+            }
+            for (i = 0; i < this._externalComponentBindings.length; i++) {
+                this._externalComponentBindings[i].component.resetComponent();
+            }
+            this._background.remove();
+            this._container.remove();
+            this._background = null;
+            this._container = null;
+        } else {
+            application.showError("Attempting to remove screen '" + this._name + "' before adding it to the page!");
         }
-        for (i = 0; i < this._externalComponents.length; i++) {
-            this._externalComponents[i].component.resetComponent();
-        }
-        document.body.removeChild(this._background);
-        document.body.removeChild(this._container);
-        this._background = null;
-        this._container = null;
     };
     /**
      * Setting the properties that will be used to easier access DOM elements later.
@@ -235,16 +312,27 @@ define([
         for (i = 0; i < this._simpleComponents.length; i++) {
             this._simpleComponents[i].initComponent();
         }
-        for (i = 0; i < this._externalComponents.length; i++) {
-            if (this._externalComponents[i].parentNodeID !== undefined) {
-                parentNode = document.getElementById(this._name + "_" + this._externalComponents[i].parentNodeID);
+        for (i = 0; i < this._externalComponentBindings.length; i++) {
+            if (this._externalComponentBindings[i].parentNodeID) {
+                parentNode = this.getElement(this._externalComponentBindings[i].parentNodeID);
             }
             // otherwise just leave it undefined, nothing to pass to the method below
-            this.addExternalComponent(this._externalComponents[i].component, parentNode);
+            this.addExternalComponent(this._externalComponentBindings[i].component, parentNode);
         }
         this._updateComponents();
     };
     /**
+     * Returns appropriately prefixed version of the original, passed ID that would correspond
+     * to the ID of an element on this screen.
+     * @param {String} originalElementID
+     * @returns {String}
+     */
+    HTMLScreen.prototype._getElementID = function (originalElementID) {
+        return this._name + ELEMENT_ID_SEPARATOR + originalElementID;
+    };
+    /**
+     * Returns the original ID of an element of this screen, that is, the ID without prefixes referring 
+     * to this screen.
      * @param {Element} element
      * @returns {String}
      */
@@ -267,8 +355,8 @@ define([
                     defaultValue: translatableElements[i].innerHTML
                 });
             }
-            for (i = 0; i < this._externalComponents.length; i++) {
-                this._externalComponents[i].component.updateComponents();
+            for (i = 0; i < this._externalComponentBindings.length; i++) {
+                this._externalComponentBindings[i].component.updateComponents();
             }
         }
     };
@@ -279,52 +367,63 @@ define([
         this._updateComponents();
     };
     /**
+     * Sets up the component to be associated with an HTML element on this page having the 
+     * passed original ID, which will serve as the name for the component.
      * @param {String} simpleComponentName
      * @returns {SimpleComponent}
      */
     HTMLScreen.prototype.registerSimpleComponent = function (simpleComponentName) {
-        var component = new components.SimpleComponent(this._name + ELEMENT_ID_SEPARATOR + simpleComponentName);
+        var component = new components.SimpleComponent(simpleComponentName, this._getElementID(simpleComponentName));
         this._simpleComponents.push(component);
         return component;
     };
     /**
-     * @param {ExternalComponent} screenComponent
-     * @param {String} parentNodeID
+     * A reference to the passed external component associated with the passed parent node ID will be stored, and
+     * when the screen is added to the page, the external component will be added under the node with the passed
+     * original ID. This also makes the screen wait for the component to load before adding it to the page.
+     * The root element ID of the passed component will be prefixed with the name of the screen.
+     * @param {ExternalComponent} externalComponent
+     * @param {String} [parentNodeID]
      * @returns {ExternalComponent}
      */
-    HTMLScreen.prototype.registerExternalComponent = function (screenComponent, parentNodeID) {
+    HTMLScreen.prototype.registerExternalComponent = function (externalComponent, parentNodeID) {
+        // note that one more component needs to be loaded for the page to be ready
         this._externalComponentsToLoad++;
-        this._externalComponents.push({
-            component: screenComponent,
+        // save the reference
+        this._externalComponentBindings.push({
+            component: externalComponent,
             parentNodeID: parentNodeID
         });
-        screenComponent.executeWhenReady(function () {
+        // prefix the element ID with the name of the screen
+        externalComponent.setRootElementID(this._getElementID(externalComponent.getName()));
+        // set the callback to check if we are ready with the screen loading when this component is loaded
+        externalComponent.executeWhenReady(function () {
             this._externalComponentsLoaded++;
-            if (this._model && (this._externalComponentsLoaded === this._externalComponentsToLoad)) {
+            if (this._isLoaded()) {
                 this.setToReady();
             }
         }.bind(this));
-        return screenComponent;
+        return externalComponent;
     };
     /**
      * Appends the elements of an external component (a HTML document fragment
      * defined in an external xml file) to the DOM tree and returns the same 
      * component.
-     * @param {ScreenComponent} screenComponent
+     * @param {ExternalComponent} externalComponent
      * @param {Node} [parentNode] The node in the document to which to append the
      * component (if omitted, it will be appended to the body)
-     * @returns {ScreenComponent}
+     * @returns {ExternalComponent}
      */
-    HTMLScreen.prototype.addExternalComponent = function (screenComponent, parentNode) {
-        screenComponent.appendToPage(parentNode);
-        return screenComponent;
+    HTMLScreen.prototype.addExternalComponent = function (externalComponent, parentNode) {
+        externalComponent.appendToPage(parentNode);
+        return externalComponent;
     };
     /**
      * Provides visual information to the user about the current status of the application.
      * @param {String} newStatus The new status to display.
      */
     HTMLScreen.prototype.updateStatus = function (newStatus) {
-        if (this._status !== null) {
+        if (this._status) {
             this._status.setContent(newStatus);
         } else {
             alert(newStatus);
@@ -336,7 +435,7 @@ define([
      * @returns {Element}
      */
     HTMLScreen.prototype.getElement = function (originalElementID) {
-        return this._container.querySelector("#" + this._name + ELEMENT_ID_SEPARATOR + originalElementID);
+        return this._container.querySelector("#" + this._getElementID(originalElementID));
     };
     // #########################################################################
     /**
@@ -409,11 +508,12 @@ define([
      * @param {String} name The name by which this screen can be identified.
      * @param {String} source The name of the HTML file where the structure of this
      * screen is defined.
+     * @param {HTMLScreen~Style} [style]
      * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvas of this screen
      */
-    function HTMLScreenWithCanvases(name, source, antialiasing, filtering) {
-        HTMLScreen.call(this, name, source);
+    function HTMLScreenWithCanvases(name, source, style, antialiasing, filtering) {
+        HTMLScreen.call(this, name, source, style);
         /**
          * @type Boolean
          */
@@ -622,12 +722,13 @@ define([
      * @extends HTMLScreen
      * @param {String} name See {@link GameScreen}
      * @param {String} source See {@link GameScreen}
+     * @param {HTMLScreen~Style} [style]
      * @param {MenuComponent~MenuOption[]} menuOptions The menuOptions for creating the {@link MenuComponent}
      * @param {String} [menuContainerID] The ID of the HTML element inside of which
      * the menu should be added (if omitted, it will be appended to body)
      */
-    function MenuScreen(name, source, menuOptions, menuContainerID) {
-        HTMLScreen.call(this, name, source);
+    function MenuScreen(name, source, style, menuOptions, menuContainerID) {
+        HTMLScreen.call(this, name, source, style);
         /**
          * @type MenuComponent~MenuOption[]
          */
@@ -644,7 +745,7 @@ define([
          */
         this._menuComponent = this.registerExternalComponent(
                 new components.MenuComponent(
-                        name + "_menu",
+                        "menu",
                         "menucomponent.html",
                         {
                             menuClassName: "menu",

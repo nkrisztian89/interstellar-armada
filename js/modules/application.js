@@ -16,7 +16,7 @@
  */
 
 /*jslint nomen: true, plusplus: true, white: true */
-/*global define, alert, console, XMLHttpRequest, DOMParser */
+/*global define, alert, console, XMLHttpRequest, DOMParser, document */
 
 /**
  * @module modules/application
@@ -295,6 +295,30 @@ define(function () {
                                     request.responseText));
                 }
             }.bind(this), "application/xml");
+        },
+        /**
+         * Issues an asynchronous request to get a CSS file and apply it to the current
+         * document and executes a callback once it has been loaded.
+         * @param {String} filetype The ID of the folder where the CSS files resides.
+         * @param {String} filename The name of the file (relative to the referenced folder)
+         * @param {Function} onload The function to execute when the css has been
+         */
+        requestCSSFile: function (filetype, filename, onload) {
+            var cssLink;
+            // Add a <link> tag pointing to the CSS file. Also check if the CSS file has already been 
+            // linked, and only add it if not.
+            if ((document.head.querySelectorAll("link[href='" + this.getFileURL(filetype, filename) + "']").length === 0)) {
+                cssLink = document.createElement("link");
+                cssLink.setAttribute("rel", "stylesheet");
+                cssLink.setAttribute("type", "text/css");
+                cssLink.onload = onload;
+                cssLink.href = this.getFileURL(filetype, filename);
+                document.head.appendChild(cssLink);
+            } else {
+                if (onload) {
+                    onload();
+                }
+            }
         }
     };
 });
