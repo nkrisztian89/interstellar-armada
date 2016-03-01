@@ -209,6 +209,14 @@ define([
     };
     GENERAL_SETTINGS = {
         /**
+         * Whether the RequestAnimationFrame API should be used for the render loops (as opposed to setInterval)
+         */
+        USE_REQUEST_ANIM_FRAME: {
+            name: "useRequestAnimFrame",
+            type: "boolean",
+            defaultValue: true
+        },
+        /**
          * Default seed to use for generating random numbers to allow consistent and comparable testing.
          */
         DEFAULT_RANDOM_SEED: {
@@ -3770,6 +3778,7 @@ define([
     // The public interface of the module
     return {
         FlightMode: FlightMode,
+        GENERAL_SETTINGS: GENERAL_SETTINGS,
         BATTLE_SETTINGS: BATTLE_SETTINGS,
         DATABASE_SETTINGS: DATABASE_SETTINGS,
         CAMERA_SETTINGS: CAMERA_SETTINGS,

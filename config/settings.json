@@ -62,6 +62,7 @@
     },
     "logic": {
         "general": {
+            "useRequestAnimFrame": true,
             "defaultRandomSeed": 4718,
             "luminosityFactorsArrayName": "luminosityFactors"
         },

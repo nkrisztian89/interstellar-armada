@@ -19,6 +19,10 @@ define(function () {
         LOADING_BOX_CSS: "loadingbox.css",
         INFO_BOX_SOURCE: "infobox.html",
         INFO_BOX_CSS: "infobox.css",
+        MENU_COMPONENT_SOURCE: "menucomponent.html",
+        MENU_CLASS_NAME: "menu",
+        MENU_BUTTON_CLASS_NAME: "button",
+        MENU_BUTTON_CONTAINER_CLASS_NAME: "transparentContainer",
         // general
         SUPERIMPOSE_BACKGROUND_COLOR: [0.25, 0.25, 0.25, 0.5],
         SCREEN_BACKGROUND_CLASS_NAME: "fullScreenFix",

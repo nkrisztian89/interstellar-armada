@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true*/
-/*global define, document, setInterval, clearInterval, window*/
+/*global define, document, setInterval, clearInterval, window, performance */
 
 /**
  * @param utils
@@ -54,6 +54,7 @@ define([
             INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
             LOOP_CANCELED = -1,
+            LOOP_REQUESTANIMFRAME = -2,
             TARGET_INFO_SEPARATOR = "---------------",
             LOADING_RANDOM_ITEMS_PROGRESS = 5,
             LOADING_BUILDING_SCENE_PROGRESS = 10,
@@ -84,7 +85,7 @@ define([
             _battleCursor,
             /**
              * Stores the timestamp of the last simulation step
-             * @type Date
+             * @type DOMHighResTimeStamp
              */
             _prevDate,
             /**
@@ -108,12 +109,14 @@ define([
      * Executes one simulation (and control) step for the battle.
      */
     function _simulationLoopFunction() {
-        var curDate = new Date();
-        control.control();
-        if (!_isTimeStopped) {
-            _level.tick(curDate - _prevDate);
+        if (_simulationLoop !== LOOP_CANCELED) {
+            var curDate = performance.now();
+            control.control();
+            if (!_isTimeStopped) {
+                _level.tick(curDate - _prevDate);
+            }
+            _prevDate = curDate;
         }
-        _prevDate = curDate;
     }
     /**
      * Removes the stored renferences to the logic and graphical models of the battle.
@@ -165,7 +168,9 @@ define([
         control.stopListening();
         _battleCursor = document.body.style.cursor;
         document.body.style.cursor = 'default';
-        clearInterval(_simulationLoop);
+        if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
+            clearInterval(_simulationLoop);
+        }
         _simulationLoop = LOOP_CANCELED;
         if (_battleScene) {
             _battleScene.setShouldAnimate(false);
@@ -178,14 +183,18 @@ define([
     function resumeBattle() {
         document.body.style.cursor = _battleCursor || 'default';
         if (_simulationLoop === LOOP_CANCELED) {
-            _prevDate = new Date();
+            _prevDate = performance.now();
             if (_battleScene) {
                 if (!_isTimeStopped) {
                     _battleScene.setShouldAnimate(true);
                 }
                 _battleScene.setShouldUpdateCamera(true);
             }
-            _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+            if (logic.getSetting(logic.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
+                _simulationLoop = LOOP_REQUESTANIMFRAME;
+            } else {
+                _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+            }
             control.startListening();
         } else {
             application.showError("Trying to resume simulation while it is already going on!", "minor",
@@ -207,7 +216,8 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 graphics.getAntialiasing(),
-                graphics.getFiltering());
+                graphics.getFiltering(),
+                logic.getSetting(logic.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
         /**
          * @type SimpleComponent
          */
@@ -431,13 +441,21 @@ define([
     };
     /**
      * @override
+     * @param {Number} dt
      */
-    BattleScreen.prototype.render = function () {
-        screens.HTMLScreenWithCanvases.prototype.render.call(this);
-        this._stats.setContent(
-                this.getFPS() + "<br/>" +
-                _battleScene.getNumberOfDrawnTriangles());
-        this._updateUI();
+    BattleScreen.prototype._render = function (dt) {
+        // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
+        // is performed right before each render and not in a separate loop for best performance
+        if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
+            _simulationLoopFunction();
+        }
+        screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
+        if (_battleScene) {
+            this._stats.setContent(
+                    this.getFPS() + "<br/>" +
+                    _battleScene.getNumberOfDrawnTriangles());
+            this._updateUI();
+        }
     };
     /**
      * Loads the specified level description file and sets a callback to create a new game-logic model and scene for the simulated battle
@@ -446,7 +464,7 @@ define([
      */
     BattleScreen.prototype.startNewBattle = function (levelSourceFilename) {
         var
-                loadingStartTime = new Date(),
+                loadingStartTime = performance.now(),
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         _clearData();
         document.body.classList.add("wait");
@@ -489,7 +507,7 @@ define([
                     this.clearSceneCanvasBindings();
                     this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
                     this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
-                    application.log("Game data loaded in " + ((new Date() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
+                    application.log("Game data loaded in " + ((performance.now() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                     this._smallHeader.setContent(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false);

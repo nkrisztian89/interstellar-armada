@@ -34,6 +34,12 @@ define([
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
+                armadaScreens.MENU_COMPONENT_SOURCE,
+                {
+                    menuClassName: armadaScreens.MENU_CLASS_NAME,
+                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
+                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
+                },
                 [{
                         id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
@@ -63,6 +69,12 @@ define([
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
+                armadaScreens.MENU_COMPONENT_SOURCE,
+                {
+                    menuClassName: armadaScreens.MENU_CLASS_NAME,
+                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
+                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
+                },
                 [{
                         id: strings.SETTINGS.GENERAL.name,
                         action: function () {
@@ -91,6 +103,12 @@ define([
                     cssFilename: armadaScreens.INGAME_MENU_SCREEN_CSS,
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                armadaScreens.MENU_COMPONENT_SOURCE,
+                {
+                    menuClassName: armadaScreens.MENU_CLASS_NAME,
+                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
+                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
                 },
                 [{
                         id: strings.INGAME_MENU.RESUME.name,

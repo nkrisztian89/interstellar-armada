@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, document, alert, window, setInterval, clearInterval */
+/*global define, document, alert, window, setInterval, clearInterval, performance */
 
 /**
  * @param types Used for handling enum values
@@ -44,7 +44,11 @@ define([
             SCREEN_BACKGROUND_ID = "screenBackground",
             DEFAULT_SCREEN_BACKGROUND_CLASS_NAME = "screenBackground",
             SCREEN_CONTAINER_ID = "screenContainer",
-            DEFAULT_SCREEN_CONTAINER_CLASS_NAME = "screenContainer";
+            DEFAULT_SCREEN_CONTAINER_CLASS_NAME = "screenContainer",
+            RESIZEABLE_CLASS_NAME = "resizeable",
+            LOOP_CANCELED = -1,
+            LOOP_REQUESTANIMFRAME = -2,
+            MENU_COMPONENT_NAME = "menu";
     // #########################################################################
     /**
      * @typedef {Object} HTMLScreen~Style
@@ -441,35 +445,33 @@ define([
     /**
      * @class An enhanced canvas element (a wrapper around a regular HTML canvas), 
      * that can create and hold a reference to a managed WebGL context for the canvas.
-     * @param {HTMLCanvasElement} canvas The canvas around which this object should
-     * be created.
+     * @param {HTMLCanvasElement} canvas The canvas around which this object should be created.
      * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL context of this canvas
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
-     * @returns {ScreenCanvas}
      */
     function ScreenCanvas(canvas, antialiasing, filtering) {
         /**
+         * A reference to the wrapped HTML5 canvas.
          * @type HTMLCanvasElement
          */
         this._canvas = canvas;
         /**
-         * @type String
-         */
-        this._name = canvas.getAttribute("id");
-        /**
+         * Whether the size of this canvas can change when resizing the screen
          * @type Boolean
          */
-        this._resizeable = canvas.classList.contains("resizeable");
+        this._resizeable = canvas.classList.contains(RESIZEABLE_CLASS_NAME);
         /**
+         * Whether antialiasing should be turned on for the GL context of this canvas
          * @type Boolean
          */
         this._antialiasing = antialiasing;
         /**
-         * enum managedGL.TextureFiltering
+         * (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
          * @type String
          */
-        this._filtering = types.getEnumValue("canvas.filtering", managedGL.TextureFiltering, filtering);
+        this._filtering = types.getEnumValue("ScreenCanvas.filtering", managedGL.TextureFiltering, filtering);
         /**
+         * A reference to the managed GL context associated with this canvas.
          * @type ManagedGLContext
          */
         this._context = null;
@@ -482,8 +484,7 @@ define([
         return this._canvas;
     };
     /**
-     * Tells if the canvas is resizeable = if it has a dynamic size that changes
-     * when the window is resized.
+     * Tells if the canvas is resizeable = if it has a dynamic size that changes when the window is resized.
      * @returns {Boolean}
      */
     ScreenCanvas.prototype.isResizeable = function () {
@@ -495,64 +496,86 @@ define([
      * @returns {ManagedGLContext}
      */
     ScreenCanvas.prototype.getManagedContext = function () {
-        if (this._context === null) {
+        if (!this._context) {
             this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, this._antialiasing, this._filtering);
         }
         return this._context;
     };
     // #########################################################################
     /**
-     * @class Represents a game screen that has one or more canvases where WebGL
-     * scenes can be rendered.
+     * @class Represents a game screen that has one or more canvases where WebGL scenes can be rendered.
      * @extends HTMLScreen
      * @param {String} name The name by which this screen can be identified.
-     * @param {String} source The name of the HTML file where the structure of this
-     * screen is defined.
-     * @param {HTMLScreen~Style} [style]
+     * @param {String} htmlFilename See HTMLScreen.
+     * @param {HTMLScreen~Style} [style] See HTMLScreen.
      * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
-     * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvas of this screen
+     * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
+     * @param {Boolean} [useRequestAnimFrame=false] Whether to use the requestAnimationFrame API for the render loop
+     * (as opposed to setInterval)
      */
-    function HTMLScreenWithCanvases(name, source, style, antialiasing, filtering) {
-        HTMLScreen.call(this, name, source, style);
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, filtering, useRequestAnimFrame) {
+        HTMLScreen.call(this, name, htmlFilename, style);
         /**
+         * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
          * @type Boolean
          */
         this._antialiasing = antialiasing;
         /**
-         * enum managedGL.TextureFiltering
+         * (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
          * @type String
          */
-        this._filtering = source ? types.getEnumValue("HTMLScreenWithCanvases.filtering", managedGL.TextureFiltering, filtering) : null;
+        this._filtering = htmlFilename ? types.getEnumValue("HTMLScreenWithCanvases.filtering", managedGL.TextureFiltering, filtering) : null;
         /**
+         * Stores the canvases of the screen by their names (IDs)
          * @type Object.<String, ScreenCanvas>
          */
         this._canvases = {};
         /**
-         * @typedef {Object} ScreenCanvasBinding
+         * @typedef {Object} HTMLScreenWithCanvases~ScreenCanvasBinding
          * @property {Scene} scene
          * @property {ScreenCanvas} canvas
          */
         /**
-         * @type ScreenCanvasBinding[]
+         * Stores all the active bindings that exist between the canvases of this screen and WebGL (BudaScene)
+         * Scenes. When calling render or starting the render loop, all the scenes present in these bindings
+         * will be automatically rendered on their corresponding canvases.
+         * @type HTMLScreenWithCanvases~ScreenCanvasBinding[]
          */
         this._sceneCanvasBindings = [];
         /**
+         * An ID for the render loop so that it can be cleared (when using setInterval)
          * @type Number
          */
-        this._renderLoop = null;
+        this._renderLoop = LOOP_CANCELED;
         /**
-         * @type Date[]
+         * Stores the timestamps of the last renders so that the FPS can be calculated.
+         * @type DOMHighResTimeStamp[]
          */
         this._renderTimes = null;
         /**
+         * A reference to the function that is set to handle the resize event for this screen so
+         * that it can be removed if the screen is no longer active.
          * @type Function
          */
         this._resizeEventListener = null;
+        /**
+         * Whether to use the requestAnimationFrame API for the render loop (as opposed to setInterval)
+         * @type Boolean
+         */
+        this._useRequestAnimFrame = useRequestAnimFrame;
     }
     HTMLScreenWithCanvases.prototype = new HTMLScreen();
     HTMLScreenWithCanvases.prototype.constructor = HTMLScreenWithCanvases;
     /**
-     * Removes all stored binding between scenes and canvases. This removes all references to the related scenes existing in this object.
+     * A handler for the resize event of the window so that e.g. the projection matrices used to render
+     * the scene can be adjusted for the new aspect ratio.
+     */
+    HTMLScreenWithCanvases.prototype.handleResize = function () {
+        this.resizeCanvases();
+    };
+    /**
+     * Removes all stored binding between scenes and canvases. 
+     * This removes all references to the related scenes existing in this object.
      */
     HTMLScreenWithCanvases.prototype.clearSceneCanvasBindings = function () {
         this._sceneCanvasBindings = [];
@@ -565,7 +588,6 @@ define([
         HTMLScreen.prototype.removeFromPage.call(this);
         this.stopRenderLoop();
         window.removeEventListener("resize", this._resizeEventListener);
-        this._resizeEventListener = null;
         this._canvases = {};
         this.clearSceneCanvasBindings();
         resources.clearResourceContextBindings();
@@ -579,6 +601,7 @@ define([
         this.stopRenderLoop();
     };
     /**
+     * @override
      * Initializes the components of the parent class, then the additional ones for
      * this class (the canvases).
      */
@@ -589,18 +612,18 @@ define([
         for (i = 0; i < canvasElements.length; i++) {
             this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(canvasElements[i], this._antialiasing, this._filtering);
         }
-        this._resizeEventListener = function () {
-            this.resizeCanvases();
-        }.bind(this);
+        // save a specific reference so we can remove it later
+        this._resizeEventListener = this.handleResize.bind(this);
         window.addEventListener("resize", this._resizeEventListener);
     };
     /**
-     * Returns the stored canvas component that has the passed name.
+     * Returns the stored canvas component that corresponds to the HTML5 canvas element with the passed
+     * original ID.
      * @param {String} name
      * @returns {ScreenCanvas}
      */
     HTMLScreenWithCanvases.prototype.getScreenCanvas = function (name) {
-        return this._canvases[this._name + "_" + name];
+        return this._canvases[this._getElementID(name)];
     };
     /**
      * Creates a binding between the passed scene and canvas, causing the scene to
@@ -624,22 +647,32 @@ define([
             });
         }
         scene.addToContext(canvas.getManagedContext());
-        if (this._renderLoop !== null) {
+        if (this._renderLoop !== LOOP_CANCELED) {
             canvas.getManagedContext().setup();
         }
     };
     /**
-     * Renders the scenes displayed on this screen.
+     * The core render function that needs to be overridden adding any additional rendering next to
+     * rendering the bound scenes to their canvases.
+     * @param {Number} dt The time passed since the last render in milliseconds.
      */
-    HTMLScreenWithCanvases.prototype.render = function () {
-        var i, d, dt;
-        d = new Date();
-        dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
+    HTMLScreenWithCanvases.prototype._render = function (dt) {
+        var i;
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             this._sceneCanvasBindings[i].scene.cleanUp();
             this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext(), dt);
         }
-        if (this._renderLoop !== null) {
+    };
+    /**
+     * Calls the core render method and manages the timestamps for FPS calculation as a simple 
+     * standalone method that can be used with setInterval or on its own for a single render.
+     */
+    HTMLScreenWithCanvases.prototype.render = function () {
+        var d, dt;
+        d = performance.now();
+        dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
+        this._render(dt);
+        if (this._renderLoop !== LOOP_CANCELED) {
             this._renderTimes.push(d);
             while ((this._renderTimes.length > 1) && ((d - this._renderTimes[0]) > 1000)) {
                 this._renderTimes.shift();
@@ -647,26 +680,51 @@ define([
         }
     };
     /**
-     * Starts the render loop, by beginning to execute the render function every
-     * interval milliseconds.
-     * @param {Number} interval
+     * Calls the core render method and manages the timestamps for FPS calculation, and if needed, maintains
+     * the render loop using the RequestAnimationFrame API.
+     * @param {DOMHighResTimeStamp} timestamp
+     */
+    HTMLScreenWithCanvases.prototype._renderRequestAnimFrame = function (timestamp) {
+        var dt;
+        dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (timestamp - this._renderTimes[this._renderTimes.length - 1]) : 0;
+        this._render(dt);
+        if (this._renderLoop !== LOOP_CANCELED) {
+            this._renderTimes.push(timestamp);
+            while ((this._renderTimes.length > 1) && ((timestamp - this._renderTimes[0]) > 1000)) {
+                this._renderTimes.shift();
+            }
+            window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
+        }
+    };
+    /**
+     * Starts the render loop, by beginning to execute the render function every interval milliseconds or
+     * using the requestAnimationFrame API.
+     * @param {Number} interval This will only be considered if setInterval, and not the RequestAnimationFrame
+     * API is used
      */
     HTMLScreenWithCanvases.prototype.startRenderLoop = function (interval) {
         var i;
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             this._sceneCanvasBindings[i].canvas.getManagedContext().setup();
         }
-        this._renderTimes = [new Date()];
-        this._renderLoop = setInterval(function () {
-            this.render();
-        }.bind(this), interval);
+        this._renderTimes = [performance.now()];
+        if (this._useRequestAnimFrame) {
+            this._renderLoop = LOOP_REQUESTANIMFRAME;
+            window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
+        } else {
+            this._renderLoop = setInterval(function () {
+                this.render();
+            }.bind(this), interval);
+        }
     };
     /**
      * Stops the render loop.
      */
     HTMLScreenWithCanvases.prototype.stopRenderLoop = function () {
-        clearInterval(this._renderLoop);
-        this._renderLoop = null;
+        if (!this._useRequestAnimFrame) {
+            clearInterval(this._renderLoop);
+        }
+        this._renderLoop = LOOP_CANCELED;
     };
     /**
      * Returns the Frames Per Second count for this screen's render loop.
@@ -718,18 +776,21 @@ define([
     };
     // #########################################################################
     /**
-     * @class A game screen with a {@link MenuComponent}.
+     * @class A game screen with a menu component and related convenience constructor.
      * @extends HTMLScreen
-     * @param {String} name See {@link GameScreen}
-     * @param {String} source See {@link GameScreen}
-     * @param {HTMLScreen~Style} [style]
-     * @param {MenuComponent~MenuOption[]} menuOptions The menuOptions for creating the {@link MenuComponent}
+     * @param {String} name See HTMLScreen.
+     * @param {String} htmlFilename See HTMLScreen.
+     * @param {HTMLScreen~Style} [style] See HTMLScreen.
+     * @param {String} menuHTMLFilename The filename of the HTML source file of the menu component.
+     * @param {MenuComponent~Style} [menuStyle] The style information for the menu component.
+     * @param {MenuComponent~MenuOption[]} menuOptions The menuOptions for creating the menu component.
      * @param {String} [menuContainerID] The ID of the HTML element inside of which
      * the menu should be added (if omitted, it will be appended to body)
      */
-    function MenuScreen(name, source, style, menuOptions, menuContainerID) {
-        HTMLScreen.call(this, name, source, style);
+    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID) {
+        HTMLScreen.call(this, name, htmlFilename, style);
         /**
+         * The menuOptions for creating the menu component.
          * @type MenuComponent~MenuOption[]
          */
         this._menuOptions = menuOptions;
@@ -745,13 +806,9 @@ define([
          */
         this._menuComponent = this.registerExternalComponent(
                 new components.MenuComponent(
-                        "menu",
-                        "menucomponent.html",
-                        {
-                            menuClassName: "menu",
-                            buttonClassName: "button",
-                            buttonContainerClassName: "transparentContainer"
-                        },
+                        MENU_COMPONENT_NAME,
+                        menuHTMLFilename,
+                        menuStyle,
                         this._menuOptions),
                 this._menuContainerID);
     }

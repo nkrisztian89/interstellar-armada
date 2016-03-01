@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true  */
-/*global define, setInterval, clearInterval, document */
+/*global define, setInterval, clearInterval, document, performance */
 
 /**
  * 
@@ -179,13 +179,13 @@ define([
      */
     function _startRevealLoop() {
         var
-                revealStartDate = new Date(),
+                revealStartDate = performance.now(),
                 maxRevealState = (_getSetting(SETTINGS.SHOW_SOLID_MODEL) ? REVEAL_SOLID_END_STATE : REVEAL_WIREFRAME_END_STATE),
                 elapsedTime;
         _revealState = _showWireframeModel() ? REVEAL_WIREFRAME_START_STATE : REVEAL_SOLID_START_STATE;
         // creating the reveal function on-the-fly so we can use closures, and as a new loop is not started frequently
         _revealLoop = setInterval(function () {
-            elapsedTime = new Date() - revealStartDate;
+            elapsedTime = performance.now() - revealStartDate;
             // applying the solid reveal delay
             if (elapsedTime > REVEAL_SOLID_START_STATE * _getSetting(SETTINGS.REVEAL_DURATION)) {
                 elapsedTime = Math.max(REVEAL_SOLID_START_STATE * _getSetting(SETTINGS.REVEAL_DURATION), elapsedTime - _getSetting(SETTINGS.REVEAL_SOLID_DELAY_DURATION));
@@ -210,7 +210,7 @@ define([
      */
     function _startRotationLoop(startAngle) {
         var
-                prevDate = new Date(),
+                prevDate = performance.now(),
                 curDate,
                 startOrientationMatrix = mat.mul4(
                         mat.rotation4([0.0, 0.0, 1.0], Math.radians(startAngle)),
@@ -224,7 +224,7 @@ define([
         }
         // setting the loop function
         _rotationLoop = setInterval(function () {
-            curDate = new Date();
+            curDate = performance.now();
             if (_solidModel) {
                 _solidModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
             }
@@ -415,7 +415,8 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 graphics.getAntialiasing(),
-                graphics.getFiltering());
+                graphics.getFiltering(),
+                logic.getSetting(logic.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
         /**
          * @type SimpleComponent
          */
