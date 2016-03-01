@@ -587,7 +587,7 @@ define([
         lightSources = _getSetting(SETTINGS.LIGHT_SOURCES);
         if (lightSources) {
             for (i = 0; i < lightSources.length; i++) {
-                _itemViewScene.addLightSource(new budaScene.LightSource(lightSources[i].color, lightSources[i].direction));
+                _itemViewScene.addLightSource(new budaScene.DirectionalLightSource(lightSources[i].color, lightSources[i].direction));
             }
         }
         if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {

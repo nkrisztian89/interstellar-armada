@@ -26,7 +26,7 @@ define([
              */
             CLOSE_TO_ONE_THRESHOLD = 0.99999;
     // -----------------------------------------------------------------------------
-    // Functions that create new matrices
+    // Functions that create new matrices and constant matrices
     /**
      * Returns a 3x3 identity matrix.
      * @returns {Float32Array}
@@ -39,6 +39,11 @@ define([
         ]);
     };
     /**
+     * A constant 3x3 identity matrix.
+     * @type Float32Array
+     */
+    mat.IDENTITY3 = mat.identity3();
+    /**
      * Returns a 4x4 identity matrix.
      * @returns {Float32Array}
      */
@@ -50,6 +55,11 @@ define([
             0.0, 0.0, 0.0, 1.0
         ]);
     };
+    /**
+     * A constant 4x4 identity matrix.
+     * @type Float32Array
+     */
+    mat.IDENTITY4 = mat.identity4();
     /**
      * Returns a 3x3 null matrix.
      * @returns {Float32Array}
@@ -170,6 +180,34 @@ define([
             m[8], m[9], m[10], 0.0,
             0.0, 0.0, 0.0, 1.0
         ]);
+    };
+    /**
+     * Returns a 4x4 rotation matrix that has a Z axis pointing towards the given direction and a Y axis based on an optional second vector.
+     * @param {Number[3]} direction A 3D unit vector.
+     * @param {Number[3]} [up] A 3D unit vector.
+     * @returns {Float32Array}
+     */
+    mat.lookTowards4 = function (direction, up) {
+        var result, right;
+        up = up || [0, 1, 0];
+        result = new Float32Array([
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            direction[0], direction[1], direction[2], 0,
+            0, 0, 0, 1
+        ]);
+        if (Math.abs(vec.dot3(up, direction)) > CLOSE_TO_ONE_THRESHOLD) {
+            up = vec.perpendicular3(direction);
+        }
+        right = vec.cross3(up, direction);
+        result[0] = right[0];
+        result[1] = right[1];
+        result[2] = right[2];
+        up = vec.cross3(direction, right);
+        result[4] = up[0];
+        result[5] = up[1];
+        result[6] = up[2];
+        return mat.correctedOrthogonal4(result);
     };
     /**
      * Returns a 4x4 transformation matrix describing a scaling along the 3 axes.

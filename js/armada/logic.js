@@ -729,7 +729,7 @@ define([
      * @param {Scene} scene
      */
     BackgroundObject.prototype.addToScene = function (scene) {
-        scene.addLightSource(new budaScene.LightSource(this._class.getLightColor(), this._direction));
+        scene.addLightSource(new budaScene.DirectionalLightSource(this._class.getLightColor(), this._direction));
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             var i, layers, layerParticle;

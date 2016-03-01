@@ -11,12 +11,23 @@
 
 define(function () {
     "use strict";
-
     var vec = {};
-
+    // -----------------------------------------------------------------------------
+    // Constant vectors
+    /**
+     * A constant 3D null vector.
+     * @type Number[3]
+     */
+    vec.NULL3 = [0, 0, 0];
+    Object.freeze(vec.NULL3);
+    /**
+     * A constant 4D null vector.
+     * @type Number[4]
+     */
+    vec.NULL4 = [0, 0, 0, 0];
+    Object.freeze(vec.NULL4);
     // -----------------------------------------------------------------------------
     // Functions that create a vector
-
     /**
      * Returns a 3D vector created based on the attributes of the passed XML element.
      * @param {Element} tag
@@ -29,10 +40,16 @@ define(function () {
             parseFloat(tag.getAttribute("z"))
         ];
     };
-
+    /**
+     * Returns a 3D vector that is perpendicular to the passed 3D vector (one of the infinite possibilities)
+     * @param {Number[3]} v
+     * @returns {Number[3]}
+     */
+    vec.perpendicular3 = function (v) {
+        return [v[1], -v[0], 0];
+    };
     // -----------------------------------------------------------------------------
     // Functions of a single vector
-
     /**
      * Returns the length of a 3D vector.
      * @param {Number[3]} v The 3D vector.

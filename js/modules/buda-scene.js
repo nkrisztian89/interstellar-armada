@@ -70,7 +70,12 @@ define([
              * The maximum beta angle for FPS-mode camera configurations that were created without specifying it
              * @type Number
              */
-            DEFAULT_MAX_BETA = 90;
+            DEFAULT_MAX_BETA = 90,
+            SHADOW_MAP_BUFFER_NAME_PREFIX = "shadow-map-buffer-",
+            SHADOW_MAP_BUFFER_NAME_INFIX = "-",
+            UNIFORM_LIGHT_MATRIX_NAME = "u_lightMatrix",
+            UNIFORM_SHADOW_MAP_DEPTH_NAME = "u_shadowMapDepth",
+            UNIFORM_PROJECTION_MATRIX_NAME = "u_projMatrix";
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -5241,81 +5246,142 @@ define([
             }
         }
     };
-    ///TODO: continue refactoring from here
-    ///-------------------------------------------------------------------------
+    // #########################################################################
     /**
-     * @class Represents a light source that can be taken into account when rendering.
-     * @param {Number[3]} color
-     * @param {Number[3]} direction
-     * @returns {LightSource}
+     * @typedef {Object} BudaScene~LightUniformData
+     * @property {Number[3]} color
+     * @property {Number[3]} direction
+     * @property {Float32Array} matrix
+     * @property {Float32Array} translationVector
      */
-    function LightSource(color, direction) {
-        this.color = color;
-        this.direction = vec.normal3(direction);
-        this.castsShadows = true;
-        this._orientationMatrix = mat.identity4();
-        this.matrix = null;
-        this._index = null;
-        var vx, vy, vz;
-        vz = this.direction;
-        vy = (vz[1] < -0.995) ? [1, 0, 0] : ((vz[1] > 0.995) ? [1, 0, 0] : [0, 1, 0]);
-        vx = vec.normal3(vec.cross3(vy, vz));
-        vy = vec.normal3(vec.cross3(vz, vx));
-        this._orientationMatrix = mat.correctedOrthogonal4(mat.fromVectorsTo4(vx, vy, vz));
-        this._orientationMatrix = mat.inverseOfRotation4(this._orientationMatrix);
-        this.matrix = this._orientationMatrix;
-        this.translationVector = new Float32Array(vec.mulVec3Mat4([0, 0, 1], this._orientationMatrix));
+    /**
+     * @class A simple directional light source that all objects in the scene will have access to and can cast shadows using a set of
+     * shadow maps that have increasing spans around the camera position to provide higher resolution for objects close to the camera.
+     * @param {Number[3]} color The color of the light the source emits.
+     * @param {Number[3]} direction The direction this light source emits light FROM (the opposite of the direction of the light rays
+     * themselves)
+     */
+    function DirectionalLightSource(color, direction) {
+        /**
+         * The color of the light the source emits.
+         * @type Number[3]
+         */
+        this._color = color;
+        /**
+         * A unit vector indicating the direction this light source emits light FROM (the opposite of the direction of the light rays
+         * themselves)
+         * @type Number[3]
+         */
+        this._direction = vec.normal3(direction);
+        /**
+         * The inverse of the rotation matrix pointing towards this light source.
+         * @type Float32Array
+         */
+        this._orientationMatrix = mat.inverseOfRotation4(mat.lookTowards4(this._direction));
+        /**
+         * The matrix that transforms a world coordinate into a shadow map coordinate for this light source. Depends on the camera position,
+         * but does not take into account that the actual center of the shadow map is in front of the camera, at different positions for
+         * each range, so the resulting coordinates will have to be translated using a stored translation unit vector and the size of the
+         * ranges.
+         * @type Float32Array
+         */
+        this._matrix = null;
+        /**
+         * A unit vector that points from the camera center towards the centers of the shadow maps (which reside in from of the camera), 
+         * for the current camera that is used to render a scene with this light source. Using this vector, shaders can calculate the
+         * position of a 3D point on every shadow map just based on the matrix that refers to a shadow map with the camera in center.
+         * @type Float32Array
+         */
+        this._translationVector = null;
+        /**
+         * The prefix to use for creating frambuffer names for the shadow maps of different ranges for this light source.
+         * @type String
+         */
+        this._shadowMapBufferNamePrefix = null;
     }
-
     /**
-     * 
-     * @param {ManagedGLContext} context
-     * @param {Number} index 
-     * @param {Boolean} shadowMappingEnabled
-     * @param {Number} nRanges
-     * @param {Number} shadowMapTextureSize
+     * Returns the name of the shadow map framebuffer to use for rendering the shadow map of the range with the given index for this light source.
+     * @param {Number} rangeIndex
+     * @returns {String}
      */
-    LightSource.prototype.addToContext = function (context, index, shadowMappingEnabled, nRanges, shadowMapTextureSize) {
+    DirectionalLightSource.prototype.getShadowMapBufferName = function (rangeIndex) {
+        return this._shadowMapBufferNamePrefix + rangeIndex.toString();
+    };
+    /**
+     * Performs all necessary actions to prepare for rendering shadow maps for this light source using the passed context with the passed
+     * parameters.
+     * @param {ManagedGLContext} context The context to use for rendering shadow maps.
+     * @param {Boolean} shadowMappingEnabled Whether shadow mapping is enabled for rendering.
+     * @param {String} shadowMapBufferNamePrefix The prefix to use for creating frambuffer names for the shadow maps of different ranges for this light source.
+     * @param {Number} numRanges The number of shadow map( range)s that will have to be rendered.
+     * @param {Number} shadowMapTextureSize The size (width and height, in texels) that the shadow map framebuffers should have
+     */
+    DirectionalLightSource.prototype.addToContext = function (context, shadowMappingEnabled, shadowMapBufferNamePrefix, numRanges, shadowMapTextureSize) {
         var i;
-        this._index = index;
-        if (shadowMappingEnabled && this.castsShadows) {
-            for (i = 0; i < nRanges; i++) {
-                context.addFrameBuffer(new managedGL.FrameBuffer("shadow-map-buffer-" + this._index + "-" + i, shadowMapTextureSize, shadowMapTextureSize));
+        this._shadowMapBufferNamePrefix = shadowMapBufferNamePrefix;
+        if (shadowMappingEnabled) {
+            for (i = 0; i < numRanges; i++) {
+                context.addFrameBuffer(new managedGL.FrameBuffer(this.getShadowMapBufferName(i), shadowMapTextureSize, shadowMapTextureSize));
             }
         }
     };
-    LightSource.prototype.reset = function () {
-        this.matrix = null;
-        this.translationVector = null;
-    };
     /**
-     * 
-     * @param {ManagedGLContext} context
-     * @param {Camera} camera
-     * @param {Number[3]} cameraZ
-     * @param {Number} rangeIndex
-     * @param {Number} range
-     * @param {Number} depth
+     * Call at the beginning of each render to clear stored values that refer to the state of the previous render.
+     * @returns {undefined}
      */
-    LightSource.prototype.startShadowMap = function (context, camera, cameraZ, rangeIndex, range, depth) {
-        context.setCurrentFrameBuffer("shadow-map-buffer-" + this._index + "-" + rangeIndex);
-        var matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(cameraZ, range))), this._orientationMatrix);
-        this.matrix = this.matrix || mat.mul4(camera.getInversePositionMatrix(), this._orientationMatrix);
-        this.translationVector = this.translationVector || new Float32Array(vec.normal3(vec.add3(mat.translationVector3(matrix), vec.scaled3(mat.translationVector3(this.matrix), -1))));
-        context.getCurrentShader().assignUniforms(context, {
-            "u_lightMatrix": function () {
-                return matrix;
-            },
-            "u_shadowMapDepth": function () {
-                return depth;
-            },
-            "u_projMatrix": function () {
-                return mat.orthographic4(range, range, -depth, depth);
-            }
-        });
+    DirectionalLightSource.prototype.reset = function () {
+        this._matrix = null;
+        this._translationVector = null;
     };
     /**
-     * Creates a new scene graph object.
+     * Performs all actions necesary to set up the passed context for rendering the shadow map of the given range for this light source.
+     * Assumes that an appropriate shadow mapping shader is already bound (since that would be the same for the different ranges and light
+     * sources)
+     * @param {ManagedGLContext} context The context to set up for shadow map rendering.
+     * @param {Camera} camera The camera used for the rendering (since the positions of the shadow maps in the world depend on it)
+     * @param {Number} rangeIndex The index of the shadow map range that is to be rendered
+     * @param {Number} range The range of this shadow map (the size of the shadow map area on axes X and Y)
+     * @param {Number} depth The depth of this shadow map (the size of the shadow map area on axis Z)
+     */
+    DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
+        var matrix, uniformValueFunctions = {};
+        context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
+        // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
+        // considering also that the center of the shadow map is ahead of the camera
+        matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getOrientationMatrix()), range))), this._orientationMatrix);
+        // a matrix referring to shadow map that would have its center at the camera and the unit vector that points from this center towards
+        // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
+        // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
+        this._matrix = this._matrix || mat.mul4(camera.getInversePositionMatrix(), this._orientationMatrix);
+        this._translationVector = this._translationVector || new Float32Array(vec.normal3(vec.sub3(mat.translationVector3(matrix), mat.translationVector3(this._matrix))));
+        uniformValueFunctions[UNIFORM_LIGHT_MATRIX_NAME] = function () {
+            return matrix;
+        };
+        uniformValueFunctions[UNIFORM_SHADOW_MAP_DEPTH_NAME] = function () {
+            return depth;
+        };
+        uniformValueFunctions[UNIFORM_PROJECTION_MATRIX_NAME] = function () {
+            return mat.orthographic4(range, range, -depth, depth);
+        };
+        context.getCurrentShader().assignUniforms(context, uniformValueFunctions);
+    };
+    /**
+     * Returns an object that can be used to set the uniform object representing this light source in a shader using it.
+     * @returns {BudaScene~LightUniformData}
+     */
+    DirectionalLightSource.prototype.getUniformData = function () {
+        // null cannot be passed to uniforms of vector / matrix type
+        return {
+            color: this._color,
+            direction: this._direction,
+            matrix: this._matrix || mat.IDENTITY4,
+            translationVector: this._translationVector || vec.NULL3
+        };
+    };
+    ///TODO: continue refactoring from here
+    ///-------------------------------------------------------------------------
+    // #########################################################################
+    /**
      * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
      * @param {number} left The X coordinate of the top left corner of the viewport on the screen.
      * @param {number} top The Y coordinate of the top left corner of the viewport on the screen.
@@ -5341,6 +5407,7 @@ define([
         this.objects = [];
         this._cameraConfigurations = [];
         this.lights = [];
+        this._lightUniformData = [];
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = [];
         /**
@@ -5384,10 +5451,10 @@ define([
         // objects, so any shader used in the scene will be able to get their
         // values
         this.uniformValueFunctions.u_numLights = function () {
-            return this.lights.length;
+            return this._lightUniformData.length;
         }.bind(this);
         this.uniformValueFunctions.u_lights = function () {
-            return this.lights;
+            return this._lightUniformData;
         }.bind(this);
         this.uniformValueFunctions.u_cameraMatrix = function () {
             return this.activeCamera.getCameraMatrix();
@@ -5405,6 +5472,14 @@ define([
             return this._shadowMappingEnabled;
         }.bind(this);
     }
+
+    Scene.prototype._updateLightUniformData = function () {
+        var i;
+        this._lightUniformData = [];
+        for (i = 0; i < this.lights.length; i++) {
+            this._lightUniformData.push(this.lights[i].getUniformData());
+        }
+    };
 
     Scene.prototype.setShadowMapping = function (params) {
         if (params) {
@@ -5437,7 +5512,7 @@ define([
         this._shadowMapRanges = ranges;
         for (i = 0; i < this._contexts.length; i++) {
             for (j = 0; j < this.lights.length; j++) {
-                this.lights[j].addToContext(this._contexts[i], j, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
+                this.lights[j].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(j), this._shadowMapRanges.length, this._shadowMapTextureSize);
             }
         }
     };
@@ -5713,6 +5788,14 @@ define([
         }
     };
     /**
+     * Returns the framebuffer name prefix to use for the shadow maps for the light with the given index.
+     * @param {Number} lightIndex
+     * @returns {String}
+     */
+    Scene.prototype._getShadowMapBufferNamePrefix = function (lightIndex) {
+        return SHADOW_MAP_BUFFER_NAME_PREFIX + lightIndex + SHADOW_MAP_BUFFER_NAME_INFIX;
+    };
+    /**
      * 
      * @param {ManagedGLContext} context
      */
@@ -5724,14 +5807,14 @@ define([
                 var j, k, shadowMaps = [];
                 for (j = 0; j < this.lights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(context.getFrameBuffer("shadow-map-buffer-" + j + "-" + k).getTextureBindLocation(context));
+                        shadowMaps.push(context.getFrameBuffer(this.lights[j].getShadowMapBufferName(k)).getTextureBindLocation(context));
                     }
                 }
                 return new Int32Array(shadowMaps);
             }.bind(this);
         }
         for (i = 0; i < this.lights.length; i++) {
-            this.lights[i].addToContext(context, i, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
+            this.lights[i].addToContext(context, this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
         for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
             this._backgroundObjects[i].addToContext(context);
@@ -5752,7 +5835,7 @@ define([
                 var j, k, shadowMaps = [];
                 for (j = 0; j < this.lights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(this._contexts[0].getFrameBuffer("shadow-map-buffer-" + j + "-" + k).getTextureBindLocation(this._contexts[0]));
+                        shadowMaps.push(this._contexts[0].getFrameBuffer(this.lights[j].getShadowMapBufferName(k)).getTextureBindLocation(this._contexts[0]));
                     }
                 }
                 return new Int32Array(shadowMaps);
@@ -5763,7 +5846,7 @@ define([
             for (i = 0; i < this._contexts.length; i++) {
                 this._shadowMappingShader.addToContext(this._contexts[i]);
                 for (l = 0; l < this.lights.length; l++) {
-                    this.lights[l].addToContext(this._contexts[i], l, this._shadowMappingEnabled, this._shadowMapRanges.length, this._shadowMapTextureSize);
+                    this.lights[l].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(l), this._shadowMapRanges.length, this._shadowMapTextureSize);
                 }
             }
         } else {
@@ -5801,7 +5884,7 @@ define([
      * @param {number} dt
      */
     Scene.prototype.render = function (context, dt) {
-        var i, j, _length_, gl, camOri, cameraZ, clear;
+        var i, j, _length_, gl, clear;
         application.log("Rendering scene...", 3);
         this.activeCamera.update(this._shouldUpdateCamera ? dt : 0);
         this._drawnTriangles = 0;
@@ -5815,25 +5898,20 @@ define([
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
-            camOri = this.activeCamera.getOrientationMatrix();
-            cameraZ = [camOri[8], camOri[9], camOri[10]];
             for (i = 0; i < this.lights.length; i++) {
-                if (this.lights[i].castsShadows) {
-                    this.lights[i].reset();
-                    for (j = 0; j < this._shadowMapRanges.length; j++) {
-                        this.lights[i].startShadowMap(context, this.activeCamera, cameraZ, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
-                        this.renderShadowMap(context);
-                    }
+                this.lights[i].reset();
+                for (j = 0; j < this._shadowMapRanges.length; j++) {
+                    this.lights[i].startShadowMap(context, this.activeCamera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
+                    this.renderShadowMap(context);
                 }
             }
             for (i = 0; i < this.lights.length; i++) {
-                if (this.lights[i].castsShadows) {
-                    for (j = 0; j < this._shadowMapRanges.length; j++) {
-                        context.bindTexture(context.getFrameBuffer("shadow-map-buffer-" + i + "-" + j), undefined, true);
-                    }
+                for (j = 0; j < this._shadowMapRanges.length; j++) {
+                    context.bindTexture(context.getFrameBuffer(this.lights[i].getShadowMapBufferName(j)), undefined, true);
                 }
             }
         }
+        this._updateLightUniformData();
         context.setCurrentFrameBuffer(null);
         gl.viewport(this.left, this.top, this.width, this.height);
         if (this.clearColorOnRender) {
@@ -5892,7 +5970,7 @@ define([
     return {
         LODContext: LODContext,
         Scene: Scene,
-        LightSource: LightSource,
+        DirectionalLightSource: DirectionalLightSource,
         RenderableObject: RenderableObject,
         RenderableObject3D: RenderableObject3D,
         RenderableNode: RenderableNode,
