@@ -10,12 +10,21 @@ struct Light
         vec3 translationVector;
     };
 
+struct PointLight
+    {
+        vec3 color;
+        float intensity;
+        vec3 position;
+    };
+
 // phong shading
 uniform sampler2D u_diffuseTexture;
 uniform sampler2D u_specularTexture;
 uniform vec3 u_eyePos;
 uniform Light u_lights[2];
 uniform int u_numLights;
+uniform PointLight u_pointLights[128];
+uniform int u_numPointLights;
 
 // luminosity mapping
 uniform sampler2D u_emissiveTexture;
@@ -211,6 +220,20 @@ void main() {
                         );
                 }
             }
+        }
+    }
+    // handling dynamic point-like light sources
+    vec3 direction;
+    float intensity;
+    for (int i = 0; i < 128; i++) {
+        if (i < u_numPointLights) {
+            direction = u_pointLights[i].position - v_worldPos.xyz;
+            dist = length(direction);
+            diffuseFactor = max(0.0, dot(normalize(direction), normal));
+            specularFactor = v_shininess > 0.0 ? pow(max(dot(reflDir, normalize(direction)), 0.0), v_shininess) : 0.0;
+            intensity = u_pointLights[i].intensity / (dist * dist);
+            gl_FragColor.rgb += clamp(u_pointLights[i].color * diffuseFactor  * intensity, 0.0, 1.0) * v_color.rgb * texCol.rgb
+                              + clamp(u_pointLights[i].color * specularFactor * intensity, 0.0, 1.0) * texSpec.rgb;
         }
     }
     // the alpha component from the attribute color and texture

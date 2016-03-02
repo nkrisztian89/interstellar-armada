@@ -1124,6 +1124,8 @@
                 "size": 2.5,
                 "duration": 250
             },
+            "lightColor": [0, 1, 0],
+            "lightIntensity": 35,
             "explosion": "smallHitExplosion"
         },
         {
@@ -1132,7 +1134,7 @@
             "shader": "billboard",
             "texture": "proton",
             "size": 8,
-            "mass": 5,
+            "mass": 15,
             "duration": 5000,
             "intersectionPositions": [0.35],
             "muzzleFlash": {
@@ -1142,6 +1144,8 @@
                 "size": 8,
                 "duration": 350
             },
+            "lightColor": [1, 1, 0],
+            "lightIntensity": 160,
             "explosion": "mediumHitExplosion"
         },
         {
@@ -1160,6 +1164,8 @@
                 "size": 18,
                 "duration": 450
             },
+            "lightColor": [0, 0.6, 1],
+            "lightIntensity": 500,
             "explosion": "largeHitExplosion"
         }
     ],
@@ -1361,7 +1367,7 @@
         {
             "name": "corvette",
             "fullName": "Corvette",
-            "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.", 
+            "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.",
             "goodAgainst": [
                 "reconFighter", "heavyFighter", "interceptor"
             ],

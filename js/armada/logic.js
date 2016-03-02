@@ -1446,6 +1446,13 @@ define([
                 this._physicalModel.getOrientationMatrix());
     };
     /**
+     * Returns the visual model of the projectile.
+     * @returns {Billboard}
+     */
+    Projectile.prototype.getVisualModel = function () {
+        return this._visualModel;
+    };
+    /**
      * Adds a renderable node representing this projectile to the passed scene.
      * @param {budaScene} scene The scene to which to add the renderable object
      * presenting the projectile.
@@ -1669,7 +1676,8 @@ define([
         var i, p,
                 orientationMatrix, scaledOriMatrix, weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
-                projectileClass, barrelPosVector, muzzleFlash, barrels;
+                projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
+                scene = this._visualModel.getNode().getScene();
         // check cooldown
         if (this._cooldown >= this._class.getCooldown()) {
             this._cooldown = 0;
@@ -1680,6 +1688,7 @@ define([
             weaponSlotPosMatrix = mat.mul4(this._spacecraft.getPositionMatrix(), mat.translation4v(weaponSlotPosVector));
             projectileOriMatrix = mat.mul4(this._slot.orientationMatrix, orientationMatrix);
             barrels = this._class.getBarrels();
+            projectileLights = {};
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
@@ -1696,8 +1705,15 @@ define([
                         projectileOriMatrix,
                         this._spacecraft,
                         new physics.Force("", barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)));
-                p.addToScene(this._visualModel.getNode().getScene());
+                p.addToScene(scene);
                 projectiles.push(p);
+                // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
+                // been created, so that projectiles from the same weapon and of the same class only use one light source object
+                if (!projectileLights[projectileClass.getName()]) {
+                    projectileLights[projectileClass.getName()] = new budaScene.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), [0, 0, 0], [p.getVisualModel()]);
+                } else {
+                    projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
+                }
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().addForceAndTorque(
                         vec.sub3(
@@ -1707,6 +1723,11 @@ define([
                         barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)),
                         _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)
                         );
+            }
+            for (projClassName in projectileLights) {
+                if (projectileLights.hasOwnProperty(projClassName)) {
+                    scene.addPointLightSource(projectileLights[projClassName]);
+                }
             }
         }
     };

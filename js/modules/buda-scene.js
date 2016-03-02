@@ -5378,6 +5378,122 @@ define([
             translationVector: this._translationVector || vec.NULL3
         };
     };
+    // #########################################################################
+    /**
+     * @typedef {Object} BudaScene~PointLightUniformData
+     * @property {Number[3]} color
+     * @property {Number} intensity
+     * @property {Number[3]} position
+     */
+    /**
+     * @class Represents a point-like light source that can be bound to one or more object in a scene, following their position.
+     * @param {Number[3]} color The color of the light emitted by this source.
+     * @param {Number} intensity The intensity of the light - the level of lighting for point light sources depends on the distance
+     * from the illuminated object, and it will be multiplied by this factor. This value corresponds by the intensity emitted by one of the
+     * objects, the total intensity will be multiplied by the total number of objects participating in this light source.
+     * @param {Number[3]} positionVector The position of the light source - if there is no specific object emitting it, then relative to the
+     * scene origo, if there is one specific object, then relative to that object, and if there are multiple object, this value is not 
+     * considered.
+     * @param {RenderableObject3D[]} [emittingObjects] The list of objects that together act as this light source. If none specified, the 
+     * light source will act as a static, global light source in the scene, and if multiple objects are specified, it will be positioned
+     * at the average position of those objects. In this case, all objects will be considered to contribute the same amount of intensity
+     * of the same color.
+     */
+    function PointLightSource(color, intensity, positionVector, emittingObjects) {
+        /**
+         * The color of the light emitted by this source.
+         * @type Number[3]
+         */
+        this._color = color;
+        /**
+         * The intensity of light emitted by one object
+         * @type Number
+         */
+        this._objectIntensity = intensity;
+        /**
+         * The position vector of this light source relative to the scene, if there are no emitting objects, and relative to the emitting 
+         * object, if there is one. If there are multiple objects, this value is not considered.
+         * @type Number[3]
+         */
+        this._relativePositionVector = positionVector;
+        /**
+         * The list of all objects acting together as this light source. If null / undefined, then the light source is considered static.
+         * @type RenderableObject3D[]
+         */
+        this._emittingObjects = emittingObjects;
+        /**
+         * Storing the calculated total intensity of this light source emitted by all of its emitting objects.
+         * @type Number
+         */
+        this._totalIntensity = intensity * (emittingObjects ? emittingObjects.length : 1);
+        /**
+         * The calculated position vector of this light source in world-space.
+         * @type Number[3]
+         */
+        this._positionVector = null;
+    }
+    /**
+     * Updates the properties of the light source based on the status of the emitting objects.
+     */
+    PointLightSource.prototype.update = function () {
+        var i, count;
+        if (!this._emittingObjects) {
+            this._totalIntensity = this._objectIntensity;
+            this._positionVector = this._relativePositionVector;
+        } else
+        if (this._emittingObjects.length === 1) {
+            this._totalIntensity = this._objectIntensity;
+            this._positionVector = vec.add3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, this._emittingObjects[0].getOrientationMatrix()));
+        } else {
+            this._positionVector = [0, 0, 0];
+            count = 0;
+            for (i = 0; i < this._emittingObjects.length; i++) {
+                if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused()) {
+                    this._positionVector = vec.add3(this._positionVector, this._emittingObjects[i].getPositionVector());
+                    count++;
+                }
+            }
+            this._positionVector[0] /= count;
+            this._positionVector[1] /= count;
+            this._positionVector[2] /= count;
+            this._totalIntensity = this._objectIntensity * count;
+        }
+    };
+    /**
+     * Returns an object that can be used to set the uniform object representing this light source in a shader using it.
+     * @returns {BudaScene~PointLightUniformData}
+     */
+    PointLightSource.prototype.getUniformData = function () {
+        return {
+            color: this._color,
+            intensity: this._totalIntensity,
+            position: this._positionVector
+        };
+    };
+    /**
+     * Returns whether this light source object can be reused as the light source it represents is not needed anymore (all its emitting
+     * objects have been deleted)
+     * @returns {Boolean}
+     */
+    PointLightSource.prototype.canBeReused = function () {
+        var i;
+        if (!this._emittingObjects) {
+            return false;
+        }
+        for (i = 0; i < this._emittingObjects.length; i++) {
+            if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused()) {
+                return false;
+            }
+        }
+        return true;
+    };
+    /**
+     * Adds a new emitting object to the ones contributing to this light source. All objects should be of the same type (color and intensity)
+     * @param {RenderableObject3D} emittingObject
+     */
+    PointLightSource.prototype.addEmittingObject = function (emittingObject) {
+        this._emittingObjects.push(emittingObject);
+    };
     ///TODO: continue refactoring from here
     ///-------------------------------------------------------------------------
     // #########################################################################
@@ -5406,8 +5522,10 @@ define([
         this._backgroundObjects = [];
         this.objects = [];
         this._cameraConfigurations = [];
-        this.lights = [];
-        this._lightUniformData = [];
+        this._directionalLights = [];
+        this._directionalLightUniformData = [];
+        this._pointLights = [];
+        this._pointLightUniformData = [];
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = [];
         /**
@@ -5451,10 +5569,16 @@ define([
         // objects, so any shader used in the scene will be able to get their
         // values
         this.uniformValueFunctions.u_numLights = function () {
-            return this._lightUniformData.length;
+            return this._directionalLightUniformData.length;
         }.bind(this);
         this.uniformValueFunctions.u_lights = function () {
-            return this._lightUniformData;
+            return this._directionalLightUniformData;
+        }.bind(this);
+        this.uniformValueFunctions.u_numPointLights = function () {
+            return this._pointLightUniformData.length;
+        }.bind(this);
+        this.uniformValueFunctions.u_pointLights = function () {
+            return this._pointLightUniformData;
         }.bind(this);
         this.uniformValueFunctions.u_cameraMatrix = function () {
             return this.activeCamera.getCameraMatrix();
@@ -5475,9 +5599,14 @@ define([
 
     Scene.prototype._updateLightUniformData = function () {
         var i;
-        this._lightUniformData = [];
-        for (i = 0; i < this.lights.length; i++) {
-            this._lightUniformData.push(this.lights[i].getUniformData());
+        this._directionalLightUniformData = [];
+        for (i = 0; i < this._directionalLights.length; i++) {
+            this._directionalLightUniformData.push(this._directionalLights[i].getUniformData());
+        }
+        this._pointLightUniformData = [];
+        for (i = 0; i < this._pointLights.length; i++) {
+            this._pointLights[i].update();
+            this._pointLightUniformData.push(this._pointLights[i].getUniformData());
         }
     };
 
@@ -5511,8 +5640,8 @@ define([
         var i, j;
         this._shadowMapRanges = ranges;
         for (i = 0; i < this._contexts.length; i++) {
-            for (j = 0; j < this.lights.length; j++) {
-                this.lights[j].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(j), this._shadowMapRanges.length, this._shadowMapTextureSize);
+            for (j = 0; j < this._directionalLights.length; j++) {
+                this._directionalLights[j].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(j), this._shadowMapRanges.length, this._shadowMapTextureSize);
             }
         }
     };
@@ -5653,7 +5782,10 @@ define([
         node.setScene(this);
     };
     Scene.prototype.addLightSource = function (newLightSource) {
-        this.lights.push(newLightSource);
+        this._directionalLights.push(newLightSource);
+    };
+    Scene.prototype.addPointLightSource = function (newLightSource) {
+        this._pointLights.push(newLightSource);
     };
     Scene.prototype.getLODContext = function () {
         return this.lodContext;
@@ -5786,6 +5918,15 @@ define([
             }
             this.objects.splice(i, k);
         }
+        for (i = 0; i < this._pointLights.length; i++) {
+            j = i;
+            k = 0;
+            while ((j < this._pointLights.length) && ((!this._pointLights[j]) || (this._pointLights[j].canBeReused() === true))) {
+                j++;
+                k++;
+            }
+            this._pointLights.splice(i, k);
+        }
     };
     /**
      * Returns the framebuffer name prefix to use for the shadow maps for the light with the given index.
@@ -5805,16 +5946,16 @@ define([
             this._shadowMappingShader.addToContext(context);
             this.uniformValueFunctions.u_shadowMaps = function () {
                 var j, k, shadowMaps = [];
-                for (j = 0; j < this.lights.length; j++) {
+                for (j = 0; j < this._directionalLights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(context.getFrameBuffer(this.lights[j].getShadowMapBufferName(k)).getTextureBindLocation(context));
+                        shadowMaps.push(context.getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getTextureBindLocation(context));
                     }
                 }
                 return new Int32Array(shadowMaps);
             }.bind(this);
         }
-        for (i = 0; i < this.lights.length; i++) {
-            this.lights[i].addToContext(context, this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
+        for (i = 0; i < this._directionalLights.length; i++) {
+            this._directionalLights[i].addToContext(context, this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
         for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
             this._backgroundObjects[i].addToContext(context);
@@ -5833,9 +5974,9 @@ define([
             this._shadowMappingEnabled = true;
             this.uniformValueFunctions.u_shadowMaps = function () {
                 var j, k, shadowMaps = [];
-                for (j = 0; j < this.lights.length; j++) {
+                for (j = 0; j < this._directionalLights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(this._contexts[0].getFrameBuffer(this.lights[j].getShadowMapBufferName(k)).getTextureBindLocation(this._contexts[0]));
+                        shadowMaps.push(this._contexts[0].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getTextureBindLocation(this._contexts[0]));
                     }
                 }
                 return new Int32Array(shadowMaps);
@@ -5845,8 +5986,8 @@ define([
             // make it easier to change this later
             for (i = 0; i < this._contexts.length; i++) {
                 this._shadowMappingShader.addToContext(this._contexts[i]);
-                for (l = 0; l < this.lights.length; l++) {
-                    this.lights[l].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(l), this._shadowMapRanges.length, this._shadowMapTextureSize);
+                for (l = 0; l < this._directionalLights.length; l++) {
+                    this._directionalLights[l].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(l), this._shadowMapRanges.length, this._shadowMapTextureSize);
                 }
             }
         } else {
@@ -5898,16 +6039,16 @@ define([
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
-            for (i = 0; i < this.lights.length; i++) {
-                this.lights[i].reset();
+            for (i = 0; i < this._directionalLights.length; i++) {
+                this._directionalLights[i].reset();
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
-                    this.lights[i].startShadowMap(context, this.activeCamera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
+                    this._directionalLights[i].startShadowMap(context, this.activeCamera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
                     this.renderShadowMap(context);
                 }
             }
-            for (i = 0; i < this.lights.length; i++) {
+            for (i = 0; i < this._directionalLights.length; i++) {
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
-                    context.bindTexture(context.getFrameBuffer(this.lights[i].getShadowMapBufferName(j)), undefined, true);
+                    context.bindTexture(context.getFrameBuffer(this._directionalLights[i].getShadowMapBufferName(j)), undefined, true);
                 }
             }
         }
@@ -5971,6 +6112,7 @@ define([
         LODContext: LODContext,
         Scene: Scene,
         DirectionalLightSource: DirectionalLightSource,
+        PointLightSource: PointLightSource,
         RenderableObject: RenderableObject,
         RenderableObject3D: RenderableObject3D,
         RenderableNode: RenderableNode,

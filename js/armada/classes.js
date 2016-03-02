@@ -1026,6 +1026,16 @@ define([
             }
         }
         /**
+         * The color of the light this projectile emits as a light source.
+         * @type Number[3]
+         */
+        this._lightColor = dataJSON ? (dataJSON.lightColor || _showMissingPropertyError(this, "lightColor")) : null;
+        /**
+         * The intensity of the light this projectile emits as a light source.
+         * @type Number
+         */
+        this._lightIntensity = dataJSON ? (dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity")) : 0;
+        /**
          * The class of the explosion this spacecraft creates when it hits a spacecraft.
          * @type ExplosionClass
          */
@@ -1068,6 +1078,18 @@ define([
      */
     ProjectileClass.prototype.getMuzzleFlash = function () {
         return this._muzzleFlash;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    ProjectileClass.prototype.getLightColor = function () {
+        return this._lightColor;
+    };
+    /**
+     * @returns {Number}
+     */
+    ProjectileClass.prototype.getLightIntensity = function () {
+        return this._lightIntensity;
     };
     /**
      * @returns {ExplosionClass}
