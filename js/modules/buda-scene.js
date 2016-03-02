@@ -2052,7 +2052,7 @@ define([
             this._timeSinceLastTransition += dt;
             // find out which state did we arrive to and which is next
             nextStateIndex = (this._currentStateIndex + 1) % this._states.length;
-            while (this._timeSinceLastTransition >= this._states[nextStateIndex].timeToReach) {
+            while (this._timeSinceLastTransition > this._states[nextStateIndex].timeToReach) {
                 if ((nextStateIndex === 0) && (!this._looping)) {
                     this._size = 0;
                     this.markAsReusable();
@@ -5380,6 +5380,12 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Object} PointLightSource~LightState
+     * @property {Number[3]} color
+     * @property {Number} intensity
+     * @property {Number} timeToReach
+     */
+    /**
      * @typedef {Object} BudaScene~PointLightUniformData
      * @property {Number[3]} color
      * @property {Number} intensity
@@ -5398,8 +5404,12 @@ define([
      * light source will act as a static, global light source in the scene, and if multiple objects are specified, it will be positioned
      * at the average position of those objects. In this case, all objects will be considered to contribute the same amount of intensity
      * of the same color.
+     * @param {PointLightSource~LightState[]} [states] The list of states this light source should go through, if a dynamic behavior is
+     * desired.
+     * @param {Boolean} [looping] If states are given, this parameter tells whether to loop through them, starting over once the last
+     * state is reached, or just stay in it.
      */
-    function PointLightSource(color, intensity, positionVector, emittingObjects) {
+    function PointLightSource(color, intensity, positionVector, emittingObjects, states, looping) {
         /**
          * The color of the light emitted by this source.
          * @type Number[3]
@@ -5431,12 +5441,61 @@ define([
          * @type Number[3]
          */
         this._positionVector = null;
+        /**
+         * The list of states (storing the values for attributes like color and intensity) this light source will go through.
+         * If it is not given, the light source will have a static state.
+         * @type PointLightSource~LightState[]
+         */
+        this._states = states;
+        /**
+         * The time elapsed since transitioning to the current state, in milliseconds.
+         * @type Number
+         */
+        this._timeSinceLastTransition = 0;
+        /**
+         * The index of the current state the light source is in - it might be transitioning already to the next state, in which case its
+         * actual attributes will be determined as a combination of the ones defined in these two states.
+         * @type Number
+         */
+        this._currentStateIndex = 0;
+        /**
+         * If this light source has states, whether to start over after reaching the last one.
+         * @type Boolean
+         */
+        this._looping = looping;
     }
     /**
-     * Updates the properties of the light source based on the status of the emitting objects.
+     * Updates the properties of the light source based on the status of the emitting objects and the current state of the light source.
+     * @param {Number} dt The time elapsed since the last update, in milliseconds
      */
-    PointLightSource.prototype.update = function () {
-        var i, count;
+    PointLightSource.prototype.update = function (dt) {
+        var i, count, nextStateIndex, stateProgress;
+        // only animating through states if there is more than one of them
+        if (this._states && this._states.length > 1) {
+            this._timeSinceLastTransition += dt;
+            // find out which state did we arrive to and which is next
+            nextStateIndex = (this._currentStateIndex + 1) % this._states.length;
+            while (this._timeSinceLastTransition > this._states[nextStateIndex].timeToReach) {
+                this._timeSinceLastTransition -= this._states[nextStateIndex].timeToReach;
+                nextStateIndex = nextStateIndex + 1;
+                if (nextStateIndex >= this._states.length) {
+                    if (this._looping) {
+                        nextStateIndex = 0;
+                    } else {
+                        nextStateIndex = this._states.length - 1;
+                        this._timeSinceLastTransition = this._states[nextStateIndex].timeToReach;
+                    }
+                }
+            }
+            this._currentStateIndex = (nextStateIndex - 1) % this._states.length;
+            // calculate the relative progress
+            stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
+            this.setObjectIntensity(this._states[this._currentStateIndex].intensity * (1.0 - stateProgress) + this._states[nextStateIndex].intensity * stateProgress);
+            this.setColor(vec.add3(
+                    vec.scaled3(this._states[this._currentStateIndex].color, 1.0 - stateProgress),
+                    vec.scaled3(this._states[nextStateIndex].color, stateProgress)));
+        }
+        // calculate attributes that depend on the emitting objects
         if (!this._emittingObjects) {
             this._totalIntensity = this._objectIntensity;
             this._positionVector = this._relativePositionVector;
@@ -5486,6 +5545,20 @@ define([
             }
         }
         return true;
+    };
+    /**
+     * Sets a new color for the light emitted by this source.
+     * @param {Number[3]} value
+     */
+    PointLightSource.prototype.setColor = function (value) {
+        this._color = value;
+    };
+    /**
+     * Sets a new intensity for the light emitted by the objects contributing to this light source.
+     * @param {Number} value
+     */
+    PointLightSource.prototype.setObjectIntensity = function (value) {
+        this._objectIntensity = value;
     };
     /**
      * Adds a new emitting object to the ones contributing to this light source. All objects should be of the same type (color and intensity)
@@ -5597,7 +5670,7 @@ define([
         }.bind(this);
     }
 
-    Scene.prototype._updateLightUniformData = function () {
+    Scene.prototype._updateLightUniformData = function (dt) {
         var i;
         this._directionalLightUniformData = [];
         for (i = 0; i < this._directionalLights.length; i++) {
@@ -5605,7 +5678,7 @@ define([
         }
         this._pointLightUniformData = [];
         for (i = 0; i < this._pointLights.length; i++) {
-            this._pointLights[i].update();
+            this._pointLights[i].update(dt);
             this._pointLightUniformData.push(this._pointLights[i].getUniformData());
         }
     };
@@ -6052,7 +6125,7 @@ define([
                 }
             }
         }
-        this._updateLightUniformData();
+        this._updateLightUniformData(this._shouldAnimate ? dt : 0);
         context.setCurrentFrameBuffer(null);
         gl.viewport(this.left, this.top, this.width, this.height);
         if (this.clearColorOnRender) {

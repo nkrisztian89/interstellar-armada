@@ -1325,10 +1325,11 @@ define([
      * Adds a renderable node representing this explosion to the passed scene.
      * @param {Scene} scene The scene to which to add the renderable object
      * presenting the explosion.
-     * @param {RenderableNode} parentNode If given, the explosion will be added 
+     * @param {RenderableNode} [parentNode] If given, the explosion will be added 
      * to the scene graph as the subnode of this node
      */
     Explosion.prototype.addToScene = function (scene, parentNode) {
+        var lightStates;
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             this._createVisualModel();
@@ -1336,6 +1337,10 @@ define([
                 parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
             } else {
                 scene.addObject(this._visualModel);
+            }
+            lightStates = this._class.getLightStates();
+            if (lightStates) {
+                scene.addPointLightSource(new budaScene.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates));
             }
         }.bind(this));
     };
@@ -1710,7 +1715,7 @@ define([
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                 // been created, so that projectiles from the same weapon and of the same class only use one light source object
                 if (!projectileLights[projectileClass.getName()]) {
-                    projectileLights[projectileClass.getName()] = new budaScene.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), [0, 0, 0], [p.getVisualModel()]);
+                    projectileLights[projectileClass.getName()] = new budaScene.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
                 } else {
                     projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
                 }
@@ -3737,6 +3742,7 @@ define([
         this._environment.simulate();
         for (i = 0; i < this._spacecrafts.length; i++) {
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
+                this._spacecrafts[i].destroy();
                 this._spacecrafts[i] = null;
                 this._spacecrafts.splice(i, 1);
                 this._hitObjects[i] = null;
@@ -3747,9 +3753,10 @@ define([
         }
         for (i = 0; i < this._projectiles.length; i++) {
             if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
-                application.log("Projectile removed.", 2);
+                this._projectiles[i].destroy();
                 this._projectiles[i] = null;
                 this._projectiles.splice(i, 1);
+                application.log("Projectile removed.", 2);
             } else {
                 this._projectiles[i].simulate(dt, this._hitObjects);
             }

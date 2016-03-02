@@ -74,13 +74,11 @@
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0.35,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 0.7,
                             "timeToReach": 300
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 500
@@ -103,13 +101,23 @@
                             "color": [1.0, 1.0, 0.5, 1.0],
                             "size": 4.5,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.4, 1.0],
                             "size": 0,
                             "timeToReach": 450
                         }
                     ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.5],
+                    "intensity": 35,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 0.6, 0.2],
+                    "intensity": 0,
+                    "timeToReach": 450
                 }
             ]
         },
@@ -133,13 +141,11 @@
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0.65,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 1.1,
                             "timeToReach": 300
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 500
@@ -162,8 +168,7 @@
                             "color": [1.0, 1.0, 0.6, 1.0],
                             "size": 10.5,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.4, 1.0],
                             "size": 0,
                             "timeToReach": 450
@@ -187,13 +192,27 @@
                             "color": [1.0, 1.0, 0.1, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 0.0],
                             "size": 10,
                             "timeToReach": 500
                         }
                     ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.6],
+                    "intensity": 350,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.1],
+                    "intensity": 200,
+                    "timeToReach": 600
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 400
                 }
             ]
         },
@@ -217,13 +236,11 @@
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0.65,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 3.1,
                             "timeToReach": 300
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 500
@@ -247,8 +264,7 @@
                             "color": [0.3, 0.9, 1.0, 1.0],
                             "size": 2.5,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [0.1, 0.3, 1.0, 0.0],
                             "size": 5,
                             "timeToReach": 500
@@ -271,8 +287,7 @@
                             "color": [0.3, 0.9, 1.0, 1.0],
                             "size": 30,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [0.1, 0.6, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 450
@@ -296,14 +311,33 @@
                             "color": [1.0, 1.0, 0.1, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 0.0],
                             "size": 15,
                             "timeToReach": 500
                         }
                     ]
                 }
+            ],
+            "lightStates": [
+                {
+                    "color": [0.3, 0.9, 1.0],
+                    "intensity": 2025,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.3],
+                    "intensity": 400,
+                    "timeToReach": 450
+                }, {
+                    "color": [1.0, 1.0, 0.3],
+                    "intensity": 100,
+                    "timeToReach": 250
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 250
+                }
+
             ]
         },
         {
@@ -320,8 +354,7 @@
                             "color": [1.0, 1.0, 0.7, 1.0],
                             "size": 45,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 0,
                             "timeToReach": 300
@@ -339,8 +372,7 @@
                             "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 0.0],
                             "size": 30,
                             "timeToReach": 700
@@ -363,13 +395,11 @@
                             "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0.5,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 0.8,
                             "timeToReach": 300
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.8, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 400
@@ -389,13 +419,11 @@
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 3.5,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 10,
                             "timeToReach": 250
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 300
@@ -415,13 +443,27 @@
                             "color": [1.0, 0.8, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.2, 0.0, 0.0],
                             "size": 12,
                             "timeToReach": 700
                         }
                     ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.7],
+                    "intensity": 8100,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.3],
+                    "intensity": 3600,
+                    "timeToReach": 300
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 400
                 }
             ]
         },
@@ -439,8 +481,7 @@
                             "color": [0.3, 0.9, 1.0, 1.0],
                             "size": 65,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [0.1, 0.3, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 350
@@ -461,8 +502,7 @@
                             "color": [1.0, 1.0, 0.7, 1.0],
                             "size": 50,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.4, 1.0],
                             "size": 0,
                             "timeToReach": 350
@@ -480,8 +520,7 @@
                             "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 0.0],
                             "size": 40,
                             "timeToReach": 850
@@ -504,13 +543,11 @@
                             "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0.8,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 1.1,
                             "timeToReach": 300
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.8, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 400
@@ -530,13 +567,11 @@
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 5.5,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 12,
                             "timeToReach": 250
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 300
@@ -556,13 +591,27 @@
                             "color": [1.0, 0.8, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.2, 0.0, 0.0],
                             "size": 20,
                             "timeToReach": 700
                         }
                     ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [0.3, 0.9, 1.0],
+                    "intensity": 16900,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.4],
+                    "intensity": 6400,
+                    "timeToReach": 350
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 500
                 }
             ]
         },
@@ -580,8 +629,7 @@
                             "color": [0.3, 0.9, 1.0, 1.0],
                             "size": 240,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [0.1, 0.6, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 400
@@ -602,8 +650,7 @@
                             "color": [1.0, 1.0, 0.7, 1.0],
                             "size": 140,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 0,
                             "timeToReach": 350
@@ -626,13 +673,11 @@
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 1.2,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 2.5,
                             "timeToReach": 700
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 700
@@ -655,13 +700,11 @@
                             "color": [1.0, 0.5, 0.0, 1.0],
                             "size": 25,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 7,
                             "timeToReach": 600
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.3, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 200
@@ -684,13 +727,11 @@
                             "color": [1.0, 1.0, 0.4, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.7, 0.0, 1.0],
                             "size": 30,
                             "timeToReach": 400
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.2, 0.0, 0.0],
                             "size": 60,
                             "timeToReach": 400
@@ -710,13 +751,31 @@
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 1,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.0, 1.0],
                             "size": 0,
                             "timeToReach": 1000
                         }
                     ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [0.3, 0.9, 1.0],
+                    "intensity": 230400,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.4],
+                    "intensity": 78400,
+                    "timeToReach": 350
+                }, {
+                    "color": [1.0, 0.7, 0.0],
+                    "intensity": 78400,
+                    "timeToReach": 550
+                }, {
+                    "color": [1.0, 0.2, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 400
                 }
             ]
         },
@@ -737,8 +796,7 @@
                             "color": [0.5, 1.0, 1.0, 1.0],
                             "size": 1500,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [0.2, 0.8, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 500
@@ -759,8 +817,7 @@
                             "color": [0.3, 0.9, 1.0, 1.0],
                             "size": 500,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [0.1, 0.3, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 400
@@ -781,8 +838,7 @@
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.5, 0.0],
                             "size": 400,
                             "timeToReach": 200
@@ -804,13 +860,11 @@
                             "color": [1.0, 1.0, 0.7, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 200,
                             "timeToReach": 350
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.3, 0.0, 0.0],
                             "size": 400,
                             "timeToReach": 350
@@ -833,8 +887,7 @@
                             "color": [1.0, 1.0, 0.7, 1.0],
                             "size": 6,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.7, 0.0, 0.0],
                             "size": 1,
                             "timeToReach": 600
@@ -857,13 +910,11 @@
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.3, 1.0],
                             "size": 50,
                             "timeToReach": 400
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.5, 0.0, 0.0],
                             "size": 75,
                             "timeToReach": 800
@@ -886,13 +937,11 @@
                             "color": [1.0, 1.0, 1.0, 1.0],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 1.0, 0.0, 0.7],
                             "size": 150,
                             "timeToReach": 1200
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 0.0],
                             "size": 300,
                             "timeToReach": 1200
@@ -915,13 +964,39 @@
                             "color": [1.0, 0.0, 0.0, 0.5],
                             "size": 0,
                             "timeToReach": 0
-                        },
-                        {
+                        }, {
                             "color": [1.0, 0.0, 0.0, 0.0],
                             "size": 450,
                             "timeToReach": 1000
                         }
                     ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.7],
+                    "intensity": 0,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.7],
+                    "intensity": 1000000,
+                    "timeToReach": 500
+                }, {
+                    "color": [0.5, 1.0, 1.0],
+                    "intensity": 5062500,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 1.0],
+                    "intensity": 2250000,
+                    "timeToReach": 500
+                }, {
+                    "color": [1.0, 1.0, 0.0],
+                    "intensity": 1000000,
+                    "timeToReach": 500
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 3000
                 }
             ]
         },
@@ -1125,7 +1200,7 @@
                 "duration": 250
             },
             "lightColor": [0, 1, 0],
-            "lightIntensity": 35,
+            "lightIntensity": 36,
             "explosion": "smallHitExplosion"
         },
         {
@@ -1145,7 +1220,7 @@
                 "duration": 350
             },
             "lightColor": [1, 1, 0],
-            "lightIntensity": 160,
+            "lightIntensity": 400,
             "explosion": "mediumHitExplosion"
         },
         {
@@ -1165,7 +1240,7 @@
                 "duration": 450
             },
             "lightColor": [0, 0.6, 1],
-            "lightIntensity": 500,
+            "lightIntensity": 1296,
             "explosion": "largeHitExplosion"
         }
     ],

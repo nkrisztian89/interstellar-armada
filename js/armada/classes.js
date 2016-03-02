@@ -911,6 +911,12 @@ define([
                 this._particleEmitterDescriptors.push(new ParticleEmitterDescriptor(dataJSON.particleEmitters[i]));
             }
         }
+        /**
+         * The point-like light source associated with this explosion will go through the states defined in this list. If the value is undefined
+         * or null, there will be no light-source associated with this explosion.
+         * @type PointLightSource~LightState[]
+         */
+        this._lightStates = dataJSON ? dataJSON.lightStates : null;
     };
     /**
      * Sets up the references to all required resource objects and marks them for loading.
@@ -928,6 +934,9 @@ define([
      */
     ExplosionClass.prototype.getParticleEmitterDescriptors = function () {
         return this._particleEmitterDescriptors;
+    };
+    ExplosionClass.prototype.getLightStates = function () {
+        return this._lightStates;
     };
     /**
      * Returns the duration while the particle system representing this explosion would display particles (milliseconds)
