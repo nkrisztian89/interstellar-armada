@@ -348,8 +348,8 @@
             "followsPosition": true,
             "movable": false,
             "turnable": true,
-            "alphaRange": [-45,45],
-            "betaRange": [-10,20],
+            "alphaRange": [-45, 45],
+            "betaRange": [-10, 20],
             "rotationCenterIsObject": false,
             "position": [0, 15, 2],
             "shouldAutoReset": true
@@ -487,5 +487,6 @@
             "hullIntegrity": 10,
             "class": "mediumFire"
         }
-    ]
+    ],
+    "lights": []
 }

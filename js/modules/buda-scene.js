@@ -5502,7 +5502,7 @@ define([
         } else
         if (this._emittingObjects.length === 1) {
             this._totalIntensity = this._objectIntensity;
-            this._positionVector = vec.add3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, this._emittingObjects[0].getOrientationMatrix()));
+            this._positionVector = vec.add3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, mat.mul4(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
         } else {
             this._positionVector = [0, 0, 0];
             count = 0;

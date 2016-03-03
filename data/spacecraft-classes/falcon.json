@@ -403,5 +403,6 @@
             "hullIntegrity": 10,
             "class": "smallFire"
         }
-    ]
+    ],
+    "lights": []
 }

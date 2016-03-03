@@ -2044,6 +2044,24 @@ define([
          */
         this.explosionClass = dataJSON ? (getExplosionClass(dataJSON.class || _showMissingPropertyError(this, "class")) || application.crash()) : null;
     }
+    /**
+     * @struct Describes the properties of a light source based on which an actual light source object can be added to a scene.
+     * @param {Object} dataJSON Th object holdin the values of the properties
+     */
+    function LightSourceDescriptor(dataJSON) {
+        /**
+         * @type Number[3]
+         */
+        this.position = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        /**
+         * @type Number[3]
+         */
+        this.color = dataJSON ? (dataJSON.color || _showMissingPropertyError(this, "color")) : null;
+        /**
+         * @type Number
+         */
+        this.intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
+    }
     // ##############################################################################
     /**
      * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
@@ -2243,6 +2261,18 @@ define([
         } else if (!otherSpacecraftClass) {
             _showMissingPropertyError(this, "damageIndicators");
         }
+        /**
+         * The light sources that can be added to a scene along with this spacecraft.
+         * @type LightSourceDescriptor[]
+         */
+        this._lightSources = (otherSpacecraftClass && !dataJSON.lights) ? otherSpacecraftClass._lightSources : [];
+        if (dataJSON.lights) {
+            for (i = 0; i < dataJSON.lights.length; i++) {
+                this._lightSources.push(new LightSourceDescriptor(dataJSON.lights[i]));
+            }
+        } else if (!otherSpacecraftClass) {
+            _showMissingPropertyError(this, "lights");
+        }
     };
     /**
      * @override
@@ -2348,6 +2378,12 @@ define([
      */
     SpacecraftClass.prototype.getDamageIndicators = function () {
         return this._damageIndicators;
+    };
+    /**
+     * @returns {LightSourceDescriptor[]}
+     */
+    SpacecraftClass.prototype.getLightSources = function () {
+        return this._lightSources;
     };
     /**
      * @override

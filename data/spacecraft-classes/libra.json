@@ -696,5 +696,24 @@
             "hullIntegrity": 5,
             "class": "largeFire"
         }
+    ],
+    "lights": [
+        {
+            "position": [200, -1400, 100],
+            "color": [1, 1, 1],
+            "intensity": 1600
+        }, {
+            "position": [200, -1400, -100],
+            "color": [1, 1, 1],
+            "intensity": 400
+        }, {
+            "position": [-200, -1400, 100],
+            "color": [1, 1, 1],
+            "intensity": 1600
+        }, {
+            "position": [-200, -1400, -100],
+            "color": [1, 1, 1],
+            "intensity": 400
+        }
     ]
 }

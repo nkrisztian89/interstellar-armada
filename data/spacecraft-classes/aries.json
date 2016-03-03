@@ -341,5 +341,6 @@
             "hullIntegrity": 10,
             "class": "mediumFire"
         }
-    ]
+    ],
+    "lights": []
 }

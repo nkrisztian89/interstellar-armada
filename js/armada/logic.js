@@ -3086,6 +3086,7 @@ define([
      * @property {Boolean} projectileResources
      * @property {Boolean} explosion
      * @property {Boolean} cameraConfigurations
+     * @property {Boolean} lightSources
      */
     /**
      * @typedef {Function} Spacecraft~addToSceneCallback
@@ -3128,7 +3129,7 @@ define([
             this._class.getExplosionClass().acquireResources();
         }
         resources.executeWhenReady(function () {
-            var node, explosion;
+            var node, explosion, lightSources;
             application.log("Adding spacecraft (" + this._class.getFullName() + ") to scene...", 2);
             this._visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
@@ -3187,6 +3188,12 @@ define([
             // add comera configurations
             if (addSupplements.cameraConfigurations === true) {
                 this._addCameraConfigurationsForViews();
+            }
+            if (addSupplements.lightSources === true) {
+                lightSources = this._class.getLightSources();
+                for (i = 0; i < lightSources.length; i++) {
+                    scene.addPointLightSource(new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]));
+                }
             }
             if (callback) {
                 callback(this._visualModel);
@@ -3708,7 +3715,8 @@ define([
                 thrusterParticles: true,
                 projectileResources: true,
                 explosion: true,
-                cameraConfigurations: true
+                cameraConfigurations: true,
+                lightSources: true
             });
             this._hitObjects.push(this._spacecrafts[i]);
         }
