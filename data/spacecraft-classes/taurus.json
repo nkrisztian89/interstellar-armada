@@ -488,5 +488,6 @@
             "class": "mediumFire"
         }
     ],
-    "lights": []
+    "lights": [],
+    "blinkers": []
 }

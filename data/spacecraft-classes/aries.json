@@ -342,5 +342,80 @@
             "class": "mediumFire"
         }
     ],
-    "lights": []
+    "lights": [],
+    "blinkers": [
+        {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 1, 1],
+                "duration": 200
+            },
+            "position": [30, 390, 2],
+            "period": 1500,
+            "blinks": [0, 300],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 1, 1],
+                "duration": 200
+            },
+            "position": [-30, 390, -2],
+            "period": 1500,
+            "blinks": [0, 300],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 0, 1],
+                "duration": 200
+            },
+            "position": [225, -80, 2],
+            "period": 1500,
+            "blinks": [600],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 0, 1],
+                "duration": 200
+            },
+            "position": [-225, -80, 2],
+            "period": 1500,
+            "blinks": [600],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 0, 0, 1],
+                "duration": 200
+            },
+            "position": [50.5, -300, 0],
+            "period": 1500,
+            "blinks": [150],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 0, 0, 1],
+                "duration": 200
+            },
+            "position": [-50.5, -300, 0],
+            "period": 1500,
+            "blinks": [150],
+            "intensity": 49
+        }
+    ]
 }

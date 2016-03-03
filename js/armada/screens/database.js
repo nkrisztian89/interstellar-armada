@@ -264,7 +264,7 @@ define([
         graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));
         if (_getSetting(SETTINGS.SHOW_SOLID_MODEL)) {
             // add the ship to the scene in triangle drawing mode
-            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true}, function (model) {
+            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: false}, function (model) {
                 _solidModel = model;
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
                 _solidModel.getNode().setShader(graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME)).getManagedShader());

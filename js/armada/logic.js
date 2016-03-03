@@ -3087,6 +3087,7 @@ define([
      * @property {Boolean} explosion
      * @property {Boolean} cameraConfigurations
      * @property {Boolean} lightSources
+     * @property {Boolean} blinkers
      */
     /**
      * @typedef {Function} Spacecraft~addToSceneCallback
@@ -3109,7 +3110,7 @@ define([
      * @param {Spacecraft~addToSceneCallback} callback
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, callback) {
-        var i;
+        var i, blinkers;
         addSupplements = addSupplements || {};
         // getting resources
         this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true));
@@ -3127,6 +3128,12 @@ define([
         }
         if (addSupplements.explosion === true) {
             this._class.getExplosionClass().acquireResources();
+        }
+        if (addSupplements.blinkers === true) {
+            blinkers = this._class.getBlinkers();
+            for (i = 0; i < blinkers.length; i++) {
+                blinkers[i].acquireResources();
+            }
         }
         resources.executeWhenReady(function () {
             var node, explosion, lightSources;
@@ -3189,10 +3196,33 @@ define([
             if (addSupplements.cameraConfigurations === true) {
                 this._addCameraConfigurationsForViews();
             }
+            // add light sources
             if (addSupplements.lightSources === true) {
                 lightSources = this._class.getLightSources();
                 for (i = 0; i < lightSources.length; i++) {
                     scene.addPointLightSource(new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]));
+                }
+            }
+            // add blinking lights
+            if (addSupplements.blinkers === true) {
+                blinkers = this._class.getBlinkers();
+                for (i = 0; i < blinkers.length; i++) {
+                    node.addSubnode(new budaScene.RenderableNode(new budaScene.Particle(
+                            blinkers[i].getParticle().getModel(),
+                            blinkers[i].getParticle().getShader(),
+                            blinkers[i].getParticle().getTexturesOfTypes(blinkers[i].getParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                            mat.translation4v(blinkers[i].getPosition()),
+                            blinkers[i].getParticleStates(),
+                            true)));
+                    if ((addSupplements.lightSources === true) && (blinkers[i].getIntensity() > 0)) {
+                        scene.addPointLightSource(new budaScene.PointLightSource(
+                                blinkers[i].getLightColor(),
+                                blinkers[i].getIntensity(),
+                                blinkers[i].getPosition(),
+                                [this._visualModel],
+                                blinkers[i].getLightStates(),
+                                true));
+                    }
                 }
             }
             if (callback) {
@@ -3716,7 +3746,8 @@ define([
                 projectileResources: true,
                 explosion: true,
                 cameraConfigurations: true,
-                lightSources: true
+                lightSources: true,
+                blinkers: true
             });
             this._hitObjects.push(this._spacecrafts[i]);
         }

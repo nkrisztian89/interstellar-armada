@@ -2062,6 +2062,153 @@ define([
          */
         this.intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
     }
+    /**
+     * @class Stores the information about a "blinker": a lamp giving a binking light on a spacecraft. It is simulated by the combination of
+     * a dynamic particle and a point-like light source.
+     * @param {Object} dataJSON The object to load the properties from.
+     */
+    function BlinkerDescriptor(dataJSON) {
+        /**
+         * The descriptor for the particle that will be used for the blinking light effect. The states of the particle will be automatically
+         * calculated, here (only) the maximum size needs to be set.
+         * @type ParticleDescriptor
+         */
+        this._particle = null;
+        if (dataJSON.particle) {
+            dataJSON.particle.name = "-";
+            this._particle = new ParticleDescriptor(dataJSON.particle);
+        } else {
+            _showMissingPropertyError(this, "particle");
+        }
+        /**
+         * The relative position on the spacecraft.
+         * @type Number[3]
+         */
+        this._position = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        /**
+         * The duration of one cycle that keeps repeating, in milliseconds.
+         * @type Number
+         */
+        this._period = dataJSON ? (dataJSON.period || _showMissingPropertyError(this, "period")) : 0;
+        /**
+         * Within one cycle, there can be several blinks, that starting times of which are stored in this array.
+         * @type Number[]
+         */
+        this._blinks = dataJSON ? (dataJSON.blinks || _showMissingPropertyError(this, "blinks")) : null;
+        /**
+         * The intensity of the light emitted by the associated light source. If zero, there will be no light source added for this blinker.
+         * @type Number
+         */
+        this._intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
+    }
+    /**
+     * Marks the resources needed to render this blinking light for loading.
+     */
+    BlinkerDescriptor.prototype.acquireResources = function () {
+        this._particle.acquireResources();
+    };
+    /**
+     * @returns {ParticleDescriptor}
+     */
+    BlinkerDescriptor.prototype.getParticle = function () {
+        return this._particle;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    BlinkerDescriptor.prototype.getPosition = function () {
+        return this._position;
+    };
+    /**
+     * @returns {Number[]}
+     */
+    BlinkerDescriptor.prototype.getBlinks = function () {
+        return this._blinks;
+    };
+    /**
+     * @returns {Number}
+     */
+    BlinkerDescriptor.prototype.getPeriod = function () {
+        return this._period;
+    };
+    /**
+     * @returns {Number}
+     */
+    BlinkerDescriptor.prototype.getIntensity = function () {
+        return this._intensity;
+    };
+    /**
+     * Returns the color to be used for the light source.
+     * @returns {Number[3]}
+     */
+    BlinkerDescriptor.prototype.getLightColor = function () {
+        // the particle color needs an alpha component but the light color does not
+        return [
+            this._particle.getColor()[0],
+            this._particle.getColor()[1],
+            this._particle.getColor()[2]
+        ];
+    };
+    /**
+     * Calculated and returns the particle state list to be applied for particles representing this blinking light.
+     * @returns {ParticleState[]}
+     */
+    BlinkerDescriptor.prototype.getParticleStates = function () {
+        var i, time = 0, result = [];
+        if (this._blinks.length > 0) {
+            if (this._blinks[0] > 0) {
+                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, 0));
+                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, this._blinks[0]));
+            }
+            for (i = 0; i < this._blinks.length; i++) {
+                result.push(new budaScene.ParticleState(this._particle.getColor(), this._particle.getSize(), 0));
+                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, this._particle.getDuration()));
+                time = this._blinks[i] + this._particle.getDuration();
+                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)));
+            }
+        }
+        return result;
+    };
+    /**
+     * Calculated and returns the light state list to be applied for light sources representing this blinking light.
+     * @returns {PointLightSource~LightState[]}
+     */
+    BlinkerDescriptor.prototype.getLightStates = function () {
+        var i, time = 0, result = [];
+        if (this._blinks.length > 0) {
+            if (this._blinks[0] > 0) {
+                result.push({
+                    color: this.getLightColor(),
+                    intensity: 0,
+                    timeToReach: 0
+                });
+                result.push({
+                    color: this.getLightColor(),
+                    intensity: 0,
+                    timeToReach: this._blinks[0]
+                });
+            }
+            for (i = 0; i < this._blinks.length; i++) {
+                result.push({
+                    color: this.getLightColor(),
+                    intensity: this._intensity,
+                    timeToReach: 0
+                });
+                result.push({
+                    color: this.getLightColor(),
+                    intensity: 0,
+                    timeToReach: this._particle.getDuration()
+                });
+                time = this._blinks[i] + this._particle.getDuration();
+                result.push({
+                    color: this.getLightColor(),
+                    intensity: 0,
+                    timeToReach: (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)
+                });
+            }
+        }
+        return result;
+    };
     // ##############################################################################
     /**
      * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
@@ -2273,6 +2420,18 @@ define([
         } else if (!otherSpacecraftClass) {
             _showMissingPropertyError(this, "lights");
         }
+        /**
+         * The blinking lights that can be added to the scene along with this spacecraft.
+         * @type BlinkerDescriptor[]
+         */
+        this._blinkers = (otherSpacecraftClass && !dataJSON.blinkers) ? otherSpacecraftClass._blinkers : [];
+        if (dataJSON.blinkers) {
+            for (i = 0; i < dataJSON.blinkers.length; i++) {
+                this._blinkers.push(new BlinkerDescriptor(dataJSON.blinkers[i]));
+            }
+        } else if (!otherSpacecraftClass) {
+            _showMissingPropertyError(this, "blinkers");
+        }
     };
     /**
      * @override
@@ -2386,6 +2545,12 @@ define([
         return this._lightSources;
     };
     /**
+     * @returns {BlinkerDescriptor[]}
+     */
+    SpacecraftClass.prototype.getBlinkers = function () {
+        return this._blinkers;
+    };
+    /**
      * @override
      */
     SpacecraftClass.prototype.acquireResources = function () {
@@ -2394,6 +2559,9 @@ define([
         this._explosionClass.acquireResources();
         for (i = 0; i < this._damageIndicators.length; i++) {
             this._damageIndicators[i].explosionClass.acquireResources();
+        }
+        for (i = 0; i < this._blinkers.length; i++) {
+            this._blinkers[i].acquireResources();
         }
     };
     /**

@@ -2061,7 +2061,7 @@ define([
                 this._timeSinceLastTransition -= this._states[nextStateIndex].timeToReach;
                 nextStateIndex = (nextStateIndex + 1) % this._states.length;
             }
-            this._currentStateIndex = (nextStateIndex - 1) % this._states.length;
+            this._currentStateIndex = (nextStateIndex === 0) ? (this._states.length - 1) : (nextStateIndex - 1);
             // calculate the relative progress
             stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
             for (i = 0; i < this._color.length; i++) {
@@ -2086,41 +2086,47 @@ define([
      * Creates and returns a particle that dynamically shrinks to zero size during it's lifespan. Used for flashes.
      * @param {Model} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {Texture} texture The texture that should be bound while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
      * @param {Number[4]} color The RGBA components of the color to modulate the billboard texture with.
      * @param {Number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Number} duration The lifespan of the particle in milliseconds.
      */
-    function dynamicParticle(model, shader, texture, color, size, positionMatrix, duration) {
-        return new Particle(model, shader, texture, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false);
+    function dynamicParticle(model, shader, textures, color, size, positionMatrix, duration) {
+        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false);
     }
     // #########################################################################
     /**
      * Creates and returns a particle that does not change its state on it's own, but its attributes can be set directly.
      * @param {Model} model The model to store the simple billboard data.
      * @param {Shader} shader The shader that should be active while rendering this object.
-     * @param {Texture} texture The texture that should be bound while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
      * @param {Number[4]} color The RGBA components of the color to modulate the billboard texture with.
      * @param {Number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      */
-    function staticParticle(model, shader, texture, color, size, positionMatrix) {
-        return new Particle(model, shader, texture, positionMatrix, [new ParticleState(color, size, 0)], false);
+    function staticParticle(model, shader, textures, color, size, positionMatrix) {
+        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0)], false);
     }
     /**
      * @class Can be used for a static particle that is rendered as part of the background. (such as a star)
      * @extends Particle
      * @param {Model} model A billboard or similar model.
      * @param {Shader} shader The shader to use for render.
-     * @param {Texture} texture The texture to use.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
      * @param {Number[4]} color Will be passed to the shader as the uniform u_color
      * @param {Number} size Will be passed to the shader as the uniform u_billboardSize
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position. Should be
      * a far away position in the distance for objects part of te background
      */
-    function BackgroundBillboard(model, shader, texture, color, size, positionMatrix) {
-        Particle.call(this, model, shader, texture, positionMatrix, [new ParticleState(color, size, 0)], false);
+    function BackgroundBillboard(model, shader, textures, color, size, positionMatrix) {
+        Particle.call(this, model, shader, textures, positionMatrix, [new ParticleState(color, size, 0)], false);
     }
     BackgroundBillboard.prototype = new Particle();
     BackgroundBillboard.prototype.constructor = BackgroundBillboard;
@@ -5476,18 +5482,15 @@ define([
             // find out which state did we arrive to and which is next
             nextStateIndex = (this._currentStateIndex + 1) % this._states.length;
             while (this._timeSinceLastTransition > this._states[nextStateIndex].timeToReach) {
-                this._timeSinceLastTransition -= this._states[nextStateIndex].timeToReach;
-                nextStateIndex = nextStateIndex + 1;
-                if (nextStateIndex >= this._states.length) {
-                    if (this._looping) {
-                        nextStateIndex = 0;
-                    } else {
-                        nextStateIndex = this._states.length - 1;
-                        this._timeSinceLastTransition = this._states[nextStateIndex].timeToReach;
-                    }
+                if ((nextStateIndex === 0) && (!this._looping)) {
+                    nextStateIndex = this._states.length - 1;
+                    this._timeSinceLastTransition = this._states[nextStateIndex].timeToReach;
+                    break;
                 }
+                this._timeSinceLastTransition -= this._states[nextStateIndex].timeToReach;
+                nextStateIndex = (nextStateIndex + 1) % this._states.length;
             }
-            this._currentStateIndex = (nextStateIndex - 1) % this._states.length;
+            this._currentStateIndex = (nextStateIndex === 0) ? (this._states.length - 1) : (nextStateIndex - 1);
             // calculate the relative progress
             stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
             this.setObjectIntensity(this._states[this._currentStateIndex].intensity * (1.0 - stateProgress) + this._states[nextStateIndex].intensity * stateProgress);
