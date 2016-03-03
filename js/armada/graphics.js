@@ -112,6 +112,11 @@ define([
              */
             DEFAULT_MAX_DYNAMIC_LIGHTS = DynamicLightsAmount.MEDIUM,
             /**
+             * The default name of the #define that determines the maximum number of dynamic point lights in shaders.
+             * @type String
+             */
+            DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME = "MAX_POINT_LIGHTS",
+            /**
              * Shaders that implement the same function but without shadows should be referenced among the fallback shaders with this type key
              * @type String
              */
@@ -224,6 +229,10 @@ define([
          * @type Number
          */
         this._maxDynamicLights = 0;
+        /**
+         * @type String
+         */
+        this._maxPointLightsDefineName = null;
     }
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
@@ -279,6 +288,7 @@ define([
         if (typeof dataJSON.shaders === "object") {
             this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, DEFAULT_SHADER_COMPLEXITY);
             this._shadowMappingShaderName = types.getStringValue("shadow mapping shader name", dataJSON.shaders.shadowMappingShaderName, DEFAULT_SHADOW_MAPPING_SHADER_NAME);
+            this._maxPointLightsDefineName = types.getStringValue("maxPointLightsDefineName", dataJSON.shaders.maxPointLightsDefineName, DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME);
         }
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
@@ -601,7 +611,9 @@ define([
      * @returns {ManagedShader}
      */
     GraphicsContext.prototype.getManagedShader = function (shaderName) {
-        return this.getShader(shaderName).getManagedShader({MAX_POINT_LIGHTS: this.getMaxDynamicLights()});
+        var replacedDefines = {};
+        replacedDefines[this._maxPointLightsDefineName] = this.getMaxDynamicLights();
+        return this.getShader(shaderName).getManagedShader(replacedDefines);
     };
     /**
      * Return model resource that should be used for the given name and requests it for loading if needed. Considers the context settings.

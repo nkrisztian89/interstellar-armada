@@ -16,7 +16,8 @@
         },
         "shaders": {
             "complexity": "normal",
-            "shadowMappingShaderName": "shadowMapping"
+            "shadowMappingShaderName": "shadowMapping",
+            "maxPointLightsDefineName": "MAX_POINT_LIGHTS"
         },
         "levelOfDetailSettings": {
             "lodLoadProfile": {
