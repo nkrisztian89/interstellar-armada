@@ -111,7 +111,11 @@
         "high": "magas",
         "veryHigh": "nagyon magas",
         "normal": "normál",
-        "simple": "egyszerű"
+        "simple": "egyszerű",
+        "minimum": "minimum",
+        "maximum": "maximum",
+        "few": "kevés",
+        "many": "sok"
     },
     "generalSettings": {
         "backButton": "Vissza a menübe",
@@ -136,7 +140,8 @@
         "shadowDistanceClose": "közeli",
         "shadowDistanceMedium": "közepes",
         "shadowDistanceFar": "távoli",
-        "shadowDistanceVeryFar": "nagyon távoli"
+        "shadowDistanceVeryFar": "nagyon távoli",
+        "maxDynamicLights": "Dinamikus fények:"
     },
     "controller": {
         "general": "Általános",

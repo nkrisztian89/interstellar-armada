@@ -11,7 +11,8 @@
                 "ranges": [3, 10, 30, 90, 330, 1000],
                 "numRanges": 4,
                 "depthRatio": 1.5
-            }
+            },
+            "maxDynamicLights": 64
         },
         "shaders": {
             "complexity": "normal",

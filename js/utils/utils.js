@@ -134,6 +134,12 @@ define(function () {
         }
         return "#" + keyCode;
     };
+    /**
+     * Compares whether two arrays contain the same values in the same order.
+     * @param {Array} array1
+     * @param {Array} array2
+     * @returns {Boolean}
+     */
     exports.arraysEqual = function (array1, array2) {
         var i, l;
         if (!array2) {
@@ -149,6 +155,29 @@ define(function () {
                     return false;
                 }
             } else if (array1[i] !== array2[i]) {
+                return false;
+            }
+        }
+        return true;
+    };
+    /**
+     * Compares whether two objects have the same own enumerable properties with the same values.
+     * @param {Object} object1
+     * @param {Object} object2
+     * @returns {Boolean}
+     */
+    exports.objectsEqual = function (object1, object2) {
+        var keys1, keys2, i;
+        if ((object1 === null) && (object2 === null)) {
+            return true;
+        }
+        keys1 = Object.keys(object1);
+        keys2 = Object.keys(object2);
+        if (keys1.length !== keys2.length) {
+            return false;
+        }
+        for (i = 0; i < keys1.length; i++) {
+            if ((keys1[i] !== keys2[i]) || (object1[keys1[i]] !== object2[keys2[i]])) {
                 return false;
             }
         }

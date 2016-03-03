@@ -10,7 +10,7 @@
 /*global define, parseFloat, window, localStorage */
 
 /**
- * @param types Used for type checking JSON settings
+ * @param types Used for type checking JSON settings and set values
  * @param application Using the application module for error displaying functionality
  * @param asyncResource GraphicsContext is an AsynchResource subclass
  * @param managedGL Used for checking valid texture filtering values
@@ -43,6 +43,18 @@ define([
         LOW: 1024,
         MEDIUM: 2048,
         HIGH: 4096
+    },
+    /**
+     * @enum {Number}
+     * The possible values that can be set for maximum number of dynamic lights
+     */
+    DynamicLightsAmount = {
+        OFF: 0,
+        MINIMUM: 16,
+        FEW: 32,
+        MEDIUM: 64,
+        MANY: 128,
+        MAXIMUM: 160
     },
     /**
      * The default antialiasing setting
@@ -95,10 +107,20 @@ define([
              */
             DEFAULT_SHADOW_DEPTH_RATIO = 1.5,
             /**
-             * Shaders that realize the same function but without shadows should be references among the fallback shaders with this type key
+             * (enum DynamicLightsAmount) The default value for maximum number of dynamic lights
+             * @type Number
+             */
+            DEFAULT_MAX_DYNAMIC_LIGHTS = DynamicLightsAmount.MEDIUM,
+            /**
+             * Shaders that implement the same function but without shadows should be referenced among the fallback shaders with this type key
              * @type String
              */
             FALLBACK_TYPE_WITHOUT_SHADOWS = "withoutShadows",
+            /**
+             * Shaders that implement the same function but without dynamic lights should be referenced among the fallback shaders with this type key
+             * @type String
+             */
+            FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS = "withoutDynamicLights",
             /**
              * 
              * @type GraphicsContext
@@ -106,6 +128,7 @@ define([
             _context;
     Object.freeze(ShaderComplexity);
     Object.freeze(ShadowMapQuality);
+    Object.freeze(DynamicLightsAmount);
     // ############################################################################################
     /**
      * @class A graphics context for other modules, to be used to pass the 
@@ -196,6 +219,11 @@ define([
          * @type Number
          */
         this._shadowDepthRatio = 0;
+        /**
+         * (enum DynamicLightsAmount) The maximum number of dynamic lights to be used in shaders.
+         * @type Number
+         */
+        this._maxDynamicLights = 0;
     }
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
@@ -246,6 +274,7 @@ define([
         this._shadowRanges = DEFAULT_SHADOW_MAP_RANGES;
         this._shadowDistance = DEFAULT_SHADOW_DISTANCE;
         this._shadowDepthRatio = DEFAULT_SHADOW_DEPTH_RATIO;
+        this._maxDynamicLights = DEFAULT_MAX_DYNAMIC_LIGHTS;
         // overwrite with the settings from the data JSON, if present
         if (typeof dataJSON.shaders === "object") {
             this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, DEFAULT_SHADER_COMPLEXITY);
@@ -274,6 +303,7 @@ define([
                     this._shadowDepthRatio = types.getNumberValue("shadow depth ratio", dataJSON.context.shadows.depthRatio);
                 }
             }
+            this._maxDynamicLights = types.getEnumValue("maxDynamicLights", DynamicLightsAmount, dataJSON.context.maxDynamicLights, DEFAULT_MAX_DYNAMIC_LIGHTS);
         }
         // load the LOD load settings (maximum loaded LOD)
         this._maxLoadedLOD = dataJSON.levelOfDetailSettings.lodLoadProfile.maxLevel;
@@ -332,6 +362,9 @@ define([
         if (localStorage.interstellarArmada_graphics_shadowDistance !== undefined) {
             this.setShadowDistance(parseInt(localStorage.interstellarArmada_graphics_shadowDistance, 10));
         }
+        if (localStorage.interstellarArmada_graphics_maxDynamicLights !== undefined) {
+            this.setMaxDynamicLights(parseInt(localStorage.interstellarArmada_graphics_maxDynamicLights, 10));
+        }
         this.setToReady();
     };
     /**
@@ -348,6 +381,7 @@ define([
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
         localStorage.removeItem("interstellarArmada_graphics_shadowQuality");
         localStorage.removeItem("interstellarArmada_graphics_shadowDistance");
+        localStorage.removeItem("interstellarArmada_graphics_maxDynamicLights");
     };
     /**
      * Returns the current antialiasing setting.
@@ -522,6 +556,21 @@ define([
         return this._shadowDepthRatio;
     };
     /**
+     * Returns the maximum number of dynamic lights that should be used in shaders.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getMaxDynamicLights = function () {
+        return this._maxDynamicLights;
+    };
+    /**
+     * Sets a new maximum number of dynamic lights to be used in shaders.
+     * @param {Number} value
+     */
+    GraphicsContext.prototype.setMaxDynamicLights = function (value) {
+        this._maxDynamicLights = types.getEnumValue("max dynamic lights", DynamicLightsAmount, value, DEFAULT_MAX_DYNAMIC_LIGHTS);
+        localStorage.interstellarArmada_graphics_maxDynamicLights = this._maxDynamicLights;
+    };
+    /**
      * Return shader resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
      * @param {String} shaderName
      * @returns {ShaderResource}
@@ -529,16 +578,30 @@ define([
     GraphicsContext.prototype.getShader = function (shaderName) {
         switch (this.getShaderComplexity()) {
             case ShaderComplexity.NORMAL:
-                if (this._shadowMapping) {
+                if (this._shadowMapping && (this._maxDynamicLights > DynamicLightsAmount.OFF)) {
                     return resources.getShader(shaderName);
                 }
-                return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS);
+                if (!this._shadowMapping) {
+                    return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS);
+                }
+                if (this._maxDynamicLights === DynamicLightsAmount.OFF) {
+                    return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS);
+                }
+                break;
             case ShaderComplexity.SIMPLE:
                 return resources.getFallbackShader(shaderName, ShaderComplexity.SIMPLE);
             default:
                 application.showError("Unhandled shader complexity level: '" + this.getShaderComplexity() + "' - no corresponding shader set for this level!");
                 return null;
         }
+    };
+    /**
+     * Returns the managed shader corresponding to the passed name, taking into account the settings of the context.
+     * @param {String} shaderName
+     * @returns {ManagedShader}
+     */
+    GraphicsContext.prototype.getManagedShader = function (shaderName) {
+        return this.getShader(shaderName).getManagedShader({MAX_POINT_LIGHTS: this.getMaxDynamicLights()});
     };
     /**
      * Return model resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
@@ -548,6 +611,8 @@ define([
     GraphicsContext.prototype.getModel = function (modelName) {
         return resources.getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
+    // -------------------------------------------------------------------------
+    // Public functions
     /**
      * Returns whether shadow mapping should be used if all current graphics settings are considered (not just the shadow mapping setting
      * itself)
@@ -585,6 +650,7 @@ define([
     return {
         ShaderComplexity: ShaderComplexity,
         ShadowMapQuality: ShadowMapQuality,
+        DynamicLightsAmount: DynamicLightsAmount,
         loadSettingsFromJSON: _context.loadFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadFromLocalStorage.bind(_context),
         restoreDefaults: _context.restoreDefaults.bind(_context),
@@ -609,7 +675,10 @@ define([
         getShadowDistance: _context.getShadowDistance.bind(_context),
         setShadowDistance: _context.setShadowDistance.bind(_context),
         getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
+        getMaxDynamicLights: _context.getMaxDynamicLights.bind(_context),
+        setMaxDynamicLights: _context.setMaxDynamicLights.bind(_context),
         getShader: _context.getShader.bind(_context),
+        getManagedShader: _context.getManagedShader.bind(_context),
         getModel: _context.getModel.bind(_context),
         shouldUseShadowMapping: shouldUseShadowMapping,
         getShadowMappingShader: getShadowMappingShader,

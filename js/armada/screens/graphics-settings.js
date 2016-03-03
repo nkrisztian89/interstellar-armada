@@ -105,6 +105,16 @@ define([
                     [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_FAR), 6]
                 ];
             },
+            _getMaxDynamicLightsSettingValues = function () {
+                return [
+                    [strings.get(strings.SETTING.OFF), graphics.DynamicLightsAmount.OFF],
+                    [strings.get(strings.SETTING.MINIMUM), graphics.DynamicLightsAmount.MINIMUM],
+                    [strings.get(strings.SETTING.FEW), graphics.DynamicLightsAmount.FEW],
+                    [strings.get(strings.SETTING.MEDIUM), graphics.DynamicLightsAmount.MEDIUM],
+                    [strings.get(strings.SETTING.MANY), graphics.DynamicLightsAmount.MANY],
+                    [strings.get(strings.SETTING.MAXIMUM), graphics.DynamicLightsAmount.MAXIMUM]
+                ];
+            },
             // ------------------------------------------------------------------------------
             // constants
             BACK_BUTTON_ID = "backButton",
@@ -118,6 +128,7 @@ define([
             SHADOW_MAPPING_SELECTOR_ID = "shadowMappingSelector",
             SHADOW_QUALITY_SELECTOR_ID = "shadowQualitySelector",
             SHADOW_DISTANCE_SELECTOR_ID = "shadowDistanceSelector",
+            MAX_DYNAMIC_LIGHTS_SELECTOR_ID = "maxDynamicLightSelector",
             OPTION_PARENT_ID = "settingsDiv",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
@@ -178,6 +189,10 @@ define([
          * @type Selector
          */
         this._shadowDistanceSelector = null;
+        /**
+         * @type Selector
+         */
+        this._maxDynamicLightsSelector = null;
         graphics.executeWhenReady(function () {
             this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
@@ -203,6 +218,9 @@ define([
             this._shadowDistanceSelector = this._registerSelector(SHADOW_DISTANCE_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_DISTANCE.name,
                     _getShadowDistanceSettingValues().map(_mapCaption));
+            this._maxDynamicLightsSelector = this._registerSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
+                    strings.GRAPHICS.MAX_DYNAMIC_LIGHTS.name,
+                    _getMaxDynamicLightsSettingValues().map(_mapCaption));
         }.bind(this));
     }
     GraphicsScreen.prototype = new screens.HTMLScreen();
@@ -237,6 +255,7 @@ define([
             graphics.setShadowMapping((this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX));
             graphics.setShadowQuality(_getShadowQualitySettingValues()[this._shadowQualitySelector.getSelectedIndex()][1]);
             graphics.setShadowDistance(_getShadowDistanceSettingValues()[this._shadowDistanceSelector.getSelectedIndex()][1]);
+            graphics.setMaxDynamicLights(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
         }.bind(this);
@@ -249,10 +268,12 @@ define([
             if (_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1] === graphics.ShaderComplexity.NORMAL) {
                 this._shadowMappingSelector.show();
                 this._shadowMappingSelector.onChange();
+                this._maxDynamicLightsSelector.show();
             } else {
                 this._shadowMappingSelector.hide();
                 this._shadowQualitySelector.hide();
                 this._shadowDistanceSelector.hide();
+                this._maxDynamicLightsSelector.hide();
             }
         }.bind(this);
         this._shadowMappingSelector.onChange = function () {
@@ -283,6 +304,7 @@ define([
         this._shadowMappingSelector.setValueList(_getOnOffSettingValues());
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
         this._shadowDistanceSelector.setValueList(_getShadowDistanceSettingValues().map(_mapCaption));
+        this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
         this._updateValues();
     };
     /**
@@ -303,6 +325,7 @@ define([
             this._shadowMappingSelector.selectValueWithIndex((graphics.isShadowMappingEnabled() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._shadowQualitySelector.selectValueWithIndex(findIndexOf(graphics.getShadowQuality(), _getShadowQualitySettingValues()));
             this._shadowDistanceSelector.selectValueWithIndex(findIndexOf(graphics.getShadowDistance(), _getShadowDistanceSettingValues()));
+            this._maxDynamicLightsSelector.selectValueWithIndex(findIndexOf(graphics.getMaxDynamicLights(), _getMaxDynamicLightsSettingValues()));
         }.bind(this));
     };
     /**

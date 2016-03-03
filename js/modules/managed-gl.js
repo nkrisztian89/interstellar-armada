@@ -914,8 +914,9 @@ define([
      * @param {String} fragmentShaderSource
      * @param {String} blendType
      * @param {Object.<String, String>} attributeRoles
+     * @param {Object.<String, String} replacedDefines 
      */
-    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendType, attributeRoles) {
+    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendType, attributeRoles, replacedDefines) {
         // properties for file resource management
         /**
          * The name of the shader program it can be referred to with later. Has to
@@ -959,7 +960,7 @@ define([
          * @type Object
          */
         this._ids = {};
-        this._loadAttributesAndUniforms(attributeRoles);
+        this._parceShaderSources(attributeRoles, replacedDefines);
     }
     /**
      * @param {String} name
@@ -975,16 +976,40 @@ define([
         return false;
     };
     /**
-     * @param {Object} attributeRoles
+     * @param {Object.<String, String>} attributeRoles The associative array binding the attribute names in the shader source to their roles
+     * (which determines what kind of data will be bound to the respective attribute array). Format: {attributeName: attributeRole, ...}
+     * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
+     * provided in this object (e.g. #define CONST 3 will be changed to #define CONST 5 if {CONST: 5} is passed.
      */
-    ManagedShader.prototype._loadAttributesAndUniforms = function (attributeRoles) {
+    ManagedShader.prototype._parceShaderSources = function (attributeRoles, replacedDefines) {
         var
                 i, j, shaderType,
                 sourceLines, words,
                 attributeName, attributeSize, attributeRole,
-                uniform, uniformNameElements, uniformName, uniformType, uniformArraySize, structFound,
+                uniform, uniformNameElements, uniformName, uniformType, uniformArraySize, uniformArraySizeString,
+                defines = {}, sourceChanged,
                 isNotEmptyString = function (s) {
                     return s !== "";
+                },
+                addStructMembers = function (uniform, uniformType) {
+                    var structFound, innerWords;
+                    structFound = false;
+                    for (j = 0; j < sourceLines.length; j++) {
+                        innerWords = sourceLines[j].split(" ");
+                        if (!structFound) {
+                            if ((innerWords[0] === "struct") && (innerWords[1].split("{")[0] === uniformType)) {
+                                structFound = true;
+                            }
+                        } else {
+                            innerWords = innerWords.filter(isNotEmptyString);
+                            if ((innerWords.length > 0) && (innerWords[innerWords.length - 1].split(";")[0] === "}")) {
+                                break;
+                            }
+                            if (innerWords.length >= 2) {
+                                uniform.addMember(new ShaderUniform(innerWords[1].split(";")[0], innerWords[0], 0));
+                            }
+                        }
+                    }
                 };
         for (shaderType = 0; shaderType < 2; shaderType++) {
             switch (shaderType) {
@@ -995,8 +1020,20 @@ define([
                     sourceLines = this._fragmentShaderSource.split("\n");
                     break;
             }
+            sourceChanged = false;
             for (i = 0; i < sourceLines.length; i++) {
                 words = sourceLines[i].split(" ");
+                // parsing defines
+                if (words[0] === "#define") {
+                    if (replacedDefines && (replacedDefines[words[1]] !== undefined)) {
+                        defines[words[1]] = replacedDefines[words[1]];
+                        words[2] = replacedDefines[words[1]];
+                        sourceChanged = true;
+                    } else {
+                        defines[words[1]] = words[2];
+                    }
+                }
+                // parsing attributes
                 if ((shaderType === 0) && (words[0] === "attribute")) {
                     attributeName = words[2].split(";")[0];
                     switch (words[1]) {
@@ -1023,40 +1060,40 @@ define([
                     }
                     this._attributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
                 }
+                // parsing uniforms
                 if (words[0] === "uniform") {
                     uniformNameElements = words[2].split(";")[0].split("[");
                     uniformName = uniformNameElements[0];
                     if (this._hasUniform(uniformName) === false) {
                         if (uniformNameElements.length > 1) {
-                            uniformArraySize = parseInt(uniformNameElements[1].split("]")[0], 10);
+                            uniformArraySizeString = uniformNameElements[1].split("]")[0];
+                            if (defines[uniformArraySizeString]) {
+                                uniformArraySizeString = defines[uniformArraySizeString];
+                            }
+                            uniformArraySize = parseInt(uniformArraySizeString, 10);
                         } else {
                             uniformArraySize = 0;
                         }
                         uniformType = words[1];
                         if (ShaderUniform.prototype.getVariableTypeFromString(uniformType) === ShaderUniform.prototype.VariableTypes.none) {
                             uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
-                            structFound = false;
-                            for (j = 0; j < sourceLines.length; j++) {
-                                words = sourceLines[j].split(" ");
-                                if (!structFound) {
-                                    if ((words[0] === "struct") && (words[1].split("{")[0] === uniformType)) {
-                                        structFound = true;
-                                    }
-                                } else {
-                                    words = words.filter(isNotEmptyString);
-                                    if ((words.length > 0) && (words[words.length - 1].split(";")[0] === "}")) {
-                                        break;
-                                    }
-                                    if (words.length >= 2) {
-                                        uniform.addMember(new ShaderUniform(words[1].split(";")[0], words[0], 0));
-                                    }
-                                }
-                            }
+                            addStructMembers(uniform, uniformType);
                             this._uniforms.push(uniform);
                         } else {
                             this._uniforms.push(new ShaderUniform(uniformName, uniformType, uniformArraySize));
                         }
                     }
+                }
+                sourceLines[i] = words.join(" ");
+            }
+            if (sourceChanged) {
+                switch (shaderType) {
+                    case 0:
+                        this._vertexShaderSource = sourceLines.join("\n");
+                        break;
+                    case 1:
+                        this._fragmentShaderSource = sourceLines.join("\n");
+                        break;
                 }
             }
         }

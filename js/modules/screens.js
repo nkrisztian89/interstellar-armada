@@ -686,9 +686,9 @@ define([
      */
     HTMLScreenWithCanvases.prototype._renderRequestAnimFrame = function (timestamp) {
         var dt;
-        dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (timestamp - this._renderTimes[this._renderTimes.length - 1]) : 0;
-        this._render(dt);
         if (this._renderLoop !== LOOP_CANCELED) {
+            dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (timestamp - this._renderTimes[this._renderTimes.length - 1]) : 0;
+            this._render(dt);
             this._renderTimes.push(timestamp);
             while ((this._renderTimes.length > 1) && ((timestamp - this._renderTimes[0]) > 1000)) {
                 this._renderTimes.shift();

@@ -86,7 +86,11 @@
         "high": "high",
         "veryHigh": "very high",
         "normal": "normal",
-        "simple": "simple"
+        "simple": "simple",
+        "minimum": "minimum",
+        "maximum": "maximum",
+        "few": "few",
+        "many": "many"
     },
     "generalSettings": {
         "backButton": "Back to menu",
@@ -111,7 +115,8 @@
         "shadowDistanceClose": "close",
         "shadowDistanceMedium": "medium",
         "shadowDistanceFar": "far",
-        "shadowDistanceVeryFar": "very far"
+        "shadowDistanceVeryFar": "very far",
+        "maxDynamicLights": "Dynamic lights:"
     },
     "controller": {
         "general": "General",

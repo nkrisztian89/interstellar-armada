@@ -285,9 +285,29 @@
             }
         },
         {
-            "name": "ship",
+            "name": "ship-no-dynamic-lights",
             "fallback": {
                 "simple": "lambert-with-luminosity"
+            },
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship-no-dynamic-lights.frag",
+            "blendType": "mix",
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship",
+            "fallback": {
+                "simple": "lambert-with-luminosity",
+                "withoutDynamicLights": "ship-no-dynamic-lights"
             },
             "vertexShaderSource": "mesh/ship.vert",
             "fragmentShaderSource": "mesh/ship.frag",

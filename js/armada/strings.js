@@ -97,7 +97,11 @@ define([
         HIGH: {name: "setting.high"},
         VERY_HIGH: {name: "setting.veryHigh"},
         NORMAL: {name: "setting.normal"},
-        SIMPLE: {name: "setting.simple"}
+        SIMPLE: {name: "setting.simple"},
+        MINIMUM: {name: "setting.minimum"},
+        MAXIMUM: {name: "setting.maximum"},
+        FEW: {name: "setting.few"},
+        MANY: {name: "setting.many"}
     };
     strings.GENERAL_SETTINGS = {
         BACK: {name: "generalSettings.backButton"},
@@ -122,7 +126,8 @@ define([
         SHADOW_DISTANCE_CLOSE: {name: "graphics.shadowDistanceClose"},
         SHADOW_DISTANCE_MEDIUM: {name: "graphics.shadowDistanceMedium"},
         SHADOW_DISTANCE_FAR: {name: "graphics.shadowDistanceFar"},
-        SHADOW_DISTANCE_VERY_FAR: {name: "graphics.shadowDistanceVeryFar"}
+        SHADOW_DISTANCE_VERY_FAR: {name: "graphics.shadowDistanceVeryFar"},
+        MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"}
     };
     strings.CONTOLLER = {
         PREFIX: {name: "controller.", optional: true},

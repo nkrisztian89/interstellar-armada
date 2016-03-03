@@ -13,6 +13,7 @@
 /*global define, Image, window */
 
 /**
+ * @param utils Used for comparing objects for equality
  * @param types Used for verifying enum values
  * @param application Used for file loading, logging and displaying error messages
  * @param resourceManager This module builds on the functionality of the general resource manager module
@@ -20,12 +21,13 @@
  * @param egomModel Provides resource classes that can load and create Egom Models
  */
 define([
+    "utils/utils",
     "utils/types",
     "modules/application",
     "modules/resource-manager",
     "modules/managed-gl",
     "modules/egom-model"
-], function (types, application, resourceManager, managedGL, egomModel) {
+], function (utils, types, application, resourceManager, managedGL, egomModel) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -393,6 +395,11 @@ define([
     };
     // ############################################################################################
     /**
+     * @typedef {Object} ShaderResource~ManagedShaderBinding
+     * @property {ManagedShader} managedShader
+     * @property {Object.<String, String>} replacedDefines
+     */
+    /**
      * @class 
      * @augments GenericResource
      * @param {Object} dataJSON
@@ -428,9 +435,9 @@ define([
          */
         this._fragmentShaderSource = null;
         /**
-         * @type ManagedShader
+         * @type ShaderResource~ManagedShaderBinding[]
          */
-        this._managedShader = null;
+        this._managedShaderBindings = [];
     }
     ShaderResource.prototype = new resourceManager.GenericResource();
     ShaderResource.prototype.constructor = ShaderResource;
@@ -479,15 +486,27 @@ define([
         return this._fallbackShaderNames ? this._fallbackShaderNames[fallbackType] : null;
     };
     /**
+     * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
+     * provided in this object (e.g. #define CONST 3 will be changed to #define CONST 5 if {CONST: 5} is passed.
      * @returns {ManagedShader}
      */
-    ShaderResource.prototype.getManagedShader = function () {
+    ShaderResource.prototype.getManagedShader = function (replacedDefines) {
+        var i;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot get managed GL shader for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
-        this._managedShader = this._managedShader || new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendType, this._attributeRoles);
-        return this._managedShader;
+        replacedDefines = replacedDefines || null;
+        for (i = 0; i < this._managedShaderBindings.length; i++) {
+            if (utils.objectsEqual(this._managedShaderBindings[i].replacedDefines, replacedDefines)) {
+                return this._managedShaderBindings[i].managedShader;
+            }
+        }
+        this._managedShaderBindings.push({
+            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendType, this._attributeRoles, replacedDefines),
+            replacedDefines: replacedDefines
+        });
+        return this._managedShaderBindings[this._managedShaderBindings.length - 1].managedShader;
     };
     // ############################################################################################x
     /**

@@ -348,7 +348,7 @@ define([
             this.showResourceAccessError("shader", this._shaderName);
             return null;
         }
-        return this._shader.getManagedShader();
+        return graphics.getManagedShader(this._shaderName);
     };
     // ##############################################################################
     /**

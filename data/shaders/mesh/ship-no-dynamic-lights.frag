@@ -3,7 +3,6 @@
 precision mediump float;
 
 #define MAX_LIGHTS 2
-#define MAX_POINT_LIGHTS 128
 
 #define MAX_SHADOW_MAP_RANGES 6
 #define MAX_SHADOW_MAPS 12
@@ -29,8 +28,6 @@ uniform sampler2D u_specularTexture;
 uniform vec3 u_eyePos;
 uniform Light u_lights[MAX_LIGHTS];
 uniform int u_numLights;
-uniform PointLight u_pointLights[MAX_POINT_LIGHTS];
-uniform int u_numPointLights;
 
 // luminosity mapping
 uniform sampler2D u_emissiveTexture;
@@ -228,21 +225,7 @@ void main() {
             }
         }
     }
-    // handling dynamic point-like light sources
-    vec3 direction;
-    float intensity;
-    float specDist;
-    for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
-        if (i < u_numPointLights) {
-            direction = u_pointLights[i].position - v_worldPos.xyz;
-            dist = length(direction);
-            specDist = dist + length(v_worldPos.xyz - u_eyePos);
-            diffuseFactor = max(0.0, dot(normalize(direction), normal));
-            specularFactor = v_shininess > 0.0 ? pow(max(dot(reflDir, normalize(direction)), 0.0), v_shininess) : 0.0;
-            gl_FragColor.rgb += clamp(u_pointLights[i].color * diffuseFactor  * u_pointLights[i].intensity / (dist * dist), 0.0, 1.0) * v_color.rgb * texCol.rgb
-                              + clamp(u_pointLights[i].color * specularFactor * u_pointLights[i].intensity / (specDist * specDist), 0.0, 1.0) * texSpec.rgb;
-        }
-    }
+    
     // the alpha component from the attribute color and texture
     gl_FragColor.a = v_color.a*texCol.a; 
 }
