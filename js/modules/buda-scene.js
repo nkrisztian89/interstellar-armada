@@ -5528,8 +5528,7 @@ define([
     PointLightSource.prototype.getUniformData = function () {
         return {
             color: this._color.concat(this._totalIntensity),
-            spot: vec.NULL4,
-            position: this._positionVector.concat(0)
+            position: this._positionVector
         };
     };
     /**

@@ -20,6 +20,12 @@ struct Light
 struct PointLight
     {
         vec4 color; // RGB color and intensity
+        vec3 position; // position
+    };
+
+struct SpotLight
+    {
+        vec4 color; // RGB color and intensity
         vec4 spot; // spot direction XYZ and cutoff angle cosine
         vec4 position; // position and full intensity angle cosine
     };
@@ -32,7 +38,7 @@ uniform Light u_lights[MAX_LIGHTS];
 uniform int u_numLights;
 uniform PointLight u_pointLights[MAX_POINT_LIGHTS];
 uniform int u_numPointLights;
-uniform PointLight u_spotLights[MAX_SPOT_LIGHTS];
+uniform SpotLight u_spotLights[MAX_SPOT_LIGHTS];
 uniform int u_numSpotLights;
 
 // luminosity mapping
@@ -237,7 +243,7 @@ void main() {
     float specDist;
     for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
         if (i < u_numPointLights) {
-            direction = u_pointLights[i].position.xyz - v_worldPos.xyz;
+            direction = u_pointLights[i].position - v_worldPos.xyz;
             dist = length(direction);
             direction = normalize(direction);
             specDist = dist + length(v_worldPos.xyz - u_eyePos);
@@ -249,7 +255,6 @@ void main() {
         }
     }
     // handling spotlights
-    // they have the same format as point lights, but are more computationally expensive so pass and handle them in a separate array
     float cutoffFactor;
     float cosine;
     for (int i = 0; i < MAX_SPOT_LIGHTS; i++) {
