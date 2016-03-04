@@ -2046,6 +2046,7 @@ define([
     }
     /**
      * @struct Describes the properties of a light source based on which an actual light source object can be added to a scene.
+     * (simple of spot point-like light source)
      * @param {Object} dataJSON Th object holdin the values of the properties
      */
     function LightSourceDescriptor(dataJSON) {
@@ -2061,6 +2062,19 @@ define([
          * @type Number
          */
         this.intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
+        // spot light properties are optional
+        /**
+         * @type Number[3]
+         */
+        this.spotDirection = dataJSON ? (dataJSON.spotDirection || null) : null;
+        /**
+         * @type Number
+         */
+        this.spotCutoffAngle = dataJSON ? (dataJSON.spotCutoffAngle || 0) : 0;
+        /**
+         * @type Number
+         */
+        this.spotFullIntensityAngle = dataJSON ? (dataJSON.spotFullIntensityAngle || 0) : 0;
     }
     /**
      * @class Stores the information about a "blinker": a lamp giving a binking light on a spacecraft. It is simulated by the combination of

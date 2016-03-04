@@ -3200,7 +3200,11 @@ define([
             if (addSupplements.lightSources === true) {
                 lightSources = this._class.getLightSources();
                 for (i = 0; i < lightSources.length; i++) {
-                    scene.addPointLightSource(new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]));
+                    if (lightSources[i].spotDirection) {
+                        scene.addSpotLightSource(new budaScene.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [this._visualModel]));
+                    } else {
+                        scene.addPointLightSource(new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]));
+                    }
                 }
             }
             // add blinking lights

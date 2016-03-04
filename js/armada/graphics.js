@@ -54,7 +54,7 @@ define([
         FEW: 32,
         MEDIUM: 64,
         MANY: 128,
-        MAXIMUM: 160
+        MAXIMUM: 150
     },
     /**
      * The default antialiasing setting

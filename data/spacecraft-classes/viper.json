@@ -430,6 +430,15 @@
             "class": "smallFire"
         }
     ],
-    "lights": [],
+    "lights": [
+        {
+            "position": [7.44, 51.84, 5.04],
+            "color": [1, 1, 1],
+            "intensity": 6400,
+            "spotDirection": [0, 1, 0],
+            "spotCutoffAngle": 11,
+            "spotFullIntensityAngle": 5
+        }
+    ],
     "blinkers": []
 }

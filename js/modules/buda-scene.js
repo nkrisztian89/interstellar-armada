@@ -5527,9 +5527,9 @@ define([
      */
     PointLightSource.prototype.getUniformData = function () {
         return {
-            color: this._color,
-            intensity: this._totalIntensity,
-            position: this._positionVector
+            color: this._color.concat(this._totalIntensity),
+            spot: vec.NULL4,
+            position: this._positionVector.concat(0)
         };
     };
     /**
@@ -5570,6 +5570,85 @@ define([
     PointLightSource.prototype.addEmittingObject = function (emittingObject) {
         this._emittingObjects.push(emittingObject);
     };
+    // #########################################################################
+    /**
+     * @class A directed point-like light source.
+     * @extends PointLightSource
+     * @param {Number[3]} color See PointLightSource.
+     * @param {Number} intensity See PointLightSource.
+     * @param {Number[3]} positionVector See PointLightSource.
+     * @param {Number[3]} spotDirection The (relative) direction in which the light cone of this light source is pointed. If there is one
+     * emitting object, the direction will be relative to the orientation of that object, otherwise it will be taken as absolute.
+     * @param {Number} spotCutoffAngle Light will not be emitted in directions with angles larger than this to the primary spot direction.
+     * In degrees.
+     * @param {Number} spotFullIntensityAngle Light will be emitted at full intensity only in direction with angles smaller than this to the
+     * primary direction. Between this and the cutoff angle, the intensity will transition to zero. If this is larger than the cutoff angle,
+     * light will be emitted with full intensity everywhere within the cutoff angle. In degrees.
+     * @param {RenderableObject3D[]} emittingObjects See PointLightSource.
+     * @param {PointLightSource~LightState[]} [states] See PointLightSource.
+     * @param {Boolean} [looping] See PointLightSource.
+     */
+    function SpotLightSource(color, intensity, positionVector, spotDirection, spotCutoffAngle, spotFullIntensityAngle, emittingObjects, states, looping) {
+        PointLightSource.call(this, color, intensity, positionVector, emittingObjects, states, looping);
+        /**
+         * The (relative) direction in which the light cone of this light source is pointed. If there is one
+         * emitting object, the direction will be relative to the orientation of that object, otherwise it will be taken as absolute.
+         * @type Numberf[3]
+         */
+        this._relativeSpotDirection = spotDirection;
+        /**
+         * The cosine of the cutoff angle.
+         * @type Number
+         */
+        this._spotCutoffCosine = Math.cos(Math.radians(spotCutoffAngle));
+        /**
+         * The cosine of th full intensity angle (zero if there if full intensity needs to be applied everywhere)
+         * @type Number
+         */
+        this._spotFullIntensityCosine = (spotFullIntensityAngle < spotCutoffAngle) ? Math.cos(Math.radians(spotFullIntensityAngle)) : 0;
+        /**
+         * The direction of the light cone in world-space.
+         * @type Numberf[3]
+         */
+        this._spotDirection = null;
+    }
+    SpotLightSource.prototype = new PointLightSource();
+    SpotLightSource.prototype.constructor = SpotLightSource;
+    /**
+     * @param {Number[3]} value
+     */
+    SpotLightSource.prototype.setSpotDirection = function (value) {
+        this._relativeSpotDirection = value;
+    };
+    /**
+     * @param {Number} value
+     */
+    SpotLightSource.prototype.setSpotCutoffAngle = function (value) {
+        this._spotCutoffCosine = Math.cos(Math.radians(value));
+    };
+    /**
+     * @override
+     * @param {Number} dt
+     */
+    SpotLightSource.prototype.update = function (dt) {
+        PointLightSource.prototype.update.call(this, dt);
+        // calculate attributes that depend on the emitting objects
+        if (!this._emittingObjects || (this._emittingObjects.length !== 1)) {
+            this._spotDirection = this._relativeSpotDirection;
+        } else {
+            this._spotDirection = vec.mulVec3Mat4(this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
+        }
+    };
+    /**
+     * @override
+     */
+    SpotLightSource.prototype.getUniformData = function () {
+        return {
+            color: this._color.concat(this._totalIntensity),
+            spot: [this._spotDirection[0], this._spotDirection[1], this._spotDirection[2], this._spotCutoffCosine],
+            position: this._positionVector.concat(this._spotFullIntensityCosine)
+        };
+    };
     ///TODO: continue refactoring from here
     ///-------------------------------------------------------------------------
     // #########################################################################
@@ -5602,6 +5681,8 @@ define([
         this._directionalLightUniformData = [];
         this._pointLights = [];
         this._pointLightUniformData = [];
+        this._spotLights = [];
+        this._spotLightUniformData = [];
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = [];
         /**
@@ -5656,6 +5737,12 @@ define([
         this.uniformValueFunctions.u_pointLights = function () {
             return this._pointLightUniformData;
         }.bind(this);
+        this.uniformValueFunctions.u_numSpotLights = function () {
+            return this._spotLightUniformData.length;
+        }.bind(this);
+        this.uniformValueFunctions.u_spotLights = function () {
+            return this._spotLightUniformData;
+        }.bind(this);
         this.uniformValueFunctions.u_cameraMatrix = function () {
             return this.activeCamera.getCameraMatrix();
         }.bind(this);
@@ -5683,6 +5770,11 @@ define([
         for (i = 0; i < this._pointLights.length; i++) {
             this._pointLights[i].update(dt);
             this._pointLightUniformData.push(this._pointLights[i].getUniformData());
+        }
+        this._spotLightUniformData = [];
+        for (i = 0; i < this._spotLights.length; i++) {
+            this._spotLights[i].update(dt);
+            this._spotLightUniformData.push(this._spotLights[i].getUniformData());
         }
     };
 
@@ -5863,6 +5955,9 @@ define([
     Scene.prototype.addPointLightSource = function (newLightSource) {
         this._pointLights.push(newLightSource);
     };
+    Scene.prototype.addSpotLightSource = function (newLightSource) {
+        this._spotLights.push(newLightSource);
+    };
     Scene.prototype.getLODContext = function () {
         return this.lodContext;
     };
@@ -6002,6 +6097,15 @@ define([
                 k++;
             }
             this._pointLights.splice(i, k);
+        }
+        for (i = 0; i < this._spotLights.length; i++) {
+            j = i;
+            k = 0;
+            while ((j < this._spotLights.length) && ((!this._spotLights[j]) || (this._spotLights[j].canBeReused() === true))) {
+                j++;
+                k++;
+            }
+            this._spotLights.splice(i, k);
         }
     };
     /**
@@ -6189,6 +6293,7 @@ define([
         Scene: Scene,
         DirectionalLightSource: DirectionalLightSource,
         PointLightSource: PointLightSource,
+        SpotLightSource: SpotLightSource,
         RenderableObject: RenderableObject,
         RenderableObject3D: RenderableObject3D,
         RenderableNode: RenderableNode,

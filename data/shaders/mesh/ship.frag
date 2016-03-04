@@ -4,6 +4,7 @@ precision mediump float;
 
 #define MAX_LIGHTS 2
 #define MAX_POINT_LIGHTS 128
+#define MAX_SPOT_LIGHTS 7
 
 #define MAX_SHADOW_MAP_RANGES 6
 #define MAX_SHADOW_MAPS 12
@@ -18,9 +19,9 @@ struct Light
 
 struct PointLight
     {
-        vec3 color;
-        float intensity;
-        vec3 position;
+        vec4 color; // RGB color and intensity
+        vec4 spot; // spot direction XYZ and cutoff angle cosine
+        vec4 position; // position and full intensity angle cosine
     };
 
 // phong shading
@@ -31,6 +32,8 @@ uniform Light u_lights[MAX_LIGHTS];
 uniform int u_numLights;
 uniform PointLight u_pointLights[MAX_POINT_LIGHTS];
 uniform int u_numPointLights;
+uniform PointLight u_spotLights[MAX_SPOT_LIGHTS];
+uniform int u_numSpotLights;
 
 // luminosity mapping
 uniform sampler2D u_emissiveTexture;
@@ -234,13 +237,39 @@ void main() {
     float specDist;
     for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
         if (i < u_numPointLights) {
-            direction = u_pointLights[i].position - v_worldPos.xyz;
+            direction = u_pointLights[i].position.xyz - v_worldPos.xyz;
             dist = length(direction);
+            direction = normalize(direction);
             specDist = dist + length(v_worldPos.xyz - u_eyePos);
-            diffuseFactor = max(0.0, dot(normalize(direction), normal));
-            specularFactor = v_shininess > 0.0 ? pow(max(dot(reflDir, normalize(direction)), 0.0), v_shininess) : 0.0;
-            gl_FragColor.rgb += clamp(u_pointLights[i].color * diffuseFactor  * u_pointLights[i].intensity / (dist * dist), 0.0, 1.0) * v_color.rgb * texCol.rgb
-                              + clamp(u_pointLights[i].color * specularFactor * u_pointLights[i].intensity / (specDist * specDist), 0.0, 1.0) * texSpec.rgb;
+            diffuseFactor = max(0.0, dot(direction, normal));
+            specularFactor = v_shininess > 0.0 ? pow(max(dot(reflDir, direction), 0.0), v_shininess) : 0.0;
+            intensity = u_pointLights[i].color.a;
+            gl_FragColor.rgb += clamp(u_pointLights[i].color.rgb * diffuseFactor  * intensity / (dist * dist), 0.0, 1.0) * v_color.rgb * texCol.rgb
+                              + clamp(u_pointLights[i].color.rgb * specularFactor * intensity / (specDist * specDist), 0.0, 1.0) * texSpec.rgb;
+        }
+    }
+    // handling spotlights
+    // they have the same format as point lights, but are more computationally expensive so pass and handle them in a separate array
+    float cutoffFactor;
+    float cosine;
+    for (int i = 0; i < MAX_SPOT_LIGHTS; i++) {
+        if (i < u_numSpotLights) {
+            direction = u_spotLights[i].position.xyz - v_worldPos.xyz;
+            dist = length(direction);
+            direction = normalize(direction);
+            specDist = dist + length(v_worldPos.xyz - u_eyePos);
+            diffuseFactor = max(0.0, dot(direction, normal));
+            specularFactor = v_shininess > 0.0 ? pow(max(dot(reflDir, direction), 0.0), v_shininess) : 0.0;
+            intensity = u_spotLights[i].color.a;
+            cosine = dot(direction, -u_spotLights[i].spot.xyz);
+            cutoffFactor = 1.0;
+            if (cosine >= u_spotLights[i].spot.a) {
+                if (u_spotLights[i].position.a > 0.0) {
+                    cutoffFactor = clamp((cosine - u_spotLights[i].spot.a) / (u_spotLights[i].position.a - u_spotLights[i].spot.a), 0.0, 1.0);
+                }
+                gl_FragColor.rgb += clamp(u_spotLights[i].color.rgb * diffuseFactor  * intensity / (dist * dist), 0.0, 1.0) * cutoffFactor * v_color.rgb * texCol.rgb
+                                  + clamp(u_spotLights[i].color.rgb * specularFactor * intensity / (specDist * specDist), 0.0, 1.0) * cutoffFactor * texSpec.rgb;
+            }
         }
     }
     // the alpha component from the attribute color and texture
