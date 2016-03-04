@@ -12,12 +12,14 @@
                 "numRanges": 4,
                 "depthRatio": 1.5
             },
-            "maxDynamicLights": 64
+            "maxPointLights": 64,
+            "maxSpotLights": 7
         },
         "shaders": {
             "complexity": "normal",
             "shadowMappingShaderName": "shadowMapping",
-            "maxPointLightsDefineName": "MAX_POINT_LIGHTS"
+            "maxPointLightsDefineName": "MAX_POINT_LIGHTS",
+            "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS"
         },
         "levelOfDetailSettings": {
             "lodLoadProfile": {

@@ -92,6 +92,26 @@ define([
              */
             HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
             /**
+             * Static lights anchored to spacecrafts will be added to their scenes with this priority
+             * @type Number
+             */
+            SPACECRAFT_LIGHT_PRIORITY = 0,
+            /**
+             * Lights sources for explosions will be added to their scenes with this priority
+             * @type Number
+             */
+            EXPLOSION_LIGHT_PRIORITY = 1,
+            /**
+             * Lights sources for projectiles will be added to their scenes with this priority
+             * @type Number
+             */
+            PROJECTILE_LIGHT_PRIORITY = 2,
+            /**
+             * Lights sources for blinking lights on spacecrafts will be added to their scenes with this priority
+             * @type Number
+             */
+            BLINKER_LIGHT_PRIORITY = 3,
+            /**
              * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
              * @type Object
              */
@@ -1340,7 +1360,9 @@ define([
             }
             lightStates = this._class.getLightStates();
             if (lightStates) {
-                scene.addPointLightSource(new budaScene.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates));
+                scene.addPointLightSource(
+                        new budaScene.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
+                        EXPLOSION_LIGHT_PRIORITY);
             }
         }.bind(this));
     };
@@ -1731,7 +1753,7 @@ define([
             }
             for (projClassName in projectileLights) {
                 if (projectileLights.hasOwnProperty(projClassName)) {
-                    scene.addPointLightSource(projectileLights[projClassName]);
+                    scene.addPointLightSource(projectileLights[projClassName], PROJECTILE_LIGHT_PRIORITY);
                 }
             }
         }
@@ -3203,7 +3225,9 @@ define([
                     if (lightSources[i].spotDirection) {
                         scene.addSpotLightSource(new budaScene.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [this._visualModel]));
                     } else {
-                        scene.addPointLightSource(new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]));
+                        scene.addPointLightSource(
+                                new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]),
+                                SPACECRAFT_LIGHT_PRIORITY);
                     }
                 }
             }
@@ -3219,13 +3243,15 @@ define([
                             blinkers[i].getParticleStates(),
                             true)));
                     if ((addSupplements.lightSources === true) && (blinkers[i].getIntensity() > 0)) {
-                        scene.addPointLightSource(new budaScene.PointLightSource(
-                                blinkers[i].getLightColor(),
-                                blinkers[i].getIntensity(),
-                                blinkers[i].getPosition(),
-                                [this._visualModel],
-                                blinkers[i].getLightStates(),
-                                true));
+                        scene.addPointLightSource(
+                                new budaScene.PointLightSource(
+                                        blinkers[i].getLightColor(),
+                                        blinkers[i].getIntensity(),
+                                        blinkers[i].getPosition(),
+                                        [this._visualModel],
+                                        blinkers[i].getLightStates(),
+                                        true),
+                                BLINKER_LIGHT_PRIORITY);
                     }
                 }
             }

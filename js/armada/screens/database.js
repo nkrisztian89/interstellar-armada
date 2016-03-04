@@ -583,7 +583,9 @@ define([
                 0, 0, canvas.clientWidth, canvas.clientHeight,
                 true, [true, true, true, true],
                 _getSetting(SETTINGS.BACKGROUND_COLOR), true,
-                graphics.getLODContext());
+                graphics.getLODContext(),
+                graphics.getMaxPointLights(),
+                graphics.getMaxSpotLights());
         lightSources = _getSetting(SETTINGS.LIGHT_SOURCES);
         if (lightSources) {
             for (i = 0; i < lightSources.length; i++) {

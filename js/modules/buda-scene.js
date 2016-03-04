@@ -71,11 +71,38 @@ define([
              * @type Number
              */
             DEFAULT_MAX_BETA = 90,
+            /**
+             * When creating a shadow map framebuffer, this prefix will be added before the light index for which it is created.
+             * @type String
+             */
             SHADOW_MAP_BUFFER_NAME_PREFIX = "shadow-map-buffer-",
+            /**
+             * When creating a shadow map framebuffer, this infix will be added in between the indices of the light and the shadow map range
+             * for which it is created.
+             * @type String
+             */
             SHADOW_MAP_BUFFER_NAME_INFIX = "-",
+            /**
+             * When rendering a shadow map, the light matrix data will be loaded to the uniform with this name.
+             * @type String
+             */
             UNIFORM_LIGHT_MATRIX_NAME = "u_lightMatrix",
+            /**
+             * When rendering a shadow map, the shadow depth data will be loaded to the uniform with this name.
+             * @type String
+             */
             UNIFORM_SHADOW_MAP_DEPTH_NAME = "u_shadowMapDepth",
-            UNIFORM_PROJECTION_MATRIX_NAME = "u_projMatrix";
+            /**
+             * When rendering a shadow map, the projection matrix data will be loaded to the uniform with this name.
+             * @type String
+             */
+            UNIFORM_PROJECTION_MATRIX_NAME = "u_projMatrix",
+            /**
+             * The number of available priorities with which new point light sources can be added. If set to e.g. 5, the available priorities
+             * will be 0 to 4
+             * @type Number
+             */
+            MAX_POINT_LIGHT_PRIORITIES = 5;
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -689,6 +716,57 @@ define([
     RenderableNode.prototype.addSubnode = function (subnode) {
         this._subnodes.push(subnode);
         subnode.setParent(this);
+        if (this._scene) {
+            subnode.setScene(this._scene);
+        }
+    };
+    /**
+     * Returns the array of subnodes this node has.
+     * @returns {RenderableNode[]}
+     */
+    RenderableNode.prototype.getSubnodes = function () {
+        return this._subnodes;
+    };
+    /**
+     * Return the first subnode of this node.
+     * @returns {RenderableNode}
+     */
+    RenderableNode.prototype.getFirstSubnode = function () {
+        return this._subnodes[0];
+    };
+    /**
+     * Returns the node coming after the specified node among the subnodes of this node. If the given node is not among the subnodes,
+     * returns the first subnode.
+     * @param {RenderableNode} currentNode
+     * @returns {RenderableNode}
+     */
+    RenderableNode.prototype.getNextSubnode = function (currentNode) {
+        var i, _length_;
+        for (i = 0, _length_ = this._subnodes.length; i < _length_; i++) {
+            if (this._subnodes[i] === currentNode) {
+                return ((i === (this._subnodes.length - 1)) ?
+                        this._subnodes[0] :
+                        this._subnodes[i + 1]);
+            }
+        }
+        return this._subnodes[0];
+    };
+    /**
+     * Returns the node coming before the specified node among the subnodes of this node. If the given node is not among the subnodes,
+     * returns the last subnode.
+     * @param {RenderableNode} currentNode
+     * @returns {RenderableNode}
+     */
+    RenderableNode.prototype.getPreviousSubnode = function (currentNode) {
+        var i, _length_;
+        for (i = 0, _length_ = this._subnodes.length; i < _length_; i++) {
+            if (this._subnodes[i] === currentNode) {
+                return ((i === 0) ?
+                        this._subnodes[this._subnodes.length - 1] :
+                        this._subnodes[i - 1]);
+            }
+        }
+        return this._subnodes[this._subnodes.length - 1];
     };
     /**
      * Adds a new associated camera configuration to this node.
@@ -698,6 +776,20 @@ define([
         this._cameraConfigurations.push(cameraConfiguration);
     };
     /**
+     * Returns whether the given camera configuration is among the ones associated with this node.
+     * @param {CameraConfiguration} cameraConfiguration
+     * @returns {Boolean}
+     */
+    RenderableNode.prototype.hasCameraConfiguration = function (cameraConfiguration) {
+        var i;
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
+            if (this._cameraConfigurations[i] === cameraConfiguration) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
      * Returns the camera configuration the comes after the one passed as parameter in the list of associated camera configurations.
      * If the last configuration is passed, returns the first one. Returns the first configuration if called with a null parameter, and
      * crashes if the given configuration is not in the list.
@@ -705,20 +797,14 @@ define([
      * @returns {CameraConfiguration}
      */
     RenderableNode.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
-        var i, found;
+        var i;
         if (!currentCameraConfiguration) {
             return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[0] : null;
         }
-        for (i = 0, found = false; i < this._cameraConfigurations.length; i++) {
-            if (found) {
-                return this._cameraConfigurations[i];
-            }
+        for (i = 0; i < this._cameraConfigurations.length; i++) {
             if (this._cameraConfigurations[i] === currentCameraConfiguration) {
-                found = true;
+                return this._cameraConfigurations[(i + 1) % this._cameraConfigurations.length];
             }
-        }
-        if (found) {
-            return this._cameraConfigurations[0];
         }
         application.crash(); // the current configuration was not in the list
     };
@@ -730,20 +816,16 @@ define([
      * @returns {CameraConfiguration}
      */
     RenderableNode.prototype.getPreviousCameraConfiguration = function (currentCameraConfiguration) {
-        var i, found;
+        var i;
         if (!currentCameraConfiguration) {
             return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[this._cameraConfigurations.length - 1] : null;
         }
-        for (i = (this._cameraConfigurations.length - 1), found = false; i >= 0; i--) {
-            if (found) {
-                return this._cameraConfigurations[i];
-            }
+        for (i = (this._cameraConfigurations.length - 1); i >= 0; i--) {
             if (this._cameraConfigurations[i] === currentCameraConfiguration) {
-                found = true;
+                return (i === 0) ?
+                        this._cameraConfigurations[this._cameraConfigurations.length - 1] :
+                        this._cameraConfigurations[i - 1];
             }
-        }
-        if (found) {
-            return this._cameraConfigurations[this._cameraConfigurations.length - 1];
         }
         application.crash(); // the current configuration was not in the list
     };
@@ -5254,7 +5336,7 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {Object} BudaScene~LightUniformData
+     * @typedef {Object} BudaScene~DirectionalLightUniformData
      * @property {Number[3]} color
      * @property {Number[3]} direction
      * @property {Float32Array} matrix
@@ -5373,7 +5455,7 @@ define([
     };
     /**
      * Returns an object that can be used to set the uniform object representing this light source in a shader using it.
-     * @returns {BudaScene~LightUniformData}
+     * @returns {BudaScene~DirectionalLightUniformData}
      */
     DirectionalLightSource.prototype.getUniformData = function () {
         // null cannot be passed to uniforms of vector / matrix type
@@ -5393,8 +5475,7 @@ define([
      */
     /**
      * @typedef {Object} BudaScene~PointLightUniformData
-     * @property {Number[3]} color
-     * @property {Number} intensity
+     * @property {Number[4]} color The RGB color and the intensity of the light.
      * @property {Number[3]} position
      */
     /**
@@ -5471,11 +5552,11 @@ define([
         this._looping = looping;
     }
     /**
-     * Updates the properties of the light source based on the status of the emitting objects and the current state of the light source.
-     * @param {Number} dt The time elapsed since the last update, in milliseconds
+     * Updates the properties of the light source that are defined in the state list.
+     * @param {Number} dt The elapsed time since the last update, in milliseconds.
      */
-    PointLightSource.prototype.update = function (dt) {
-        var i, count, nextStateIndex, stateProgress;
+    PointLightSource.prototype.updateState = function (dt) {
+        var nextStateIndex, stateProgress;
         // only animating through states if there is more than one of them
         if (this._states && this._states.length > 1) {
             this._timeSinceLastTransition += dt;
@@ -5498,6 +5579,14 @@ define([
                     vec.scaled3(this._states[this._currentStateIndex].color, 1.0 - stateProgress),
                     vec.scaled3(this._states[nextStateIndex].color, stateProgress)));
         }
+    };
+    /**
+     * Updates the properties of the light source based on the status of the emitting objects and the current state of the light source.
+     * @param {Number} dt The time elapsed since the last update, in milliseconds
+     */
+    PointLightSource.prototype.update = function (dt) {
+        var i, count;
+        this.updateState(dt);
         // calculate attributes that depend on the emitting objects
         if (!this._emittingObjects) {
             this._totalIntensity = this._objectIntensity;
@@ -5569,7 +5658,22 @@ define([
     PointLightSource.prototype.addEmittingObject = function (emittingObject) {
         this._emittingObjects.push(emittingObject);
     };
+    /**
+     * Returns whether the light source should be considered for rendering if the passed camera is used.
+     * @param {Camera} camera
+     * @returns {Boolean}
+     */
+    PointLightSource.prototype.shouldBeRendered = function (camera) {
+        var positionInCameraSpace = mat.mul4(mat.translation4v(this._positionVector), camera.getCameraMatrix());
+        return positionInCameraSpace[14] < this._totalIntensity;
+    };
     // #########################################################################
+    /**
+     * @typedef {BudaScene~PointLightUniformData} BudaScene~SpotLightUniformData
+     * @property {Number[4]} color The RGB color and the intensity of the light.
+     * @property {Number[4]} spot The spot direction (XYZ) and the cutoff angle cosine
+     * @property {Number[4]} position The position in world-space (XYZ) and the full intensity angle cosine (or zero)
+     */
     /**
      * @class A directed point-like light source.
      * @extends PointLightSource
@@ -5640,6 +5744,7 @@ define([
     };
     /**
      * @override
+     * @returns {BudaScene~SpotLightUniformData}
      */
     SpotLightSource.prototype.getUniformData = function () {
         return {
@@ -5648,40 +5753,121 @@ define([
             position: this._positionVector.concat(this._spotFullIntensityCosine)
         };
     };
-    ///TODO: continue refactoring from here
-    ///-------------------------------------------------------------------------
     // #########################################################################
     /**
      * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
-     * @param {number} left The X coordinate of the top left corner of the viewport on the screen.
-     * @param {number} top The Y coordinate of the top left corner of the viewport on the screen.
-     * @param {number} width The width of the viewport in pixels.
-     * @param {number} height The height of the viewport in pixels.
-     * @param {boolean} clearColorOnRender Whether to clear the color buffer every time at the beginning of rendering the scene.
-     * @param {boolean[]} colorMask Which components shall be cleared if the color buffer is to be cleared.
-     * @param {number[]} clearColor What color to use when clearing the buffer (RGBA components).
-     * @param {boolean} clearDepthOnRender Whether to clear the depth buffer every time at the beginning of rendering the scene.
+     * @param {Number} left The X coordinate of the top left corner of the viewport on the canvas.
+     * @param {Number} top The Y coordinate of the top left corner of the viewport on the canvas.
+     * @param {Number} width The width of the viewport in pixels.
+     * @param {Number} height The height of the viewport in pixels.
+     * @param {Boolean} clearColorOnRender Whether to clear the color buffer every time at the beginning of rendering the scene.
+     * @param {Boolean[4]} clearColorMask Which components shall be cleared if the color buffer is to be cleared.
+     * @param {Number[4]} clearColor What color to use when clearing the buffer (RGBA components).
+     * @param {Boolean} clearDepthOnRender Whether to clear the depth buffer every time at the beginning of rendering the scene.
      * @param {LODContext} lodContext The LOD threshold and configuration to be used
      * for rendering object with the appropriate level of detail.
+     * @param {Number} maxRenderedPointLights The maximum number of point lights that should be considered when rendering this scene.
+     * @param {Number} maxRenderedSpotLights The maximum number of spot lights that should be considered when rendering this scene.
      */
-    function Scene(left, top, width, height, clearColorOnRender, colorMask, clearColor, clearDepthOnRender, lodContext) {
-        this.left = left;
-        this.top = top;
-        this.width = width;
-        this.height = height;
-        this.clearColorOnRender = clearColorOnRender;
-        this.colorMask = colorMask;
-        this.clearColor = clearColor;
-        this.clearDepthOnRender = clearDepthOnRender;
-        this._backgroundObjects = [];
-        this.objects = [];
-        this._cameraConfigurations = [];
+    function Scene(left, top, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedPointLights, maxRenderedSpotLights) {
+        var i;
+        /**
+         * The X coordinate of the top left corner of the viewport on the canvas.
+         * @type Number
+         */
+        this._left = left;
+        /**
+         * The Y coordinate of the top left corner of the viewport on the canvas.
+         * @type Number
+         */
+        this._top = top;
+        /**
+         * The width of the viewport in pixels.
+         * @type Number
+         */
+        this._width = width;
+        /**
+         * The height of the viewport in pixels.
+         * @type Number
+         */
+        this._height = height;
+        /**
+         * Whether to clear the color buffer every time at the beginning of rendering the scene.
+         * @type Boolean
+         */
+        this._shouldClearColorOnRender = clearColorOnRender;
+        /**
+         * Which components shall be cleared if the color buffer is to be cleared.
+         * @type Boolean[4]
+         */
+        this._clearColorMask = clearColorMask;
+        /**
+         * What color to use when clearing the buffer (RGBA components).
+         * @type Number[4]
+         */
+        this._clearColor = clearColor;
+        /**
+         * Whether to clear the depth buffer every time at the beginning of rendering the scene.
+         * @type Boolean
+         */
+        this._shouldClearDepthOnRender = clearDepthOnRender;
+        /**
+         * The root node for the node tree storing the background objects.
+         * @type RenderableNode
+         */
+        this._rootBackgroundNode = null;
+        /**
+         * The root node for the node tree storing the main scene objects.
+         * @type RenderableNode
+         */
+        this._rootNode = null;
+        /**
+         * The list of directional light sources that are available to all objects in the scene.
+         * @type DirectionalLightSource[]
+         */
         this._directionalLights = [];
+        /**
+         * This array stores the (calculated) data about the directional lights that is in the right format to be sent to the shaders as uniforms.
+         * @type BudaScene~DirectionalLightUniformData[]
+         */
         this._directionalLightUniformData = [];
-        this._pointLights = [];
+        /**
+         * The lists of point light sources that are available to all objects in the scene, ordered by the priorities of the light sources.
+         * The first list contains the light sources with the highest priority. If the amount of light sources that can be rendered is 
+         * smaller than the stored light sources, the ones with higher priority will be chosen for rendering.
+         * @type PointLightSource[][]
+         */
+        this._pointLightPriorityArrays = new Array(MAX_POINT_LIGHT_PRIORITIES);
+        for (i = 0; i < MAX_POINT_LIGHT_PRIORITIES; i++) {
+            this._pointLightPriorityArrays[i] = [];
+        }
+        /**
+         * This array stores the (calculated) data about the point lights that is in the right format to be sent to the shaders as uniforms.
+         * @type BudaScene~PointLightUniformData[]
+         */
         this._pointLightUniformData = [];
+        /**
+         * The maximum number of point light sources that should be considered when rendering this scene.
+         * @type Number
+         */
+        this._maxRenderedPointLights = maxRenderedPointLights || 0;
+        /**
+         * The list of spot light sources that are available to all objects in the scene.
+         * @type SpotLightSource[]
+         */
         this._spotLights = [];
+        /**
+         * This array stores the (calculated) data about the spot lights that is in the right format to be sent to the shaders as uniforms.
+         * @type BudaScene~SpotLightUniformData[]
+         */
         this._spotLightUniformData = [];
+        /**
+         * The maximum number of spot light sources that should be considered when rendering this scene.
+         * @type Number
+         */
+        this._maxRenderedSpotLights = maxRenderedSpotLights || 0;
+        ///TODO: continue refactoring from here
+        ///-------------------------------------------------------------------------
         // objects that will not be rendered, but their resources will be added
         this._resourceHolderObjects = [];
         /**
@@ -5721,6 +5907,8 @@ define([
         this.firstRender = true;
         this._drawnTriangles = 0;
         this._contexts = [];
+
+        this.clearNodes();
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
@@ -5760,20 +5948,33 @@ define([
     }
 
     Scene.prototype._updateLightUniformData = function (dt) {
-        var i;
+        var i, j, count, max;
         this._directionalLightUniformData = [];
         for (i = 0; i < this._directionalLights.length; i++) {
             this._directionalLightUniformData.push(this._directionalLights[i].getUniformData());
         }
         this._pointLightUniformData = [];
-        for (i = 0; i < this._pointLights.length; i++) {
-            this._pointLights[i].update(dt);
-            this._pointLightUniformData.push(this._pointLights[i].getUniformData());
+        for (i = 0, count = 0; (i < this._pointLightPriorityArrays.length); i++) {
+            for (j = 0; (j < this._pointLightPriorityArrays[i].length) && (count < this._maxRenderedPointLights); j++) {
+                this._pointLightPriorityArrays[i][j].update(dt);
+                if (this._pointLightPriorityArrays[i][j].shouldBeRendered(this.activeCamera)) {
+                    this._pointLightUniformData.push(this._pointLightPriorityArrays[i][j].getUniformData());
+                    count++;
+                }
+            }
+            while (j < this._pointLightPriorityArrays[i].length) {
+                this._pointLightPriorityArrays[i][j].updateState(dt);
+                j++;
+            }
         }
         this._spotLightUniformData = [];
-        for (i = 0; i < this._spotLights.length; i++) {
+        for (i = 0, max = Math.min(this._spotLights.length, this._maxRenderedSpotLights); i < max; i++) {
             this._spotLights[i].update(dt);
             this._spotLightUniformData.push(this._spotLights[i].getUniformData());
+        }
+        while (i < this._spotLights.length) {
+            this._spotLights[i].updateState(dt);
+            i++;
         }
     };
 
@@ -5845,8 +6046,7 @@ define([
      */
     Scene.prototype.addBackgroundObject = function (newRenderableObject) {
         var node = new RenderableNode(newRenderableObject);
-        this._backgroundObjects.push(node);
-        node.setScene(this);
+        this._rootBackgroundNode.addSubnode(node);
         return node;
     };
     /**
@@ -5855,8 +6055,7 @@ define([
      */
     Scene.prototype.addObject = function (newRenderableObject) {
         var node = new RenderableNode(newRenderableObject);
-        this.objects.push(node);
-        node.setScene(this);
+        this._rootNode.addSubnode(node);
         return node;
     };
     Scene.prototype.addObjectToContexts = function (newRenderableObject) {
@@ -5866,37 +6065,28 @@ define([
         }
     };
     Scene.prototype.clearNodes = function () {
-        var i;
-        if (this._backgroundObjects) {
-            for (i = 0; i < this._backgroundObjects.length; i++) {
-                if (this._backgroundObjects[i]) {
-                    this._backgroundObjects[i].destroy();
-                    this._backgroundObjects[i] = null;
-                }
-            }
+        if (this._rootBackgroundNode) {
+            this._rootBackgroundNode.destroy();
         }
-        this._backgroundObjects = [];
-        if (this.objects) {
-            for (i = 0; i < this.objects.length; i++) {
-                if (this.objects[i]) {
-                    this.objects[i].destroy();
-                    this.objects[i] = null;
-                }
-            }
+        this._rootBackgroundNode = new RenderableNode(new RenderableObject3D(null, false, false));
+        this._rootBackgroundNode.setScene(this);
+        if (this._rootNode) {
+            this._rootNode.destroy();
         }
-        this.objects = [];
+        this._rootNode = new RenderableNode(new RenderableObject3D(null, false, false));
+        this._rootNode.setScene(this);
     };
     Scene.prototype.getAllObjects = function () {
-        var i, result = [];
-        for (i = 0; i < this.objects.length; i++) {
-            result.push(this.object[i].getRenderableObject());
+        var i, result = [], subnodes = this._rootNode.getSubnodes();
+        for (i = 0; i < subnodes.length; i++) {
+            result.push(subnodes[i].getRenderableObject());
         }
         return result;
     };
     Scene.prototype.getAll3DObjects = function () {
-        var i, o, result = [];
-        for (i = 0; i < this.objects.length; i++) {
-            o = this.objects[i].getRenderableObject();
+        var i, o, result = [], subnodes = this._rootNode.getSubnodes();
+        for (i = 0; i < subnodes.length; i++) {
+            o = subnodes[i].getRenderableObject();
             if (o.getPositionMatrix && o.getOrientationMatrix) {
                 result.push(o);
             }
@@ -5908,37 +6098,21 @@ define([
      * @returns {RenderableNode}
      */
     Scene.prototype.getFirstNode = function () {
-        return this.objects[0];
+        return this._rootNode.getFirstSubnode();
     };
     /**
      * @param {RenderableNode} currentNode
      * @returns {RenderableNode}
      */
     Scene.prototype.getNextNode = function (currentNode) {
-        var i, _length_;
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            if (this.objects[i] === currentNode) {
-                return ((i === (this.objects.length - 1)) ?
-                        this.objects[0] :
-                        this.objects[i + 1]);
-            }
-        }
-        return this.objects[0];
+        return this._rootNode.getNextSubnode(currentNode);
     };
     /**
      * @param {RenderableNode} currentNode
      * @returns {RenderableNode}
      */
     Scene.prototype.getPreviousNode = function (currentNode) {
-        var i, _length_;
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            if (this.objects[i] === currentNode) {
-                return ((i === 0) ?
-                        this.objects[this.objects.length - 1] :
-                        this.objects[i - 1]);
-            }
-        }
-        return this.objects[this.objects.length - 1];
+        return this._rootNode.getPreviousSubnode(currentNode);
     };
     /**
      * @param {RenderableObject} object
@@ -5951,8 +6125,9 @@ define([
     Scene.prototype.addLightSource = function (newLightSource) {
         this._directionalLights.push(newLightSource);
     };
-    Scene.prototype.addPointLightSource = function (newLightSource) {
-        this._pointLights.push(newLightSource);
+    Scene.prototype.addPointLightSource = function (newLightSource, priority) {
+        priority = priority || 0;
+        this._pointLightPriorityArrays[priority].push(newLightSource);
     };
     Scene.prototype.addSpotLightSource = function (newLightSource) {
         this._spotLights.push(newLightSource);
@@ -5971,7 +6146,7 @@ define([
      * @param {CameraConfiguration} cameraConfiguration
      */
     Scene.prototype.addCameraConfiguration = function (cameraConfiguration) {
-        this._cameraConfigurations.push(cameraConfiguration);
+        this._rootNode.addCameraConfiguration(cameraConfiguration);
     };
     /**
      * Returns whether the given camera configuration is among the ones associated with this scene.
@@ -5979,13 +6154,7 @@ define([
      * @returns {Boolean}
      */
     Scene.prototype.hasCameraConfiguration = function (cameraConfiguration) {
-        var i;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (this._cameraConfigurations[i] === cameraConfiguration) {
-                return true;
-            }
-        }
-        return false;
+        return this._rootNode.hasCameraConfiguration(cameraConfiguration);
     };
     /**
      * Returns the camera configuration the comes after the one passed as parameter in the list of associated camera configurations.
@@ -5995,22 +6164,7 @@ define([
      * @returns {CameraConfiguration}
      */
     Scene.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
-        var i, found;
-        if (!currentCameraConfiguration) {
-            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[0] : null;
-        }
-        for (i = 0, found = false; i < this._cameraConfigurations.length; i++) {
-            if (found) {
-                return this._cameraConfigurations[i];
-            }
-            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
-                found = true;
-            }
-        }
-        if (found) {
-            return this._cameraConfigurations[0];
-        }
-        application.crash(); // the current configuration was not in the list
+        return this._rootNode.getNextCameraConfiguration(currentCameraConfiguration);
     };
     /**
      * Returns the camera configuration the comes before the one passed as parameter in the list of associated camera configurations.
@@ -6020,22 +6174,7 @@ define([
      * @returns {CameraConfiguration}
      */
     Scene.prototype.getPreviousCameraConfiguration = function (currentCameraConfiguration) {
-        var i, found;
-        if (!currentCameraConfiguration) {
-            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[this._cameraConfigurations.length - 1] : null;
-        }
-        for (i = (this._cameraConfigurations.length - 1), found = false; i >= 0; i--) {
-            if (found) {
-                return this._cameraConfigurations[i];
-            }
-            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
-                found = true;
-            }
-        }
-        if (found) {
-            return this._cameraConfigurations[this._cameraConfigurations.length - 1];
-        }
-        application.crash(); // the current configuration was not in the list
+        return this._rootNode.getPreviousCameraConfiguration(currentCameraConfiguration);
     };
     /**
      * Returns a list of the associated camera configurations that have the specified name.
@@ -6043,13 +6182,7 @@ define([
      * @returns {CameraConfiguration[]}
      */
     Scene.prototype.getCameraConfigurationsWithName = function (name) {
-        var result = [], i;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (this._cameraConfigurations[i].getName() === name) {
-                result.push(this._cameraConfigurations[i]);
-            }
-        }
-        return result;
+        return this._rootNode.getCameraConfigurationsWithName(name);
     };
     /**
      * Recalculates the perspective matrices of cameras in case the viewport size
@@ -6058,9 +6191,9 @@ define([
      * @param {Number} newHeight
      */
     Scene.prototype.resizeViewport = function (newWidth, newHeight) {
-        this.width = newWidth;
-        this.height = newHeight;
-        this.activeCamera.setAspect(this.width / this.height);
+        this._width = newWidth;
+        this._height = newHeight;
+        this.activeCamera.setAspect(this._width / this._height);
     };
     /**
      * Assigns all uniforms in the given shader program that
@@ -6077,25 +6210,18 @@ define([
      * marked for deletion.
      */
     Scene.prototype.cleanUp = function () {
-        var i, j, k;
-        for (i = 0; i < this.objects.length; i++) {
-            this.objects[i].cleanUp();
-            j = i;
-            k = 0;
-            while ((j < this.objects.length) && ((!this.objects[j]) || (this.objects[j].canBeReused() === true))) {
-                j++;
-                k++;
+        var i, j, k, prio;
+        this._rootNode.cleanUp();
+        for (prio = 0; prio < this._pointLightPriorityArrays.length; prio++) {
+            for (i = 0; i < this._pointLightPriorityArrays[prio].length; i++) {
+                j = i;
+                k = 0;
+                while ((j < this._pointLightPriorityArrays[prio].length) && ((!this._pointLightPriorityArrays[prio][j]) || (this._pointLightPriorityArrays[prio][j].canBeReused() === true))) {
+                    j++;
+                    k++;
+                }
+                this._pointLightPriorityArrays[prio].splice(i, k);
             }
-            this.objects.splice(i, k);
-        }
-        for (i = 0; i < this._pointLights.length; i++) {
-            j = i;
-            k = 0;
-            while ((j < this._pointLights.length) && ((!this._pointLights[j]) || (this._pointLights[j].canBeReused() === true))) {
-                j++;
-                k++;
-            }
-            this._pointLights.splice(i, k);
         }
         for (i = 0; i < this._spotLights.length; i++) {
             j = i;
@@ -6136,12 +6262,8 @@ define([
         for (i = 0; i < this._directionalLights.length; i++) {
             this._directionalLights[i].addToContext(context, this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
         }
-        for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
-            this._backgroundObjects[i].addToContext(context);
-        }
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            this.objects[i].addToContext(context);
-        }
+        this._rootBackgroundNode.addToContext(context);
+        this._rootNode.addToContext(context);
         for (i = 0, _length_ = this._resourceHolderObjects.length; i < _length_; i++) {
             this._resourceHolderObjects[i].addToContext(context);
         }
@@ -6185,7 +6307,7 @@ define([
         }
     };
     Scene.prototype.renderShadowMap = function (context) {
-        var i, _length_, gl = context.gl;
+        var gl = context.gl;
         gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
         gl.colorMask(true, true, true, true);
@@ -6193,9 +6315,7 @@ define([
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            this.objects[i].renderToShadowMap(context, this.width, this.height);
-        }
+        this._rootNode.renderToShadowMap(context, this._width, this._height);
     };
     /**
      * Renders the whole scene applying the general configuration and then rendering
@@ -6204,16 +6324,14 @@ define([
      * @param {number} dt
      */
     Scene.prototype.render = function (context, dt) {
-        var i, j, _length_, gl, clear;
+        var i, j, gl, clearBits;
         application.log("Rendering scene...", 3);
         this.activeCamera.update(this._shouldUpdateCamera ? dt : 0);
         this._drawnTriangles = 0;
         gl = context.gl;
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            this.objects[i].resetForNewFrame();
-        }
+        this._rootNode.resetForNewFrame();
 
         if (this._shadowMappingEnabled) {
             context.setCurrentShader(this._shadowMappingShader);
@@ -6233,10 +6351,10 @@ define([
         }
         this._updateLightUniformData(this._shouldAnimate ? dt : 0);
         context.setCurrentFrameBuffer(null);
-        gl.viewport(this.left, this.top, this.width, this.height);
-        if (this.clearColorOnRender) {
-            gl.colorMask(this.colorMask[0], this.colorMask[1], this.colorMask[2], this.colorMask[3]);
-            gl.clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], this.clearColor[3]);
+        gl.viewport(this._left, this._top, this._width, this._height);
+        if (this._shouldClearColorOnRender) {
+            gl.colorMask(this._clearColorMask[0], this._clearColorMask[1], this._clearColorMask[2], this._clearColorMask[3]);
+            gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
         }
 
         this.firstRender = false;
@@ -6244,9 +6362,9 @@ define([
         // (it's disabled for the second (transparent) render pass)
         gl.depthMask(true);
         // clearing color and depth buffers as set for this scene
-        clear = this.clearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
-        clear = this.clearDepthOnRender ? clear | gl.DEPTH_BUFFER_BIT : clear;
-        gl.clear(clear);
+        clearBits = this._shouldClearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
+        clearBits = this._shouldClearDepthOnRender ? clearBits | gl.DEPTH_BUFFER_BIT : clearBits;
+        gl.clear(clearBits);
         gl.enable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
         gl.depthMask(false);
@@ -6257,11 +6375,9 @@ define([
             this.assignUniforms(context, context.getCurrentShader());
         }
 
-        for (i = 0, _length_ = this._backgroundObjects.length; i < _length_; i++) {
-            this._backgroundObjects[i].resetForNewFrame();
-            this._backgroundObjects[i].render(context, this.width, this.height, false, dt);
-            this._drawnTriangles += this._backgroundObjects[i].getNumberOfDrawnTriangles();
-        }
+        this._rootBackgroundNode.resetForNewFrame();
+        this._rootBackgroundNode.render(context, this._width, this._height, false, dt);
+        this._drawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
 
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
@@ -6269,21 +6385,15 @@ define([
         // Z buffer writing turned on
         application.log("Rendering transparent phase...", 4);
         gl.disable(gl.BLEND);
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            application.log("Rendering object " + i + "...", 4);
-            this.objects[i].render(context, this.width, this.height, true, dt);
-            this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
-        }
+        this._rootNode.render(context, this._width, this._height, true, dt);
+        this._drawnTriangles += this._rootNode.getNumberOfDrawnTriangles();
         // second rendering pass: rendering the transparent triangles with 
         // Z buffer writing turned off
         application.log("Rendering opaque phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
-        for (i = 0, _length_ = this.objects.length; i < _length_; i++) {
-            application.log("Rendering object " + i + "...", 4);
-            this.objects[i].render(context, this.width, this.height, false);
-            this._drawnTriangles += this.objects[i].getNumberOfDrawnTriangles();
-        }
+        this._rootNode.render(context, this._width, this._height, false);
+        this._drawnTriangles += this._rootNode.getNumberOfDrawnTriangles();
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

@@ -493,7 +493,9 @@ define([
                     0, 0, canvas.width, canvas.height,
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
-                    graphics.getLODContext());
+                    graphics.getLODContext(),
+                    graphics.getMaxPointLights(),
+                    graphics.getMaxSpotLights());
             _level.addToScene(_battleScene);
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);

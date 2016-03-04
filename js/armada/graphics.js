@@ -110,12 +110,22 @@ define([
              * (enum DynamicLightsAmount) The default value for maximum number of dynamic lights
              * @type Number
              */
-            DEFAULT_MAX_DYNAMIC_LIGHTS = DynamicLightsAmount.MEDIUM,
+            DEFAULT_MAX_POINT_LIGHTS = DynamicLightsAmount.MEDIUM,
+            /**
+             * The default value for maximum number of spot lights
+             * @type Number
+             */
+            DEFAULT_MAX_SPOT_LIGHTS = 7,
             /**
              * The default name of the #define that determines the maximum number of dynamic point lights in shaders.
              * @type String
              */
             DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME = "MAX_POINT_LIGHTS",
+            /**
+             * The default name of the #define that determines the maximum number of dynamic spot lights in shaders.
+             * @type String
+             */
+            DEFAULT_MAX_SPOT_LIGHTS_DEFINE_NAME = "MAX_SPOT_LIGHTS",
             /**
              * Shaders that implement the same function but without shadows should be referenced among the fallback shaders with this type key
              * @type String
@@ -228,11 +238,22 @@ define([
          * (enum DynamicLightsAmount) The maximum number of dynamic lights to be used in shaders.
          * @type Number
          */
-        this._maxDynamicLights = 0;
+        this._maxPointLights = 0;
         /**
+         * The maximum number of spot lights to be used in shaders.
+         * @type Number
+         */
+        this._maxSpotLights = 0;
+        /**
+         * The name of the #define that determines the maximum number of dynamic point lights in shaders.
          * @type String
          */
         this._maxPointLightsDefineName = null;
+        /**
+         * The name of the #define that determines the maximum number of dynamic spot lights in shaders.
+         * @type String
+         */
+        this._maxSpotLightsDefineName = null;
     }
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
@@ -283,12 +304,14 @@ define([
         this._shadowRanges = DEFAULT_SHADOW_MAP_RANGES;
         this._shadowDistance = DEFAULT_SHADOW_DISTANCE;
         this._shadowDepthRatio = DEFAULT_SHADOW_DEPTH_RATIO;
-        this._maxDynamicLights = DEFAULT_MAX_DYNAMIC_LIGHTS;
+        this._maxPointLights = DEFAULT_MAX_POINT_LIGHTS;
+        this._maxSpotLights = DEFAULT_MAX_SPOT_LIGHTS;
         // overwrite with the settings from the data JSON, if present
         if (typeof dataJSON.shaders === "object") {
             this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, DEFAULT_SHADER_COMPLEXITY);
             this._shadowMappingShaderName = types.getStringValue("shadow mapping shader name", dataJSON.shaders.shadowMappingShaderName, DEFAULT_SHADOW_MAPPING_SHADER_NAME);
             this._maxPointLightsDefineName = types.getStringValue("maxPointLightsDefineName", dataJSON.shaders.maxPointLightsDefineName, DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME);
+            this._maxSpotLightsDefineName = types.getStringValue("maxSpotLightsDefineName", dataJSON.shaders.maxSpotLightsDefineName, DEFAULT_MAX_SPOT_LIGHTS_DEFINE_NAME);
         }
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
@@ -313,7 +336,8 @@ define([
                     this._shadowDepthRatio = types.getNumberValue("shadow depth ratio", dataJSON.context.shadows.depthRatio);
                 }
             }
-            this._maxDynamicLights = types.getEnumValue("maxDynamicLights", DynamicLightsAmount, dataJSON.context.maxDynamicLights, DEFAULT_MAX_DYNAMIC_LIGHTS);
+            this._maxPointLights = types.getEnumValue("maxPointLights", DynamicLightsAmount, dataJSON.context.maxPointLights, DEFAULT_MAX_POINT_LIGHTS);
+            this._maxSpotLights = types.getNumberValue("maxSpotLights", dataJSON.context.maxSpotLights, DEFAULT_MAX_SPOT_LIGHTS);
         }
         // load the LOD load settings (maximum loaded LOD)
         this._maxLoadedLOD = dataJSON.levelOfDetailSettings.lodLoadProfile.maxLevel;
@@ -372,8 +396,8 @@ define([
         if (localStorage.interstellarArmada_graphics_shadowDistance !== undefined) {
             this.setShadowDistance(parseInt(localStorage.interstellarArmada_graphics_shadowDistance, 10));
         }
-        if (localStorage.interstellarArmada_graphics_maxDynamicLights !== undefined) {
-            this.setMaxDynamicLights(parseInt(localStorage.interstellarArmada_graphics_maxDynamicLights, 10));
+        if (localStorage.interstellarArmada_graphics_maxPointLights !== undefined) {
+            this.setMaxPointLights(parseInt(localStorage.interstellarArmada_graphics_maxPointLights, 10));
         }
         this.setToReady();
     };
@@ -391,7 +415,7 @@ define([
         localStorage.removeItem("interstellarArmada_graphics_shadowMapping");
         localStorage.removeItem("interstellarArmada_graphics_shadowQuality");
         localStorage.removeItem("interstellarArmada_graphics_shadowDistance");
-        localStorage.removeItem("interstellarArmada_graphics_maxDynamicLights");
+        localStorage.removeItem("interstellarArmada_graphics_maxPointLights");
     };
     /**
      * Returns the current antialiasing setting.
@@ -569,16 +593,23 @@ define([
      * Returns the maximum number of dynamic lights that should be used in shaders.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getMaxDynamicLights = function () {
-        return this._maxDynamicLights;
+    GraphicsContext.prototype.getMaxPointLights = function () {
+        return this._maxPointLights;
     };
     /**
      * Sets a new maximum number of dynamic lights to be used in shaders.
      * @param {Number} value
      */
-    GraphicsContext.prototype.setMaxDynamicLights = function (value) {
-        this._maxDynamicLights = types.getEnumValue("max dynamic lights", DynamicLightsAmount, value, DEFAULT_MAX_DYNAMIC_LIGHTS);
-        localStorage.interstellarArmada_graphics_maxDynamicLights = this._maxDynamicLights;
+    GraphicsContext.prototype.setMaxPointLights = function (value) {
+        this._maxPointLights = types.getEnumValue("max dynamic point lights", DynamicLightsAmount, value, DEFAULT_MAX_POINT_LIGHTS);
+        localStorage.interstellarArmada_graphics_maxPointLights = this._maxPointLights;
+    };
+    /**
+     * Returns the maximum number of spot lights that should be used in shaders.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getMaxSpotLights = function () {
+        return this._maxSpotLights;
     };
     /**
      * Return shader resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
@@ -588,13 +619,13 @@ define([
     GraphicsContext.prototype.getShader = function (shaderName) {
         switch (this.getShaderComplexity()) {
             case ShaderComplexity.NORMAL:
-                if (this._shadowMapping && (this._maxDynamicLights > DynamicLightsAmount.OFF)) {
+                if (this._shadowMapping && (this._maxPointLights > DynamicLightsAmount.OFF)) {
                     return resources.getShader(shaderName);
                 }
                 if (!this._shadowMapping) {
                     return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS);
                 }
-                if (this._maxDynamicLights === DynamicLightsAmount.OFF) {
+                if (this._maxPointLights === DynamicLightsAmount.OFF) {
                     return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS);
                 }
                 break;
@@ -612,7 +643,8 @@ define([
      */
     GraphicsContext.prototype.getManagedShader = function (shaderName) {
         var replacedDefines = {};
-        replacedDefines[this._maxPointLightsDefineName] = this.getMaxDynamicLights();
+        replacedDefines[this._maxPointLightsDefineName] = this.getMaxPointLights();
+        replacedDefines[this._maxSpotLightsDefineName] = this.getMaxSpotLights();
         return this.getShader(shaderName).getManagedShader(replacedDefines);
     };
     /**
@@ -687,8 +719,9 @@ define([
         getShadowDistance: _context.getShadowDistance.bind(_context),
         setShadowDistance: _context.setShadowDistance.bind(_context),
         getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
-        getMaxDynamicLights: _context.getMaxDynamicLights.bind(_context),
-        setMaxDynamicLights: _context.setMaxDynamicLights.bind(_context),
+        getMaxPointLights: _context.getMaxPointLights.bind(_context),
+        setMaxPointLights: _context.setMaxPointLights.bind(_context),
+        getMaxSpotLights: _context.getMaxSpotLights.bind(_context),
         getShader: _context.getShader.bind(_context),
         getManagedShader: _context.getManagedShader.bind(_context),
         getModel: _context.getModel.bind(_context),

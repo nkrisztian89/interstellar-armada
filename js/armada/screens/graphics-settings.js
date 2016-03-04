@@ -255,7 +255,7 @@ define([
             graphics.setShadowMapping((this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX));
             graphics.setShadowQuality(_getShadowQualitySettingValues()[this._shadowQualitySelector.getSelectedIndex()][1]);
             graphics.setShadowDistance(_getShadowDistanceSettingValues()[this._shadowDistanceSelector.getSelectedIndex()][1]);
-            graphics.setMaxDynamicLights(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
+            graphics.setMaxPointLights(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
         }.bind(this);
@@ -325,7 +325,7 @@ define([
             this._shadowMappingSelector.selectValueWithIndex((graphics.isShadowMappingEnabled() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._shadowQualitySelector.selectValueWithIndex(findIndexOf(graphics.getShadowQuality(), _getShadowQualitySettingValues()));
             this._shadowDistanceSelector.selectValueWithIndex(findIndexOf(graphics.getShadowDistance(), _getShadowDistanceSettingValues()));
-            this._maxDynamicLightsSelector.selectValueWithIndex(findIndexOf(graphics.getMaxDynamicLights(), _getMaxDynamicLightsSettingValues()));
+            this._maxDynamicLightsSelector.selectValueWithIndex(findIndexOf(graphics.getMaxPointLights(), _getMaxDynamicLightsSettingValues()));
         }.bind(this));
     };
     /**
