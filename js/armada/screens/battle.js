@@ -61,6 +61,13 @@ define([
             LOADING_RESOURCES_START_PROGRESS = 20,
             LOADING_RESOURCE_PROGRESS = 60,
             LOADING_INIT_WEBGL_PROGRESS = LOADING_RESOURCES_START_PROGRESS + LOADING_RESOURCE_PROGRESS,
+            /**
+             * When creating the battle scene, the camera will be created with this FOV, but it will be immediately overwritten by the 
+             * FOV set for the first scene view of the loaded level, therefore no point in making this settable.
+             * @type Number
+             */
+            INITIAL_CAMERA_FOV = 40,
+            INITIAL_CAMERA_SPAN = 0.2,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -111,7 +118,7 @@ define([
     function _simulationLoopFunction() {
         if (_simulationLoop !== LOOP_CANCELED) {
             var curDate = performance.now();
-            control.control();
+            control.control(curDate - _prevDate);
             if (!_isTimeStopped) {
                 _level.tick(curDate - _prevDate);
             }
@@ -429,7 +436,7 @@ define([
                     (craft.getTarget() ? (strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(vec.length3(vec.sub3(craft.getTarget().getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector())))) +
                             "<br/>" + TARGET_INFO_SEPARATOR + "<br/>" : "") +
                     utils.formatString(strings.get(strings.BATTLE.HUD_VIEW), {
-                        view: strings.get(strings.OBJECT_VIEW.PREFIX, _battleScene.activeCamera.getConfiguration().getName(), _battleScene.activeCamera.getConfiguration().getName())
+                        view: strings.get(strings.OBJECT_VIEW.PREFIX, _battleScene.getCamera().getConfiguration().getName(), _battleScene.getCamera().getConfiguration().getName())
                     }) + "<br/>" +
                     strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": " + craft.getHitpoints() + "/" + craft.getClass().getHitpoints() + "<br/>" +
                     utils.formatString(strings.get(strings.BATTLE.HUD_FLIGHT_MODE), {
@@ -495,11 +502,19 @@ define([
                     [0, 0, 0, 1], true,
                     graphics.getLODContext(),
                     graphics.getMaxPointLights(),
-                    graphics.getMaxSpotLights());
+                    graphics.getMaxSpotLights(),
+                    {
+                        useVerticalValues: logic.getSetting(logic.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                        viewDistance: logic.getSetting(logic.BATTLE_SETTINGS.VIEW_DISTANCE),
+                        fov: INITIAL_CAMERA_FOV,
+                        span: INITIAL_CAMERA_SPAN,
+                        transitionDuration: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
+                        transitionStyle: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                    });
             _level.addToScene(_battleScene);
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
-            control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.activeCamera);
+            control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             resources.executeWhenReady(function () {

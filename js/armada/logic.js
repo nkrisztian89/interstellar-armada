@@ -252,6 +252,14 @@ define([
             name: "luminosityFactorsArrayName",
             type: "string",
             defaultValue: "luminosityFactors"
+        },
+        /**
+         * Whether to interpret given field of view, span and other camera property values as vertical or horizontal.
+         */
+        USE_VERTICAL_CAMERA_VALUES: {
+            name: "useVerticalCameraValues",
+            type: "boolean",
+            defaultValue: true
         }
     };
     DATABASE_SETTINGS = {
@@ -278,6 +286,30 @@ define([
             name: "backgroundColor",
             type: _customTypes.COLOR4,
             defaultValue: [0, 0, 0, 0]
+        },
+        /**
+         * The view distance of the scene in which the current item is displayed
+         */
+        ITEM_VIEW_DISTANCE: {
+            name: "itemViewDistance",
+            type: "number",
+            defaultValue: 2000
+        },
+        /**
+         * The field of view of the camera of the scene in which the current item is displayed (in degrees)
+         */
+        ITEM_VIEW_FOV: {
+            name: "itemViewFOV",
+            type: "number",
+            defaultValue: 60
+        },
+        /**
+         * The span of the camera of the scene in which the current item is displayed (in degrees)
+         */
+        ITEM_VIEW_SPAN: {
+            name: "itemViewSpan",
+            type: "number",
+            defaultValue: 0.2
         },
         /**
          * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
@@ -500,6 +532,48 @@ define([
             defaultValue: 60
         },
         /**
+         * The view distance in the battle scene
+         */
+        VIEW_DISTANCE: {
+            name: "viewDistance",
+            type: "number",
+            defaultValue: 5000
+        },
+        /**
+         * The default duration of camera transitions for the battle scene (will be overridden by specific settings for specific transition cases)
+         */
+        CAMERA_DEFAULT_TRANSITION_DURATION: {
+            name: "cameraDefaultTransitionDuration",
+            type: "number",
+            defaultValue: 1000
+        },
+        /**
+         * The default style of camera transitions for the battle scene (will be overridden by specific settings for specific transition cases)
+         */
+        CAMERA_DEFAULT_TRANSITION_STYLE: {
+            name: "cameraDefaultTransitionStyle",
+            type: "enum",
+            values: budaScene.Camera.prototype.TransitionStyle,
+            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+        },
+        /**
+         * The duration of camera transitions happening when the user switches to piloting mode
+         */
+        CAMERA_PILOTING_SWITCH_TRANSITION_DURATION: {
+            name: "cameraPilotingSwitchTransitionDuration",
+            type: "number",
+            defaultValue: 1000
+        },
+        /**
+         * The style of camera transitions happening when the user switches to piloting mode
+         */
+        CAMERA_PILOTING_SWITCH_TRANSITION_STYLE: {
+            name: "cameraPilotingSwitchTransitionStyle",
+            type: "enum",
+            values: budaScene.Camera.prototype.TransitionStyle,
+            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+        },
+        /**
          * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
          */
         MOMENT_DURATION: {
@@ -707,7 +781,7 @@ define([
                     this._class.getShader(),
                     this._class.getShader().getCubemapNames()[0],
                     this._class.getCubemap(),
-                    scene.activeCamera));
+                    scene.getCamera()));
         }.bind(this));
     };
     /**
@@ -1006,7 +1080,7 @@ define([
     /**
      * Adds renderable objects representing all visual elements of the 
      * environment to the passed scene.
-     * @param {budaScene} scene
+     * @param {Scene} scene
      */
     Environment.prototype.addToScene = function (scene) {
         var i;
@@ -1019,7 +1093,7 @@ define([
         for (i = 0; i < this._dustClouds.length; i++) {
             this._dustClouds[i].addToScene(scene);
         }
-        this._camera = scene.activeCamera;
+        this._camera = scene.getCamera();
     };
     /**
      * Performs a simulation step to update the state of the environment.
@@ -3368,8 +3442,8 @@ define([
         if (this._visualModel) {
             camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(_context.getSetting(BATTLE_SETTINGS.TARGET_VIEW_NAME));
             for (i = 0; i < camConfigs.length; i++) {
-                if (this._visualModel.getNode().getScene().activeCamera.getConfiguration() === camConfigs[i]) {
-                    this._visualModel.getNode().getScene().activeCamera.transitionToSameConfiguration(
+                if (this._visualModel.getNode().getScene().getCamera().getConfiguration() === camConfigs[i]) {
+                    this._visualModel.getNode().getScene().getCamera().transitionToSameConfiguration(
                             _context.getSetting(BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
                             _context.getSetting(BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
                 }
@@ -3785,8 +3859,8 @@ define([
             for (i = 0; i < this._views.length; i++) {
                 scene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], scene));
                 if (i === 0) {
-                    scene.activeCamera.followNode(null, true, 0);
-                    scene.activeCamera.update(0);
+                    scene.getCamera().followNode(null, true, 0);
+                    scene.getCamera().update(0);
                 }
             }
         }.bind(this));

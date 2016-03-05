@@ -585,7 +585,13 @@ define([
                 _getSetting(SETTINGS.BACKGROUND_COLOR), true,
                 graphics.getLODContext(),
                 graphics.getMaxPointLights(),
-                graphics.getMaxSpotLights());
+                graphics.getMaxSpotLights(),
+                {
+                    useVerticalValues: logic.getSetting(logic.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    viewDistance: _getSetting(SETTINGS.ITEM_VIEW_DISTANCE),
+                    fov: _getSetting(SETTINGS.ITEM_VIEW_FOV),
+                    span: _getSetting(SETTINGS.ITEM_VIEW_SPAN)
+                });
         lightSources = _getSetting(SETTINGS.LIGHT_SOURCES);
         if (lightSources) {
             for (i = 0; i < lightSources.length; i++) {
@@ -688,7 +694,7 @@ define([
                 // this will create the GL context if needed or update it with the new data if it already exists
                 this.bindSceneToCanvas(_itemViewScene, this.getScreenCanvas(DATABASE_CANVAS_NAME));
                 // set the camera position so that the whole ship nicely fits into the picture
-                _itemViewScene.activeCamera.moveToPosition([0, 0, _currentItem.getVisualModel().getScaledSize()], 0);
+                _itemViewScene.getCamera().moveToPosition([0, 0, _currentItem.getVisualModel().getScaledSize()], 0);
                 // set the shadow mappin ranges manually, adapting to the size of the shown model, needs to be done before binding the scene
                 if (graphics.shouldUseShadowMapping()) {
                     _itemViewScene.setShadowMapRanges([

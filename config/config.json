@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0:136+refactoring-92 (2016.03.04.)",
+    "version": "0.1.0:136+refactoring-93 (2016.03.05.)",
     "logVerbosity": 1,
     "folders": {
         "config": "config/",
@@ -134,11 +134,20 @@
             },
             {
                 "type": "camera",
+                "maxSpeed": 250,
+                "acceleration": 200,
+                "deceleration": 500,
+                "maxSpin": 180,
+                "angularAcceleration": 720,
+                "angularDeceleration": 2880,
+                "objectChangeTransitionDuration": 1200,
+                "viewChangeTransitionDuration": 600,
+                "viewResetTransitionDuration": 300,
+                "transitionStyle": "smooth",
                 "actions": [
                     {
                         "name": "controlCamera"
-                    },
-                    {
+                    }, {
                         "name": "cameraMoveLeft",
                         "continuous": true
                     }, {

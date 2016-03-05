@@ -2194,8 +2194,9 @@ define([
      * Executes the main control flow: gathers all the triggered and non-disabled 
      * actions translated  by the stored input interpreters and processes them using 
      * all stored controllers.
+     * @param {Number} dt The time elapsed since the last control step, in milliseconds.
      */
-    ControlContext.prototype.control = function () {
+    ControlContext.prototype.control = function (dt) {
         var
                 i,
                 triggeredActions,
@@ -2208,7 +2209,7 @@ define([
                 triggeredActions = triggeredActions.concat(this._inputInterpreters[i].getTriggeredActions(actionFilterFunction));
             }
             for (i = 0; i < this._controllersPriorityQueue.length; i++) {
-                this._controllersPriorityQueue[i].executeActions(triggeredActions);
+                this._controllersPriorityQueue[i].executeActions(triggeredActions, dt);
             }
         }
     };

@@ -68,12 +68,16 @@
         "general": {
             "useRequestAnimFrame": true,
             "defaultRandomSeed": 4718,
-            "luminosityFactorsArrayName": "luminosityFactors"
+            "luminosityFactorsArrayName": "luminosityFactors",
+            "useVerticalCameraValues": true
         },
         "database": {
             "showLoadingBoxFirstTime": true,
             "showLoadingBoxOnItemChange": true,
             "backgroundColor": [0, 0, 0, 0],
+            "itemViewDistance": 2000,
+            "itemViewFOV": 60,
+            "itemViewSpan": 0.2,
             "wireframeColor": [0, 1, 0, 1],
             "showWireframeModel": true,
             "wireframeShaderName": "oneColorReveal",
@@ -112,6 +116,11 @@
         "battle": {
             "battleRenderFPS": 60,
             "simulationStepsPerSecond": 60,
+            "viewDistance": 5000,
+            "cameraDefaultTransitionDuration": 1000,
+            "cameraDefaultTransitionStyle": "smooth",
+            "cameraPilotingSwitchTransitionDuration": 800,
+            "cameraPilotingSwitchTransitionStyle": "smooth",
             "momentDuration": 1,
             "backgroundObjectDistance": 4500,
             "turnAccelerationDurationInSeconds": 0.5,

@@ -15,14 +15,16 @@
  * @param game To access screen-changing functionality
  * @param armadaScreens Used for navigation
  * @param strings Used for translation support
+ * @param logic Used to access settings
  */
 define([
     "modules/control",
     "modules/camera-controller",
     "modules/game",
     "armada/screens/shared",
-    "armada/strings"
-], function (control, cameraController, game, armadaScreens, strings) {
+    "armada/strings",
+    "armada/logic"
+], function (control, cameraController, game, armadaScreens, strings, logic) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -298,7 +300,10 @@ define([
         }
         this._pilotingMode = true;
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
-        this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(pilotedSpacecraft.getVisualModel());
+        this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
+                pilotedSpacecraft.getVisualModel(),
+                logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
+                logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         game.getScreen().setHeaderContent(strings.get(strings.BATTLE.PILOTING_MODE), {
