@@ -11,6 +11,10 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, Float32Array, parseFloat, Document */
 
+/**
+ * @param vec
+ * @param application
+ */
 define([
     "utils/vectors",
     "modules/application"
@@ -356,10 +360,14 @@ define([
 
     /**
      * Returns the number of triangles this model contains.
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
      * @returns {Number}
      */
-    Mesh.prototype.getNumTriangles = function () {
-        return this._triangles.length;
+    Mesh.prototype.getNumTriangles = function (transparent) {
+        if (transparent === undefined) {
+            return this._triangles.length;
+        }
+        return transparent ? this._nTransparentTriangles : this._nOpaqueTriangles;
     };
 
     /**
@@ -1912,11 +1920,12 @@ define([
     /**
      * Returns the number of triangles this model contains.
      * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
      * @returns {Number}
      */
-    Model.prototype.getNumTriangles = function (lod) {
+    Model.prototype.getNumTriangles = function (lod, transparent) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getNumTriangles();
+        return this.getMeshWithLOD(lod).getNumTriangles(transparent);
     };
 
     /**

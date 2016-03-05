@@ -975,17 +975,17 @@ define([
         }
     };
     /**
-     * Returns the number of triangles drawn on the screen to render this node
-     * and all its subnodes.
+     * Returns the number of triangles drawn on the screen to render this node and all its subnodes.
+     * @param {Boolean} transparent Whether to count the transparent or the opaque triangles
      * @returns {Number}
      */
-    RenderableNode.prototype.getNumberOfDrawnTriangles = function () {
+    RenderableNode.prototype.getNumberOfDrawnTriangles = function (transparent) {
         var i, result = 0;
         if (this._renderableObject.wasRendered()) {
-            result += this._renderableObject.getNumberOfDrawnTriangles();
+            result += this._renderableObject.getNumberOfDrawnTriangles(transparent);
         }
         for (i = 0; i < this._subnodes.length; i++) {
-            result += this._subnodes[i].getNumberOfDrawnTriangles();
+            result += this._subnodes[i].getNumberOfDrawnTriangles(transparent);
         }
         return result;
     };
@@ -1760,10 +1760,11 @@ define([
     };
     /**
      * @override
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
      * @returns {Number}
      */
-    ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function () {
-        return (this._wireframe === false) && (this._currentLOD !== this.LOD_NOT_SET) ? this._model.getNumTriangles(this._currentLOD) : 0;
+    ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function (transparent) {
+        return (this._wireframe === false) && (this._currentLOD !== this.LOD_NOT_SET) ? this._model.getNumTriangles(this._currentLOD, transparent) : 0;
     };
     // #########################################################################
     /**
@@ -1891,10 +1892,11 @@ define([
     };
     /**
      * @override
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
      * @returns {Number}
      */
-    Billboard.prototype.getNumberOfDrawnTriangles = function () {
-        return 2;
+    Billboard.prototype.getNumberOfDrawnTriangles = function (transparent) {
+        return (transparent !== false) ? this._model.getNumTriangles() : 0;
     };
     // #########################################################################
     /**
@@ -2158,10 +2160,11 @@ define([
     };
     /**
      * @override
-     * @returns {Number} Always 2
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
+     * @returns {Number} Always 2 for transparent / any, 0 for opaque.
      */
-    Particle.prototype.getNumberOfDrawnTriangles = function () {
-        return 2;
+    Particle.prototype.getNumberOfDrawnTriangles = function (transparent) {
+        return (transparent !== false) ? 2 : 0;
     };
     // #########################################################################
     /**
@@ -5573,62 +5576,107 @@ define([
                         (cameraSettings.spanRange && cameraSettings.spanRange[1]) || cameraSettings.span),
                 cameraSettings.transitionDuration,
                 cameraSettings.transitionStyle);
-        ///TODO: continue refactoring from here
-        ///-------------------------------------------------------------------------
-        this.lodContext = lodContext;
-        this._shadowMappingEnabled = false;
-        this._shadowMappingShader = null;
-        this._shadowMapTextureSize = null;
-        this._shadowMapRanges = [];
-        this._shadowMapDepthRatio = null;
-        this.uniformValueFunctions = {};
         /**
+         * The context that stores the LOD settings for rendering models in this scene with multiple LOD meshes.
+         * @type LODContext
+         */
+        this._lodContext = lodContext;
+        /**
+         * Whether shadow maps should be rendered and used when rendering this scene.
+         * @type Boolean
+         */
+        this._shadowMappingEnabled = false;
+        /**
+         * A reference to the shader that is to be used for rendering shadow maps.
+         * @type ManagedShader
+         */
+        this._shadowMappingShader = null;
+        /**
+         * The size (width and height in texels) of the framebuffer textures to which the shadow maps should be rendered.
+         * @type Number
+         */
+        this._shadowMapTextureSize = 0;
+        /**
+         * The array of sizes (width and height) of the shadow maps in world-coordinates. For each light source, one shadow map is rendered
+         * for each range in this array.
+         * @type Number[]
+         */
+        this._shadowMapRanges = [];
+        /**
+         * The factor that determines the depth of the shadow maps in world coordinates. The depth is calculated by multiplying the shadow
+         * map size (width and height) by this factor. For depth, a smaller accuracy is enough (to avoid shadow lines on surfaces which the
+         * light hits at a sharp angle), therefore the shadow map can cover more area on this axis, resulting in farther objects casting
+         * shadows (or the same objects casting shadows with a finer quality)
+         * @type Number
+         */
+        this._shadowMapDepthRatio = 0;
+        /**
+         * The functions that can be used to set the values of uniform variables in shaders when rendering this scene. When rendering any
+         * object in this scene with a shader that has a uniform with one of the names this object has a function for, its values will be 
+         * calculated with the function and passed to the shader.
+         * @type Object.<String, Function>
+         */
+        this._uniformValueFunctions = {};
+        /**
+         * Whether light sources and objects in the scene should be animated when rendering based on the elapsed time since the last render.
          * @type Boolean
          */
         this._shouldAnimate = true;
         /**
+         * Whether the camera state (position, orientation, FOV etc) should be updated when rendering based on the elapsed time since the 
+         * last render. (e.g. if the camera is moving or transitioning, that should be progressed)
          * @type Boolean
          */
         this._shouldUpdateCamera = true;
-        this.firstRender = true;
-        this._drawnTriangles = 0;
+        /**
+         * Stores the number of triangles rendered during the last rendering of the scene.
+         * @type Number
+         */
+        this._numDrawnTriangles = 0;
+        /**
+         * The array of managed contexts to which this scene has been added. The scene needs to be added to a managed context before it can
+         * be rendered to it, so that it sets up the vertex buffers and framebuffers of the context to contain the vertices and shadow map 
+         * buffers required to render this scene.
+         * @type ManagedGLContext[]
+         */
         this._contexts = [];
-
+        ///TODO: continue refactoring from here
+        ///-------------------------------------------------------------------------
         this.clearNodes();
         // setting uniform valuables that are universal to all scene graph 
         // objects, so any shader used in the scene will be able to get their
         // values
-        this.uniformValueFunctions.u_numLights = function () {
+        this._uniformValueFunctions.u_numLights = function () {
             return this._directionalLightUniformData.length;
         }.bind(this);
-        this.uniformValueFunctions.u_lights = function () {
+        this._uniformValueFunctions.u_lights = function () {
             return this._directionalLightUniformData;
         }.bind(this);
-        this.uniformValueFunctions.u_numPointLights = function () {
+        this._uniformValueFunctions.u_numPointLights = function () {
             return this._pointLightUniformData.length;
         }.bind(this);
-        this.uniformValueFunctions.u_pointLights = function () {
+        this._uniformValueFunctions.u_pointLights = function () {
             return this._pointLightUniformData;
         }.bind(this);
-        this.uniformValueFunctions.u_numSpotLights = function () {
+        this._uniformValueFunctions.u_numSpotLights = function () {
             return this._spotLightUniformData.length;
         }.bind(this);
-        this.uniformValueFunctions.u_spotLights = function () {
+        this._uniformValueFunctions.u_spotLights = function () {
             return this._spotLightUniformData;
         }.bind(this);
-        this.uniformValueFunctions.u_cameraMatrix = function () {
+        this._uniformValueFunctions.u_cameraMatrix = function () {
             return this._camera.getViewMatrix();
         }.bind(this);
-        this.uniformValueFunctions.u_cameraOrientationMatrix = function () {
+        this._uniformValueFunctions.u_cameraOrientationMatrix = function () {
             return this._camera.getInverseOrientationMatrix();
         }.bind(this);
-        this.uniformValueFunctions.u_projMatrix = function () {
+        this._uniformValueFunctions.u_projMatrix = function () {
             return this._camera.getProjectionMatrix();
         }.bind(this);
-        this.uniformValueFunctions.u_eyePos = function () {
+        this._uniformValueFunctions.u_eyePos = function () {
             return new Float32Array(this._camera.getCameraPositionVector());
         }.bind(this);
-        this.uniformValueFunctions.u_shadows = function () {
+        this._uniformValueFunctions.u_shadows = function () {
             return this._shadowMappingEnabled;
         }.bind(this);
     }
@@ -5674,18 +5722,18 @@ define([
         } else {
             this._shadowMappingEnabled = false;
             this._shadowMappingShader = null;
-            this._shadowMapTextureSize = null;
+            this._shadowMapTextureSize = 0;
             this._shadowMapRanges = [];
-            this._shadowMapDepthRatio = null;
+            this._shadowMapDepthRatio = 0;
         }
         if (this._shadowMappingShader) {
-            this.uniformValueFunctions.u_numRanges = function () {
+            this._uniformValueFunctions.u_numRanges = function () {
                 return this._shadowMapRanges.length;
             }.bind(this);
-            this.uniformValueFunctions.u_shadowMapRanges = function () {
+            this._uniformValueFunctions.u_shadowMapRanges = function () {
                 return new Float32Array(this._shadowMapRanges);
             }.bind(this);
-            this.uniformValueFunctions.u_shadowMapDepthRatio = function () {
+            this._uniformValueFunctions.u_shadowMapDepthRatio = function () {
                 return this._shadowMapDepthRatio;
             }.bind(this);
         }
@@ -5822,13 +5870,13 @@ define([
         this._spotLights.push(newLightSource);
     };
     Scene.prototype.getLODContext = function () {
-        return this.lodContext;
+        return this._lodContext;
     };
     Scene.prototype.getNumberOfDrawnTriangles = function () {
-        return this._drawnTriangles;
+        return this._numDrawnTriangles;
     };
-    Scene.prototype.setUniformValueFunction = function (uniformName, valueFunction) {
-        this.uniformValueFunctions[uniformName] = valueFunction;
+    Scene.prototype.setUniformValueFunction = function (rawUniformName, valueFunction) {
+        this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction;
     };
     /**
      * Adds a new camera configuration that will be associated with the scene itself.
@@ -5892,7 +5940,7 @@ define([
      * @param {Shader} shader The shader program in which to assign the uniforms.
      */
     Scene.prototype.assignUniforms = function (context, shader) {
-        shader.assignUniforms(context, this.uniformValueFunctions);
+        shader.assignUniforms(context, this._uniformValueFunctions);
     };
     /**
      * Cleans up the whole scene graph, removing all object that are deleted or are
@@ -5938,7 +5986,7 @@ define([
         var i;
         if (this._shadowMappingEnabled) {
             this._shadowMappingShader.addToContext(context);
-            this.uniformValueFunctions.u_shadowMaps = function () {
+            this._uniformValueFunctions.u_shadowMaps = function () {
                 var j, k, shadowMaps = [];
                 for (j = 0; j < this._directionalLights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
@@ -5960,7 +6008,7 @@ define([
         if (this._shadowMappingShader && this._shadowMapRanges.length > 0) {
             var i, l;
             this._shadowMappingEnabled = true;
-            this.uniformValueFunctions.u_shadowMaps = function () {
+            this._uniformValueFunctions.u_shadowMaps = function () {
                 var j, k, shadowMaps = [];
                 for (j = 0; j < this._directionalLights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
@@ -6014,7 +6062,7 @@ define([
         var i, j, gl, clearBits;
         application.log("Rendering scene...", 3);
         this._camera.update(this._shouldUpdateCamera ? dt : 0);
-        this._drawnTriangles = 0;
+        this._numDrawnTriangles = 0;
         gl = context.gl;
         // ensuring that transformation matrices are only calculated once for 
         // each object in each render
@@ -6044,7 +6092,6 @@ define([
             gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
         }
 
-        this.firstRender = false;
         // glClear is affected by the depth mask, so we need to turn it on here!
         // (it's disabled for the second (transparent) render pass)
         gl.depthMask(true);
@@ -6064,23 +6111,23 @@ define([
 
         this._rootBackgroundNode.resetForNewFrame();
         this._rootBackgroundNode.render(context, this._width, this._height, false, dt);
-        this._drawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
+        this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
 
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
         // first rendering pass: rendering the non-transparent triangles with 
         // Z buffer writing turned on
-        application.log("Rendering transparent phase...", 4);
+        application.log("Rendering opaque phase...", 4);
         gl.disable(gl.BLEND);
         this._rootNode.render(context, this._width, this._height, true, dt);
-        this._drawnTriangles += this._rootNode.getNumberOfDrawnTriangles();
+        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
         // second rendering pass: rendering the transparent triangles with 
         // Z buffer writing turned off
-        application.log("Rendering opaque phase...", 4);
+        application.log("Rendering transparent phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
         this._rootNode.render(context, this._width, this._height, false);
-        this._drawnTriangles += this._rootNode.getNumberOfDrawnTriangles();
+        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
