@@ -1,15 +1,23 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
+ * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
+ * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
+ * @version 2.0
  */
 
 /*jslint nomen: true, plusplus: true, bitwise: true, white: true */
 /*global define, Float32Array, Int32Array */
 
-
+/**
+ * @param utils Used for array equality check.
+ * @param vec Used for 3D (and 4D) vector operations.
+ * @param mat Used for 3D (and 4D) matrix operations.
+ * @param application Used for displaying errors and logging (and intentional crashing)
+ * @param managedGL Used for handling managed framebuffers, creating uniform names, type checking for managed resource types
+ */
 define([
     "utils/utils",
     "utils/vectors",
@@ -82,6 +90,7 @@ define([
              * @type String
              */
             SHADOW_MAP_BUFFER_NAME_INFIX = "-",
+            // the names of uniforms that light sources provide values for (these names will be pre/suffixed by ManagedGL)
             /**
              * When rendering a shadow map, the light matrix data will be loaded to the uniform with this name.
              * @type String
@@ -103,6 +112,7 @@ define([
              * @type Number
              */
             MAX_POINT_LIGHT_PRIORITIES = 5,
+            // the names of uniforms that scenes provide values for (these names will be pre/suffixed by ManagedGL)
             /**
              * 
              * @type String
@@ -5792,6 +5802,14 @@ define([
         }
     };
     /**
+     * Returns the framebuffer name prefix to use for the shadow maps for the light with the given index.
+     * @param {Number} lightIndex
+     * @returns {String}
+     */
+    Scene.prototype._getShadowMapBufferNamePrefix = function (lightIndex) {
+        return SHADOW_MAP_BUFFER_NAME_PREFIX + lightIndex + SHADOW_MAP_BUFFER_NAME_INFIX;
+    };
+    /**
      * Does all preparations needed to render the scene to the associated context with the given index, according to the current scene 
      * settings. If no index is given, preparations are done for all contexts.
      * @param {Number} [contextIndex]
@@ -5928,49 +5946,66 @@ define([
     Scene.prototype.setShouldUpdateCamera = function (value) {
         this._shouldUpdateCamera = value;
     };
-    ///TODO: continue refactoring from here
-    ///-------------------------------------------------------------------------
     /**
-     * Appends a new visual object to the list of background objects.
-     * @param {RenderableObject} newRenderableObject The object to append.
+     * Adds a new node containing the passed renderable object to be rendered among the background objects of this scene. The background
+     * objects are rendered before the main scene objects, without depth checking, on top of each other in the order they were added.
+     * @param {RenderableObject} backgroundObject The object to add.
+     * @returns {RenderableNode} The node that was created to contain the passed object.
      */
-    Scene.prototype.addBackgroundObject = function (newRenderableObject) {
-        var node = new RenderableNode(newRenderableObject);
+    Scene.prototype.addBackgroundObject = function (backgroundObject) {
+        var node = new RenderableNode(backgroundObject);
         this._rootBackgroundNode.addSubnode(node);
         return node;
     };
     /**
-     * Appends a new visual object to the topmost level of the scene graph.
-     * @param {RenderableObject} newRenderableObject The object to append.
+     * Adds a new node containing the passed renderable object to be rendered among the main scene objects of this scene. 
+     * @param {RenderableObject} newObject The object to add.
+     * @returns {RenderableNode} The node that was created to contain the passed object.
      */
-    Scene.prototype.addObject = function (newRenderableObject) {
-        var node = new RenderableNode(newRenderableObject);
+    Scene.prototype.addObject = function (newObject) {
+        var node = new RenderableNode(newObject);
         this._rootNode.addSubnode(node);
         return node;
     };
-    Scene.prototype.addObjectToContexts = function (newRenderableObject) {
+    /**
+     * Adds the passed renderable object to all contexts this scene is associated with. Should be called when the node or an ancestor of the
+     * node of an object is added to this scene. (automatically called by RenderableNode)
+     * @param {RenderableObject} renderableObject
+     */
+    Scene.prototype.addObjectToContexts = function (renderableObject) {
         var i;
         for (i = 0; i < this._contexts.length; i++) {
-            newRenderableObject.addToContext(this._contexts[i]);
+            renderableObject.addToContext(this._contexts[i]);
         }
     };
+    /**
+     * Clears all added nodes from this scene and resets the root nodes.
+     */
     Scene.prototype.clearNodes = function () {
+        // clearing background objects
         if (this._rootBackgroundNode) {
             this._rootBackgroundNode.destroy();
         }
+        // we are adding RenderableObject3D so if nodes with object 3D-s are added, they will have a parent with position and orientation
         this._rootBackgroundNode = new RenderableNode(new RenderableObject3D(null, false, false));
         this._rootBackgroundNode.setScene(this);
+        // clearing main scene objects
         if (this._rootNode) {
             this._rootNode.destroy();
         }
         this._rootNode = new RenderableNode(new RenderableObject3D(null, false, false));
         this._rootNode.setScene(this);
+        // clearing resource objects
         if (this._rootResourceNode) {
             this._rootResourceNode.destroy();
         }
         this._rootResourceNode = new RenderableNode(new RenderableObject3D(null, false, false));
         this._rootResourceNode.setScene(this);
     };
+    /**
+     * Returns an array containing all the top level main objects of the scene.
+     * @returns {RenderableObject[]}
+     */
     Scene.prototype.getAllObjects = function () {
         var i, result = [], subnodes = this._rootNode.getSubnodes();
         for (i = 0; i < subnodes.length; i++) {
@@ -5978,6 +6013,11 @@ define([
         }
         return result;
     };
+    /**
+     * Returns an array containing all the top level main objects of the scene that have functions defined to access their position and 
+     * orientation.
+     * @returns {RenderableObject3D[]}
+     */
     Scene.prototype.getAll3DObjects = function () {
         var i, o, result = [], subnodes = this._rootNode.getSubnodes();
         for (i = 0; i < subnodes.length; i++) {
@@ -5989,13 +6029,14 @@ define([
         return result;
     };
     /**
-     * 
+     * Returns the node storing the first added main scene object.
      * @returns {RenderableNode}
      */
     Scene.prototype.getFirstNode = function () {
         return this._rootNode.getFirstSubnode();
     };
     /**
+     * Returns the node coming after the passed one among the nodes storing the main scene objects.
      * @param {RenderableNode} currentNode
      * @returns {RenderableNode}
      */
@@ -6003,6 +6044,7 @@ define([
         return this._rootNode.getNextSubnode(currentNode);
     };
     /**
+     * Returns the node coming before the passed one among the nodes storing the main scene objects.
      * @param {RenderableNode} currentNode
      * @returns {RenderableNode}
      */
@@ -6010,30 +6052,72 @@ define([
         return this._rootNode.getPreviousSubnode(currentNode);
     };
     /**
+     * Marks the resources of the passed renderable object to be added to any contexts this scene will get added to. This will make it 
+     * possible to dynamically add objects of this type to the scene after it has already been added to a context, as its resources (such
+     * as vertices in the vertex buffers of the context) will be available.
      * @param {RenderableObject} object
      */
     Scene.prototype.addResourcesOfObject = function (object) {
         this._rootResourceNode.addSubnode(new RenderableNode(object));
     };
-    Scene.prototype.addLightSource = function (newLightSource) {
-        this._directionalLights.push(newLightSource);
+    /**
+     * Adds the passed directional light source to this scene.
+     * @param {DirectionalLightSource} lightSource
+     */
+    Scene.prototype.addDirectionalLightSource = function (lightSource) {
+        this._directionalLights.push(lightSource);
     };
-    Scene.prototype.addPointLightSource = function (newLightSource, priority) {
-        priority = priority || 0;
-        this._pointLightPriorityArrays[priority].push(newLightSource);
+    /**
+     * Adds the passed point light source to this scene with the given priority. The highest priority is 0 and larger number means lower
+     * priority, with the number of available priority determined by MAX_POINT_LIGHT_PRIORITIES. If there are more point light sources in
+     * the scene than the rendering limit, the ones with the higher priority will be rendered.
+     * @param {PointLightSource} lightSource
+     * @param {Number} priority
+     */
+    Scene.prototype.addPointLightSource = function (lightSource, priority) {
+        priority = Math.min(priority || 0, MAX_POINT_LIGHT_PRIORITIES - 1);
+        this._pointLightPriorityArrays[priority].push(lightSource);
     };
-    Scene.prototype.addSpotLightSource = function (newLightSource) {
-        this._spotLights.push(newLightSource);
+    /**
+     * Adds the passed spot light source to this scene.
+     * @param {SpotLightSource} lightSource
+     */
+    Scene.prototype.addSpotLightSource = function (lightSource) {
+        this._spotLights.push(lightSource);
     };
+    /**
+     * Returns the LOD context containing the settings that govern how the LOD of multi-LOD models is chosen when rendering this scene.
+     * @returns {LODContext}
+     */
     Scene.prototype.getLODContext = function () {
         return this._lodContext;
     };
+    /**
+     * Returns how many triangles were rendered during the last render step when this scene was rendered.
+     * @returns {Number}
+     */
     Scene.prototype.getNumberOfDrawnTriangles = function () {
         return this._numDrawnTriangles;
     };
+    /**
+     * Sets the passed function to be called when a shader asks for the value of a uniform with the given name while rendering this scene.
+     * The name given here is appropriately prefixed/suffixed by ManagedGL. The value of this will be the scene instance, when calling the
+     * function.
+     * @param {String} rawUniformName
+     * @param {Function} valueFunction
+     */
     Scene.prototype.setUniformValueFunction = function (rawUniformName, valueFunction) {
         this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
     };
+    /**
+     * Sets the passed function to be called when a shader asks for the value of a uniform with the given name while rendering this scene to
+     * the associated context with the given index.
+     * The name given here is appropriately prefixed/suffixed by ManagedGL. The value of this will be the scene instance, when calling the
+     * function.
+     * @param {Number} contextIndex
+     * @param {String} rawUniformName
+     * @param {Function} valueFunction
+     */
     Scene.prototype.setContextUniformValueFunction = function (contextIndex, rawUniformName, valueFunction) {
         if (!this._contextUniformValueFunctions[contextIndex]) {
             this._contextUniformValueFunctions[contextIndex] = {};
@@ -6084,8 +6168,7 @@ define([
         return this._rootNode.getCameraConfigurationsWithName(name);
     };
     /**
-     * Recalculates the perspective matrices of cameras in case the viewport size
-     * (and as a result, aspect) has changed.
+     * Sets a new viewport size and recalculates the perspective matrix of the camera of the scene according to the new aspect ratio.
      * @param {Number} newWidth
      * @param {Number} newHeight
      */
@@ -6095,23 +6178,23 @@ define([
         this._camera.setAspect(this._width / this._height);
     };
     /**
-     * Assigns all uniforms in the given shader program that
-     * the scene has a value function for, using the appropriate webGL calls.
+     * Assigns all uniforms in the given shader program that the scene has a value function for, using the appropriate webGL calls.
      * The matching is done based on the names of the uniforms.
-     * @param {ManagedGLContext} context The webGL context to use
-     * @param {Shader} shader The shader program in which to assign the uniforms.
+     * @param {ManagedGLContext} context 
+     * @param {Shader} shader
      */
     Scene.prototype.assignUniforms = function (context, shader) {
         shader.assignUniforms(context, this._uniformValueFunctions);
         shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
     };
     /**
-     * Cleans up the whole scene graph, removing all object that are deleted or are
-     * marked for deletion.
+     * Cleans up the whole scene graph, removing all nodes and light sources that are deleted or are marked for deletion.
      */
     Scene.prototype.cleanUp = function () {
         var i, j, k, prio;
+        // cleaning the scene graph containing the main scene objects
         this._rootNode.cleanUp();
+        // cleaning up dynamic point light sources
         for (prio = 0; prio < this._pointLightPriorityArrays.length; prio++) {
             for (i = 0; i < this._pointLightPriorityArrays[prio].length; i++) {
                 j = i;
@@ -6123,6 +6206,7 @@ define([
                 this._pointLightPriorityArrays[prio].splice(i, k);
             }
         }
+        // cleaning up dynamic spot light sources 
         for (i = 0; i < this._spotLights.length; i++) {
             j = i;
             k = 0;
@@ -6134,14 +6218,11 @@ define([
         }
     };
     /**
-     * Returns the framebuffer name prefix to use for the shadow maps for the light with the given index.
-     * @param {Number} lightIndex
-     * @returns {String}
+     * Renders the main scene objects for a shadow map after it has been set up appropriately for a light source and shadow map range.
+     * This method only performs the rendering itself (clearing the background and rendering the nodes on it)
+     * @param {ManagedGLContext} context
      */
-    Scene.prototype._getShadowMapBufferNamePrefix = function (lightIndex) {
-        return SHADOW_MAP_BUFFER_NAME_PREFIX + lightIndex + SHADOW_MAP_BUFFER_NAME_INFIX;
-    };
-    Scene.prototype.renderShadowMap = function (context) {
+    Scene.prototype._renderShadowMap = function (context) {
         var gl = context.gl;
         gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -6153,45 +6234,49 @@ define([
         this._rootNode.renderToShadowMap(context, this._width, this._height);
     };
     /**
-     * Renders the whole scene applying the general configuration and then rendering
-     * all visual objects in the graph.
+     * Renders the whole scene applying the general configuration and then rendering all background and main scene objects (as well as
+     * shadow maps if applicable).
      * @param {ManagedGLContext} context
-     * @param {number} dt
+     * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
      */
     Scene.prototype.render = function (context, dt) {
         var i, j, gl, clearBits;
         application.log("Rendering scene...", 3);
         this._camera.update(this._shouldUpdateCamera ? dt : 0);
         this._numDrawnTriangles = 0;
-        gl = context.gl;
-        // ensuring that transformation matrices are only calculated once for 
-        // each object in each render
+        gl = context.gl; // caching the variable for easier access
+        // ensuring that transformation matrices are only calculated once for each object in each render
         this._rootNode.resetForNewFrame();
-
+        // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
+            // choosing the shadow map shader
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
+            // rendering for each light source and shadow map range
             for (i = 0; i < this._directionalLights.length; i++) {
                 this._directionalLights[i].reset();
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
                     this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
-                    this.renderShadowMap(context);
+                    this._renderShadowMap(context);
                 }
             }
+            // binding the created textures to be used by the subsequent rendering calls
             for (i = 0; i < this._directionalLights.length; i++) {
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
                     context.bindTexture(context.getFrameBuffer(this._directionalLights[i].getShadowMapBufferName(j)), undefined, true);
                 }
             }
         }
-        this._updateLightUniformData(this._shouldAnimate ? dt : 0);
+        // switch back to rendering to the screen
         context.setCurrentFrameBuffer(null);
+        // filling the arrays storing the light source data for uniforms that need it
+        this._updateLightUniformData(this._shouldAnimate ? dt : 0);
+        // viewport preparation
         gl.viewport(this._left, this._top, this._width, this._height);
         if (this._shouldClearColorOnRender) {
             gl.colorMask(this._clearColorMask[0], this._clearColorMask[1], this._clearColorMask[2], this._clearColorMask[3]);
             gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
         }
-
         // glClear is affected by the depth mask, so we need to turn it on here!
         // (it's disabled for the second (transparent) render pass)
         gl.depthMask(true);
@@ -6199,34 +6284,32 @@ define([
         clearBits = this._shouldClearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
         clearBits = this._shouldClearDepthOnRender ? clearBits | gl.DEPTH_BUFFER_BIT : clearBits;
         gl.clear(clearBits);
+        // preparing to render background objects
         gl.enable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
         gl.depthMask(false);
-        // if only one shader is used in rendering the whole scene, we will need to
-        // update its uniforms (as they are normally updated every time a new shader
-        // is set)
+        // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
+        // every time a new shader is set)
         if (context.getCurrentShader() !== null) {
             this.assignUniforms(context, context.getCurrentShader());
         }
-
+        // rendering background objects
         this._rootBackgroundNode.resetForNewFrame();
         this._rootBackgroundNode.render(context, this._width, this._height, false, dt);
         this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
-
+        // preparing to render main scene objects
         gl.enable(gl.DEPTH_TEST);
-        gl.depthMask(true);
-        // first rendering pass: rendering the non-transparent triangles with 
-        // Z buffer writing turned on
+        // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
         application.log("Rendering opaque phase...", 4);
+        gl.depthMask(true);
         gl.disable(gl.BLEND);
-        this._rootNode.render(context, this._width, this._height, true, dt);
+        this._rootNode.render(context, this._width, this._height, true, dt); // we also pass the elapsed time to perform animation
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
-        // second rendering pass: rendering the transparent triangles with 
-        // Z buffer writing turned off
+        // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
         application.log("Rendering transparent phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
-        this._rootNode.render(context, this._width, this._height, false);
+        this._rootNode.render(context, this._width, this._height, false, 0); // already animated, passing zero elapsed time will disable animation
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
     // -------------------------------------------------------------------------

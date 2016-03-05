@@ -1215,9 +1215,11 @@ define([
     ManagedShader.prototype.assignUniforms = function (context, uniformValueFunctions) {
         var i;
         context.setCurrentShader(this);
-        for (i = 0; i < this._uniforms.length; i++) {
-            if (uniformValueFunctions[this._uniforms[i].getName()] !== undefined) {
-                this._uniforms[i].setValue(context, this, uniformValueFunctions[this._uniforms[i].getName()]);
+        if (uniformValueFunctions) {
+            for (i = 0; i < this._uniforms.length; i++) {
+                if (uniformValueFunctions[this._uniforms[i].getName()] !== undefined) {
+                    this._uniforms[i].setValue(context, this, uniformValueFunctions[this._uniforms[i].getName()]);
+                }
             }
         }
     };
