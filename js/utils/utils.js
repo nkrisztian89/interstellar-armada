@@ -171,8 +171,16 @@ define(function () {
         if ((object1 === null) && (object2 === null)) {
             return true;
         }
-        keys1 = Object.keys(object1);
-        keys2 = Object.keys(object2);
+        if (object1) {
+            keys1 = Object.keys(object1);
+        } else {
+            return false;
+        }
+        if (object2) {
+            keys2 = Object.keys(object2);
+        } else {
+            return false;
+        }
         if (keys1.length !== keys2.length) {
             return false;
         }

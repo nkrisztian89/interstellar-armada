@@ -86,23 +86,41 @@ define([
              * When rendering a shadow map, the light matrix data will be loaded to the uniform with this name.
              * @type String
              */
-            UNIFORM_LIGHT_MATRIX_NAME = "u_lightMatrix",
+            UNIFORM_LIGHT_MATRIX_NAME = "lightMatrix",
             /**
              * When rendering a shadow map, the shadow depth data will be loaded to the uniform with this name.
              * @type String
              */
-            UNIFORM_SHADOW_MAP_DEPTH_NAME = "u_shadowMapDepth",
+            UNIFORM_SHADOW_MAP_DEPTH_NAME = "shadowMapDepth",
             /**
              * When rendering a shadow map, the projection matrix data will be loaded to the uniform with this name.
              * @type String
              */
-            UNIFORM_PROJECTION_MATRIX_NAME = "u_projMatrix",
+            UNIFORM_PROJECTION_MATRIX_NAME = "projMatrix",
             /**
              * The number of available priorities with which new point light sources can be added. If set to e.g. 5, the available priorities
              * will be 0 to 4
              * @type Number
              */
-            MAX_POINT_LIGHT_PRIORITIES = 5;
+            MAX_POINT_LIGHT_PRIORITIES = 5,
+            /**
+             * 
+             * @type String
+             */
+            UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME = "numLights",
+            UNIFORM_DIRECTIONAL_LIGHTS_ARRAY_NAME = "lights",
+            UNIFORM_NUM_POINT_LIGHTS_NAME = "numPointLights",
+            UNIFORM_POINT_LIGHTS_ARRAY_NAME = "pointLights",
+            UNIFORM_NUM_SPOT_LIGHTS_NAME = "numSpotLights",
+            UNIFORM_SPOT_LIGHTS_ARRAY_NAME = "spotLights",
+            UNIFORM_VIEW_MATRIX_NAME = "cameraMatrix",
+            UNIFORM_VIEW_ORIENTATION_MATRIX_NAME = "cameraOrientationMatrix",
+            UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
+            UNIFORM_SHADOW_MAPPING_ENABLED_NAME = "shadows",
+            UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
+            UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME = "shadowMapRanges",
+            UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME = "shadowMapDepthRatio",
+            UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps";
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -5076,7 +5094,9 @@ define([
         this._shadowMapBufferNamePrefix = shadowMapBufferNamePrefix;
         if (shadowMappingEnabled) {
             for (i = 0; i < numRanges; i++) {
-                context.addFrameBuffer(new managedGL.FrameBuffer(this.getShadowMapBufferName(i), shadowMapTextureSize, shadowMapTextureSize));
+                if (!context.getFrameBuffer(this.getShadowMapBufferName(i))) {
+                    context.addFrameBuffer(new managedGL.FrameBuffer(this.getShadowMapBufferName(i), shadowMapTextureSize, shadowMapTextureSize));
+                }
             }
         }
     };
@@ -5109,13 +5129,13 @@ define([
         // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
         this._matrix = this._matrix || mat.mul4(camera.getInversePositionMatrix(), this._orientationMatrix);
         this._translationVector = this._translationVector || new Float32Array(vec.normal3(vec.sub3(mat.translationVector3(matrix), mat.translationVector3(this._matrix))));
-        uniformValueFunctions[UNIFORM_LIGHT_MATRIX_NAME] = function () {
+        uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
             return matrix;
         };
-        uniformValueFunctions[UNIFORM_SHADOW_MAP_DEPTH_NAME] = function () {
+        uniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_DEPTH_NAME)] = function () {
             return depth;
         };
-        uniformValueFunctions[UNIFORM_PROJECTION_MATRIX_NAME] = function () {
+        uniformValueFunctions[managedGL.getUniformName(UNIFORM_PROJECTION_MATRIX_NAME)] = function () {
             return mat.orthographic4(range, range, -depth, depth);
         };
         context.getCurrentShader().assignUniforms(context, uniformValueFunctions);
@@ -5618,6 +5638,14 @@ define([
          */
         this._uniformValueFunctions = {};
         /**
+         * This array that stores those uniform value function bindings that are not the same across all contexts the scene has been added to.
+         * In each element of the array, the bindings corresponding to the context with the same index are stored. For example, the function
+         * with the key "uniformName" in the object at index 2 will return the value for the uniform named "uniformName" for shaders when
+         * rendering on the third context this scene has been added to.
+         * @type Array.<Object.<String, Function>>
+         */
+        this._contextUniformValueFunctions = [];
+        /**
          * Whether light sources and objects in the scene should be animated when rendering based on the elapsed time since the last render.
          * @type Boolean
          */
@@ -5640,53 +5668,102 @@ define([
          * @type ManagedGLContext[]
          */
         this._contexts = [];
-        ///TODO: continue refactoring from here
-        ///-------------------------------------------------------------------------
         this.clearNodes();
-        // setting uniform valuables that are universal to all scene graph 
-        // objects, so any shader used in the scene will be able to get their
-        // values
-        this._uniformValueFunctions.u_numLights = function () {
-            return this._directionalLightUniformData.length;
-        }.bind(this);
-        this._uniformValueFunctions.u_lights = function () {
-            return this._directionalLightUniformData;
-        }.bind(this);
-        this._uniformValueFunctions.u_numPointLights = function () {
-            return this._pointLightUniformData.length;
-        }.bind(this);
-        this._uniformValueFunctions.u_pointLights = function () {
-            return this._pointLightUniformData;
-        }.bind(this);
-        this._uniformValueFunctions.u_numSpotLights = function () {
-            return this._spotLightUniformData.length;
-        }.bind(this);
-        this._uniformValueFunctions.u_spotLights = function () {
-            return this._spotLightUniformData;
-        }.bind(this);
-        this._uniformValueFunctions.u_cameraMatrix = function () {
-            return this._camera.getViewMatrix();
-        }.bind(this);
-        this._uniformValueFunctions.u_cameraOrientationMatrix = function () {
-            return this._camera.getInverseOrientationMatrix();
-        }.bind(this);
-        this._uniformValueFunctions.u_projMatrix = function () {
-            return this._camera.getProjectionMatrix();
-        }.bind(this);
-        this._uniformValueFunctions.u_eyePos = function () {
-            return new Float32Array(this._camera.getCameraPositionVector());
-        }.bind(this);
-        this._uniformValueFunctions.u_shadows = function () {
-            return this._shadowMappingEnabled;
-        }.bind(this);
+        this._setGeneralUniformValueFunctions();
     }
-
+    /**
+     * Sets the uniform value functions for the scene that can be used to set all the uniforms referring to data that belongs to the whole
+     * scene. After this, any shader used when rendering objects of this scene using any of these uniforms will get the data.
+     */
+    Scene.prototype._setGeneralUniformValueFunctions = function () {
+        this.setUniformValueFunction(UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME, function () {
+            return this._directionalLightUniformData.length;
+        });
+        this.setUniformValueFunction(UNIFORM_DIRECTIONAL_LIGHTS_ARRAY_NAME, function () {
+            return this._directionalLightUniformData;
+        });
+        this.setUniformValueFunction(UNIFORM_NUM_POINT_LIGHTS_NAME, function () {
+            return this._pointLightUniformData.length;
+        });
+        this.setUniformValueFunction(UNIFORM_POINT_LIGHTS_ARRAY_NAME, function () {
+            return this._pointLightUniformData;
+        });
+        this.setUniformValueFunction(UNIFORM_NUM_SPOT_LIGHTS_NAME, function () {
+            return this._spotLightUniformData.length;
+        });
+        this.setUniformValueFunction(UNIFORM_SPOT_LIGHTS_ARRAY_NAME, function () {
+            return this._spotLightUniformData;
+        });
+        this.setUniformValueFunction(UNIFORM_VIEW_MATRIX_NAME, function () {
+            return this._camera.getViewMatrix();
+        });
+        this.setUniformValueFunction(UNIFORM_VIEW_ORIENTATION_MATRIX_NAME, function () {
+            return this._camera.getInverseOrientationMatrix();
+        });
+        this.setUniformValueFunction(UNIFORM_PROJECTION_MATRIX_NAME, function () {
+            return this._camera.getProjectionMatrix();
+        });
+        this.setUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
+            return new Float32Array(this._camera.getCameraPositionVector());
+        });
+        this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_ENABLED_NAME, function () {
+            return this._shadowMappingEnabled;
+        });
+    };
+    /**
+     * Sets the uniform value functions for the uniforms that are needed by shaders that want to use shadow mapping to provide the up-to-date
+     * data for this scene.
+     * @param {Number} [contextIndex] Shadow maps to be passed to uniforms are different for each context, and so this index tells which
+     * context (of the ones the scene has been added to) do the functions need to be set for. If omitted, they will be set for all associated
+     * contexts.
+     */
+    Scene.prototype._setShadowMappedShaderUniformValueFunctions = function (contextIndex) {
+        var i;
+        // there are some functions that are the same for all contexts, so only set these once, when the first context is chosen
+        if (contextIndex === 0) {
+            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME, function () {
+                return this._shadowMapRanges.length;
+            });
+            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME, function () {
+                return new Float32Array(this._shadowMapRanges);
+            });
+            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME, function () {
+                return this._shadowMapDepthRatio;
+            });
+        }
+        // if a specific index was given, set the values functions for that context
+        if (contextIndex !== undefined) {
+            this.setContextUniformValueFunction(contextIndex, UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME, function () {
+                var j, k, shadowMaps = [];
+                for (j = 0; j < this._directionalLights.length; j++) {
+                    for (k = 0; k < this._shadowMapRanges.length; k++) {
+                        shadowMaps.push(this._contexts[contextIndex].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getTextureBindLocation(this._contexts[contextIndex]));
+                    }
+                }
+                return new Int32Array(shadowMaps);
+            });
+            // if no specific index was given, set the functions up for all contexts
+        } else {
+            for (i = 0; i < this._contexts.length; i++) {
+                this._setShadowMappedShaderUniformValueFunctions(i);
+            }
+        }
+    };
+    /**
+     * Updates the calculated data about the stored light sources to up-to-date state for the current render step and collects them in
+     * a format that can be sent to the shaders. Those properties of light sources that are needed only for rendering are not calculated
+     * if the light source cannot be rendered in this step.
+     * @param {Number} dt The time elapsed since the last update, in milliseconds.
+     */
     Scene.prototype._updateLightUniformData = function (dt) {
         var i, j, count, max;
+        // for directional lights, simply collect all the up-to-date data from all the lights
         this._directionalLightUniformData = [];
         for (i = 0; i < this._directionalLights.length; i++) {
             this._directionalLightUniformData.push(this._directionalLights[i].getUniformData());
         }
+        // for point lights, collect the lights to be rendered going through the priority lists, starting from the highest priority, and
+        // perform a full update (including e.g. world position calculation) only for those light sources that can be rendered
         this._pointLightUniformData = [];
         for (i = 0, count = 0; (i < this._pointLightPriorityArrays.length); i++) {
             for (j = 0; (j < this._pointLightPriorityArrays[i].length) && (count < this._maxRenderedPointLights); j++) {
@@ -5696,11 +5773,14 @@ define([
                     count++;
                 }
             }
+            // for the lights sources in this priority list that cannot be rendered, the state still needs to be updated to make sure if
+            // they get rendered at one point, their state will be correct
             while (j < this._pointLightPriorityArrays[i].length) {
                 this._pointLightPriorityArrays[i][j].updateState(dt);
                 j++;
             }
         }
+        // for spot lights, only calculate the rendered ones fully, like with point lights, but there are no priorities here
         this._spotLightUniformData = [];
         for (i = 0, max = Math.min(this._spotLights.length, this._maxRenderedSpotLights); i < max; i++) {
             this._spotLights[i].update(dt);
@@ -5711,14 +5791,100 @@ define([
             i++;
         }
     };
-
+    /**
+     * Does all preparations needed to render the scene to the associated context with the given index, according to the current scene 
+     * settings. If no index is given, preparations are done for all contexts.
+     * @param {Number} [contextIndex]
+     */
+    Scene.prototype._setupContext = function (contextIndex) {
+        var i;
+        // if a specific index is given, set up the corresponding context
+        if (contextIndex !== undefined) {
+            // if shadow mapping is to be used, some additional preparations are needed
+            if (this._shadowMappingEnabled) {
+                this._shadowMappingShader.addToContext(this._contexts[contextIndex]);
+                this._setShadowMappedShaderUniformValueFunctions(contextIndex);
+            }
+            for (i = 0; i < this._directionalLights.length; i++) {
+                this._directionalLights[i].addToContext(this._contexts[contextIndex], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
+            }
+            // if no specific index is given, set up all associated contexts
+        } else {
+            for (i = 0; i < this._contexts.length; i++) {
+                this._setupContext(i);
+            }
+        }
+    };
+    /**
+     * The scene can be rendered on a managed context after it has been added to it using this function. This makes sure the context is
+     * prepared correctly, with all the resources such as vertex and frame buffers needed to render this scene are added. After this,
+     * the setup function of the managed context needs to be called to make sure all the data from the scene is pulled to the buffers.
+     * @param {ManagedGLContext} context
+     */
+    Scene.prototype.addToContext = function (context) {
+        this._contexts.push(context);
+        this._setupContext(this._contexts.length - 1);
+        this._rootBackgroundNode.addToContext(context);
+        this._rootNode.addToContext(context);
+        this._rootResourceNode.addToContext(context);
+    };
+    /**
+     * If the shadow mapping properties were appropriately set up, after this call the scene will be rendered using shadow mapping.
+     */
+    Scene.prototype.enableShadowMapping = function () {
+        if (this._shadowMappingShader && this._shadowMapRanges.length > 0) {
+            this._shadowMappingEnabled = true;
+            this._setupContext();
+        } else {
+            application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
+        }
+    };
+    /**
+     * After this call, the scene will be rendered without using shadow mapping.
+     */
+    Scene.prototype.disableShadowMapping = function () {
+        this._shadowMappingEnabled = false;
+    };
+    /**
+     * Switches whether shadow mapping for this scene is turned on to its opposite state.
+     */
+    Scene.prototype.toggleShadowMapping = function () {
+        this._shadowMappingEnabled = !this._shadowMappingEnabled;
+        if (this._shadowMappingEnabled) {
+            this.enableShadowMapping();
+        } else {
+            this.disableShadowMapping();
+        }
+    };
+    /**
+     * Sets a new list of shadow map ranges to use when rendering this scene.
+     * @param {Number[]} ranges
+     */
+    Scene.prototype.setShadowMapRanges = function (ranges) {
+        this._shadowMapRanges = ranges;
+        this._setupContext();
+    };
+    /**
+     * @typedef Scene~ShadowMappingParams
+     * @property {Boolean} [enable]
+     * @property {ManagedShader} [shader]
+     * @property {Number} [textureSize]
+     * @property {Number[]} [ranges]
+     * @property {Number} [depthRatio]
+     */
+    /**
+     * Sets the parameters of shadow mapping that are defined in the passed object, and leaves the others at their current value. If there
+     * is no object passed, resets all shadow mapping parameters to their void value.
+     * @param {Scene~ShadowMappingParams} [params]
+     */
     Scene.prototype.setShadowMapping = function (params) {
         if (params) {
-            this._shadowMappingEnabled = params.enable;
-            this._shadowMappingShader = params.shader || null;
-            this._shadowMapTextureSize = params.textureSize || 2048;
-            this._shadowMapRanges = params.ranges || [];
-            this._shadowMapDepthRatio = params.depthRatio || 1.5;
+            this._shadowMappingEnabled = (params.enable !== undefined) ? params.enable : this._shadowMappingEnabled;
+            this._shadowMappingShader = params.shader || this._shadowMappingShader;
+            this._shadowMapTextureSize = params.textureSize || this._shadowMapTextureSize;
+            this._shadowMapRanges = params.ranges || this._shadowMapRanges;
+            this._shadowMapDepthRatio = params.depthRatio || this._shadowMapDepthRatio;
+            this._setupContext();
         } else {
             this._shadowMappingEnabled = false;
             this._shadowMappingShader = null;
@@ -5726,54 +5892,44 @@ define([
             this._shadowMapRanges = [];
             this._shadowMapDepthRatio = 0;
         }
-        if (this._shadowMappingShader) {
-            this._uniformValueFunctions.u_numRanges = function () {
-                return this._shadowMapRanges.length;
-            }.bind(this);
-            this._uniformValueFunctions.u_shadowMapRanges = function () {
-                return new Float32Array(this._shadowMapRanges);
-            }.bind(this);
-            this._uniformValueFunctions.u_shadowMapDepthRatio = function () {
-                return this._shadowMapDepthRatio;
-            }.bind(this);
-        }
     };
-    Scene.prototype.setShadowMapRanges = function (ranges) {
-        var i, j;
-        this._shadowMapRanges = ranges;
-        for (i = 0; i < this._contexts.length; i++) {
-            for (j = 0; j < this._directionalLights.length; j++) {
-                this._directionalLights[j].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(j), this._shadowMapRanges.length, this._shadowMapTextureSize);
-            }
-        }
-    };
+    /**
+     * Returns the camera that is used when rendering this scene.
+     * @returns {Camera}
+     */
     Scene.prototype.getCamera = function () {
         return this._camera;
     };
     /**
+     * Returns whether this scene is set to animate when it is rendered.
      * @returns {Boolean}
      */
     Scene.prototype.shouldAnimate = function () {
         return this._shouldAnimate;
     };
     /**
+     * Sets whether this scene should animate when it is rendered.
      * @param {Boolean} value
      */
     Scene.prototype.setShouldAnimate = function (value) {
         this._shouldAnimate = value;
     };
     /**
+     * Returns whether this scene is set to update its camera's state when it is rendered.
      * @returns {Boolean}
      */
     Scene.prototype.shouldUpdateCamera = function () {
         return this._shouldUpdateCamera;
     };
     /**
+     * Sets whether this scene should update its camera's state when it is rendered.
      * @param {Boolean} value
      */
     Scene.prototype.setShouldUpdateCamera = function (value) {
         this._shouldUpdateCamera = value;
     };
+    ///TODO: continue refactoring from here
+    ///-------------------------------------------------------------------------
     /**
      * Appends a new visual object to the list of background objects.
      * @param {RenderableObject} newRenderableObject The object to append.
@@ -5876,7 +6032,13 @@ define([
         return this._numDrawnTriangles;
     };
     Scene.prototype.setUniformValueFunction = function (rawUniformName, valueFunction) {
-        this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction;
+        this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
+    };
+    Scene.prototype.setContextUniformValueFunction = function (contextIndex, rawUniformName, valueFunction) {
+        if (!this._contextUniformValueFunctions[contextIndex]) {
+            this._contextUniformValueFunctions[contextIndex] = {};
+        }
+        this._contextUniformValueFunctions[contextIndex][managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
     };
     /**
      * Adds a new camera configuration that will be associated with the scene itself.
@@ -5941,6 +6103,7 @@ define([
      */
     Scene.prototype.assignUniforms = function (context, shader) {
         shader.assignUniforms(context, this._uniformValueFunctions);
+        shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
     };
     /**
      * Cleans up the whole scene graph, removing all object that are deleted or are
@@ -5977,69 +6140,6 @@ define([
      */
     Scene.prototype._getShadowMapBufferNamePrefix = function (lightIndex) {
         return SHADOW_MAP_BUFFER_NAME_PREFIX + lightIndex + SHADOW_MAP_BUFFER_NAME_INFIX;
-    };
-    /**
-     * 
-     * @param {ManagedGLContext} context
-     */
-    Scene.prototype.addToContext = function (context) {
-        var i;
-        if (this._shadowMappingEnabled) {
-            this._shadowMappingShader.addToContext(context);
-            this._uniformValueFunctions.u_shadowMaps = function () {
-                var j, k, shadowMaps = [];
-                for (j = 0; j < this._directionalLights.length; j++) {
-                    for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(context.getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getTextureBindLocation(context));
-                    }
-                }
-                return new Int32Array(shadowMaps);
-            }.bind(this);
-        }
-        for (i = 0; i < this._directionalLights.length; i++) {
-            this._directionalLights[i].addToContext(context, this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
-        }
-        this._rootBackgroundNode.addToContext(context);
-        this._rootNode.addToContext(context);
-        this._rootResourceNode.addToContext(context);
-        this._contexts.push(context);
-    };
-    Scene.prototype.enableShadowMapping = function () {
-        if (this._shadowMappingShader && this._shadowMapRanges.length > 0) {
-            var i, l;
-            this._shadowMappingEnabled = true;
-            this._uniformValueFunctions.u_shadowMaps = function () {
-                var j, k, shadowMaps = [];
-                for (j = 0; j < this._directionalLights.length; j++) {
-                    for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(this._contexts[0].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getTextureBindLocation(this._contexts[0]));
-                    }
-                }
-                return new Int32Array(shadowMaps);
-            }.bind(this);
-            // at the moment, actually only one shadow-mapped context is supported
-            // because of how the uniform value functions work, but this code will
-            // make it easier to change this later
-            for (i = 0; i < this._contexts.length; i++) {
-                this._shadowMappingShader.addToContext(this._contexts[i]);
-                for (l = 0; l < this._directionalLights.length; l++) {
-                    this._directionalLights[l].addToContext(this._contexts[i], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(l), this._shadowMapRanges.length, this._shadowMapTextureSize);
-                }
-            }
-        } else {
-            application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
-        }
-    };
-    Scene.prototype.disableShadowMapping = function () {
-        this._shadowMappingEnabled = false;
-    };
-    Scene.prototype.toggleShadowMapping = function () {
-        this._shadowMappingEnabled = !this._shadowMappingEnabled;
-        if (this._shadowMappingEnabled) {
-            this.enableShadowMapping();
-        } else {
-            this.disableShadowMapping();
-        }
     };
     Scene.prototype.renderShadowMap = function (context) {
         var gl = context.gl;
