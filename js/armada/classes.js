@@ -935,6 +935,10 @@ define([
     ExplosionClass.prototype.getParticleEmitterDescriptors = function () {
         return this._particleEmitterDescriptors;
     };
+    /**
+     * Returns the states that the light source associated with this explosion goes through.
+     * @returns {PointLightSource~LightState[]}
+     */
     ExplosionClass.prototype.getLightStates = function () {
         return this._lightStates;
     };
@@ -943,7 +947,7 @@ define([
      * (including for how long would it generate them and after that for how long would the generated particles last)
      * @returns {Number}
      */
-    ExplosionClass.prototype.getDuration = function () {
+    ExplosionClass.prototype.getTotalDuration = function () {
         var i, j, emitterDuration, particleStates, result = 0;
         for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
             emitterDuration = this._particleEmitterDescriptors[i].getDuration();

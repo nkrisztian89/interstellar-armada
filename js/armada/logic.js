@@ -896,7 +896,7 @@ define([
      * particles.
      */
     DustParticle.prototype.simulate = function (camera) {
-        this._visualModel.fitPositionWithinRange(camera.getPositionMatrix(), this._range);
+        this._visualModel.fitPositionWithinRange(camera.getCameraPositionMatrix(), this._range);
     };
     /**
      * Removes all references to other objects for proper cleanup of memory.
@@ -1411,7 +1411,7 @@ define([
                 this._positionMatrix,
                 mat.identity4(),
                 particleEmitters,
-                this._class.getDuration(),
+                this._class.getTotalDuration(),
                 this._class.isContinuous(),
                 this._carriesParticles);
     };
@@ -1783,10 +1783,10 @@ define([
         if (this._cooldown >= this._class.getCooldown()) {
             this._cooldown = 0;
             // cache the matrices valid for the whole weapon
-            orientationMatrix = this._spacecraft.getOrientationMatrix();
-            scaledOriMatrix = mat.mul4(this._spacecraft.getScalingMatrix(), orientationMatrix);
+            orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
+            scaledOriMatrix = mat.mul4(this._spacecraft.getPhysicalScalingMatrix(), orientationMatrix);
             weaponSlotPosVector = vec.mulVec4Mat4(mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
-            weaponSlotPosMatrix = mat.mul4(this._spacecraft.getPositionMatrix(), mat.translation4v(weaponSlotPosVector));
+            weaponSlotPosMatrix = mat.mul4(this._spacecraft.getPhysicalPositionMatrix(), mat.translation4v(weaponSlotPosVector));
             projectileOriMatrix = mat.mul4(this._slot.orientationMatrix, orientationMatrix);
             barrels = this._class.getBarrels();
             projectileLights = {};
@@ -1819,7 +1819,7 @@ define([
                 this._spacecraft.getPhysicalModel().addForceAndTorque(
                         vec.sub3(
                                 mat.translationVector3(projectilePosMatrix),
-                                mat.translationVector3(this._spacecraft.getPhysicalModel().getPositionMatrix())),
+                                mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
                         barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)),
                         _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)
@@ -2817,7 +2817,7 @@ define([
      * spacecraft in world space.
      * @returns {Float32Array}
      */
-    Spacecraft.prototype.getPositionMatrix = function () {
+    Spacecraft.prototype.getPhysicalPositionMatrix = function () {
         return this._physicalModel.getPositionMatrix();
     };
     /**
@@ -2825,7 +2825,7 @@ define([
      * spacecraft in world space.
      * @returns {Float32Array}
      */
-    Spacecraft.prototype.getOrientationMatrix = function () {
+    Spacecraft.prototype.getPhysicalOrientationMatrix = function () {
         return this._physicalModel.getOrientationMatrix();
     };
     /**
@@ -2833,7 +2833,7 @@ define([
      * physical model representing this spacecraft in world space.
      * @returns {Float32Array}
      */
-    Spacecraft.prototype.getScalingMatrix = function () {
+    Spacecraft.prototype.getPhysicalScalingMatrix = function () {
         return this._physicalModel.getScalingMatrix();
     };
     /**
@@ -3570,7 +3570,7 @@ define([
                 }
             } else {
                 this._timeElapsedSinceDestruction += dt;
-                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getDuration() * this._class.getShowTimeRatioDuringExplosion())) {
+                if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
                     this.destroy();
                     return;
                 }

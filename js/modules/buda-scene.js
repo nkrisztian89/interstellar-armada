@@ -463,7 +463,7 @@ define([
             // matrix based on the original transformation
             baseMatrix =
                     mat.translation4v(mat.translationVector4(mat.mul4(this.getModelMatrix(),
-                            camera.getCameraMatrix())));
+                            camera.getViewMatrix())));
             // we reintroduce appropriate scaling, but not the orientation, so 
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
@@ -4318,7 +4318,7 @@ define([
          * thus is reset to null when those are changed.
          * @type Float32Array
          */
-        this._cameraMatrix = null;
+        this._viewMatrix = null;
         /**
          * A cache variable storing the calculated inverse of the position matrix. It is reset to null whenever the position changes.
          * @type Float32Array
@@ -4357,21 +4357,21 @@ define([
      * Returns the 4x4 translation matrix describing the current position of the camera in world space.
      * @returns {Float32Array}
      */
-    Camera.prototype.getPositionMatrix = function () {
+    Camera.prototype.getCameraPositionMatrix = function () {
         return this._object3D.getPositionMatrix();
     };
     /**
      * Returns the 3D vector describing the current position of the camera in world space.
      * @returns {Number[3]}
      */
-    Camera.prototype.getPositionVector = function () {
+    Camera.prototype.getCameraPositionVector = function () {
         return this._object3D.getPositionVector();
     };
     /**
      * Returns the 4x4 rotation matrix describing the current orientaton of the camera in world space.
      * @returns {Float32Array}
      */
-    Camera.prototype.getOrientationMatrix = function () {
+    Camera.prototype.getCameraOrientationMatrix = function () {
         return this._object3D.getOrientationMatrix();
     };
     /**
@@ -4380,7 +4380,7 @@ define([
      */
     Camera.prototype._setPositionMatrix = function (value) {
         this._object3D.setPositionMatrix(value);
-        this._cameraMatrix = null;
+        this._viewMatrix = null;
         this._inversePositionMatrix = null;
     };
     /**
@@ -4389,7 +4389,7 @@ define([
      */
     Camera.prototype._setOrientationMatrix = function (value) {
         this._object3D.setOrientationMatrix(value);
-        this._cameraMatrix = null;
+        this._viewMatrix = null;
         this._inverseOrientationMatrix = null;
     };
     /**
@@ -4418,15 +4418,15 @@ define([
         this._currentConfiguration.setRelativePositionMatrix(mat.translation4v(positionVector), true);
     };
     /**
-     * Returns the current camera matrix based on the position and orientation. This will be the inverse transformation
+     * Returns the current view matrix based on the position and orientation. This will be the inverse transformation
      * that is to be applied to objects to transform them from world space into camera space.
      * @returns {Float32Array}
      */
-    Camera.prototype.getCameraMatrix = function () {
-        if (!this._cameraMatrix) {
-            this._cameraMatrix = mat.mul4(this.getInversePositionMatrix(), this.getInverseOrientationMatrix());
+    Camera.prototype.getViewMatrix = function () {
+        if (!this._viewMatrix) {
+            this._viewMatrix = mat.mul4(this.getInversePositionMatrix(), this.getInverseOrientationMatrix());
         }
-        return this._cameraMatrix;
+        return this._viewMatrix;
     };
     /**
      * Returns the inverse of the position matrix of the camera. Uses caching to eliminate unnecessary calculations.
@@ -4609,8 +4609,8 @@ define([
         if (fps === undefined) {
             fps = this._currentConfiguration.isFPS();
         }
-        positionMatrix = positionMatrix || this.getPositionMatrix();
-        orientationMatrix = orientationMatrix || this.getOrientationMatrix();
+        positionMatrix = positionMatrix || this.getCameraPositionMatrix();
+        orientationMatrix = orientationMatrix || this.getCameraOrientationMatrix();
         if (fps) {
             orientationMatrix = mat.mul4(mat.rotation4([1, 0, 0], Math.PI / 2), orientationMatrix);
         }
@@ -4943,10 +4943,10 @@ define([
             // we can simply interpolate the position on a straight linear path
             startPositionVector = this._previousConfiguration.getPositionVector();
             endPositionVector = this._currentConfiguration.getPositionVector();
-            previousPositionVector = this.getPositionVector();
+            previousPositionVector = this.getCameraPositionVector();
             this._setPositionMatrix(mat.translation4v(vec.add3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
             // calculate the velocity vector
-            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
+            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getCameraOrientationMatrix(), vec.sub3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
@@ -4956,7 +4956,7 @@ define([
             this._setOrientationMatrix(mat.identity4());
             this._rotate(rotations.gammaAxis, rotations.gamma * transitionProgress);
             this._rotate(rotations.alphaAxis, rotations.alpha * transitionProgress);
-            this._setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getOrientationMatrix())));
+            this._setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getCameraOrientationMatrix())));
             // calculate FOV
             this._updateProjectionMatrix(
                     this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress,
@@ -4976,7 +4976,7 @@ define([
                 return;
             }
             // update the position and orientation
-            previousPositionVector = this.getPositionVector();
+            previousPositionVector = this.getCameraPositionVector();
             this._setPositionMatrix(this._currentConfiguration.getPositionMatrix());
             this._setOrientationMatrix(this._currentConfiguration.getOrientationMatrix());
             // update the relative velocity vector
@@ -4984,7 +4984,7 @@ define([
                 if (this._previousFollowedPositionVector) {
                     this._velocityVector = vec.scaled3(
                             vec.mulMat4Vec3(
-                                    this.getOrientationMatrix(),
+                                    this.getCameraOrientationMatrix(),
                                     vec.sub3(
                                             this._currentConfiguration.getFollowedPositionVector(),
                                             this._previousFollowedPositionVector)),
@@ -4994,7 +4994,7 @@ define([
                 }
                 this._previousFollowedPositionVector = this._currentConfiguration.getFollowedPositionVector();
             } else {
-                this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getOrientationMatrix(), vec.sub3(this.getPositionVector(), previousPositionVector)), 1000 / dt);
+                this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getCameraOrientationMatrix(), vec.sub3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
             }
         }
     };
@@ -5100,7 +5100,7 @@ define([
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
         // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
         // considering also that the center of the shadow map is ahead of the camera
-        matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getOrientationMatrix()), range))), this._orientationMatrix);
+        matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), range))), this._orientationMatrix);
         // a matrix referring to shadow map that would have its center at the camera and the unit vector that points from this center towards
         // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
         // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
@@ -5328,7 +5328,7 @@ define([
      * @returns {Boolean}
      */
     PointLightSource.prototype.shouldBeRendered = function (camera) {
-        var positionInCameraSpace = mat.mul4(mat.translation4v(this._positionVector), camera.getCameraMatrix());
+        var positionInCameraSpace = mat.mul4(mat.translation4v(this._positionVector), camera.getViewMatrix());
         return positionInCameraSpace[14] < this._totalIntensity;
     };
     // #########################################################################
@@ -5617,7 +5617,7 @@ define([
             return this._spotLightUniformData;
         }.bind(this);
         this.uniformValueFunctions.u_cameraMatrix = function () {
-            return this._camera.getCameraMatrix();
+            return this._camera.getViewMatrix();
         }.bind(this);
         this.uniformValueFunctions.u_cameraOrientationMatrix = function () {
             return this._camera.getInverseOrientationMatrix();
@@ -5626,7 +5626,7 @@ define([
             return this._camera.getProjectionMatrix();
         }.bind(this);
         this.uniformValueFunctions.u_eyePos = function () {
-            return new Float32Array(this._camera.getPositionVector());
+            return new Float32Array(this._camera.getCameraPositionVector());
         }.bind(this);
         this.uniformValueFunctions.u_shadows = function () {
             return this._shadowMappingEnabled;
