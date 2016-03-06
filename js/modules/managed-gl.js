@@ -1751,6 +1751,7 @@ define([
     /**
      * Sets up the provided shader for usage within the provided scene.
      * @param {ManagedShader} shader The shader to set as current.
+     * @returns {Boolean} Whether the current shader has been changed as a result of this call
      */
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
         if (this._currentShader !== shader) {
@@ -1759,7 +1760,9 @@ define([
             shader.setBlending(this);
             shader.bindVertexBuffers(this);
             this._currentShader = shader;
+            return true;
         }
+        return false;
     };
     /**
      * Binds the given {@link Texture} or {@link Cubemap} resource or the texture

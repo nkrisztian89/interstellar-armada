@@ -3534,12 +3534,12 @@ define([
                 damageIndicator = this._class.getDamageIndicators()[i];
                 hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._class.getHitpoints();
                 if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
-                    explosion = new Explosion(damageIndicator.explosionClass,
+                    explosion = new Explosion(
+                            damageIndicator.explosionClass,
                             mat.translation4v(damagePosition),
                             mat.identity4(),
                             damageDir,
-                            true,
-                            false);
+                            true);
                     explosion.addToScene(this._visualModel.getNode().getScene(), this._visualModel.getNode());
                     this._activeDamageIndicators.push(explosion);
                 }

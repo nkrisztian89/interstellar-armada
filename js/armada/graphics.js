@@ -623,12 +623,12 @@ define([
                     return resources.getShader(shaderName);
                 }
                 if (!this._shadowMapping) {
-                    return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS);
+                    shaderName = resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS).getName();
                 }
                 if (this._maxPointLights === DynamicLightsAmount.OFF) {
-                    return resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS);
+                    shaderName = resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS).getName();
                 }
-                break;
+                return resources.getShader(shaderName);
             case ShaderComplexity.SIMPLE:
                 return resources.getFallbackShader(shaderName, ShaderComplexity.SIMPLE);
             default:

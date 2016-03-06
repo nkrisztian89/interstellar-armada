@@ -692,6 +692,31 @@ define([
         }
     };
     /**
+     * Adds this node to one of the passed render queues, to the one which has nodes using the same shader as this ones, so that rendering
+     * nodes in one queue will not require a shader change. Adds the subnodes to the queues as well, but does not add either itself or the
+     * subnodes if it is not set to visible as they do no need to be rendered.
+     * @param {RenderableNode[][]} renderQueues An array of arrays storing renderable nodes organized by what shader do they use
+     */
+    RenderableNode.prototype.addToRenderQueue = function (renderQueues) {
+        var i, added = false, shader = this._renderableObject.getShader();
+        if (!this._visible) {
+            return;
+        }
+        for (i = 0; i < renderQueues.length; i++) {
+            if ((renderQueues[i].length > 0) && (renderQueues[i][0].getRenderableObject().getShader() === shader)) {
+                renderQueues[i].push(this);
+                added = true;
+                break;
+            }
+        }
+        if (!added) {
+            renderQueues.push([this]);
+        }
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].addToRenderQueue(renderQueues);
+        }
+    };
+    /**
      * Returns the parent node of this node.
      * @returns {RenderableNode}
      */
@@ -919,8 +944,9 @@ define([
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
      * @param {Number} dt
+     * @param {Boolean} [withoutSubnodes=false] If true, subnodes will not be rendered.
      */
-    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, dt) {
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, dt, withoutSubnodes) {
         var i;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
@@ -929,8 +955,10 @@ define([
             if (this._scene.shouldAnimate()) {
                 this._renderableObject.animate(this._renderParameters);
             }
-            for (i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].render(context, screenWidth, screenHeight, depthMask, dt);
+            if (!withoutSubnodes) {
+                for (i = 0; i < this._subnodes.length; i++) {
+                    this._subnodes[i].render(context, screenWidth, screenHeight, depthMask, dt);
+                }
             }
         }
     };
@@ -1256,8 +1284,9 @@ define([
      * @param {RenderParameters} renderParameters
      */
     RenderableObject.prototype.prepareForRender = function (renderParameters) {
-        renderParameters.context.setCurrentShader(this._shader);
-        renderParameters.scene.assignUniforms(renderParameters.context, this._shader);
+        if (renderParameters.context.setCurrentShader(this._shader)) {
+            renderParameters.scene.assignUniforms(renderParameters.context, this._shader);
+        }
         this.bindTextures(renderParameters.context);
         this.assignUniforms(renderParameters.context);
     };
@@ -5678,6 +5707,13 @@ define([
          * @type ManagedGLContext[]
          */
         this._contexts = [];
+        /**
+         * The array of render queues, with each queue being an array of nodes in the scene that need to be rendered and use the same 
+         * shader. This way, rendering all the queues after each other requires the minimum amount of shader switches and thus scene
+         * uniform (such as light source) assignments.
+         * @type RenderableNode[][]
+         */
+        this._renderQueues = [];
         this.clearNodes();
         this._setGeneralUniformValueFunctions();
     }
@@ -6299,17 +6335,29 @@ define([
         this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
         // preparing to render main scene objects
         gl.enable(gl.DEPTH_TEST);
+        this._renderQueues = [];
+        this._rootNode.addToRenderQueue(this._renderQueues);
         // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
         application.log("Rendering opaque phase...", 4);
         gl.depthMask(true);
         gl.disable(gl.BLEND);
-        this._rootNode.render(context, this._width, this._height, true, dt); // we also pass the elapsed time to perform animation
+        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
+        for (i = 0; i < this._renderQueues.length; i++) {
+            for (j = 0; j < this._renderQueues[i].length; j++) {
+                this._renderQueues[i][j].render(context, this._width, this._height, true, dt, true); // we also pass the elapsed time to perform animation
+            }
+        }
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
         // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
         application.log("Rendering transparent phase...", 4);
         gl.depthMask(false);
         gl.enable(gl.BLEND);
-        this._rootNode.render(context, this._width, this._height, false, 0); // already animated, passing zero elapsed time will disable animation
+        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
+        for (i = 0; i < this._renderQueues.length; i++) {
+            for (j = 0; j < this._renderQueues[i].length; j++) {
+                this._renderQueues[i][j].render(context, this._width, this._height, false, 0, true); // no need for animation for a second time
+            }
+        }
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
     // -------------------------------------------------------------------------
