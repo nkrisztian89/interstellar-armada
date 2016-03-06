@@ -26,7 +26,17 @@ define([
     "modules/managed-gl"
 ], function (utils, vec, mat, application, managedGL) {
     "use strict";
-    var makeObject3DMixinClassFunction, makeObject3DMixinClass,
+    var
+            /**
+             * The bits that can be combined to define which render queues should a node be added to.
+             * @type type
+             */
+            RenderQueueBits = {
+                NONE: 0,
+                FRONT_QUEUE_BIT: 1,
+                DISTANCE_QUEUE_BIT: 2
+            },
+    makeObject3DMixinClassFunction, makeObject3DMixinClass,
             // ----------------------------------------------------------------------
             // constants
             /**
@@ -130,7 +140,18 @@ define([
             UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
             UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME = "shadowMapRanges",
             UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME = "shadowMapDepthRatio",
-            UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps";
+            UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps",
+            /**
+             * The camera used for rendering the distance render queues will have a view distance that is the view distance of the regular
+             * camera multiplied by this factor.
+             * @type Number
+             */
+            CAMERA_EXTENSION_FACTOR = 5,
+            /**
+             * Particles will only be rendered if their size factor reaches at least this value.
+             * @type Number
+             */
+            PARTICLE_MINIMUM_VISIBLE_SIZE = 0.01;
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -247,6 +268,13 @@ define([
          * @type Object
          */
         this._lastSizeInsideViewFrustum = {width: -1, height: -1};
+        /**
+         * Stores a cached value of the (4x4 translation matrix describing the) position of this 
+         * 3D object transformed into camera space. The object needs to be reset to clear this cache, 
+         * so a reset needs to be called before the object is used with new or updated camera.
+         * @type Float32Array
+         */
+        this._positionMatrixInCameraSpace = null;
     }
     /**
      * Adds the methods of an Object3D class to the prototype of the class 
@@ -258,6 +286,12 @@ define([
      * @type Function(this:Object3D)
      */
     makeObject3DMixinClassFunction = function () {
+        /**
+         * Clears cache variables that store calculated values which are only valid for one frame.
+         */
+        function resetCachedValues() {
+            this._positionMatrixInCameraSpace = null;
+        }
         /**
          * Return the parent (might be null).
          * @returns {Object3D}
@@ -478,46 +512,64 @@ define([
             return this._insideParent;
         }
         /**
-         * Checks if the object is inside the viewing frustum of the passed 
-         * camera, taking into account the parents of the object as well. Also 
-         * sets the view width and height members of the object.
-         * @param {Camera} camera The camera the frustum of which is to be 
-         * checked
+         * Returns position matrix transformed into camera space using the passed camera.
+         * Within one frame, the value is cached to avoid calculating it multiple times
+         * for the same camera.
+         * @param {Camera} camera
+         * @returns {Float32Array}
+         */
+        function getPositionMatrixInCameraSpace(camera) {
+            if (this._positionMatrixInCameraSpace) {
+                return this._positionMatrixInCameraSpace;
+            }
+            this._positionMatrixInCameraSpace =
+                    mat.translation4v(mat.translationVector4(mat.mul4(
+                            this.getModelMatrix(),
+                            camera.getViewMatrix())));
+            return this._positionMatrixInCameraSpace;
+        }
+        /**
+         * Checks if the object is inside the viewing frustum of the passed camera, taking into account the parents of the object as well. 
+         * Also sets the view width and height members of the object to cache them for the current frame.
+         * @param {Camera} camera The camera the frustum of which is to be checked
+         * @param {Boolean} [checkNearAndFarPlanes=false] Whether to check if the object is between the near and far cutting planes of the 
+         * frustum - this is disabled by default as this easier check is normally done separately in advance to organize the objects into
+         * rendering queues by distance.
          * @returns {Object} 
          */
-        function getSizeInsideViewFrustum(camera) {
-            var baseMatrix, fullMatrix, position, zOffsetPosition, zOffset, xOffsetPosition, yOffsetPosition, xOffset, yOffset;
-            // scaling and orientation is lost here, since we create a new translation
-            // matrix based on the original transformation
-            baseMatrix =
-                    mat.translation4v(mat.translationVector4(mat.mul4(this.getModelMatrix(),
-                            camera.getViewMatrix())));
+        function getSizeInsideViewFrustum(camera, checkNearAndFarPlanes) {
+            var size, scalingMatrix, baseMatrix, fullMatrix, position, xOffsetPosition, yOffsetPosition, xOffset, yOffset;
+            // scaling and orientation is lost here, since we create a new translation matrix based on the original transformation
+            baseMatrix = this.getPositionMatrixInCameraSpace(camera);
+            scalingMatrix = this.getCascadeScalingMatrix();
+            // frustum culling: back and front
+            if (checkNearAndFarPlanes) {
+                size = this.getSize() * scalingMatrix[0];
+                if ((baseMatrix[14] - size >= -camera.getNearDistance()) || ((baseMatrix[14] + size) < -camera.getViewDistance())) {
+                    this._lastSizeInsideViewFrustum.width = 0;
+                    this._lastSizeInsideViewFrustum.height = 0;
+                    return this._lastSizeInsideViewFrustum;
+                }
+            }
             // we reintroduce appropriate scaling, but not the orientation, so 
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
             fullMatrix =
-                    mat.mul4(mat.mul4(this.getCascadeScalingMatrix(), baseMatrix),
+                    mat.mul4(mat.mul4(scalingMatrix, baseMatrix),
                             camera.getProjectionMatrix());
+            size = this.getSize();
             position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
             position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
             position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
             position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
-            zOffsetPosition = vec.mulVec4Mat4([0.0, 0.0, -this.getSize(), 1.0], fullMatrix);
-            zOffset = (zOffsetPosition[2] === 0.0) ? 0.0 : (zOffsetPosition[2] / zOffsetPosition[3]);
-            // frustum culling: back and front
-            if (((zOffset > -1.0) && (zOffset < 1.0)) || ((position[2] > -1.0) && (position[2] < 1.0))) {
-                // frustum culling: sides
-                xOffsetPosition = vec.mulVec4Mat4([this.getSize(), 0.0, 0.0, 1.0], fullMatrix);
-                yOffsetPosition = vec.mulVec4Mat4([0.0, this.getSize(), 0.0, 1.0], fullMatrix);
-                xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
-                yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
-                if (!(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) && !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))) {
-                    this._lastSizeInsideViewFrustum.width = xOffset;
-                    this._lastSizeInsideViewFrustum.height = yOffset;
-                    return this._lastSizeInsideViewFrustum;
-                }
-                this._lastSizeInsideViewFrustum.width = 0;
-                this._lastSizeInsideViewFrustum.height = 0;
+            // frustum culling: sides
+            xOffsetPosition = vec.mulVec4Mat4([size, 0.0, 0.0, 1.0], fullMatrix);
+            yOffsetPosition = vec.mulVec4Mat4([0.0, size, 0.0, 1.0], fullMatrix);
+            xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
+            yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
+            if (!(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) && !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))) {
+                this._lastSizeInsideViewFrustum.width = xOffset;
+                this._lastSizeInsideViewFrustum.height = yOffset;
                 return this._lastSizeInsideViewFrustum;
             }
             this._lastSizeInsideViewFrustum.width = 0;
@@ -525,6 +577,7 @@ define([
             return this._lastSizeInsideViewFrustum;
         }
         return function () {
+            this.prototype.resetCachedValues = resetCachedValues;
             this.prototype.getParent = getParent;
             this.prototype.setParent = setParent;
             this.prototype.getPositionMatrix = getPositionMatrix;
@@ -548,6 +601,7 @@ define([
             this.prototype.getSize = getSize;
             this.prototype.getScaledSize = getScaledSize;
             this.prototype.isInsideParent = isInsideParent;
+            this.prototype.getPositionMatrixInCameraSpace = getPositionMatrixInCameraSpace;
             this.prototype.getSizeInsideViewFrustum = getSizeInsideViewFrustum;
         };
     };
@@ -692,18 +746,14 @@ define([
         }
     };
     /**
-     * Adds this node to one of the passed render queues, to the one which has nodes using the same shader as this ones, so that rendering
-     * nodes in one queue will not require a shader change. Adds the subnodes to the queues as well, but does not add either itself or the
-     * subnodes if it is not set to visible as they do no need to be rendered.
-     * @param {RenderableNode[][]} renderQueues An array of arrays storing renderable nodes organized by what shader do they use
+     * Adds the node to the appropriate render queue out of the passed ones based on what shader does its object use.
+     * Do not call from outside.
+     * @param {RenderableNode[][]} renderQueues The render queues, each being an array of renderable nodes using the same shader.
      */
-    RenderableNode.prototype.addToRenderQueue = function (renderQueues) {
+    RenderableNode.prototype._addToRenderQueue = function (renderQueues) {
         var i, added = false, shader = this._renderableObject.getShader();
-        if (!this._visible) {
-            return;
-        }
         for (i = 0; i < renderQueues.length; i++) {
-            if ((renderQueues[i].length > 0) && (renderQueues[i][0].getRenderableObject().getShader() === shader)) {
+            if ((renderQueues[i].length > 0) && (renderQueues[i][0].getShader() === shader)) {
                 renderQueues[i].push(this);
                 added = true;
                 break;
@@ -712,8 +762,36 @@ define([
         if (!added) {
             renderQueues.push([this]);
         }
+    };
+    /**
+     * Performs the animation of the object stored at this node if needed and adds this node to one of the passed render queues, to the one 
+     * which has nodes using the same shader as this ones, so that rendering nodes in one queue will not require a shader change. Adds the 
+     * subnodes to the queues as well, but does not add either itself or the subnodes if it is not set to visible as they do no need to be 
+     * rendered.
+     * @param {RenderableNode[][]} frontRenderQueues An array of arrays storing the renderable nodes that are to be rendered among the front
+     * objects, organized by what shader do they use
+     * @param {RenderableNode[][]} distanceRenderQueues An array of arrays storing the renderable nodes that are to be rendered among the
+     * distant object, organized by what shader do they use
+     * @param {Camera} camera The camera from the view point of which renderable nodes need to be organized to front and distant nodes
+     * @param {Number} dt The elapsed time since the last render, for animation, in milliseconds
+     */
+    RenderableNode.prototype.animateAndAddToRenderQueues = function (frontRenderQueues, distanceRenderQueues, camera, dt) {
+        var queueType, i;
+        if (!this._visible) {
+            return;
+        }
+        if (this._scene.shouldAnimate()) {
+            this._renderableObject.animate(dt);
+        }
+        queueType = this._renderableObject.getRenderQueueBits(camera);
+        if (queueType & RenderQueueBits.FRONT_QUEUE_BIT) {
+            this._addToRenderQueue(frontRenderQueues);
+        }
+        if (queueType & RenderQueueBits.DISTANCE_QUEUE_BIT) {
+            this._addToRenderQueue(distanceRenderQueues);
+        }
         for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].addToRenderQueue(renderQueues);
+            this._subnodes[i].animateAndAddToRenderQueues(frontRenderQueues, distanceRenderQueues, camera, dt);
         }
     };
     /**
@@ -761,10 +839,9 @@ define([
     };
     /**
      * Adds a subnode to this node.
-     * @param {RenderableNode} subnode The subnode to be added to the rendering 
-     * tree. 
-     * It will be rendered relative to this object (transformation matrices 
-     * stack)
+     * @param {RenderableNode} subnode The subnode to be added to the rendering tree. 
+     * It will be rendered relative to this object (transformation matrices stack)
+     * @returns {RenderableNode} The added subnode, for convenience
      */
     RenderableNode.prototype.addSubnode = function (subnode) {
         this._subnodes.push(subnode);
@@ -772,6 +849,7 @@ define([
         if (this._scene) {
             subnode.setScene(this._scene);
         }
+        return subnode;
     };
     /**
      * Returns the array of subnodes this node has.
@@ -924,9 +1002,8 @@ define([
      * @param {Number} screenWidth
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
-     * @param {number} dt
      */
-    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, dt) {
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask) {
         this._renderParameters.context = context;
         this._renderParameters.depthMask = depthMask;
         this._renderParameters.scene = this._scene;
@@ -935,7 +1012,6 @@ define([
         this._renderParameters.viewportWidth = screenWidth;
         this._renderParameters.viewportHeight = screenHeight;
         this._renderParameters.lodContext = this._scene.getLODContext();
-        this._renderParameters.dt = dt;
     };
     /**
      * Renders the object at this node and all subnodes, if visible.
@@ -943,21 +1019,17 @@ define([
      * @param {Number} screenWidth
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
-     * @param {Number} dt
      * @param {Boolean} [withoutSubnodes=false] If true, subnodes will not be rendered.
      */
-    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, dt, withoutSubnodes) {
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, withoutSubnodes) {
         var i;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, depthMask, dt);
+            this.setRenderParameters(context, screenWidth, screenHeight, depthMask);
             this._renderableObject.render(this._renderParameters);
-            if (this._scene.shouldAnimate()) {
-                this._renderableObject.animate(this._renderParameters);
-            }
             if (!withoutSubnodes) {
                 for (i = 0; i < this._subnodes.length; i++) {
-                    this._subnodes[i].render(context, screenWidth, screenHeight, depthMask, dt);
+                    this._subnodes[i].render(context, screenWidth, screenHeight, depthMask);
                 }
             }
         }
@@ -992,6 +1064,13 @@ define([
         for (i = 0; i < this._subnodes.length; i++) {
             this._subnodes[i].addToContext(context);
         }
+    };
+    /**
+     * Returns the managed shader that the renderable object stored at this node uses.
+     * @returns {unresolved}
+     */
+    RenderableNode.prototype.getShader = function () {
+        return this._renderableObject.getShader();
     };
     /**
      * Sets the shader to use for the held object and for all subnodes.
@@ -1125,6 +1204,11 @@ define([
          * @type Boolean
          */
         this._canBeReused = false;
+        /**
+         * Whether this object is currently visible (should be rendered)
+         * @type Boolean
+         */
+        this._visible = true;
     }
     /**
      * Returns the node that contains this object. If there is no such node,
@@ -1265,6 +1349,14 @@ define([
         this._wasRendered = false;
     };
     /**
+     * Returns a combination of bits corresponding to which rendered queues (based on distance) should this object be added to for rendering
+     * for the current frame. Will get the camera to the view point of which the distance should be calculated as parameter when called.
+     * @returns {Number} (enum RenderQueueType)
+     */
+    RenderableObject.prototype.getRenderQueueBits = function () {
+        return this._visible ? RenderQueueBits.FRONT_QUEUE_BIT : RenderQueueBits.NONE;
+    };
+    /**
      * Called before every render to check whether to proceed with the rendering
      * or not, according to the current parameters. Subclasses must add their 
      * own subsequent checks to this function.
@@ -1272,7 +1364,7 @@ define([
      * @returns {Boolean}
      */
     RenderableObject.prototype.shouldBeRendered = function (renderParameters) {
-        if (this._canBeReused === true) {
+        if ((this._canBeReused === true) || !this._visible) {
             return false;
         }
         return (renderParameters.depthMask && this._isRenderedWithDepthMask) || (!renderParameters.depthMask && this._isRenderedWithoutDepthMask);
@@ -1357,11 +1449,11 @@ define([
     /**
      * Returns whether animation should be performed for this object. Override this
      * adding additional conditions.
-     * @param {RenderParameters} renderParameters
+     * @param {Number} dt
      * @returns {Boolean}
      */
-    RenderableObject.prototype.shouldAnimate = function (renderParameters) {
-        return renderParameters.dt > 0;
+    RenderableObject.prototype.shouldAnimate = function (dt) {
+        return dt > 0;
     };
     /**
      * Override this implementing the actual calculations for the animation of the
@@ -1372,11 +1464,11 @@ define([
     };
     /**
      * Performs the animation step for the object if needed. Do not override.
-     * @param {RenderParameters} renderParameters
+     * @param {Number} dt
      */
-    RenderableObject.prototype.animate = function (renderParameters) {
-        if (this.shouldAnimate(renderParameters)) {
-            this.performAnimate(renderParameters.dt);
+    RenderableObject.prototype.animate = function (dt) {
+        if (this.shouldAnimate(dt)) {
+            this.performAnimate(dt);
         }
     };
     /**
@@ -1495,9 +1587,28 @@ define([
      */
     RenderableObject3D.prototype.resetForNewFrame = function () {
         RenderableObject.prototype.resetForNewFrame.call(this);
+        RenderableObject3D.prototype.resetCachedValues.call(this);
         this._visibleSize.width = -1;
         this._visibleSize.height = -1;
         this._insideShadowCastFrustum = null;
+    };
+    /**
+     * @override
+     * @param {Camera} camera 
+     * @returns {Number}
+     */
+    RenderableObject3D.prototype.getRenderQueueBits = function (camera) {
+        var result = RenderQueueBits.NONE, baseMatrix, scalingMatrix, size;
+        baseMatrix = this.getPositionMatrixInCameraSpace(camera);
+        scalingMatrix = this.getCascadeScalingMatrix();
+        size = this.getSize() * scalingMatrix[0];
+        if ((baseMatrix[14] - size <= -camera.getNearDistance()) && ((baseMatrix[14] + size) > -camera.getViewDistance())) {
+            result |= RenderQueueBits.FRONT_QUEUE_BIT;
+        }
+        if ((baseMatrix[14] - size <= -camera.getViewDistance()) && ((baseMatrix[14] + size) > -camera.getExtendedCamera().getViewDistance())) {
+            result |= RenderQueueBits.DISTANCE_QUEUE_BIT;
+        }
+        return result;
     };
     /**
      * @override
@@ -2104,12 +2215,18 @@ define([
         return this._relativeSize;
     };
     /**
+     * Updates the visibility of the particle based on its current size factor.
+     */
+    Particle.prototype._updateVisible = function () {
+        this._visible = (this._size * this._relativeSize) >= PARTICLE_MINIMUM_VISIBLE_SIZE;
+    };
+    /**
      * Updates the visibility as well based on the new size.
      * @param {number} value The new value of the relative size.
      */
     Particle.prototype.setRelativeSize = function (value) {
         this._relativeSize = value;
-        this._visible = this._relativeSize >= 0.001;
+        this._updateVisible();
     };
     /**
      * Get the current velocity of the particle (m/s)
@@ -2151,12 +2268,24 @@ define([
     };
     /**
      * @override
+     * Adds a quick check for visibility to the superclass method.
+     * @param {Camera} camera
+     * @returns {Number}
+     */
+    Particle.prototype.getRenderQueueBits = function (camera) {
+        if (!this._visible) {
+            return RenderQueueBits.NONE;
+        }
+        return RenderableObject3D.prototype.getRenderQueueBits.call(this, camera);
+    };
+    /**
+     * @override
      * Considers the current visible size of the particle.
      * @param {RenderParameters} renderParameters
      * @returns {Boolean}
      */
     Particle.prototype.shouldBeRendered = function (renderParameters) {
-        if ((this._size * this._relativeSize) > 0.01) {
+        if (this._visible) {
             return RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters);
         }
         return false;
@@ -2171,11 +2300,11 @@ define([
     };
     /**
      * @override
-     * @param {RenderParameters} renderParameters
+     * @param {Number} dt
      * @returns {Boolean}
      */
-    Particle.prototype.shouldAnimate = function (renderParameters) {
-        if (RenderableObject3D.prototype.shouldAnimate.call(this, renderParameters)) {
+    Particle.prototype.shouldAnimate = function (dt) {
+        if (RenderableObject3D.prototype.shouldAnimate.call(this, dt)) {
             return this._shouldAnimate;
         }
         return false;
@@ -2209,6 +2338,7 @@ define([
                 this._color[i] = (this._states[this._currentStateIndex].color[i] * (1.0 - stateProgress)) + (this._states[nextStateIndex].color[i] * stateProgress);
             }
             this._size = this._states[this._currentStateIndex].size * (1.0 - stateProgress) + this._states[nextStateIndex].size * stateProgress;
+            this._visible = (this._size * this._relativeSize) > 0.01;
         }
         // only move if there is a non-zero velocity set
         if (this._hasVelocity()) {
@@ -4389,6 +4519,27 @@ define([
          * @type Float32Array
          */
         this._inverseOrientationMatrix = null;
+        /**
+         * The cached value of the current field of view. (in degrees)
+         * @type Number
+         */
+        this._fov = 0;
+        /**
+         * The cached value of the current span of the camera.
+         * @type Number
+         */
+        this._span = 0;
+        /**
+         * The cached value of the distance of the near cutting plane of the camera's view frustum from the focal point.
+         * @type Number
+         */
+        this._near = 0;
+        /**
+         * A cached reference to a camera with the same position, orientation and overall parameters, but with a frustum that starts from
+         * the far cutting plane of this camera and extends beyond it.
+         * @type Camera
+         */
+        this._extendedCamera = null;
     }
     /**
      * @enum {Number}
@@ -4413,6 +4564,20 @@ define([
         SMOOTH: "smooth"
     };
     Object.freeze(Camera.prototype.TransitionStyle);
+    /**
+     * Returns the view distance of the camera (the distance of the far cutting plane of the camera's view frustum from its focal point)
+     * @returns {Number}
+     */
+    Camera.prototype.getViewDistance = function () {
+        return this._viewDistance;
+    };
+    /**
+     * Returns the distance of the near cutting plane of the camera's view frustum from its focal point
+     * @returns {Number}
+     */
+    Camera.prototype.getNearDistance = function () {
+        return this._near;
+    };
     /**
      * Returns the 4x4 translation matrix describing the current position of the camera in world space.
      * @returns {Float32Array}
@@ -4548,10 +4713,12 @@ define([
      * @param {Number} span The span of the viewing rectangle at depth 0, in meters.
      */
     Camera.prototype._updateProjectionMatrix = function (fov, span) {
+        // update the near cutting plane
+        this._near = span / 2.0 / Math.tan(Math.radians(fov) / 2);
         if (this._usesVerticalValues) {
-            this._projectionMatrix = mat.perspective4(span * this._aspect / 2.0, span / 2.0, span / 2.0 / Math.tan(Math.radians(fov) / 2), this._viewDistance);
+            this._projectionMatrix = mat.perspective4(span * this._aspect / 2.0, span / 2.0, this._near, this._viewDistance);
         } else {
-            this._projectionMatrix = mat.perspective4(span / 2.0, span / this._aspect / 2.0, span / 2.0 / Math.tan(Math.radians(fov) / 2), this._viewDistance);
+            this._projectionMatrix = mat.perspective4(span / 2.0, span / this._aspect / 2.0, this._near, this._viewDistance);
         }
     };
     /**
@@ -4567,10 +4734,10 @@ define([
      * @returns {Number}
      */
     Camera.prototype.getFOV = function () {
-        if (this._previousConfiguration) {
-            return this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * this._getTransitionProgress();
+        if (!this._fov) {
+            this._updateFOV(this._getTransitionProgress());
         }
-        return this._currentConfiguration.getFOV();
+        return this._fov;
     };
     /**
      * Sets the camera's field of view.
@@ -4584,6 +4751,8 @@ define([
         duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
         if (duration > 0) {
             this.transitionToSameConfiguration(duration, style);
+        } else {
+            this._fov = fov;
         }
         this._currentConfiguration.setFOV(fov, true);
         this._projectionMatrix = null;
@@ -4592,14 +4761,14 @@ define([
      * Decreases the camera's field of view by a small step, but not below the minimum allowed by the current configuration.
      */
     Camera.prototype.decreaseFOV = function () {
-        this._currentConfiguration.decreaseFOV();
+        this._fov = this._currentConfiguration.decreaseFOV();
         this._projectionMatrix = null;
     };
     /**
      * Increases the camera's field of view by a small step, but not above the maximum allowed by the current configuration.
      */
     Camera.prototype.increaseFOV = function () {
-        this._currentConfiguration.increaseFOV();
+        this._fov = this._currentConfiguration.increaseFOV();
         this._projectionMatrix = null;
     };
     /**
@@ -4607,10 +4776,10 @@ define([
      * @returns {Number}
      */
     Camera.prototype.getSpan = function () {
-        if (this._previousConfiguration) {
-            return this._previousConfiguration.getSpan() + (this._currentConfiguration.getSpan() - this._previousConfiguration.getSpan()) * this._getTransitionProgress();
+        if (!this._span) {
+            this._updateSpan(this._getTransitionProgress());
         }
-        return this._currentConfiguration.getSpan();
+        return this._span;
     };
     /**
      * Sets the camera's span.
@@ -4624,6 +4793,8 @@ define([
         duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
         if (duration > 0) {
             this.transitionToSameConfiguration(duration, style);
+        } else {
+            this._span = span;
         }
         this._currentConfiguration.setSpan(span, true);
         this._projectionMatrix = null;
@@ -4632,14 +4803,14 @@ define([
      * Decreases the camera's span by a small step, but not below the minimum allowed by the current configuration.
      */
     Camera.prototype.decreaseSpan = function () {
-        this._currentConfiguration.decreaseSpan();
+        this._span = this._currentConfiguration.decreaseSpan();
         this._projectionMatrix = null;
     };
     /**
      * Increases the camera's span by a small step, but not above the maximum allowed by the current configuration.
      */
     Camera.prototype.increaseSpan = function () {
-        this._currentConfiguration.increaseSpan();
+        this._span = this._currentConfiguration.increaseSpan();
         this._projectionMatrix = null;
     };
     /**
@@ -4973,6 +5144,24 @@ define([
         return -1;
     };
     /**
+     * Updates the cached value of the current field of view based on the current configuration(s) and transition.
+     * @param {Number} transitionProgress The progress value of the current transition.
+     */
+    Camera.prototype._updateFOV = function (transitionProgress) {
+        this._fov = this._previousConfiguration ?
+                this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress :
+                this._currentConfiguration.getFOV();
+    };
+    /**
+     * Updates the cached value of the current span based on the current configuration(s) and transition.
+     * @param {Number} transitionProgress The progress value of the current transition.
+     */
+    Camera.prototype._updateSpan = function (transitionProgress) {
+        this._span = this._previousConfiguration ?
+                this._previousConfiguration.getSpan() + (this._currentConfiguration.getSpan() - this._previousConfiguration.getSpan()) * transitionProgress :
+                this._currentConfiguration.getSpan();
+    };
+    /**
      * Calculates and sets the world position and orientation and the relative velocity vector of the camera based on the configuration 
      * settings, the transition (if one is in progress) and the commands that were issued by the controller in this simulation step.
      * @param {Number} dt The time that has passed since the last simulation step (in milliseconds)
@@ -4981,6 +5170,7 @@ define([
         var startPositionVector, endPositionVector, previousPositionVector,
                 relativeTransitionRotationMatrix, rotations,
                 transitionProgress;
+        this._extendedCamera = null;
         if (this._previousConfiguration) {
             // if a transition is in progress...
             // during transitions, movement and turning commands are not taken into account, therefore updating the configurations without
@@ -5018,9 +5208,9 @@ define([
             this._rotate(rotations.alphaAxis, rotations.alpha * transitionProgress);
             this._setOrientationMatrix(mat.correctedOrthogonal4(mat.mul4(this._previousConfiguration.getOrientationMatrix(), this.getCameraOrientationMatrix())));
             // calculate FOV
-            this._updateProjectionMatrix(
-                    this._previousConfiguration.getFOV() + (this._currentConfiguration.getFOV() - this._previousConfiguration.getFOV()) * transitionProgress,
-                    this._previousConfiguration.getSpan() + (this._currentConfiguration.getSpan() - this._previousConfiguration.getSpan()) * transitionProgress);
+            this._updateFOV(transitionProgress);
+            this._updateSpan(transitionProgress);
+            this._updateProjectionMatrix(this._fov, this._span);
             // if the transition has finished, drop the previous configuration
             if (this._transitionElapsedTime === this._transitionDuration) {
                 this._previousConfiguration = null;
@@ -5057,6 +5247,37 @@ define([
                 this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getCameraOrientationMatrix(), vec.sub3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
             }
         }
+    };
+    /**
+     * Returns (and caches) a camera that has the same overall parameters as this one (with a free configuration), but its view frustum
+     * starts where this one's ends and extends beyond it with a total view distance determined by the CAMERA_EXTENSION_FACTOR.
+     * @returns {Camera}
+     */
+    Camera.prototype.getExtendedCamera = function () {
+        var span;
+        if (this._extendedCamera) {
+            return this._extendedCamera;
+        }
+        if (this._fov === 0) {
+            this._updateFOV();
+            this._updateSpan();
+        }
+        span = this._span / this._near * this._viewDistance;
+        this._extendedCamera = new Camera(
+                this._scene,
+                this._aspect,
+                this._usesVerticalValues,
+                this._viewDistance * CAMERA_EXTENSION_FACTOR,
+                getFreeCameraConfiguration(
+                        false,
+                        this._object3D.getPositionMatrix(),
+                        this._object3D.getOrientationMatrix(),
+                        this._fov,
+                        this._fov, this._fov,
+                        span,
+                        span, span));
+        this._extendedCamera.update(0);
+        return this._extendedCamera;
     };
     // #########################################################################
     /**
@@ -5711,9 +5932,25 @@ define([
          * The array of render queues, with each queue being an array of nodes in the scene that need to be rendered and use the same 
          * shader. This way, rendering all the queues after each other requires the minimum amount of shader switches and thus scene
          * uniform (such as light source) assignments.
+         * These are the queues that store the object to be rendered in the front, with full detail, shadow mapping and dynamic lights (if
+         * turned on), as they are inside the view frustum of the camera of the view.
          * @type RenderableNode[][]
          */
-        this._renderQueues = [];
+        this._frontRenderQueues = [];
+        /**
+         * These render queues are like the front ones, but store the nodes wich are within the view frustum of the extended camera instead
+         * of the regular one, and thus behind the front object, rendered in a separate step using a separate depth buffer (before the front
+         * objects are rendered), and with lower detail, without shadow mapping or dynamic lights.
+         * @type RenderableNode[][]
+         */
+        this._distanceRenderQueues = [];
+        /**
+         * A flag storing whether the scene uniforms have already been assigned at least once during the current frame. If the whole scene
+         * is rendered using just one shader, there are no shader switches and thus no automatic scene uniform assignments, so this flag
+         * is used to make sure that uniform values get updated for each frame even in this case.
+         * @type Boolean
+         */
+        this._uniformsUpdatedForFrame = false;
         this.clearNodes();
         this._setGeneralUniformValueFunctions();
     }
@@ -5796,18 +6033,33 @@ define([
         }
     };
     /**
-     * Updates the calculated data about the stored light sources to up-to-date state for the current render step and collects them in
-     * a format that can be sent to the shaders. Those properties of light sources that are needed only for rendering are not calculated
-     * if the light source cannot be rendered in this step.
-     * @param {Number} dt The time elapsed since the last update, in milliseconds.
+     * Updates the data of static lights sources of the scene and sets it up to be used in shaders.
+     * This needs to be called to update the light matrices used in shadow mapped shaders.
      */
-    Scene.prototype._updateLightUniformData = function (dt) {
-        var i, j, count, max;
+    Scene.prototype._updateStaticLightUniformData = function () {
+        var i;
         // for directional lights, simply collect all the up-to-date data from all the lights
         this._directionalLightUniformData = [];
         for (i = 0; i < this._directionalLights.length; i++) {
             this._directionalLightUniformData.push(this._directionalLights[i].getUniformData());
         }
+    };
+    /**
+     * Clears the data stored for uniforms about dynamic light sources, so after calling this, the
+     * data will not be sent to shaders when assigning scene uniforms.
+     */
+    Scene.prototype._clearDynamicLightUniformData = function () {
+        this._pointLightUniformData = [];
+        this._spotLightUniformData = [];
+    };
+    /**
+     * Updates the calculated data about the stored dynamic light sources to up-to-date state for the current render step and collects them in
+     * a format that can be sent to the shaders. Those properties of light sources that are needed only for rendering are not calculated
+     * if the light source cannot be rendered in this step.
+     * @param {Number} dt The time elapsed since the last update, in milliseconds.
+     */
+    Scene.prototype._updateDynamicLightUniformData = function (dt) {
+        var i, j, count, max;
         // for point lights, collect the lights to be rendered going through the priority lists, starting from the highest priority, and
         // perform a full update (including e.g. world position calculation) only for those light sources that can be rendered
         this._pointLightUniformData = [];
@@ -6222,6 +6474,7 @@ define([
     Scene.prototype.assignUniforms = function (context, shader) {
         shader.assignUniforms(context, this._uniformValueFunctions);
         shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
+        this._uniformsUpdatedForFrame = true;
     };
     /**
      * Cleans up the whole scene graph, removing all nodes and light sources that are deleted or are marked for deletion.
@@ -6270,19 +6523,12 @@ define([
         this._rootNode.renderToShadowMap(context, this._width, this._height);
     };
     /**
-     * Renders the whole scene applying the general configuration and then rendering all background and main scene objects (as well as
-     * shadow maps if applicable).
+     * If shadow mapping is enabled, renders all the shadow maps according to the current settings to separate textures, and binds all these
+     * textures to be used by subsequent shaders.
      * @param {ManagedGLContext} context
-     * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
      */
-    Scene.prototype.render = function (context, dt) {
-        var i, j, gl, clearBits;
-        application.log("Rendering scene...", 3);
-        this._camera.update(this._shouldUpdateCamera ? dt : 0);
-        this._numDrawnTriangles = 0;
-        gl = context.gl; // caching the variable for easier access
-        // ensuring that transformation matrices are only calculated once for each object in each render
-        this._rootNode.resetForNewFrame();
+    Scene.prototype._renderShadowMaps = function (context) {
+        var i, j;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
             // choosing the shadow map shader
@@ -6305,8 +6551,81 @@ define([
         }
         // switch back to rendering to the screen
         context.setCurrentFrameBuffer(null);
-        // filling the arrays storing the light source data for uniforms that need it
-        this._updateLightUniformData(this._shouldAnimate ? dt : 0);
+    };
+    /**
+     * Renders the background node tree using appropriate context settings.
+     * @param {ManagedGLContext} context
+     */
+    Scene.prototype._renderBackgroundObjects = function (context) {
+        var gl = context.gl; // caching the variable for easier access
+        // preparing to render background objects
+        gl.enable(gl.BLEND);
+        gl.disable(gl.DEPTH_TEST);
+        gl.depthMask(false);
+        // rendering background objects
+        this._rootBackgroundNode.resetForNewFrame();
+        this._rootBackgroundNode.render(context, this._width, this._height, false);
+        this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
+    };
+    /**
+     * Renders all the objects stored in the passed render queues in two passes (one for transparent and another for opaque triangles) with
+     * appropriate context settings.
+     * @param {ManagedGLContext} context
+     * @param {RenderableNode[][]} renderQueues The queues storing the nodes to render, with nodes using the same shader in each queue
+     */
+    Scene.prototype._renderMainObjects = function (context, renderQueues) {
+        var i, j, gl;
+        gl = context.gl; // caching the variable for easier access
+        // preparing to render main scene objects
+        gl.enable(gl.DEPTH_TEST);
+        // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
+        application.log("Rendering opaque phase...", 4);
+        gl.depthMask(true);
+        gl.disable(gl.BLEND);
+        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
+        for (i = 0; i < renderQueues.length; i++) {
+            for (j = 0; j < renderQueues[i].length; j++) {
+                renderQueues[i][j].render(context, this._width, this._height, true, true); // we also pass the elapsed time to perform animation
+            }
+        }
+        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
+        // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
+        application.log("Rendering transparent phase...", 4);
+        gl.depthMask(false);
+        gl.enable(gl.BLEND);
+        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
+        for (i = 0; i < renderQueues.length; i++) {
+            for (j = 0; j < renderQueues[i].length; j++) {
+                renderQueues[i][j].render(context, this._width, this._height, false, true); // no need for animation for a second time
+            }
+        }
+        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
+    };
+    /**
+     * Renders the whole scene applying the general configuration and then rendering all background and main scene objects (as well as
+     * shadow maps if applicable).
+     * @param {ManagedGLContext} context
+     * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
+     */
+    Scene.prototype.render = function (context, dt) {
+        var gl = context.gl, clearBits, camera;
+        application.log("Rendering scene...", 3);
+        // updating camera
+        this._camera.update(this._shouldUpdateCamera ? dt : 0);
+        // reset triangle counter so we can count all triangles for one render
+        this._numDrawnTriangles = 0;
+        // resetting cached values that were only valid for one render
+        this._rootNode.resetForNewFrame();
+        // animating all the needed nodes and preparing them for rendering by organizing them to render queues
+        this._frontRenderQueues = [];
+        this._distanceRenderQueues = [];
+        this._rootNode.animateAndAddToRenderQueues(this._frontRenderQueues, this._distanceRenderQueues, this._camera, dt);
+        // rendering shadow maps
+        if (this._frontRenderQueues.length > 0) {
+            this._renderShadowMaps(context);
+        }
+        // updating the light matrices to be consistent with the shadow maps
+        this._updateStaticLightUniformData();
         // viewport preparation
         gl.viewport(this._left, this._top, this._width, this._height);
         if (this._shouldClearColorOnRender) {
@@ -6320,45 +6639,40 @@ define([
         clearBits = this._shouldClearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
         clearBits = this._shouldClearDepthOnRender ? clearBits | gl.DEPTH_BUFFER_BIT : clearBits;
         gl.clear(clearBits);
-        // preparing to render background objects
-        gl.enable(gl.BLEND);
-        gl.disable(gl.DEPTH_TEST);
-        gl.depthMask(false);
         // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
         // every time a new shader is set)
-        if (context.getCurrentShader() !== null) {
+        if (this._uniformsUpdatedForFrame === false) {
             this.assignUniforms(context, context.getCurrentShader());
         }
-        // rendering background objects
-        this._rootBackgroundNode.resetForNewFrame();
-        this._rootBackgroundNode.render(context, this._width, this._height, false, dt);
-        this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
-        // preparing to render main scene objects
-        gl.enable(gl.DEPTH_TEST);
-        this._renderQueues = [];
-        this._rootNode.addToRenderQueue(this._renderQueues);
-        // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
-        application.log("Rendering opaque phase...", 4);
-        gl.depthMask(true);
-        gl.disable(gl.BLEND);
-        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
-        for (i = 0; i < this._renderQueues.length; i++) {
-            for (j = 0; j < this._renderQueues[i].length; j++) {
-                this._renderQueues[i][j].render(context, this._width, this._height, true, dt, true); // we also pass the elapsed time to perform animation
-            }
+        this._uniformsUpdatedForFrame = false;
+        // -----------------------------------------------------------------------
+        // rendering the background objects
+        this._renderBackgroundObjects(context, dt);
+        // -----------------------------------------------------------------------
+        // rendering the queues storing distant main objects
+        if (this._distanceRenderQueues.length > 0) {
+            // switching to an extended camera
+            camera = this._camera;
+            this._camera = this._camera.getExtendedCamera();
+            // dynamic lights are not support for these objects as they are not really visible but expensive
+            this._clearDynamicLightUniformData();
+            this._renderMainObjects(context, this._distanceRenderQueues);
+            // switching back the camera
+            this._camera = camera;
+            // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
+            gl.depthMask(true);
+            gl.clear(gl.DEPTH_BUFFER_BIT);
         }
-        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
-        // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
-        application.log("Rendering transparent phase...", 4);
-        gl.depthMask(false);
-        gl.enable(gl.BLEND);
-        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
-        for (i = 0; i < this._renderQueues.length; i++) {
-            for (j = 0; j < this._renderQueues[i].length; j++) {
-                this._renderQueues[i][j].render(context, this._width, this._height, false, 0, true); // no need for animation for a second time
-            }
+        // -----------------------------------------------------------------------
+        // rendering the queues storing front (close) main objects
+        if (this._frontRenderQueues.length > 0) {
+            // filling the arrays storing the light source data for uniforms that need it
+            this._updateDynamicLightUniformData(this._shouldAnimate ? dt : 0);
+            // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
+            // same as the last one used for the distant objects
+            this.assignUniforms(context, context.getCurrentShader());
+            this._renderMainObjects(context, this._frontRenderQueues, true);
         }
-        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
