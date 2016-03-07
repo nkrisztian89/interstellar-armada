@@ -2617,6 +2617,7 @@ define([
     // The public interface of the module
     return {
         ParticleEmitterType: ParticleEmitterType,
+        TexturedModelClass: TexturedModelClass,
         getSkyboxClass: getSkyboxClass,
         getBackgroundObjectClass: getBackgroundObjectClass,
         getDustCloudClass: getDustCloudClass,

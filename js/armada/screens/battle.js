@@ -21,6 +21,7 @@
  * @param strings
  * @param armadaScreens
  * @param graphics
+ * @param classes
  * @param logic
  * @param control
  */
@@ -36,10 +37,11 @@ define([
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
+    "armada/classes",
     "armada/logic",
     "armada/control",
     "utils/polyfill"
-], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, logic, control) {
+], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, classes, logic, control) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -49,7 +51,6 @@ define([
             SMALL_HEADER_ID = "smallHeader",
             BIG_HEADER_ID = "bigHeader",
             DEBUG_LABEL_PARAGRAPH_ID = "debugLabel",
-            CROSSHAIR_DIV_ID = "crosshair",
             LOADING_BOX_ID = "loadingBox",
             INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
@@ -68,6 +69,8 @@ define([
              */
             INITIAL_CAMERA_FOV = 40,
             INITIAL_CAMERA_SPAN = 0.2,
+            HUD_ELEMENT_CLASS_NAME = "hudElementClass",
+            HUD_ELEMENT_MODEL_NAME = "squareModel",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -105,6 +108,28 @@ define([
              * @type Function
              */
             _handleResize,
+            /**
+             * This HUD element represents a crosshair that is always shown at the center of the screen when a spacecraft is controlled.
+             * @type HUDElement
+             */
+            _centerCrosshair,
+            /**
+             * This HUD element represents a reticle that is shown at the location of the target of the controlled spacecraft, if that exists.
+             * @type HUDElement
+             */
+            _targetingReticle,
+            /**
+             * This HUD element represents a crosshair that is shown in the line of fire of the controlled ship, at the same distance as its
+             * current target.
+             * @type HUDElement
+             */
+            _targetCrosshair,
+            /**
+             * This HUD element represents an arrow that is shown point in the direction of the current target, if it is not visible on the
+             * screen.
+             * @type HUDElement
+             */
+            _targetArrow,
             /**
              * The object that will be returned as this module
              * @type Battle
@@ -210,6 +235,158 @@ define([
     }
     // ##############################################################################
     /**
+     * @class Can be used to represent an element of the HUD, for which it can create an appropriate UIElement and add it to the battle scene.
+     * @param {String} shaderName The name of the shader to use for rendering this element.
+     * @param {String} textureName The name of the common texture resource to use for this element.
+     * @param {Number[2]|Number[3]} position The 2D or 3D (starting) position of the element (depending on the shader used)
+     * @param {Number[2]} size The 2D size factor of the element to scale it.
+     * @param {Number[4]} color An RGBA color for the element it can be modulated with.
+     */
+    function HUDElement(shaderName, textureName, position, size, color) {
+        /**
+         * Manages the acquiry of appropriate resources.
+         * @type TexturedModelClass
+         */
+        this._class = new classes.TexturedModelClass({
+            name: HUD_ELEMENT_CLASS_NAME,
+            shader: shaderName,
+            texture: textureName
+        });
+        /**
+         * The 2D or 3D (starting) position of the element (depending on the shader used)
+         * @type Number[2]|Number[3]
+         */
+        this._position = position;
+        /**
+         * The 2D size factor of the element to scale it.
+         * @type Number[2]
+         */
+        this._size = size;
+        /**
+         * An RGBA color for the element it can be modulated with.
+         * @type Number[4]
+         */
+        this._color = color;
+        /**
+         * The current angle for the element to be rotated by in 2D, in radians.
+         * @type Number
+         */
+        this._angle = 0;
+        /**
+         * A reference to the visual model that is used to add a representation of this element to the scene.
+         * @type UIElement
+         */
+        this._visualModel = null;
+        /**
+         * A reference to the node at which the visual model of this element is stored in the scene.
+         * @type RenderableNode
+         */
+        this._node = null;
+    }
+    /**
+     * Grabs the references to all needed resource objects and marks them for loading. Automatically called when the element is added to a scene.
+     */
+    HUDElement.prototype._acquireResources = function () {
+        this._class.acquireResources({model: resources.getModel(HUD_ELEMENT_MODEL_NAME)});
+    };
+    /**
+     * Creates and stores a new visual model to represent this HUD element. Automatically called when the element is added to a scene.
+     */
+    HUDElement.prototype._createVisualModel = function () {
+        this._visualModel = new budaScene.UIElement(
+                this._class.getModel(),
+                this._class.getShader(),
+                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                this._position,
+                this._size,
+                this._color,
+                Math.degrees(this._angle));
+    };
+    /**
+     * Marks all needed resources for loading and sets a callback to add the visual model of this element to the passed scene if when all
+     * resources are loaded (or adds it right away, if the resources are already loaded at the time of call)
+     * @param {Scene} scene
+     */
+    HUDElement.prototype.addToScene = function (scene) {
+        this._acquireResources();
+        resources.executeWhenReady(function () {
+            if (!this._visualModel) {
+                this._createVisualModel();
+            }
+            this._node = scene.addUIObject(this._visualModel);
+        }.bind(this));
+    };
+    /**
+     * Hides the visual representation of this element in the scene it was added to.
+     */
+    HUDElement.prototype.hide = function () {
+        this._node.hide();
+    };
+    /**
+     * Shows (makes visible) the visual representation of this element in the scene it was added to.
+     */
+    HUDElement.prototype.show = function () {
+        this._node.show();
+    };
+    /**
+     * Sets a new position for this HUD element and its visual representation, if that exists.
+     * @param {Number[2]|Number[3]} value
+     */
+    HUDElement.prototype.setPosition = function (value) {
+        this._position = value;
+        if (this._visualModel) {
+            this._visualModel.setPosition(value);
+        }
+    };
+    /**
+     * Sets a new angle for this HUD element and its visual representation, if that exists.
+     * @param {Number} value The new angle, in radians
+     */
+    HUDElement.prototype.setAngle = function (value) {
+        this._angle = value;
+        if (this._visualModel) {
+            this._visualModel.setAngle(value);
+        }
+    };
+    // ------------------------------------------------------------------------------
+    // public functions
+    /**
+     * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
+     * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
+     */
+    function _addUIToScene() {
+        // keep the ons with the same shader together for faster rendering
+        _centerCrosshair = new HUDElement(
+                "ui2d",
+                "crosshair",
+                [0, 0],
+                [0.05, 0.05],
+                [0, 1, 0, 0.25]);
+        _centerCrosshair.addToScene(_battleScene);
+        _targetArrow = new HUDElement(
+                "ui2d",
+                "arrow",
+                [0, 0],
+                [0.075, 0.075],
+                [1, 0, 0, 0.75]);
+        _targetArrow.addToScene(_battleScene);
+        _targetingReticle = new HUDElement(
+                "ui3d",
+                "target",
+                [0, 0, 0],
+                [0.1, 0.1],
+                [1, 0, 0, 0.75]);
+        _targetingReticle.addToScene(_battleScene);
+        _targetCrosshair = new HUDElement(
+                "ui3d",
+                "crosshair",
+                [0, 0, 0],
+                [0.05, 0.05],
+                [0, 1, 0, 0.75]);
+        _targetCrosshair.addToScene(_battleScene);
+    }
+    // ##############################################################################
+    /**
      * @class Represents the battle screen.
      * @extends HTMLScreenWithCanvases
      */
@@ -245,10 +422,6 @@ define([
          * @type SimpleComponent
          */
         this._debugLabel = this.registerSimpleComponent(DEBUG_LABEL_PARAGRAPH_ID);
-        /**
-         * @type SimpleComponent
-         */
-        this._crosshair = this.registerSimpleComponent(CROSSHAIR_DIV_ID);
         /**
          * @type LoadingBox
          */
@@ -363,12 +536,18 @@ define([
      */
     BattleScreen.prototype.showUI = function () {
         this._ui.show();
+        if (_battleScene) {
+            _battleScene.showUI();
+        }
     };
     /**
      * Hides the UI (information about controlled spacecraft) component.
      */
     BattleScreen.prototype.hideUI = function () {
         this._ui.hide();
+        if (_battleScene) {
+            _battleScene.hideUI();
+        }
     };
     /**
      * Shows the headers in the top center of the screen.
@@ -383,18 +562,6 @@ define([
     BattleScreen.prototype.hideHeaders = function () {
         this._bigHeader.hide();
         this._smallHeader.hide();
-    };
-    /**
-     * 
-     */
-    BattleScreen.prototype.showCrosshair = function () {
-        this._crosshair.show();
-    };
-    /**
-     * 
-     */
-    BattleScreen.prototype.hideCrosshair = function () {
-        this._crosshair.hide();
     };
     /**
      * Toggles the visibility of the texts (headers and statistics) on the screen.
@@ -429,11 +596,46 @@ define([
      * Updates the contents of the UI with information about the currently controlled spacecraft
      */
     BattleScreen.prototype._updateUI = function () {
-        var craft = _level ? _level.getPilotedSpacecraft() : null;
+        var craft = _level ? _level.getPilotedSpacecraft() : null, target, distance, direction, behind, aspect;
         if (craft) {
+            target = craft.getTarget();
+            // updating the WebGL HUD
+            if (target) {
+                distance = vec.length3(vec.sub3(target.getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector()));
+                // targeting reticle at the target position
+                _targetingReticle.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
+                _targetingReticle.show();
+                // targeting crosshair in the line of fire
+                _targetCrosshair.setPosition(vec.add3(
+                        mat.translationVector3(craft.getVisualModel().getPositionMatrix()),
+                        vec.scaled3(mat.getRowB43(craft.getVisualModel().getOrientationMatrix()), distance)));
+                _targetCrosshair.show();
+                // target arrow, if the target is not visible on the screen
+                direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.mul4(mat.mul4(target.getVisualModel().getPositionMatrix(), _battleScene.getCamera().getViewMatrix()), _battleScene.getCamera().getProjectionMatrix()));
+                behind = direction[3] < 0;
+                vec.normalize4D(direction);
+                if (behind || (direction[0] < -1) || (direction[0] > 1) || (direction[1] < -1) || (direction[1] > 1)) {
+                    _targetArrow.show();
+                    aspect = _battleScene.getCamera().getAspect();
+                    direction[0] *= aspect;
+                    vec.normalize2(direction);
+                    if (behind) {
+                        vec.negate2(direction);
+                    }
+                    _targetArrow.setPosition(vec.scaled2([direction[0], direction[1] * aspect], 0.3));
+                    _targetArrow.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
+                } else {
+                    _targetArrow.hide();
+                }
+            } else {
+                _targetingReticle.hide();
+                _targetCrosshair.hide();
+                _targetArrow.hide();
+            }
+            // updating the HTML5 UI
             this._ui.setContent(
-                    (craft.getTarget() ? (strings.get(strings.BATTLE.HUD_TARGET) + ": " + strings.getSpacecraftClassName(craft.getTarget().getClass()) + " (" + craft.getTarget().getHitpoints() + "/" + craft.getTarget().getClass().getHitpoints() + ")<br/>") : "") +
-                    (craft.getTarget() ? (strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(vec.length3(vec.sub3(craft.getTarget().getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector())))) +
+                    (target ? (strings.get(strings.BATTLE.HUD_TARGET) + ": " + strings.getSpacecraftClassName(target.getClass()) + " (" + target.getHitpoints() + "/" + target.getClass().getHitpoints() + ")<br/>") : "") +
+                    (target ? (strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance)) +
                             "<br/>" + TARGET_INFO_SEPARATOR + "<br/>" : "") +
                     utils.formatString(strings.get(strings.BATTLE.HUD_VIEW), {
                         view: strings.get(strings.OBJECT_VIEW.PREFIX, _battleScene.getCamera().getConfiguration().getName(), _battleScene.getCamera().getConfiguration().getName())
@@ -444,6 +646,8 @@ define([
                     }) + "<br/>" +
                     strings.get(strings.BATTLE.HUD_SPEED) + ": " + craft.getRelativeVelocityMatrix()[13].toFixed() +
                     ((craft.getFlightMode() !== logic.FlightMode.FREE) ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+        } else {
+            _battleScene.hideUI();
         }
     };
     /**
@@ -456,12 +660,14 @@ define([
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
             _simulationLoopFunction();
         }
+        if (_battleScene) {
+            this._updateUI();
+        }
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
             this._stats.setContent(
                     this.getFPS() + "<br/>" +
                     _battleScene.getNumberOfDrawnTriangles());
-            this._updateUI();
         }
     };
     /**
@@ -476,8 +682,6 @@ define([
         _clearData();
         document.body.classList.add("wait");
         this.hideStats();
-        this.hideUI();
-        this.hideCrosshair();
         this._loadingBox.show();
         this.resizeCanvases();
         control.setScreenCenter(
@@ -511,7 +715,9 @@ define([
                         transitionDuration: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
+            this.hideUI();
             _level.addToScene(_battleScene);
+            _addUIToScene();
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());

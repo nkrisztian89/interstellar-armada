@@ -21,13 +21,17 @@
 /*global define, Image, Float32Array */
 
 /**
+ * @param utils Used for enum functionality
+ * @param types Used for enum functionality
  * @param application This module uses the logging and error displaying functions of the generic application module
  * @param asyncResource This module uses the AsyncResource class for easier handling of managed context resource preparation
  */
 define([
+    "utils/utils",
+    "utils/types",
     "modules/application",
     "modules/async-resource"
-], function (application, asyncResource) {
+], function (utils, types, application, asyncResource) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -41,6 +45,26 @@ define([
                 TRILINEAR: "trilinear",
                 ANISOTROPIC: "anisotropic"
             },
+    /**
+     * @enum Enumeration defining the available (supported) variables types of uniforms.
+     * @type String
+     */
+    ShaderUniformType =
+            {
+                NONE: "none",
+                FLOAT: "float",
+                VEC2: "vec2",
+                VEC3: "vec3",
+                VEC4: "vec4",
+                MAT2: "mat2",
+                MAT3: "mat3",
+                MAT4: "mat4",
+                SAMPLER2D: "sampler2D",
+                SAMPLER_CUBE: "samplerCube",
+                INT: "int",
+                BOOL: "bool",
+                STRUCT: "struct"
+            },
     // ----------------------------------------------------------------------
     // constants
     UNIFORM_NAME_PREFIX = "u_",
@@ -50,6 +74,7 @@ define([
             CUBEMAP_UNIFORM_NAME_PREFIX = "",
             CUBEMAP_UNIFORM_NAME_SUFFIX = "Cubemap";
     Object.freeze(TextureFiltering);
+    Object.freeze(ShaderUniformType);
     /**
      * Displays information about an error that has occured in relation with WebGL,
      * adding some basic WebGL support info for easier troubleshooting.
@@ -349,9 +374,8 @@ define([
         /**
          * The type of variable this uniform is, from an enumeration of supported
          * types. This is used to determine the appropriate assignment function.
-         * @see ShaderUniform#VariableTypes
          */
-        this._type = this.getVariableTypeFromString(type);
+        this._type = types.getEnumValue("uniform " + this._name + ".type", ShaderUniformType, type, ShaderUniformType.NONE);
         /**
          * The length of the array in case this uniform is declared as an array in
          * GLSL. Only float and struct arrays are supported so far.
@@ -364,7 +388,7 @@ define([
          * are stored in this array.
          * @type ShaderUniform[]
          */
-        this._members = (this._type === this.VariableTypes.struct) ? [] : null;
+        this._members = (this._type === ShaderUniformType.STRUCT) ? [] : null;
         // properties for WebGL resource management
         /**
          * The associative array containing the locations of this uniform variable
@@ -374,57 +398,6 @@ define([
          */
         this._locations = {};
     }
-    /**
-     * @enum Enumeration defining the available (supported) variables types of uniforms.
-     * @type Number
-     */
-    ShaderUniform.prototype.VariableTypes = Object.freeze(
-            {
-                none: 0,
-                float: 1,
-                mat4: 2,
-                mat3: 3,
-                vec3: 4,
-                vec4: 5,
-                sampler2D: 6,
-                samplerCube: 7,
-                int: 8,
-                bool: 9,
-                struct: 10
-            });
-    /**
-     * Determining the enumeration value of a shader variable type from the string
-     * containing the name of the variable type so that a faster hash table switch 
-     * can be used when selecting the proper assignment function based on the type, 
-     * instead of the slower string matching.
-     * @param {String} type The name of the variable type 
-     */
-    ShaderUniform.prototype.getVariableTypeFromString = function (type) {
-        switch (type) {
-            case "float":
-                return this.VariableTypes.float;
-            case "mat4":
-                return this.VariableTypes.mat4;
-            case "mat3":
-                return this.VariableTypes.mat3;
-            case "vec3":
-                return this.VariableTypes.vec3;
-            case "vec4":
-                return this.VariableTypes.vec4;
-            case "sampler2D":
-                return this.VariableTypes.sampler2D;
-            case"samplerCube":
-                return this.VariableTypes.samplerCube;
-            case "int":
-                return this.VariableTypes.int;
-            case "struct":
-                return this.VariableTypes.struct;
-            case "bool":
-                return this.VariableTypes.bool;
-            default:
-                return this.VariableTypes.none;
-        }
-    };
     /**
      * Getter for the property _name.
      * @returns {String}
@@ -438,7 +411,7 @@ define([
      * @param {ShaderUniform} member
      */
     ShaderUniform.prototype.addMember = function (member) {
-        if (this._type === this.VariableTypes.struct) {
+        if (this._type === ShaderUniformType.STRUCT) {
             this._members.push(member);
         } else {
             application.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
@@ -502,7 +475,7 @@ define([
      */
     ShaderUniform.prototype.getTextureType = function () {
         var result, parts;
-        if (this._type !== this.VariableTypes.sampler2D) {
+        if (this._type !== ShaderUniformType.SAMPLER2D) {
             return null;
         }
         result = this.getRawName();
@@ -529,7 +502,7 @@ define([
      */
     ShaderUniform.prototype.getCubemapName = function () {
         var result, parts;
-        if (this._type !== this.VariableTypes.sampler2D) {
+        if (this._type !== ShaderUniformType.SAMPLER_CUBE) {
             return null;
         }
         result = this.getRawName();
@@ -580,13 +553,13 @@ define([
         // assignment for float and struct arrays
         if (this._arraySize > 0) {
             switch (this._type) {
-                case this.VariableTypes.float:
+                case ShaderUniformType.FLOAT:
                     gl.uniform1fv(location, value);
                     break;
-                case this.VariableTypes.sampler2D:
+                case ShaderUniformType.SAMPLER2D:
                     gl.uniform1iv(location, value);
                     break;
-                case this.VariableTypes.struct:
+                case ShaderUniformType.STRUCT:
                     // for structs, launch recursive assignment of members
                     for (i = 0; i < value.length; i++) {
                         for (j = 0; j < this._members.length; j++) {
@@ -597,37 +570,47 @@ define([
                         }
                     }
                     break;
+                default:
+                    application.showError("Attempting to set uniform '" + this._name + "', but it has a type that cannot be handled! (" + this._type + "[" + this._arraySize + "])");
             }
             // assignment of simple types    
         } else {
             switch (this._type) {
-                case this.VariableTypes.float:
+                case ShaderUniformType.FLOAT:
                     gl.uniform1f(location, value);
                     break;
-                case this.VariableTypes.mat4:
-                    gl.uniformMatrix4fv(location, false, value);
+                case ShaderUniformType.VEC2:
+                    gl.uniform2fv(location, value);
                     break;
-                case this.VariableTypes.mat3:
-                    gl.uniformMatrix3fv(location, false, value);
-                    break;
-                case this.VariableTypes.vec3:
+                case ShaderUniformType.VEC3:
                     gl.uniform3fv(location, value);
                     break;
-                case this.VariableTypes.vec4:
+                case ShaderUniformType.VEC4:
                     gl.uniform4fv(location, value);
                     break;
-                case this.VariableTypes.sampler2D:
+                case ShaderUniformType.MAT2:
+                    gl.uniformMatrix2fv(location, false, value);
+                    break;
+                case ShaderUniformType.MAT3:
+                    gl.uniformMatrix3fv(location, false, value);
+                    break;
+                case ShaderUniformType.MAT4:
+                    gl.uniformMatrix4fv(location, false, value);
+                    break;
+                case ShaderUniformType.SAMPLER2D:
                     gl.uniform1i(location, value);
                     break;
-                case this.VariableTypes.samplerCube:
+                case ShaderUniformType.SAMPLER_CUBE:
                     gl.uniform1i(location, value);
                     break;
-                case this.VariableTypes.int:
+                case ShaderUniformType.INT:
                     gl.uniform1i(location, value);
                     break;
-                case this.VariableTypes.bool:
+                case ShaderUniformType.BOOL:
                     gl.uniform1i(location, value ? 1 : 0);
                     break;
+                default:
+                    application.showError("Attempting to set uniform '" + this._name + "', but it has a type that cannot be handled! (" + this._type + ")");
             }
         }
     };
@@ -1075,7 +1058,7 @@ define([
                             uniformArraySize = 0;
                         }
                         uniformType = words[1];
-                        if (ShaderUniform.prototype.getVariableTypeFromString(uniformType) === ShaderUniform.prototype.VariableTypes.none) {
+                        if (utils.getSafeEnumValue(ShaderUniformType, uniformType, ShaderUniformType.NONE) === ShaderUniformType.NONE) {
                             uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
                             addStructMembers(uniform, uniformType);
                             this._uniforms.push(uniform);

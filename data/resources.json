@@ -156,6 +156,42 @@
                 "low": "_256",
                 "normal": ""
             }
+        },
+        {
+            "name": "crosshair",
+            "basepath": "hud/crosshair",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "target",
+            "basepath": "hud/target",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "arrow",
+            "basepath": "hud/arrow",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
         }
     ],
     "cubemaps": [
@@ -418,6 +454,26 @@
             "attributeRoles": {
                 "a_position": "position",
                 "a_triangleIndex": "triangleIndex"
+            }
+        },
+        {
+            "name": "ui2d",
+            "vertexShaderSource": "ui/ui2d.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendType": "add",
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui3d",
+            "vertexShaderSource": "ui/ui3d.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendType": "add",
+            "attributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
             }
         }
     ],

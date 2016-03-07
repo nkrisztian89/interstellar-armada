@@ -150,6 +150,19 @@ define([
         ]);
     };
     /**
+     * Returns a new 2x2 transformation matrix describing a rotation.
+     * @param {Number} angle The angle of rotation in radians
+     */
+    mat.rotation2 = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        return new Float32Array([
+            cosAngle, -sinAngle,
+            sinAngle, cosAngle
+        ]);
+    };
+    /**
      * Returns a new 4x4 transformation matrix describing a rotation along an
      * arbitrary axis.
      * @param {Number[]} axis An array of 3 numbers describing the axis of the

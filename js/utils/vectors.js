@@ -11,7 +11,10 @@
 
 define(function () {
     "use strict";
-    var vec = {};
+    var vec = {},
+            // -----------------------------------------------------------------------------
+            // Constants
+            CLOSE_TO_ZERO = 0.0000001;
     // -----------------------------------------------------------------------------
     // Constant vectors
     /**
@@ -90,7 +93,7 @@ define(function () {
     };
 
     // -----------------------------------------------------------------------------
-    // Functions that transform a vector
+    // Functions that transform a vector and return a new, transformed vector
 
     /**
      * Returns a 4D vector created from a 3D one by appending the given w component.
@@ -122,6 +125,17 @@ define(function () {
                 divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
                 factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor, v[2] * factor];
+    };
+    /**
+     * Returns a 2D vector multiplied by a scalar.
+     * @param {Number[2]} v A 2D vector.
+     * @param {Number} s A scalar.
+     * @returns {Number[2]} v multiplied by s.
+     */
+    vec.scaled2 = function (v, s) {
+        return [
+            v[0] * s, v[1] * s
+        ];
     };
     /**
      * Returns a 3D vector multiplied by a scalar.
@@ -316,6 +330,30 @@ define(function () {
             m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
             m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
         ]);
+    };
+    // -----------------------------------------------------------------------------
+    // Functions that modify an existing vector
+    vec.negate2 = function (v) {
+        v[0] = -v[0];
+        v[1] = -v[1];
+    };
+    /**
+     * Scales the passed 2D vector to unit length.
+     * @param {Number[2]} v A 2D vector
+     */
+    vec.normalize2 = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        v[0] *= factor;
+        v[1] *= factor;
+    };
+    vec.normalize4D = function (v) {
+        v[3] = v[3] || CLOSE_TO_ZERO;
+        v[0] /= v[3];
+        v[1] /= v[3];
+        v[2] /= v[3];
+        v[3] = 1;
     };
     return vec;
 });

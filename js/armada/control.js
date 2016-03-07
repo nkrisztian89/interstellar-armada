@@ -310,7 +310,6 @@ define([
             spacecraftClass: strings.getSpacecraftClassName(pilotedSpacecraft.getClass()),
             spacecraftType: strings.getSpacecraftTypeName(pilotedSpacecraft.getClass().getSpacecraftType())
         });
-        game.getScreen().showCrosshair();
         game.getScreen().showUI();
         if (this.getInputInterpreter(MOUSE_NAME).isEnabled()) {
             document.body.style.cursor = 'crosshair';
@@ -330,7 +329,6 @@ define([
         this.enableAction("followNext");
         this.enableAction("followPrevious");
         game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
-        game.getScreen().hideCrosshair();
         game.getScreen().hideUI();
         document.body.style.cursor = 'default';
     };

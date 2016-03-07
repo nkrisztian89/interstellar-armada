@@ -135,6 +135,7 @@ define([
             UNIFORM_SPOT_LIGHTS_ARRAY_NAME = "spotLights",
             UNIFORM_VIEW_MATRIX_NAME = "cameraMatrix",
             UNIFORM_VIEW_ORIENTATION_MATRIX_NAME = "cameraOrientationMatrix",
+            UNIFORM_VIEW_ASPECT_NAME = "aspect",
             UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
             UNIFORM_SHADOW_MAPPING_ENABLED_NAME = "shadows",
             UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
@@ -3005,6 +3006,83 @@ define([
     PointParticle.prototype.shouldAnimate = function () {
         return false;
     };
+    /**
+     * @class A renderable object that can be used to model a simple UI element, rendered on top of the main scene view in 2D.
+     * @extends RenderableObject
+     * @param {Model} model The model storing the vertices of the UI element, typically a simple square.
+     * @param {ManagedShader} shader The shader to be used to render this element.
+     * @param {Object.<String, ManagedTexture>} textures The textures organized by roles to be used.
+     * @param {Number[2]|Number[3]} position The position of the element either on the screen (2D) or in world space (3D), depending on the
+     * shader to be used.
+     * @param {Number[2]} size The size of the element by which the model can be scaled.
+     * @param {Number[4]} color A color to modulate the element with.
+     * @param {Number} [angle] An angle based on which a 2D rotation matrix will be created and stored that can be used to rotate the 
+     * element in 2D.
+     */
+    function UIElement(model, shader, textures, position, size, color, angle) {
+        RenderableObject.call(this, shader, false, true);
+        this.setTextures(textures);
+        /**
+         * The model to store the shape of the 2D UI element.
+         * @type Model
+         */
+        this._model = model;
+        /**
+         * The position of the element in 2D or 3D, whichever is needed by the used shader.
+         * @type Number[2]|Number[3]
+         */
+        this._position = position;
+        /**
+         * The currently active color of the color used to modulate the texture color when rendering.
+         * @type Number[4]
+         */
+        this._color = color;
+        /**
+         * The size of the element that can be used by the shader to scale the element.
+         * @type Number[2]
+         */
+        this._size = size;
+        /**
+         * A 2D rotation matrix that can be used by the shader to rotate the element.
+         */
+        this._rotationMatrix = mat.rotation2(Math.radians(angle || 0));
+        this.setUniformValueFunction("u_position", function () {
+            return this._position;
+        });
+        this.setUniformValueFunction("u_size", function () {
+            return this._size;
+        });
+        this.setUniformValueFunction("u_color", function () {
+            return this._color;
+        });
+        this.setUniformValueFunction("u_rotationMatrix", function () {
+            return this._rotationMatrix;
+        });
+    }
+    UIElement.prototype = new RenderableObject();
+    UIElement.prototype.constructor = UIElement;
+    /**
+     * @override
+     * Renders the UI element.
+     * @param {RenderParameters} renderParameters
+     */
+    UIElement.prototype.performRender = function (renderParameters) {
+        this._model.render(renderParameters.context);
+    };
+    /**
+     * Sets a new position for this element.
+     * @param {Number[2]|Number[3]} value
+     */
+    UIElement.prototype.setPosition = function (value) {
+        this._position = value;
+    };
+    /**
+     * Sets a new rotation matrix for this element based on the given rotation angle.
+     * @param {Number} value The angle by which to rotate, in radians.
+     */
+    UIElement.prototype.setAngle = function (value) {
+        this._rotationMatrix = mat.rotation2(value);
+    };
     // #########################################################################
     /**
      * @class This class can update and compute the world position of a camera based on the related configuration settings, which it stores.
@@ -4722,6 +4800,13 @@ define([
         }
     };
     /**
+     * Returns the current width / height aspect ratio of the camera.
+     * @returns {Number}
+     */
+    Camera.prototype.getAspect = function () {
+        return this._aspect;
+    };
+    /**
      * Sets the camera's aspect ratio. (width / height)
      * @param {Number} aspect The new desired aspect ratio.
      */
@@ -5775,7 +5860,7 @@ define([
          */
         this._shouldClearDepthOnRender = clearDepthOnRender;
         /**
-         * The root node for the node tree storing the background objects.
+         * The root node for the node tree storing the background objects. (rendered behind the main objects, without depth check)
          * @type RenderableNode
          */
         this._rootBackgroundNode = null;
@@ -5784,6 +5869,11 @@ define([
          * @type RenderableNode
          */
         this._rootNode = null;
+        /**
+         * The root node for the node tree storing the UI objects (rendered on top of the background and main objects without depth check)
+         * @type RenderableNode
+         */
+        this._rootUINode = null;
         /**
          * The list of directional light sources that are available to all objects in the scene.
          * @type DirectionalLightSource[]
@@ -5983,6 +6073,9 @@ define([
         this.setUniformValueFunction(UNIFORM_VIEW_ORIENTATION_MATRIX_NAME, function () {
             return this._camera.getInverseOrientationMatrix();
         });
+        this.setUniformValueFunction(UNIFORM_VIEW_ASPECT_NAME, function () {
+            return this._camera.getAspect();
+        });
         this.setUniformValueFunction(UNIFORM_PROJECTION_MATRIX_NAME, function () {
             return this._camera.getProjectionMatrix();
         });
@@ -6132,6 +6225,7 @@ define([
         this._setupContext(this._contexts.length - 1);
         this._rootBackgroundNode.addToContext(context);
         this._rootNode.addToContext(context);
+        this._rootUINode.addToContext(context);
         this._rootResourceNode.addToContext(context);
     };
     /**
@@ -6256,6 +6350,16 @@ define([
         return node;
     };
     /**
+     * Adds a new node to the UI node tree, which will be rendered atop the background and main scene objects, without depth buffer.
+     * @param {RebderableObject} uiObject
+     * @returns {RenderableNode} The node that was created to contain the passed object.
+     */
+    Scene.prototype.addUIObject = function (uiObject) {
+        var node = new RenderableNode(uiObject);
+        this._rootUINode.addSubnode(node);
+        return node;
+    };
+    /**
      * Adds the passed renderable object to all contexts this scene is associated with. Should be called when the node or an ancestor of the
      * node of an object is added to this scene. (automatically called by RenderableNode)
      * @param {RenderableObject} renderableObject
@@ -6289,6 +6393,12 @@ define([
         }
         this._rootResourceNode = new RenderableNode(new RenderableObject3D(null, false, false));
         this._rootResourceNode.setScene(this);
+        // clearing UI objects
+        if (this._rootUINode) {
+            this._rootUINode.destroy();
+        }
+        this._rootUINode = new RenderableNode(new RenderableObject3D(null, false, false));
+        this._rootUINode.setScene(this);
     };
     /**
      * Returns an array containing all the top level main objects of the scene.
@@ -6466,6 +6576,18 @@ define([
         this._camera.setAspect(this._width / this._height);
     };
     /**
+     * Hides the UI node tree (it will not be rendered in subsequent render calls until shown again)
+     */
+    Scene.prototype.hideUI = function () {
+        this._rootUINode.hide();
+    };
+    /**
+     * Shows the UI node tree (it will be rendered in subsequent render calls until hidden)
+     */
+    Scene.prototype.showUI = function () {
+        this._rootUINode.show();
+    };
+    /**
      * Assigns all uniforms in the given shader program that the scene has a value function for, using the appropriate webGL calls.
      * The matching is done based on the names of the uniforms.
      * @param {ManagedGLContext} context 
@@ -6602,6 +6724,23 @@ define([
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
     /**
+     * Renders the UI node tree using appropriate context settings.
+     * @param {ManagedGLContext} context
+     */
+    Scene.prototype._renderUIObjects = function (context) {
+        var gl = context.gl; // caching the variable for easier access
+        if (this._rootUINode.getSubnodes().length > 0) {
+            // preparing to render UI objects
+            gl.enable(gl.BLEND);
+            gl.disable(gl.DEPTH_TEST);
+            gl.depthMask(false);
+            // rendering background objects
+            this._rootUINode.resetForNewFrame();
+            this._rootUINode.render(context, this._width, this._height, false);
+            this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
+        }
+    };
+    /**
      * Renders the whole scene applying the general configuration and then rendering all background and main scene objects (as well as
      * shadow maps if applicable).
      * @param {ManagedGLContext} context
@@ -6647,7 +6786,7 @@ define([
         this._uniformsUpdatedForFrame = false;
         // -----------------------------------------------------------------------
         // rendering the background objects
-        this._renderBackgroundObjects(context, dt);
+        this._renderBackgroundObjects(context);
         // -----------------------------------------------------------------------
         // rendering the queues storing distant main objects
         if (this._distanceRenderQueues.length > 0) {
@@ -6673,6 +6812,9 @@ define([
             this.assignUniforms(context, context.getCurrentShader());
             this._renderMainObjects(context, this._frontRenderQueues, true);
         }
+        // -----------------------------------------------------------------------
+        // rendering the UI objects
+        this._renderUIObjects(context);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -6701,6 +6843,7 @@ define([
         ParticleSystem: ParticleSystem,
         PointCloud: PointCloud,
         PointParticle: PointParticle,
+        UIElement: UIElement,
         CameraPositionConfiguration: CameraPositionConfiguration,
         CameraOrientationConfiguration: CameraOrientationConfiguration,
         CameraConfiguration: CameraConfiguration,
