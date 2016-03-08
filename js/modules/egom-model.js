@@ -1,8 +1,10 @@
 /**
  * Copyright 2014-2015 Krisztián Nagy
  * @file 
- * Usage:
- * TODO: explain usage
+ * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
+ * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
+ * vertex buffers as well as load it itself to vertex buffers and render it. Functions for generating and returning several simple models
+ * are also included.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

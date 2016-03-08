@@ -1985,7 +1985,7 @@ define([
                 for (j = 0; j < uniformArrayLength; j++) {
                     this._parameterArrays[parameterArrayNames[i]][j] = 0.0;
                 }
-                this.setUniformValueFunction(uniformArrayName, this.createGetParameterArrayFunction(parameterArrayNames[i]));
+                this.setUniformValueFunction(parameterArrayNames[i], this.createGetParameterArrayFunction(parameterArrayNames[i]));
             } else {
                 application.showError("Cannot initialize parameter array '" + parameterArrayNames[i] + "' for parameterized mesh, as the given shader (" + shader.getName() + ") does not have a uniform array named '" + uniformArrayName + "'!");
             }
@@ -4625,6 +4625,12 @@ define([
          * @type Camera
          */
         this._extendedCamera = null;
+        /**
+         * A cached reference to a camera with the same overall parameters, but with a view frustum that combines that of this camera and
+         * its extended camera.
+         * @type Camera
+         */
+        this._combinedExtendedCamera = null;
     }
     /**
      * @enum {Number}
@@ -5263,6 +5269,7 @@ define([
                 relativeTransitionRotationMatrix, rotations,
                 transitionProgress;
         this._extendedCamera = null;
+        this._combinedExtendedCamera = null;
         if (this._previousConfiguration) {
             // if a transition is in progress...
             // during transitions, movement and turning commands are not taken into account, therefore updating the configurations without
@@ -5343,19 +5350,24 @@ define([
     /**
      * Returns (and caches) a camera that has the same overall parameters as this one (with a free configuration), but its view frustum
      * starts where this one's ends and extends beyond it with a total view distance determined by the CAMERA_EXTENSION_FACTOR.
+     * @param {Boolean} [includeOriginalFrustum=false] If true, the created extended camera will have the same near plane as the original,
+     * and the same far plane as a regular extended camera.
      * @returns {Camera}
      */
-    Camera.prototype.getExtendedCamera = function () {
-        var span;
-        if (this._extendedCamera) {
+    Camera.prototype.getExtendedCamera = function (includeOriginalFrustum) {
+        var span, result;
+        if (!includeOriginalFrustum && this._extendedCamera) {
             return this._extendedCamera;
+        }
+        if (includeOriginalFrustum && this._combinedExtendedCamera) {
+            return this._combinedExtendedCamera;
         }
         if (this._fov === 0) {
             this._updateFOV();
             this._updateSpan();
         }
-        span = this._span / this._near * this._viewDistance;
-        this._extendedCamera = new Camera(
+        span = includeOriginalFrustum ? this._span : this._span / this._near * this._viewDistance;
+        result = new Camera(
                 this._scene,
                 this._aspect,
                 this._usesVerticalValues,
@@ -5368,8 +5380,13 @@ define([
                         this._fov, this._fov,
                         span,
                         span, span));
-        this._extendedCamera.update(0);
-        return this._extendedCamera;
+        result.update(0);
+        if (!includeOriginalFrustum) {
+            this._extendedCamera = result;
+        } else {
+            this._combinedExtendedCamera = result;
+        }
+        return result;
     };
     // #########################################################################
     /**
@@ -6821,7 +6838,11 @@ define([
         }
         // -----------------------------------------------------------------------
         // rendering the UI objects
+        // rendering UI elements based on 3D positions should work both for positions inside the front and the distance range
+        camera = this._camera;
+        this._camera = this._camera.getExtendedCamera(true);
         this._renderUIObjects(context);
+        this._camera = camera;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
