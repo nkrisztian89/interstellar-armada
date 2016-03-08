@@ -143,7 +143,19 @@
             "hitboxShader": "lambert-with-luminosity",
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
-            "targetChangeTransitionStyle": "smooth"
+            "targetChangeTransitionStyle": "smooth",
+            "hudCenterCrosshairTexture": "crosshair",
+            "hudCenterCrosshairSize": [0.05, 0.05],
+            "hudCenterCrosshairColor": [0, 1, 0, 0.25],
+            "hudTargetArrowTexture": "arrow",
+            "hudTargetArrowSize": [0.075, 0.075],
+            "hudTargetArrowColor": [1, 0, 0, 0.75],
+            "hudTargetIndicatorTexture": "target",
+            "hudTargetIndicatorSize": [0.1, 0.1],
+            "hudTargetIndicatorColor": [1, 0, 0, 0.75],
+            "hudTargetCrosshairTexture": "crosshair",
+            "hudTargetCrosshairSize": [0.05, 0.05],
+            "hudTargetCrosshairColor": [0, 1, 0, 0.75]
         },
         "camera": {
             "defaultFOV": 40,

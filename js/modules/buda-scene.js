@@ -89,6 +89,22 @@ define([
              * @type Number
              */
             DEFAULT_MAX_BETA = 90,
+            // the raw names of uniforms using which the various renderable object classes make their properties available to shaders
+            // the actual shader uniform names are created by ManagedGL, using these names as a basis, and adding the appropriate prefixes/suffixes
+            /**
+             * @type String
+             */
+            UNIFORM_VIEW_PROJECTION_INVERSE_MATRIX_NAME = "viewDirectionProjectionInverse",
+            UNIFORM_MODEL_MATRIX_NAME = "modelMatrix",
+            UNIFORM_NORMAL_MATRIX_NAME = "normalMatrix",
+            UNIFORM_BILLBOARD_SIZE_NAME = "billboardSize",
+            UNIFORM_COLOR_NAME = "color",
+            UNIFORM_POINT_CLOUD_SHIFT_NAME = "shift",
+            UNIFORM_POINT_CLOUD_LENGTH_NAME = "length",
+            UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME = "farthestZ",
+            UNIFORM_POSITION_NAME = "position",
+            UNIFORM_SIZE_NAME = "size",
+            UNIFORM_ROTATION_MATRIX_NAME = "rotationMatrix",
             /**
              * When creating a shadow map framebuffer, this prefix will be added before the light index for which it is created.
              * @type String
@@ -124,7 +140,6 @@ define([
             MAX_POINT_LIGHT_PRIORITIES = 5,
             // the names of uniforms that scenes provide values for (these names will be pre/suffixed by ManagedGL)
             /**
-             * 
              * @type String
              */
             UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME = "numLights",
@@ -1262,12 +1277,12 @@ define([
     /**
      * Assigns a function to get the value of the uniform with the passed name.
      * Overwrites potential previous assignments.
-     * @param {String} uniformName
+     * @param {String} rawUniformName
      * @param {Function(this:RenderableObject)} valueFunction
      * @param {Object} alternativeThis
      */
-    RenderableObject.prototype.setUniformValueFunction = function (uniformName, valueFunction, alternativeThis) {
-        this._uniformValueFunctions[uniformName] = valueFunction.bind(alternativeThis || this);
+    RenderableObject.prototype.setUniformValueFunction = function (rawUniformName, valueFunction, alternativeThis) {
+        this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(alternativeThis || this);
     };
     /**
      * Returns a function that obtains the texture location of the texture with
@@ -1296,11 +1311,11 @@ define([
             if (this._textures.hasOwnProperty(role)) {
                 this._textures[role].addToContext(context);
                 if (this._textures[role] instanceof managedGL.ManagedTexture) {
-                    this.setUniformValueFunction("u_" + role + "Texture", this.createTextureLocationGetter(role, context));
+                    this.setUniformValueFunction(managedGL.getTextureUniformRawName(role), this.createTextureLocationGetter(role, context));
                 } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
-                    this.setUniformValueFunction("u_" + role + "Cubemap", this.createTextureLocationGetter(role, context));
+                    this.setUniformValueFunction(managedGL.getCubemapUniformRawName(role), this.createTextureLocationGetter(role, context));
                 } else {
-                    application.showError("Attemtping to add a texture of unknown type to the GL context.");
+                    application.showError("Attemtping to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
                 }
             }
         }
@@ -1645,21 +1660,14 @@ define([
     };
     // #########################################################################
     /**
-     * @class A Full Viewport Quad to be used for rendering the background using 
-     * a cube mapped texture.
-     * @constructor
+     * @class A Full Viewport Quad to be used for rendering the background using a cube mapped texture.
      * @extends RenderableObject
-     * @param {Model} model Pass a model describing a simple quad that fills
-     * the screen.
-     * @param {Shader} shader The shader that should be active while rendering 
-     * this object.
+     * @param {Model} model Pass a model describing a simple quad that fills the screen.
+     * @param {Shader} shader The shader that should be active while rendering this object.
      * @param {String} samplerName The name of the uniform variable that holds 
-     * the texture sampler for the drawing, which will be prefixed with "u_" and 
-     * suffixed with "Sampler".
-     * @param {Cubemap} cubemap The cubemap object to be used for mapping the 
-     * background
+     * the texture sampler for the drawing, which will be appropriately prefixed and suffixed
+     * @param {Cubemap} cubemap The cubemap object to be used for mapping the  background
      * @param {Camera} camera The camera to be used for querying the cube map.
-     * @returns {CubemapSampledFVQ}
      * */
     function CubemapSampledFVQ(model, shader, samplerName, cubemap, camera) {
         RenderableObject.call(this, shader, false, true);
@@ -1669,8 +1677,7 @@ define([
          */
         this._model = model;
         /**
-         * The name of the uniform variable that holds the texture sampler is 
-         * this variable prefixed with "u_" and suffixed with "Sampler".
+         * The name of the sampler which will be appropriately prefixed and suffixed to get the uniform sampler variable name
          * @type String
          */
         this._samplerName = samplerName;
@@ -1680,7 +1687,7 @@ define([
          */
         this._camera = camera;
         this.setTexture(samplerName, cubemap);
-        this.setUniformValueFunction("u_viewDirectionProjectionInverse", function () {
+        this.setUniformValueFunction(UNIFORM_VIEW_PROJECTION_INVERSE_MATRIX_NAME, function () {
             return mat.inverse4(mat.mul4(this._camera.getInverseOrientationMatrix(), this._camera.getProjectionMatrix()));
         });
     }
@@ -1771,10 +1778,10 @@ define([
          * @type Number
          */
         this._staticLOD = (lod !== undefined) ? lod : this.LOD_NOT_SET;
-        this.setUniformValueFunction("u_modelMatrix", function () {
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
-        this.setUniformValueFunction("u_normalMatrix", function () {
+        this.setUniformValueFunction(UNIFORM_NORMAL_MATRIX_NAME, function () {
             return mat.transposed3(mat.inverse3(mat.matrix3from4(this.getModelMatrix())));
         });
     }
@@ -2029,7 +2036,7 @@ define([
          * @type Model
          */
         this._model = model;
-        this.setUniformValueFunction("u_modelMatrix", function () {
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
     }
@@ -2176,13 +2183,13 @@ define([
          * @type Boolean
          */
         this._shouldAnimate = false;
-        this.setUniformValueFunction("u_modelMatrix", function () {
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
-        this.setUniformValueFunction("u_billboardSize", function () {
+        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function () {
             return this._size * this._relativeSize;
         });
-        this.setUniformValueFunction("u_color", function () {
+        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
         });
         this._updateShouldAnimate();
@@ -2393,8 +2400,8 @@ define([
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
      * the roles as keys.
-     * @param {Number[4]} color Will be passed to the shader as the uniform u_color
-     * @param {Number} size Will be passed to the shader as the uniform u_billboardSize
+     * @param {Number[4]} color Will be available for the shader as uniform
+     * @param {Number} size Will be available to the shader as the uniform 
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position. Should be
      * a far away position in the distance for objects part of te background
      */
@@ -2866,41 +2873,41 @@ define([
      * @extends RenderableObject
      * @param {Shader} shader The shader to use when rendering the points
      * @param {Number[4]} color The RGBA components of the color of the point particles.
-     * It will be passed to the shader as the uniform u_color
+     * It will be available to the shader as uniform 
      * @param {Number} range How deep the point cloud should extend forward from the screen (meters)
      */
     function PointCloud(shader, color, range) {
         RenderableObject.call(this, shader, false, true);
         /**
          * The RGBA components of the color of the point particles.
-         * Passed to the shader as the uniform u_color.
+         * Available to the shader as uniform 
          * @type Number[4]
          */
         this._color = color;
         /**
          * How deep the point cloud should extend forward from the screen (meters).
-         * Passed to the shader as the uniform u_farthestZ, using which particles can be gradually blended
+         * Available to the shader as uniform, using which particles can be gradually blended
          * into the background based on their distance.
          * @type Number
          */
         this._range = range;
         /**
          * Which direction the particles are currently moving and how much (meters). 
-         * Passed to the shader as the uniform u_shift, using which
+         * Available to the shader as uniform, using which
          * the trails of the particles can be visualised to indicate the direction of their movement.
          * @type Number[3]
          */
         this._shift = [0.0, 0.0, 0.0];
-        this.setUniformValueFunction("u_color", function () {
+        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
         });
-        this.setUniformValueFunction("u_shift", function () {
+        this.setUniformValueFunction(UNIFORM_POINT_CLOUD_SHIFT_NAME, function () {
             return this._shift;
         });
-        this.setUniformValueFunction("u_length", function () {
+        this.setUniformValueFunction(UNIFORM_POINT_CLOUD_LENGTH_NAME, function () {
             return vec.length3(this._shift);
         });
-        this.setUniformValueFunction("u_farthestZ", function () {
+        this.setUniformValueFunction(UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME, function () {
             return this._range;
         });
     }
@@ -2941,7 +2948,7 @@ define([
          * @type Model
          */
         this._model = model;
-        this.setUniformValueFunction("u_modelMatrix", function () {
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
     }
@@ -3046,16 +3053,16 @@ define([
          * A 2D rotation matrix that can be used by the shader to rotate the element.
          */
         this._rotationMatrix = mat.rotation2(Math.radians(angle || 0));
-        this.setUniformValueFunction("u_position", function () {
+        this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
             return this._position;
         });
-        this.setUniformValueFunction("u_size", function () {
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function () {
             return this._size;
         });
-        this.setUniformValueFunction("u_color", function () {
+        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
         });
-        this.setUniformValueFunction("u_rotationMatrix", function () {
+        this.setUniformValueFunction(UNIFORM_ROTATION_MATRIX_NAME, function () {
             return this._rotationMatrix;
         });
     }

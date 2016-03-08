@@ -532,6 +532,25 @@ define([
         return UNIFORM_NAME_PREFIX + rawName + UNIFORM_NAME_SUFFIX;
     };
     /**
+     * Returns the raw uniform name to be used for a texture sampler corresponding to a texture with the passed type / role (e.g. "diffuse")
+     * Applying the general uniform prefixes and suffixes to this name will give the final uniform name for the sampler.
+     * (e.g. diffuse -> diffuseTexture -> u_diffuseTexture)
+     * @param {String} textureType
+     * @returns {String}
+     */
+    ShaderUniform.prototype.getTextureUniformRawName = function (textureType) {
+        return TEXTURE_UNIFORM_NAME_PREFIX + textureType + TEXTURE_UNIFORM_NAME_SUFFIX;
+    };
+    /**
+     * Returns the raw uniform name to be used for a cube sampler corresponding to a cubemap with the passed name / role
+     * Applying the general uniform prefixes and suffixes to this name will give the final uniform name for the sampler.
+     * @param {String} cubemapName
+     * @returns {String}
+     */
+    ShaderUniform.prototype.getCubemapUniformRawName = function (cubemapName) {
+        return CUBEMAP_UNIFORM_NAME_PREFIX + cubemapName + CUBEMAP_UNIFORM_NAME_SUFFIX;
+    };
+    /**
      * Sets the value of the shader uniform in the specified GL context to the passed value.
      * @param {ManagedGLContext} context The managed GL context
      * @param {ManagedShader} shader The shader which this uniform belongs to.
@@ -1821,6 +1840,8 @@ define([
     return {
         TextureFiltering: TextureFiltering,
         getUniformName: ShaderUniform.prototype.getUniformName,
+        getTextureUniformRawName: ShaderUniform.prototype.getTextureUniformRawName,
+        getCubemapUniformRawName: ShaderUniform.prototype.getCubemapUniformRawName,
         ManagedTexture: ManagedTexture,
         ManagedCubemap: ManagedCubemap,
         ManagedShader: ManagedShader,

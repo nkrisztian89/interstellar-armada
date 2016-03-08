@@ -71,6 +71,8 @@ define([
             INITIAL_CAMERA_SPAN = 0.2,
             HUD_ELEMENT_CLASS_NAME = "hudElementClass",
             HUD_ELEMENT_MODEL_NAME = "squareModel",
+            UI_2D_SHADER_NAME = "ui2d",
+            UI_3D_SHADER_NAME = "ui3d",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -117,7 +119,7 @@ define([
              * This HUD element represents a reticle that is shown at the location of the target of the controlled spacecraft, if that exists.
              * @type HUDElement
              */
-            _targetingReticle,
+            _targetIndicator,
             /**
              * This HUD element represents a crosshair that is shown in the line of fire of the controlled ship, at the same distance as its
              * current target.
@@ -357,32 +359,32 @@ define([
     function _addUIToScene() {
         // keep the ons with the same shader together for faster rendering
         _centerCrosshair = new HUDElement(
-                "ui2d",
-                "crosshair",
+                UI_2D_SHADER_NAME,
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_TEXTURE),
                 [0, 0],
-                [0.05, 0.05],
-                [0, 1, 0, 0.25]);
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SIZE),
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_COLOR));
         _centerCrosshair.addToScene(_battleScene);
         _targetArrow = new HUDElement(
-                "ui2d",
-                "arrow",
+                UI_2D_SHADER_NAME,
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_ARROW_TEXTURE),
                 [0, 0],
-                [0.075, 0.075],
-                [1, 0, 0, 0.75]);
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE),
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_ARROW_COLOR));
         _targetArrow.addToScene(_battleScene);
-        _targetingReticle = new HUDElement(
-                "ui3d",
-                "target",
+        _targetIndicator = new HUDElement(
+                UI_3D_SHADER_NAME,
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_TEXTURE),
                 [0, 0, 0],
-                [0.1, 0.1],
-                [1, 0, 0, 0.75]);
-        _targetingReticle.addToScene(_battleScene);
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_COLOR));
+        _targetIndicator.addToScene(_battleScene);
         _targetCrosshair = new HUDElement(
-                "ui3d",
-                "crosshair",
+                UI_3D_SHADER_NAME,
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_CROSSHAIR_TEXTURE),
                 [0, 0, 0],
-                [0.05, 0.05],
-                [0, 1, 0, 0.75]);
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_CROSSHAIR_SIZE),
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_CROSSHAIR_COLOR));
         _targetCrosshair.addToScene(_battleScene);
     }
     // ##############################################################################
@@ -603,8 +605,8 @@ define([
             if (target) {
                 distance = vec.length3(vec.sub3(target.getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector()));
                 // targeting reticle at the target position
-                _targetingReticle.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
-                _targetingReticle.show();
+                _targetIndicator.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
+                _targetIndicator.show();
                 // targeting crosshair in the line of fire
                 _targetCrosshair.setPosition(vec.add3(
                         mat.translationVector3(craft.getVisualModel().getPositionMatrix()),
@@ -628,7 +630,7 @@ define([
                     _targetArrow.hide();
                 }
             } else {
-                _targetingReticle.hide();
+                _targetIndicator.hide();
                 _targetCrosshair.hide();
                 _targetArrow.hide();
             }

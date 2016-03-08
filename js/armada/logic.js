@@ -720,6 +720,74 @@ define([
             type: "enum",
             values: budaScene.Camera.prototype.TransitionStyle,
             defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+        },
+        HUD_CENTER_CROSSHAIR_TEXTURE: {
+            name: "hudCenterCrosshairTexture",
+            type: "string",
+            defaultValue: "crosshair"
+        },
+        HUD_CENTER_CROSSHAIR_SIZE: {
+            name: "hudCenterCrosshairSize",
+            type: "array",
+            elementType: "number",
+            length: 2,
+            defaultValue: [0.05, 0.05]
+        },
+        HUD_CENTER_CROSSHAIR_COLOR: {
+            name: "hudCenterCrosshairColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [0, 1, 0, 0.25]
+        },
+        HUD_TARGET_ARROW_TEXTURE: {
+            name: "hudTargetArrowTexture",
+            type: "string",
+            defaultValue: "arrow"
+        },
+        HUD_TARGET_ARROW_SIZE: {
+            name: "hudTargetArrowSize",
+            type: "array",
+            elementType: "number",
+            length: 2,
+            defaultValue: [0.075, 0.075]
+        },
+        HUD_TARGET_ARROW_COLOR: {
+            name: "hudTargetArrowColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [1, 0, 0, 0.75]
+        },
+        HUD_TARGET_INDICATOR_TEXTURE: {
+            name: "hudTargetIndicatorTexture",
+            type: "string",
+            defaultValue: "target"
+        },
+        HUD_TARGET_INDICATOR_SIZE: {
+            name: "hudTargetIndicatorSize",
+            type: "array",
+            elementType: "number",
+            length: 2,
+            defaultValue: [0.1, 0.1]
+        },
+        HUD_TARGET_INDICATOR_COLOR: {
+            name: "hudTargetIndicatorColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [1, 0, 0, 0.75]
+        },
+        HUD_TARGET_CROSSHAIR_TEXTURE: {
+            name: "hudTargetCrosshairTexture",
+            type: "string",
+            defaultValue: "crosshair"
+        },
+        HUD_TARGET_CROSSHAIR_SIZE: {
+            name: "hudTargetCrosshairSize",
+            type: "array",
+            elementType: "number",
+            length: 2,
+            defaultValue: [0.05, 0.05]
+        },
+        HUD_TARGET_CROSSHAIR_COLOR: {
+            name: "hudTargetCrosshairColor",
+            type: _customTypes.COLOR4,
+            defaultValue: [0, 1, 0, 0.75]
         }
     };
     CAMERA_SETTINGS = {
