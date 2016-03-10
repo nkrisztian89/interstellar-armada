@@ -551,13 +551,15 @@ define([
     /**
      * Updates the loading box message and progress value to reflect the state given in the parameters.
      * @param {String} resourceName The name of the resource that have just finished loading
+     * @param {String} resourceType The type of the resource that have just finished loading
      * @param {Number} totalResources The number of total resources to be loaded
      * @param {Number} loadedResources The number of resources that have already been loaded
      */
-    DatabaseScreen.prototype._updateLoadingBoxForResourceLoad = function (resourceName, totalResources, loadedResources) {
+    DatabaseScreen.prototype._updateLoadingBoxForResourceLoad = function (resourceName, resourceType, totalResources, loadedResources) {
         this._updateLoadingStatus(
                 utils.formatString(strings.get(strings.LOADING.RESOURCE_READY), {
                     resource: resourceName,
+                    resourceType: resourceType,
                     loaded: loadedResources,
                     total: totalResources
                 }),

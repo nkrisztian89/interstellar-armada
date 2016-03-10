@@ -19,7 +19,9 @@
             "complexity": "normal",
             "shadowMappingShaderName": "shadowMapping",
             "maxPointLightsDefineName": "MAX_POINT_LIGHTS",
-            "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS"
+            "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS",
+            "dustLengthDivisor": "200.0",
+            "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR"
         },
         "levelOfDetailSettings": {
             "lodLoadProfile": {
@@ -116,6 +118,11 @@
         "battle": {
             "battleRenderFPS": 60,
             "simulationStepsPerSecond": 60,
+            "minimumDustParticleCountForInstancing": 1,
+            "minimumExplosionParticleCountForInstancing": 1,
+            "minimumMuzzleFlashParticleCountForInstancing": 1,
+            "minimumThrusterParticleCountForInstancing": 1,
+            "minimumBlinkerParticleCountForInstancing": 1,
             "viewDistance": 5000,
             "cameraDefaultTransitionDuration": 1000,
             "cameraDefaultTransitionStyle": "smooth",

@@ -291,7 +291,14 @@ define([
         this._onAnyResourceTypeLoadFunctionQueue.push(callback);
     };
     /**
-     * @param {Function} callback
+     * @typedef {Function} ResourceManager~resourceLoadCallback
+     * @param {String} resourceName
+     * @param {Number} numReqestedResources
+     * @param {Number} numLoadedResources
+     * @param {String} resourceType
+     */
+    /**
+     * @param {ResourceManager~resourceLoadCallback} callback
      */
     ResourceManager.prototype.executeOnResourceLoad = function (callback) {
         this._onResourceLoadFunctionQueue.push(callback);
@@ -313,7 +320,7 @@ define([
         var i, queue;
         queue = this._onResourceLoadFunctionQueue;
         for (i = 0; i < queue.length; i++) {
-            queue[i](resourceName, this._numRequestedResources, this._numLoadedResources);
+            queue[i](resourceName, resourceType, this._numRequestedResources, this._numLoadedResources);
         }
         if (this.allResourcesOfTypeAreLoaded(resourceType)) {
             queue = this._onResourceTypeLoadFunctionQueues[resourceType] || [];

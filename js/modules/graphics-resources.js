@@ -93,6 +93,12 @@ define([
     Object.freeze(ShaderType);
     // ############################################################################################
     /**
+     * @typedef TextureResource~ManagedTextureCacheObject
+     * @property {String[]} types
+     * @property {String[]} qualityPreferenceList
+     * @property {Object.<String, ManagedTexture>} textures
+     */
+    /**
      * @class
      * @augments GenericResource
      * @param {Object} dataJSON
@@ -135,6 +141,10 @@ define([
          * @type Object.<String, Object.<String, ManagedTexture>>
          */
         this._managedTextures = {};
+        /**
+         * @type TextureResource~ManagedTextureCacheObject[]
+         */
+        this._cachedManagedTexturesOfTypes = [];
     }
     TextureResource.prototype = new resourceManager.GenericResource();
     TextureResource.prototype.constructor = TextureResource;
@@ -282,6 +292,13 @@ define([
      */
     TextureResource.prototype.getManagedTexturesOfTypes = function (types, qualityPreferenceList) {
         var i, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
+        types.sort();
+        // return from cache if possible
+        for (i = 0; i < this._cachedManagedTexturesOfTypes.length; i++) {
+            if (utils.arraysEqual(types, this._cachedManagedTexturesOfTypes[i].types) && utils.arraysEqual(qualityPreferenceList, this._cachedManagedTexturesOfTypes[i].qualityPreferenceList)) {
+                return this._cachedManagedTexturesOfTypes[i].textures;
+            }
+        }
         result = {};
         qualities = this.getQualities();
         mostFittingQualityIndex = -1;
@@ -299,6 +316,12 @@ define([
         for (i = 0; i < types.length; i++) {
             result[types[i]] = this.getManagedTexture(types[i], mostFittingQuality);
         }
+        // cache the result
+        this._cachedManagedTexturesOfTypes.push({
+            types: types,
+            qualityPreferenceList: qualityPreferenceList,
+            textures: result
+        });
         return result;
     };
     /**
@@ -407,9 +430,10 @@ define([
     function ShaderResource(dataJSON) {
         resourceManager.GenericResource.call(this, dataJSON.name);
         /**
-         * @type Object
+         * The names of the variants of this shaders organized by the variant names.
+         * @type Object.<String, String>
          */
-        this._fallbackShaderNames = dataJSON.fallback || null;
+        this._variantShaderNames = dataJSON.variants || null;
         /**
          * @type String
          */
@@ -423,9 +447,16 @@ define([
          */
         this._blendType = dataJSON.blendType;
         /**
+         * The roles of the vertex attributes (= the name of the data array returned by the model from which they should get their values)
+         * organized by the names of the vertex attributes.
          * @type Object.<String, String>
          */
-        this._attributeRoles = dataJSON.attributeRoles;
+        this._vertexAttributeRoles = dataJSON.vertexAttributeRoles;
+        /**
+         * The roles of the instance attributes (= the names of the uniforms they replace) organized by the names of the instance attributes.
+         * @type Object.<String, String>
+         */
+        this._instanceAttributeRoles = dataJSON.instanceAttributeRoles || {};
         /**
          * @type String
          */
@@ -479,11 +510,12 @@ define([
         }
     };
     /**
-     * @param {String} fallbackType
-     * @returns {String}
+     * Returns the name of the shader that is stored by the passed variant name for this shader.
+     * @param {String} variantName
+     * @returns {String|null} Null, if there is no such variant for this shader.
      */
-    ShaderResource.prototype.getFallbackShaderName = function (fallbackType) {
-        return this._fallbackShaderNames ? this._fallbackShaderNames[fallbackType] : null;
+    ShaderResource.prototype.getVariantShaderName = function (variantName) {
+        return this._variantShaderNames ? this._variantShaderNames[variantName] : null;
     };
     /**
      * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
@@ -503,7 +535,7 @@ define([
             }
         }
         this._managedShaderBindings.push({
-            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendType, this._attributeRoles, replacedDefines),
+            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendType, this._vertexAttributeRoles, this._instanceAttributeRoles, replacedDefines),
             replacedDefines: replacedDefines
         });
         return this._managedShaderBindings[this._managedShaderBindings.length - 1].managedShader;
@@ -697,12 +729,14 @@ define([
         return this.getResource(SHADER_ARRAY_NAME, name);
     };
     /**
+     * Returns the shader resource representing the given variant of the shader with the given name, if it exists, or the one representing
+     * the original shader resource with the given name, if it does not.
      * @param {String} name
-     * @param {String} fallbackType
+     * @param {String} variantName
      * @returns {ShaderResource}
      */
-    GraphicsResourceManager.prototype.getFallbackShader = function (name, fallbackType) {
-        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getFallbackShaderName(fallbackType), {allowNullResult: true}) || this.getShader(name);
+    GraphicsResourceManager.prototype.getVariantShader = function (name, variantName) {
+        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getVariantShaderName(variantName), {allowNullResult: true}) || this.getShader(name);
     };
     /**
      * @param {String} name
@@ -726,6 +760,8 @@ define([
         }
         return result;
     };
+    // ------------------------------------------------------------------------------
+    // Public functions
     /**
      * Sends an asynchronous request to grab the file containing the graphics
      * resource descriptions and sets a callback to load those descriptions as 
@@ -749,7 +785,7 @@ define([
         getTexture: _resourceManager.getTexture.bind(_resourceManager),
         getCubemap: _resourceManager.getCubemap.bind(_resourceManager),
         getShader: _resourceManager.getShader.bind(_resourceManager),
-        getFallbackShader: _resourceManager.getFallbackShader.bind(_resourceManager),
+        getVariantShader: _resourceManager.getVariantShader.bind(_resourceManager),
         getModel: _resourceManager.getModel.bind(_resourceManager),
         getOrAddModel: _resourceManager.getOrAddModel.bind(_resourceManager),
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),

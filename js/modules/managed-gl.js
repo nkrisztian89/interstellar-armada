@@ -46,10 +46,10 @@ define([
                 ANISOTROPIC: "anisotropic"
             },
     /**
-     * @enum Enumeration defining the available (supported) variables types of uniforms.
+     * @enum Enumeration defining the available (supported) variables types in GLSL shaders.
      * @type String
      */
-    ShaderUniformType =
+    ShaderVariableType =
             {
                 NONE: "none",
                 FLOAT: "float",
@@ -74,7 +74,7 @@ define([
             CUBEMAP_UNIFORM_NAME_PREFIX = "",
             CUBEMAP_UNIFORM_NAME_SUFFIX = "Cubemap";
     Object.freeze(TextureFiltering);
-    Object.freeze(ShaderUniformType);
+    Object.freeze(ShaderVariableType);
     /**
      * Displays information about an error that has occured in relation with WebGL,
      * adding some basic WebGL support info for easier troubleshooting.
@@ -99,6 +99,42 @@ define([
                     "WebGL renderer: " + gl.getParameter(gl.RENDERER));
         }
     };
+    /**
+     * Returns the size of one variable if the passed type if it is converted to a float vector. (how many floats does it occupy)
+     * @param {type} shaderVariableType
+     * @returns {Number}
+     */
+    function getFloatVectorSize(shaderVariableType) {
+        switch (shaderVariableType) {
+            case ShaderVariableType.NONE:
+                return 0;
+            case ShaderVariableType.FLOAT:
+                return 1;
+            case ShaderVariableType.VEC2:
+                return 2;
+            case ShaderVariableType.VEC3:
+                return 3;
+            case ShaderVariableType.VEC4:
+                return 4;
+            case ShaderVariableType.MAT2:
+                return 4;
+            case ShaderVariableType.MAT3:
+                return 9;
+            case ShaderVariableType.MAT4:
+                return 16;
+            case ShaderVariableType.SAMPLER2D:
+                return 1;
+            case ShaderVariableType.SAMPLER_CUBE:
+                return 1;
+            case ShaderVariableType.INT:
+                return 1;
+            case ShaderVariableType.BOOL:
+                return 1;
+            default:
+                application.showError("Cannot determine vector size of GLSL type '" + shaderVariableType + "'!");
+                return 0;
+        }
+    }
     // ############################################################################################
     /**
      * @class Represents a managed WebGL texture.
@@ -375,7 +411,7 @@ define([
          * The type of variable this uniform is, from an enumeration of supported
          * types. This is used to determine the appropriate assignment function.
          */
-        this._type = types.getEnumValue("uniform " + this._name + ".type", ShaderUniformType, type, ShaderUniformType.NONE);
+        this._type = types.getEnumValue("uniform " + this._name + ".type", ShaderVariableType, type, ShaderVariableType.NONE);
         /**
          * The length of the array in case this uniform is declared as an array in
          * GLSL. Only float and struct arrays are supported so far.
@@ -388,7 +424,7 @@ define([
          * are stored in this array.
          * @type ShaderUniform[]
          */
-        this._members = (this._type === ShaderUniformType.STRUCT) ? [] : null;
+        this._members = (this._type === ShaderVariableType.STRUCT) ? [] : null;
         // properties for WebGL resource management
         /**
          * The associative array containing the locations of this uniform variable
@@ -411,7 +447,7 @@ define([
      * @param {ShaderUniform} member
      */
     ShaderUniform.prototype.addMember = function (member) {
-        if (this._type === ShaderUniformType.STRUCT) {
+        if (this._type === ShaderVariableType.STRUCT) {
             this._members.push(member);
         } else {
             application.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
@@ -475,7 +511,7 @@ define([
      */
     ShaderUniform.prototype.getTextureType = function () {
         var result, parts;
-        if (this._type !== ShaderUniformType.SAMPLER2D) {
+        if (this._type !== ShaderVariableType.SAMPLER2D) {
             return null;
         }
         result = this.getRawName();
@@ -502,7 +538,7 @@ define([
      */
     ShaderUniform.prototype.getCubemapName = function () {
         var result, parts;
-        if (this._type !== ShaderUniformType.SAMPLER_CUBE) {
+        if (this._type !== ShaderVariableType.SAMPLER_CUBE) {
             return null;
         }
         result = this.getRawName();
@@ -572,13 +608,13 @@ define([
         // assignment for float and struct arrays
         if (this._arraySize > 0) {
             switch (this._type) {
-                case ShaderUniformType.FLOAT:
+                case ShaderVariableType.FLOAT:
                     gl.uniform1fv(location, value);
                     break;
-                case ShaderUniformType.SAMPLER2D:
+                case ShaderVariableType.SAMPLER2D:
                     gl.uniform1iv(location, value);
                     break;
-                case ShaderUniformType.STRUCT:
+                case ShaderVariableType.STRUCT:
                     // for structs, launch recursive assignment of members
                     for (i = 0; i < value.length; i++) {
                         for (j = 0; j < this._members.length; j++) {
@@ -595,37 +631,37 @@ define([
             // assignment of simple types    
         } else {
             switch (this._type) {
-                case ShaderUniformType.FLOAT:
+                case ShaderVariableType.FLOAT:
                     gl.uniform1f(location, value);
                     break;
-                case ShaderUniformType.VEC2:
+                case ShaderVariableType.VEC2:
                     gl.uniform2fv(location, value);
                     break;
-                case ShaderUniformType.VEC3:
+                case ShaderVariableType.VEC3:
                     gl.uniform3fv(location, value);
                     break;
-                case ShaderUniformType.VEC4:
+                case ShaderVariableType.VEC4:
                     gl.uniform4fv(location, value);
                     break;
-                case ShaderUniformType.MAT2:
+                case ShaderVariableType.MAT2:
                     gl.uniformMatrix2fv(location, false, value);
                     break;
-                case ShaderUniformType.MAT3:
+                case ShaderVariableType.MAT3:
                     gl.uniformMatrix3fv(location, false, value);
                     break;
-                case ShaderUniformType.MAT4:
+                case ShaderVariableType.MAT4:
                     gl.uniformMatrix4fv(location, false, value);
                     break;
-                case ShaderUniformType.SAMPLER2D:
+                case ShaderVariableType.SAMPLER2D:
                     gl.uniform1i(location, value);
                     break;
-                case ShaderUniformType.SAMPLER_CUBE:
+                case ShaderVariableType.SAMPLER_CUBE:
                     gl.uniform1i(location, value);
                     break;
-                case ShaderUniformType.INT:
+                case ShaderVariableType.INT:
                     gl.uniform1i(location, value);
                     break;
-                case ShaderUniformType.BOOL:
+                case ShaderVariableType.BOOL:
                     gl.uniform1i(location, value ? 1 : 0);
                     break;
                 default:
@@ -702,6 +738,11 @@ define([
          * @type Object
          */
         this._locations = {};
+        /**
+         * The number of vectors that have been progressively filled in the data array using addVector().
+         * @type Number
+         */
+        this._filledVectors = 0;
     }
     /**
      * Returns the name of this vertex buffer.
@@ -730,6 +771,34 @@ define([
         this._data.set(data, start * this._vectorSize);
     };
     /**
+     * Returns the number of vectors this buffer is currently able to store.
+     * @returns {Number}
+     */
+    VertexBuffer.prototype.getSize = function () {
+        return this._data.length / this._vectorSize;
+    };
+    /**
+     * Erases the current content and sets a new size for this buffer.
+     * @param {Number} size The new number of vectors the buffer should be able to store.
+     */
+    VertexBuffer.prototype.resize = function (size) {
+        this._data = new Float32Array(size * this._vectorSize);
+    };
+    /**
+     * Using this method, the data array can be filled progressively, with one vector each time.
+     * @param {Number[]|Float32Array} vector A float vector to be added to the array. Needs to be _vectorSize long.
+     */
+    VertexBuffer.prototype.addVector = function (vector) {
+        this._data.set(vector, this._filledVectors * this._vectorSize);
+        this._filledVectors++;
+    };
+    /**
+     * After calling this method, the buffer data can be filled again from the beginning using addVector().
+     */
+    VertexBuffer.prototype.resetFilledVectors = function () {
+        this._filledVectors = 0;
+    };
+    /**
      * Frees the data stored in the normal RAM (for use after it is already in GPU 
      * memory)
      */
@@ -740,15 +809,18 @@ define([
      * Creates the needed VBO in the supplied context and sends over the data (set
      * by setData) using it to the GPU, then erases the original data array.
      * @param {ManagedGLContext} context
+     * @param {Boolean} [keepData=false]
      */
-    VertexBuffer.prototype.loadToGPUMemory = function (context) {
+    VertexBuffer.prototype.loadToGPUMemory = function (context, keepData) {
         this._id = context.gl.createBuffer();
         context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
         context.gl.bufferData(
                 context.gl.ARRAY_BUFFER,
                 this._data,
                 context.gl.STATIC_DRAW);
-        this.freeData();
+        if (!keepData) {
+            this.freeData();
+        }
     };
     /**
      * Binds the vertex buffer to the vertex attribute that has the same name as
@@ -757,18 +829,29 @@ define([
      * corresponding vertex attribute array.
      * @param {ManagedGLContext} context
      * @param {ManagedShader} shader
+     * @param {Boolean} [instanced=false] Whether to bind this buffer as an instance attribute buffer rather than a vertex attribute buffer
+     * for instancing.
      */
-    VertexBuffer.prototype.bind = function (context, shader) {
+    VertexBuffer.prototype.bind = function (context, shader, instanced) {
         if (this._locations[shader.getName()] === undefined) {
             this._locations[shader.getName()] = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
         }
         var location = this._locations[shader.getName()];
         if ((location >= 0) && (context.getBoundVertexBuffer(location) !== this)) {
-            application.log("Binding vertex buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
-            context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
-            context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
-            context.setBoundVertexBuffer(location, this);
+            application.log("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
+            if (instanced) {
+                this.loadToGPUMemory(context, true);
+            } else {
+                context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
+            }
             context.gl.enableVertexAttribArray(location);
+            context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
+            if (instanced) {
+                context.instancing.vertexAttribDivisorANGLE(location, 1);
+            } else {
+                context.instancing.vertexAttribDivisorANGLE(location, 0);
+            }
+            context.setBoundVertexBuffer(location, this);
         }
     };
     /**
@@ -777,6 +860,8 @@ define([
      */
     VertexBuffer.prototype.delete = function (context) {
         context.gl.deleteBuffer(this._id);
+        this.freeData();
+        this._id = null;
     };
     // ############################################################################################
     /**
@@ -915,10 +1000,11 @@ define([
      * @param {String} vertexShaderSource
      * @param {String} fragmentShaderSource
      * @param {String} blendType
-     * @param {Object.<String, String>} attributeRoles
+     * @param {Object.<String, String>} vertexAttributeRoles
+     * @param {Object.<String, String>} instanceAttributeRoles
      * @param {Object.<String, String} replacedDefines 
      */
-    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendType, attributeRoles, replacedDefines) {
+    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendType, vertexAttributeRoles, instanceAttributeRoles, replacedDefines) {
         // properties for file resource management
         /**
          * The name of the shader program it can be referred to with later. Has to
@@ -935,10 +1021,15 @@ define([
          */
         this._blendType = blendType;
         /**
-         * The list of shader attribute properties of this shader.
+         * The list of vertex attribute properties of this shader.
          * @type ShaderAttribute[]
          */
-        this._attributes = [];
+        this._vertexAttributes = [];
+        /**
+         * The list of instance attribute properties of this shader.
+         * @type ShaderAttribute[]
+         */
+        this._instanceAttributes = [];
         /**
          * The list of shader uniforms of this shader.
          * @type ShaderUniform[]
@@ -962,7 +1053,19 @@ define([
          * @type Object
          */
         this._ids = {};
-        this._parceShaderSources(attributeRoles, replacedDefines);
+        /**
+         * The array of objects storing the instance attribute buffers organized by their names. Each element of the array stores the buffers
+         * for one instance queue.
+         * @type Array.<Object.<String, VertexBuffer>>
+         */
+        this._instanceAttributeBuffers = [];
+        /**
+         * The names of uniform variables that are replaced by instance attributes, if the shader is instanced, organized by the names of
+         * instance attributes they are replaced by.
+         * @type Object.<String, String>
+         */
+        this._uniformNamesForInstanceAttributeNames = instanceAttributeRoles;
+        this._parceShaderSources(vertexAttributeRoles, replacedDefines);
     }
     /**
      * @param {String} name
@@ -1038,29 +1141,19 @@ define([
                 // parsing attributes
                 if ((shaderType === 0) && (words[0] === "attribute")) {
                     attributeName = words[2].split(";")[0];
-                    switch (words[1]) {
-                        case "float":
-                            attributeSize = 1;
-                            break;
-                        case "vec2":
-                            attributeSize = 2;
-                            break;
-                        case "vec3":
-                            attributeSize = 3;
-                            break;
-                        case "vec4":
-                            attributeSize = 4;
-                            break;
-                        default:
-                            application.showError("Unknown attribute type: '" + words[1] + "' found in the source of shader: '" + this._name + "'!");
-                            return;
-                    }
+                    attributeSize = getFloatVectorSize(words[1]);
                     attributeRole = attributeRoles[attributeName];
                     if (attributeRole === undefined) {
-                        application.showError("Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
-                        return;
+                        if (this._uniformNamesForInstanceAttributeNames.hasOwnProperty(attributeName)) {
+                            attributeRole = this._uniformNamesForInstanceAttributeNames[attributeName];
+                            this._instanceAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
+                        } else {
+                            application.showError("Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
+                            return;
+                        }
+                    } else {
+                        this._vertexAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
                     }
-                    this._attributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
                 }
                 // parsing uniforms
                 if (words[0] === "uniform") {
@@ -1077,7 +1170,7 @@ define([
                             uniformArraySize = 0;
                         }
                         uniformType = words[1];
-                        if (utils.getSafeEnumValue(ShaderUniformType, uniformType, ShaderUniformType.NONE) === ShaderUniformType.NONE) {
+                        if (utils.getSafeEnumValue(ShaderVariableType, uniformType, ShaderVariableType.NONE) === ShaderVariableType.NONE) {
                             uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
                             addStructMembers(uniform, uniformType);
                             this._uniforms.push(uniform);
@@ -1118,18 +1211,39 @@ define([
         return this._ids[context.getName()];
     };
     /**
-     * Returns the array of shader attributes of this shader.
+     * Returns the array of vertex attributes of this shader.
      * @returns {ShaderAttribute[]}
      */
-    ManagedShader.prototype.getAttributes = function () {
-        return this._attributes;
+    ManagedShader.prototype.getVertexAttributes = function () {
+        return this._vertexAttributes;
     };
     /**
-     * Returns the name of the optional fallback shader of this shader.
-     * @returns {String}
+     * Returns the vertex attribute with the given name.
+     * @param {String} name
+     * @returns {ShaderAttribute}
      */
-    ManagedShader.prototype.getFallbackShaderName = function () {
-        return this._fallback;
+    ManagedShader.prototype.getVertexAttribute = function (name) {
+        var i;
+        for (i = 0; i < this._vertexAttributes.length; i++) {
+            if (this._vertexAttributes[i].name === name) {
+                return this._vertexAttributes[i];
+            }
+        }
+        return null;
+    };
+    /**
+     * Returns the instance attribute with the given name.
+     * @param {String} name
+     * @returns {ShaderAttribute}
+     */
+    ManagedShader.prototype.getInstanceAttribute = function (name) {
+        var i;
+        for (i = 0; i < this._instanceAttributes.length; i++) {
+            if (this._instanceAttributes[i].name === name) {
+                return this._instanceAttributes[i];
+            }
+        }
+        return null;
     };
     /**
      * Adds the shader resource to be available for the provided managed WebGL
@@ -1226,14 +1340,13 @@ define([
         }
     };
     /**
-     * Binds the appropriate vertex buffers to the indices of the vertex 
-     * attributes that this shader has.
+     * Binds the appropriate vertex buffers to the indices of the vertex attributes that this shader has.
      * @param {ManagedGLContext} context
      */
     ManagedShader.prototype.bindVertexBuffers = function (context) {
         var i;
-        for (i = 0; i < this._attributes.length; i++) {
-            context.getVertexBuffer(this._attributes[i].name).bind(context, this);
+        for (i = 0; i < this._vertexAttributes.length; i++) {
+            context.getVertexBuffer(this._vertexAttributes[i].name).bind(context, this);
         }
     };
     /**
@@ -1278,6 +1391,83 @@ define([
             }
         }
         return result;
+    };
+    /**
+     * Creates instance buffers for all the instance attributes of this shader. The created buffers are saved at the given index and can be
+     * accessed later using it, so that multiple instance queues using the same shader can be managed by giving them different indices.
+     * @param {Number} index
+     * @param {Number} instanceCount
+     */
+    ManagedShader.prototype.createInstanceBuffers = function (index, instanceCount) {
+        var attributeName;
+        // if we don't have a storage for this instane queue yet, grow the array
+        if (this._instanceAttributeBuffers.length < index + 1) {
+            this._instanceAttributeBuffers = this._instanceAttributeBuffers.concat(new Array(index - this._instanceAttributeBuffers.length + 1));
+        }
+        // for each instance attribute, a new buffer is created or the existing one is set up (so that when rendering a new frame, existing
+        // buffers can be reused even if the indices for the instance queues change)
+        for (attributeName in this._uniformNamesForInstanceAttributeNames) {
+            if (this._uniformNamesForInstanceAttributeNames.hasOwnProperty(attributeName)) {
+                if (!this._instanceAttributeBuffers[index]) {
+                    this._instanceAttributeBuffers[index] = {};
+                }
+                if (!this._instanceAttributeBuffers[index][attributeName]) {
+                    this._instanceAttributeBuffers[index][attributeName] = new VertexBuffer(
+                            attributeName,
+                            this._uniformNamesForInstanceAttributeNames[attributeName],
+                            this.getInstanceAttribute(attributeName).size,
+                            instanceCount);
+                } else {
+                    this._instanceAttributeBuffers[index][attributeName].resize(instanceCount);
+                    this._instanceAttributeBuffers[index][attributeName].resetFilledVectors();
+                }
+            }
+        }
+    };
+    /**
+     * Adds the data of one instance to the instance buffers (of all instance attributes) at the given index, using the values of the 
+     * uniforms the instance would have assigned if it was not rendered in instanced mode.
+     * @param {Number} index
+     * @param {Object.<String, Function>} uniformValueFunctions
+     */
+    ManagedShader.prototype.addDataToInstanceBuffers = function (index, uniformValueFunctions) {
+        var attributeName, uniformName;
+        for (attributeName in this._instanceAttributeBuffers[index]) {
+            if (this._instanceAttributeBuffers[index].hasOwnProperty(attributeName)) {
+                uniformName = this._instanceAttributeBuffers[index][attributeName].getRole();
+                if (uniformValueFunctions.hasOwnProperty(uniformName)) {
+                    this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](true));
+                }
+            }
+        }
+    };
+    /**
+     * Sends the data to WebGL using the passed context from the instance buffers (of all indices) stored at the passed index as well as
+     * binds them to the correct attribute locations and sets them to instanced.
+     * @param {ManagedGLContext} context
+     * @param {Number} index
+     */
+    ManagedShader.prototype.bindAndFillInstanceBuffers = function (context, index) {
+        var attributeName;
+        for (attributeName in this._instanceAttributeBuffers[index]) {
+            if (this._instanceAttributeBuffers[index].hasOwnProperty(attributeName)) {
+                this._instanceAttributeBuffers[index][attributeName].bind(context, this, true);
+            }
+        }
+    };
+    /**
+     * Deletes all the stored instance buffers created for the passed context.
+     * @param {Number} context
+     */
+    ManagedShader.prototype.deleteInstanceBuffers = function (context) {
+        var i, attributeName;
+        for (i = 0; i < this._instanceAttributeBuffers.length; i++) {
+            for (attributeName in this._instanceAttributeBuffers[i]) {
+                if (this._instanceAttributeBuffers[i].hasOwnProperty(attributeName)) {
+                    this._instanceAttributeBuffers[i][attributeName].delete(context);
+                }
+            }
+        }
     };
     // ############################################################################################
     /**
@@ -1331,6 +1521,11 @@ define([
          * @type Object
          */
         this._anisotropicFilter = null;
+        /**
+         * Holder for the handle of the ANGLE_instanced_arrays extension.
+         * @type Object
+         */
+        this.instancing = null;
         /**
          * The list of associated shaders. This needs to be stored in order to bind
          * the vertex buffer objects to the corresponding attributes of the shaders
@@ -1507,6 +1702,12 @@ define([
                 application.log("Anisotropic filtering successfully initialized.", 1);
             }
         }
+        this.instancing = gl_.getExtension("ANGLE_instanced_arrays");
+        if (this.instancing === null) {
+            application.log("Instancing is not available, and so it will be disabled.", 1);
+        } else {
+            application.log("Instancing successfully initialized.", 1);
+        }
         // some basic settings on the context state machine
         gl_.clearDepth(1.0);
         gl_.colorMask(true, true, true, true);
@@ -1621,7 +1822,7 @@ define([
      * attribute indices.
      */
     ManagedGLContext.prototype.setupVertexBuffers = function () {
-        var i, j, vbName, sumVertices, shaderAttributes, bufferSize;
+        var i, j, vbName, sumVertices, vertexAttributes, bufferSize;
         if (this.isReadyToUse() === true) {
             return;
         }
@@ -1649,9 +1850,9 @@ define([
         // creating a Float32Array of the appropriate size for each needed buffer
         this._vertexBuffers = {};
         for (i = 0; i < this._shaders.length; i++) {
-            shaderAttributes = this._shaders[i].getAttributes();
-            for (j = 0; j < shaderAttributes.length; j++) {
-                this.addVertexBuffer(new VertexBuffer(shaderAttributes[j].name, shaderAttributes[j].role, shaderAttributes[j].size, sumVertices));
+            vertexAttributes = this._shaders[i].getVertexAttributes();
+            for (j = 0; j < vertexAttributes.length; j++) {
+                this.addVertexBuffer(new VertexBuffer(vertexAttributes[j].name, vertexAttributes[j].role, vertexAttributes[j].size, sumVertices));
             }
         }
         // filling the buffer data arrays from model data

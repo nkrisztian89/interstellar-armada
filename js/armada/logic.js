@@ -531,6 +531,31 @@ define([
             type: "number",
             defaultValue: 60
         },
+        MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING: {
+            name: "minimumDustParticleCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
+        MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING: {
+            name: "minimumExplosionParticleCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
+        MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING: {
+            name: "minimumMuzzleFlashParticleCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
+        MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING: {
+            name: "minimumThrusterParticleCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
+        MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING: {
+            name: "minimumBlinkerParticleCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
         /**
          * The view distance in the battle scene
          */
@@ -923,13 +948,13 @@ define([
      * @class A tiny piece of dust that is rendered as passing line to indicate the
      * direction and speed of movement to the player.
      * @param {DustCloud} cloud The cloud to which this dust particle belongs.
-     * @param {Float32Array} positionMatrix
+     * @param {Number[3]} positionVector
      */
-    function DustParticle(cloud, positionMatrix) {
+    function DustParticle(cloud, positionVector) {
         /**
-         * @type Float32Array
+         * @type Number[3]
          */
-        this._positionMatrix = positionMatrix;
+        this._positionVector = positionVector;
         /**
          * The renderable object representing this particle in the scene.
          * @type PointParticle
@@ -949,13 +974,23 @@ define([
      * Adds the visual model of this particle to a scene, using the passed node
      * as its rendering parent.
      * @param {PointCloud} cloudNode
+     * @param {Boolean} addOwnProperties
      */
-    DustParticle.prototype.addToScene = function (cloudNode) {
+    DustParticle.prototype.addToScene = function (cloudNode, addOwnProperties) {
         this._visualModel = new budaScene.PointParticle(
                 this._cloud.getClass().getModel(),
                 this._cloud.getClass().getShader(),
-                this._positionMatrix);
-        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+                this._cloud.getClass().getInstancedShader(),
+                this._positionVector,
+                addOwnProperties ? this._cloud.getClass().getColor() : null,
+                addOwnProperties ? this._range : null);
+        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
+    };
+    /**
+     * @returns {PointParticle}
+     */
+    DustParticle.prototype.getVisualModel = function () {
+        return this._visualModel;
     };
     /**
      * Updates the position of the particle to be acound the camera within proper
@@ -970,7 +1005,7 @@ define([
      * Removes all references to other objects for proper cleanup of memory.
      */
     DustParticle.prototype.destroy = function () {
-        this._positionMatrix = null;
+        this._positionVector = null;
         if (this._visualModel) {
             this._visualModel.getNode().markAsReusable();
             this._visualModel = null;
@@ -1035,21 +1070,18 @@ define([
         for (i = 0; i < n; i++) {
             particle = new DustParticle(
                     this,
-                    mat.translation4(
-                            (Math.random() - 0.5) * 2 * this._class.getRange(),
-                            (Math.random() - 0.5) * 2 * this._class.getRange(),
-                            (Math.random() - 0.5) * 2 * this._class.getRange()));
+                    [
+                        (Math.random() - 0.5) * 2 * this._class.getRange(),
+                        (Math.random() - 0.5) * 2 * this._class.getRange(),
+                        (Math.random() - 0.5) * 2 * this._class.getRange()]);
             this._particles.push(particle);
         }
         resources.executeWhenReady(function () {
             var j, node;
-            this._visualModel = new budaScene.PointCloud(
-                    this._class.getShader(),
-                    this._class.getColor(),
-                    this._class.getRange());
-            node = scene.addObject(this._visualModel);
+            this._visualModel = new budaScene.RenderableObject(null, false, false);
+            node = scene.addNode(new budaScene.RenderableNode(this._visualModel, true));
             for (j = 0; j < n; j++) {
-                this._particles[j].addToScene(node);
+                this._particles[j].addToScene(node, j === 0);
             }
         }.bind(this));
     };
@@ -1060,7 +1092,7 @@ define([
     DustCloud.prototype.simulate = function (camera) {
         var i, n;
         n = this._class.getNumberOfParticles();
-        this._visualModel.setShift(camera.getVelocityVector()[0], camera.getVelocityVector()[1], camera.getVelocityVector()[2]);
+        this._particles[0].getVisualModel().setShift(camera.getVelocityVector()[0], camera.getVelocityVector()[1], camera.getVelocityVector()[2]);
         for (i = 0; i < n; i++) {
             this._particles[i].simulate(camera);
         }
@@ -1412,7 +1444,8 @@ define([
                     emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     mat.identity4(),
                     emitterDescriptor.getParticleStates(),
-                    false);
+                    false,
+                    emitterDescriptor.getInstancedShader());
         };
     };
     /**
@@ -1481,7 +1514,8 @@ define([
                 particleEmitters,
                 this._class.getTotalDuration(),
                 this._class.isContinuous(),
-                this._carriesParticles);
+                this._carriesParticles,
+                _context.getSetting(BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING));
     };
     /**
      * Adds a renderable node representing this explosion to the passed scene.
@@ -1807,7 +1841,8 @@ define([
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getMuzzleFlash().getSize(),
                 muzzleFlashPosMatrix,
-                projectileClass.getMuzzleFlash().getDuration() || _context.getSetting(BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION));
+                projectileClass.getMuzzleFlash().getDuration() || _context.getSetting(BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION),
+                projectileClass.getMuzzleFlash().getInstancedShader());
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
@@ -1866,7 +1901,7 @@ define([
                 projectilePosMatrix = mat.mul4(weaponSlotPosMatrix, mat.translation4v(barrelPosVector));
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i);
-                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash));
+                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING));
                 // add the projectile of this barrel
                 p = new Projectile(
                         projectileClass,
@@ -1963,9 +1998,10 @@ define([
                     this._propulsionClass.getThrusterBurnParticle().getTexturesOfTypes(this._propulsionClass.getThrusterBurnParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     this._propulsionClass.getThrusterBurnParticle().getColor(),
                     this._slot.size,
-                    mat.translation4v(this._slot.positionVector));
+                    mat.translation4v(this._slot.positionVector),
+                    this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             this._visualModel.setRelativeSize(0);
-            parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+            parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
             this._shipModel = parentNode.getRenderableObject();
         }.bind(this));
     };
@@ -3377,13 +3413,16 @@ define([
             if (addSupplements.blinkers === true) {
                 blinkers = this._class.getBlinkers();
                 for (i = 0; i < blinkers.length; i++) {
-                    node.addSubnode(new budaScene.RenderableNode(new budaScene.Particle(
-                            blinkers[i].getParticle().getModel(),
-                            blinkers[i].getParticle().getShader(),
-                            blinkers[i].getParticle().getTexturesOfTypes(blinkers[i].getParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                            mat.translation4v(blinkers[i].getPosition()),
-                            blinkers[i].getParticleStates(),
-                            true)));
+                    node.addSubnode(new budaScene.RenderableNode(
+                            new budaScene.Particle(
+                                    blinkers[i].getParticle().getModel(),
+                                    blinkers[i].getParticle().getShader(),
+                                    blinkers[i].getParticle().getTexturesOfTypes(blinkers[i].getParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                                    mat.translation4v(blinkers[i].getPosition()),
+                                    blinkers[i].getParticleStates(),
+                                    true,
+                                    blinkers[i].getParticle().getInstancedShader()),
+                            false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
                     if ((addSupplements.lightSources === true) && (blinkers[i].getIntensity() > 0)) {
                         scene.addPointLightSource(
                                 new budaScene.PointLightSource(

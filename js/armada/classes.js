@@ -325,6 +325,8 @@ define([
          * @type ShaderResource
          */
         this._shader = null;
+        this._instancedShaderName = null;
+        this._instancedShader = null;
     };
     /**
      * @override
@@ -338,6 +340,10 @@ define([
      */
     ShadedClass.prototype.acquireResources = function () {
         this._shader = graphics.getShader(this._shaderName);
+        this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName("instanced");
+        if (this._instancedShaderName) {
+            this._instancedShader = graphics.getShader(this._instancedShaderName);
+        }
     };
     /**
      * 
@@ -349,6 +355,17 @@ define([
             return null;
         }
         return graphics.getManagedShader(this._shaderName);
+    };
+    /**
+     * 
+     * @returns {ManagedShader}
+     */
+    ShadedClass.prototype.getInstancedShader = function () {
+        if (this._instancedShader === null) {
+            application.showError("Attempting to access the instanced shader of '" + this._name + "', which does not exist (or is not loaded)!");
+            return null;
+        }
+        return graphics.getManagedShader(this._instancedShaderName);
     };
     // ##############################################################################
     /**

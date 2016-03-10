@@ -117,6 +117,13 @@ define([
              */
             DEFAULT_MAX_SPOT_LIGHTS = 7,
             /**
+             * The default value for the divisor of the dust particle length in shaders. The original value defined in the shader is
+             * replaced by this value, and since it has to be strictly given in floating point format for the shader to compile, it is 
+             * defined as a string here.
+             * @type String
+             */
+            DEFAULT_DUST_LENGTH_DIVISOR = "200.0",
+            /**
              * The default name of the #define that determines the maximum number of dynamic point lights in shaders.
              * @type String
              */
@@ -127,15 +134,20 @@ define([
              */
             DEFAULT_MAX_SPOT_LIGHTS_DEFINE_NAME = "MAX_SPOT_LIGHTS",
             /**
-             * Shaders that implement the same function but without shadows should be referenced among the fallback shaders with this type key
+             * The default name of the #define that determined the divisor by which the length of dust particles is divided.
              * @type String
              */
-            FALLBACK_TYPE_WITHOUT_SHADOWS = "withoutShadows",
+            DEFAULT_DUST_LENGTH_DIVISOR_DEFINE_NAME = "DUST_LENGTH_DIVISOR",
             /**
-             * Shaders that implement the same function but without dynamic lights should be referenced among the fallback shaders with this type key
+             * Shaders that implement the same function but without shadows should be referenced among the variant shaders with this type key
              * @type String
              */
-            FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS = "withoutDynamicLights",
+            SHADER_VARIANT_WITHOUT_SHADOWS_NAME = "withoutShadows",
+            /**
+             * Shaders that implement the same function but without dynamic lights should be referenced among the variant shaders with this type key
+             * @type String
+             */
+            SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME = "withoutDynamicLights",
             /**
              * 
              * @type GraphicsContext
@@ -194,8 +206,8 @@ define([
          */
         this._textureQualityPreferenceList = null;
         /**
-         * The preferred complexity level of shader. "normal" uses the regular
-         * shaders, "simple" uses the fallback shaders.
+         * (enum ShaderComplexity) The preferred complexity level of shaders. If a variant for a shader is available with the same name (key)
+         * as the current shader complexity, then that shader is used instead of the original one.
          * @type String
          */
         this._shaderComplexity = null;
@@ -245,6 +257,13 @@ define([
          */
         this._maxSpotLights = 0;
         /**
+         * The value for the divisor of the dust particle length in shaders. The original value defined in the shader is
+         * replaced by this value, and since it has to be strictly given in floating point format for the shader to compile, it is 
+         * defined as a string here.
+         * @type String
+         */
+        this._dustLengthDivisor = null;
+        /**
          * The name of the #define that determines the maximum number of dynamic point lights in shaders.
          * @type String
          */
@@ -254,6 +273,11 @@ define([
          * @type String
          */
         this._maxSpotLightsDefineName = null;
+        /**
+         * The name of the #define that determined the divisor by which the length of dust particles is divided.
+         * @type String
+         */
+        this._dustLengthDivisorDefineName = null;
     }
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
@@ -312,6 +336,8 @@ define([
             this._shadowMappingShaderName = types.getStringValue("shadow mapping shader name", dataJSON.shaders.shadowMappingShaderName, DEFAULT_SHADOW_MAPPING_SHADER_NAME);
             this._maxPointLightsDefineName = types.getStringValue("maxPointLightsDefineName", dataJSON.shaders.maxPointLightsDefineName, DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME);
             this._maxSpotLightsDefineName = types.getStringValue("maxSpotLightsDefineName", dataJSON.shaders.maxSpotLightsDefineName, DEFAULT_MAX_SPOT_LIGHTS_DEFINE_NAME);
+            this._dustLengthDivisor = types.getStringValue("dustLengthDivisor", dataJSON.shaders.dustLengthDivisor, DEFAULT_DUST_LENGTH_DIVISOR);
+            this._dustLengthDivisorDefineName = types.getStringValue("dustLengthDivisorDefineName", dataJSON.shaders.dustLengthDivisorDefineName, DEFAULT_DUST_LENGTH_DIVISOR_DEFINE_NAME);
         }
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
@@ -612,29 +638,26 @@ define([
         return this._maxSpotLights;
     };
     /**
+     * Returns the value by which the original value defined as the dust length divisor needs to be replaced in shader sources.
+     * @returns {String}
+     */
+    GraphicsContext.prototype.getDustLengthDivisor = function () {
+        return this._dustLengthDivisor;
+    };
+    /**
      * Return shader resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
      * @param {String} shaderName
      * @returns {ShaderResource}
      */
     GraphicsContext.prototype.getShader = function (shaderName) {
-        switch (this.getShaderComplexity()) {
-            case ShaderComplexity.NORMAL:
-                if (this._shadowMapping && (this._maxPointLights > DynamicLightsAmount.OFF)) {
-                    return resources.getShader(shaderName);
-                }
-                if (!this._shadowMapping) {
-                    shaderName = resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_SHADOWS).getName();
-                }
-                if (this._maxPointLights === DynamicLightsAmount.OFF) {
-                    shaderName = resources.getFallbackShader(shaderName, FALLBACK_TYPE_WITHOUT_DYNAMIC_LIGHTS).getName();
-                }
-                return resources.getShader(shaderName);
-            case ShaderComplexity.SIMPLE:
-                return resources.getFallbackShader(shaderName, ShaderComplexity.SIMPLE);
-            default:
-                application.showError("Unhandled shader complexity level: '" + this.getShaderComplexity() + "' - no corresponding shader set for this level!");
-                return null;
+        shaderName = resources.getVariantShader(shaderName, this.getShaderComplexity()).getName();
+        if (!this._shadowMapping) {
+            shaderName = resources.getVariantShader(shaderName, SHADER_VARIANT_WITHOUT_SHADOWS_NAME).getName();
         }
+        if (this._maxPointLights === DynamicLightsAmount.OFF) {
+            shaderName = resources.getVariantShader(shaderName, SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME).getName();
+        }
+        return resources.getShader(shaderName);
     };
     /**
      * Returns the managed shader corresponding to the passed name, taking into account the settings of the context.
@@ -645,6 +668,7 @@ define([
         var replacedDefines = {};
         replacedDefines[this._maxPointLightsDefineName] = this.getMaxPointLights();
         replacedDefines[this._maxSpotLightsDefineName] = this.getMaxSpotLights();
+        replacedDefines[this._dustLengthDivisorDefineName] = this.getDustLengthDivisor();
         return this.getShader(shaderName).getManagedShader(replacedDefines);
     };
     /**

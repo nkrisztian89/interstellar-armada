@@ -995,6 +995,31 @@ define([
             }
         }
     };
+    /**
+     * Similar to the regular render method, but this renders the given number of instances of the mesh using instancing.
+     * @param {ManagedGLContext} context
+     * @param {Boolean} wireframe
+     * @param {Boolean} [opaque]
+     * @param {Number} instanceCount
+     */
+    Mesh.prototype.renderInstances = function (context, wireframe, opaque, instanceCount) {
+        var props = this._contextProperties[context.getName()];
+        if (wireframe === true) {
+            context.instancing.drawArraysInstancedANGLE(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length, instanceCount);
+        } else {
+            switch (opaque) {
+                case true:
+                    context.instancing.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles, instanceCount);
+                    break;
+                case false:
+                    context.instancing.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles, instanceCount);
+                    break;
+                case undefined:
+                    context.instancing.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length, instanceCount);
+                    break;
+            }
+        }
+    };
 
     /**
      * Adds a cuboid geometry to the object. (both vertices and faces)
@@ -2062,6 +2087,18 @@ define([
     Model.prototype.render = function (context, wireframe, opaque, lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
         this.getMeshWithLOD(lod).render(context, wireframe, opaque);
+    };
+    /**
+     * Similar to the regular render method, but this renders the given number of instances of the model using instancing.
+     * @param {ManagedGLContext} context
+     * @param {Boolean} wireframe
+     * @param {Boolean} [opaque]
+     * @param {Number} [lod=0]
+     * @param {Number} instanceCount
+     */
+    Model.prototype.renderInstances = function (context, wireframe, opaque, lod, instanceCount) {
+        lod = (lod !== undefined) ? lod : this._minLOD;
+        this.getMeshWithLOD(lod).renderInstances(context, wireframe, opaque, instanceCount);
     };
 
     /**

@@ -167,7 +167,27 @@ define([
              * Particles will only be rendered if their size factor reaches at least this value.
              * @type Number
              */
-            PARTICLE_MINIMUM_VISIBLE_SIZE = 0.01;
+            PARTICLE_MINIMUM_VISIBLE_SIZE = 0.01,
+            /**
+             * The index of the array storing the front - opaque render queues in the main render queues array of scenes.
+             * @type Number
+             */
+            FRONT_OPAQUE_RENDER_QUEUES_INDEX = 0,
+            /**
+             * The index of the array storing the front - transparent render queues in the main render queues array of scenes.
+             * @type Number
+             */
+            FRONT_TRANSPARENT_RENDER_QUEUES_INDEX = 1,
+            /**
+             * The index of the array storing the distance - opaque render queues in the main render queues array of scenes.
+             * @type Number
+             */
+            DISTANCE_OPAQUE_RENDER_QUEUES_INDEX = 2,
+            /**
+             * The index of the array storing the distance - transparent render queues in the main render queues array of scenes.
+             * @type Number
+             */
+            DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX = 3;
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -183,9 +203,9 @@ define([
      * bigger than a reference size as smaller, and smallers ones as bigger.
      * This is used to make better LOD decisions for objects spanning a wide
      * range of sizes, but having more similar size details.
-     * @param {[Number]} referenceSize The size that should be taken as is, when
+     * @param {Number} [referenceSize] The size that should be taken as is, when
      * compensation is enabled.
-     * @param {[Number]} minimumRelativeSize If the relative size of a object 
+     * @param {Number} [minimumRelativeSize] If the relative size of a object 
      * inside a parent (compared to the size of the parent) is smaller than this
      * value, this value will be used instead to calculate the relative visible
      * size.
@@ -636,9 +656,11 @@ define([
      * @param {Number} viewportHeight
      * @param {LODContext} lodContext
      * @param {Number} dt
+     * @param {Boolean} [useInstancing=false] 
+     * @param {Number} [instanceQueueIndex]
      * @returns {RenderParameters}
      */
-    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt) {
+    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt, useInstancing, instanceQueueIndex) {
         /**
          * @type ManagedGLContext
          */
@@ -675,6 +697,14 @@ define([
          * @type Number
          */
         this.dt = dt || 0;
+        /**
+         * @type Boolean
+         */
+        this.useInstancing = useInstancing || false;
+        /**
+         * @type Number
+         */
+        this.instanceQueueIndex = instanceQueueIndex;
     }
     // #########################################################################
     /**
@@ -682,9 +712,14 @@ define([
      * well as references to children nodes.
      * @constructor
      * @param {RenderableObject} renderableObject
-     * @returns {RenderableNode}
+     * @param {Boolean} [instancedSubnodes=false] If true, then when this node is added to render queues and it has enough subnodes for
+     * instanced rendering, only its first subnode will be checked about which queues it should be added to, and all the subnodes will be 
+     * added to the same queues together, without checking them for further subnodes. Use this on container nodes storing large amounts
+     * of (leaf) subnodes that are suitable for instancing to improve performance.
+     * @param {Number} [minimumCountForInstancing=0] If greater than zero, then when at least this amount of nodes of the same type are
+     * added to the same render queue and instancing is available, they will be rendered using instancing.
      */
-    function RenderableNode(renderableObject) {
+    function RenderableNode(renderableObject, instancedSubnodes, minimumCountForInstancing) {
         /**
          * The object this node holds that can be rendered.
          * @type RenderableObject
@@ -723,6 +758,17 @@ define([
          * @type CameraConfiguration[]
          */
         this._cameraConfigurations = [];
+        /**
+         * Whether this node has subnodes of the same type, which are leaf nodes and are suitable for instancing, so can be added to the
+         * same instanced queue.
+         * @type Boolean
+         */
+        this._hasInstancedSubnodes = instancedSubnodes;
+        /**
+         * The minimum number of nodes of this same type that should be added to the same render queue to be rendered in instanced mode.
+         * @type Number
+         */
+        this._minimumCountForInstancing = minimumCountForInstancing || 0;
     }
     /**
      * Returns whether this node can be reused to hold a different object.
@@ -765,49 +811,115 @@ define([
      * Adds the node to the appropriate render queue out of the passed ones based on what shader does its object use.
      * Do not call from outside.
      * @param {RenderableNode[][]} renderQueues The render queues, each being an array of renderable nodes using the same shader.
+     * @returns {Number}
      */
-    RenderableNode.prototype._addToRenderQueue = function (renderQueues) {
-        var i, added = false, shader = this._renderableObject.getShader();
-        for (i = 0; i < renderQueues.length; i++) {
-            if ((renderQueues[i].length > 0) && (renderQueues[i][0].getShader() === shader)) {
-                renderQueues[i].push(this);
-                added = true;
-                break;
+    RenderableNode.prototype.addToRenderQueue = function (renderQueues) {
+        var i;
+        if (this._minimumCountForInstancing === 0) {
+            for (i = 0; i < renderQueues.length; i++) {
+                if ((renderQueues[i].length > 0) &&
+                        (renderQueues[i][0].getMinimumCountForInstancing() === 0) &&
+                        (this._renderableObject.shouldGoInSameRenderQueue(renderQueues[i][0].getRenderableObject()))) {
+                    renderQueues[i].push(this);
+                    return i;
+                }
+            }
+        } else {
+            for (i = 0; i < renderQueues.length; i++) {
+                if ((renderQueues[i].length > 0) &&
+                        (renderQueues[i][0].getMinimumCountForInstancing() > 0) &&
+                        (this._renderableObject.shouldGoInSameRenderQueueInstanced(renderQueues[i][0].getRenderableObject()))) {
+                    renderQueues[i].push(this);
+                    return i;
+                }
             }
         }
-        if (!added) {
-            renderQueues.push([this]);
-        }
+        renderQueues.push([this]);
+        return renderQueues.length - 1;
     };
     /**
      * Performs the animation of the object stored at this node if needed and adds this node to one of the passed render queues, to the one 
      * which has nodes using the same shader as this ones, so that rendering nodes in one queue will not require a shader change. Adds the 
      * subnodes to the queues as well, but does not add either itself or the subnodes if it is not set to visible as they do no need to be 
      * rendered.
-     * @param {RenderableNode[][]} frontRenderQueues An array of arrays storing the renderable nodes that are to be rendered among the front
-     * objects, organized by what shader do they use
-     * @param {RenderableNode[][]} distanceRenderQueues An array of arrays storing the renderable nodes that are to be rendered among the
-     * distant object, organized by what shader do they use
+     * @param {RenderableNode[][][]} renderQueues A two dimensional array of render queues. Meaning of indices: 
+     * -1st: front / distance, transparent / opaque render queues
+     * -2nd: queues storing nodes that should be rendered together
+     * -3rd: the nodes to render
      * @param {Camera} camera The camera from the view point of which renderable nodes need to be organized to front and distant nodes
      * @param {Number} dt The elapsed time since the last render, for animation, in milliseconds
      */
-    RenderableNode.prototype.animateAndAddToRenderQueues = function (frontRenderQueues, distanceRenderQueues, camera, dt) {
-        var queueType, i;
+    RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, camera, dt) {
+        var queueType, i, renderQueueIndex, transparent, opaque;
         if (!this._visible) {
             return;
         }
         if (this._scene.shouldAnimate()) {
             this._renderableObject.animate(dt);
         }
-        queueType = this._renderableObject.getRenderQueueBits(camera);
-        if (queueType & RenderQueueBits.FRONT_QUEUE_BIT) {
-            this._addToRenderQueue(frontRenderQueues);
+        transparent = this._renderableObject.isRenderedWithoutDepthMask();
+        opaque = this._renderableObject.isRenderedWithDepthMask();
+        if (transparent || opaque) {
+            queueType = this._renderableObject.getRenderQueueBits(camera);
+            if (queueType & RenderQueueBits.FRONT_QUEUE_BIT) {
+                if (transparent) {
+                    this.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                }
+                if (opaque) {
+                    this.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
+                }
+            }
+            if (queueType & RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                if (transparent) {
+                    this.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                }
+                if (opaque) {
+                    this.addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
+                }
+            }
         }
-        if (queueType & RenderQueueBits.DISTANCE_QUEUE_BIT) {
-            this._addToRenderQueue(distanceRenderQueues);
-        }
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].animateAndAddToRenderQueues(frontRenderQueues, distanceRenderQueues, camera, dt);
+        if (this._subnodes.length > 0) {
+            if (!this._hasInstancedSubnodes || (this._subnodes.length < this._subnodes[0].getMinimumCountForInstancing())) {
+                for (i = 0; i < this._subnodes.length; i++) {
+                    this._subnodes[i].animateAndAddToRenderQueues(renderQueues, camera, dt);
+                }
+            } else {
+                // if subnodes can be added to the same instanced queue, do the addition and animation directly and do not go into recursion further
+                if (this._scene.shouldAnimate()) {
+                    for (i = 0; i < this._subnodes.length; i++) {
+                        this._subnodes[i].getRenderableObject().animate(dt);
+                    }
+                }
+                transparent = this._subnodes[0].getRenderableObject().isRenderedWithoutDepthMask();
+                opaque = this._subnodes[0].getRenderableObject().isRenderedWithDepthMask();
+                if (transparent || opaque) {
+                    queueType = this._subnodes[0].getRenderableObject().getRenderQueueBits(camera);
+                    if (queueType & RenderQueueBits.FRONT_QUEUE_BIT) {
+                        if (transparent) {
+                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                            renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                            renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                        }
+                        if (opaque) {
+                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
+                            renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                            renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                        }
+                    }
+                    if (queueType & RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                        if (transparent) {
+                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                            renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                            renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                        }
+                        if (opaque) {
+                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
+                            renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                            renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                        }
+                    }
+                }
+            }
         }
     };
     /**
@@ -1011,15 +1123,15 @@ define([
         }
     };
     /**
-     * Sets up the stored render parameters that are passed to the held 
-     * renderable
-     * object for the next rendering.
+     * Sets up the stored render parameters that are passed to the held renderable object for the next rendering.
      * @param {ManagedGLContext} context
      * @param {Number} screenWidth
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
+     * @param {Boolean} [useInstancing=false] 
+     * @param {Number} [instanceQueueIndex]
      */
-    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask) {
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex) {
         this._renderParameters.context = context;
         this._renderParameters.depthMask = depthMask;
         this._renderParameters.scene = this._scene;
@@ -1028,6 +1140,8 @@ define([
         this._renderParameters.viewportWidth = screenWidth;
         this._renderParameters.viewportHeight = screenHeight;
         this._renderParameters.lodContext = this._scene.getLODContext();
+        this._renderParameters.useInstancing = useInstancing;
+        this._renderParameters.instanceQueueIndex = instanceQueueIndex;
     };
     /**
      * Renders the object at this node and all subnodes, if visible.
@@ -1036,19 +1150,46 @@ define([
      * @param {Number} screenHeight
      * @param {Boolean} depthMask
      * @param {Boolean} [withoutSubnodes=false] If true, subnodes will not be rendered.
+     * @param {Boolean} [useInstancing=false] If true, the node will not be rendered, just its data will be added to the corresponding 
+     * instance attribute buffers.
+     * @param {Number} [instanceQueueIndex] This index identifies the instance queue so that instance attribute buffer data for different
+     * queues using the same shader do not mix
+     * @returns {Boolean} Whether the node was rendered.
      */
-    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, withoutSubnodes) {
-        var i;
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex) {
+        var i, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, depthMask);
-            this._renderableObject.render(this._renderParameters);
+            this.setRenderParameters(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
+            result = this._renderableObject.render(this._renderParameters);
             if (!withoutSubnodes) {
                 for (i = 0; i < this._subnodes.length; i++) {
-                    this._subnodes[i].render(context, screenWidth, screenHeight, depthMask);
+                    this._subnodes[i].render(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
                 }
             }
+            return result;
         }
+        return false;
+    };
+    /**
+     * Call this on the first node of an instance render queue comprised of nodes that should be rendered together as instances. Sets up
+     * the instance buffers so that the nodes in the queue can add their own data to it before rendering.
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceQueueIndex This identifies the instance queue so if multiple queues use the same shader, their instance
+     * attribute data will not mix
+     * @param {Number} instanceCount The number of instances in this queue
+     */
+    RenderableNode.prototype.prepareForInstancedRender = function (context, instanceQueueIndex, instanceCount) {
+        this._renderableObject.prepareForInstancedRender(context, this._scene, instanceQueueIndex, instanceCount);
+    };
+    /**
+     * Call this on any of the nodes of an instance queue after all of them have been set up to render them all.
+     * @param {ManagedGLContex} context
+     * @param {Number} instanceQueueIndex
+     * @param {Number} instanceCount
+     */
+    RenderableNode.prototype.renderInstances = function (context, instanceQueueIndex, instanceCount) {
+        this._renderableObject.renderInstances(context, instanceQueueIndex, instanceCount);
     };
     /**
      * Renders the object at this node and all subnodes to the shadow map, if 
@@ -1090,7 +1231,7 @@ define([
     };
     /**
      * Sets the shader to use for the held object and for all subnodes.
-     * @param {Shader} shader
+     * @param {ManagedShader} shader
      */
     RenderableNode.prototype.setShader = function (shader) {
         var i;
@@ -1124,6 +1265,13 @@ define([
             }
             this._subnodes.splice(i, k);
         }
+    };
+    /**
+     * Returns the minimum number of nodes that should be in the same render queue to enable instanced rendering for that queue.
+     * @returns {Number}
+     */
+    RenderableNode.prototype.getMinimumCountForInstancing = function () {
+        return this._minimumCountForInstancing;
     };
     /**
      * Returns the number of triangles drawn on the screen to render this node and all its subnodes.
@@ -1162,32 +1310,27 @@ define([
     // #########################################################################
     /**
      * @class The superclass of all objects that can be rendered on the screen.
-     * @constructor
-     * @param {Shader} shader The shader that should be active while rendering 
-     * this object
-     * @param {[Boolean=true]} renderedWithDepthMask Tells whether this object 
-     * should be rendered when the depth mask is on (= it contains 
+     * @param {ManagedShader} shader The shader that should be active while rendering this object
+     * @param {Boolean} [renderedWithDepthMask=true] Tells whether this object should be rendered when the depth mask is on (= it contains 
      * non-transparent triangles)
-     * @param {[Boolean=true]} renderedWithoutDepthMask Tells whether this 
-     * object should be rendered when the depth mask is off (= it contains 
+     * @param {Boolean} [renderedWithoutDepthMask=true] Tells whether this object should be rendered when the depth mask is off (= it contains 
      * transparent triangles)
-     * @returns {RenderableObject}
+     * @param {ManagedShader} [instancedShader]
      */
-    function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask) {
+    function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader) {
         /**
          * A reference to the node holding this object.
          * @type RenderableNode
          */
         this._node = null;
         /**
-         * A flag marking whether this object has been rendered in the current
-         * frame already.
+         * A flag marking whether this object has been rendered in the current frame already.
          * @type Boolean
          */
         this._wasRendered = false;
         /**
          * The shader to use while rendering this object.
-         * @type Shader
+         * @type ManagedShader
          */
         this._shader = shader;
         /**
@@ -1196,27 +1339,27 @@ define([
          */
         this._textures = {};
         /**
-         * The functions to call when calculating the values of uniform 
-         * variables before assigning them, ordered by the names of the 
-         * variables.
+         * The functions to call when calculating the values of uniform variables before assigning them, ordered by the names of the variables.
          * @type Object.<String, Function>
          */
         this._uniformValueFunctions = {};
         /**
-         * Flag, whether this object should be rendered when the depth mask is 
-         * on.
+         * Flag, whether this object should be rendered when the depth mask is on.
          * @type Boolean
          */
         this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
         /**
-         * Flag, whether this object should be rendered when the depth mask is 
-         * off.
+         * Flag, whether this object should be rendered when the depth mask is off.
          * @type Boolean
          */
         this._isRenderedWithoutDepthMask = renderedWithoutDepthMask === undefined ? true : renderedWithoutDepthMask;
         /**
-         * Flag, whether this object is no longer valid and can be used to store
-         * a new object.
+         * The shader to use when rendering this object in instanced mode.
+         * @type ManagedShader
+         */
+        this._instancedShader = instancedShader || null;
+        /**
+         * Flag, whether this object is no longer valid and can be used to store a new object.
          * @type Boolean
          */
         this._canBeReused = false;
@@ -1246,14 +1389,14 @@ define([
     };
     /**
      * Return the shader of this object.
-     * @returns {Shader}
+     * @returns {ManagedShader}
      */
     RenderableObject.prototype.getShader = function () {
         return this._shader;
     };
     /**
      * Sets a new shader.
-     * @param {Shader} shader
+     * @param {ManagedShader} shader
      */
     RenderableObject.prototype.setShader = function (shader) {
         this._shader = shader;
@@ -1273,6 +1416,20 @@ define([
      */
     RenderableObject.prototype.setTextures = function (textures) {
         this._textures = textures;
+    };
+    /**
+     * Whether this object should be rendered in passes when the depth mask is turned off
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.isRenderedWithoutDepthMask = function () {
+        return this._isRenderedWithoutDepthMask;
+    };
+    /**
+     * Whether this object should be rendered in passes when the depth mask is turned on
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.isRenderedWithDepthMask = function () {
+        return this._isRenderedWithDepthMask;
     };
     /**
      * Assigns a function to get the value of the uniform with the passed name.
@@ -1307,6 +1464,9 @@ define([
         if (this._shader) {
             this._shader.addToContext(context);
         }
+        if (this._instancedShader) {
+            this._instancedShader.addToContext(context);
+        }
         for (role in this._textures) {
             if (this._textures.hasOwnProperty(role)) {
                 this._textures[role].addToContext(context);
@@ -1331,13 +1491,6 @@ define([
                 context.bindTexture(this._textures[role]);
             }
         }
-    };
-    /**
-     * Assigns the uniforms specific to this object within the passed context.
-     * @param {ManagedGLContext} context
-     */
-    RenderableObject.prototype.assignUniforms = function (context) {
-        this._shader.assignUniforms(context, this._uniformValueFunctions);
     };
     /**
      * Marks the object as one that is no longer valid and can be reused to
@@ -1373,6 +1526,22 @@ define([
         return this._visible ? RenderQueueBits.FRONT_QUEUE_BIT : RenderQueueBits.NONE;
     };
     /**
+     * Sets up the rendering of an instance queue storing nodes that can be rendered together with this node in instance mode.
+     * @param {ManagedGLContext} context
+     * @param {Scene} scene
+     * @param {Number} instanceQueueIndex Identifies the instance queue, so that multiple queues using the same shader will not use the same
+     * instance buffers of that shader
+     * @param {Number} instanceCount
+     */
+    RenderableObject.prototype.prepareForInstancedRender = function (context, scene, instanceQueueIndex, instanceCount) {
+        if (context.setCurrentShader(this._instancedShader)) {
+            scene.assignUniforms(context, this._instancedShader);
+        }
+        this.bindTextures(context);
+        this._instancedShader.assignUniforms(context, this._uniformValueFunctions);
+        this._instancedShader.createInstanceBuffers(instanceQueueIndex, instanceCount);
+    };
+    /**
      * Called before every render to check whether to proceed with the rendering
      * or not, according to the current parameters. Subclasses must add their 
      * own subsequent checks to this function.
@@ -1392,11 +1561,15 @@ define([
      * @param {RenderParameters} renderParameters
      */
     RenderableObject.prototype.prepareForRender = function (renderParameters) {
-        if (renderParameters.context.setCurrentShader(this._shader)) {
-            renderParameters.scene.assignUniforms(renderParameters.context, this._shader);
+        if (renderParameters.useInstancing) {
+            this._instancedShader.addDataToInstanceBuffers(renderParameters.instanceQueueIndex, this._uniformValueFunctions);
+        } else {
+            if (renderParameters.context.setCurrentShader(this._shader)) {
+                renderParameters.scene.assignUniforms(renderParameters.context, this._shader);
+            }
+            this.bindTextures(renderParameters.context);
+            this._shader.assignUniforms(renderParameters.context, this._uniformValueFunctions);
         }
-        this.bindTextures(renderParameters.context);
-        this.assignUniforms(renderParameters.context);
     };
     /**
      * The function actually performing the rendering, after all checks and
@@ -1414,16 +1587,41 @@ define([
         this._wasRendered = true;
     };
     /**
-     * Handles the full render flow, with checks and preparations. Don't 
-     * override this.
+     * Handles the full render flow, with checks and preparations. Don't override this.
+     * In instanced mode, only performs the preparation and the finish step, and not the rendering itself.
      * @param {RenderParameters} renderParameters
+     * @returns {Boolean} Whether the object was rendered (or in case of instanced rendering, the instance buffers were filled with its data)
      */
     RenderableObject.prototype.render = function (renderParameters) {
         if (this.shouldBeRendered(renderParameters)) {
             this.prepareForRender(renderParameters);
-            this.performRender(renderParameters);
+            if (!renderParameters.useInstancing) {
+                this.performRender(renderParameters);
+            }
             this.finishRender(renderParameters);
+            return true;
         }
+        return false;
+    };
+    /**
+     * A method to override which should define how to render a given number of instances of this object to a managed context in instanced
+     * rendering mode.
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceCount
+     */
+    RenderableObject.prototype._peformRenderInstances = function (context, instanceCount) {
+        application.showError("Cannot render " + instanceCount + " instances of " + this.constructor.name + " to " + context.getName() + " in instanced mode, because no instanced render method was defined for it!");
+    };
+    /*
+     * Finishes the preparation for instanced rendering and renders the given number of instances of this object to the given context, using
+     * the instance attributes for the instance queue with the given index.
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceQueueIndex
+     * @param {Number} instanceCount
+     */
+    RenderableObject.prototype.renderInstances = function (context, instanceQueueIndex, instanceCount) {
+        this._instancedShader.bindAndFillInstanceBuffers(context, instanceQueueIndex);
+        this._peformRenderInstances(context, instanceCount);
     };
     /**
      * Called every time before rendering to a shadow map would occur to check 
@@ -1504,6 +1702,24 @@ define([
     RenderableObject.prototype.getNumberOfDrawnTriangles = function () {
         return 0;
     };
+    /**
+     * Returns whether this object can be put in the same rendering queue as the passed other rendering object.
+     * @param {RenderableObject} otherRenderableObject
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.shouldGoInSameRenderQueue = function (otherRenderableObject) {
+        return this._shader === otherRenderableObject.getShader();
+    };
+    /**
+     * Returns whether this object can be rendered together with the other objects in the same instanced rendering queue.
+     * Override to add specific attribute checks to subclasses.
+     * @param {RenderableObject} otherRenderableObject
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.shouldGoInSameRenderQueueInstanced = function (otherRenderableObject) {
+        return (this.constructor === otherRenderableObject.constructor) &&
+                (this._shader === otherRenderableObject._shader);
+    };
     // #########################################################################
     /**
      * @class A renderable object with the functionality of the Object3D class
@@ -1511,16 +1727,17 @@ define([
      * @constructor
      * @extends RenderableObject
      * @extends Object3D
-     * @param {Shader} shader
+     * @param {ManagedShader} shader
      * @param {Boolean} renderedWithDepthMask
      * @param {Boolean} renderedWithoutDepthMask
      * @param {Float32Array} [positionMatrix] Initial position.
      * @param {Float32Array} [orientationMatrix] Initial orientation.
      * @param {Float32Array} [scalingMatrix] Initial scaling.
+     * @param {ManagedShader} [instancedShader]
      * @returns {RenderableObject3D}
      */
-    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix) {
-        RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask);
+    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader) {
+        RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
         Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix);
         /**
          * The cached value of the size of this object on the screen from the 
@@ -1663,7 +1880,7 @@ define([
      * @class A Full Viewport Quad to be used for rendering the background using a cube mapped texture.
      * @extends RenderableObject
      * @param {Model} model Pass a model describing a simple quad that fills the screen.
-     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {String} samplerName The name of the uniform variable that holds 
      * the texture sampler for the drawing, which will be appropriately prefixed and suffixed
      * @param {Cubemap} cubemap The cubemap object to be used for mapping the  background
@@ -1722,7 +1939,7 @@ define([
      * @constructor
      * @extends RenderableObject3D
      * @param {Model} model The 3D model with meshes for different LODs.
-     * @param {Shader} shader The shader that should be active while rendering 
+     * @param {ManagedShader} shader The shader that should be active while rendering 
      * this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
@@ -1950,7 +2167,7 @@ define([
      * @extends ShadedLODMesh
      * @constructor
      * @param {Model} model
-     * @param {Shader} shader The shader that should be active while rendering 
+     * @param {ManagedShader} shader The shader that should be active while rendering 
      * this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
@@ -2020,7 +2237,7 @@ define([
      * @extends RenderableObject3D
      * @constructor
      * @param {Model} model The model to store the simple billboard data.
-     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
      * the roles as keys.
@@ -2104,7 +2321,7 @@ define([
      * particle systems.
      * @extends RenderableObject3D
      * @param {Model} model The model to store the simple billboard data.
-     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
      * the roles as keys.
@@ -2112,10 +2329,11 @@ define([
      * @param {ParticleState[]} states The list of states this particle will go through during its lifespan.
      * If only one state is given, the particle will stay forever in that state
      * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
+     * @param {ManagedShader} [instancedShader]
      */
-    function Particle(model, shader, textures, positionMatrix, states, looping) {
+    function Particle(model, shader, textures, positionMatrix, states, looping, instancedShader) {
         var i;
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.identity4(), mat.identity4());
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
         this.setSmallestSizeWhenDrawn(0.1);
         this.setTextures(textures);
         /**
@@ -2183,11 +2401,11 @@ define([
          * @type Boolean
          */
         this._shouldAnimate = false;
-        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
-            return this.getModelMatrix();
+        this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
+            return mat.translationVector3(this.getModelMatrix());
         });
-        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function () {
-            return this._size * this._relativeSize;
+        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function (instanced) {
+            return instanced ? [this._size * this._relativeSize] : this._size * this._relativeSize;
         });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
@@ -2308,6 +2526,14 @@ define([
     };
     /**
      * @override
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceCount
+     */
+    Particle.prototype._peformRenderInstances = function (context, instanceCount) {
+        this._model.renderInstances(context, false, undefined, undefined, instanceCount);
+    };
+    /**
+     * @override
      * @param {Number} dt
      * @returns {Boolean}
      */
@@ -2361,11 +2587,21 @@ define([
     Particle.prototype.getNumberOfDrawnTriangles = function (transparent) {
         return (transparent !== false) ? 2 : 0;
     };
+    /**
+     * @override
+     * @param {Particle} otherRenderableObject
+     * @returns {Boolean}
+     */
+    Particle.prototype.shouldGoInSameRenderQueueInstanced = function (otherRenderableObject) {
+        return (RenderableObject3D.prototype.shouldGoInSameRenderQueueInstanced.call(this, otherRenderableObject)) &&
+                (this._textures === otherRenderableObject._textures) &&
+                (this._model === otherRenderableObject._model);
+    };
     // #########################################################################
     /**
      * Creates and returns a particle that dynamically shrinks to zero size during it's lifespan. Used for flashes.
      * @param {Model} model The model to store the simple billboard data.
-     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
      * the roles as keys.
@@ -2373,30 +2609,32 @@ define([
      * @param {Number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Number} duration The lifespan of the particle in milliseconds.
+     * @param {ManagedShader} [instancedShader]
      */
-    function dynamicParticle(model, shader, textures, color, size, positionMatrix, duration) {
-        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false);
+    function dynamicParticle(model, shader, textures, color, size, positionMatrix, duration, instancedShader) {
+        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false, instancedShader);
     }
     // #########################################################################
     /**
      * Creates and returns a particle that does not change its state on it's own, but its attributes can be set directly.
      * @param {Model} model The model to store the simple billboard data.
-     * @param {Shader} shader The shader that should be active while rendering this object.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
      * the roles as keys.
      * @param {Number[4]} color The RGBA components of the color to modulate the billboard texture with.
      * @param {Number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {ManagedShader} [instancedShader]
      */
-    function staticParticle(model, shader, textures, color, size, positionMatrix) {
-        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0)], false);
+    function staticParticle(model, shader, textures, color, size, positionMatrix, instancedShader) {
+        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0)], false, instancedShader);
     }
     /**
      * @class Can be used for a static particle that is rendered as part of the background. (such as a star)
      * @extends Particle
      * @param {Model} model A billboard or similar model.
-     * @param {Shader} shader The shader to use for render.
+     * @param {ManagedShader} shader The shader to use for render.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that 
      * should be bound while rendering this object in an associative array, with 
      * the roles as keys.
@@ -2763,9 +3001,11 @@ define([
      * Emitters that are set to produce particles forever will keep on doing so.
      * @param {Boolean} [carriesParticles=false] Whether to carry the emitted particles as subnodes in the scene graph or
      * add them directly to the scene root.
+     * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
+     * by this particle system will turn on instancing for their render queue.
      */
-    function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles) {
-        RenderableObject3D.call(this, null, false, true, positionMatrix, mat.identity4(), mat.identity4());
+    function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing) {
+        RenderableObject3D.call(this, null, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
          * @type Float32Array
@@ -2798,6 +3038,12 @@ define([
          * @type Boolean
          */
         this._carriesParticles = (carriesParticles === true);
+        /**
+         * If greater than zero, then having at least this many particles of the types emitted by this particle system will turn on 
+         * instancing for their render queue.
+         * @type Number
+         */
+        this._minimumCountForInstancing = minimumCountForInstancing;
     }
     ParticleSystem.prototype = new RenderableObject3D();
     ParticleSystem.prototype.constructor = ParticleSystem;
@@ -2826,7 +3072,7 @@ define([
                 particles = this._emitters[i].emitParticles(dt);
                 if (this._carriesParticles) {
                     for (j = 0; j < particles.length; j++) {
-                        this.getNode().addSubnode(new RenderableNode(particles[j]));
+                        this.getNode().addSubnode(new RenderableNode(particles[j], false, this._minimumCountForInstancing));
                     }
                 } else {
                     modelMatrix = this.getModelMatrix();
@@ -2835,7 +3081,7 @@ define([
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(positionMatrix);
                         particles[j].rotateByMatrix(orientationMatrix);
-                        this.getNode().getScene().addObject(particles[j]);
+                        this.getNode().getScene().addNode(new RenderableNode(particles[j], false, this._minimumCountForInstancing));
                     }
                 }
             }
@@ -2866,18 +3112,31 @@ define([
     };
     // #########################################################################
     /**
-     * @class Rendering a point cloud can provide visual feedback to the player as to which direction
-     * is the camera moving at the moment.
-     * This object exists as a parent to set the uniforms common to all particles, but it is not rendered
-     * itself. (performRender is an empty function)
+     * @class Visual object that renders a point like object as a line as it is
+     * moving. Used to represent dust particles that give a visual clue about the
+     * motion of the camera.
      * @extends RenderableObject
-     * @param {Shader} shader The shader to use when rendering the points
-     * @param {Number[4]} color The RGBA components of the color of the point particles.
-     * It will be available to the shader as uniform 
-     * @param {Number} range How deep the point cloud should extend forward from the screen (meters)
+     * @param {Model} model A model of 2 vertices has to be passed (see lineModel()).
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {ManagedShader} instancedShader
+     * @param {Number[3]} positionVector The initial position of the point.
+     * @param {Number[4]} color The RGBA components of the color of the point particle. It will be available to the shader as uniform.
+     * @param {Number} range How deep the point cloud should extend forward from the screen (meters) Can be used by the shader to fade out
+     * particles that are farther.
      */
-    function PointCloud(shader, color, range) {
-        RenderableObject.call(this, shader, false, true);
+    function PointParticle(model, shader, instancedShader, positionVector, color, range) {
+        RenderableObject.call(this, shader, false, true, instancedShader);
+        /**
+         * A 4x4 translation matrix representing the position of this point in space to be passed
+         * to the shader.
+         * @type Number[3]
+         */
+        this._positionVector = positionVector;
+        /**
+         * Stores a reference to the 2-vertex line model. (see lineModel())
+         * @type Model
+         */
+        this._model = model;
         /**
          * The RGBA components of the color of the point particles.
          * Available to the shader as uniform 
@@ -2898,59 +3157,23 @@ define([
          * @type Number[3]
          */
         this._shift = [0.0, 0.0, 0.0];
-        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
-            return this._color;
+        this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
+            return this._positionVector;
         });
-        this.setUniformValueFunction(UNIFORM_POINT_CLOUD_SHIFT_NAME, function () {
-            return this._shift;
-        });
-        this.setUniformValueFunction(UNIFORM_POINT_CLOUD_LENGTH_NAME, function () {
-            return vec.length3(this._shift);
-        });
-        this.setUniformValueFunction(UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME, function () {
-            return this._range;
-        });
-    }
-    PointCloud.prototype = new RenderableObject();
-    PointCloud.prototype.constructor = PointCloud;
-    /**
-     * Updates the shift vector.
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} z
-     */
-    PointCloud.prototype.setShift = function (x, y, z) {
-        this._shift[0] = x;
-        this._shift[1] = y;
-        this._shift[2] = z;
-    };
-    // #########################################################################
-    /**
-     * @class Visual object that renders a point like object as a line as it is
-     * moving. Used to represent dust particles that give a visual clue about the
-     * motion of the camera.
-     * @extends RenderableObject
-     * @param {Model} model A model of 2 vertices has to be passed (see lineModel()).
-     * @param {Shader} shader The shader that should be active while rendering this object. Should be the same as the 
-     * point cloud's.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the point.
-     */
-    function PointParticle(model, shader, positionMatrix) {
-        RenderableObject.call(this, shader, false, true);
-        /**
-         * A 4x4 translation matrix representing the position of this point in space to be passed
-         * to the shader.
-         * @type Float32Array
-         */
-        this._positionMatrix = positionMatrix;
-        /**
-         * Stores a reference to the 2-vertex line model. (see lineModel())
-         * @type Model
-         */
-        this._model = model;
-        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
-            return this.getModelMatrix();
-        });
+        if (this._color) {
+            this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
+                return this._color;
+            });
+            this.setUniformValueFunction(UNIFORM_POINT_CLOUD_SHIFT_NAME, function () {
+                return this._shift;
+            });
+            this.setUniformValueFunction(UNIFORM_POINT_CLOUD_LENGTH_NAME, function () {
+                return vec.length3(this._shift);
+            });
+            this.setUniformValueFunction(UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME, function () {
+                return this._range;
+            });
+        }
     }
     PointParticle.prototype = new RenderableObject();
     PointParticle.prototype.constructor = PointParticle;
@@ -2964,19 +3187,15 @@ define([
         this._model.addToContext(context, false);
     };
     /**
-     * Return the 4x4 translation matrix describing the position of this particle in space.
-     * @returns {Float32Array}
+     * Updates the shift vector.
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} z
      */
-    PointParticle.prototype.getPositionMatrix = function () {
-        return this._positionMatrix;
-    };
-    /**
-     * Only takes the position into account, as point-like objects do not have an orientation.
-     * Does not support parent-child relative positions as regular RenderableObject3Ds do.
-     * @returns {Float32Array}
-     */
-    PointParticle.prototype.getModelMatrix = function () {
-        return this._positionMatrix;
+    PointParticle.prototype.setShift = function (x, y, z) {
+        this._shift[0] = x;
+        this._shift[1] = y;
+        this._shift[2] = z;
     };
     /**
      * Modifies the position matrix of the particle to make sure it the particle is situated
@@ -2989,12 +3208,12 @@ define([
      */
     PointParticle.prototype.fitPositionWithinRange = function (centerPositionMatrix, range) {
         var i;
-        for (i = 12; i < 15; i++) {
-            while (this._positionMatrix[i] > centerPositionMatrix[i] + range) {
-                this._positionMatrix[i] -= range * 2;
+        for (i = 0; i < 3; i++) {
+            while (this._positionVector[i] > centerPositionMatrix[12 + i] + range) {
+                this._positionVector[i] -= range * 2;
             }
-            while (this._positionMatrix[i] < centerPositionMatrix[i] - range) {
-                this._positionMatrix[i] += range * 2;
+            while (this._positionVector[i] < centerPositionMatrix[12 + i] - range) {
+                this._positionVector[i] += range * 2;
             }
         }
     };
@@ -3006,6 +3225,9 @@ define([
     PointParticle.prototype.performRender = function (renderParameters) {
         this._model.render(renderParameters.context, true);
     };
+    PointParticle.prototype._peformRenderInstances = function (context, instanceCount) {
+        this._model.renderInstances(context, true, false, undefined, instanceCount);
+    };
     /**
      * Always returns false, there are no animations for this type of objects.
      * @returns {Boolean}
@@ -3013,6 +3235,17 @@ define([
     PointParticle.prototype.shouldAnimate = function () {
         return false;
     };
+    /**
+     * @override
+     * @param {PointParticle} otherRenderableObject
+     * @returns {Boolean}
+     */
+    PointParticle.prototype.shouldGoInSameRenderQueueInstanced = function (otherRenderableObject) {
+        return (RenderableObject.prototype.shouldGoInSameRenderQueueInstanced.call(this, otherRenderableObject)) &&
+                (this._color === otherRenderableObject._color) &&
+                (this._range === otherRenderableObject._range);
+    };
+    // #########################################################################
     /**
      * @class A renderable object that can be used to model a simple UI element, rendered on top of the main scene view in 2D.
      * @extends RenderableObject
@@ -3107,7 +3340,7 @@ define([
      * The final world position is always calculated and not set.
      * @param {Number[2]} distanceRange If the camera turns around the followed objects and it is not fixed, this is the range in which the
      * distance from the objects is allowed to change
-     * @param {[Number[3][2]]} confines If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
+     * @param {Number[3][2]} [confines] If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
      * respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range for the other
      * axes.
      * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position 
@@ -4001,7 +4234,7 @@ define([
                         if (baseOrientationMatrix) {
                             dirTowardsObject = vec.mulVec3Mat4(dirTowardsObject, mat.inverseOfRotation4(baseOrientationMatrix));
                         } else {
-                            baseOrientationMatrix = mat.identity4();
+                            baseOrientationMatrix = mat.IDENTITY4;
                         }
                         this._alpha = vec.angle2uCapped([0, 1], vec.normal2([dirTowardsObject[0], dirTowardsObject[1]]));
                         if (dirTowardsObject[0] < 0) {
@@ -6043,21 +6276,14 @@ define([
          */
         this._contexts = [];
         /**
-         * The array of render queues, with each queue being an array of nodes in the scene that need to be rendered and use the same 
+         * The array of arrays of render queues, with each queue being an array of nodes in the scene that need to be rendered and use the same 
          * shader. This way, rendering all the queues after each other requires the minimum amount of shader switches and thus scene
          * uniform (such as light source) assignments.
-         * These are the queues that store the object to be rendered in the front, with full detail, shadow mapping and dynamic lights (if
-         * turned on), as they are inside the view frustum of the camera of the view.
-         * @type RenderableNode[][]
+         * This top level array contains four elements corresponding to the four categories of render queues depending on whether they are
+         * front or distance queues and transparent or opaque queues.
+         * @type RenderableNode[][][]
          */
-        this._frontRenderQueues = [];
-        /**
-         * These render queues are like the front ones, but store the nodes wich are within the view frustum of the extended camera instead
-         * of the regular one, and thus behind the front object, rendered in a separate step using a separate depth buffer (before the front
-         * objects are rendered), and with lower detail, without shadow mapping or dynamic lights.
-         * @type RenderableNode[][]
-         */
-        this._distanceRenderQueues = [];
+        this._renderQueues = [];
         /**
          * A flag storing whether the scene uniforms have already been assigned at least once during the current frame. If the whole scene
          * is rendered using just one shader, there are no shader switches and thus no automatic scene uniform assignments, so this flag
@@ -6374,6 +6600,15 @@ define([
         return node;
     };
     /**
+     * Adds the given node to the main scene object nodes of this scene, and returns it for convenience.
+     * @param {RenderableNode} node
+     * @returns {RenderableNode}
+     */
+    Scene.prototype.addNode = function (node) {
+        this._rootNode.addSubnode(node);
+        return node;
+    };
+    /**
      * Adds a new node to the UI node tree, which will be rendered atop the background and main scene objects, without depth buffer.
      * @param {RebderableObject} uiObject
      * @returns {RenderableNode} The node that was created to contain the passed object.
@@ -6615,7 +6850,7 @@ define([
      * Assigns all uniforms in the given shader program that the scene has a value function for, using the appropriate webGL calls.
      * The matching is done based on the names of the uniforms.
      * @param {ManagedGLContext} context 
-     * @param {Shader} shader
+     * @param {ManagedShader} shader
      */
     Scene.prototype.assignUniforms = function (context, shader) {
         shader.assignUniforms(context, this._uniformValueFunctions);
@@ -6714,13 +6949,45 @@ define([
         this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
     };
     /**
+     * Renders the specified render queues of the scene with the given settings.
+     * @param {ManagedGLContext} context
+     * @param {RenderableNode[]} renderQueue
+     * @param {Number} index This is the index to identify the queue in case it is rendered in instanced mode.
+     * @param {Boolean} depthMask
+     */
+    Scene.prototype._renderQueue = function (context, renderQueue, index, depthMask) {
+        var i, queueLength = renderQueue.length, minimumInstancingCount, count;
+        if (queueLength > 0) {
+            minimumInstancingCount = renderQueue[0].getMinimumCountForInstancing();
+            if ((minimumInstancingCount > 0) && (queueLength >= minimumInstancingCount) && (context.instancing)) {
+                count = 0;
+                renderQueue[0].prepareForInstancedRender(context, index, queueLength);
+                for (i = 0; i < queueLength; i++) {
+                    if (renderQueue[i].render(context, this._width, this._height, depthMask, true, true, index)) {
+                        count++;
+                    }
+                }
+                if (count > 0) {
+                    renderQueue[0].renderInstances(context, index, count);
+                }
+            } else {
+                for (i = 0; i < queueLength; i++) {
+                    renderQueue[i].render(context, this._width, this._height, depthMask, true);
+                }
+            }
+        }
+    };
+    /**
      * Renders all the objects stored in the passed render queues in two passes (one for transparent and another for opaque triangles) with
      * appropriate context settings.
      * @param {ManagedGLContext} context
-     * @param {RenderableNode[][]} renderQueues The queues storing the nodes to render, with nodes using the same shader in each queue
+     * @param {RenderableNode[][]} opaqueRenderQueues The queues storing the nodes to render, with nodes using the same shader in each queue.
+     * In these queues should be the nodes that contain objects that should be rendered in opaque mode.
+     * @param {RenderableNode[][]} transparentRenderQueues In these queues should be the nodes that contain objects that should be rendered 
+     * in transparent mode.
      */
-    Scene.prototype._renderMainObjects = function (context, renderQueues) {
-        var i, j, gl;
+    Scene.prototype._renderMainObjects = function (context, opaqueRenderQueues, transparentRenderQueues) {
+        var i, gl;
         gl = context.gl; // caching the variable for easier access
         // preparing to render main scene objects
         gl.enable(gl.DEPTH_TEST);
@@ -6729,10 +6996,8 @@ define([
         gl.depthMask(true);
         gl.disable(gl.BLEND);
         // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
-        for (i = 0; i < renderQueues.length; i++) {
-            for (j = 0; j < renderQueues[i].length; j++) {
-                renderQueues[i][j].render(context, this._width, this._height, true, true); // we also pass the elapsed time to perform animation
-            }
+        for (i = 0; i < opaqueRenderQueues.length; i++) {
+            this._renderQueue(context, opaqueRenderQueues[i], i, true);
         }
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
         // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
@@ -6740,10 +7005,8 @@ define([
         gl.depthMask(false);
         gl.enable(gl.BLEND);
         // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
-        for (i = 0; i < renderQueues.length; i++) {
-            for (j = 0; j < renderQueues[i].length; j++) {
-                renderQueues[i][j].render(context, this._width, this._height, false, true); // no need for animation for a second time
-            }
+        for (i = 0; i < transparentRenderQueues.length; i++) {
+            this._renderQueue(context, transparentRenderQueues[i], i, false);
         }
         this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
@@ -6771,7 +7034,7 @@ define([
      * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
      */
     Scene.prototype.render = function (context, dt) {
-        var gl = context.gl, clearBits, camera;
+        var gl = context.gl, clearBits, camera, frontQueuesNotEmpty;
         application.log("Rendering scene...", 3);
         // updating camera
         this._camera.update(this._shouldUpdateCamera ? dt : 0);
@@ -6780,11 +7043,11 @@ define([
         // resetting cached values that were only valid for one render
         this._rootNode.resetForNewFrame();
         // animating all the needed nodes and preparing them for rendering by organizing them to render queues
-        this._frontRenderQueues = [];
-        this._distanceRenderQueues = [];
-        this._rootNode.animateAndAddToRenderQueues(this._frontRenderQueues, this._distanceRenderQueues, this._camera, dt);
+        this._renderQueues = [[], [], [], []];
+        this._rootNode.animateAndAddToRenderQueues(this._renderQueues, this._camera, dt);
+        frontQueuesNotEmpty = (this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
         // rendering shadow maps
-        if (this._frontRenderQueues.length > 0) {
+        if (frontQueuesNotEmpty) {
             this._renderShadowMaps(context);
         }
         // updating the light matrices to be consistent with the shadow maps
@@ -6813,13 +7076,13 @@ define([
         this._renderBackgroundObjects(context);
         // -----------------------------------------------------------------------
         // rendering the queues storing distant main objects
-        if (this._distanceRenderQueues.length > 0) {
+        if ((this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0)) {
             // switching to an extended camera
             camera = this._camera;
             this._camera = this._camera.getExtendedCamera();
             // dynamic lights are not support for these objects as they are not really visible but expensive
             this._clearDynamicLightUniformData();
-            this._renderMainObjects(context, this._distanceRenderQueues);
+            this._renderMainObjects(context, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
             // switching back the camera
             this._camera = camera;
             // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
@@ -6828,13 +7091,13 @@ define([
         }
         // -----------------------------------------------------------------------
         // rendering the queues storing front (close) main objects
-        if (this._frontRenderQueues.length > 0) {
+        if (frontQueuesNotEmpty) {
             // filling the arrays storing the light source data for uniforms that need it
             this._updateDynamicLightUniformData(this._shouldAnimate ? dt : 0);
             // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
             // same as the last one used for the distant objects
             this.assignUniforms(context, context.getCurrentShader());
-            this._renderMainObjects(context, this._frontRenderQueues, true);
+            this._renderMainObjects(context, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
         }
         // -----------------------------------------------------------------------
         // rendering the UI objects
@@ -6869,7 +7132,6 @@ define([
         UnidirectionalParticleEmitter: UnidirectionalParticleEmitter,
         PlanarParticleEmitter: PlanarParticleEmitter,
         ParticleSystem: ParticleSystem,
-        PointCloud: PointCloud,
         PointParticle: PointParticle,
         UIElement: UIElement,
         CameraPositionConfiguration: CameraPositionConfiguration,
