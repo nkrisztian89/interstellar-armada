@@ -26,7 +26,7 @@ define([
      * The list of EgomModel versions that can be loaded from file.
      * @type String[]
      */
-    var _supportedVersions = ["2.0", "2.1", "2.2"];
+    var _supportedVersions = ["2.0", "2.1", "2.2", "3.0"];
 
     /**
      * @class Represents a vertex in 3D space.
@@ -1490,7 +1490,7 @@ define([
             application.showError("'" + filename + "' does not appear to be an XML document.",
                     "severe",
                     "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
             return false;
         }
         if (xmlDoc.documentElement.nodeName !== "EgomModel") {
@@ -1727,6 +1727,149 @@ define([
             str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
         application.log(str, 2);
+        return true;
+    };
+    /**
+     * Loads the model data from the passed JSON object.
+     * @param {String} filename
+     * @param {Object} dataJSON
+     * @param {Number} defaultLOD
+     * @returns {Boolean} Whether the model has been successfully loaded.
+     */
+    Model.prototype.loadFromJSON = function (filename, dataJSON, defaultLOD) {
+        var i, j, str,
+                minLoadedLOD = null,
+                maxLoadedLOD = null,
+                defaultMinLOD = null,
+                defaultMaxLOD = null,
+                minLOD, maxLOD,
+                version, defaultShininess, colorPalette,
+                params,
+                nVertices, nLines, nTriangles,
+                index, vertex, line, triangle,
+                resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
+                    var lod;
+                    if (minLoadedLOD === null) {
+                        for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD;
+                    } else {
+                        for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
+                    }
+                }.bind(this);
+        defaultLOD = defaultLOD || 0;
+        application.log("Loading EgomModel data from file: " + filename + " ...", 2);
+        // checking the passed JSON file
+        if (typeof dataJSON !== "object") {
+            application.showError("'" + filename + "' does not appear to be an JSON file.",
+                    "severe",
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
+            return false;
+        }
+        // checking EgomModel version
+        version = dataJSON.version;
+        if (!version) {
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            return false;
+        }
+        if (_supportedVersions.indexOf(version) < 0) {
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
+                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+            return false;
+        }
+        // loading info properties
+        colorPalette = null;
+        this._infoProperties = dataJSON.info || {};
+        this._name = dataJSON.info.name || null;
+        this._scale = dataJSON.info.scale || 1;
+        defaultMinLOD = dataJSON.info.defaultLOD[0];
+        defaultMaxLOD = dataJSON.info.defaultLOD[1];
+        defaultShininess = dataJSON.info.defaultShininess || 0;
+        colorPalette = dataJSON.info.colorPalette;
+        // loading vertices
+        nVertices = dataJSON.vertices.length;
+        for (i = 0; i < nVertices; i++) {
+            index = dataJSON.vertices[i].i;
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = dataJSON.vertices[i].lod ? dataJSON.vertices[i].lod[0] : minLOD;
+            maxLOD = dataJSON.vertices[i].lod ? dataJSON.vertices[i].lod[1] : maxLOD;
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            vertex = new Vertex(dataJSON.vertices[i].p);
+            for (j = minLOD; j <= maxLOD; j++) {
+                this.getMeshWithLOD(j).setVertex(index, vertex);
+            }
+        }
+        application.log("Loaded " + nVertices + " vertices.", 3);
+        // loading lines
+        nLines = dataJSON.lines.length;
+        for (i = 0; i < nLines; i++) {
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = dataJSON.lines[i].lod ? dataJSON.lines[i].lod[0] : minLOD;
+            maxLOD = dataJSON.lines[i].lod ? dataJSON.lines[i].lod[1] : maxLOD;
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            line = new Line(
+                    dataJSON.lines[i].a,
+                    dataJSON.lines[i].b,
+                    colorPalette ? colorPalette[dataJSON.lines[i].color] : dataJSON.lines[i].color,
+                    dataJSON.lines[i].lum || 0,
+                    dataJSON.lines[i].n);
+            for (j = minLOD; j <= maxLOD; j++) {
+                this.getMeshWithLOD(j).addLine(line);
+            }
+        }
+        application.log("Loaded " + nLines + " lines.", 3);
+        // loading triangles
+        nTriangles = dataJSON.triangles.length;
+        params = {};
+        for (i = 0; i < nTriangles; i++) {
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = dataJSON.triangles[i].lod ? dataJSON.triangles[i].lod[0] : minLOD;
+            maxLOD = dataJSON.triangles[i].lod ? dataJSON.triangles[i].lod[1] : maxLOD;
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            params.color = colorPalette ? colorPalette[dataJSON.triangles[i].color] : dataJSON.triangles[i].color;
+            params.luminosity = dataJSON.triangles[i].lum || 0;
+            params.shininess = dataJSON.triangles[i].shi || defaultShininess;
+            params.texCoords = dataJSON.triangles[i].t;
+            params.normals = dataJSON.triangles[i].n;
+            params.groupIndex = (dataJSON.triangles[i].group !== undefined) ? dataJSON.triangles[i].group : null;
+            params.withoutLines = true;
+            triangle = null;
+            for (j = minLOD; j <= maxLOD; j++) {
+                if (!triangle) {
+                    triangle = this.getMeshWithLOD(j).addTriangleWithParams(
+                            dataJSON.triangles[i].a,
+                            dataJSON.triangles[i].b,
+                            dataJSON.triangles[i].c,
+                            params);
+                } else {
+                    this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
+                }
+            }
+        }
+        application.log("Loaded " + nTriangles + " triangles.", 3);
+        application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
+        str = "Number of triangles per LOD for " + this._name + ": ";
+        for (i = this._minLOD; i <= this._maxLOD; i++) {
+            str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
+        }
+        application.log(str, 2);
+        return true;
     };
     /**
      * Returns the scale factor of this model i.e. what is the meaning of 1 coordinate

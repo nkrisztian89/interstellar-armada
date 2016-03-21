@@ -825,7 +825,13 @@ define([
     ModelResource.prototype._loadData = function (params) {
         application.log("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
         this._model = new egomModel.Model();
-        this._model.loadFromXML(this._getPath(params.maxLOD), new window.DOMParser().parseFromString(params.text, "text/xml"), params.maxLOD);
+        if (params.text[0] === "{") {
+            this._model.loadFromJSON(this._getPath(params.maxLOD), JSON.parse(params.text), params.maxLOD);
+        } else if (params.text[0] === "<") {
+            this._model.loadFromXML(this._getPath(params.maxLOD), new window.DOMParser().parseFromString(params.text, "text/xml"), params.maxLOD);
+        } else {
+            application.showError("Cannot load Egom Mode from file '" + this._getPath(params.maxLOD) + "', as it does no appear to be either an XML or a JSON file!");
+        }
         this._maxLoadedLOD = params.maxLOD;
     };
     /**
