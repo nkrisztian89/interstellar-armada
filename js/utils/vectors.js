@@ -169,7 +169,7 @@ define(function () {
      * @param {Number[3]} v2 The second 3D vector.
      * @returns {Number[3]} The sum of v1 and v2.
      */
-    vec.add3 = function (v1, v2) {
+    vec.sum3 = function (v1, v2) {
         return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
     };
     /**
@@ -178,7 +178,7 @@ define(function () {
      * @param {Number[3]} v2 The second 3D vector.
      * @returns {Number[3]} The difference of v1 and v2.
      */
-    vec.sub3 = function (v1, v2) {
+    vec.diff3 = function (v1, v2) {
         return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
     };
     /**
@@ -348,12 +348,49 @@ define(function () {
         v[0] *= factor;
         v[1] *= factor;
     };
+    /**
+     * Scales the passed 3D vector to unit length.
+     * @param {Number[3]} v A 3D vector
+     */
+    vec.normalize3 = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        v[0] *= factor;
+        v[1] *= factor;
+        v[2] *= factor;
+    };
+    /**
+     * Normalizes the pased 4D vector by dividing all its coordinates by the last (4th) coordinate.
+     * @param {Number[4]} v
+     */
     vec.normalize4D = function (v) {
         v[3] = v[3] || CLOSE_TO_ZERO;
         v[0] /= v[3];
         v[1] /= v[3];
         v[2] /= v[3];
         v[3] = 1;
+    };
+    /**
+     * Adds the 3D vector v2 to the 3D vector v1, modifying v1 in-place.
+     * @param {Number[3]} v1
+     * @param {Number[3]} v2
+     */
+    vec.add3 = function (v1, v2) {
+        v1[0] += v2[0];
+        v1[1] += v2[1];
+        v1[2] += v2[2];
+    };
+    /**
+     * Cross multiplies the passed v1 vector with v2 in-place.
+     * @param {Number[3]} v1 A 3D vector.
+     * @param {Number[3]} v2 A 3D vector.
+     */
+    vec.mulCross3 = function (v1, v2) {
+        var v30 = v1[0], v31 = v1[1], v32 = v1[2];
+        v1[0] = v31 * v2[2] - v32 * v2[1];
+        v1[1] = v32 * v2[0] - v30 * v2[2];
+        v1[2] = v30 * v2[1] - v31 * v2[0];
     };
     return vec;
 });

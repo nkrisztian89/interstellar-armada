@@ -445,6 +445,7 @@ define([
                 },
                 function () {
                     resumeBattle();
+                    control.switchToPilotMode(_level.getPilotedSpacecraft());
                 }.bind(this),
                 strings.INFO_BOX.HEADER.name,
                 strings.INFO_BOX.OK_BUTTON.name));
@@ -606,17 +607,17 @@ define([
             target = craft.getTarget();
             // updating the WebGL HUD
             if (target) {
-                distance = vec.length3(vec.sub3(target.getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector()));
+                distance = vec.length3(vec.diff3(target.getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector()));
                 // targeting reticle at the target position
                 _targetIndicator.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
                 _targetIndicator.show();
                 // targeting crosshair in the line of fire
-                _targetCrosshair.setPosition(vec.add3(
+                _targetCrosshair.setPosition(vec.sum3(
                         mat.translationVector3(craft.getVisualModel().getPositionMatrix()),
                         vec.scaled3(mat.getRowB43(craft.getVisualModel().getOrientationMatrix()), distance)));
                 _targetCrosshair.show();
                 // target arrow, if the target is not visible on the screen
-                direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.mul4(mat.mul4(target.getVisualModel().getPositionMatrix(), _battleScene.getCamera().getViewMatrix()), _battleScene.getCamera().getProjectionMatrix()));
+                direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.prod34(target.getVisualModel().getPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
                 behind = direction[3] < 0;
                 vec.normalize4D(direction);
                 if (behind || (direction[0] < -1) || (direction[0] > 1) || (direction[1] < -1) || (direction[1] > 1)) {
@@ -671,8 +672,10 @@ define([
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
             this._stats.setContent(
+                    mat.getMatrixCount() + " <br/>" +
                     this.getFPS() + "<br/>" +
                     _battleScene.getNumberOfDrawnTriangles());
+            mat.clearMatrixCount();
         }
     };
     /**

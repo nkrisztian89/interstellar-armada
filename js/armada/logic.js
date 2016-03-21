@@ -1703,7 +1703,7 @@ define([
             for (i = 0; i < hitObjects.length; i++) {
                 physicalHitObject = hitObjects[i].getPhysicalModel();
                 if (physicalHitObject && (_context.getSetting(BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin)) && (physicalHitObject.checkHit(positionVector, [], 0))) {
-                    relPos = vec.sub3(positionVector, mat.translationVector3(physicalHitObject.getPositionMatrix()));
+                    relPos = vec.diff3(positionVector, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     velocity = vec.length3(velocityVector);
                     velocityDir = vec.normal3(velocityVector);
@@ -1887,18 +1887,18 @@ define([
             this._cooldown = 0;
             // cache the matrices valid for the whole weapon
             orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
-            scaledOriMatrix = mat.mul4(this._spacecraft.getPhysicalScalingMatrix(), orientationMatrix);
+            scaledOriMatrix = mat.prod4(this._spacecraft.getPhysicalScalingMatrix(), orientationMatrix);
             weaponSlotPosVector = vec.mulVec4Mat4(mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
-            weaponSlotPosMatrix = mat.mul4(this._spacecraft.getPhysicalPositionMatrix(), mat.translation4v(weaponSlotPosVector));
-            projectileOriMatrix = mat.mul4(this._slot.orientationMatrix, orientationMatrix);
+            weaponSlotPosMatrix = mat.prod4(this._spacecraft.getPhysicalPositionMatrix(), mat.translation4v(weaponSlotPosVector));
+            projectileOriMatrix = mat.prod4(this._slot.orientationMatrix, orientationMatrix);
             barrels = this._class.getBarrels();
             projectileLights = {};
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
                 projectileClass = barrels[i].getProjectileClass();
-                barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.matrix3from4(mat.mul4(this._slot.orientationMatrix, scaledOriMatrix)));
-                projectilePosMatrix = mat.mul4(weaponSlotPosMatrix, mat.translation4v(barrelPosVector));
+                barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.matrix3from4(mat.prod4(this._slot.orientationMatrix, scaledOriMatrix)));
+                projectilePosMatrix = mat.prod4(weaponSlotPosMatrix, mat.translation4v(barrelPosVector));
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i);
                 this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING));
@@ -1920,7 +1920,7 @@ define([
                 }
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().addForceAndTorque(
-                        vec.sub3(
+                        vec.diff3(
                                 mat.translationVector3(projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
@@ -2954,7 +2954,7 @@ define([
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
-        return mat.mul4(
+        return mat.prod4(
                 this._physicalModel.getVelocityMatrix(),
                 mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
@@ -2964,10 +2964,9 @@ define([
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getTurningMatrix = function () {
-        return mat.mul4(
-                mat.mul4(
-                        this._physicalModel.getOrientationMatrix(),
-                        this._physicalModel.getAngularVelocityMatrix()),
+        return mat.prod34(
+                this._physicalModel.getOrientationMatrix(),
+                this._physicalModel.getAngularVelocityMatrix(),
                 mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
     };
     /**
@@ -3263,7 +3262,7 @@ define([
                         phyModel.getEgomModel(),
                         resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
                         this.getHitboxTextures(),
-                        mat.translation4v(mat.translationVector3(this._class.getBodies()[index].getPositionMatrix())),
+                        mat.translation4m4(this._class.getBodies()[index].getPositionMatrix()),
                         this._class.getBodies()[index].getOrientationMatrix(),
                         mat.identity4(),
                         false);
@@ -3883,13 +3882,13 @@ define([
                     orientation = orientationMatrix ?
                             mat.matrix4(orientationMatrix) : mat.identity4();
                     if (randomTurnAroundZ) {
-                        orientation = mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
+                        mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
                     }
                     if (randomTurnAroundX) {
-                        orientation = mat.mul4(orientation, mat.rotation4(mat.getRowA4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
+                        mat.mul4(orientation, mat.rotation4(mat.getRowA4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
                     }
                     if (randomTurnAroundY) {
-                        orientation = mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
+                        mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
                     }
                     this._spacecrafts.push(
                             new Spacecraft(

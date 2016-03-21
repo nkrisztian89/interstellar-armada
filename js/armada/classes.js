@@ -2343,7 +2343,7 @@ define([
                     count = dataJSON.weaponSlots[i].count || _showMissingPropertyError(this, "weaponSlot array count");
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
-                            position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
+                            position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
                             rotations: rotations,
                             maxGrade: maxGrade
                         }));
@@ -2375,7 +2375,7 @@ define([
                     count = dataJSON.thrusterSlots[i].count || _showMissingPropertyError(this, "thrusterSlot array count");
                     for (j = 0; j < count; j++) {
                         this._thrusterSlots.push(new ThrusterSlot({
-                            position: vec.add3(startPosition, vec.scaled3(translationVector, j)),
+                            position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
                             size: size,
                             groupIndex: groupIndex,
                             uses: uses

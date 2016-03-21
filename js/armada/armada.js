@@ -38,6 +38,7 @@ define([
     game.setStartScreenName("mainMenu");
     game.setConfigFolder("config/");
     game.setConfigFileName("config.json");
+    game.setFileCacheBypassEnabled(true);
     // -------------------------------------------------------------------------
     // Overridden protected methods
     game._loadGameSettingsAndExecuteCallback = function (settingsJSON, callback) {

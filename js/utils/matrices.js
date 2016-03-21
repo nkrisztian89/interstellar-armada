@@ -24,7 +24,74 @@ define([
              * Used as error threshold - numbers larger than this can be exchanged for the number 1 in certain places
              * @type Number
              */
-            CLOSE_TO_ONE_THRESHOLD = 0.99999;
+            CLOSE_TO_ONE_THRESHOLD = 0.99999,
+            // ----------------------------------------------------------------------
+            // private variables
+            /**
+             * @typedef {object} TempMatrixObject
+             * @property {Float32Array} matrix
+             * @property {Boolean} used
+             */
+            /**
+             * Stores matrices used for temporary values during matrix calculations so fewer new matrices need to be created.
+             * @type TempMatrixObject[]
+             */
+            _tempMatrices = [],
+            /**
+             * Stores how many new matrices have been created.
+             * @type Number
+             */
+            _matrixCount = 0;
+    // -----------------------------------------------------------------------------
+    // Private functions with the matrix counterF
+    /**
+     * Clears the counter storing how many new matrices have been created.
+     */
+    mat.clearMatrixCount = function () {
+        _matrixCount = 0;
+    };
+    /**
+     * Returns how many matrices have been created using the functions of this module.
+     * @returns {Number}
+     */
+    mat.getMatrixCount = function () {
+        return _matrixCount;
+    };
+    // -----------------------------------------------------------------------------
+    // Private functions with temporary matrices
+    /**
+     * Returns an index at which a free (currently not used) temporary matrix is available.
+     * @returns {Number}
+     */
+    function _getFreeTempMatrixIndex() {
+        var i;
+        for (i = 0; i < _tempMatrices.length; i++) {
+            if (!_tempMatrices[i].used) {
+                return i;
+            }
+        }
+        _tempMatrices.push({
+            used: false,
+            matrix: mat.identity4()
+        });
+        return _tempMatrices.length - 1;
+    }
+    /**
+     * Returns the temporary matrix stored at the passed index as well as marks it as used.
+     * @param {Number} index
+     * @returns {Float32Array}
+     */
+    function _getTempMatrix(index) {
+        _tempMatrices[index].used = true;
+        return _tempMatrices[index].matrix;
+    }
+    /**
+     * Marks the temporary matrix at the passed index as free.
+     * @param {Number} index
+     */
+    function _releaseTempMatrix(index) {
+        _tempMatrices[index].used = false;
+    }
     // -----------------------------------------------------------------------------
     // Functions that create new matrices and constant matrices
     /**
@@ -32,6 +99,7 @@ define([
      * @returns {Float32Array}
      */
     mat.identity3 = function () {
+        _matrixCount++;
         return new Float32Array([
             1.0, 0.0, 0.0,
             0.0, 1.0, 0.0,
@@ -48,6 +116,7 @@ define([
      * @returns {Float32Array}
      */
     mat.identity4 = function () {
+        _matrixCount++;
         return new Float32Array([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -65,6 +134,7 @@ define([
      * @returns {Float32Array}
      */
     mat.null3 = function () {
+        _matrixCount++;
         return new Float32Array([
             0.0, 0.0, 0.0,
             0.0, 0.0, 0.0,
@@ -76,6 +146,7 @@ define([
      * @returns {Float32Array}
      */
     mat.null4 = function () {
+        _matrixCount++;
         return new Float32Array([
             0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0,
@@ -89,6 +160,7 @@ define([
      * @returns {Float32Array}
      */
     mat.matrix3 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[1], m[2],
             m[3], m[4], m[5],
@@ -101,6 +173,7 @@ define([
      * @returns {Float32Array}
      */
     mat.matrix4 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[1], m[2], m[3],
             m[4], m[5], m[6], m[7],
@@ -116,6 +189,7 @@ define([
      * @returns {Float32Array}
      */
     mat.translation4 = function (x, y, z) {
+        _matrixCount++;
         return new Float32Array([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -129,6 +203,7 @@ define([
      * @returns {Float32Array}
      */
     mat.translation4v = function (v) {
+        _matrixCount++;
         return new Float32Array([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -142,6 +217,7 @@ define([
      * @returns {Float32Array}
      */
     mat.translation4m4 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -157,6 +233,7 @@ define([
         var
                 cosAngle = Math.cos(angle),
                 sinAngle = Math.sin(angle);
+        _matrixCount++;
         return new Float32Array([
             cosAngle, -sinAngle,
             sinAngle, cosAngle
@@ -173,6 +250,7 @@ define([
         var
                 cosAngle = Math.cos(angle),
                 sinAngle = Math.sin(angle);
+        _matrixCount++;
         return new Float32Array([
             cosAngle + (1 - cosAngle) * axis[0] * axis[0], (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2], (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1], 0.0,
             (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2], cosAngle + (1 - cosAngle) * axis[1] * axis[1], (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0], 0.0,
@@ -187,6 +265,7 @@ define([
      * @returns {Float32Array}
      */
     mat.rotation4m4 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[1], m[2], 0.0,
             m[4], m[5], m[6], 0.0,
@@ -203,6 +282,7 @@ define([
     mat.lookTowards4 = function (direction, up) {
         var result, right;
         up = up || [0, 1, 0];
+        _matrixCount++;
         result = new Float32Array([
             1, 0, 0, 0,
             0, 1, 0, 0,
@@ -234,6 +314,7 @@ define([
     mat.scaling4 = function (x, y, z) {
         y = y || x;
         z = z || x;
+        _matrixCount++;
         return new Float32Array([
             x, 0.0, 0.0, 0.0,
             0.0, y, 0.0, 0.0,
@@ -252,6 +333,7 @@ define([
      * @returns {Float32Array}
      */
     mat.translationRotation = function (translationMatrix, rotationMatrix) {
+        _matrixCount++;
         return new Float32Array([
             rotationMatrix[0], rotationMatrix[1], rotationMatrix[2], 0.0,
             rotationMatrix[4], rotationMatrix[5], rotationMatrix[6], 0.0,
@@ -268,6 +350,7 @@ define([
      * @returns {Float32Array}
      */
     mat.perspective4 = function (right, top, near, far) {
+        _matrixCount++;
         return new Float32Array([
             near / right, 0.0, 0.0, 0.0,
             0.0, near / top, 0.0, 0.0,
@@ -284,6 +367,7 @@ define([
      * @returns {Float32Array}
      */
     mat.orthographic4 = function (right, top, near, far) {
+        _matrixCount++;
         return new Float32Array([
             1 / right, 0.0, 0.0, 0.0,
             0.0, 1 / top, 0.0, 0.0,
@@ -320,7 +404,7 @@ define([
                 axis = [0, 0, 1];
             }
             result =
-                    mat.mul4(
+                    mat.prod4(
                             result,
                             mat.rotation4(
                                     axis,
@@ -354,7 +438,7 @@ define([
                     axis = jsonArray[i].axis;
                 }
                 result =
-                        mat.mul4(
+                        mat.prod4(
                                 result,
                                 mat.rotation4(
                                         axis,
@@ -373,6 +457,7 @@ define([
      * @returns {Float32Array}
      */
     mat.fromVectorsTo3 = function (vx, vy, vz) {
+        _matrixCount++;
         return new Float32Array([
             vx[0], vx[1], vx[2],
             vy[0], vy[1], vy[2],
@@ -391,6 +476,7 @@ define([
      */
     mat.fromVectorsTo4 = function (vx, vy, vz, vw) {
         vw = vw || [0.0, 0.0, 0.0, 1.0];
+        _matrixCount++;
         return new Float32Array([
             vx[0], vx[1], vx[2], vx.length > 3 ? vx[3] : 0.0,
             vy[0], vy[1], vy[2], vy.length > 3 ? vy[3] : 0.0,
@@ -610,7 +696,7 @@ define([
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchMatrix = mat.correctedOrthogonal4(mat.mul4(m, mat.rotation4([0, 0, 1], -result.yaw)));
+            pitchMatrix = mat.correctedOrthogonal4(mat.prod4(m, mat.rotation4([0, 0, 1], -result.yaw)));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
             if (pitchMatrix[6] > 0) {
                 result.pitch = -result.pitch;
@@ -642,7 +728,7 @@ define([
             result.alpha -= 2 * Math.PI;
         }
         // calculate the matrix we would get if we rotated the Y vector into position
-        halfMatrix = mat.correctedOrthogonal4(mat.mul4(m, mat.rotation4(result.alphaAxis, -result.alpha)));
+        halfMatrix = mat.correctedOrthogonal4(mat.prod4(m, mat.rotation4(result.alphaAxis, -result.alpha)));
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
         dot = vec.dot3([1, 0, 0], mat.getRowA43(halfMatrix));
@@ -708,6 +794,7 @@ define([
      * @returns {Float32Array}
      */
     mat.matrix3from4 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[1], m[2],
             m[4], m[5], m[6],
@@ -721,6 +808,7 @@ define([
      * @returns {Float32Array}
      */
     mat.matrix4from3 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[1], m[2], 0.0,
             m[3], m[4], m[5], 0.0,
@@ -734,6 +822,7 @@ define([
      * @returns {Float32Array} The transposed of m.
      */
     mat.transposed3 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[3], m[6],
             m[1], m[4], m[7],
@@ -746,6 +835,7 @@ define([
      * @returns {Float32Array} The transposed of m.
      */
     mat.transposed4 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             m[0], m[4], m[8], m[12],
             m[1], m[5], m[9], m[13],
@@ -759,8 +849,9 @@ define([
      * @returns {Float32Array} The inverse of m.
      */
     mat.inverse3 = function (m) {
-        var i, j, k, t, u, m2, result, swap;
-        m2 = new Float32Array(m);
+        var i, j, k, t, u, m2, result, swap, index = _getFreeTempMatrixIndex();
+        m2 = _getTempMatrix(index);
+        mat.setMatrix3(m2, m);
         // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
         // the right of the original matrix
         result = mat.identity3();
@@ -818,6 +909,7 @@ define([
                 }
             }
         }
+        _releaseTempMatrix(index);
         return result;
     };
     /**
@@ -826,8 +918,9 @@ define([
      * @returns {Float32Array} The inverse of m.
      */
     mat.inverse4 = function (m) {
-        var i, j, k, t, u, m2, result, swap;
-        m2 = new Float32Array(m);
+        var i, j, k, t, u, m2, result, swap, index = _getFreeTempMatrixIndex();
+        m2 = _getTempMatrix(index);
+        mat.setMatrix4(m2, m);
         // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
         // the right of the original matrix
         result = mat.identity4();
@@ -883,6 +976,7 @@ define([
                 }
             }
         }
+        _releaseTempMatrix(index);
         return result;
     };
     /**
@@ -892,6 +986,7 @@ define([
      * @returns {Float32Array} The calculated inverse 4x4 matrix.
      */
     mat.inverseOfTranslation4 = function (m) {
+        _matrixCount++;
         return new Float32Array([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -923,6 +1018,7 @@ define([
      * @returns {Float32Array} m multiplied by s.
      */
     mat.scaled3 = function (m, s) {
+        _matrixCount++;
         return new Float32Array([
             m[0] * s, m[1] * s, m[2] * s,
             m[3] * s, m[4] * s, m[5] * s,
@@ -936,6 +1032,7 @@ define([
      * @returns {Float32Array} m multiplied by s.
      */
     mat.scaled4 = function (m, s) {
+        _matrixCount++;
         return new Float32Array([
             m[0] * s, m[1] * s, m[2] * s, m[3] * s,
             m[4] * s, m[5] * s, m[6] * s, m[7] * s,
@@ -957,6 +1054,7 @@ define([
                 vy = vec.normal3([m[4], m[5], m[6]]),
                 vz = vec.cross3(vx, vy);
         vy = vec.cross3(vz, vx);
+        _matrixCount++;
         return new Float32Array([
             vx[0], vx[1], vx[2], 0.0,
             vy[0], vy[1], vy[2], 0.0,
@@ -973,6 +1071,7 @@ define([
      * @returns {Float32Array}
      */
     mat.straightened = function (m, epsilon) {
+        _matrixCount++;
         var i, result = new Float32Array(m);
         for (i = 0; i < result.length; i++) {
             result[i] = (Math.abs(m[i]) < epsilon) ?
@@ -1018,7 +1117,8 @@ define([
      * @param {Float32Array} m2 The second 4x4 matrix.
      * @returns {Float32Array} The result 4x4 matrix.
      */
-    mat.add4 = function (m1, m2) {
+    mat.sum4 = function (m1, m2) {
+        _matrixCount++;
         return new Float32Array([
             m1[0] + m2[0], m1[1] + m2[1], m1[2] + m2[2], m1[3] + m2[3],
             m1[4] + m2[4], m1[5] + m2[5], m1[6] + m2[6], m1[7] + m2[7],
@@ -1027,12 +1127,13 @@ define([
         ]);
     };
     /**
-     * Multiplies two 3x3 matrices.
+     * Multiplies two 3x3 matrices and returns the result.
      * @param {Float32Array} m1 The 3x3 matrix on the left of the multiplicaton.
      * @param {Float32Array} m2 The 3x3 matrix on the right of the multiplicaton.
      * @returns {Float32Array} The result 3x3 matrix.
      */
-    mat.mul3 = function (m1, m2) {
+    mat.prod3 = function (m1, m2) {
+        _matrixCount++;
         return new Float32Array([
             m1[0] * m2[0] + m1[1] * m2[3] + m1[2] * m2[6],
             m1[0] * m2[1] + m1[1] * m2[4] + m1[2] * m2[7],
@@ -1046,12 +1147,13 @@ define([
         ]);
     };
     /**
-     * Multiplies two 4x4 matrices.
+     * Multiplies two 4x4 matrices and returns the result.
      * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
      * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
      * @returns {Float32Array} The result 4x4 matrix.
      */
-    mat.mul4 = function (m1, m2) {
+    mat.prod4 = function (m1, m2) {
+        _matrixCount++;
         return new Float32Array([
             m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8] + m1[3] * m2[12],
             m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9] + m1[3] * m2[13],
@@ -1072,6 +1174,18 @@ define([
         ]);
     };
     /**
+     * Multiplies three 4x4 matrices and returns the result.
+     * @param {Float32Array} m1 The first (leftmost) 4x4 matrix
+     * @param {Float32Array} m2 The second (middle) 4x4 matrix
+     * @param {Float32Array} m3 The third (rightmost) 4x4 matrix
+     * @returns {Float32Array}
+     */
+    mat.prod34 = function (m1, m2, m3) {
+        var result = mat.prod4(m1, m2);
+        mat.mul4(result, m3);
+        return result;
+    };
+    /**
      * Returns a 4x4 transformation matrix, which is the result of translating m1
      * by the translation described by m2.
      * @param {Float32Array} m1 A 4x4 transformation matrix.
@@ -1080,6 +1194,7 @@ define([
      * @returns {Float32Array}
      */
     mat.translatedByM4 = function (m1, m2) {
+        _matrixCount++;
         return new Float32Array([
             m1[0], m1[1], m1[2], m1[3],
             m1[4], m1[5], m1[6], m1[7],
@@ -1129,6 +1244,33 @@ define([
         }
     };
     /**
+     * Modifies the matrix m in-place, setting it to a 4x4 rotation matrix.
+     * @param {Float32Array} m The matrix to modify
+     * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.setRotation4 = function (m, axis, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        m[0] = cosAngle + (1 - cosAngle) * axis[0] * axis[0];
+        m[1] = (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2];
+        m[2] = (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1];
+        m[3] = 0.0;
+        m[4] = (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2];
+        m[5] = cosAngle + (1 - cosAngle) * axis[1] * axis[1];
+        m[6] = (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0];
+        m[7] = 0.0;
+        m[8] = (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1];
+        m[9] = (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0];
+        m[10] = cosAngle + (1 - cosAngle) * axis[2] * axis[2];
+        m[11] = 0.0;
+        m[12] = 0.0;
+        m[13] = 0.0;
+        m[14] = 0.0;
+        m[15] = 1.0;
+    };
+    /**
      * Applies a translation to the passed 4x4 transformation matrix described by the passed
      * 3D vector.
      * @param {Float32Array} m A 4x4 matrix
@@ -1151,5 +1293,95 @@ define([
         m[13] += n[13];
         m[14] += n[14];
     };
+    /**
+     * Modifies the passed 4x4 transformation matrix m in-place to be rotated around the given axis by the given angle.
+     * @param {Float32Array} m The matrix to modify
+     * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotate4 = function (m, axis, angle) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                rot = _getTempMatrix(index);
+        mat.setRotation4(rot, axis, angle);
+        mat.mul4(m, rot);
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Multiples the given matrix m1 in place by the matrix m2 from the right.
+     * @param {Float32Array} m1
+     * @param {Float32Array} m2
+     */
+    mat.mul4 = function (m1, m2) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                m3 = _getTempMatrix(index);
+        mat.setMatrix4(m3, m1);
+        m1[0] = m3[0] * m2[0] + m3[1] * m2[4] + m3[2] * m2[8] + m3[3] * m2[12];
+        m1[1] = m3[0] * m2[1] + m3[1] * m2[5] + m3[2] * m2[9] + m3[3] * m2[13];
+        m1[2] = m3[0] * m2[2] + m3[1] * m2[6] + m3[2] * m2[10] + m3[3] * m2[14];
+        m1[3] = m3[0] * m2[3] + m3[1] * m2[7] + m3[2] * m2[11] + m3[3] * m2[15];
+        m1[4] = m3[4] * m2[0] + m3[5] * m2[4] + m3[6] * m2[8] + m3[7] * m2[12];
+        m1[5] = m3[4] * m2[1] + m3[5] * m2[5] + m3[6] * m2[9] + m3[7] * m2[13];
+        m1[6] = m3[4] * m2[2] + m3[5] * m2[6] + m3[6] * m2[10] + m3[7] * m2[14];
+        m1[7] = m3[4] * m2[3] + m3[5] * m2[7] + m3[6] * m2[11] + m3[7] * m2[15];
+        m1[8] = m3[8] * m2[0] + m3[9] * m2[4] + m3[10] * m2[8] + m3[11] * m2[12];
+        m1[9] = m3[8] * m2[1] + m3[9] * m2[5] + m3[10] * m2[9] + m3[11] * m2[13];
+        m1[10] = m3[8] * m2[2] + m3[9] * m2[6] + m3[10] * m2[10] + m3[11] * m2[14];
+        m1[11] = m3[8] * m2[3] + m3[9] * m2[7] + m3[10] * m2[11] + m3[11] * m2[15];
+        m1[12] = m3[12] * m2[0] + m3[13] * m2[4] + m3[14] * m2[8] + m3[15] * m2[12];
+        m1[13] = m3[12] * m2[1] + m3[13] * m2[5] + m3[14] * m2[9] + m3[15] * m2[13];
+        m1[14] = m3[12] * m2[2] + m3[13] * m2[6] + m3[14] * m2[10] + m3[15] * m2[14];
+        m1[15] = m3[12] * m2[3] + m3[13] * m2[7] + m3[14] * m2[11] + m3[15] * m2[15];
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Modifies the passed matrix m in-place to ensure its orthogonality.
+     * @param {Float32Array} m
+     */
+    mat.correctOrthogonal4 = function (m) {
+        var
+                vx = vec.normal3([m[0], m[1], m[2]]),
+                vy = vec.normal3([m[4], m[5], m[6]]),
+                vz = vec.cross3(vx, vy);
+        vy = vec.cross3(vz, vx);
+        m[0] = vx[0];
+        m[1] = vx[1];
+        m[2] = vx[2];
+        m[3] = 0.0;
+        m[4] = vy[0];
+        m[5] = vy[1];
+        m[6] = vy[2];
+        m[7] = 0.0;
+        m[8] = vz[0];
+        m[9] = vz[1];
+        m[10] = vz[2];
+        m[11] = 0.0;
+        m[12] = 0.0;
+        m[13] = 0.0;
+        m[14] = 0.0;
+        m[15] = 1.0;
+    };
+    /**
+     * Modifies the passed matrix m to a "straigthened" version, wich means every value
+     * within the matrix that is at least epsilon-close to -1, 0 or 1 will be changed
+     * to -1, 0 or 1 respectively. Works with both 3x3 and 4x4 matrices.
+     * @param {Float32Array} m The input matrix.
+     * @param {Number} epsilon The difference threshold within the matrix components
+     * will be corrected.
+     */
+    mat.straighten = function (m, epsilon) {
+        var i;
+        for (i = 0; i < m.length; i++) {
+            m[i] = (Math.abs(m[i]) < epsilon) ?
+                    0.0 :
+                    ((Math.abs(1 - m[i]) < epsilon) ?
+                            1.0 :
+                            ((Math.abs(-1 - m[i]) < epsilon) ?
+                                    -1.0 : m[i]));
+        }
+    };
+    // ----------------------------------------------------------------------
+    // Returning the public interface
     return mat;
 });

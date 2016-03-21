@@ -357,6 +357,7 @@ define([
         stopListening: _context.stopListening.bind(_context),
         setScreenCenter: _context.setScreenCenter.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
+        switchToPilotMode: _context.switchToPilotMode.bind(_context),
         switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context)
     };
 });

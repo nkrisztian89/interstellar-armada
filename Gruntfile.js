@@ -28,6 +28,14 @@ module.exports = function (grunt) {
                         to: 'main-optimized.js'
                     }]
             },
+            preOptimize: {
+                src: ['js/utils/matrices.js'],
+                dest: 'js/utils/',
+                replacements: [{
+                        from: '_matrixCount++;',
+                        to: '//_matrixCount++;'
+                    }]
+            },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
             // avoid the overhead of calling the getter functions
             optimize: {
@@ -69,6 +77,17 @@ module.exports = function (grunt) {
                     }, {
                         from: '.getPhysicalModel()',
                         to: '._physicalModel'
+                    }, {
+                        from: 'setFileCacheBypassEnabled(true)',
+                        to: 'setFileCacheBypassEnabled(false)'
+                    }]
+            },
+            postOptimize: {
+                src: ['js/utils/matrices.js'],
+                dest: 'js/utils/',
+                replacements: [{
+                        from: '//_matrixCount++;',
+                        to: '_matrixCount++;'
                     }]
             },
             dev: {
@@ -87,7 +106,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-text-replace');
     // Tasks
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('build', ['requirejs', 'replace:dist', 'replace:optimize']);
+    grunt.registerTask('build', ['replace:preOptimize', 'requirejs', 'replace:dist', 'replace:optimize', 'replace:postOptimize']);
     grunt.renameTask('clean', 'rawClean');
     grunt.registerTask('clean', ['rawClean:dev', 'replace:dev']);
 };
