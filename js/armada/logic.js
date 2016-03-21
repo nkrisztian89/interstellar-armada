@@ -2013,7 +2013,7 @@ define([
         // set the size of the particle that shows the burn
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
-        if (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) {
+        if (graphics.areLuminosityTexturesAvailable()) {
             this._shipModel.setParameter(
                     _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
                     this._slot.group,
@@ -3347,8 +3347,8 @@ define([
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ? [_context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
-            if (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) {
+                    graphics.areLuminosityTexturesAvailable() ? [_context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
+            if (graphics.areLuminosityTexturesAvailable()) {
                 this._visualModel.setParameter(
                         _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
                         0,
@@ -3421,13 +3421,14 @@ define([
                                     mat.translation4v(blinkers[i].getPosition()),
                                     blinkers[i].getParticleStates(),
                                     true,
-                                    blinkers[i].getParticle().getInstancedShader()),
+                                    blinkers[i].getParticle().getInstancedShader(),
+                                    0),
                             false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
                     if ((addSupplements.lightSources === true) && (blinkers[i].getIntensity() > 0)) {
                         scene.addPointLightSource(
                                 new budaScene.PointLightSource(
                                         blinkers[i].getLightColor(),
-                                        blinkers[i].getIntensity(),
+                                        0,
                                         blinkers[i].getPosition(),
                                         [this._visualModel],
                                         blinkers[i].getLightStates(),

@@ -8,18 +8,65 @@
             "shadowMapping": true,
             "shadows": {
                 "quality": 2048,
-                "ranges": [3, 10, 30, 90, 330, 1000],
+                "ranges": [2, 8, 21, 100, 350, 1500],
                 "numRanges": 4,
                 "depthRatio": 1.5
             },
-            "maxPointLights": 64,
-            "maxSpotLights": 7
+            "maxPointLights": 48
         },
         "shaders": {
-            "complexity": "normal",
+            "complexities": [
+                {
+                    "name": "veryLow",
+                    "shadows": false,
+                    "dynamicLights": false,
+                    "maxDirLights": 1,
+                    "luminosityTextures": false,
+                    "reveal": false
+                }, {
+                    "name": "low",
+                    "shadows": false,
+                    "dynamicLights": false,
+                    "maxDirLights": 2,
+                    "luminosityTextures": false,
+                    "reveal": false
+                }, {
+                    "name": "medium",
+                    "shadows": true,
+                    "numShadowMapSamples": 3,
+                    "dynamicLights": true,
+                    "maxDirLights": 2,
+                    "maxSpotLights": 3,
+                    "luminosityTextures": true,
+                    "reveal": true
+                }, {
+                    "name": "high",
+                    "shadows": true,
+                    "numShadowMapSamples": 5,
+                    "dynamicLights": true,
+                    "maxDirLights": 2,
+                    "maxSpotLights": 5,
+                    "luminosityTextures": true,
+                    "reveal": true
+                }, {
+                    "name": "veryHigh",
+                    "shadows": true,
+                    "numShadowMapSamples": 9,
+                    "dynamicLights": true,
+                    "maxDirLights": 2,
+                    "maxSpotLights": 7,
+                    "luminosityTextures": true,
+                    "reveal": true
+                }
+            ],
+            "complexity": "medium",
             "shadowMappingShaderName": "shadowMapping",
+            "maxDirLightsDefineName": "MAX_DIR_LIGHTS",
             "maxPointLightsDefineName": "MAX_POINT_LIGHTS",
             "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS",
+            "maxShadowMapRangesDefineName": "MAX_SHADOW_MAP_RANGES",
+            "maxShadowMapsDefineName": "MAX_SHADOW_MAPS",
+            "numShadowMapSamplesDefineName": "NUM_SHADOW_MAP_SAMPLES",
             "dustLengthDivisor": "200.0",
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR"
         },
@@ -84,7 +131,7 @@
             "showWireframeModel": true,
             "wireframeShaderName": "oneColorReveal",
             "showSolidModel": true,
-            "solidShaderName": "shadowMapReveal",
+            "solidShaderName": "reveal",
             "lightSources": [
                 {
                     "color": [1.0, 1.0, 1.0],

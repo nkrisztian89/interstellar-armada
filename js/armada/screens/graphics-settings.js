@@ -11,6 +11,7 @@
 
 /**
  * @param utils
+ * @param application
  * @param components
  * @param screens
  * @param managedGL
@@ -21,6 +22,7 @@
  */
 define([
     "utils/utils",
+    "modules/application",
     "modules/components",
     "modules/screens",
     "modules/managed-gl",
@@ -29,14 +31,19 @@ define([
     "armada/screens/shared",
     "armada/graphics",
     "utils/polyfill"
-], function (utils, components, screens, managedGL, game, strings, armadaScreens, graphics) {
+], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
             // private functions
             _getMapToCaptionAndValueFunction = function (stringCategory) {
                 return function (element) {
-                    return [strings.get(stringCategory[utils.constantName(element)]), element];
+                    var stringDefinition = stringCategory[utils.constantName(element)];
+                    if (!stringDefinition) {
+                        application.showError("No string specified for setting '" + element + "'!");
+                        return [element, element];
+                    }
+                    return [strings.get(stringDefinition), element];
                 };
             },
             _mapCaption = function (element) {
@@ -79,7 +86,7 @@ define([
              * @type String[][2]
              */
             _getShaderComplexitySettingValues = function () {
-                return utils.getEnumValues(graphics.ShaderComplexity).map(_getMapToCaptionAndValueFunction(strings.SETTING));
+                return graphics.getShaderComplexities().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * In the same format as the other value arrays
@@ -251,7 +258,6 @@ define([
             graphics.setFiltering(_getFilteringSettingValues()[this._filteringSelector.getSelectedIndex()][1]);
             graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
             graphics.setMaxLOD(_getFullRangeSettingValues()[this._lodSelector.getSelectedIndex()][1]);
-            graphics.setShaderComplexity(_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1]);
             graphics.setShadowMapping((this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX));
             graphics.setShadowQuality(_getShadowQualitySettingValues()[this._shadowQualitySelector.getSelectedIndex()][1]);
             graphics.setShadowDistance(_getShadowDistanceSettingValues()[this._shadowDistanceSelector.getSelectedIndex()][1]);
@@ -265,20 +271,24 @@ define([
             return false;
         }.bind(this);
         this._shaderComplexitySelector.onChange = function () {
-            if (_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1] === graphics.ShaderComplexity.NORMAL) {
+            graphics.setShaderComplexity(_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1]);
+            if (graphics.isShadowMappingAvailable()) {
                 this._shadowMappingSelector.show();
                 this._shadowMappingSelector.onChange();
-                this._maxDynamicLightsSelector.show();
             } else {
                 this._shadowMappingSelector.hide();
                 this._shadowQualitySelector.hide();
                 this._shadowDistanceSelector.hide();
+            }
+            if (graphics.areDynamicLightsAvailable()) {
+                this._maxDynamicLightsSelector.show();
+            } else {
                 this._maxDynamicLightsSelector.hide();
             }
         }.bind(this);
         this._shadowMappingSelector.onChange = function () {
             if (this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX) {
-                if (_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1] === graphics.ShaderComplexity.NORMAL) {
+                if (graphics.isShadowMappingAvailable()) {
                     this._shadowQualitySelector.show();
                     this._shadowDistanceSelector.show();
                 }

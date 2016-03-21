@@ -29,7 +29,7 @@ define([
     var
             /**
              * The bits that can be combined to define which render queues should a node be added to.
-             * @type type
+             * @type Object
              */
             RenderQueueBits = {
                 NONE: 0,
@@ -142,8 +142,8 @@ define([
             /**
              * @type String
              */
-            UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME = "numLights",
-            UNIFORM_DIRECTIONAL_LIGHTS_ARRAY_NAME = "lights",
+            UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME = "numDirLights",
+            UNIFORM_DIRECTIONAL_LIGHTS_ARRAY_NAME = "dirLights",
             UNIFORM_NUM_POINT_LIGHTS_NAME = "numPointLights",
             UNIFORM_POINT_LIGHTS_ARRAY_NAME = "pointLights",
             UNIFORM_NUM_SPOT_LIGHTS_NAME = "numSpotLights",
@@ -156,6 +156,7 @@ define([
             UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
             UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME = "shadowMapRanges",
             UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME = "shadowMapDepthRatio",
+            UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME = "shadowMapTextureSize",
             UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps",
             /**
              * The camera used for rendering the distance render queues will have a view distance that is the view distance of the regular
@@ -1449,8 +1450,9 @@ define([
      * @returns {Function}
      */
     RenderableObject.prototype.createTextureLocationGetter = function (role, context) {
+        var contextName = context.getName();
         return function () {
-            return this._textures[role].getTextureBindLocation(context);
+            return this._textures[role].getLastTextureBindLocation(contextName);
         }.bind(this);
     };
     /**
@@ -1462,14 +1464,14 @@ define([
     RenderableObject.prototype.addToContext = function (context) {
         var role;
         if (this._shader) {
-            this._shader.addToContext(context);
+            context.addShader(this._shader);
         }
         if (this._instancedShader) {
-            this._instancedShader.addToContext(context);
+            context.addShader(this._instancedShader);
         }
         for (role in this._textures) {
             if (this._textures.hasOwnProperty(role)) {
-                this._textures[role].addToContext(context);
+                context.addTexture(this._textures[role]);
                 if (this._textures[role] instanceof managedGL.ManagedTexture) {
                     this.setUniformValueFunction(managedGL.getTextureUniformRawName(role), this.createTextureLocationGetter(role, context));
                 } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
@@ -2330,8 +2332,10 @@ define([
      * If only one state is given, the particle will stay forever in that state
      * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
      * @param {ManagedShader} [instancedShader]
+     * @param {Number} [initialSize] If given, the particle's size will initially be set to this value rather than the starting size of the
+     * first particle state.
      */
-    function Particle(model, shader, textures, positionMatrix, states, looping, instancedShader) {
+    function Particle(model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
         var i;
         RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
         this.setSmallestSizeWhenDrawn(0.1);
@@ -2359,7 +2363,7 @@ define([
          * specified in the states of the particle.
          * @type Number
          */
-        this._size = states ? states[0].size : 0;
+        this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
         /**
          * The billboard will be scaled using this number when rendering.
          * Can be set from outside to influence the visible size of the particle.
@@ -5719,13 +5723,14 @@ define([
      * @param {Number} rangeIndex The index of the shadow map range that is to be rendered
      * @param {Number} range The range of this shadow map (the size of the shadow map area on axes X and Y)
      * @param {Number} depth The depth of this shadow map (the size of the shadow map area on axis Z)
+     * @param {Number} translationLength The length of the vector that point from the camera position center to the center of this shadow map.
      */
-    DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
+    DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth, translationLength) {
         var matrix, uniformValueFunctions = {};
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
         // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
         // considering also that the center of the shadow map is ahead of the camera
-        matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), range))), this._orientationMatrix);
+        matrix = mat.mul4(mat.mul4(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), translationLength))), this._orientationMatrix);
         // a matrix referring to shadow map that would have its center at the camera and the unit vector that points from this center towards
         // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
         // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
@@ -5847,7 +5852,7 @@ define([
     PointLightSource.prototype.updateState = function (dt) {
         var nextStateIndex, stateProgress;
         // only animating through states if there is more than one of them
-        if (this._states && this._states.length > 1) {
+        if (this._states && (this._states.length > 1) && (dt > 0)) {
             this._timeSinceLastTransition += dt;
             // find out which state did we arrive to and which is next
             nextStateIndex = (this._currentStateIndex + 1) % this._states.length;
@@ -6075,7 +6080,6 @@ define([
      * @param {Scene~CameraSettings} cameraSettings The properties based on which the camera for this scene will be set up.
      */
     function Scene(left, top, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings) {
-        var i;
         /**
          * The X coordinate of the top left corner of the viewport on the canvas.
          * @type Number
@@ -6147,10 +6151,7 @@ define([
          * smaller than the stored light sources, the ones with higher priority will be chosen for rendering.
          * @type PointLightSource[][]
          */
-        this._pointLightPriorityArrays = new Array(MAX_POINT_LIGHT_PRIORITIES);
-        for (i = 0; i < MAX_POINT_LIGHT_PRIORITIES; i++) {
-            this._pointLightPriorityArrays[i] = [];
-        }
+        this._pointLightPriorityArrays = null;
         /**
          * This array stores the (calculated) data about the point lights that is in the right format to be sent to the shaders as uniforms.
          * @type BudaScene~PointLightUniformData[]
@@ -6292,6 +6293,7 @@ define([
          */
         this._uniformsUpdatedForFrame = false;
         this.clearNodes();
+        this.clearPointLights();
         this._setGeneralUniformValueFunctions();
     }
     /**
@@ -6356,6 +6358,9 @@ define([
             this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME, function () {
                 return this._shadowMapDepthRatio;
             });
+            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME, function () {
+                return this._shadowMapTextureSize;
+            });
         }
         // if a specific index was given, set the values functions for that context
         if (contextIndex !== undefined) {
@@ -6363,7 +6368,7 @@ define([
                 var j, k, shadowMaps = [];
                 for (j = 0; j < this._directionalLights.length; j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
-                        shadowMaps.push(this._contexts[contextIndex].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getTextureBindLocation(this._contexts[contextIndex]));
+                        shadowMaps.push(this._contexts[contextIndex].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getLastTextureBindLocation(this._contexts[contextIndex].getName()));
                     }
                 }
                 return new Int32Array(shadowMaps);
@@ -6451,7 +6456,7 @@ define([
         if (contextIndex !== undefined) {
             // if shadow mapping is to be used, some additional preparations are needed
             if (this._shadowMappingEnabled) {
-                this._shadowMappingShader.addToContext(this._contexts[contextIndex]);
+                this._contexts[contextIndex].addShader(this._shadowMappingShader);
                 this._setShadowMappedShaderUniformValueFunctions(contextIndex);
             }
             for (i = 0; i < this._directionalLights.length; i++) {
@@ -6658,6 +6663,17 @@ define([
         }
         this._rootUINode = new RenderableNode(new RenderableObject3D(null, false, false));
         this._rootUINode.setScene(this);
+    };
+    /**
+     * Removes all the previously added point light sources from the scene.
+     * @returns {undefined}
+     */
+    Scene.prototype.clearPointLights = function () {
+        var i;
+        this._pointLightPriorityArrays = new Array(MAX_POINT_LIGHT_PRIORITIES);
+        for (i = 0; i < MAX_POINT_LIGHT_PRIORITIES; i++) {
+            this._pointLightPriorityArrays[i] = [];
+        }
     };
     /**
      * Returns an array containing all the top level main objects of the scene.
@@ -6909,9 +6925,10 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype._renderShadowMaps = function (context) {
-        var i, j;
+        var i, j, translationLength = 0;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
+            application.log("Rendering shadow maps for scene...", 4);
             // choosing the shadow map shader
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
@@ -6919,7 +6936,8 @@ define([
             for (i = 0; i < this._directionalLights.length; i++) {
                 this._directionalLights[i].reset();
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
-                    this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
+                    translationLength = (this._shadowMapRanges[j] - ((j > 0) ? this._shadowMapRanges[j - 1] : 0));
+                    this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, translationLength);
                     this._renderShadowMap(context);
                 }
             }
@@ -6939,6 +6957,7 @@ define([
      */
     Scene.prototype._renderBackgroundObjects = function (context) {
         var gl = context.gl; // caching the variable for easier access
+        application.log("Rendering background objects of scene...", 4);
         // preparing to render background objects
         gl.enable(gl.BLEND);
         gl.disable(gl.DEPTH_TEST);
@@ -6959,7 +6978,7 @@ define([
         var i, queueLength = renderQueue.length, minimumInstancingCount, count;
         if (queueLength > 0) {
             minimumInstancingCount = renderQueue[0].getMinimumCountForInstancing();
-            if ((minimumInstancingCount > 0) && (queueLength >= minimumInstancingCount) && (context.instancing)) {
+            if ((minimumInstancingCount > 0) && (queueLength >= minimumInstancingCount) && (context.instancingExt)) {
                 count = 0;
                 renderQueue[0].prepareForInstancedRender(context, index, queueLength);
                 for (i = 0; i < queueLength; i++) {
@@ -7067,7 +7086,7 @@ define([
         gl.clear(clearBits);
         // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
         // every time a new shader is set)
-        if (this._uniformsUpdatedForFrame === false) {
+        if ((this._uniformsUpdatedForFrame === false) && context.getCurrentShader()) {
             this.assignUniforms(context, context.getCurrentShader());
         }
         this._uniformsUpdatedForFrame = false;

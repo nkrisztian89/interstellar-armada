@@ -51,20 +51,21 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {Boolean|null}
      */
-    exports.getBooleanValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
+    exports.getBooleanValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
         if (typeof value === "boolean") {
             if (checkFunction) {
-                if (!checkFunction(value)) {
+                if (!checkFunction(value, parentObject)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
                 }
             }
             return value;
         }
         _showTypeError("a boolean", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+        return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
      * @typedef {Function} Types~NumberCallback
@@ -81,20 +82,21 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {Number|null}
      */
-    exports.getNumberValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
+    exports.getNumberValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
         if (typeof value === "number") {
             if (checkFunction) {
-                if (!checkFunction(value)) {
+                if (!checkFunction(value, parentObject)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
                 }
             }
             return value;
         }
         _showTypeError("a number", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+        return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
      * Returns a type-safe number value falling into a specific range. If the given original value is of invalid type, will show an error 
@@ -109,9 +111,10 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {Number|null}
      */
-    exports.getNumberValueInRange = function (name, value, minValue, maxValue, defaultValue, checkFunction, checkFailMessage) {
+    exports.getNumberValueInRange = function (name, value, minValue, maxValue, defaultValue, checkFunction, checkFailMessage, parentObject) {
         if (typeof value === "number") {
             if (((minValue !== undefined) && (value < minValue)) || ((maxValue !== undefined) && (value > maxValue))) {
                 application.showError("Invalid value for " + name + ": out of range (" + ((minValue !== undefined) ? minValue : "...") + "-" + ((maxValue !== undefined) ? maxValue : "...") + "). The setting will be changed to fit the valid range.");
@@ -123,15 +126,15 @@ define([
                 }
             }
             if (checkFunction) {
-                if (!checkFunction(value)) {
+                if (!checkFunction(value, parentObject)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return (defaultValue !== null) ? exports.getNumberValueInRange(name, defaultValue, minValue, maxValue, null, checkFunction, checkFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getNumberValueInRange(name, defaultValue, minValue, maxValue, null, checkFunction, checkFailMessage, parentObject) : null;
                 }
             }
             return value;
         }
         _showTypeError("a number", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getNumberValueInRange(name, defaultValue, minValue, maxValue, null, checkFunction, checkFailMessage) : null;
+        return (defaultValue !== null) ? exports.getNumberValueInRange(name, defaultValue, minValue, maxValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
      * @typedef {Function} Types~StringCallback
@@ -148,20 +151,21 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {String|null}
      */
-    exports.getStringValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
+    exports.getStringValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
         if (typeof value === "string") {
             if (checkFunction) {
-                if (!checkFunction(value)) {
+                if (!checkFunction(value, parentObject)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
                 }
             }
             return value;
         }
         _showTypeError("a string", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+        return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
      * If the given value is one of the possible enumeration values defined in the given enumeration object, it returns it, otherwise shows
@@ -174,13 +178,14 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {}
      */
-    exports.getEnumValue = function (name, enumObject, value, defaultValue, checkFunction, checkFailMessage) {
+    exports.getEnumValue = function (name, enumObject, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
         var safeValue = utils.getSafeEnumValue(enumObject, value);
         if (safeValue !== null) {
             if (checkFunction) {
-                if (!checkFunction(safeValue)) {
+                if (!checkFunction(safeValue, parentObject)) {
                     _showCheckFailError(name, safeValue, defaultValue, checkFailMessage);
                     return defaultValue;
                 }
@@ -205,20 +210,21 @@ define([
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {Object|null}
      */
-    exports.getObjectValue = function (name, value, defaultValue, checkFunction, checkFailMessage) {
+    exports.getObjectValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
         if (typeof value === "object") {
             if (checkFunction) {
-                if (!checkFunction(value)) {
+                if (!checkFunction(value, parentObject)) {
                     _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return (defaultValue !== null) ? exports.getObjectValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getObjectValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
                 }
             }
             return value;
         }
         _showTypeError("an object", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getObjectValue(name, defaultValue, null, checkFunction, checkFailMessage) : null;
+        return (defaultValue !== null) ? exports.getObjectValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
      * Executes type verification on a supplied value based on the passed type information. If the supplied value does not pass the
@@ -247,13 +253,14 @@ define([
      * valid. This will not be applied if the value to be tested is an object to be verified by an object definition object given through
      * the verify parameter.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {}
      */
-    exports.getValueOfType = function (name, type, value, defaultValue, optional, typeParams, checkFunction, checkFailMessage) {
+    exports.getValueOfType = function (name, type, value, defaultValue, optional, typeParams, checkFunction, checkFailMessage, parentObject) {
         typeParams = typeParams || {};
         if (value === undefined) {
             if (defaultValue !== undefined) {
-                return (defaultValue !== null) ? exports.getValueOfType(name, type, defaultValue, null, optional, typeParams, checkFunction, checkFailMessage) : null;
+                return (defaultValue !== null) ? exports.getValueOfType(name, type, defaultValue, null, optional, typeParams, checkFunction, checkFailMessage, parentObject) : null;
             }
             if (!optional) {
                 application.showError("Missing required value of '" + name + "'!");
@@ -261,21 +268,21 @@ define([
             return undefined;
         }
         if (typeof type === "object") {
-            return exports.getValueOfType(name, type.baseType, value, defaultValue, optional, type, checkFunction, checkFailMessage);
+            return exports.getValueOfType(name, type.baseType, value, defaultValue, optional, type, checkFunction, checkFailMessage, parentObject);
         }
         switch (type) {
             case "boolean":
-                return exports.getBooleanValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                return exports.getBooleanValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
             case "number":
                 if (typeParams.range) {
-                    return exports.getNumberValueInRange(name, value, typeParams.range[0], typeParams.range[1], defaultValue, checkFunction, checkFailMessage);
+                    return exports.getNumberValueInRange(name, value, typeParams.range[0], typeParams.range[1], defaultValue, checkFunction, checkFailMessage, parentObject);
                 }
-                return exports.getNumberValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                return exports.getNumberValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
             case "string":
-                return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
             case "enum":
                 if (typeParams.values) {
-                    return exports.getEnumValue(name, typeParams.values, value, defaultValue, checkFunction, checkFailMessage);
+                    return exports.getEnumValue(name, typeParams.values, value, defaultValue, checkFunction, checkFailMessage, parentObject);
                 }
                 application.showError("Missing enum definition object for '" + name + "'!");
                 return null;
@@ -283,9 +290,9 @@ define([
                 if (typeParams.properties) {
                     return exports.getVerifiedObject(name, value, typeParams.properties);
                 }
-                return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage);
+                return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
             case "array":
-                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams, defaultValue, checkFunction, checkFailMessage);
+                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams, defaultValue, checkFunction, checkFailMessage, null, null, parentObject);
             default:
                 application.showError("Unknown type specified for '" + name + "': " + type);
                 return null;
@@ -311,28 +318,29 @@ define([
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
      * @param {Function} [elementCheckFunction] A check function to be run for each element in the array
      * @param {String} [elementCheckFailMessage] An explanatory error message to show if elements of the array fail their check
+     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      * @returns {Boolean}
      */
-    exports.getArrayValue = function (name, value, elementType, elementTypeParams, arrayParams, defaultValue, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) {
+    exports.getArrayValue = function (name, value, elementType, elementTypeParams, arrayParams, defaultValue, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage, parentObject) {
         var result = [], resultElement;
         if (value instanceof Array) {
             if (arrayParams !== undefined) {
                 if ((arrayParams.length !== undefined) && (value.length !== arrayParams.length)) {
                     application.showError("Invalid array length for '" + name + "'! Expected a length of " + arrayParams.length + " and got " + value.length + (defaultValue ? (". Using default value [" + defaultValue.join(", ") + "] instead.") : "."));
-                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage, parentObject) : null;
                 }
                 if ((arrayParams.minLength !== undefined) && (value.length < arrayParams.minLength)) {
                     application.showError("Invalid array length for '" + name + "'! Expected a minimum length of " + arrayParams.minLength + " and got " + value.length + (defaultValue ? (". Using default value [" + defaultValue.join(", ") + "] instead.") : "."));
-                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage, parentObject) : null;
                 }
                 if ((arrayParams.maxLength !== undefined) && (value.length > arrayParams.maxLength)) {
                     application.showError("Invalid array length for '" + name + "'! Expected a maximum length of " + arrayParams.maxLength + " and got " + value.length + (defaultValue ? (". Using default value [" + defaultValue.join(", ") + "] instead.") : "."));
-                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                    return defaultValue ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage, parentObject) : null;
                 }
             }
             if (elementType !== undefined) {
                 value.forEach(function (element, index) {
-                    resultElement = exports.getValueOfType(name + "[" + index + "]", elementType, element, null, false, elementTypeParams, elementCheckFunction, elementCheckFailMessage);
+                    resultElement = exports.getValueOfType(name + "[" + index + "]", elementType, element, null, false, elementTypeParams, elementCheckFunction, elementCheckFailMessage, parentObject);
                     if (resultElement !== null) {
                         result.push(resultElement);
                     }
@@ -341,13 +349,13 @@ define([
             if (checkFunction) {
                 if (!checkFunction(value)) {
                     _showCheckFailError(name, value, "[" + defaultValue.join(", ") + "]", checkFailMessage);
-                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+                    return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage, parentObject) : null;
                 }
             }
             return value;
         }
         _showTypeError("an array", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage) : null;
+        return (defaultValue !== null) ? exports.getArrayValue(name, defaultValue, elementType, elementTypeParams, arrayParams, null, checkFunction, checkFailMessage, elementCheckFunction, elementCheckFailMessage, parentObject) : null;
     };
     /**
      * Verifies a given object's properties to be of certain types given by a passed object definition object. 
@@ -391,7 +399,8 @@ define([
                                 properties: propertyDefinition.properties
                             },
                             propertyDefinition.check,
-                            propertyDefinition.checkFailMessage);
+                            propertyDefinition.checkFailMessage,
+                            value);
                     processedProperties.push(propertyDefinition.name);
                 }
             }

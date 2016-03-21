@@ -23,37 +23,30 @@ define([
     "modules/async-resource",
     "modules/managed-gl",
     "modules/graphics-resources",
-    "modules/buda-scene"
+    "modules/buda-scene",
+    "utils/polyfill"
 ], function (types, application, asyncResource, managedGL, resources, budaScene) {
     "use strict";
     var
             /**
-             * @enum {String}
-             * An enumeration storing the possible values for the shader complexity setting
+             * @enum {Number}
+             * An enumeration storing the possible values for shadow map quality, with the raw values describing the exact shadow map texture size
              */
-            ShaderComplexity = {
-                SIMPLE: "simple",
-                NORMAL: "normal"
+            ShadowMapQuality = {
+                LOW: 1024,
+                MEDIUM: 2048,
+                HIGH: 4096
             },
-    /**
-     * @enum {Number}
-     * An enumeration storing the possible values for shadow map quality, with the raw values describing the exact shadow map texture size
-     */
-    ShadowMapQuality = {
-        LOW: 1024,
-        MEDIUM: 2048,
-        HIGH: 4096
-    },
     /**
      * @enum {Number}
      * The possible values that can be set for maximum number of dynamic lights
      */
     DynamicLightsAmount = {
         OFF: 0,
-        MINIMUM: 16,
-        FEW: 32,
-        MEDIUM: 64,
-        MANY: 128,
+        MINIMUM: 12,
+        FEW: 24,
+        MEDIUM: 48,
+        MANY: 96,
         MAXIMUM: 192
     },
     /**
@@ -71,16 +64,6 @@ define([
              * @type String[]
              */
             DEFAULT_TEXTURE_QUALITIES = ["low", "medium", "high"],
-            /**
-             * The default shader complexity setting
-             * @type String
-             */
-            DEFAULT_SHADER_COMPLEXITY = ShaderComplexity.NORMAL,
-            /**
-             * The name of the default shader to use for rendering shadow maps
-             * @type String
-             */
-            DEFAULT_SHADOW_MAPPING_SHADER_NAME = "shadowMapping",
             /**
              * Whether shadow mapping should be enabled by default
              * @type Boolean
@@ -112,48 +95,175 @@ define([
              */
             DEFAULT_MAX_POINT_LIGHTS = DynamicLightsAmount.MEDIUM,
             /**
-             * The default value for maximum number of spot lights
-             * @type Number
+             * A constant defining the structure of shader descriptor object, used to verify the shader complexity descriptors read from JSON.
+             * @type Object
              */
-            DEFAULT_MAX_SPOT_LIGHTS = 7,
-            /**
-             * The default value for the divisor of the dust particle length in shaders. The original value defined in the shader is
-             * replaced by this value, and since it has to be strictly given in floating point format for the shader to compile, it is 
-             * defined as a string here.
-             * @type String
-             */
-            DEFAULT_DUST_LENGTH_DIVISOR = "200.0",
-            /**
-             * The default name of the #define that determines the maximum number of dynamic point lights in shaders.
-             * @type String
-             */
-            DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME = "MAX_POINT_LIGHTS",
-            /**
-             * The default name of the #define that determines the maximum number of dynamic spot lights in shaders.
-             * @type String
-             */
-            DEFAULT_MAX_SPOT_LIGHTS_DEFINE_NAME = "MAX_SPOT_LIGHTS",
-            /**
-             * The default name of the #define that determined the divisor by which the length of dust particles is divided.
-             * @type String
-             */
-            DEFAULT_DUST_LENGTH_DIVISOR_DEFINE_NAME = "DUST_LENGTH_DIVISOR",
-            /**
-             * Shaders that implement the same function but without shadows should be referenced among the variant shaders with this type key
-             * @type String
-             */
-            SHADER_VARIANT_WITHOUT_SHADOWS_NAME = "withoutShadows",
+            SHADER_COMPLEXITY_DESCRIPTOR_TYPE = {
+                baseType: "object",
+                properties: {
+                    NAME: {
+                        name: "name",
+                        type: "string"
+                    },
+                    SHADOW_MAPPING_AVAILABLE: {
+                        name: "shadows",
+                        type: "boolean"
+                    },
+                    NUM_SHADOW_MAP_SAMPLES: {
+                        name: "numShadowMapSamples",
+                        type: "number",
+                        defaultValue: 5
+                    },
+                    DYNAMIC_LIGHTS_AVAILABLE: {
+                        name: "dynamicLights",
+                        type: "boolean"
+                    },
+                    MAX_DIR_LIGHTS: {
+                        name: "maxDirLights",
+                        type: "number"
+                    },
+                    MAX_SPOT_LIGHTS: {
+                        name: "maxSpotLights",
+                        type: "number",
+                        defaultValue: 7
+                    },
+                    LUMINOSITY_TEXTURES_AVAILABLE: {
+                        name: "luminosityTextures",
+                        type: "boolean"
+                    },
+                    REVEAL_AVAILABLE: {
+                        name: "reveal",
+                        type: "boolean"
+                    }
+                }
+            },
+    /**
+     * The array of shader complexity descriptors will be read from the property with this name in the shader settings JSON.
+     * @type String
+     */
+    SHADER_COMPLEXITIES_PROPERTY_NAME = "complexities",
+            SHADER_SETTINGS = {
+                /**
+                 * The array storing the descriptors for the available shader complexities, from the least complex to the most complex.
+                 */
+                COMPLEXITIES: {
+                    name: SHADER_COMPLEXITIES_PROPERTY_NAME,
+                    type: "array",
+                    elementType: SHADER_COMPLEXITY_DESCRIPTOR_TYPE,
+                    minLength: 1
+                },
+                /**
+                 * The preferred complexity level of shaders. If a variant for a shader is available with the same name (key)
+                 * as the current shader complexity, then that shader is used instead of the original one.
+                 */
+                COMPLEXITY: {
+                    name: "complexity",
+                    type: "string",
+                    defaultValue: "medium",
+                    check: function (value, shaderSettings) {
+                        var i, shaderComplexities = shaderSettings[SHADER_COMPLEXITIES_PROPERTY_NAME];
+                        for (i = 0; i < shaderComplexities.length; i++) {
+                            if (shaderComplexities[i].name === value) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    },
+                    checkFailMessage: "The specified shader complexity is not one of the specified available complexities."
+                },
+                /**
+                 * Name of the shader that should be used when rendering the shadow maps.
+                 */
+                SHADOW_MAPPING_SHADER_NAME: {
+                    name: "shadowMappingShaderName",
+                    type: "string",
+                    defaultValue: "shadowMapping"
+                },
+                /**
+                 * Name of the #define that determines the maximum number of directional lights in shaders.
+                 */
+                MAX_DIR_LIGHTS_DEFINE_NAME: {
+                    name: "maxDirLightsDefineName",
+                    type: "string",
+                    defaultValue: "MAX_DIR_LIGHTS"
+                },
+                /**
+                 * The name of the #define that determines the maximum number of dynamic point lights in shaders.
+                 */
+                MAX_POINT_LIGHTS_DEFINE_NAME: {
+                    name: "maxPointLightsDefineName",
+                    type: "string",
+                    defaultValue: "MAX_POINT_LIGHTS"
+                },
+                /**
+                 * The name of the #define that determines the maximum number of dynamic spot lights in shaders.
+                 * @type String
+                 */
+                MAX_SPOT_LIGHTS_DEFINE_NAME: {
+                    name: "maxSpotLightsDefineName",
+                    type: "string",
+                    defaultValue: "MAX_SPOT_LIGHTS"
+                },
+                /**
+                 * The divisor of the dust particle length in shaders. The original value defined in the shader is replaced by this value, 
+                 * and since it has to be strictly given in floating point format for the shader to compile, it is defined as a string here.
+                 */
+                DUST_LENGTH_DIVISOR: {
+                    name: "dustLengthDivisor",
+                    type: "string",
+                    defaultValue: "200.0"
+                },
+                /**
+                 * The name of the #define that determines the divisor by which the length of dust particles is divided.
+                 */
+                DUST_LENGTH_DIVISOR_DEFINE_NAME: {
+                    name: "dustLengthDivisorDefineName",
+                    type: "string",
+                    defaultValue: "DUST_LENGTH_DIVISOR"
+                },
+                /**
+                 * The name of the #define that determines the maximum number of available shadow map ranges (for each directional light 
+                 * source) in shaders.
+                 */
+                MAX_SHADOW_MAP_RANGES_DEFINE_NAME: {
+                    name: "maxShadowMapRangesDefineName",
+                    type: "string",
+                    defaultValue: "MAX_SHADOW_MAP_RANGES"
+                },
+                /**
+                 * The name of the #define that determines the maximum number of available shadow maps (which will be set to maximum number
+                 * of light sources * maximum number of shadow map ranges) in shaders.
+                 */
+                MAX_SHADOW_MAPS_DEFINE_NAME: {
+                    name: "maxShadowMapsDefineName",
+                    type: "string",
+                    defaultValue: "MAX_SHADOW_MAPS"
+                },
+                /**
+                 * The name of the #define that determines how many samples of shadow maps should be taken and averaged to determine how
+                 * much a certain point is in shadow.
+                 */
+                NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME: {
+                    name: "numShadowMapSamplesDefineName",
+                    type: "string",
+                    defaultValue: "NUM_SHADOW_MAP_SAMPLES"
+                }
+            },
+    /**
+     * Shaders that implement the same function but without shadows should be referenced among the variant shaders with this type key
+     * @type String
+     */
+    SHADER_VARIANT_WITHOUT_SHADOWS_NAME = "withoutShadows",
             /**
              * Shaders that implement the same function but without dynamic lights should be referenced among the variant shaders with this type key
              * @type String
              */
             SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME = "withoutDynamicLights",
             /**
-             * 
+             * Stores a default context the methods of which are exposed in the interface of this module.
              * @type GraphicsContext
              */
             _context;
-    Object.freeze(ShaderComplexity);
     Object.freeze(ShadowMapQuality);
     Object.freeze(DynamicLightsAmount);
     // ############################################################################################
@@ -206,17 +316,6 @@ define([
          */
         this._textureQualityPreferenceList = null;
         /**
-         * (enum ShaderComplexity) The preferred complexity level of shaders. If a variant for a shader is available with the same name (key)
-         * as the current shader complexity, then that shader is used instead of the original one.
-         * @type String
-         */
-        this._shaderComplexity = null;
-        /**
-         * The name of the shader to use for rendering shadow maps
-         * @type String
-         */
-        this._shadowMappingShaderName = null;
-        /**
          * Whether shadow mapping is currently enabled.
          * @type Boolean
          */
@@ -252,32 +351,11 @@ define([
          */
         this._maxPointLights = 0;
         /**
-         * The maximum number of spot lights to be used in shaders.
-         * @type Number
+         * The object that stores all the shader settings, verified using SHADER_SETTINGS (which describes its exact structure) when loaded 
+         * from JSON.
+         * @type Object
          */
-        this._maxSpotLights = 0;
-        /**
-         * The value for the divisor of the dust particle length in shaders. The original value defined in the shader is
-         * replaced by this value, and since it has to be strictly given in floating point format for the shader to compile, it is 
-         * defined as a string here.
-         * @type String
-         */
-        this._dustLengthDivisor = null;
-        /**
-         * The name of the #define that determines the maximum number of dynamic point lights in shaders.
-         * @type String
-         */
-        this._maxPointLightsDefineName = null;
-        /**
-         * The name of the #define that determines the maximum number of dynamic spot lights in shaders.
-         * @type String
-         */
-        this._maxSpotLightsDefineName = null;
-        /**
-         * The name of the #define that determined the divisor by which the length of dust particles is divided.
-         * @type String
-         */
-        this._dustLengthDivisorDefineName = null;
+        this._shaderSettings = null;
     }
     GraphicsContext.prototype = new asyncResource.AsyncResource();
     GraphicsContext.prototype.constructor = GraphicsContext;
@@ -321,23 +399,15 @@ define([
         this._textureQualities = DEFAULT_TEXTURE_QUALITIES;
         this._textureQuality = this._textureQualities[this._textureQualities[this._textureQualities.length - 1]];
         this._updateTextureQualityPreferenceList();
-        this._shaderComplexity = DEFAULT_SHADER_COMPLEXITY;
-        this._shadowMappingShaderName = DEFAULT_SHADOW_MAPPING_SHADER_NAME;
         this._shadowMapping = DEFAULT_SHADOW_MAPPING_ENABLED;
         this._shadowQuality = DEFAULT_SHADOW_QUALITY;
         this._shadowRanges = DEFAULT_SHADOW_MAP_RANGES;
         this._shadowDistance = DEFAULT_SHADOW_DISTANCE;
         this._shadowDepthRatio = DEFAULT_SHADOW_DEPTH_RATIO;
         this._maxPointLights = DEFAULT_MAX_POINT_LIGHTS;
-        this._maxSpotLights = DEFAULT_MAX_SPOT_LIGHTS;
         // overwrite with the settings from the data JSON, if present
         if (typeof dataJSON.shaders === "object") {
-            this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, dataJSON.shaders.complexity, DEFAULT_SHADER_COMPLEXITY);
-            this._shadowMappingShaderName = types.getStringValue("shadow mapping shader name", dataJSON.shaders.shadowMappingShaderName, DEFAULT_SHADOW_MAPPING_SHADER_NAME);
-            this._maxPointLightsDefineName = types.getStringValue("maxPointLightsDefineName", dataJSON.shaders.maxPointLightsDefineName, DEFAULT_MAX_POINT_LIGHTS_DEFINE_NAME);
-            this._maxSpotLightsDefineName = types.getStringValue("maxSpotLightsDefineName", dataJSON.shaders.maxSpotLightsDefineName, DEFAULT_MAX_SPOT_LIGHTS_DEFINE_NAME);
-            this._dustLengthDivisor = types.getStringValue("dustLengthDivisor", dataJSON.shaders.dustLengthDivisor, DEFAULT_DUST_LENGTH_DIVISOR);
-            this._dustLengthDivisorDefineName = types.getStringValue("dustLengthDivisorDefineName", dataJSON.shaders.dustLengthDivisorDefineName, DEFAULT_DUST_LENGTH_DIVISOR_DEFINE_NAME);
+            this._shaderSettings = types.getVerifiedObject("shader settings", dataJSON.shaders, SHADER_SETTINGS);
         }
         if (typeof dataJSON.context === "object") {
             this._antialiasing = types.getBooleanValue("antialiasing", dataJSON.context.antialiasing);
@@ -363,7 +433,6 @@ define([
                 }
             }
             this._maxPointLights = types.getEnumValue("maxPointLights", DynamicLightsAmount, dataJSON.context.maxPointLights, DEFAULT_MAX_POINT_LIGHTS);
-            this._maxSpotLights = types.getNumberValue("maxSpotLights", dataJSON.context.maxSpotLights, DEFAULT_MAX_SPOT_LIGHTS);
         }
         // load the LOD load settings (maximum loaded LOD)
         this._maxLoadedLOD = dataJSON.levelOfDetailSettings.lodLoadProfile.maxLevel;
@@ -533,22 +602,38 @@ define([
      * @returns {String}
      */
     GraphicsContext.prototype.getShaderComplexity = function () {
-        return this._shaderComplexity;
+        return this.getShaderSetting(SHADER_SETTINGS.COMPLEXITY);
     };
     /**
-     * Sets a new shader complexity setting.
-     * @param {String} value Possible values: normal, simple.
+     * Sets a new shader complexity level.
+     * @param {String} value Needs to be one of the available shader complexities described in the shader settings JSON.
      */
     GraphicsContext.prototype.setShaderComplexity = function (value) {
-        this._shaderComplexity = types.getEnumValue("shader complexity", ShaderComplexity, value, DEFAULT_SHADER_COMPLEXITY);
-        localStorage.interstellarArmada_graphics_shaderComplexity = this._shaderComplexity;
+        if (this.getShaderComplexities().indexOf(value) >= 0) {
+            this.setShaderSetting(SHADER_SETTINGS.COMPLEXITY, value);
+            localStorage.interstellarArmada_graphics_shaderComplexity = this.getShaderComplexity();
+        } else {
+            application.showError(
+                    "Attempting to set shader complexity to '" + value + "', which is not one of the available options (" + this.getShaderComplexities().join(", ") + ").",
+                    "minor",
+                    "The shader complexity will stay '" + this.getShaderComplexity() + "'.");
+        }
+    };
+    /**
+     * Return a list containing the names of all available shader complexity levels that can be set.
+     * @returns {String[]}
+     */
+    GraphicsContext.prototype.getShaderComplexities = function () {
+        return this.getShaderSetting(SHADER_SETTINGS.COMPLEXITIES).map(function (complexityDescriptor) {
+            return complexityDescriptor.name;
+        });
     };
     /**
      * Returns the name of the shader that is to be used for rendering shadow maps
      * @returns {String|null}
      */
     GraphicsContext.prototype.getShadowMappingShaderName = function () {
-        return this._shadowMappingShaderName;
+        return this.getShaderSetting(SHADER_SETTINGS.SHADOW_MAPPING_SHADER_NAME);
     };
     /**
      * Returns whether shadow mapping is enabled.
@@ -616,6 +701,22 @@ define([
         return this._shadowDepthRatio;
     };
     /**
+     * Returns the shader complexity descriptor object for the currently set shader complexity level.
+     * @returns {Object}
+     */
+    GraphicsContext.prototype._getShaderComplexityDescriptor = function () {
+        return this.getShaderSetting(SHADER_SETTINGS.COMPLEXITIES).find(function (complexityDescriptor) {
+            return complexityDescriptor.name === this.getShaderSetting(SHADER_SETTINGS.COMPLEXITY);
+        }, this);
+    };
+    /**
+     * Returns the maximum number of directional lights that should be used in shaders.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getMaxDirLights = function () {
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.MAX_DIR_LIGHTS.name];
+    };
+    /**
      * Returns the maximum number of dynamic lights that should be used in shaders.
      * @returns {Number}
      */
@@ -631,18 +732,62 @@ define([
         localStorage.interstellarArmada_graphics_maxPointLights = this._maxPointLights;
     };
     /**
-     * Returns the maximum number of spot lights that should be used in shaders.
+     * Returns the maximum number of spot lights that can be used in shaders.
      * @returns {Number}
      */
     GraphicsContext.prototype.getMaxSpotLights = function () {
-        return this._maxSpotLights;
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.MAX_SPOT_LIGHTS.name];
     };
     /**
-     * Returns the value by which the original value defined as the dust length divisor needs to be replaced in shader sources.
-     * @returns {String}
+     * Returns the shader setting corresponding to the passed setting definition object. (i.e. a property of SHADER_SETTINGS)
+     * @param {Object} settingDefinition
+     * @returns {}
      */
-    GraphicsContext.prototype.getDustLengthDivisor = function () {
-        return this._dustLengthDivisor;
+    GraphicsContext.prototype.getShaderSetting = function (settingDefinition) {
+        return this._shaderSettings[settingDefinition.name];
+    };
+    /**
+     * Sets the passed value as the new shader setting corresponding to the passed setting definition object (i.e. a property of SHADER_SETTINGS)
+     * @param {Object} settingDefinition
+     * @param {} value
+     */
+    GraphicsContext.prototype.setShaderSetting = function (settingDefinition, value) {
+        this._shaderSettings[settingDefinition.name] = value;
+    };
+    /**
+     * Returns how many samples should shaders take (and average) of the shadow maps to determine how much a point is in shadow.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getNumShadowMapSamples = function () {
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.NUM_SHADOW_MAP_SAMPLES.name];
+    };
+    /**
+     * Returns whether shadow mapping is available according to the currently set shader complexity level.
+     * @returns {Boolean}
+     */
+    GraphicsContext.prototype.isShadowMappingAvailable = function () {
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.SHADOW_MAPPING_AVAILABLE.name];
+    };
+    /**
+     * Returns whether luminosity textures are available according to the currently set shader complexity level.
+     * @returns {Boolean}
+     */
+    GraphicsContext.prototype.areLuminosityTexturesAvailable = function () {
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.LUMINOSITY_TEXTURES_AVAILABLE.name];
+    };
+    /**
+     * Returns whether the reveal effect is available according to the currently set shader complexity level.
+     * @returns {Boolean}
+     */
+    GraphicsContext.prototype.isRevealAvailable = function () {
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.REVEAL_AVAILABLE.name];
+    };
+    /**
+     * Returns whether dynamic (point and spot) lights are available according to the currently set shader complexity level.
+     * @returns {Boolean}
+     */
+    GraphicsContext.prototype.areDynamicLightsAvailable = function () {
+        return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties.DYNAMIC_LIGHTS_AVAILABLE.name];
     };
     /**
      * Return shader resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
@@ -666,9 +811,13 @@ define([
      */
     GraphicsContext.prototype.getManagedShader = function (shaderName) {
         var replacedDefines = {};
-        replacedDefines[this._maxPointLightsDefineName] = this.getMaxPointLights();
-        replacedDefines[this._maxSpotLightsDefineName] = this.getMaxSpotLights();
-        replacedDefines[this._dustLengthDivisorDefineName] = this.getDustLengthDivisor();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_DIR_LIGHTS_DEFINE_NAME)] = this.getMaxDirLights();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_POINT_LIGHTS_DEFINE_NAME)] = this.getMaxPointLights();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_SPOT_LIGHTS_DEFINE_NAME)] = this.getMaxSpotLights();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_SHADOW_MAP_RANGES_DEFINE_NAME)] = this.getShadowDistance();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_SHADOW_MAPS_DEFINE_NAME)] = this.getMaxDirLights() * this.getShadowDistance();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME)] = this.getNumShadowMapSamples();
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderSetting(SHADER_SETTINGS.DUST_LENGTH_DIVISOR);
         return this.getShader(shaderName).getManagedShader(replacedDefines);
     };
     /**
@@ -687,7 +836,7 @@ define([
      * @returns {Boolean}
      */
     function shouldUseShadowMapping() {
-        return _context.isShadowMappingEnabled() && (_context.getShaderComplexity() === ShaderComplexity.NORMAL);
+        return _context.isShadowMappingEnabled() && (_context.isShadowMappingAvailable());
     }
     /**
      * Returns the resource for the shader that is to be used when rendering shadow maps
@@ -716,7 +865,6 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        ShaderComplexity: ShaderComplexity,
         ShadowMapQuality: ShadowMapQuality,
         DynamicLightsAmount: DynamicLightsAmount,
         loadSettingsFromJSON: _context.loadFromJSON.bind(_context),
@@ -735,6 +883,7 @@ define([
         getLODContext: _context.getLODContext.bind(_context),
         getShaderComplexity: _context.getShaderComplexity.bind(_context),
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
+        getShaderComplexities: _context.getShaderComplexities.bind(_context),
         getShadowMappingShaderName: _context.getShadowMappingShaderName.bind(_context),
         isShadowMappingEnabled: _context.isShadowMappingEnabled.bind(_context),
         setShadowMapping: _context.setShadowMapping.bind(_context),
@@ -743,9 +892,14 @@ define([
         getShadowDistance: _context.getShadowDistance.bind(_context),
         setShadowDistance: _context.setShadowDistance.bind(_context),
         getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
+        getMaxDirLights: _context.getMaxDirLights.bind(_context),
         getMaxPointLights: _context.getMaxPointLights.bind(_context),
         setMaxPointLights: _context.setMaxPointLights.bind(_context),
         getMaxSpotLights: _context.getMaxSpotLights.bind(_context),
+        isShadowMappingAvailable: _context.isShadowMappingAvailable.bind(_context),
+        areLuminosityTexturesAvailable: _context.areLuminosityTexturesAvailable.bind(_context),
+        isRevealAvailable: _context.isRevealAvailable.bind(_context),
+        areDynamicLightsAvailable: _context.areDynamicLightsAvailable.bind(_context),
         getShader: _context.getShader.bind(_context),
         getManagedShader: _context.getManagedShader.bind(_context),
         getModel: _context.getModel.bind(_context),

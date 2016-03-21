@@ -48,7 +48,11 @@ define([
             RESIZEABLE_CLASS_NAME = "resizeable",
             LOOP_CANCELED = -1,
             LOOP_REQUESTANIMFRAME = -2,
-            MENU_COMPONENT_NAME = "menu";
+            MENU_COMPONENT_NAME = "menu",
+            ANTIALIASING_CHANGE_ERROR_STRING = {
+                name: "error.antialiasingChange",
+                defaultValue: "The antialiasing setting has been changed. Please restart the application to apply the new setting!"
+            };
     // #########################################################################
     /**
      * @typedef {Object} HTMLScreen~Style
@@ -497,9 +501,46 @@ define([
      */
     ScreenCanvas.prototype.getManagedContext = function () {
         if (!this._context) {
-            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, this._antialiasing, this._filtering);
+            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id") + performance.now(), this._canvas, this._antialiasing, this._filtering);
         }
         return this._context;
+    };
+    /**
+     * If a managed context has already been created for this canvas, clears it so that it can be safely set up again with e.g. new 
+     * framebuffers or vertexbuffers. Does not remove the added resources from the context.
+     */
+    ScreenCanvas.prototype.clearManagedContext = function () {
+        if (this._context) {
+            this._context.clear();
+        }
+    };
+    /**
+     * Sets a new antialiasing setting for the managed context to be created for this canvas, or if it was already created, notifies a user
+     * that a restart is required.
+     * @param {Boolean} value
+     * @returns {Boolean} Whether the antialiasing value is now the same as the passed one.
+     */
+    ScreenCanvas.prototype.setAntialiasing = function (value) {
+        if (value !== this._antialiasing) {
+            if (this._context) {
+                application.showError(strings.get(ANTIALIASING_CHANGE_ERROR_STRING));
+                return false;
+            }
+            this._antialiasing = value;
+        }
+        return true;
+    };
+    /**
+     * Sets a new filtering option for the textures rendered to the managed context of this canvas.
+     * @param {String} value (enum ManagedGL.TextureFiltering)
+     */
+    ScreenCanvas.prototype.setFiltering = function (value) {
+        if (value !== this._filtering) {
+            this._filtering = value;
+            if (this._context) {
+                this._context.setFiltering(this._filtering);
+            }
+        }
     };
     // #########################################################################
     /**
@@ -578,6 +619,10 @@ define([
      * This removes all references to the related scenes existing in this object.
      */
     HTMLScreenWithCanvases.prototype.clearSceneCanvasBindings = function () {
+        var i;
+        for (i = 0; i < this._sceneCanvasBindings.length; i++) {
+            this._sceneCanvasBindings[i].canvas.clearManagedContext();
+        }
         this._sceneCanvasBindings = [];
     };
     /**
@@ -649,6 +694,40 @@ define([
         scene.addToContext(canvas.getManagedContext());
         if (this._renderLoop !== LOOP_CANCELED) {
             canvas.getManagedContext().setup();
+        }
+    };
+    /**
+     * Sets a new antialiasing setting for the managed contexts to be created for the canvases of this screen, or if some were already 
+     * created with a different antialiasing setting, notifies a user that a restart is required.
+     * @param {Boolean} value
+     */
+    HTMLScreenWithCanvases.prototype.setAntialiasing = function (value) {
+        var canvasName;
+        if (value !== this._antialiasing) {
+            this._antialiasing = value;
+            for (canvasName in this._canvases) {
+                if (this._canvases.hasOwnProperty(canvasName)) {
+                    if (!this._canvases[canvasName].setAntialiasing(this._antialiasing)) {
+                        return;
+                    }
+                }
+            }
+        }
+    };
+    /**
+     * Sets a new filtering option for the textures rendered to the managed contexts of the canvases of this screen.
+     * @param {String} value (enum ManagedGL.TextureFiltering)
+     */
+    HTMLScreenWithCanvases.prototype.setFiltering = function (value) {
+        var canvasName;
+        value = types.getEnumValue("HTMLScreenWithCanvases.filtering", managedGL.TextureFiltering, value, this._filtering);
+        if (value !== this._filtering) {
+            this._filtering = value;
+            for (canvasName in this._canvases) {
+                if (this._canvases.hasOwnProperty(canvasName)) {
+                    this._canvases[canvasName].setFiltering(this._filtering);
+                }
+            }
         }
     };
     /**

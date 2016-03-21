@@ -213,7 +213,7 @@
             "name": "oneColor",
             "vertexShaderSource": "mesh/oneColor.vert",
             "fragmentShaderSource": "mesh/oneColor.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
@@ -222,7 +222,7 @@
             "name": "colored",
             "vertexShaderSource": "mesh/colored.vert",
             "fragmentShaderSource": "mesh/colored.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_color": "color"
@@ -230,12 +230,9 @@
         },
         {
             "name": "textured",
-            "variants": {
-                "simple": "colored"
-            },
             "vertexShaderSource": "mesh/textured.vert",
             "fragmentShaderSource": "mesh/textured.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord",
@@ -244,12 +241,9 @@
         },
         {
             "name": "lambert",
-            "variants": {
-                "simple": "textured"
-            },
             "vertexShaderSource": "mesh/lambert.vert",
             "fragmentShaderSource": "mesh/lambert.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord",
@@ -259,12 +253,9 @@
         },
         {
             "name": "lambert-with-luminosity",
-            "variants": {
-                "simple": "lambert"
-            },
             "vertexShaderSource": "mesh/lambert-with-luminosity.vert",
             "fragmentShaderSource": "mesh/lambert-with-luminosity.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord",
@@ -274,80 +265,30 @@
             }
         },
         {
-            "name": "simple",
-            "variants": {
-                "simple": "lambert-with-luminosity"
-            },
-            "vertexShaderSource": "mesh/simple.vert",
-            "fragmentShaderSource": "mesh/simple.frag",
-            "blendType": "mix",
-            "vertexAttributeRoles": {
-                "a_position": "position",
-                "a_texCoord": "texCoord",
-                "a_normal": "normal",
-                "a_color": "color",
-                "a_luminosity": "luminosity",
-                "a_shininess": "shininess"
-            }
-        },
-        {
-            "name": "simpleReveal",
-            "variants": {
-                "simple": "lambert-with-luminosity"
-            },
-            "vertexShaderSource": "mesh/simpleWithModelPos.vert",
-            "fragmentShaderSource": "mesh/simpleReveal.frag",
-            "blendType": "mix",
-            "vertexAttributeRoles": {
-                "a_position": "position",
-                "a_texCoord": "texCoord",
-                "a_normal": "normal",
-                "a_color": "color",
-                "a_luminosity": "luminosity",
-                "a_shininess": "shininess",
-                "a_index": "triangleIndex"
-            }
-        },
-        {
             "name": "oneColorReveal",
             "variants": {
-                "simple": "oneColor"
+                "veryLow": "oneColor",
+                "low": "oneColor"
             },
-            "vertexShaderSource": "mesh/oneColorReveal.vert",
-            "fragmentShaderSource": "mesh/oneColorReveal.frag",
-            "blendType": "mix",
+            "vertexShaderSource": "mesh/reveal-oneColor.vert",
+            "fragmentShaderSource": "mesh/reveal-oneColor.frag",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
         },
         {
-            "name": "ship-no-dynamic-lights",
-            "variants": {
-                "simple": "lambert-with-luminosity"
-            },
-            "vertexShaderSource": "mesh/ship.vert",
-            "fragmentShaderSource": "mesh/ship-no-dynamic-lights.frag",
-            "blendType": "mix",
-            "vertexAttributeRoles": {
-                "a_position": "position",
-                "a_texCoord": "texCoord",
-                "a_normal": "normal",
-                "a_color": "color",
-                "a_luminosity": "luminosity",
-                "a_shininess": "shininess",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
-            }
-        },
-        {
             "name": "ship",
             "variants": {
-                "simple": "lambert-with-luminosity",
-                "withoutDynamicLights": "ship-no-dynamic-lights"
+                "veryLow": "lambert-with-luminosity",
+                "low": "ship-low",
+                "veryHigh": "ship-veryHigh",
+                "withoutDynamicLights": "ship-no-dynamic-lights",
+                "withoutShadows": "ship-no-shadows"
             },
             "vertexShaderSource": "mesh/ship.vert",
             "fragmentShaderSource": "mesh/ship.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord",
@@ -360,14 +301,10 @@
             }
         },
         {
-            "name": "shadowMapReveal",
-            "variants": {
-                "simple": "lambert-with-luminosity",
-                "withoutShadows": "simpleReveal"
-            },
-            "vertexShaderSource": "mesh/modelPosShadowMapping.vert",
-            "fragmentShaderSource": "mesh/shadowMapReveal.frag",
-            "blendType": "mix",
+            "name": "ship-low",
+            "vertexShaderSource": "mesh/ship-low.vert",
+            "fragmentShaderSource": "mesh/ship-low.frag",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord",
@@ -375,6 +312,176 @@
                 "a_color": "color",
                 "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-veryHigh",
+            "variants": {
+                "withoutDynamicLights": "ship-no-dynamic-lights",
+                "withoutShadows": "ship-veryHigh-no-shadows"
+            },
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship-veryHigh.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-no-dynamic-lights",
+            "variants": {
+                "withoutShadows": "ship-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/ship-no-dynamic-lights.vert",
+            "fragmentShaderSource": "mesh/ship-no-dynamic-lights.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-no-shadows",
+            "variants": {
+                "withoutDynamicLights": "ship-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/ship-no-shadows.vert",
+            "fragmentShaderSource": "mesh/ship-no-shadows.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-no-advanced-lighting",
+            "vertexShaderSource": "mesh/ship-no-advanced-lighting.vert",
+            "fragmentShaderSource": "mesh/ship-no-advanced-lighting.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-veryHigh-no-shadows",
+            "variants": {
+                "withoutDynamicLights": "ship-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship-veryHigh-no-shadows.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal",
+            "variants": {
+                "veryLow": "lambert-with-luminosity",
+                "low": "ship-low",
+                "withoutDynamicLights": "reveal-no-dynamic-lights",
+                "withoutShadows": "reveal-no-shadows"
+            },
+            "vertexShaderSource": "mesh/reveal.vert",
+            "fragmentShaderSource": "mesh/reveal.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal-no-dynamic-lights",
+            "variants": {
+                "withoutShadows": "reveal-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/reveal-no-dynamic-lights.vert",
+            "fragmentShaderSource": "mesh/reveal-no-dynamic-lights.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal-no-shadows",
+            "variants": {
+                "withoutDynamicLights": "reveal-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/reveal-no-shadows.vert",
+            "fragmentShaderSource": "mesh/reveal-no-shadows.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal-no-advanced-lighting",
+            "vertexShaderSource": "mesh/reveal-no-advanced-lighting.vert",
+            "fragmentShaderSource": "mesh/reveal-no-advanced-lighting.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
         },
@@ -382,7 +489,7 @@
             "name": "skybox",
             "vertexShaderSource": "billboard/skybox.vert",
             "fragmentShaderSource": "billboard/skybox.frag",
-            "blendType": "none",
+            "blendMode": "none",
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
@@ -391,7 +498,7 @@
             "name": "billboard",
             "vertexShaderSource": "billboard/billboard.vert",
             "fragmentShaderSource": "billboard/billboard.frag",
-            "blendType": "add",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"
@@ -401,7 +508,7 @@
             "name": "particle-instanced",
             "vertexShaderSource": "billboard/particle-instanced.vert",
             "fragmentShaderSource": "billboard/particle-instanced.frag",
-            "blendType": "add",
+            "blendMode": "add",
             "instanceAttributeRoles": {
                 "i_position": "u_position",
                 "i_billboardSize": "u_billboardSize",
@@ -419,7 +526,7 @@
             },
             "vertexShaderSource": "billboard/particle.vert",
             "fragmentShaderSource": "billboard/particle.frag",
-            "blendType": "add",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"
@@ -429,7 +536,7 @@
             "name": "backgroundBillboard",
             "vertexShaderSource": "billboard/backgroundBillboard.vert",
             "fragmentShaderSource": "billboard/particle.frag",
-            "blendType": "add",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"
@@ -439,7 +546,7 @@
             "name": "dust-instanced",
             "vertexShaderSource": "dust-instanced.vert",
             "fragmentShaderSource": "dust.frag",
-            "blendType": "none",
+            "blendMode": "none",
             "instanceAttributeRoles": {
                 "i_position": "u_position"
             },
@@ -454,7 +561,7 @@
             },
             "vertexShaderSource": "dust.vert",
             "fragmentShaderSource": "dust.frag",
-            "blendType": "none",
+            "blendMode": "none",
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
@@ -463,7 +570,7 @@
             "name": "shadowMapping",
             "vertexShaderSource": "shadow-mapping.vert",
             "fragmentShaderSource": "shadow-mapping.frag",
-            "blendType": "mix",
+            "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_triangleIndex": "triangleIndex"
@@ -473,7 +580,7 @@
             "name": "ui2d",
             "vertexShaderSource": "ui/ui2d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
-            "blendType": "add",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"
@@ -483,7 +590,7 @@
             "name": "ui3d",
             "vertexShaderSource": "ui/ui3d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
-            "blendType": "add",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"

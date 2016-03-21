@@ -1,0 +1,1 @@
+v_modelPos = vec4(a_position, 1.0);

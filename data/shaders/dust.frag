@@ -1,6 +1,8 @@
-#define DUST_LENGTH_DIVISOR 200.0
+#version 100
 
 precision mediump float;
+
+#define DUST_LENGTH_DIVISOR 200.0
 
 // common uniforms
 uniform vec3 u_color;

@@ -1,15 +1,15 @@
-// Simple shader using vertex attribute colors
+#version 100
 
-uniform mat4 u_modelMatrix;
-uniform mat4 u_cameraMatrix;
-uniform mat4 u_projMatrix;
+precision mediump float;
 
-attribute vec3 a_position;
-attribute vec4 a_color;
+#include "mesh/variables/camera.glsl"
+#include "mesh/variables/model-base-vert.glsl"
 
-varying vec4 v_color;
+attribute lowp vec4 a_color;
+
+varying lowp vec4 v_color;
 
 void main() {
-    gl_Position = u_projMatrix * u_cameraMatrix * u_modelMatrix * vec4(a_position, 1.0);
+#include "mesh/vert/simple-position.glsl"
     v_color = a_color;
 }

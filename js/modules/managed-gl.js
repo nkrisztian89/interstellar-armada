@@ -18,7 +18,7 @@
  */
 
 /*jslint nomen: true, plusplus: true, white: true */
-/*global define, Image, Float32Array */
+/*global define, Image, Float32Array, parseInt */
 
 /**
  * @param utils Used for enum functionality
@@ -37,8 +37,8 @@ define([
             // ----------------------------------------------------------------------
             // enums
             /**
-             * @enum {String}
              * An enumeration storing the possible values for texture filtering
+             * @enum {String}
              */
             TextureFiltering = {
                 BILINEAR: "bilinear",
@@ -46,25 +46,35 @@ define([
                 ANISOTROPIC: "anisotropic"
             },
     /**
-     * @enum Enumeration defining the available (supported) variables types in GLSL shaders.
+     * Enumeration defining the available (supported) variables types in GLSL shaders.
+     * @enum {String}
      * @type String
      */
-    ShaderVariableType =
-            {
-                NONE: "none",
-                FLOAT: "float",
-                VEC2: "vec2",
-                VEC3: "vec3",
-                VEC4: "vec4",
-                MAT2: "mat2",
-                MAT3: "mat3",
-                MAT4: "mat4",
-                SAMPLER2D: "sampler2D",
-                SAMPLER_CUBE: "samplerCube",
-                INT: "int",
-                BOOL: "bool",
-                STRUCT: "struct"
-            },
+    ShaderVariableType = {
+        NONE: "none",
+        FLOAT: "float",
+        VEC2: "vec2",
+        VEC3: "vec3",
+        VEC4: "vec4",
+        MAT2: "mat2",
+        MAT3: "mat3",
+        MAT4: "mat4",
+        SAMPLER2D: "sampler2D",
+        SAMPLER_CUBE: "samplerCube",
+        INT: "int",
+        BOOL: "bool",
+        STRUCT: "struct"
+    },
+    /**
+     * The possible blend modes based on which the blend function is set when a shader is applied.
+     * @enum {String}
+     * @type String
+     */
+    ShaderBlendMode = {
+        NONE: "none",
+        MIX: "mix",
+        ADD: "add"
+    },
     // ----------------------------------------------------------------------
     // constants
     UNIFORM_NAME_PREFIX = "u_",
@@ -166,7 +176,7 @@ define([
          * contexts which this texture has been associated with. The keys are 
          * the names of the managed contexts, and values are the WebGL IDs 
          * (handles)
-         * @type Object
+         * @type Object.<String, WebGLTexture>
          */
         this._ids = {};
         /**
@@ -174,7 +184,7 @@ define([
          * belonging to managed contexts which this texture has been associated with. 
          * The keys are the names of the managed contexts, and values are the location
          * indices.
-         * @type Object
+         * @type Object.<String, Number>
          */
         this._locations = {};
     }
@@ -185,72 +195,90 @@ define([
         return this._name;
     };
     /**
-     * Returns the WebGL ID of this texture valid in the supplied managed context.
-     * Error checking is not performed - if there is no valid ID for this context,
-     * it will return undefined.
-     * @param {ManagedGLContext} context
-     * @returns {WebGLTexture}
-     */
-    ManagedTexture.prototype.getIDForContext = function (context) {
-        return this._ids[context.getName()];
-    };
-    /**
-     * Returns the texture unit index where this texture has been last bound to
-     * within the passed context.
-     * @param {ManagedGLContext} context
+     * Returns the texture unit index where this texture has been last bound to within the context with the passed name.
+     * @param {String} contextName
      * @returns {Number}
      */
-    ManagedTexture.prototype.getTextureBindLocation = function (context) {
-        return this._locations[context.getName()];
+    ManagedTexture.prototype.getLastTextureBindLocation = function (contextName) {
+        return this._locations[contextName];
     };
     /**
-     * Sets the texture unit index where this texture should be bound to
-     * within the passed context.
-     * @param {ManagedGLContext} context
-     * @param {Number} location
+     * Clears the cached value storing the last bind location for this texture, associated with the passed context name.
+     * @param {String} contextName
      */
-    ManagedTexture.prototype.setTextureBindLocation = function (context, location) {
-        this._locations[context.getName()] = location;
+    ManagedTexture.prototype.forgetLastTextureBindLocation = function (contextName) {
+        delete this._locations[contextName];
     };
     /**
-     * Adds the texture resource to be available for the provided managed WebGL
-     * context. If it has already been added, does nothing. (as typically this
-     * will be called many times, with different {@link RenderableObject}s containing 
-     * the texture request it to be added to the context where they are to be
-     * drawn)
-     * @param {ManagedGLContext} context
+     * Sets the minification filter to be used when sampling this texture. Requires the texture to be bound!
+     * @param {WebGLRenderingContext} gl
+     * @param {String} filtering (enum TextureFiltering)
+     * @param {EXTTextureFilterAnisotropic} anisotropicFilterExt
      */
-    ManagedTexture.prototype.addToContext = function (context) {
-        if (this._ids[context.getName()] === undefined) {
-            var gl = context.gl;
-            this._ids[context.getName()] = gl.createTexture();
-            this._locations[context.getName()] = context.bindTexture(this);
-            // Upload the image into the texture.
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
-            // Set the parameters so we can render any size image.
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            if (this._mipmap === false) {
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            } else {
-                if (context.getFiltering() === TextureFiltering.BILINEAR) {
+    ManagedTexture.prototype.setMinFiltering = function (gl, filtering, anisotropicFilterExt) {
+        if (this._mipmap === false) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        } else {
+            switch (filtering) {
+                case TextureFiltering.BILINEAR:
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-                } else if (context.getFiltering() === TextureFiltering.TRILINEAR) {
+                    break;
+                case TextureFiltering.TRILINEAR:
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-                } else if (context.getFiltering() === TextureFiltering.ANISOTROPIC) {
-                    gl.texParameterf(gl.TEXTURE_2D, context.getAnisotropicFilter().TEXTURE_MAX_ANISOTROPY_EXT, 4);
-                }
-                gl.generateMipmap(gl.TEXTURE_2D);
+                    break;
+                case TextureFiltering.ANISOTROPIC:
+                    gl.texParameterf(gl.TEXTURE_2D, anisotropicFilterExt.TEXTURE_MAX_ANISOTROPY_EXT, 4);
+                    break;
             }
+            gl.generateMipmap(gl.TEXTURE_2D);
         }
     };
     /**
-     * Clears all previous bindings to managed WebGL contexts.
+     * Creates the underlying WebGL texture object and associates it with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
      */
-    ManagedTexture.prototype.clearContextBindings = function () {
-        this._ids = {};
-        this._locations = {};
+    ManagedTexture.prototype.createGLTexture = function (contextName, gl) {
+        this._ids[contextName] = gl.createTexture();
+    };
+    /**
+     * Binds the underlying WebGL texture object with the passed context and caches the location where it was bound for later use, associated
+     * with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {Number} location The texture unit index where to bind the texture.
+     */
+    ManagedTexture.prototype.bindGLTexture = function (contextName, gl, location) {
+        gl.activeTexture(gl.TEXTURE0 + location);
+        gl.bindTexture(gl.TEXTURE_2D, this._ids[contextName]);
+        this._locations[contextName] = location;
+    };
+    /**
+     * Loads the image data into the underlying WebGL texture object and sets up wrapping and filtering. Requires the texture to be bound!
+     * @param {WebGLRenderingContext} gl
+     * @param {String} filtering (enum TextureFiltering)
+     * @param {EXTTextureFilterAnisotropic} anisotropicFilterExt
+     */
+    ManagedTexture.prototype.setupGLTexture = function (gl, filtering, anisotropicFilterExt) {
+        // Upload the image into the texture.
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._image);
+        // Set the parameters so we can render any size image.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        this.setMinFiltering(gl, filtering, anisotropicFilterExt);
+    };
+    /**
+     * Deletes the underlying WebGL texture object associated with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     */
+    ManagedTexture.prototype.deleteGLTexture = function (contextName, gl) {
+        if (this._ids[contextName]) {
+            gl.deleteTexture(this._ids[contextName]);
+            delete this._ids[contextName];
+            delete this._locations[contextName];
+        }
     };
     // ############################################################################################
     /**
@@ -300,73 +328,76 @@ define([
         return this._name;
     };
     /**
-     * Returns the WebGL ID of this cubemap valid in the supplied managed context.
-     * Error checking is not performed - if there is no valid ID for this context,
-     * it will return undefined.
-     * @param {ManagedGLContext} context
-     * @returns {WebGLTexture}
-     */
-    ManagedCubemap.prototype.getIDForContext = function (context) {
-        return this._ids[context.getName()];
-    };
-    /**
-     * Returns the texture unit index where this cubemap has been last bound to
-     * within the passed context.
-     * @param {ManagedGLContext} context
+     * Returns the texture unit index where this cubemap has been last bound to within the context with the passed name.
+     * @param {String} contextName
      * @returns {Number}
      */
-    ManagedCubemap.prototype.getTextureBindLocation = function (context) {
-        return this._locations[context.getName()];
+    ManagedCubemap.prototype.getLastTextureBindLocation = function (contextName) {
+        return this._locations[contextName];
     };
     /**
-     * Sets the texture unit index where this cubemap should be bound to
-     * within the passed context.
-     * @param {ManagedGLContext} context
-     * @param {Number} location
+     * Clears the cached value storing the last bind location for this cubemap, associated with the passed context name.
+     * @param {String} contextName
      */
-    ManagedCubemap.prototype.setTextureBindLocation = function (context, location) {
-        this._locations[context.getName()] = location;
+    ManagedCubemap.prototype.forgetLastTextureBindLocation = function (contextName) {
+        delete this._locations[contextName];
     };
     /**
-     * Adds the cubemap resource to be available for the provided managed WebGL
-     * context. If it has already been added, does nothing. (as this might be called 
-     * multiple times, with different {@link RenderableObject}s containing 
-     * the cubemap request it to be added to the context where they are to be
-     * drawn) The action is only executed when the cubemap has been loaded.
-     * @param {ManagedGLContext} context
+     * Creates the underlying WebGL texture object and associates it with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
      */
-    ManagedCubemap.prototype.addToContext = function (context) {
-        var type, i, gl;
-        if (this._ids[context.getName()] === undefined) {
-            gl = context.gl;
-            this._ids[context.getName()] = gl.createTexture();
-            this._locations[context.getName()] = context.bindTexture(this);
-            // Set the parameters so we can render any size image.
-            gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-            type = [
-                gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-                gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-                gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
-                gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-                gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
-            ];
-            // Upload the images into the texture.
-            for (i = 0; i < 6; i++) {
-                gl.texImage2D(type[i], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._images[i]);
-            }
+    ManagedCubemap.prototype.createGLTexture = function (contextName, gl) {
+        this._ids[contextName] = gl.createTexture();
+    };
+    /**
+     * Binds the underlying WebGL texture object with the passed context and caches the location where it was bound for later use, associated
+     * with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {Number} location The texture unit index where to bind the texture.
+     */
+    ManagedCubemap.prototype.bindGLTexture = function (contextName, gl, location) {
+        gl.activeTexture(gl.TEXTURE0 + location);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this._ids[contextName]);
+        this._locations[contextName] = location;
+    };
+    /**
+     * Loads the image data into the underlying WebGL texture object and sets up wrapping and filtering. Requires the texture to be bound!
+     * @param {WebGLRenderingContext} gl
+     */
+    ManagedCubemap.prototype.setupGLTexture = function (gl) {
+        var type, i;
+        // Set the parameters so we can render any size image.
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        type = [
+            gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+        ];
+        // Upload the images into the texture.
+        for (i = 0; i < 6; i++) {
+            gl.texImage2D(type[i], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._images[i]);
         }
     };
     /**
-     * Clears all previous bindings to managed WebGL contexts.
+     * Deletes the underlying WebGL texture object associated with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
      */
-    ManagedCubemap.prototype.clearContextBindings = function () {
-        this._ids = {};
-        this._locations = {};
+    ManagedCubemap.prototype.deleteGLTexture = function (contextName, gl) {
+        if (this._ids[contextName]) {
+            gl.deleteTexture(this._ids[contextName]);
+            delete this._ids[contextName];
+            delete this._locations[contextName];
+        }
     };
     // ############################################################################################
     /**
@@ -454,33 +485,51 @@ define([
         }
     };
     /**
-     * Gets the location of the uniform in the supplied context and stores it in a
-     * member for faster reference with getLocation later.
-     * @param {ManagedGLContext} context
+     * Gets the location of the uniform in the supplied rendering context and stores it associated with the passed context name for faster 
+     * reference with getLocation later.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl 
      * @param {ManagedShader} shader The shader which this uniform belongs to.
      * @param {String} [locationPrefix] Same as for the setValue() method
      */
-    ShaderUniform.prototype.setLocation = function (context, shader, locationPrefix) {
-        if (!this._locations[context.getName()]) {
-            this._locations[context.getName()] = {};
+    ShaderUniform.prototype.saveLocation = function (contextName, gl, shader, locationPrefix) {
+        if (!this._locations[contextName]) {
+            this._locations[contextName] = {};
         }
-        this._locations[context.getName()][(locationPrefix || "self")] = context.gl.getUniformLocation(shader.getIDForContext(context), (locationPrefix || "") + this._name);
+        this._locations[contextName][(locationPrefix || "self")] = gl.getUniformLocation(shader.getIDForContext(contextName), (locationPrefix || "") + this._name);
+    };
+    /**
+     * Deletes the cached uniform locations associated with the passed context name. If the uniform has members, their cached locations are 
+     * erased, too.
+     * @param {String} contextName
+     */
+    ShaderUniform.prototype.forgetLocations = function (contextName) {
+        var i, j;
+        delete  this._locations[contextName];
+        if (this._members) {
+            for (i = 0; i < this._arraySize; i++) {
+                for (j = 0; j < this._members.length; j++) {
+                    this._members[j].forgetLocations(contextName);
+                }
+            }
+        }
     };
     /**
      * Gets the location of this uniform valid in the supplied context. For simple uniform types, the location
-     * has to be grabbed from the context with a setLocation prior to the usage of this, otherwise it will 
+     * has to be grabbed from the context with a saveLocation prior to the usage of this, otherwise it will 
      * return undefined! For complex types (with locationPrefix), the location is grabbed from GL here, if
      * necessary.
-     * @param {ManagedGLContext} context
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
      * @param {ManagedShader} shader The shader which this uniform belongs to.
      * @param {String} [locationPrefix] Same as for the setValue() method
      * @returns {WebGLUniformLocation}
      */
-    ShaderUniform.prototype.getLocation = function (context, shader, locationPrefix) {
-        if (locationPrefix && (!this._locations[context.getName()] || (this._locations[context.getName()][locationPrefix] === undefined))) {
-            this.setLocation(context, shader, locationPrefix);
+    ShaderUniform.prototype.getLocation = function (contextName, gl, shader, locationPrefix) {
+        if (locationPrefix && (!this._locations[contextName] || (this._locations[contextName][locationPrefix] === undefined))) {
+            this.saveLocation(contextName, gl, shader, locationPrefix);
         }
-        return this._locations[context.getName()][(locationPrefix || "self")];
+        return this._locations[contextName][(locationPrefix || "self")];
     };
     /**
      * If this uniform is an array, returns the length of the array, otherwise returns 0.
@@ -588,7 +637,8 @@ define([
     };
     /**
      * Sets the value of the shader uniform in the specified GL context to the passed value.
-     * @param {ManagedGLContext} context The managed GL context
+     * @param {String} contextName The name of the managed GL context
+     * @param {WebGLRenderingContext} gl
      * @param {ManagedShader} shader The shader which this uniform belongs to.
      * @param {any} value The new uniform value.
      * The type of this argument should be appropriate to the uniform type.
@@ -601,10 +651,10 @@ define([
      * "lights[3].color", the name would be "color" and so the prefix should be
      * "lights[3]."
      */
-    ShaderUniform.prototype.setConstantValue = function (context, shader, value, locationPrefix) {
-        var gl = context.gl, location, i, j, memberName;
+    ShaderUniform.prototype.setConstantValue = function (contextName, gl, shader, value, locationPrefix) {
+        var location, i, j, memberName;
         // get the location
-        location = this.getLocation(context, shader, locationPrefix);
+        location = this.getLocation(contextName, gl, shader, locationPrefix);
         // assignment for float and struct arrays
         if (this._arraySize > 0) {
             switch (this._type) {
@@ -620,7 +670,7 @@ define([
                         for (j = 0; j < this._members.length; j++) {
                             if (value[i][this._members[j]._name] !== undefined) {
                                 memberName = this._members[j]._name;
-                                this._members[j].setConstantValue(context, shader, value[i][memberName], this._name + "[" + i + "].");
+                                this._members[j].setConstantValue(contextName, gl, shader, value[i][memberName], this._name + "[" + i + "].");
                             }
                         }
                     }
@@ -674,7 +724,8 @@ define([
      * of the passed value function. Passing a function makes sure whatever 
      * calculations need to take place, they are (can be) calculated right before 
      * the uniform assignment if necessary.
-     * @param {ManagedGLContext} context The managed GL context
+     * @param {String} contextName The managed GL context
+     * @param {WebGLRenderingContext} gl
      * @param {ManagedShader} shader The shader which this uniform belongs to.
      * @param {Function} valueFunction The function to calculate the uniform value.
      * The return type of this function should be appropriate to the uniform type.
@@ -687,8 +738,8 @@ define([
      * "lights[3].color", the name would be "color" and so the prefix should be
      * "lights[3]."
      */
-    ShaderUniform.prototype.setValue = function (context, shader, valueFunction, locationPrefix) {
-        this.setConstantValue(context, shader, valueFunction(), locationPrefix);
+    ShaderUniform.prototype.setValue = function (contextName, gl, shader, valueFunction, locationPrefix) {
+        this.setConstantValue(contextName, gl, shader, valueFunction(), locationPrefix);
     };
     // ############################################################################################
     /**
@@ -725,10 +776,10 @@ define([
          */
         this._data = new Float32Array(numVectors * this._vectorSize);
         /**
-         * The WebGL handle for this vertex buffer object.
-         * @type WebGLBuffer
+         * The WebGL handles for this vertex buffer object.
+         * @type Object.<String, WebGLBuffer>
          */
-        this._id = null;
+        this._ids = {};
         /**
          * The associative array of the locations (vertex attribute indices) of 
          * this vertex buffer associated with different shaders. The keys are the
@@ -807,17 +858,18 @@ define([
     };
     /**
      * Creates the needed VBO in the supplied context and sends over the data (set
-     * by setData) using it to the GPU, then erases the original data array.
-     * @param {ManagedGLContext} context
-     * @param {Boolean} [keepData=false]
+     * by setData) using it to the GPU, then erases the original data array. (unless otherwise specified)
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {Boolean} [keepData=false] If true, the stored data is not erased.
      */
-    VertexBuffer.prototype.loadToGPUMemory = function (context, keepData) {
-        this._id = context.gl.createBuffer();
-        context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
-        context.gl.bufferData(
-                context.gl.ARRAY_BUFFER,
+    VertexBuffer.prototype.loadToGPUMemory = function (contextName, gl, keepData) {
+        this._ids[contextName] = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._ids[contextName]);
+        gl.bufferData(
+                gl.ARRAY_BUFFER,
                 this._data,
-                context.gl.STATIC_DRAW);
+                gl.STATIC_DRAW);
         if (!keepData) {
             this.freeData();
         }
@@ -833,23 +885,25 @@ define([
      * for instancing.
      */
     VertexBuffer.prototype.bind = function (context, shader, instanced) {
-        if (this._locations[shader.getName()] === undefined) {
-            this._locations[shader.getName()] = context.gl.getAttribLocation(shader.getIDForContext(context), this._name);
+        if ((this._locations[shader.getName()] === undefined) || (this._locations[shader.getName()] === -1)) {
+            this._locations[shader.getName()] = context.gl.getAttribLocation(shader.getIDForContext(context.getName()), this._name);
         }
         var location = this._locations[shader.getName()];
         if ((location >= 0) && (context.getBoundVertexBuffer(location) !== this)) {
             application.log("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
             if (instanced) {
-                this.loadToGPUMemory(context, true);
+                this.loadToGPUMemory(context.getName(), context.gl, true);
             } else {
-                context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._id);
+                context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._ids[context.getName()]);
             }
             context.gl.enableVertexAttribArray(location);
             context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
-            if (instanced) {
-                context.instancing.vertexAttribDivisorANGLE(location, 1);
-            } else {
-                context.instancing.vertexAttribDivisorANGLE(location, 0);
+            if (context.instancingExt) {
+                if (instanced) {
+                    context.instancingExt.vertexAttribDivisorANGLE(location, 1);
+                } else {
+                    context.instancingExt.vertexAttribDivisorANGLE(location, 0);
+                }
             }
             context.setBoundVertexBuffer(location, this);
         }
@@ -859,9 +913,22 @@ define([
      * @param {ManagedGLContext} context
      */
     VertexBuffer.prototype.delete = function (context) {
-        context.gl.deleteBuffer(this._id);
-        this.freeData();
-        this._id = null;
+        var shaderName, location;
+        context.gl.deleteBuffer(this._ids[context.getName()]);
+        for (shaderName in this._locations) {
+            if (this._locations.hasOwnProperty(shaderName)) {
+                location = this._locations[shaderName];
+                if (context.getBoundVertexBuffer(location) === this) {
+                    context.setBoundVertexBuffer(location, null);
+                    context.gl.disableVertexAttribArray(location);
+                }
+            }
+        }
+        delete this._ids[context.getName()];
+        if (Object.keys(this._ids).length === 0) {
+            this.freeData();
+            this._locations = {};
+        }
     };
     // ############################################################################################
     /**
@@ -926,28 +993,18 @@ define([
         return this._name;
     };
     /**
-     * Returns the WebGL handle for the texture object holding this buffer's color
-     * attachment.
-     * @returns {String}
-     */
-    FrameBuffer.prototype.getTextureID = function () {
-        return this._textureID;
-    };
-    /**
      * Returns the texture unit index where the texture associated with this 
      * framebuffer has been last bound to.
      * @returns {Number}
      */
-    FrameBuffer.prototype.getTextureBindLocation = function () {
+    FrameBuffer.prototype.getLastTextureBindLocation = function () {
         return this._textureLocation;
     };
     /**
-     * Sets the texture unit index where the texture associated with this framebuffer
-     * should be bound to.
-     * @param {Number} location
+     * Erases the stored texture unit index corresponding to the last binding location of the texture of this framebuffer.
      */
-    FrameBuffer.prototype.setTextureBindLocation = function (location) {
-        this._textureLocation = location;
+    FrameBuffer.prototype.forgetLastTextureBindLocation = function () {
+        this._textureLocation = this.TEXTURE_LOCATION_NOT_SET;
     };
     /**
      * Creates the WebGL frame buffer object for this buffer, then creates and 
@@ -956,17 +1013,16 @@ define([
      * @param {ManagedGLContext} context
      */
     FrameBuffer.prototype.setup = function (context) {
-        // calling setup on a frame buffer that has already been set up has no
-        // effect
-        if (this._id !== null) {
+        // calling setup on a frame buffer that has already been set up has no effect
+        if (this._id) {
             return;
         }
         this._id = context.gl.createFramebuffer();
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
         this._textureID = context.gl.createTexture();
         this._textureLocation = context.bindTexture(this);
-        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.LINEAR);
-        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.LINEAR);
+        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.NEAREST);
+        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.NEAREST);
         context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
         this._renderBufferID = context.gl.createRenderbuffer();
         context.gl.bindRenderbuffer(context.gl.RENDERBUFFER, this._renderBufferID);
@@ -981,6 +1037,16 @@ define([
      */
     FrameBuffer.prototype.bind = function (context) {
         context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, this._id);
+    };
+    /**
+     * Binds the texture corresponding to this frame buffer object to the texture unit with the specified index.
+     * @param {WebGLRenderingContext} gl
+     * @param {Number} place
+     */
+    FrameBuffer.prototype.bindGLTexture = function (gl, place) {
+        gl.activeTexture(gl.TEXTURE0 + place);
+        gl.bindTexture(gl.TEXTURE_2D, this._textureID);
+        this._textureLocation = place;
     };
     /**
      * Deletes the corresponding WebGL frame buffer object and the objects
@@ -999,12 +1065,12 @@ define([
      * @param {String} name
      * @param {String} vertexShaderSource
      * @param {String} fragmentShaderSource
-     * @param {String} blendType
+     * @param {String} blendMode (enum ShaderBlendMode) 
      * @param {Object.<String, String>} vertexAttributeRoles
      * @param {Object.<String, String>} instanceAttributeRoles
      * @param {Object.<String, String} replacedDefines 
      */
-    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendType, vertexAttributeRoles, instanceAttributeRoles, replacedDefines) {
+    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendMode, vertexAttributeRoles, instanceAttributeRoles, replacedDefines) {
         // properties for file resource management
         /**
          * The name of the shader program it can be referred to with later. Has to
@@ -1013,13 +1079,11 @@ define([
          */
         this._name = name;
         /**
-         * The type of blending to be used with this shader. Options:
-         * "mix": will overwrite the existing color up to the proportion of the 
-         * alpha component of the new color (srcAlpha + (1-srcAlpha)) 
-         * "add": will add the color of the existing one (srcAlpha + 1)
+         * (enum ShaderBlendMode) 
+         * The type of blending to be used with this shader.
          * @type String
          */
-        this._blendType = blendType;
+        this._blendMode = blendMode;
         /**
          * The list of vertex attribute properties of this shader.
          * @type ShaderAttribute[]
@@ -1065,7 +1129,7 @@ define([
          * @type Object.<String, String>
          */
         this._uniformNamesForInstanceAttributeNames = instanceAttributeRoles;
-        this._parceShaderSources(vertexAttributeRoles, replacedDefines);
+        this._parseShaderSources(vertexAttributeRoles, replacedDefines);
     }
     /**
      * @param {String} name
@@ -1086,18 +1150,24 @@ define([
      * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
      * provided in this object (e.g. #define CONST 3 will be changed to #define CONST 5 if {CONST: 5} is passed.
      */
-    ManagedShader.prototype._parceShaderSources = function (attributeRoles, replacedDefines) {
+    ManagedShader.prototype._parseShaderSources = function (attributeRoles, replacedDefines) {
         var
-                i, j, shaderType,
-                sourceLines, words,
+                i, k, shaderType,
+                sourceLines, words, delimiters, index,
                 attributeName, attributeSize, attributeRole,
-                uniform, uniformNameElements, uniformName, uniformType, uniformArraySize, uniformArraySizeString,
-                defines = {}, sourceChanged,
+                uniform, uniformName, uniformType, uniformArraySize, arraySizeString,
+                defines = {}, sourceChanged, localVariableNames, localVariableSizes = {},
                 isNotEmptyString = function (s) {
                     return s !== "";
                 },
+                isPrecisionQualifier = function (s) {
+                    return (s === "highp") || (s === "mediump") || (s === "lowp");
+                },
+                isBuiltInGLSLType = function (s) {
+                    return utils.getSafeEnumValue(ShaderVariableType, s, ShaderVariableType.NONE) !== ShaderVariableType.NONE;
+                },
                 addStructMembers = function (uniform, uniformType) {
-                    var structFound, innerWords;
+                    var structFound, innerWords, j;
                     structFound = false;
                     for (j = 0; j < sourceLines.length; j++) {
                         innerWords = sourceLines[j].split(" ");
@@ -1127,59 +1197,109 @@ define([
             }
             sourceChanged = false;
             for (i = 0; i < sourceLines.length; i++) {
-                words = sourceLines[i].split(" ");
-                // parsing defines
-                if (words[0] === "#define") {
-                    if (replacedDefines && (replacedDefines[words[1]] !== undefined)) {
-                        defines[words[1]] = replacedDefines[words[1]];
-                        words[2] = replacedDefines[words[1]];
-                        sourceChanged = true;
-                    } else {
-                        defines[words[1]] = words[2];
-                    }
-                }
-                // parsing attributes
-                if ((shaderType === 0) && (words[0] === "attribute")) {
-                    attributeName = words[2].split(";")[0];
-                    attributeSize = getFloatVectorSize(words[1]);
-                    attributeRole = attributeRoles[attributeName];
-                    if (attributeRole === undefined) {
-                        if (this._uniformNamesForInstanceAttributeNames.hasOwnProperty(attributeName)) {
-                            attributeRole = this._uniformNamesForInstanceAttributeNames[attributeName];
-                            this._instanceAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
-                        } else {
-                            application.showError("Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
-                            return;
-                        }
-                    } else {
-                        this._vertexAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
-                    }
-                }
-                // parsing uniforms
-                if (words[0] === "uniform") {
-                    uniformNameElements = words[2].split(";")[0].split("[");
-                    uniformName = uniformNameElements[0];
-                    if (this._hasUniform(uniformName) === false) {
-                        if (uniformNameElements.length > 1) {
-                            uniformArraySizeString = uniformNameElements[1].split("]")[0];
-                            if (defines[uniformArraySizeString]) {
-                                uniformArraySizeString = defines[uniformArraySizeString];
+                if (sourceLines[i].length > 0) {
+                    words = sourceLines[i].split(/\s+|[\(\)\[\]\{\}\+\?\-!<>=*\/\^\|\&,;]/);
+                    delimiters = sourceLines[i].match(/\s+|[\(\)\[\]\{\}\+\?\-!<>=*\/\^\|\&,;]/g);
+                    // parsing defines
+                    if (words[0] === "#define") {
+                        if (replacedDefines && (replacedDefines[words[1]] !== undefined)) {
+                            defines[words[1]] = replacedDefines[words[1]];
+                            if (words[2] !== replacedDefines[words[1]]) {
+                                sourceLines[i] = sourceLines[i].replace(words[2], replacedDefines[words[1]]);
+                                sourceChanged = true;
                             }
-                            uniformArraySize = parseInt(uniformArraySizeString, 10);
                         } else {
-                            uniformArraySize = 0;
+                            defines[words[1]] = words[2];
                         }
-                        uniformType = words[1];
-                        if (utils.getSafeEnumValue(ShaderVariableType, uniformType, ShaderVariableType.NONE) === ShaderVariableType.NONE) {
-                            uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
-                            addStructMembers(uniform, uniformType);
-                            this._uniforms.push(uniform);
+                    }
+                    // parsing attributes
+                    else if ((shaderType === 0) && (words[0] === "attribute")) {
+                        index = isPrecisionQualifier(words[1]) ? 3 : 2;
+                        attributeName = words[index];
+                        attributeSize = getFloatVectorSize(words[index - 1]);
+                        attributeRole = attributeRoles[attributeName];
+                        if (attributeRole === undefined) {
+                            if (this._uniformNamesForInstanceAttributeNames.hasOwnProperty(attributeName)) {
+                                attributeRole = this._uniformNamesForInstanceAttributeNames[attributeName];
+                                this._instanceAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
+                            } else {
+                                application.showError("Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
+                                return;
+                            }
                         } else {
-                            this._uniforms.push(new ShaderUniform(uniformName, uniformType, uniformArraySize));
+                            this._vertexAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
+                        }
+                    }
+                    // parsing uniforms
+                    else if (words[0] === "uniform") {
+                        index = isPrecisionQualifier(words[1]) ? 3 : 2;
+                        uniformName = words[index];
+                        if (this._hasUniform(uniformName) === false) {
+                            if (delimiters[index] === "[") {
+                                arraySizeString = words[index + 1];
+                                if (defines[arraySizeString]) {
+                                    arraySizeString = defines[arraySizeString];
+                                }
+                                uniformArraySize = parseInt(arraySizeString, 10);
+                            } else {
+                                uniformArraySize = 0;
+                            }
+                            uniformType = words[index - 1];
+                            if (!isBuiltInGLSLType(uniformType)) {
+                                uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
+                                addStructMembers(uniform, uniformType);
+                                this._uniforms.push(uniform);
+                            } else {
+                                this._uniforms.push(new ShaderUniform(uniformName, uniformType, uniformArraySize));
+                            }
+                        }
+                    }
+                    // parsing array sizes of local variables
+                    else {
+                        index = 0;
+                        while (words[index] === "") {
+                            index++;
+                        }
+                        if (isBuiltInGLSLType(words[index]) || isPrecisionQualifier(words[index])) {
+                            index = isPrecisionQualifier(words[index]) ? index + 2 : index + 1;
+                            if (delimiters[index] === "[") {
+                                arraySizeString = words[index + 1];
+                                if (defines[arraySizeString]) {
+                                    arraySizeString = defines[arraySizeString];
+                                }
+                                localVariableSizes[words[index]] = parseInt(arraySizeString, 10);
+                            }
+                        }
+                        // removing lines wich access array variables out of bounds according to replaced defines
+                        else {
+                            for (k = 0; k < this._uniforms.length; k++) {
+                                index = words.indexOf(this._uniforms[k].getName());
+                                if (index >= 0) {
+                                    if ((this._uniforms[k].getArraySize() > 0) && (delimiters[index] === "[")) {
+                                        if ((parseInt(words[index + 1], 10).toString() === words[index + 1]) && (parseInt(words[index + 1], 10) >= this._uniforms[k].getArraySize())) {
+                                            sourceLines[i] = "";
+                                            sourceChanged = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            localVariableNames = Object.keys(localVariableSizes);
+                            for (k = 0; k < localVariableNames.length; k++) {
+                                index = words.indexOf(localVariableNames[k]);
+                                if (index >= 0) {
+                                    if (delimiters[index] === "[") {
+                                        if ((parseInt(words[index + 1], 10).toString() === words[index + 1]) && (parseInt(words[index + 1], 10) >= localVariableSizes[words[index]])) {
+                                            sourceLines[i] = "";
+                                            sourceChanged = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                sourceLines[i] = words.join(" ");
             }
             if (sourceChanged) {
                 switch (shaderType) {
@@ -1201,14 +1321,14 @@ define([
         return this._name;
     };
     /**
-     * Returns the WebGL ID of this program valid in the supplied managed context.
+     * Returns the WebGL ID of this program valid in the managed context with the passed name.
      * Error checking is not performed - if there is no valid ID for this context,
      * it will return undefined.
-     * @param {ManagedGLContext} context
+     * @param {String} contextName
      * @returns {WebGLProgram}
      */
-    ManagedShader.prototype.getIDForContext = function (context) {
-        return this._ids[context.getName()];
+    ManagedShader.prototype.getIDForContext = function (contextName) {
+        return this._ids[contextName];
     };
     /**
      * Returns the array of vertex attributes of this shader.
@@ -1246,66 +1366,53 @@ define([
         return null;
     };
     /**
-     * Adds the shader resource to be available for the provided managed WebGL
-     * context. If it has already been added, does nothing. (as typically this
-     * will be called many times, with different {@link RenderableObject}s containing 
-     * the shader request it to be added to the context where they are to be
-     * drawn) The action is only executed when the shader has been loaded.
-     * @param {ManagedGLContext} context
+     * Using the passed rendering context, creates, compiles, and links the corresponding WebGL program and caches the locations of its
+     * uniforms so it will be ready to use.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
      */
-    ManagedShader.prototype.addToContext = function (context) {
-        var gl, vertexShader, infoLog, fragmentShader, prog, i;
-        if (this._ids[context.getName()] === undefined) {
-            gl = context.gl;
-            // create and compile vertex shader
-            vertexShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertexShader, this._vertexShaderSource);
-            gl.compileShader(vertexShader);
-            // detect and display compilation errors
-            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-                infoLog = gl.getShaderInfoLog(vertexShader);
-                application.showGraphicsError("Compiling GLSL vertex shader '" + this._vertexShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
-                this._ids[context.getName()] = null;
-                return;
-            }
-            // create and compile fragment shader
-            fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(fragmentShader, this._fragmentShaderSource);
-            gl.compileShader(fragmentShader);
-            // detect and display compilation errors
-            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-                infoLog = gl.getShaderInfoLog(fragmentShader);
-                application.showGraphicsError("Compiling GLSL fragment shader '" + this._fragmentShaderFileName + "' failed.", "severe", "More details:\n" + infoLog, gl);
-                this._ids[context.getName()] = null;
-                return;
-            }
-            // create and link shader program
-            this._ids[context.getName()] = gl.createProgram();
-            prog = this._ids[context.getName()];
-            gl.attachShader(prog, vertexShader);
-            gl.attachShader(prog, fragmentShader);
-            gl.linkProgram(prog);
-            // detect and display linking errors
-            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-                infoLog = gl.getProgramInfoLog(prog);
-                application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog, gl);
-                gl.deleteProgram(prog);
-                this._ids[context.getName()] = null;
-                return;
-            }
-            // cache uniform locations
-            for (i = 0; i < this._uniforms.length; i++) {
-                this._uniforms[i].setLocation(context, this);
-            }
-            // add the created shader to the context's managed resources list
-            context.addShader(this);
+    ManagedShader.prototype.setupGLProgram = function (contextName, gl) {
+        var vertexShader, infoLog, fragmentShader, prog, i;
+        // create and compile vertex shader
+        vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader, this._vertexShaderSource);
+        gl.compileShader(vertexShader);
+        // detect and display compilation errors
+        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+            infoLog = gl.getShaderInfoLog(vertexShader);
+            application.showGraphicsError("Compiling GLSL vertex shader of '" + this._name + "' failed.", "severe", "More details:\n" + infoLog, gl);
+            this._ids[contextName] = null;
+            return;
         }
-    };
-    /**
-     * Clears all previous bindings to managed WebGL contexts.
-     */
-    ManagedShader.prototype.clearContextBindings = function () {
-        this._ids = {};
+        // create and compile fragment shader
+        fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader, this._fragmentShaderSource);
+        gl.compileShader(fragmentShader);
+        // detect and display compilation errors
+        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+            infoLog = gl.getShaderInfoLog(fragmentShader);
+            application.showGraphicsError("Compiling GLSL fragment shader of '" + this._name + "' failed.", "severe", "More details:\n" + infoLog, gl);
+            this._ids[contextName] = null;
+            return;
+        }
+        // create and link shader program
+        this._ids[contextName] = gl.createProgram();
+        prog = this._ids[contextName];
+        gl.attachShader(prog, vertexShader);
+        gl.attachShader(prog, fragmentShader);
+        gl.linkProgram(prog);
+        // detect and display linking errors
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+            infoLog = gl.getProgramInfoLog(prog);
+            application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog, gl);
+            gl.deleteProgram(prog);
+            this._ids[contextName] = null;
+            return;
+        }
+        // cache uniform locations - this is necessary for simple uniforms before use
+        for (i = 0; i < this._uniforms.length; i++) {
+            this._uniforms[i].saveLocation(contextName, gl, this);
+        }
     };
     /**
      * Sets the blending function in the supplied managed context according to the
@@ -1313,10 +1420,17 @@ define([
      * @param {ManagedGLContext} context
      */
     ManagedShader.prototype.setBlending = function (context) {
-        if (this._blendType === "mix") {
-            context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE_MINUS_SRC_ALPHA);
-        } else if (this._blendType === "add") {
-            context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE);
+        switch (this._blendMode) {
+            case ShaderBlendMode.MIX:
+                context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE_MINUS_SRC_ALPHA);
+                break;
+            case ShaderBlendMode.ADD:
+                context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE);
+                break;
+            case ShaderBlendMode.NONE:
+                break;
+            default:
+                application.crash();
         }
     };
     /**
@@ -1334,7 +1448,7 @@ define([
         if (uniformValueFunctions) {
             for (i = 0; i < this._uniforms.length; i++) {
                 if (uniformValueFunctions[this._uniforms[i].getName()] !== undefined) {
-                    this._uniforms[i].setValue(context, this, uniformValueFunctions[this._uniforms[i].getName()]);
+                    this._uniforms[i].setValue(context.getName(), context.gl, this, uniformValueFunctions[this._uniforms[i].getName()]);
                 }
             }
         }
@@ -1468,6 +1582,23 @@ define([
                 }
             }
         }
+        this._instanceAttributeBuffers = [];
+    };
+    /**
+     * Deletes the underlying WebGL program object and erases the cached uniform locations associated with the passed context name.
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     */
+    ManagedShader.prototype.deleteGLProgram = function (contextName, gl) {
+        var i;
+        if (this._ids[contextName]) {
+            // cache uniform locations
+            for (i = 0; i < this._uniforms.length; i++) {
+                this._uniforms[i].forgetLocations(contextName);
+            }
+            gl.deleteProgram(this._ids[contextName]);
+            delete this._ids[contextName];
+        }
     };
     // ############################################################################################
     /**
@@ -1489,13 +1620,17 @@ define([
      * @returns {ManagedGLContext}
      */
     function ManagedGLContext(name, canvas, antialiasing, filtering) {
-        var gl_, contextParameters;
         asyncResource.AsyncResource.call(this);
         /**
          * The name of the context by which it can be referred to.
          * @type String
          */
         this._name = name;
+        /**
+         * A reference to the canvas the context of which this object wraps.
+         * @type HTMLCanvasElement
+         */
+        this._canvas = canvas;
         /**
          * The contained basic WebGL rendering context.
          * @type WebGLRenderingContext
@@ -1514,18 +1649,17 @@ define([
          * filtering.
          * @type String
          */
-        this._filtering = filtering;
+        this._filtering = null;
         /**
-         * Holder for the handle of the anisotropic filter WebGL extension, should it
-         * be needed.
+         * Holder for the handle of the anisotropic filter WebGL extension.
+         * @type EXTTextureFilterAnisotropic
+         */
+        this.anisotropicFilterExt = null;
+        /**
+         * Holder for the handle of the ANGLE_instanced_arrays WebGL extension.
          * @type Object
          */
-        this._anisotropicFilter = null;
-        /**
-         * Holder for the handle of the ANGLE_instanced_arrays extension.
-         * @type Object
-         */
-        this.instancing = null;
+        this.instancingExt = null;
         /**
          * The list of associated shaders. This needs to be stored in order to bind
          * the vertex buffer objects to the corresponding attributes of the shaders
@@ -1573,11 +1707,16 @@ define([
          */
         this._currentShader = null;
         /**
+         * The list of textures added to this context.
+         * @type (ManagedTexture|ManagedCubemap)[]
+         */
+        this._textures = [];
+        /**
          * The list of references to the currently bound textures in order to 
          * quickly dismiss calls that aim to bind the same texture to the same place
          * again. The indices mark which texture unit index the texture is bound 
          * to.
-         * @type Texture[]
+         * @type {texture: (ManagedTexture|ManagedCubemap|Framebuffer), reserved: Boolean}[]
          */
         this._boundTextures = [];
         /**
@@ -1631,14 +1770,25 @@ define([
          * @type Number
          */
         this._maxVaryings = 0;
+        this._createContext();
+        this.setFiltering(filtering);
+    }
+    ManagedGLContext.prototype = new asyncResource.AsyncResource();
+    ManagedGLContext.prototype.constructor = ManagedGLContext;
+    /**
+     * Creates the underlying WebGL context and its extension objects. (the ones that are available)
+     */
+    ManagedGLContext.prototype._createContext = function () {
+        var gl_, contextParameters;
         application.log("Initializing WebGL context...", 1);
+        // -------------------------------------------------------------------------------------------------------
         // creating the WebGLRenderingContext
-        contextParameters = {alpha: true, antialias: antialiasing};
+        contextParameters = {alpha: true, antialias: this._antialiasing};
         // some implementations throw an exception, others don't, but all return null
         // if the creation fails, so handle that case
         try {
             // Try to grab the standard context.
-            this.gl = canvas.getContext("webgl", contextParameters);
+            this.gl = this._canvas.getContext("webgl", contextParameters);
         } catch (ignore) {
         }
         // if creating a normal context fails, fall back to experimental, but notify the user
@@ -1646,7 +1796,7 @@ define([
             application.log("Initializing a regular context failed, initializing experimental context...", 1);
             contextParameters.alpha = false;
             try {
-                this.gl = canvas.getContext("experimental-webgl", contextParameters);
+                this.gl = this._canvas.getContext("experimental-webgl", contextParameters);
             } catch (ignore) {
             }
             if (!this.gl) {
@@ -1665,13 +1815,14 @@ define([
                     "If you experience problems, it is recommended to use lower graphics quality settings.");
         }
         gl_ = this.gl;
-        if (antialiasing && !(gl_.getContextAttributes().antialias)) {
+        if (this._antialiasing && !(gl_.getContextAttributes().antialias)) {
             application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
                     "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
                     "this error message showing up again, disable antialiasing in the graphics settings or try " +
                     "running the application in a different browser. Antialiasing will not work, but otherwise this " +
                     "error will have no consequences.", gl_);
         }
+        // -------------------------------------------------------------------------------------------------------
         // save the information about WebGL limits
         this._maxBoundTextures = gl_.getParameter(gl_.MAX_TEXTURE_IMAGE_UNITS);
         this._maxTextureSize = gl_.getParameter(gl_.MAX_TEXTURE_SIZE);
@@ -1690,24 +1841,23 @@ define([
                 " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
                 " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
                 " Available varying vectors: " + this._maxVaryings, 1);
-        // is filtering is set to anisotropic, try to grab the needed extension. If that fails,
-        // fall back to trilinear filtering.
-        if (this._filtering === "anisotropic") {
-            application.log("Initializing anisotropic filter...", 1);
-            this._anisotropicFilter = gl_.getExtension("EXT_texture_filter_anisotropic");
-            if (this._anisotropicFilter === null) {
-                application.log("Anisotropic filtering not available. Falling back to trilinear filtering.", 1);
-                this._filtering = "trilinear";
-            } else {
-                application.log("Anisotropic filtering successfully initialized.", 1);
-            }
+        // -------------------------------------------------------------------------------------------------------
+        // initializing extensions
+        // anisotropic filtering
+        this.anisotropicFilterExt = gl_.getExtension("EXT_texture_filter_anisotropic");
+        if (this.anisotropicFilterExt === null) {
+            application.log("Anisotropic filtering not available.", 1);
+        } else {
+            application.log("Anisotropic filtering successfully initialized.", 1);
         }
-        this.instancing = gl_.getExtension("ANGLE_instanced_arrays");
-        if (this.instancing === null) {
+        // instancing extension
+        this.instancingExt = gl_.getExtension("ANGLE_instanced_arrays");
+        if (this.instancingExt === null) {
             application.log("Instancing is not available, and so it will be disabled.", 1);
         } else {
             application.log("Instancing successfully initialized.", 1);
         }
+        // -------------------------------------------------------------------------------------------------------
         // some basic settings on the context state machine
         gl_.clearDepth(1.0);
         gl_.colorMask(true, true, true, true);
@@ -1716,9 +1866,7 @@ define([
         gl_.enable(gl_.CULL_FACE);
         gl_.cullFace(gl_.BACK);
         gl_.frontFace(gl_.CCW);
-    }
-    ManagedGLContext.prototype = new asyncResource.AsyncResource();
-    ManagedGLContext.prototype.constructor = ManagedGLContext;
+    };
     /**
      * Returns the name of this managed context.
      * @returns {String}
@@ -1734,23 +1882,39 @@ define([
         return this._filtering;
     };
     /**
-     * Returns the extension object for anisotropic texture filtering.
-     * @returns {Object}
+     * Sets a new (minification) filtering mode and applies it to all textures that have been added to the context.
+     * @param {String} value (enum TextureFiltering)
      */
-    ManagedGLContext.prototype.getAnisotropicFilter = function () {
-        return this._anisotropicFilter;
+    ManagedGLContext.prototype.setFiltering = function (value) {
+        var i;
+        value = utils.getSafeEnumValue(TextureFiltering, value, this._filtering);
+        if (value !== this._filtering) {
+            this._filtering = value;
+            if (this._filtering === TextureFiltering.ANISOTROPIC) {
+                if (!this.anisotropicFilterExt) {
+                    application.log("Anisotropic filtering is set, but the required extension is not available. Trilinear filtering will be used.", 1);
+                    this._filtering = TextureFiltering.TRILINEAR;
+                }
+            }
+            for (i = 0; i < this._textures.length; i++) {
+                if (this._textures[i].setMinFiltering) {
+                    this.bindTexture(this._textures[i]);
+                    this._textures[i].setMinFiltering(this.gl, this._filtering, this.anisotropicFilterExt);
+                }
+            }
+        }
     };
     /**
      * Adds the shader reference to the list of shaders to be used when the vertex
-     * buffer objects are created and bound to shader attributes. This method only
-     * appends the reference, in order to perform the necessary preparation of the 
-     * shader (compiling, linking...) and avoid adding the same shader multiple
-     * times, the shader's addToContext() method needs to be called instead!
+     * buffer objects are created and bound to shader attributes. (if needed)
      * @param {ManagedShader} shader
      */
     ManagedGLContext.prototype.addShader = function (shader) {
-        this._shaders.push(shader);
-        this.resetReadyState();
+        if (this._shaders.indexOf(shader) < 0) {
+            this._shaders.push(shader);
+            shader.setupGLProgram(this._name, this.gl);
+            this.resetReadyState();
+        }
     };
     /**
      * Adds the model reference to the list of models to be used when the vertex
@@ -1866,7 +2030,7 @@ define([
         // the corresponding VBOs
         for (vbName in this._vertexBuffers) {
             if (this._vertexBuffers.hasOwnProperty(vbName)) {
-                this._vertexBuffers[vbName].loadToGPUMemory(this);
+                this._vertexBuffers[vbName].loadToGPUMemory(this._name, this.gl);
             }
         }
         // bind the vertex buffers to the vertex attribute indices in each shader
@@ -1886,11 +2050,12 @@ define([
         return this._frameBuffers[name];
     };
     /**
-     * Adds the frame buffer object given as parameter.
+     * Adds the passed frame buffer objec to the managed context.
      * @param {FrameBuffer} frameBuffer
      */
     ManagedGLContext.prototype.addFrameBuffer = function (frameBuffer) {
         if (this._frameBuffers[frameBuffer.getName()] === undefined) {
+            application.log("Adding new framebuffer '" + frameBuffer.getName() + "' to context (" + this._name + ")...", 2);
             this._frameBuffers[frameBuffer.getName()] = frameBuffer;
             if (this.isReadyToUse()) {
                 this._frameBuffers[frameBuffer.getName()].setup(this);
@@ -1927,9 +2092,44 @@ define([
      * added to it up to this point.
      */
     ManagedGLContext.prototype.setup = function () {
+        application.log("Setting up context '" + this._name + "'...", 2);
         this.setupVertexBuffers();
         this.setupFrameBuffers();
         this.setToReady();
+    };
+    /**
+     * Clears the stored state and the list of frame buffers of the managed context, but keeps the
+     * added resources (textures, cubemaps, models, shaders)
+     */
+    ManagedGLContext.prototype.clear = function () {
+        var i;
+        application.log("Clearing context '" + this._name + "'...", 2);
+        this.clearFrameBuffers();
+        this._currentShader = null;
+        for (i = 0; i < this._boundTextures.length; i++) {
+            this.unbindTexture(this._boundTextures[i].texture);
+        }
+        this._boundTextures = [];
+        for (i = 0; i < this._textures.length; i++) {
+            this._textures[i].forgetLastTextureBindLocation(this._name);
+        }
+        for (i = 0; i < this._boundVertexBuffers.length; i++) {
+            this.gl.disableVertexAttribArray(i);
+        }
+        this._boundVertexBuffers = [];
+    };
+    /**
+     * Removes all the shader added to this managed context and deletes their underlying WebGL shaders.
+     * @returns {undefined}
+     */
+    ManagedGLContext.prototype.removeShaders = function () {
+        var i;
+        for (i = 0; i < this._shaders.length; i++) {
+            this._shaders[i].deleteInstanceBuffers(this);
+            this._shaders[i].deleteGLProgram(this._name, this.gl);
+        }
+        this._shaders = [];
+        this._currentShader = null;
     };
     /**
      * Sets the stored framebuffer with the passed name as the current framebuffer
@@ -1959,13 +2159,26 @@ define([
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
         if (this._currentShader !== shader) {
             application.log("Switching to shader: " + shader.getName(), 3);
-            this.gl.useProgram(shader.getIDForContext(this));
+            this.gl.useProgram(shader.getIDForContext(this._name));
             shader.setBlending(this);
             shader.bindVertexBuffers(this);
             this._currentShader = shader;
             return true;
         }
         return false;
+    };
+    /**
+     * Adds the passed texture to the list of associated textures, if needed. (so e.g. when the texture filtering mode for this context is 
+     * changed, it will be changed for this texture as well)
+     * @param {ManagedTexture|ManagedCubemap} texture
+     */
+    ManagedGLContext.prototype.addTexture = function (texture) {
+        if (this._textures.indexOf(texture) < 0) {
+            this._textures.push(texture);
+            texture.createGLTexture(this._name, this.gl);
+            this.bindTexture(texture);
+            texture.setupGLTexture(this.gl, this._filtering, this.anisotropicFilterExt);
+        }
     };
     /**
      * Binds the given {@link Texture} or {@link Cubemap} resource or the texture
@@ -1987,12 +2200,12 @@ define([
         // if needed, determine the bind locaton automatically
         if (place === undefined) {
             // find out if there is a preferred bind location
-            place = texture.getTextureBindLocation(this);
+            place = texture.getLastTextureBindLocation(this._name);
             // if there is no preferred location or another texture is bound to the preferred location,
             // find the first free place, and bind the texture there
             if ((place === undefined) || (place === FrameBuffer.prototype.TEXTURE_LOCATION_NOT_SET) || (this._boundTextures[place].texture !== texture)) {
                 place = 0;
-                while ((place < this._maxBoundTextures) && (place < this._boundTextures.length) && (this._boundTextures[place] !== undefined)) {
+                while ((place < this._maxBoundTextures) && (place < this._boundTextures.length) && (this._boundTextures[place])) {
                     place++;
                 }
                 // if there is no free space left, bind to a rotating location, excluding the reserved
@@ -2006,24 +2219,19 @@ define([
                 }
             }
         }
-        // only bound to it the given texture if currenty it is unbound or a different texture is bound to it
+        // only bind to it the given texture location if currenty it is unbound or a different texture is bound to it
         if (!this._boundTextures[place] || (this._boundTextures[place].texture !== texture)) {
-            // make the selected texture unit active
-            this.gl.activeTexture(this.gl.TEXTURE0 + place);
             if (texture instanceof ManagedTexture) {
-                application.log("Binding texture: '" + texture.getName() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getIDForContext(this));
-                texture.setTextureBindLocation(this, place);
+                application.log("Binding texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
+                texture.bindGLTexture(this._name, this.gl, place);
             } else
             if (texture instanceof ManagedCubemap) {
-                application.log("Binding cubemap texture: '" + texture.getName() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
-                this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture.getIDForContext(this));
-                texture.setTextureBindLocation(this, place);
+                application.log("Binding cubemap texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
+                texture.bindGLTexture(this._name, this.gl, place);
             } else
             if (texture instanceof FrameBuffer) {
-                application.log("Binding framebuffer texture: '" + texture.getName() + "' to place " + place + (reserved ? ", reserving place." : "."), 3);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, texture.getTextureID());
-                texture.setTextureBindLocation(place);
+                application.log("Binding framebuffer texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
+                texture.bindGLTexture(this.gl, place);
             } else {
                 application.showError("Cannot set object: '" + texture.toString() + "' as current texture, because it is not of an appropriate type.");
             }
@@ -2036,10 +2244,37 @@ define([
         }
         return place;
     };
+    /**
+     * If the passed texture is currently bound to a texture unit, removes that binding.
+     * @param {ManagedTexture|ManagedCubemap|Framebuffer} texture
+     */
+    ManagedGLContext.prototype.unbindTexture = function (texture) {
+        var place = texture && texture.getLastTextureBindLocation(this._name);
+        if ((place !== undefined) && (place >= 0) && (this._boundTextures[place] === texture)) {
+            this.gl.activeTexture(this.gl.TEXTURE0 + place);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+            this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, null);
+            this._boundTextures[place] = null;
+            texture.forgetLastTextureBindLocation(this._name);
+        }
+    };
+    /**
+     * Removes the passed texture if it has been added to the context before as well as deletes its underlying WebGL texture object.
+     * @param {ManagedTexture|ManagedCubemap} texture
+     */
+    ManagedGLContext.removeTexture = function (texture) {
+        var index = this._textures.indexOf(texture);
+        if (index >= 0) {
+            this.unbindTexture(texture);
+            texture.deleteGLTexture(this._name, this.gl);
+            this._textures.splice(index, 1);
+        }
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         TextureFiltering: TextureFiltering,
+        ShaderBlendMode: ShaderBlendMode,
         getUniformName: ShaderUniform.prototype.getUniformName,
         getTextureUniformRawName: ShaderUniform.prototype.getTextureUniformRawName,
         getCubemapUniformRawName: ShaderUniform.prototype.getCubemapUniformRawName,

@@ -1,0 +1,1 @@
+v_worldPos = gl_Position;

@@ -162,6 +162,7 @@ define([
         _level = null;
         if (_battleScene) {
             _battleScene.clearNodes();
+            _battleScene.clearPointLights();
         }
         _battleScene = null;
     }
@@ -731,6 +732,8 @@ define([
                 _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {
+                    this.setAntialiasing(graphics.getAntialiasing());
+                    this.setFiltering(graphics.getFiltering());
                     this.clearSceneCanvasBindings();
                     this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
                     this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);

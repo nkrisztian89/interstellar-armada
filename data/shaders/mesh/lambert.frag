@@ -1,24 +1,13 @@
-// Lambert shading with one light source.
+#version 100
 
 precision mediump float;
 
-struct Light
-    {
-        vec3 color;
-        vec3 direction;
-    };
+#include "mesh/variables/dir-lights.glsl"
 
-uniform sampler2D u_diffuseTexture;
-uniform Light u_lights[1];
-	
-varying vec2 v_texCoord;
-varying vec3 v_normal;
-varying vec4 v_color;
+#include "mesh/variables/model-diff-frag.glsl"
 
 void main() {
-    vec4 texCol = texture2D(u_diffuseTexture, v_texCoord);
-    // interpolated normals can have different then unit length
-    vec3 normal = normalize(v_normal);
-    gl_FragColor.rgb = v_color.rgb * texCol.rgb * u_lights[0].color * max(0.0, dot(+u_lights[0].direction, normal));
-    gl_FragColor.a = v_color.a * texCol.a;
+#include "mesh/frag/prep-diff.glsl"
+#include "mesh/frag/simple-diff.glsl"
+#include "mesh/frag/alpha.glsl"
 }

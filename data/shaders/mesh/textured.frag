@@ -1,4 +1,4 @@
-// Simple shader that uses a texture modulated by vertex attribute colors.
+#version 100
 
 precision mediump float;
 

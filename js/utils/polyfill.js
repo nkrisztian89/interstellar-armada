@@ -74,14 +74,43 @@
         return radians * 180 / Math.PI;
     };
 
-    Array.prototype.findIndex = Array.prototype.findIndex || function (test) {
+    /**
+     * @typedef {Function} arrayFindCallback
+     * @param {} element
+     * @param {Number} index
+     * @param {Array} array
+     * @returns {Boolean}
+     */
+    /**
+     * Returns the index of the first element stored in the array that passes the given test, or -1 if no elements pass the test.
+     * @param {arrayFindCallback} callback The function to test the elements.
+     * @param {Object} [thisArg] If given, this will be the value of this when the test function is called.
+     * @returns {Number}
+     */
+    Array.prototype.findIndex = Array.prototype.findIndex || function (callback, thisArg) {
         var i;
         for (i = 0; i < this.length; i++) {
-            if (test(this[i], i, this)) {
+            if (callback.call(thisArg || callback, this[i], i, this)) {
                 return i;
+            }
+        }
+        return -1;
+    };
+    /**
+     * Returns the first element stored in the array that passes the given test, or undefined if no elements pass the test.
+     * @param {arrayFindCallback} callback The function to test the elements.
+     * @param {Object} [thisArg] If given, this will be the value of this when the test function is called.
+     * @returns {}
+     */
+    Array.prototype.find = Array.prototype.find || function (callback, thisArg) {
+        var i;
+        for (i = 0; i < this.length; i++) {
+            if (callback.call(thisArg || callback, this[i], i, this)) {
+                return this[i];
             }
         }
         return undefined;
     };
+
 
 }());

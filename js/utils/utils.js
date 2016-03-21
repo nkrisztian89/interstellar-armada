@@ -295,12 +295,19 @@ define(function () {
                         exports.getDelimitedStringForNumber(Math.round(massInKilograms / 1000)) + " t");
     };
     /**
-     * Converts the string to all uppercase and replaces spaces with underscores
+     * Converts the string to all uppercase and replaces spaces with underscores as well as inserts underscores before uppercase letters
      * @param {String} string
      * @returns {String}
      */
     exports.constantName = function (string) {
-        return string.toUpperCase().replace(/ /g, "_");
+        var result = "", i;
+        for (i = 0; i < string.length; i++) {
+            if (string[i].match(/[A-Z]/)) {
+                result += "_";
+            }
+            result += (string[i] === " ") ? "_" : string[i].toUpperCase();
+        }
+        return result;
     };
     /**
      * Replaces parts of a string marked by curly braces with the properties of the passed object

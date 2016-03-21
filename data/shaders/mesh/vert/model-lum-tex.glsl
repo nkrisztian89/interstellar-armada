@@ -1,0 +1,1 @@
+v_luminosityFactor = u_luminosityFactors[int(a_groupIndex)];

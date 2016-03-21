@@ -97,7 +97,6 @@ define([
         HIGH: {name: "setting.high"},
         VERY_HIGH: {name: "setting.veryHigh"},
         NORMAL: {name: "setting.normal"},
-        SIMPLE: {name: "setting.simple"},
         MINIMUM: {name: "setting.minimum"},
         MAXIMUM: {name: "setting.maximum"},
         FEW: {name: "setting.few"},

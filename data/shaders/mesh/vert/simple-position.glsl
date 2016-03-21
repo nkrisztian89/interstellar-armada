@@ -1,0 +1,1 @@
+gl_Position = u_projMatrix * u_cameraMatrix * u_modelMatrix * vec4(a_position, 1.0);

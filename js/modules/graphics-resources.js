@@ -82,8 +82,32 @@ define([
              * @type String
              */
             MODEL_FOLDER = "model",
+            /**
+             * Lines in shader sources starting with this string are treated as include statements referencing another shader source file
+             * to be inserted into the source in the place of the line, with the name (path) of the file to be inserted starting after this
+             * prefix.
+             * @type String
+             */
+            SHADER_INCLUDE_STATEMENT_PREFIX = '#include "',
+            /**
+             * When parsing an include statement in a shader source, this suffix at the end of the line of the include statement is not 
+             * considered to be the part of the path of the referenced file.
+             * @type String
+             */
+            SHADER_INCLUDE_STATEMENT_SUFFIX = '"',
             // ------------------------------------------------------------------------------
             // module variables
+            /**
+             * @typedef {Object} ShaderIncludeCacheObject
+             * @property {String} source
+             * @property {Function[]} onLoad
+             */
+            /**
+             * Stores the texts of the already downloaded shader includes (shader sources that are included in another source) and the 
+             * onLoad queues of the ones that being downloaded.
+             * @type Object.<String, ShaderIncludeCacheObject>
+             */
+            _shaderIncludeCache = {},
             /**
              * This graphics resource manager will be used to load and access the graphics resources.
              * @type GraphicsResourceManager
@@ -443,9 +467,10 @@ define([
          */
         this._fragmentShaderSourcePath = dataJSON.fragmentShaderSource;
         /**
+         * (enum ShaderBlendMode)
          * @type String
          */
-        this._blendType = dataJSON.blendType;
+        this._blendMode = types.getEnumValue("shader.blendMode", managedGL.ShaderBlendMode, dataJSON.blendMode);
         /**
          * The roles of the vertex attributes (= the name of the data array returned by the model from which they should get their values)
          * organized by the names of the vertex attributes.
@@ -469,9 +494,121 @@ define([
          * @type ShaderResource~ManagedShaderBinding[]
          */
         this._managedShaderBindings = [];
+        /**
+         * The total number of shader includes (references shader source files to be inserted into the sources of this shader) of the sources
+         * of this shader.
+         * @type Number
+         */
+        this._shaderIncludesToLoad = 0;
+        /**
+         * The number of already loaded and inserted shader includes of this shader.
+         * @type Number
+         */
+        this._shaderIncludesLoaded = 0;
     }
     ShaderResource.prototype = new resourceManager.GenericResource();
     ShaderResource.prototype.constructor = ShaderResource;
+    /**
+     * Returns whether all source files needed to assemble the final sources of this shader have been loaded and inserted.
+     * @returns {Boolean}
+     */
+    ShaderResource.prototype._allSourcesLoaded = function () {
+        return (this._vertexShaderSource && this._fragmentShaderSource && (this._shaderIncludesLoaded === this._shaderIncludesToLoad));
+    };
+    /**
+     * To be called when a new shader include (references file) has finished downloading - saves the text of the file to the cache and calls
+     * the resolution method as well as any other functions queued to execute on the loading of this file. (i.e. this will call the resolution
+     * as many times as it has been requested so far for this particular file)
+     * @param {String} shaderType (enum ShaderType) The type of the shader in which to insert the source of the downloaded file.
+     * @param {String} includeSourceFilename The name of the file (the path by which it was referenced)
+     * @param {String} responseText The text of the downloaded file.
+     */
+    ShaderResource.prototype._loadIncludeSource = function (shaderType, includeSourceFilename, responseText) {
+        var i;
+        _shaderIncludeCache[includeSourceFilename].source = responseText;
+        this._resolveInclude(shaderType, includeSourceFilename);
+        for (i = 0; i < _shaderIncludeCache[includeSourceFilename].onLoad.length; i++) {
+            _shaderIncludeCache[includeSourceFilename].onLoad[i]();
+        }
+    };
+    /**
+     * Extracts the name (path) of the referenced file from the passed source line.
+     * @param {String} sourceLine Should be an include statement
+     */
+    ShaderResource.prototype._getIncludeFileName = function (sourceLine) {
+        return sourceLine.substr(SHADER_INCLUDE_STATEMENT_PREFIX.length, sourceLine.length - (SHADER_INCLUDE_STATEMENT_PREFIX.length + SHADER_INCLUDE_STATEMENT_SUFFIX.length));
+    };
+    /**
+     * Inserts the (downloaded and cached) text of an include file into the source of the shader of the passed type. Only replaces the first
+     * occurence of the include statement. (that refers to the file with the passed name (path)
+     * @param {String} shaderType (enum ShaderType) The type of the shader in which to insert the source of the downloaded file.
+     * @param {String} includeFileName
+     */
+    ShaderResource.prototype._resolveInclude = function (shaderType, includeFileName) {
+        var i, includeText = _shaderIncludeCache[includeFileName].source, sourceLines;
+        switch (shaderType) {
+            case ShaderType.VERTEX:
+                sourceLines = this._vertexShaderSource.split("\n");
+                break;
+            case ShaderType.FRAGMENT:
+                sourceLines = this._fragmentShaderSource.split("\n");
+                break;
+            default:
+                application.crash();
+        }
+        for (i = 0; i < sourceLines.length; i++) {
+            if (sourceLines[i].substr(0, SHADER_INCLUDE_STATEMENT_PREFIX.length) === SHADER_INCLUDE_STATEMENT_PREFIX) {
+                if (includeFileName === this._getIncludeFileName(sourceLines[i])) {
+                    sourceLines[i] = includeText;
+                    switch (shaderType) {
+                        case ShaderType.VERTEX:
+                            this._vertexShaderSource = sourceLines.join("\n");
+                            break;
+                        case ShaderType.FRAGMENT:
+                            this._fragmentShaderSource = sourceLines.join("\n");
+                            break;
+                        default:
+                            application.crash();
+                    }
+                    this._resolveSource(shaderType, includeText);
+                    break;
+                }
+            }
+        }
+        this._shaderIncludesLoaded++;
+        if (this._allSourcesLoaded()) {
+            this.setToReady();
+        }
+    };
+    /**
+     * Parses the passed shader source text for include statements and either replaces them if the referenced file has already been downloaded
+     * and cached or initiates their download and queues the replacement for when the download has finished.
+     * @param {String} shaderType (enum ShaderType) The type of the shader in which to insert the source of the downloaded files.
+     * @param {String} sourceText The whole or a part of the source of the shader source to scan for include statements.
+     */
+    ShaderResource.prototype._resolveSource = function (shaderType, sourceText) {
+        var i, sourceLines = sourceText.split("\n"), includeSourceFilenames = [];
+        for (i = 0; i < sourceLines.length; i++) {
+            if (sourceLines[i].substr(0, SHADER_INCLUDE_STATEMENT_PREFIX.length) === SHADER_INCLUDE_STATEMENT_PREFIX) {
+                includeSourceFilenames.push(this._getIncludeFileName(sourceLines[i]));
+                this._shaderIncludesToLoad++;
+            }
+        }
+        for (i = 0; i < includeSourceFilenames.length; i++) {
+            if (_shaderIncludeCache[includeSourceFilenames[i]]) {
+                if (_shaderIncludeCache[includeSourceFilenames[i]].source) {
+                    this._resolveInclude(shaderType, includeSourceFilenames[i]);
+                } else {
+                    _shaderIncludeCache[includeSourceFilenames[i]].onLoad.push(this._resolveInclude.bind(this, shaderType, includeSourceFilenames[i]));
+                }
+            } else {
+                _shaderIncludeCache[includeSourceFilenames[i]] = {
+                    onLoad: []
+                };
+                application.requestTextFile(SHADER_FOLDER, includeSourceFilenames[i], this._loadIncludeSource.bind(this, shaderType, includeSourceFilenames[i]));
+            }
+        }
+    };
     /**
      * @override
      * @returns {Boolean}
@@ -487,10 +624,10 @@ define([
      */
     ShaderResource.prototype._requestFiles = function () {
         application.requestTextFile(SHADER_FOLDER, this._vertexShaderSourcePath, function (responseText) {
-            this._onFilesLoad(this._fragmentShaderSource !== null, {shaderType: ShaderType.VERTEX, text: responseText});
+            this._onFilesLoad(false, {shaderType: ShaderType.VERTEX, text: responseText});
         }.bind(this));
         application.requestTextFile(SHADER_FOLDER, this._fragmentShaderSourcePath, function (responseText) {
-            this._onFilesLoad(this._vertexShaderSource !== null, {shaderType: ShaderType.FRAGMENT, text: responseText});
+            this._onFilesLoad(false, {shaderType: ShaderType.FRAGMENT, text: responseText});
         }.bind(this));
     };
     /**
@@ -507,6 +644,10 @@ define([
                 break;
             default:
                 application.crash();
+        }
+        this._resolveSource(params.shaderType, params.text);
+        if (this._allSourcesLoaded()) {
+            this.setToReady();
         }
     };
     /**
@@ -535,7 +676,7 @@ define([
             }
         }
         this._managedShaderBindings.push({
-            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendType, this._vertexAttributeRoles, this._instanceAttributeRoles, replacedDefines),
+            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendMode, this._vertexAttributeRoles, this._instanceAttributeRoles, replacedDefines),
             replacedDefines: replacedDefines
         });
         return this._managedShaderBindings[this._managedShaderBindings.length - 1].managedShader;

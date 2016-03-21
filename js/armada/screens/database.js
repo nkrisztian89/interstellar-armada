@@ -155,7 +155,7 @@ define([
      * @returns {Boolean}
      */
     function _showWireframeModel() {
-        return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) ?
+        return graphics.isRevealAvailable() ?
                 _getSetting(SETTINGS.SHOW_WIREFRAME_MODEL) :
                 !_getSetting(SETTINGS.SHOW_SOLID_MODEL);
     }
@@ -164,7 +164,7 @@ define([
      * @returns {Boolean}
      */
     function _shouldReveal() {
-        return (graphics.getShaderComplexity() === graphics.ShaderComplexity.NORMAL) &&
+        return graphics.isRevealAvailable() &&
                 _getSetting(SETTINGS.MODEL_REVEAL_ANIMATION);
     }
     /**
@@ -195,6 +195,7 @@ define([
                 _revealState = Math.min(elapsedTime / _getSetting(SETTINGS.REVEAL_DURATION), maxRevealState);
             } else {
                 _stopRevealLoop();
+                _itemViewScene.setShouldAnimate(true);
             }
         }, 1000 / _getSetting(SETTINGS.REVEAL_FPS));
     }
@@ -264,7 +265,7 @@ define([
         graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));
         if (_getSetting(SETTINGS.SHOW_SOLID_MODEL)) {
             // add the ship to the scene in triangle drawing mode
-            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: false}, function (model) {
+            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: true}, function (model) {
                 _solidModel = model;
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
                 _solidModel.getNode().setShader(graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME)).getManagedShader());
@@ -466,6 +467,7 @@ define([
         _stopRevealLoop();
         _stopRotationLoop();
         _itemViewScene.clearNodes();
+        _itemViewScene.clearPointLights();
         _itemViewScene = null;
         if (_currentItem) {
             _currentItem.destroy();
@@ -642,6 +644,7 @@ define([
         screens.HTMLScreenWithCanvases.prototype.hide.call(this);
         this.executeWhenReady(function () {
             _itemViewScene.clearNodes();
+            _itemViewScene.clearPointLights();
             this.render();
         });
     };
@@ -680,6 +683,8 @@ define([
         this.stopRenderLoop();
         // clear the previous scene graph and render the empty scene to clear the canvas 
         _itemViewScene.clearNodes();
+        _itemViewScene.clearPointLights();
+        _itemViewScene.setShouldAnimate(false);
         if (_currentItem) {
             _currentItem.destroy();
         }
@@ -727,6 +732,7 @@ define([
                     _startRevealLoop();
                 } else {
                     _revealState = REVEAL_SOLID_END_STATE;
+                    _itemViewScene.setShouldAnimate(true);
                 }
                 document.body.classList.remove("wait");
                 if ((_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) ||

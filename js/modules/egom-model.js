@@ -1005,17 +1005,17 @@ define([
     Mesh.prototype.renderInstances = function (context, wireframe, opaque, instanceCount) {
         var props = this._contextProperties[context.getName()];
         if (wireframe === true) {
-            context.instancing.drawArraysInstancedANGLE(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length, instanceCount);
+            context.instancingExt.drawArraysInstancedANGLE(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length, instanceCount);
         } else {
             switch (opaque) {
                 case true:
-                    context.instancing.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles, instanceCount);
+                    context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles, instanceCount);
                     break;
                 case false:
-                    context.instancing.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles, instanceCount);
+                    context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles, instanceCount);
                     break;
                 case undefined:
-                    context.instancing.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length, instanceCount);
+                    context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length, instanceCount);
                     break;
             }
         }
@@ -1967,7 +1967,6 @@ define([
      * functions.
      */
     Model.prototype.addToContext = function (context, wireframe) {
-        application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
         this._minLOD = (this._minLOD !== this.LOD_NOT_SET) ? this._minLOD : 0;
         this._maxLOD = (this._maxLOD !== this.LOD_NOT_SET) ? this._maxLOD : 0;
         // get the already stored properties for easier access
@@ -1975,6 +1974,7 @@ define([
         // If the model hasn't been added to this context at all yet, add it with
         // the appropriate mode.
         if (!props) {
+            application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
             props = new ModelContextProperties();
             props.wireframe = wireframe;
             props.solid = !wireframe;
@@ -1987,18 +1987,22 @@ define([
             // data will need to be loaded to the buffers.
         } else {
             if (!props.wireframe && wireframe) {
+                application.log("Adding model (" + this._name + ") to context in wireframe mode)...", 2);
                 props.wireframe = true;
                 context.resetReadyState();
             }
             if (!props.solid && !wireframe) {
+                application.log("Adding model (" + this._name + ") to context in solid mode)...", 2);
                 props.solid = true;
                 context.resetReadyState();
             }
             if (props.minLOD > this._minLOD) {
+                application.log("Adding model (" + this._name + ") to context with minimum LOD " + this._minLOD + "...", 2);
                 props.minLOD = this._minLOD;
                 context.resetReadyState();
             }
             if (props.maxLOD < this._maxLOD) {
+                application.log("Adding model (" + this._name + ") to context with maximum LOD " + this._maxLOD + "...", 2);
                 props.maxLOD = this._maxLOD;
                 context.resetReadyState();
             }

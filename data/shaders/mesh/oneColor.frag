@@ -1,4 +1,4 @@
-// A shader that simply displays the color set in a uniform.
+#version 100
 
 precision mediump float;
 	

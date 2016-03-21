@@ -271,7 +271,7 @@
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -30, 6.5]
+            "position": [0, -28, 6.5]
         },
         {
             "name": "far",

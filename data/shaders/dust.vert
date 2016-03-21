@@ -1,5 +1,7 @@
 #version 100
 
+precision mediump float;
+
 #define DUST_LENGTH_DIVISOR 200.0
 
 // scene uniforms
