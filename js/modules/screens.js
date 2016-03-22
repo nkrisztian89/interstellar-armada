@@ -501,7 +501,7 @@ define([
      */
     ScreenCanvas.prototype.getManagedContext = function () {
         if (!this._context) {
-            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id") + performance.now(), this._canvas, this._antialiasing, this._filtering);
+            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, this._antialiasing, this._filtering);
         }
         return this._context;
     };
@@ -804,6 +804,7 @@ define([
             clearInterval(this._renderLoop);
         }
         this._renderLoop = LOOP_CANCELED;
+        this._renderTimes = null;
     };
     /**
      * Returns the Frames Per Second count for this screen's render loop.

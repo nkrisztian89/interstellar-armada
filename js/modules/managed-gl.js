@@ -1922,8 +1922,10 @@ define([
      * @param {Model} model
      */
     ManagedGLContext.prototype.addModel = function (model) {
-        this._models.push(model);
-        this.resetReadyState();
+        if (this._models.indexOf(model) < 0) {
+            this._models.push(model);
+            this.resetReadyState();
+        }
     };
     /**
      * Returns the vertex buffer with the given name, if such exists. Otherwise
@@ -2067,6 +2069,9 @@ define([
      */
     ManagedGLContext.prototype.setupFrameBuffers = function () {
         var fbName;
+        if (this.isReadyToUse()) {
+            return;
+        }
         for (fbName in this._frameBuffers) {
             if (this._frameBuffers.hasOwnProperty(fbName)) {
                 this._frameBuffers[fbName].setup(this);

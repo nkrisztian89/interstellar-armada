@@ -61,6 +61,7 @@ define([
             LOADING_INITIAL_PROGRESS = 15,
             LOADING_RESOURCES_START_PROGRESS = 15,
             LOADING_RESOURCE_PROGRESS = 60,
+            LOADING_INIT_WEBGL_PROGRESS = LOADING_RESOURCES_START_PROGRESS + LOADING_RESOURCE_PROGRESS,
             UNIFORM_REVEAL_FRONT_NAME = "revealFront",
             UNIFORM_REVEAL_START_NAME = "revealStart",
             UNIFORM_REVEAL_TRANSITION_LENGTH_NAME = "revealTransitionLength",
@@ -175,14 +176,21 @@ define([
         _revealLoop = LOOP_CANCELED;
     }
     /**
+     * Resets the current reveal state to its initial (no parts revealed) state.
+     */
+    function _resetRevealState() {
+        _revealState = 0;
+    }
+    /**F
      * Resets the reveal state and sets a loop to update it according to the current settings
      */
     function _startRevealLoop() {
         var
                 revealStartDate = performance.now(),
+                startRevealState = _showWireframeModel() ? REVEAL_WIREFRAME_START_STATE : REVEAL_SOLID_START_STATE,
                 maxRevealState = (_getSetting(SETTINGS.SHOW_SOLID_MODEL) ? REVEAL_SOLID_END_STATE : REVEAL_WIREFRAME_END_STATE),
                 elapsedTime;
-        _revealState = _showWireframeModel() ? REVEAL_WIREFRAME_START_STATE : REVEAL_SOLID_START_STATE;
+        _revealState = startRevealState;
         // creating the reveal function on-the-fly so we can use closures, and as a new loop is not started frequently
         _revealLoop = setInterval(function () {
             elapsedTime = performance.now() - revealStartDate;
@@ -192,7 +200,7 @@ define([
             }
             // calculating the current reveal state
             if (_revealState < maxRevealState) {
-                _revealState = Math.min(elapsedTime / _getSetting(SETTINGS.REVEAL_DURATION), maxRevealState);
+                _revealState = Math.min(startRevealState + elapsedTime / _getSetting(SETTINGS.REVEAL_DURATION), maxRevealState);
             } else {
                 _stopRevealLoop();
                 _itemViewScene.setShouldAnimate(true);
@@ -717,30 +725,35 @@ define([
                 _scaleModels(_currentItemOriginalScale * _getSetting(SETTINGS.START_SIZE_FACTOR));
                 // setting the front that will be used by reveal shaders
                 _currentItemFront = _currentItem.getVisualModel().getMaxY();
-                // if no loops are running, a single render is enough since the scene will be static
-                if (!_getSetting(SETTINGS.MODEL_AUTO_ROTATION) && !_getSetting(SETTINGS.MODEL_MOUSE_ROTATION) && !_shouldReveal()) {
-                    this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
-                    this.render();
-                } else {
-                    this.startRenderLoop(1000 / _getSetting(SETTINGS.RENDER_FPS));
-                }
-                // starting rotation and reveal loops, as needed
-                if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
-                    _startRotationLoop(_shouldReveal() ? _getSetting(SETTINGS.ROTATION_REVEAL_START_ANGLE) : _getSetting(SETTINGS.ROTATION_START_ANGLE));
-                }
+                this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
+                this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
                 if (_shouldReveal()) {
-                    _startRevealLoop();
-                } else {
-                    _revealState = REVEAL_SOLID_END_STATE;
-                    _itemViewScene.setShouldAnimate(true);
+                    _resetRevealState();
                 }
-                document.body.classList.remove("wait");
-                if ((_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) ||
-                        (!_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_ON_ITEM_CHANGE))) {
-                    this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
-                    this._loadingBox.hide();
-                }
-                _firstLoad = false;
+                this.render();
+                utils.executeAsync(function () {
+                    // if no loops are running, a single render is enough since the scene will be static
+                    if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION) || _getSetting(SETTINGS.MODEL_MOUSE_ROTATION) || _shouldReveal()) {
+                        this.startRenderLoop(1000 / _getSetting(SETTINGS.RENDER_FPS));
+                    }
+                    // starting rotation and reveal loops, as needed
+                    if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
+                        _startRotationLoop(_shouldReveal() ? _getSetting(SETTINGS.ROTATION_REVEAL_START_ANGLE) : _getSetting(SETTINGS.ROTATION_START_ANGLE));
+                    }
+                    if (_shouldReveal()) {
+                        _startRevealLoop();
+                    } else {
+                        _revealState = REVEAL_SOLID_END_STATE;
+                        _itemViewScene.setShouldAnimate(true);
+                    }
+                    document.body.classList.remove("wait");
+                    if ((_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) ||
+                            (!_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_ON_ITEM_CHANGE))) {
+                        this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
+                        this._loadingBox.hide();
+                    }
+                    _firstLoad = false;
+                }.bind(this));
             }.bind(this), function () {
                 // if the resources are not ready, display the loading box
                 if (!_firstLoad && _getSetting(SETTINGS.SHOW_LOADING_BOX_ON_ITEM_CHANGE)) {
