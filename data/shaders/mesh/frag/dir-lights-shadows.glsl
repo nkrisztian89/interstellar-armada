@@ -36,7 +36,6 @@
                     // whether the projection of this fragment to the shadow map planes has already
                     // fallen into the covered area
                     covered = false;
-                    float translationLength = 0.0;
                     float range = 0.0;
                     // going through each shadow map (start and end indices need to be constant)
                     for (int j = 0; j < MAX_SHADOW_MAP_RANGES; j++) {
@@ -44,14 +43,13 @@
                         if (j < u_numRanges) {
                             // the range of the current shadow map (length of the area covered from center
                             // to the sides of the map in world coordinates)
-                            translationLength = -range;
                             range = u_shadowMapRanges[j];
-                            translationLength += range;
                             float depthRange = range * u_shadowMapDepthRatio;
                             // the coordinates in shadow mapping space translated to have the current map center in the origo
-                            shadowMapPosition = (u_dirLights[i].translationVector * translationLength) + v_shadowMapPosition[i].xyz;
-                            if (j == u_numRanges - 1) {
-                                shade = 1.0 - clamp(((distFromEye / (translationLength + range)) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0, 1.0);
+                            // an offset based on the normal vector of the surface is also applied to help eliminate shadow acne, which has a higher coefficient for surfaces more parallel to the light
+                            shadowMapPosition = u_dirLights[i].translationVector * range + v_shadowMapPosition[i].xyz + normalize(v_shadowMapNormal[i]) * (NORMAL_OFFSET_SCALE * range * (-1.0 * diffuseFactor * diffuseFactor + 1.0));
+                            if ((j == u_numRanges - 1) && (distFromEye > range)) {
+                                shade = 1.0 - clamp((((distFromEye - range) / range) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0, 1.0);
                             }
                             // only check if the current fragment is (could be) covered by the current shadow map
                             if (length(shadowMapPosition.xy) < range) {
@@ -69,41 +67,51 @@
                                     //shadowMapTexel = texture2D(u_shadowMaps[i * MAX_SHADOW_MAP_RANGES + j], shMapTexCoords);
                                     int shMapIndex = i * u_numRanges + j;
                                     for (int k = 0; k < NUM_SHADOW_MAP_SAMPLES; k++) {
+                                        vec2 shadowMapSampleOffset = v_shadowMapSampleOffsetTransform[i] * u_shadowMapSampleOffsets[k];
                                         if (shMapIndex == 0) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[0], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[0], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 1) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[1], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[1], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 2) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[2], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[2], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 3) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[3], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[3], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 4) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[4], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[4], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 5) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[5], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[5], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 6) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[6], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[6], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 7) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[7], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[7], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 8) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[8], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[8], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 9) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[9], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[9], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 10) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[10], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[10], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 11) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[11], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[11], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
+                                        } else 
+                                        if (shMapIndex == 12) {
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[12], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
+                                        } else 
+                                        if (shMapIndex == 13) {
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[13], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
+                                        } else 
+                                        if (shMapIndex == 14) {
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[14], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         }
                                         // depth check is performed with a tolerance for small errors
                                         float absErrorTolerance = 1.0 / 255.0 * depthRange;

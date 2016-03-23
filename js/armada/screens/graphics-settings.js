@@ -105,11 +105,11 @@ define([
              */
             _getShadowDistanceSettingValues = function () {
                 return [
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_CLOSE), 2],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_CLOSE), 3],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_MEDIUM), 4],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_FAR), 5],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_FAR), 6]
+                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_CLOSE), 3],
+                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_CLOSE), 4],
+                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_MEDIUM), 5],
+                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_FAR), 6],
+                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_FAR), 7]
                 ];
             },
             _getMaxDynamicLightsSettingValues = function () {

@@ -5759,7 +5759,7 @@ define([
         // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
         // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
         this._matrix = this._matrix || mat.prod4(camera.getInversePositionMatrix(), this._orientationMatrix);
-        this._translationVector = this._translationVector || new Float32Array(vec.normal3(vec.diff3(mat.translationVector3(matrix), mat.translationVector3(this._matrix))));
+        this._translationVector = this._translationVector || vec.normal3(vec.diff3(mat.translationVector3(matrix), mat.translationVector3(this._matrix)));
         uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
             return matrix;
         };
@@ -6267,6 +6267,7 @@ define([
          */
         this._numShadowMapSamples = 0;
         /**
+         * When sampling a shadow map for PCF, the samples will be taken from coordinates offset from the center by these vectors.
          * @type Number[][]
          */
         this._shadowMapSampleOffsets = [];
@@ -6554,7 +6555,7 @@ define([
      * @param {Number[]} ranges
      */
     Scene.prototype.setShadowMapRanges = function (ranges) {
-        this._shadowMapRanges = ranges;
+        this._shadowMapRanges = new Float32Array(ranges);
         this._setupContext();
     };
     /**
@@ -6577,7 +6578,7 @@ define([
             this._shadowMappingEnabled = (params.enable !== undefined) ? params.enable : this._shadowMappingEnabled;
             this._shadowMappingShader = params.shader || this._shadowMappingShader;
             this._shadowMapTextureSize = params.textureSize || this._shadowMapTextureSize;
-            this._shadowMapRanges = params.ranges || this._shadowMapRanges;
+            this._shadowMapRanges = params.ranges ? new Float32Array(params.ranges) : this._shadowMapRanges;
             this._shadowMapDepthRatio = params.depthRatio || this._shadowMapDepthRatio;
             this._numShadowMapSamples = params.numSamples ? types.getNumberValueInRange(
                     "shadowMappingParams.numSamples",
@@ -6976,7 +6977,7 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype._renderShadowMaps = function (context) {
-        var i, j, translationLength = 0;
+        var i, j;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
             application.log("Rendering shadow maps for scene...", 4);
@@ -6987,8 +6988,7 @@ define([
             for (i = 0; i < this._directionalLights.length; i++) {
                 this._directionalLights[i].reset();
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
-                    translationLength = (this._shadowMapRanges[j] - ((j > 0) ? this._shadowMapRanges[j - 1] : 0));
-                    this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, translationLength);
+                    this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, this._shadowMapRanges[j]);
                     this._renderShadowMap(context);
                 }
             }

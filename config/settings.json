@@ -8,7 +8,7 @@
             "shadowMapping": true,
             "shadows": {
                 "quality": 2048,
-                "ranges": [2, 8, 21, 100, 350, 1500],
+                "ranges": [2, 6, 18, 54, 162, 486, 1458],
                 "numRanges": 4,
                 "depthRatio": 1.5
             },

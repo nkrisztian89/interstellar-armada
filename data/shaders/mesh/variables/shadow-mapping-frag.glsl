@@ -9,6 +9,8 @@
 
 #define NUM_SHADOW_MAP_SAMPLES 9
 
+#define NORMAL_OFFSET_SCALE 0.000275
+
 uniform sampler2D u_shadowMaps[MAX_SHADOW_MAPS];
 uniform bool u_shadows;
 uniform float u_shadowMapRanges[MAX_SHADOW_MAP_RANGES];
@@ -19,4 +21,6 @@ uniform vec2 u_shadowMapSampleOffsets[NUM_SHADOW_MAP_SAMPLES];
 
 varying vec2 v_index;
 
-varying vec4 v_shadowMapPosition[MAX_DIR_LIGHTS];
+varying vec3 v_shadowMapPosition[MAX_DIR_LIGHTS];
+varying vec3 v_shadowMapNormal[MAX_DIR_LIGHTS];
+varying mat2 v_shadowMapSampleOffsetTransform[MAX_DIR_LIGHTS];
