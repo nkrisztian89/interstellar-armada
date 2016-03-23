@@ -239,7 +239,7 @@ define([
     function _showMissingPropertyError(classInstance, propertyName) {
         application.showError(
                 "Cannot initialize " + classInstance.constructor.name + " without correctly specifying its property '" + propertyName + "'!",
-                "severe",
+                application.ErrorSeverity.SEVERE,
                 "The property was either not specified, or it was specified with a wrong type or an invalid value." +
                 (((typeof classInstance._name) === "string") ?
                         "The error happened while initializing '" + classInstance._name + "'" : ""));
@@ -1656,7 +1656,7 @@ define([
                 (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
                         application.showError(
                                 "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
-                                "minor",
+                                application.ErrorSeverity.MINOR,
                                 "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
                 null) : null;
         /**
@@ -1669,7 +1669,7 @@ define([
                 (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
                         application.showError(
                                 "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
-                                "minor",
+                                application.ErrorSeverity.MINOR,
                                 "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
                 null) : null;
     }
@@ -1871,7 +1871,7 @@ define([
         if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
             application.showError(
                     "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
-                    "severe",
+                    application.ErrorSeverity.SEVERE,
                     "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
         }
         if (!this._followsPosition && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
@@ -1979,7 +1979,7 @@ define([
         if (!this._turnAroundAll && !this._startsWithRelativePosition && this._lookAtAll && this._confines && this._distanceRange) {
             application.showError(
                     "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
-                    "severe",
+                    application.ErrorSeverity.SEVERE,
                     "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
         }
         if (!this._turnAroundAll && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {

@@ -23,10 +23,33 @@
  */
 define(function () {
     "use strict";
-    // -------------------------------------------------------------------------
-    //Private members
     var
-            DEFAULT_TEXT_MIME_TYPE = "text/plain; charset=utf-8",
+            // -------------------------------------------------------------------------
+            // Enums
+            /**
+             * @enum {String}
+             * The possible levels for the severity of displayed errors.
+             */
+            ErrorSeverity = {
+                /**
+                 * The application is not functional after such an error.
+                 * @type String
+                 */
+                CRITICAL: "critical",
+                /**
+                 * The application is expected to produce serious bugs after such an error.
+                 * @type String
+                 */
+                SEVERE: "severe",
+                /**
+                 * The application should run fine after this kind of error, but with possible changes in settings / performace / features.
+                 * @type String
+                 */
+                MINOR: "minor"
+            },
+    // -------------------------------------------------------------------------
+    // Private variables
+    DEFAULT_TEXT_MIME_TYPE = "text/plain; charset=utf-8",
             /**
              * The associative array storing the names of the folders of the application, 
              * indexed by the types of files they contain.
@@ -57,9 +80,12 @@ define(function () {
              * @type String
              */
             _version = "";
-    // -------------------------------------------------------------------------
-    // Public methods
     return {
+        // -------------------------------------------------------------------------
+        // Public enums
+        ErrorSeverity: ErrorSeverity,
+        // -------------------------------------------------------------------------
+        // Public methods
         /**
          * Returns the path of the folder where the files of the passed type are stored,
          * relative to the site root.
@@ -78,7 +104,7 @@ define(function () {
             if (_folders[fileType] !== undefined) {
                 return _folders[fileType];
             }
-            this.showError("Asked for folder for file type '" + fileType + "', and folder for such files is not registered!", "severe");
+            this.showError("Asked for folder for file type '" + fileType + "', and folder for such files is not registered!", ErrorSeverity.SEVERE);
             return null;
         },
         /**
@@ -101,15 +127,15 @@ define(function () {
                             if (referringFolderFileTypes.indexOf(substitutedFolderFileType) < 0) {
                                 folder = folder.replace(folder.substring(start, Math.min(end + 3, folder.length)), resolveFolder(substitutedFolder, substitutedFolderFileType, referringFolderFileTypes.concat(fType)));
                             } else {
-                                this.showError("Circular reference detected among the following folders: " + referringFolderFileTypes.concat(fType).join(", "), "severe");
+                                this.showError("Circular reference detected among the following folders: " + referringFolderFileTypes.concat(fType).join(", "), ErrorSeverity.SEVERE);
                                 return null;
                             }
                         } else {
-                            this.showError("Invalid folder name specified! Cannot find referenced folder '" + folder.substring(start + 2, end) + "' in " + folder + "!", "severe");
+                            this.showError("Invalid folder name specified! Cannot find referenced folder '" + folder.substring(start + 2, end) + "' in " + folder + "!", ErrorSeverity.SEVERE);
                             return null;
                         }
                     } else {
-                        this.showError("Invalid folder name specified! Cannot resolve: '" + folder + "'", "severe", "References to other folders must be surrounded by {{ and }}.");
+                        this.showError("Invalid folder name specified! Cannot resolve: '" + folder + "'", ErrorSeverity.SEVERE, "References to other folders must be surrounded by {{ and }}.");
                         return null;
                     }
                 }
@@ -167,24 +193,23 @@ define(function () {
         /**
          * Notifies the user of an error that happened while running the game.
          * @param {String} message A brief error message to show.
-         * @param {String} [severity] The severity level of the error. Possible
-         * values: "critical", "severe", "minor".
+         * @param {String} [severity] (enum ErrorSeverity) The severity level of the error.
          * @param {String} [details] Additional details to show about the error,
          * with possible explanations or tips how to correct this error.
          */
         showError: function (message, severity, details) {
             var errorString = "Error: " + message + (details ? "\n\n" + details + "\n\n" : "\n\n");
             switch (severity) {
-                case "critical":
+                case ErrorSeverity.CRITICAL:
                     errorString += "Unfortunately this is a critical error.\n" +
                             "The application is not functional until this error is resolved.";
                     break;
-                case "severe":
+                case ErrorSeverity.SEVERE:
                     errorString += "This is a severe error.\n" +
                             "The application might produce unexpected behaviour from this point on. " +
                             "It is recommended that you restart the application by refreshing the page in your browser.";
                     break;
-                case "minor":
+                case ErrorSeverity.MINOR:
                     errorString += "This is a minor error.\n" +
                             "The application might be fully functional, but you might need to readjust some settings or take " +
                             "some other actions depending on the explanation of the error.";
@@ -236,10 +261,10 @@ define(function () {
                 onload(request);
             }.bind(this);
             request.onerror = function () {
-                this.showError("An error occured while trying to load file: '" + filename + "'.", "severe", "The status of the request was: '" + request.statusText + "' when the error happened.");
+                this.showError("An error occured while trying to load file: '" + filename + "'.", ErrorSeverity.SEVERE, "The status of the request was: '" + request.statusText + "' when the error happened.");
             }.bind(this);
             request.ontimeout = function () {
-                this.showError("Request to load the file: '" + filename + "' timed out.", "severe");
+                this.showError("Request to load the file: '" + filename + "' timed out.", ErrorSeverity.SEVERE);
             }.bind(this);
             if (customMimeType) {
                 request.overrideMimeType(customMimeType);
@@ -287,7 +312,8 @@ define(function () {
                     onload(responseXML);
                 } else {
                     this.showError("Could not parse XML file: '" + filename + "'.",
-                            "severe", "The file could be loaded, but for some reason the parsing of it has failed. \n" +
+                            ErrorSeverity.SEVERE,
+                            "The file could be loaded, but for some reason the parsing of it has failed. \n" +
                             "The status of the request was: '" + request.statusText + "' when the error happened.\n" +
                             "The text content of the file:\n" +
                             (request.responseText.length > 120 ?

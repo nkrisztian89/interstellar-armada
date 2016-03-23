@@ -244,7 +244,9 @@ define([
     SimpleComponent.prototype.initComponent = function () {
         this._element = document.getElementById(this._elementID);
         if (!this._element) {
-            application.showError("Cannot initialize component: '" + this._name + "'!", "severe",
+            application.showError(
+                    "Cannot initialize component: '" + this._name + "'!",
+                    application.ErrorSeverity.SEVERE,
                     "No element can be found on the page with a corresponding ID: '" + this._elementID + "'!");
         } else {
             this._displayStyle = this._element.style.display;
@@ -889,7 +891,9 @@ define([
             if (i < this._valueList.length) {
                 this.selectValueWithIndex(i);
             } else {
-                application.showError("Attempted to select value: '" + value + "' for '" + this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}) + "', which is not one of the available options.", "minor");
+                application.showError(
+                        "Attempted to select value: '" + value + "' for '" + this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}) + "', which is not one of the available options.",
+                        application.ErrorSeverity.MINOR);
             }
         } else {
             application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
@@ -908,7 +912,9 @@ define([
                     this.onChange();
                 }
             } else {
-                application.showError("Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1), "minor");
+                application.showError(
+                        "Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1),
+                        application.ErrorSeverity.MINOR);
             }
         } else {
             application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");

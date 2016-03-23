@@ -371,8 +371,8 @@ define([
         return new Float32Array([
             1 / right, 0.0, 0.0, 0.0,
             0.0, 1 / top, 0.0, 0.0,
-            0.0, 0.0, -2 / (far - near), 0.0,
-            0.0, 0.0, (far + near) / (far - near), 1.0
+            0.0, 0.0, -2.0 / (far - near), 0.0,
+            0.0, 0.0, -(near + far) / 2.0, 1.0
         ]);
     };
     /**

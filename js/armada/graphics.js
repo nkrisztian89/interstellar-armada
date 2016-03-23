@@ -615,7 +615,7 @@ define([
         } else {
             application.showError(
                     "Attempting to set shader complexity to '" + value + "', which is not one of the available options (" + this.getShaderComplexities().join(", ") + ").",
-                    "minor",
+                    application.ErrorSeverity.MINOR,
                     "The shader complexity will stay '" + this.getShaderComplexity() + "'.");
         }
     };

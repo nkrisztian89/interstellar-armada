@@ -1489,7 +1489,7 @@ define([
          */
         this._actionNames = dataJSON.actionNames;
         if (this._sensitivityFactor && this._staticSensitivity) {
-            application.showError("Sensitivity action group defined with both factored and static sensitivity!", "minor");
+            application.showError("Sensitivity action group defined with both factored and static sensitivity!", application.ErrorSeverity.MINOR);
         }
     }
     /**
@@ -1911,7 +1911,9 @@ define([
             }
         } else {
             application.showError("Attempting to initialize action '" + actionName + "', but no such action was defined " +
-                    "for '" + this.getType() + "' type controllers.", "severe", "The action definition might be missing from the " +
+                    "for '" + this.getType() + "' type controllers.",
+                    application.ErrorSeverity.SEVERE,
+                    "The action definition might be missing from the " +
                     "settings file, or the settings file has not been loaded properly. The game is still playable, " +
                     "but this action will not work until the error with the settings file is corrected and the game " +
                     "is restarted.");
@@ -2077,7 +2079,10 @@ define([
             // saving another reference for easier access
             this._inputInterpretersByType[interpreterTypeName] = inputInterpreter;
         } else {
-            application.showError("Attempting to add an input interpreter of an unregistered type to the control context!", "severe", "Interpreter type: " + inputInterpreter.constructor.name);
+            application.showError(
+                    "Attempting to add an input interpreter of an unregistered type to the control context!",
+                    application.ErrorSeverity.SEVERE,
+                    "Interpreter type: " + inputInterpreter.constructor.name);
         }
     };
     /**
@@ -2122,7 +2127,10 @@ define([
             this._controllersByType[controllerTypeName] = controller;
             controller.setContext(this);
         } else {
-            application.showError("Attempting to add a controller of an unregistered type to the control context!", "severe", "Controller type: " + controller.prototype.constructor.name);
+            application.showError(
+                    "Attempting to add a controller of an unregistered type to the control context!",
+                    application.ErrorSeverity.SEVERE,
+                    "Controller type: " + controller.prototype.constructor.name);
         }
     };
     /**
@@ -2225,7 +2233,7 @@ define([
                 this.addController(new this._controllerTypes[dataJSON.controllers[i].type](dataJSON.controllers[i]));
             } else {
                 application.showError("Attempting to load unregistered controller type: '" + dataJSON.controllers[i].type + "'!",
-                        "severe",
+                        application.ErrorSeverity.SEVERE,
                         (Object.keys(this._controllerTypes).length > 0) ?
                         ("Every controller to be loaded must be of one of the registered types: " + Object.keys(this._controllerTypes).join(", ") + ".") :
                         "There are no types registered and thus loading controllers is not possible.");
@@ -2253,7 +2261,7 @@ define([
                     this.addInputInterpreter(new this._inputInterpreterTypes[dataJSON.inputDevices[i].type](dataJSON.inputDevices[i]));
                 } else {
                     application.showError("Attempting to load unregistered input device type: '" + dataJSON.inputDevices[i].type + "'!",
-                            "severe",
+                            application.ErrorSeverity.SEVERE,
                             (Object.keys(this._inputInterpreterTypes).length > 0) ?
                             ("Every input device interpreter to be loaded must be of one of the registered types: " + Object.keys(this._inputInterpreterTypes).join(", ") + ".") :
                             "There are no types registered and thus loading input interpreters is not possible.");

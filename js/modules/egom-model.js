@@ -1488,14 +1488,14 @@ define([
         // checking the passed XML document
         if (!(xmlDoc instanceof Document)) {
             application.showError("'" + filename + "' does not appear to be an XML document.",
-                    "severe",
+                    application.ErrorSeverity.SEVERE,
                     "A model was supposed to be loaded from this file, but only models of EgomModel format " +
                     "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
             return false;
         }
         if (xmlDoc.documentElement.nodeName !== "EgomModel") {
             application.showError("'" + filename + "' does not appear to be an EgomModel file.",
-                    "severe",
+                    application.ErrorSeverity.SEVERE,
                     "A model was supposed to be loaded from this file, but only models of EgomModel format " +
                     "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
                     "'" + xmlDoc.documentElement.nodeName + "' instead.");
@@ -1504,12 +1504,12 @@ define([
         // checking EgomModel version
         version = xmlDoc.documentElement.getAttribute("version");
         if (!version) {
-            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", application.ErrorSeverity.SEVERE);
             return false;
         }
         if (_supportedVersions.indexOf(version) < 0) {
             application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
-                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+                    application.ErrorSeverity.SEVERE, "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }
         // loading info properties
@@ -1771,7 +1771,7 @@ define([
         // checking the passed JSON file
         if (typeof dataJSON !== "object") {
             application.showError("'" + filename + "' does not appear to be an JSON file.",
-                    "severe",
+                    application.ErrorSeverity.SEVERE,
                     "A model was supposed to be loaded from this file, but only models of EgomModel format " +
                     "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
             return false;
@@ -1779,12 +1779,12 @@ define([
         // checking EgomModel version
         version = dataJSON.version;
         if (!version) {
-            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", application.ErrorSeverity.SEVERE);
             return false;
         }
         if (_supportedVersions.indexOf(version) < 0) {
             application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
-                    "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+                    application.ErrorSeverity.SEVERE, "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }
         // loading info properties

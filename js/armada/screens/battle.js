@@ -232,7 +232,9 @@ define([
             }
             control.startListening();
         } else {
-            application.showError("Trying to resume simulation while it is already going on!", "minor",
+            application.showError(
+                    "Trying to resume simulation while it is already going on!",
+                    application.ErrorSeverity.MINOR,
                     "No action was taken, to avoid double-running the simulation.");
         }
     }

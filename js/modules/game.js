@@ -263,7 +263,8 @@ define([
     application.initialize = function () {
         application.log("Initializing " + _gameName + "...");
         if (location.protocol === "file:") {
-            this.showError("Trying to run the game from the local filesystem!", "critical",
+            this.showError("Trying to run the game from the local filesystem!",
+                    application.ErrorSeverity.CRITICAL,
                     "This application can only be run through a web server. " +
                     "If you wish to run it from your own computer, you have to install, set up " +
                     "and start a web server first. You have to put the folder containing the files of this game " +

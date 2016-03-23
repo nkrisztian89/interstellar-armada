@@ -89,8 +89,7 @@ define([
      * Displays information about an error that has occured in relation with WebGL,
      * adding some basic WebGL support info for easier troubleshooting.
      * @param {String} message A brief error message to show.
-     * @param {String} [severity] The severity level of the error. Possible
-     * values: "critical", "severe", "minor".
+     * @param {String} [severity] (enum application.ErrorSeverity) The severity level of the error.
      * @param {String} [details] Additional details to show about the error,
      * with possible explanations or tips how to correct this error.
      * @param {WebGLRenderingContext} gl The WebGL context the error happened in
@@ -1397,7 +1396,7 @@ define([
         // detect and display compilation errors
         if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
             infoLog = gl.getShaderInfoLog(vertexShader);
-            application.showGraphicsError("Compiling GLSL vertex shader of '" + this._name + "' failed.", "severe", "More details:\n" + infoLog, gl);
+            application.showGraphicsError("Compiling GLSL vertex shader of '" + this._name + "' failed.", application.ErrorSeverity.SEVERE, "More details:\n" + infoLog, gl);
             this._ids[contextName] = null;
             return;
         }
@@ -1408,7 +1407,7 @@ define([
         // detect and display compilation errors
         if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
             infoLog = gl.getShaderInfoLog(fragmentShader);
-            application.showGraphicsError("Compiling GLSL fragment shader of '" + this._name + "' failed.", "severe", "More details:\n" + infoLog, gl);
+            application.showGraphicsError("Compiling GLSL fragment shader of '" + this._name + "' failed.", application.ErrorSeverity.SEVERE, "More details:\n" + infoLog, gl);
             this._ids[contextName] = null;
             return;
         }
@@ -1421,7 +1420,7 @@ define([
         // detect and display linking errors
         if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
             infoLog = gl.getProgramInfoLog(prog);
-            application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", "severe", "More details: " + infoLog, gl);
+            application.showGraphicsError("Linking GLSL shader '" + this._name + "' failed.", application.ErrorSeverity.SEVERE, "More details: " + infoLog, gl);
             gl.deleteProgram(prog);
             this._ids[contextName] = null;
             return;
@@ -1817,7 +1816,8 @@ define([
             } catch (ignore) {
             }
             if (!this.gl) {
-                application.showError("Unable to initialize WebGL.", "critical",
+                application.showError("Unable to initialize WebGL.",
+                        application.ErrorSeverity.CRITICAL,
                         "It looks like your device, browser or graphics drivers do not " +
                         "support web 3D graphics. Make sure your browser and graphics " +
                         "drivers are updated to the latest version, and you are using " +
@@ -1834,7 +1834,8 @@ define([
         gl_ = this.gl;
         if (this._antialiasing && !(gl_.getContextAttributes().antialias)) {
             application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
-                    "minor", "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
+                    application.ErrorSeverity.MINOR,
+                    "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
                     "this error message showing up again, disable antialiasing in the graphics settings or try " +
                     "running the application in a different browser. Antialiasing will not work, but otherwise this " +
                     "error will have no consequences.", gl_);
