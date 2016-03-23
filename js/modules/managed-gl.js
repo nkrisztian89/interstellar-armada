@@ -145,6 +145,14 @@ define([
                 return 0;
         }
     }
+    /**
+     * Returns a numberic value that can be assigned as an int to a boolean GLSL variable.
+     * @param {Boolean} value
+     * @returns {Number}
+     */
+    function intValueOfBool(value) {
+        return value ? 1 : 0;
+    }
     // ############################################################################################
     /**
      * @class Represents a managed WebGL texture.
@@ -655,16 +663,50 @@ define([
         var location, i, j, memberName;
         // get the location
         location = this.getLocation(contextName, gl, shader, locationPrefix);
-        // assignment for float and struct arrays
-        if (this._arraySize > 0) {
-            switch (this._type) {
-                case ShaderVariableType.FLOAT:
+        switch (this._type) {
+            case ShaderVariableType.FLOAT:
+                if (this._arraySize > 0) {
                     gl.uniform1fv(location, value);
-                    break;
-                case ShaderVariableType.SAMPLER2D:
+                } else {
+                    gl.uniform1f(location, value);
+                }
+                break;
+            case ShaderVariableType.VEC2:
+                gl.uniform2fv(location, value);
+                break;
+            case ShaderVariableType.VEC3:
+                gl.uniform3fv(location, value);
+                break;
+            case ShaderVariableType.VEC4:
+                gl.uniform4fv(location, value);
+                break;
+            case ShaderVariableType.MAT2:
+                gl.uniformMatrix2fv(location, false, value);
+                break;
+            case ShaderVariableType.MAT3:
+                gl.uniformMatrix3fv(location, false, value);
+                break;
+            case ShaderVariableType.MAT4:
+                gl.uniformMatrix4fv(location, false, value);
+                break;
+            case ShaderVariableType.SAMPLER2D:
+            case ShaderVariableType.SAMPLER_CUBE:
+            case ShaderVariableType.INT:
+                if (this._arraySize > 0) {
                     gl.uniform1iv(location, value);
-                    break;
-                case ShaderVariableType.STRUCT:
+                } else {
+                    gl.uniform1i(location, value);
+                }
+                break;
+            case ShaderVariableType.BOOL:
+                if (this._arraySize > 0) {
+                    gl.uniform1iv(location, value.map(intValueOfBool));
+                } else {
+                    gl.uniform1i(location, value ? 1 : 0);
+                }
+                break;
+            case ShaderVariableType.STRUCT:
+                if (this._arraySize > 0) {
                     // for structs, launch recursive assignment of members
                     for (i = 0; i < value.length; i++) {
                         for (j = 0; j < this._members.length; j++) {
@@ -674,49 +716,24 @@ define([
                             }
                         }
                     }
-                    break;
-                default:
-                    application.showError("Attempting to set uniform '" + this._name + "', but it has a type that cannot be handled! (" + this._type + "[" + this._arraySize + "])");
-            }
-            // assignment of simple types    
-        } else {
-            switch (this._type) {
-                case ShaderVariableType.FLOAT:
-                    gl.uniform1f(location, value);
-                    break;
-                case ShaderVariableType.VEC2:
-                    gl.uniform2fv(location, value);
-                    break;
-                case ShaderVariableType.VEC3:
-                    gl.uniform3fv(location, value);
-                    break;
-                case ShaderVariableType.VEC4:
-                    gl.uniform4fv(location, value);
-                    break;
-                case ShaderVariableType.MAT2:
-                    gl.uniformMatrix2fv(location, false, value);
-                    break;
-                case ShaderVariableType.MAT3:
-                    gl.uniformMatrix3fv(location, false, value);
-                    break;
-                case ShaderVariableType.MAT4:
-                    gl.uniformMatrix4fv(location, false, value);
-                    break;
-                case ShaderVariableType.SAMPLER2D:
-                    gl.uniform1i(location, value);
-                    break;
-                case ShaderVariableType.SAMPLER_CUBE:
-                    gl.uniform1i(location, value);
-                    break;
-                case ShaderVariableType.INT:
-                    gl.uniform1i(location, value);
-                    break;
-                case ShaderVariableType.BOOL:
-                    gl.uniform1i(location, value ? 1 : 0);
-                    break;
-                default:
-                    application.showError("Attempting to set uniform '" + this._name + "', but it has a type that cannot be handled! (" + this._type + ")");
-            }
+                } else {
+                    for (i = 0; i < this._members.length; i++) {
+                        if (value[this._members[i]._name] !== undefined) {
+                            memberName = this._members[i]._name;
+                            this._members[i].setConstantValue(contextName, gl, shader, value[memberName], this._name + ".");
+                        }
+                    }
+                }
+                break;
+            default:
+                application.showError(
+                        "Attempting to set uniform '" +
+                        this._name +
+                        "', but it has a type that cannot be handled! (" +
+                        ((this._arraySize > 0) ?
+                                ("array (" + this._arraySize + ") of ") :
+                                "") +
+                        this._type + ")");
         }
     };
     /**

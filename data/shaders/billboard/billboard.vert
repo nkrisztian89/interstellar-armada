@@ -1,8 +1,7 @@
 #version 100
 
 uniform mat4 u_modelMatrix;
-uniform mat4 u_cameraMatrix;
-uniform mat4 u_projMatrix;
+uniform mat4 u_viewProjMatrix;
 
 uniform vec3 u_eyePos;
 
@@ -18,7 +17,7 @@ void main() {
 	vec4 vz = vec4(normalize(cross(vx.xyz,vy.xyz))*length(u_modelMatrix[2].xyz), u_modelMatrix[2].w);
 	vec4 vw = u_modelMatrix[3];
 	
-	mat4 mvpMatrix = u_projMatrix * u_cameraMatrix * mat4(vx,vy,vz,vw);
+	mat4 mvpMatrix = u_viewProjMatrix * mat4(vx,vy,vz,vw);
 	
 	gl_Position = mvpMatrix * vec4(a_position,1.0);	
 	

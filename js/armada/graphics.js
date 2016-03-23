@@ -848,7 +848,7 @@ define([
     /**
      * Returns a shadow mapping settings descriptor object that can be directly used as parameter for Scene constructors and contains the
      * state that reflect the current settings stored 
-     * @returns {Object|null}
+     * @returns {Scene~ShadowMappingParams|null}
      */
     function getShadowMappingSettings() {
         return shouldUseShadowMapping() ?
@@ -857,7 +857,8 @@ define([
                     shader: getShadowMappingShader().getManagedShader(),
                     textureSize: _context.getShadowQuality(),
                     ranges: _context.getShadowRanges(),
-                    depthRatio: _context.getShadowDepthRatio()
+                    depthRatio: _context.getShadowDepthRatio(),
+                    numSamples: _context.getNumShadowMapSamples()
                 } :
                 null;
     }
@@ -892,6 +893,7 @@ define([
         getShadowDistance: _context.getShadowDistance.bind(_context),
         setShadowDistance: _context.setShadowDistance.bind(_context),
         getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
+        getNumShadowMapSamples: _context.getNumShadowMapSamples.bind(_context),
         getMaxDirLights: _context.getMaxDirLights.bind(_context),
         getMaxPointLights: _context.getMaxPointLights.bind(_context),
         setMaxPointLights: _context.setMaxPointLights.bind(_context),

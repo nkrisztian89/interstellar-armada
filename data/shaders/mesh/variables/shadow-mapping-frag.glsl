@@ -15,6 +15,7 @@ uniform float u_shadowMapRanges[MAX_SHADOW_MAP_RANGES];
 uniform int u_numRanges;
 uniform float u_shadowMapDepthRatio;
 uniform float u_shadowMapTextureSize;
+uniform vec2 u_shadowMapSampleOffsets[NUM_SHADOW_MAP_SAMPLES];
 
 varying vec2 v_index;
 

@@ -1,1 +1,1 @@
-gl_Position = u_projMatrix * u_cameraMatrix * gl_Position;
+gl_Position = u_viewProjMatrix * gl_Position;

@@ -13,6 +13,7 @@
 
 /**
  * @param utils Used for array equality check.
+ * @param types Used for type checking.
  * @param vec Used for 3D (and 4D) vector operations.
  * @param mat Used for 3D (and 4D) matrix operations.
  * @param application Used for displaying errors and logging (and intentional crashing)
@@ -20,11 +21,12 @@
  */
 define([
     "utils/utils",
+    "utils/types",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/managed-gl"
-], function (utils, vec, mat, application, managedGL) {
+], function (utils, types, vec, mat, application, managedGL) {
     "use strict";
     var
             /**
@@ -149,6 +151,7 @@ define([
             UNIFORM_NUM_SPOT_LIGHTS_NAME = "numSpotLights",
             UNIFORM_SPOT_LIGHTS_ARRAY_NAME = "spotLights",
             UNIFORM_VIEW_MATRIX_NAME = "cameraMatrix",
+            UNIFORM_VIEW_PROJECTION_MATRIX_NAME = "viewProjMatrix",
             UNIFORM_VIEW_ORIENTATION_MATRIX_NAME = "cameraOrientationMatrix",
             UNIFORM_VIEW_ASPECT_NAME = "aspect",
             UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
@@ -158,6 +161,18 @@ define([
             UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME = "shadowMapDepthRatio",
             UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME = "shadowMapTextureSize",
             UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps",
+            UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME = "shadowMapSampleOffsets",
+            SHADOW_MAP_SAMPLE_OFFSETS = [
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                -1.0, 0.0,
+                0.0, -1.0,
+                1.0, 1.0,
+                1.0, -1.0,
+                -1.0, 1.0,
+                -1.0, -1.0
+            ],
             /**
              * The camera used for rendering the distance render queues will have a view distance that is the view distance of the regular
              * camera multiplied by this factor.
@@ -6248,6 +6263,14 @@ define([
          */
         this._shadowMapDepthRatio = 0;
         /**
+         * @type Number
+         */
+        this._numShadowMapSamples = 0;
+        /**
+         * @type Number[][]
+         */
+        this._shadowMapSampleOffsets = [];
+        /**
          * The functions that can be used to set the values of uniform variables in shaders when rendering this scene. When rendering any
          * object in this scene with a shader that has a uniform with one of the names this object has a function for, its values will be 
          * calculated with the function and passed to the shader.
@@ -6340,6 +6363,9 @@ define([
         this.setUniformValueFunction(UNIFORM_PROJECTION_MATRIX_NAME, function () {
             return this._camera.getProjectionMatrix();
         });
+        this.setUniformValueFunction(UNIFORM_VIEW_PROJECTION_MATRIX_NAME, function () {
+            return mat.prod4(this._camera.getViewMatrix(), this._camera.getProjectionMatrix());
+        });
         this.setUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
             return new Float32Array(this._camera.getCameraPositionVector());
         });
@@ -6369,6 +6395,9 @@ define([
             });
             this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME, function () {
                 return this._shadowMapTextureSize;
+            });
+            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME, function () {
+                return this._shadowMapSampleOffsets;
             });
         }
         // if a specific index was given, set the values functions for that context
@@ -6535,6 +6564,8 @@ define([
      * @property {Number} [textureSize]
      * @property {Number[]} [ranges]
      * @property {Number} [depthRatio]
+     * @property {Number} [numSamples]
+     * @property {Boolean} [deferSetup=false]
      */
     /**
      * Sets the parameters of shadow mapping that are defined in the passed object, and leaves the others at their current value. If there
@@ -6548,13 +6579,24 @@ define([
             this._shadowMapTextureSize = params.textureSize || this._shadowMapTextureSize;
             this._shadowMapRanges = params.ranges || this._shadowMapRanges;
             this._shadowMapDepthRatio = params.depthRatio || this._shadowMapDepthRatio;
-            this._setupContext();
+            this._numShadowMapSamples = params.numSamples ? types.getNumberValueInRange(
+                    "shadowMappingParams.numSamples",
+                    params.numSamples,
+                    this._shadowMappingEnabled ? 1 : 0,
+                    this._shadowMappingEnabled ? SHADOW_MAP_SAMPLE_OFFSETS.length / 2 : 0,
+                    this._shadowMappingEnabled ? 1 : 0) : params.numSamples;
+            this._shadowMapSampleOffsets = SHADOW_MAP_SAMPLE_OFFSETS.slice(0, 2 * this._numShadowMapSamples);
+            if (!params.deferSetup) {
+                this._setupContext();
+            }
         } else {
             this._shadowMappingEnabled = false;
             this._shadowMappingShader = null;
             this._shadowMapTextureSize = 0;
             this._shadowMapRanges = [];
             this._shadowMapDepthRatio = 0;
+            this._numShadowMapSamples = 0;
+            this._shadowMapSampleOffsets = [];
         }
     };
     /**

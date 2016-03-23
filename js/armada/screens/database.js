@@ -620,7 +620,9 @@ define([
                     shader: graphics.getShadowMappingShader().getManagedShader(),
                     textureSize: graphics.getShadowQuality(),
                     ranges: [],
-                    depthRatio: graphics.getShadowDepthRatio()
+                    depthRatio: graphics.getShadowDepthRatio(),
+                    numSamples: graphics.getNumShadowMapSamples(),
+                    deferSetup: true
                 });
             } else {
                 _itemViewScene.setShadowMapping(null);

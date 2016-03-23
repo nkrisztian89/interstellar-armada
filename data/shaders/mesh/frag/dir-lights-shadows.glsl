@@ -10,17 +10,6 @@
     // for the largest shadow map, add a fade out factor towards the end of the range
     float shade = 1.0;
 
-    vec2 shadowMapSampleOffset[NUM_SHADOW_MAP_SAMPLES];
-    shadowMapSampleOffset[0] = vec2(0.0, 0.0);
-    shadowMapSampleOffset[1] = vec2(1.0, 0.0);
-    shadowMapSampleOffset[2] = vec2(0.0, 1.0);
-    shadowMapSampleOffset[3] = vec2(-1.0, 0.0);
-    shadowMapSampleOffset[4] = vec2(0.0, -1.0);
-    shadowMapSampleOffset[5] = vec2(1.0, 1.0);
-    shadowMapSampleOffset[6] = vec2(1.0, -1.0);
-    shadowMapSampleOffset[7] = vec2(-1.0, 1.0);
-    shadowMapSampleOffset[8] = vec2(-1.0, -1.0);
-
     float distFromEye = length(v_viewDir);
 
     // going through each static, directional light source
@@ -81,40 +70,40 @@
                                     int shMapIndex = i * u_numRanges + j;
                                     for (int k = 0; k < NUM_SHADOW_MAP_SAMPLES; k++) {
                                         if (shMapIndex == 0) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[0], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[0], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 1) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[1], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[1], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 2) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[2], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[2], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 3) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[3], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[3], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 4) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[4], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[4], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 5) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[5], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[5], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 6) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[6], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[6], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 7) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[7], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[7], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 8) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[8], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[8], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 9) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[9], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[9], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 10) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[10], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[10], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         } else 
                                         if (shMapIndex == 11) {
-                                            shadowMapTexel[k] = texture2D(u_shadowMaps[11], shMapTexCoords + shadowMapSampleOffset[k] / u_shadowMapTextureSize);
+                                            shadowMapTexel[k] = texture2D(u_shadowMaps[11], shMapTexCoords + u_shadowMapSampleOffsets[k] / u_shadowMapTextureSize);
                                         }
                                         // depth check is performed with a tolerance for small errors
                                         float absErrorTolerance = 1.0 / 255.0 * depthRange;
