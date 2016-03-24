@@ -1,6 +1,6 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file 
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -11,12 +11,26 @@
 
 define(function () {
     "use strict";
-
-    var vec = {};
-
+    var vec = {},
+            // -----------------------------------------------------------------------------
+            // Constants
+            CLOSE_TO_ZERO = 0.0000001;
+    // -----------------------------------------------------------------------------
+    // Constant vectors
+    /**
+     * A constant 3D null vector.
+     * @type Number[3]
+     */
+    vec.NULL3 = [0, 0, 0];
+    Object.freeze(vec.NULL3);
+    /**
+     * A constant 4D null vector.
+     * @type Number[4]
+     */
+    vec.NULL4 = [0, 0, 0, 0];
+    Object.freeze(vec.NULL4);
     // -----------------------------------------------------------------------------
     // Functions that create a vector
-
     /**
      * Returns a 3D vector created based on the attributes of the passed XML element.
      * @param {Element} tag
@@ -29,10 +43,16 @@ define(function () {
             parseFloat(tag.getAttribute("z"))
         ];
     };
-
+    /**
+     * Returns a 3D vector that is perpendicular to the passed 3D vector (one of the infinite possibilities)
+     * @param {Number[3]} v
+     * @returns {Number[3]}
+     */
+    vec.perpendicular3 = function (v) {
+        return [v[1], -v[0], 0];
+    };
     // -----------------------------------------------------------------------------
     // Functions of a single vector
-
     /**
      * Returns the length of a 3D vector.
      * @param {Number[3]} v The 3D vector.
@@ -73,7 +93,7 @@ define(function () {
     };
 
     // -----------------------------------------------------------------------------
-    // Functions that transform a vector
+    // Functions that transform a vector and return a new, transformed vector
 
     /**
      * Returns a 4D vector created from a 3D one by appending the given w component.
@@ -91,8 +111,8 @@ define(function () {
      */
     vec.normal2 = function (v) {
         var
-              divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
-              factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor];
     };
     /**
@@ -102,9 +122,20 @@ define(function () {
      */
     vec.normal3 = function (v) {
         var
-              divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
-              factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor, v[2] * factor];
+    };
+    /**
+     * Returns a 2D vector multiplied by a scalar.
+     * @param {Number[2]} v A 2D vector.
+     * @param {Number} s A scalar.
+     * @returns {Number[2]} v multiplied by s.
+     */
+    vec.scaled2 = function (v, s) {
+        return [
+            v[0] * s, v[1] * s
+        ];
     };
     /**
      * Returns a 3D vector multiplied by a scalar.
@@ -138,7 +169,7 @@ define(function () {
      * @param {Number[3]} v2 The second 3D vector.
      * @returns {Number[3]} The sum of v1 and v2.
      */
-    vec.add3 = function (v1, v2) {
+    vec.sum3 = function (v1, v2) {
         return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
     };
     /**
@@ -147,7 +178,7 @@ define(function () {
      * @param {Number[3]} v2 The second 3D vector.
      * @returns {Number[3]} The difference of v1 and v2.
      */
-    vec.sub3 = function (v1, v2) {
+    vec.diff3 = function (v1, v2) {
         return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
     };
     /**
@@ -173,15 +204,25 @@ define(function () {
         ];
     };
     /**
-     * Returns the angle of the two 2D vectors in radians.
+     * Returns the angle of the two 2D unit vectors in radians.
      * @param {Number[2]} v1 The first 2D vector.
      * @param {Number[2]} v2 The second 2D vector.
      * @returns {Number} The angle in radian.
      */
     vec.angle2u = function (v1, v2) {
-        return (
-              Math.acos(v1[0] * v2[0] + v1[1] * v2[1])
-              );
+        return Math.acos(v1[0] * v2[0] + v1[1] * v2[1]);
+    };
+    /**
+     * Returns the angle of the two 2D unit vectors in radians. The dot product
+     * of the vectors is capped between -1.0 and 1.0, and so this cannot return
+     * NaN accidentally (with the product falling slightly out of range due to
+     * float inaccuracy)
+     * @param {Number[2]} v1 The first 2D vector.
+     * @param {Number[2]} v2 The second 2D vector.
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle2uCapped = function (v1, v2) {
+        return (Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1]), 1.0)));
     };
     /**
      * Returns the angle of the two 3D unit vectors in radians.
@@ -190,9 +231,19 @@ define(function () {
      * @returns {Number} The angle in radian.
      */
     vec.angle3u = function (v1, v2) {
-        return (
-              Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
-              );
+        return Math.acos(v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]);
+    };
+    /**
+     * Returns the angle of the two 3D unit vectors in radians. The dot product
+     * of the vectors is capped between -1.0 and 1.0, and so this cannot return
+     * NaN accidentally (with the product falling slightly out of range due to
+     * float inaccuracy)
+     * @param {Number[3]} v1 A 3D unit vector.
+     * @param {Number[3]} v2 A 3D unit vector.
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle3uCapped = function (v1, v2) {
+        return Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]), 1.0));
     };
 
     // -----------------------------------------------------------------------------
@@ -212,19 +263,6 @@ define(function () {
         ]);
     };
     /**
-     * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
-     * @param {Float32Array} m A 3x3 matrix.
-     * @param {Number[3]} v A 3D vector.
-     * @returns {Float32Array} m*v
-     */
-    vec.mulMat3Vec3 = function (m, v) {
-        return new Float32Array([
-            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
-            m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
-            m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
-        ]);
-    };
-    /**
      * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
      * given 4x4 matrix. (from the right)
      * @param {Number[3]} v A 3D vector.
@@ -236,20 +274,6 @@ define(function () {
             m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
             m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
             m[2] * v[0] + m[6] * v[1] + m[10] * v[2]
-        ]);
-    };
-    /**
-     * Multiplies the given 4x4 matrix with the given 4D row vector. (from the right)
-     * @param {Float32Array} m A 4x4 matrix.
-     * @param {Number[4]} v A 4D vector.
-     * @returns {Float32Array} m*v
-     */
-    vec.mulMat4Vec4 = function (m, v) {
-        return new Float32Array([
-            m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
-            m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
-            m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
-            m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
         ]);
     };
     /**
@@ -266,6 +290,107 @@ define(function () {
             m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3]
         ]);
     };
-
+    /**
+     * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
+     * @param {Float32Array} m A 3x3 matrix.
+     * @param {Number[3]} v A 3D vector.
+     * @returns {Float32Array} m*v
+     */
+    vec.mulMat3Vec3 = function (m, v) {
+        return new Float32Array([
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+            m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
+            m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
+        ]);
+    };
+    /**
+     * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
+     * given 4x4 matrix. (from the left)
+     * @param {Float32Array} m A 4x4 matrix.
+     * @param {Number[3]} v A 3D vector.
+     * @returns {Float32Array} m'*v
+     */
+    vec.mulMat4Vec3 = function (m, v) {
+        return new Float32Array([
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+            m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
+            m[8] * v[0] + m[9] * v[1] + m[10] * v[2]
+        ]);
+    };
+    /**
+     * Multiplies the given 4x4 matrix with the given 4D row vector. (from the right)
+     * @param {Float32Array} m A 4x4 matrix.
+     * @param {Number[4]} v A 4D vector.
+     * @returns {Float32Array} m*v
+     */
+    vec.mulMat4Vec4 = function (m, v) {
+        return new Float32Array([
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
+            m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
+            m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
+            m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
+        ]);
+    };
+    // -----------------------------------------------------------------------------
+    // Functions that modify an existing vector
+    vec.negate2 = function (v) {
+        v[0] = -v[0];
+        v[1] = -v[1];
+    };
+    /**
+     * Scales the passed 2D vector to unit length.
+     * @param {Number[2]} v A 2D vector
+     */
+    vec.normalize2 = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        v[0] *= factor;
+        v[1] *= factor;
+    };
+    /**
+     * Scales the passed 3D vector to unit length.
+     * @param {Number[3]} v A 3D vector
+     */
+    vec.normalize3 = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        v[0] *= factor;
+        v[1] *= factor;
+        v[2] *= factor;
+    };
+    /**
+     * Normalizes the pased 4D vector by dividing all its coordinates by the last (4th) coordinate.
+     * @param {Number[4]} v
+     */
+    vec.normalize4D = function (v) {
+        v[3] = v[3] || CLOSE_TO_ZERO;
+        v[0] /= v[3];
+        v[1] /= v[3];
+        v[2] /= v[3];
+        v[3] = 1;
+    };
+    /**
+     * Adds the 3D vector v2 to the 3D vector v1, modifying v1 in-place.
+     * @param {Number[3]} v1
+     * @param {Number[3]} v2
+     */
+    vec.add3 = function (v1, v2) {
+        v1[0] += v2[0];
+        v1[1] += v2[1];
+        v1[2] += v2[2];
+    };
+    /**
+     * Cross multiplies the passed v1 vector with v2 in-place.
+     * @param {Number[3]} v1 A 3D vector.
+     * @param {Number[3]} v2 A 3D vector.
+     */
+    vec.mulCross3 = function (v1, v2) {
+        var v30 = v1[0], v31 = v1[1], v32 = v1[2];
+        v1[0] = v31 * v2[2] - v32 * v2[1];
+        v1[1] = v32 * v2[0] - v30 * v2[2];
+        v1[2] = v30 * v2[1] - v31 * v2[0];
+    };
     return vec;
 });

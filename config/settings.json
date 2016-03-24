@@ -3,16 +3,74 @@
         "context": {
             "antialiasing": true,
             "filtering": "trilinear",
+            "textureQualities": ["low", "normal"],
+            "textureQuality": "normal",
             "shadowMapping": true,
             "shadows": {
                 "quality": 2048,
-                "ranges": [10, 30, 90, 200, 400, 1000],
+                "ranges": [2, 6, 18, 54, 162, 486, 1458],
                 "numRanges": 4,
                 "depthRatio": 1.5
-            }
+            },
+            "maxPointLights": 48
         },
         "shaders": {
-            "complexity": "normal"
+            "complexities": [
+                {
+                    "name": "veryLow",
+                    "shadows": false,
+                    "dynamicLights": false,
+                    "maxDirLights": 1,
+                    "luminosityTextures": false,
+                    "reveal": false
+                }, {
+                    "name": "low",
+                    "shadows": false,
+                    "dynamicLights": false,
+                    "maxDirLights": 2,
+                    "luminosityTextures": false,
+                    "reveal": false
+                }, {
+                    "name": "medium",
+                    "shadows": true,
+                    "numShadowMapSamples": 3,
+                    "dynamicLights": true,
+                    "maxDirLights": 2,
+                    "maxSpotLights": 3,
+                    "luminosityTextures": true,
+                    "reveal": true
+                }, {
+                    "name": "high",
+                    "shadows": true,
+                    "numShadowMapSamples": 5,
+                    "dynamicLights": true,
+                    "maxDirLights": 2,
+                    "maxSpotLights": 5,
+                    "luminosityTextures": true,
+                    "reveal": true
+                }, {
+                    "name": "veryHigh",
+                    "shadows": true,
+                    "numShadowMapSamples": 9,
+                    "dynamicLights": true,
+                    "maxDirLights": 2,
+                    "maxSpotLights": 7,
+                    "luminosityTextures": true,
+                    "reveal": true
+                }
+            ],
+            "complexity": "medium",
+            "shadowMappingShaderName": "shadowMapping",
+            "maxDirLightsDefineName": "MAX_DIR_LIGHTS",
+            "maxPointLightsDefineName": "MAX_POINT_LIGHTS",
+            "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS",
+            "maxShadowMapRangesDefineName": "MAX_SHADOW_MAP_RANGES",
+            "maxShadowMapsDefineName": "MAX_SHADOW_MAPS",
+            "numShadowMapSamplesDefineName": "NUM_SHADOW_MAP_SAMPLES",
+            "dustLengthDivisor": "200.0",
+            "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
+            "maxLuminosityFactors": 20,
+            "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS"
         },
         "levelOfDetailSettings": {
             "lodLoadProfile": {
@@ -58,172 +116,113 @@
         }
     },
     "logic": {
+        "general": {
+            "useRequestAnimFrame": true,
+            "defaultRandomSeed": 4718,
+            "luminosityFactorsArrayName": "luminosityFactors",
+            "useVerticalCameraValues": true
+        },
         "database": {
-            "modelRotation": true
+            "showLoadingBoxFirstTime": true,
+            "showLoadingBoxOnItemChange": true,
+            "backgroundColor": [0, 0, 0, 0],
+            "itemViewDistance": 2000,
+            "itemViewFOV": 60,
+            "itemViewSpan": 0.2,
+            "wireframeColor": [0, 1, 0, 1],
+            "showWireframeModel": true,
+            "wireframeShaderName": "oneColorReveal",
+            "showSolidModel": true,
+            "solidShaderName": "reveal",
+            "lightSources": [
+                {
+                    "color": [1.0, 1.0, 1.0],
+                    "direction": [0.0, 1.0, 1.0]
+                },
+                {
+                    "color": [1.0, 1.0, 1.0],
+                    "direction": [1.0, 0.0, 0.0]
+                }
+            ],
+            "equipmentProfileName": "default",
+            "startSizeFactor": 1,
+            "minimumSizeFactor": 0.9,
+            "maximumSizeFactor": 1.6,
+            "modelRevealAnimation": true,
+            "revealColor": [1.0, 1.0, 1.0, 1.0],
+            "revealFPS": 60,
+            "revealDuration": 2000,
+            "revealSolidDelayDuration": 2000,
+            "revealTransitionLengthFactor": 0.15,
+            "modelAutoRotation": true,
+            "modelMouseRotation": true,
+            "rotationFPS": 60,
+            "rotationRevealStartAngle": 90,
+            "rotationStartAngle": 180,
+            "rotationViewAngle": 60,
+            "rotationDuration": 4000,
+            "rotationMouseSensitivity": 1.0,
+            "databaseRenderFPS": 60
         },
         "battle": {
+            "battleRenderFPS": 60,
+            "simulationStepsPerSecond": 60,
+            "minimumDustParticleCountForInstancing": 1,
+            "minimumExplosionParticleCountForInstancing": 1,
+            "minimumMuzzleFlashParticleCountForInstancing": 1,
+            "minimumThrusterParticleCountForInstancing": 1,
+            "minimumBlinkerParticleCountForInstancing": 1,
+            "viewDistance": 5000,
+            "cameraDefaultTransitionDuration": 1000,
+            "cameraDefaultTransitionStyle": "smooth",
+            "cameraPilotingSwitchTransitionDuration": 800,
+            "cameraPilotingSwitchTransitionStyle": "smooth",
+            "momentDuration": 1,
+            "backgroundObjectDistance": 4500,
+            "turnAccelerationDurationInSeconds": 0.5,
+            "defaultMuzzleFlashDuration": 500,
+            "selfFire": true,
+            "autoTargeting": "hitAndAutoTarget",
+            "defaultEquipmentProfileName": "default",
             "randomShips": {
                 "falcon": 3,
                 "viper": 2,
                 "aries": 1,
                 "taurus": 1
-            }
+            },
+            "randomShipsMapSize": 3000,
+            "randomShipsEquipmentProfileName": "default",
+            "randomShipsHeadingAngle": 90,
+            "randomShipsRandomHeading": true,
+            "hitboxColor": [0.0, 0.5, 0.5, 0.5],
+            "hitboxTexture": "white",
+            "hitboxShader": "lambert-with-luminosity",
+            "targetViewName": "target",
+            "targetChangeTransitonDuration": 300,
+            "targetChangeTransitionStyle": "smooth",
+            "hudCenterCrosshairTexture": "crosshair",
+            "hudCenterCrosshairSize": [0.05, 0.05],
+            "hudCenterCrosshairColor": [0, 1, 0, 0.25],
+            "hudTargetArrowTexture": "arrow",
+            "hudTargetArrowSize": [0.075, 0.075],
+            "hudTargetArrowColor": [1, 0, 0, 0.75],
+            "hudTargetIndicatorTexture": "target",
+            "hudTargetIndicatorSize": [0.1, 0.1],
+            "hudTargetIndicatorColor": [1, 0, 0, 0.75],
+            "hudTargetCrosshairTexture": "crosshair",
+            "hudTargetCrosshairSize": [0.05, 0.05],
+            "hudTargetCrosshairColor": [0, 1, 0, 0.75]
+        },
+        "camera": {
+            "defaultFOV": 40,
+            "defaultFOVRange": [5, 100],
+            "defaultSpan": 0.2,
+            "defaultSpanRange": [0.2, 0.2],
+            "defaultBaseOrientation": "positionFollowedObjects",
+            "defaultPointToFallback": "positionFollowedObjectOrWorld"
         }
     },
     "control": {
-        "controllers": [
-            {
-                "type": "general",
-                "actions": [
-                    {
-                        "name": "quit",
-                        "description": "Quit to menu"
-                    }, {
-                        "name": "pause",
-                        "description": "Pause the game"
-                    }, {
-                        "name": "switchToPilotMode",
-                        "description": "Switch to pilot mode"
-                    }, {
-                        "name": "switchToSpectatorMode",
-                        "description": "Switch to spectator mode"
-                    }, {
-                        "name": "toggleHitboxVisibility",
-                        "description": "Toggle the visibility of hitboxes"
-                    }, {
-                        "name": "toggleTextVisibility",
-                        "description": "Toggle the visibility of the texts on screen"
-                    }
-                ]
-            },
-            {
-                "type": "fighter",
-                "actions": [
-                    {
-                        "name": "changeFlightMode",
-                        "description": "Change flight mode"
-                    }, {
-                        "name": "fire",
-                        "description": "Fire primary weapons",
-                        "continuous": true
-                    }, {
-                        "name": "forward",
-                        "description": "Forward thrust (free mode) or increase speed",
-                        "continuous": true
-                    }, {
-                        "name": "reverse",
-                        "description": "Reverse thrust (free mode) or decrease speed",
-                        "continuous": true
-                    }, {
-                        "name": "strafeLeft",
-                        "description": "Strafe left",
-                        "continuous": true
-                    }, {
-                        "name": "strafeRight",
-                        "description": "Strafe right",
-                        "continuous": true
-                    }, {
-                        "name": "raise",
-                        "description": "Strafe upwards",
-                        "continuous": true
-                    }, {
-                        "name": "lower",
-                        "description": "Strafe downwards",
-                        "continuous": true
-                    }, {
-                        "name": "resetSpeed",
-                        "description": "Reset speed to zero (compensated mode)"
-                    }, {
-                        "name": "yawLeft",
-                        "description": "Turn to the left",
-                        "continuous": true
-                    }, {
-                        "name": "yawRight",
-                        "description": "Turn to the right",
-                        "continuous": true
-                    }, {
-                        "name": "pitchUp",
-                        "description": "Turn upwards",
-                        "continuous": true
-                    }, {
-                        "name": "pitchDown",
-                        "description": "Turn downwards",
-                        "continuous": true
-                    }, {
-                        "name": "rollLeft",
-                        "description": "Roll to the left",
-                        "continuous": true
-                    }, {
-                        "name": "rollRight",
-                        "description": "Roll to the right",
-                        "continuous": true
-                    }
-                ]
-            },
-            {
-                "type": "camera",
-                "actions": [
-                    {
-                        "name": "cameraMoveLeft",
-                        "description": "Move the camera to the left (free camera mode)",
-                        "continuous": true
-                    }, {
-                        "name": "cameraMoveRight",
-                        "description": "Move the camera to the right (free camera mode)",
-                        "continuous": true
-                    }, {
-                        "name": "cameraMoveUp",
-                        "description": "Move the camera upwards (free camera mode)",
-                        "continuous": true
-                    }, {
-                        "name": "cameraMoveDown",
-                        "description": "Move the camera downwards (free camera mode)",
-                        "continuous": true
-                    }, {
-                        "name": "cameraMoveForward",
-                        "description": "Move the camera forward (free camera mode)",
-                        "continuous": true
-                    }, {
-                        "name": "cameraMoveBackward",
-                        "description": "Move the camera backward (free camera mode)",
-                        "continuous": true
-                    }, {
-                        "name": "cameraTurnLeft",
-                        "description": "Turn the camera to the left",
-                        "continuous": true
-                    }, {
-                        "name": "cameraTurnRight",
-                        "description": "Turn the camera to the right",
-                        "continuous": true
-                    }, {
-                        "name": "cameraTurnUp",
-                        "description": "Turn the camera upwards",
-                        "continuous": true
-                    }, {
-                        "name": "cameraTurnDown",
-                        "description": "Turn the camera downwards",
-                        "continuous": true
-                    }, {
-                        "name": "cameraDecreaseFOV",
-                        "description": "Zoom in",
-                        "continuous": true
-                    }, {
-                        "name": "cameraIncreaseFOV",
-                        "description": "Zoom out",
-                        "continuous": true
-                    }, {
-                        "name": "followNext",
-                        "description": "Follow next spacecraft. (in spectator mode)"
-                    }, {
-                        "name": "followPrevious",
-                        "description": "Follow previous spacecraft. (in spectator mode)"
-                    }, {
-                        "name": "changeView",
-                        "description": "Change view of currently followed spacecraft"
-                    }
-                ]
-            }
-        ],
         "inputDevices": [
             {
                 "type": "keyboard",
@@ -231,6 +230,9 @@
                     {
                         "action": "fire",
                         "key": "space"
+                    }, {
+                        "action": "nextTarget",
+                        "key": "t"
                     }, {
                         "action": "changeFlightMode",
                         "key": "tab"
@@ -256,6 +258,9 @@
                         "action": "resetSpeed",
                         "key": "0"
                     }, {
+                        "action": "controlCamera",
+                        "key": "shift"
+                    }, {
                         "action": "yawLeft",
                         "key": "left"
                     }, {
@@ -275,38 +280,40 @@
                         "key": "q"
                     }, {
                         "action": "cameraTurnLeft",
-                        "key": "left",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraTurnRight",
-                        "key": "right",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraTurnUp",
-                        "key": "up",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraTurnDown",
-                        "key": "down",
-                        "ctrl": true
-                    }, {
-                        "action": "cameraMoveLeft",
                         "key": "left"
                     }, {
-                        "action": "cameraMoveRight",
+                        "action": "cameraTurnRight",
                         "key": "right"
                     }, {
-                        "action": "cameraMoveUp",
-                        "key": "page up"
-                    }, {
-                        "action": "cameraMoveDown",
-                        "key": "page down"
-                    }, {
-                        "action": "cameraMoveForward",
+                        "action": "cameraTurnUp",
                         "key": "up"
                     }, {
-                        "action": "cameraMoveBackward",
+                        "action": "cameraTurnDown",
                         "key": "down"
+                    }, {
+                        "action": "cameraRollLeft",
+                        "key": "q"
+                    }, {
+                        "action": "cameraRollRight",
+                        "key": "e"
+                    }, {
+                        "action": "cameraMoveLeft",
+                        "key": "a"
+                    }, {
+                        "action": "cameraMoveRight",
+                        "key": "d"
+                    }, {
+                        "action": "cameraMoveUp",
+                        "key": "r"
+                    }, {
+                        "action": "cameraMoveDown",
+                        "key": "f"
+                    }, {
+                        "action": "cameraMoveForward",
+                        "key": "w"
+                    }, {
+                        "action": "cameraMoveBackward",
+                        "key": "s"
                     }, {
                         "action": "cameraDecreaseFOV",
                         "key": "z"
@@ -314,8 +321,11 @@
                         "action": "cameraIncreaseFOV",
                         "key": "u"
                     }, {
-                        "action": "changeView",
+                        "action": "nextView",
                         "key": "v"
+                    }, {
+                        "action": "previousView",
+                        "key": "g"
                     }, {
                         "action": "followNext",
                         "key": "c"
@@ -323,8 +333,14 @@
                         "action": "followPrevious",
                         "key": "x"
                     }, {
+                        "action": "resetView",
+                        "key": "b"
+                    }, {
                         "action": "pause",
                         "key": "p"
+                    }, {
+                        "action": "stopTime",
+                        "key": "o"
                     }, {
                         "action": "switchToPilotMode",
                         "key": "m"
@@ -339,14 +355,20 @@
                         "key": "escape"
                     }, {
                         "action": "toggleTextVisibility",
-                        "key": "t"
+                        "key": "i"
+                    }, {
+                        "action": "toggleMouseControls",
+                        "key": "l"
+                    }, {
+                        "action": "toggleJoystickControls",
+                        "key": "k"
                     }
                 ]
             },
             {
                 "type": "mouse",
                 "sensitivityProfile": {
-                    "moveSensitivity": 0.005,
+                    "moveSensitivity": 10,
                     "displacementSensitivity": 0.00002,
                     "displacementDeadzone": 6
                 },
@@ -367,6 +389,9 @@
                         "action": "fire",
                         "button": "left"
                     }, {
+                        "action": "nextTarget",
+                        "button": "middle"
+                    }, {
                         "action": "yawLeft",
                         "move": "left",
                         "fromCenter": true
@@ -382,18 +407,44 @@
                         "action": "pitchUp",
                         "move": "up",
                         "fromCenter": true
+                    }, {
+                        "action": "cameraDecreaseFOV",
+                        "scroll": "up"
+                    }, {
+                        "action": "cameraIncreaseFOV",
+                        "scroll": "down"
+                    }, {
+                        "action": "nextView",
+                        "button": "middle"
+                    }, {
+                        "action": "followNext",
+                        "button": "left"
+                    }, {
+                        "action": "followPrevious",
+                        "button": "right"
                     }
                 ]
             },
             {
                 "type": "joystick",
                 "sensitivityProfile": {
-                    "turnSensitivity": 0.0075
+                    "actionGroups": [
+                        {
+                            "sensitivityFactor": 0.0075,
+                            "actionNames": ["yawLeft", "yawRight", "pitchUp", "pitchDown", "rollLeft", "rollRight"]
+                        }, {
+                            "staticSensitivity": true,
+                            "actionNames": ["cameraTurnLeft", "cameraTurnRight", "cameraTurnUp", "cameraTurnDown", "cameraRollLeft", "cameraRollRight"]
+                        }
+                    ]
                 },
                 "bindings": [
                     {
                         "action": "fire",
                         "button": 0
+                    }, {
+                        "action": "nextTarget",
+                        "button": 1
                     }, {
                         "action": "yawLeft",
                         "axis": "-2"
@@ -430,6 +481,24 @@
                     }, {
                         "action": "cameraTurnRight",
                         "axis": "+4"
+                    }, {
+                        "action": "cameraMoveLeft",
+                        "axis": "-0"
+                    }, {
+                        "action": "cameraMoveRight",
+                        "axis": "+0"
+                    }, {
+                        "action": "cameraMoveForward",
+                        "axis": "-1"
+                    }, {
+                        "action": "cameraMoveBackward",
+                        "axis": "+1"
+                    }, {
+                        "action": "nextView",
+                        "button": 3
+                    }, {
+                        "action": "resetView",
+                        "button": 2
                     }, {
                         "action": "resetSpeed",
                         "button": 4

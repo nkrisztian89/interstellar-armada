@@ -1,0 +1,421 @@
+{
+    "name": "aries",
+    "type": "corvette",
+    "fullName": "Aries",
+    "description": "The most common patrol ship of the Empire. Equipped with two rapid fire precision turrets, it is very efficient at taking out enemy fighters and light bombers. It is only lightly armored, which leaves good maneuverability its main protection against larger ships. ",
+    "showInDatabase": true,
+    "hitpoints": 500,
+    "model": "aries",
+    "shader": "ship",
+    "texture": "aries",
+    "groupZeroLuminosity": 1.0,
+    "mass": 9000000,
+    "bodies": [
+        {
+            "position": [0, 70, 0],
+            "size": [130, 300, 80]
+        },
+        {
+            "position": [0, 315, 0],
+            "size": [70, 150, 40]
+        },
+        {
+            "position": [0, -20, 0],
+            "size": [210, 120, 80]
+        },
+        {
+            "position": [-77.5, -175, 0],
+            "size": [35, 270, 35]
+        },
+        {
+            "position": [77.5, -175, 0],
+            "size": [35, 270, 35]
+        },
+        {
+            "position": [165, -70, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 20
+                }
+            ],
+            "size": [135, 30, 5]
+        },
+        {
+            "position": [-165, -70, 0],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -20
+                }
+            ],
+            "size": [135, 30, 5]
+        }
+    ],
+    "weaponSlots": [
+        {
+            "position": [56, -10, 45],
+            "maxGrade": 3
+        },
+        {
+            "position": [-56, -10, 45],
+            "maxGrade": 3
+        }
+    ],
+    "maxPropulsionGrade": 3,
+    "thrusterSlots": [
+        {
+            "group": 1,
+            "uses": ["yawLeft", "strafeLeft"],
+            "thrusters": [
+                {
+                    "position": [56, 285, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 2,
+            "uses": ["yawRight", "strafeRight"],
+            "thrusters": [
+                {
+                    "position": [-56, 285, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 3,
+            "uses": ["pitchUp", "rollLeft", "raise"],
+            "thrusters": [
+                {
+                    "position": [14, 285, -28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 4,
+            "uses": ["pitchUp", "rollRight", "raise"],
+            "thrusters": [
+                {
+                    "position": [-14, 285, -28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 5,
+            "uses": ["pitchDown", "rollRight", "lower"],
+            "thrusters": [
+                {
+                    "position": [14, 285, 28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 6,
+            "uses": ["pitchDown", "rollLeft", "lower"],
+            "thrusters": [
+                {
+                    "position": [-14, 285, 28],
+                    "size": 5.5
+                }
+            ]
+        },
+        {
+            "group": 7,
+            "uses": ["reverse"],
+            "thrusters": [
+                {
+                    "position": [75, 53, 20],
+                    "size": 8.5
+                },
+                {
+                    "position": [-75, 53, 20],
+                    "size": 8.5
+                },
+                {
+                    "position": [75, 53, -20],
+                    "size": 8.5
+                },
+                {
+                    "position": [-75, 53, -20],
+                    "size": 8.5
+                }
+            ]
+        },
+        {
+            "group": 8,
+            "uses": ["forward"],
+            "thrusters": [
+                {
+                    "position": [77.5, -311, 0],
+                    "size": 13.4
+                },
+                {
+                    "position": [-77.5, -311, 0],
+                    "size": 13.4
+                }
+            ]
+        },
+        {
+            "group": 9,
+            "uses": ["yawRight", "strafeLeft"],
+            "thrusters": [
+                {
+                    "position": [109, -273, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 10,
+            "uses": ["pitchDown", "rollLeft", "raise"],
+            "thrusters": [
+                {
+                    "position": [77.5, -273, -31.5],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 11,
+            "uses": ["pitchUp", "rollRight", "lower"],
+            "thrusters": [
+                {
+                    "position": [77.5, -273, 31.5],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 12,
+            "uses": ["yawLeft", "strafeRight"],
+            "thrusters": [
+                {
+                    "position": [-109, -273, 0],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 13,
+            "uses": ["pitchDown", "rollRight", "raise"],
+            "thrusters": [
+                {
+                    "position": [-77.5, -273, -31.5],
+                    "size": 5.0
+                }
+            ]
+        },
+        {
+            "group": 14,
+            "uses": ["pitchUp", "rollLeft", "lower"],
+            "thrusters": [
+                {
+                    "position": [-77.5, -273, 31.5],
+                    "size": 5.0
+                }
+            ]
+        }
+    ],
+    "views": [
+        {
+            "name": "near",
+            "fov": 40,
+            "fovRange": [40, 40],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -40, 20]
+        },
+        {
+            "name": "far",
+            "fov": 55,
+            "fovRange": [55, 55],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -165, 45]
+        },
+        {
+            "name": "bridge",
+            "fov": 45,
+            "fovRange": [45, 45],
+            "fps": true,
+            "followsPosition": true,
+            "movable": true,
+            "turnable": true,
+            "rotationCenterIsObject": false,
+            "betaRange": [-80, 50],
+            "position": [0, 40, 6.7],
+            "confines": [[-5, 5], [30, 41.2], [6.6, 6.6]]
+        },
+        {
+            "name": "front",
+            "fov": 55,
+            "fovRange": [55, 55],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [0, 126, 38],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 180
+                },
+                {
+                    "axis": "X",
+                    "degrees": -12
+                }
+            ]
+        },
+        {
+            "name": "free",
+            "fov": 45,
+            "fovRange": [30, 60],
+            "followsPosition": true,
+            "movable": true,
+            "turnable": true,
+            "rotationCenterIsObject": true,
+            "distanceRange": [100, 250],
+            "position": [0, -120, 0]
+        },
+        {
+            "name": "flyby",
+            "fps": true,
+            "fov": 45,
+            "fovRange": [45, 45],
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": false,
+            "turnable": false,
+            "position": [85, 300, 40],
+            "distanceRange": [90, 500]
+        },
+        {
+            "name": "target",
+            "fps": true,
+            "fov": 55,
+            "fovRange": [30, 55],
+            "followsPosition": true,
+            "lookAt": "target",
+            "movable": true,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -125, 35],
+            "distanceRange": [90, 240]
+        }
+    ],
+    "equipmentProfiles": [
+        {
+            "name": "default",
+            "weapons": [
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialCorvetteMk1"
+            }
+        }
+    ],
+    "explosion": "smallShipExplosion",
+    "showTimeRatioDuringExplosion": 0.25,
+    "damageIndicators": [
+        {
+            "hullIntegrity": 25,
+            "class": "mediumFire"
+        },
+        {
+            "hullIntegrity": 10,
+            "class": "mediumFire"
+        }
+    ],
+    "lights": [],
+    "blinkers": [
+        {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 1, 1],
+                "duration": 200
+            },
+            "position": [30, 390, 2],
+            "period": 1500,
+            "blinks": [0, 300],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 1, 1],
+                "duration": 200
+            },
+            "position": [-30, 390, -2],
+            "period": 1500,
+            "blinks": [0, 300],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 0, 1],
+                "duration": 200
+            },
+            "position": [225, -80, 2],
+            "period": 1500,
+            "blinks": [600],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 0, 1],
+                "duration": 200
+            },
+            "position": [-225, -80, 2],
+            "period": 1500,
+            "blinks": [600],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 0, 0, 1],
+                "duration": 200
+            },
+            "position": [50.5, -300, 0],
+            "period": 1500,
+            "blinks": [150],
+            "intensity": 49
+        }, {
+            "particle": {
+                "size": 1.5,
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 0, 0, 1],
+                "duration": 200
+            },
+            "position": [-50.5, -300, 0],
+            "period": 1500,
+            "blinks": [150],
+            "intensity": 49
+        }
+    ]
+}

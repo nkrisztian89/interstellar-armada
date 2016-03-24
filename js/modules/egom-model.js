@@ -1,8 +1,10 @@
 /**
  * Copyright 2014-2015 Krisztián Nagy
  * @file 
- * Usage:
- * TODO: explain usage
+ * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
+ * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
+ * vertex buffers as well as load it itself to vertex buffers and render it. Functions for generating and returning several simple models
+ * are also included.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -11,6 +13,10 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, Float32Array, parseFloat, Document */
 
+/**
+ * @param vec Used for vector operations to create / manipulate normal vectors.
+ * @param application Used for displaying errors and logging.
+ */
 define([
     "utils/vectors",
     "modules/application"
@@ -20,33 +26,26 @@ define([
      * The list of EgomModel versions that can be loaded from file.
      * @type String[]
      */
-    var _supportedVersions = ["2.0", "2.1", "2.2"];
+    var _supportedVersions = ["2.0", "2.1", "2.2", "3.0"];
 
     /**
-     * @name Vertex
-     * @alias Egom.Vertex
-     * @private
      * @class Represents a vertex in 3D space.
      * @param {Number[3]} position Position vector.
      * @param {Number[2]} texCoords Texture coordinates.
-     * @returns {Vertex}
      */
     function Vertex(position, texCoords) {
         /**
          * The X coordinate of the vertex.
-         * @name Vertex#x
          * @type Number
          */
         this.x = position[0];
         /**
          * The Y coordinate of the vertex.
-         * @name Vertex#y
          * @type Number
          */
         this.y = position[1];
         /**
          * The Z coordinate of the vertex.
-         * @name Vertex#z
          * @type Number
          */
         this.z = position[2];
@@ -54,13 +53,11 @@ define([
         texCoords = texCoords || [this.x, this.y];
         /**
          * The U (horizontal) texture coordinate of the vertex.
-         * @name Vertex#u
          * @type Number
          */
         this.u = texCoords[0];
         /**
          * The V (vertical) texture coordinate of the vertex.
-         * @name Vertex#v
          * @type Number
          */
         this.v = texCoords[1];
@@ -99,56 +96,44 @@ define([
     };
 
     /**
-     * @name Line
-     * @alias Egom.Line
-     * @private
      * @class Represents a line connecting two vertices in a model.
      * @param {Number} a The index of the starting vertex of the line.
      * @param {Number} b The index of the end vertex of the line.
      * @param {Number[3]} color The color of the line. ([red, green, blue])
      * @param {Number} luminosity The luminosity of the line. (0.0-1.0)
      * @param {Number[3]} normal The normal vector associated with the line.
-     * @returns {Line}
      */
     function Line(a, b, color, luminosity, normal) {
         /**
          * The index (in the model) of the starting vertex of the line.
-         * @name Line#a
          * @type Number
          */
         this.a = a;
         /**
          * The index (in the model) of the end vertex of the line.
-         * @name Line#b
          * @type Number
          */
         this.b = b;
         /**
          * The color of the line for rendering. ([red, green, blue])
-         * @name Line#color
          * @type Number
          */
         this.color = color;
         /**
          * The luminosity of the line for rendering. (0.0-1.0)
-         * @name Line#luminosity
          * @type Number
          */
         this.luminosity = luminosity;
         /**
          * The normal vector associated with the line for shading.
-         * @name Line#normal
          * @type Number[3]
          */
         this.normal = normal;
     }
 
     /**
-     * @name Triangle
-     * @alias Egom.Triangle
-     * @private
      * @class Represents a triangular face between 3 vertices of a model.
-     * @param {Model} model The model to which this triangle is added.
+     * @param {Mesh} model The model to which this triangle is added.
      * @param {Number} a The index of the first vertex.
      * @param {Number} b The index of the second vertex.
      * @param {Number} c The index of the third vertex.
@@ -161,55 +146,46 @@ define([
      * If the three vertives are the same, it is enough to pass an array with only
      * one element.
      * @param {Number} [groupIndex] The index of the group this triangle belongs to.
-     * @returns {Triangle}
      */
     function Triangle(model, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex) {
         /**
          * The model to which this triangle is added.
-         * @name Triangle#_mesh
          * @type Mesh
          */
         this._mesh = model;
         /**
          * The index (in the model) of the first vertex of the triangle.
-         * @name Triangle#a
          * @type Number
          */
         this.a = a;
         /**
          * The index (in the model) of the second vertex of the triangle.
-         * @name Triangle#b
          * @type Number
          */
         this.b = b;
         /**
          * The index (in the model) of the third vertex of the triangle.
-         * @name Triangle#c
          * @type Number
          */
         this.c = c;
         /**
          * The RGBA color of the triangle. ([red, green, blue, alpha])
-         * @name Triangle#color
          * @type Number[4]
          */
         this.color = color;
         /**
          * The luminosity of the triangle. (0.0-1.0)
-         * @name Triangle#luminosity
          * @type Number
          */
         this.luminosity = luminosity;
         /**
          * The shininess (exponent) of the triangle for phong shading.
-         * @name Triangle#shininess
          * @type Number
          */
         this.shininess = shininess;
         /**
          * The texture coordinates of the triangle's vertices. Format: 
          * [[a.u,a.v],[b.u,b.v],[c.u,c.v]]
-         * @name Triangle#texCoords
          * @type Number[3][2]
          */
         this.texCoords = texCoords;
@@ -217,14 +193,12 @@ define([
          * The normal vector(s) of the triangle's vertices. May have one (uniform
          * normal across the triangle) or three (different normal per vertex)
          * elements.
-         * @name Triangle#_normals
          * @type Number[][3]
          */
         this._normals = normals || vec.normal3(vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
         /**
          * The index of the group this triangle belongs to. (for setting different
          * uniform values for certain triangle groups of the model while rendering)
-         * @name Triangle#groupIndex
          * @type Number
          */
         this.groupIndex = groupIndex || 0;
@@ -242,111 +216,94 @@ define([
     /**
      * @class Stores the attributes that a mesh has associated with a managed
      * WebGL context.
-     * @returns {MeshContextProperties}
      */
     function MeshContextProperties() {
         /**
          * The index marking where the data belonging to the lines of this 
          * model starts in the vertex buffer objects.
-         * @name ModelContextProperties#bufferStartWireframe
          * @type Number
          */
-        this.bufferStartWireframe = null;
+        this.bufferStartWireframe = 0;
         /**
          * The index marking where the data belonging to the triangles of this 
          * model starts in the vertex buffer objects.
-         * @name ModelContextProperties#bufferStartSolid
          * @type Number
          */
-        this.bufferStartSolid = null;
+        this.bufferStartSolid = 0;
         /**
          * The index marking where the data belonging to the transparent 
          * triangles of this model starts in the vertex buffer objects.
-         * @name ModelContextProperties#bufferStartTransparent
          * @type Number
          */
-        this.bufferStartTransparent = null;
+        this.bufferStartTransparent = 0;
     }
 
     /**
-     * A single, specific mesh consisting of lines (for wireframe rendering) and 
+     * @class A single, specific mesh consisting of lines (for wireframe rendering) and 
      * triangles (for solid rendering) that connect 3D vertices. Multiple such
      * meshes that represent the same 3D model on different levels of detail
      * are grouped together in the Model class.
-     * @returns {Mesh}
      */
     function Mesh() {
         /**
          * The array of vertices of the model. These can be referenced by index
          * when defining lines or triangles.
-         * @name Mesh#_vertices
          * @type Vertex[]
          */
         this._vertices = [];
         /**
          * The array of lines of the model for wireframe rendering.
-         * @name Mesh#_lines
          * @type Line[]
          */
         this._lines = [];
         /**
          * The array of triangles of the model for solid rendering.
-         * @name Mesh#_triangles
          * @type Triangle[]
          */
         this._triangles = [];
         /**
          * The size of the model. It is the double of the (absolute) largest coordinate
          * found among the vertices.
-         * @name Mesh#_size
          * @type Number
          */
         this._size = 0;
         /**
          * The largest positive X coordinate found among the vertices.
-         * @name Mesh#_maxX
          * @type Number
          */
         this._maxX = 0;
         /**
          * The largest negative X coordinate found among the vertices.
-         * @name Mesh#_minX
          * @type Number
          */
         this._minX = 0;
         /**
          * The largest positive Y coordinate found among the vertices.
-         * @name Mesh#_maxY
          * @type Number
          */
         this._maxY = 0;
         /**
          * The largest negative Y coordinate found among the vertices.
-         * @name Mesh#_minY
          * @type Number
          */
         this._minY = 0;
         /**
          * The largest positive Z coordinate found among the vertices.
-         * @name Mesh#_maxZ
          * @type Number
          */
         this._maxZ = 0;
         /**
          * The largest negative Z coordinate found among the vertices.
-         * @name Mesh#_minZ
          * @type Number
          */
         this._minZ = 0;
         /**
          * The number of opaque triangles this model contains.
-         * @name Mesh#_nOpaqueTriangles
          * @type Number
          */
         this._nOpaqueTriangles = 0;
         /**
          * The number of transparent triangles this model contains.
-         * @name Mesh#_nTransparentTriangles
          * @type Number
          */
         this._nTransparentTriangles = 0;
@@ -354,31 +311,26 @@ define([
          * An associative array storing ModelContextProperties objects for each
          * context this mesh is associated with, organized by the names of the
          * contexts.
-         * @name Mesh#_contextProperties
          * @type Object.<String, MeshContextProperties>
          */
         this._contextProperties = {};
         /**
          * The default texture coordinates for newly added triangles and quads.
-         * @name Mesh#_texCoords
          * @type Number[4][2]
          */
         this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
         /**
          * The default luminosity value for newly added lines and triangles.
-         * @name Mesh#_luminosity
          * @type Number
          */
         this._luminosity = 0;
         /**
          * The default shininess value for newly added lines and triangles.
-         * @name Mesh#_shininess
          * @type Number
          */
         this._shininess = 0;
         /**
          * The default group index for newly added triangles and lines.
-         * @name Mesh#_currentGroupIndex
          * @type Number
          */
         this._currentGroupIndex = 0;
@@ -386,7 +338,6 @@ define([
          * A property for convenience and optimization, all filler null vectors
          * point to this object instead of creating a separate vertex object
          * for each.
-         * @name Mesh#_nullVertex
          * @type Vertex
          */
         this._nullVertex = new Vertex([0.0, 0.0, 0.0]);
@@ -411,10 +362,14 @@ define([
 
     /**
      * Returns the number of triangles this model contains.
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
      * @returns {Number}
      */
-    Mesh.prototype.getNumTriangles = function () {
-        return this._triangles.length;
+    Mesh.prototype.getNumTriangles = function (transparent) {
+        if (transparent === undefined) {
+            return this._triangles.length;
+        }
+        return transparent ? this._nTransparentTriangles : this._nOpaqueTriangles;
     };
 
     /**
@@ -614,8 +569,8 @@ define([
         // texture coordinates may be taken from the vertices, from the parameters
         // passed to this function or from the default coordinates set for the model
         texCoords = params.useVertexTexCoords ?
-              [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-              (params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+                (params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
         // normals are taken from the parameters - can be 1 or 3 element long
         normals = params.normals;
         // if not specified, use the model's default group index
@@ -648,28 +603,28 @@ define([
         triangle1Params.withoutLines = true;
         // for texture coordinates and normals, the first 3 values need to be used
         triangle1Params.texCoords = params.useVertexTexCoords ?
-              [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-              (params.texCoords ?
-                    [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
-                    [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
+                (params.texCoords ?
+                        [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
+                        [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
         triangle1Params.normals = params.normals ?
-              (params.normals.length === 4 ?
-                    [params.normals[0], params.normals[1], params.normals[2]] :
-                    params.normals) :
-              null;
+                (params.normals.length === 4 ?
+                        [params.normals[0], params.normals[1], params.normals[2]] :
+                        params.normals) :
+                null;
         this.addTriangleWithParams(a, b, c, triangle1Params);
         // adding the first triangle
         triangle2Params = Object.create(params);
         triangle2Params.texCoords = params.useVertexTexCoords ?
-              [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
-              (params.texCoords ?
-                    [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
-                    [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
+                [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
+                (params.texCoords ?
+                        [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
+                        [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
         triangle2Params.normals = params.normals ?
-              (params.normals.length === 4 ?
-                    [params.normals[2], params.normals[3], params.normals[0]] :
-                    params.normals) :
-              null;
+                (params.normals.length === 4 ?
+                        [params.normals[2], params.normals[3], params.normals[0]] :
+                        params.normals) :
+                null;
         this.addTriangleWithParams(c, d, a, triangle2Params);
         // adding the 4 lines around the quad
         if (!params.withoutLines) {
@@ -784,8 +739,8 @@ define([
      */
     Mesh.prototype.getBufferData = function (wireframe, startIndex) {
         var i, j, nLines, nTriangles, ix, index,
-              vertexData, texCoordData, normalData, colorData, luminosityData,
-              shininessData, groupIndexData, triangleIndexData;
+                vertexData, texCoordData, normalData, colorData, luminosityData,
+                shininessData, groupIndexData, triangleIndexData;
         startIndex = startIndex || 0;
         if (wireframe === true) {
             nLines = this._lines.length;
@@ -984,8 +939,8 @@ define([
      */
     Mesh.prototype.loadToVertexBuffers = function (context, startIndex, wireframe, solid) {
         var bufferData = null,
-              dataSize = 0,
-              props = this._contextProperties[context.getName()] || new MeshContextProperties();
+                dataSize = 0,
+                props = this._contextProperties[context.getName()] || new MeshContextProperties();
         if (wireframe) {
             bufferData = this.getBufferData(true, startIndex);
             props.bufferStartWireframe = startIndex;
@@ -1036,6 +991,31 @@ define([
                 case undefined:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length);
                     //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._triangles.length, context.gl.UNSIGNED_SHORT, props.bufferStartSolid * 2);
+                    break;
+            }
+        }
+    };
+    /**
+     * Similar to the regular render method, but this renders the given number of instances of the mesh using instancing.
+     * @param {ManagedGLContext} context
+     * @param {Boolean} wireframe
+     * @param {Boolean} [opaque]
+     * @param {Number} instanceCount
+     */
+    Mesh.prototype.renderInstances = function (context, wireframe, opaque, instanceCount) {
+        var props = this._contextProperties[context.getName()];
+        if (wireframe === true) {
+            context.instancingExt.drawArraysInstancedANGLE(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length, instanceCount);
+        } else {
+            switch (opaque) {
+                case true:
+                    context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles, instanceCount);
+                    break;
+                case false:
+                    context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles, instanceCount);
+                    break;
+                case undefined:
+                    context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length, instanceCount);
                     break;
             }
         }
@@ -1154,7 +1134,7 @@ define([
         // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
         for (i = 0; i < angles; i++) {
             for (j = 0; j < angles; j++) {
-                this.appendVertex([x + radius * Math.sin(j * 2 * 3.1415 / angles) * Math.cos(i * 2 * 3.1415 / angles), y + radius * Math.cos(j * 2 * 3.1415 / angles), z + radius * Math.sin(i * 2 * 3.1415 / angles) * Math.sin(j * 2 * 3.1415 / angles)]);
+                this.appendVertex([x + radius * Math.sin(j * 2 * Math.PI / angles) * Math.cos(i * 2 * Math.PI / angles), y + radius * Math.cos(j * 2 * Math.PI / angles), z + radius * Math.sin(i * 2 * Math.PI / angles) * Math.sin(j * 2 * Math.PI / angles)]);
             }
         }
 
@@ -1249,36 +1229,31 @@ define([
     function ModelContextProperties() {
         /**
          * Whether the wireframe model is used in the context.
-         * @name ModelContextProperties#wireframe
          * @type Boolean
          */
-        this.wireframe = null;
+        this.wireframe = false;
         /**
          * Whether the solid model is used in the context.
-         * @name ModelContextProperties#wireframe
          * @type Boolean
          */
-        this.solid = null;
+        this.solid = false;
         /**
          * The minimum LOD with which this model has been added to the context.
          * The vertex buffer data should be filled with the mesh data starting
          * from this LOD, when the context is initialized.
-         * @name ModelContextProperties#minLOD
          * @type Number
          */
-        this.minLOD = null;
+        this.minLOD = 0;
         /**
          * The maximum LOD with which this model has been added to the context.
          * The vertex buffer data should be filled with the mesh data up to this 
          * LOD, when the context is initialized.
-         * @name ModelContextProperties#maxLOD
          * @type Number
          */
-        this.maxLOD = null;
+        this.maxLOD = 0;
     }
 
     /**
-     * @name Model
      * @class Combines different Mesh object into one, multi-LOD 3D model and
      * provides functionality for loading these different LODs from a single or
      * multiple files.
@@ -1287,59 +1262,50 @@ define([
         /**
          * The mesh ordered by their LOD (the index corresponds to the LOD of
          * the mesh)
-         * @name Model#_meshes
-         * @type Array.<Mesh>
+         * @type Mesh[]
          */
         this._meshes = [];
         /**
          * The minimum LOD for which this model currently stores info. It is set
          * when mesh info is loaded from a file.
-         * @name Model#_minLOD
          * @type Number
          */
-        this._minLOD = null;
+        this._minLOD = this.LOD_NOT_SET;
         /**
          * The maximum LOD for which this model currently stores info. It is set
          * when mesh info is loaded from a file.
-         * @name Model#_maxLOD
          * @type Number
          */
-        this._maxLOD = null;
+        this._maxLOD = this.LOD_NOT_SET;
         /**
          * A convenience property holding a reference to the currently edited
          * mesh, in case a single LOD is set to be edited. Editing operations
          * affect only this mesh, if it is set.
-         * @name Model#_editedMesh
          * @type Mesh
          */
         this._editedMesh = null;
         /**
          * Editing operations affect the meshes equal to or above this LOD.
-         * @name Model#_minEditedLOD
          * @type Number
          */
         this._minEditedLOD = 0;
         /**
          * Editing operations affect the meshes up to this LOD.
-         * @name Model#_maxEditedLOD
          * @type Number
          */
         this._maxEditedLOD = 0;
         /**
          * The name of this model.
-         * @name Model#_name
          * @type String
          */
         this._name = null;
         /**
          * The object storing the info (meta) properties of the model.
-         * @name Model#_infoProperties
          * @type Object
          */
         this._infoProperties = {};
         /**
          * The length of one model-space unit in meters.
-         * @name Model#_scale
          * @type Number
          */
         this._scale = 1;
@@ -1347,11 +1313,16 @@ define([
          * An associative array storing ModelContextProperties objects for each
          * context this model is associated with, organized by the names of the
          * contexts.
-         * @name Model#_contextProperties
          * @type Object.<String, ModelContextProperties>
          */
         this._contextProperties = {};
     }
+    /**
+     * The value for LOD levels that have not been set yet
+     * @constant
+     * @type Number
+     */
+    Model.prototype.LOD_NOT_SET = -1;
 
     /**
      * Returns the name of the model. (not the same as the filename - a name can be
@@ -1415,8 +1386,8 @@ define([
      * @param {Number} maxLOD
      */
     Model.prototype.updateLODInfo = function (minLOD, maxLOD) {
-        this._minLOD = this._minLOD === null ? minLOD : (minLOD < this._minLOD ? minLOD : this._minLOD);
-        this._maxLOD = this._maxLOD === null ? maxLOD : (maxLOD > this._maxLOD ? maxLOD : this._maxLOD);
+        this._minLOD = (this._minLOD === this.LOD_NOT_SET) ? minLOD : (minLOD < this._minLOD ? minLOD : this._minLOD);
+        this._maxLOD = (this._maxLOD === this.LOD_NOT_SET) ? maxLOD : (maxLOD > this._maxLOD ? maxLOD : this._maxLOD);
     };
 
     /**
@@ -1480,65 +1451,65 @@ define([
      */
     Model.prototype.loadFromXML = function (filename, xmlDoc, defaultLOD) {
         var i, j, str,
-              minLoadedLOD = null,
-              maxLoadedLOD = null,
-              defaultMinLOD = null,
-              defaultMaxLOD = null,
-              minLOD, maxLOD, minMaxLOD,
-              version, defaultShininess, colorPalette, propertyTags, propName, defLOD,
-              vertexTagName, lineTagName, triangleTagName,
-              params,
-              vertexTags, nVertices, lineTags, nLines, triangleTags, nTriangles,
-              index, vertex, line, triangle,
-              resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
-                  var lod;
-                  if (minLoadedLOD === null) {
-                      for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
-                          this.getMeshWithLOD(lod).resetMesh();
-                      }
-                      minLoadedLOD = newMinLoadedLOD;
-                      maxLoadedLOD = newMaxLoadedLOD;
-                  } else {
-                      for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
-                          this.getMeshWithLOD(lod).resetMesh();
-                      }
-                      for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
-                          this.getMeshWithLOD(lod).resetMesh();
-                      }
-                      minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
-                      maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
-                  }
-              }.bind(this),
-              parseFloatList = function (s) {
-                  return s.split(",").map(parseFloat);
-              };
+                minLoadedLOD = null,
+                maxLoadedLOD = null,
+                defaultMinLOD = null,
+                defaultMaxLOD = null,
+                minLOD, maxLOD, minMaxLOD,
+                version, defaultShininess, colorPalette, propertyTags, propName, defLOD,
+                vertexTagName, lineTagName, triangleTagName,
+                params,
+                vertexTags, nVertices, lineTags, nLines, triangleTags, nTriangles,
+                index, vertex, line, triangle,
+                resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
+                    var lod;
+                    if (minLoadedLOD === null) {
+                        for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD;
+                    } else {
+                        for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
+                    }
+                }.bind(this),
+                parseFloatList = function (s) {
+                    return s.split(",").map(parseFloat);
+                };
         defaultLOD = defaultLOD || 0;
         application.log("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed XML document
         if (!(xmlDoc instanceof Document)) {
             application.showError("'" + filename + "' does not appear to be an XML document.",
-                  "severe",
-                  "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                  "are accepted. Such a file needs to be a valid XML document with an EgomModel root element.");
+                    application.ErrorSeverity.SEVERE,
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
             return false;
         }
         if (xmlDoc.documentElement.nodeName !== "EgomModel") {
             application.showError("'" + filename + "' does not appear to be an EgomModel file.",
-                  "severe",
-                  "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                  "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
-                  "'" + xmlDoc.documentElement.nodeName + "' instead.");
+                    application.ErrorSeverity.SEVERE,
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to have an EgomModel as root element, while this file has " +
+                    "'" + xmlDoc.documentElement.nodeName + "' instead.");
             return false;
         }
         // checking EgomModel version
         version = xmlDoc.documentElement.getAttribute("version");
         if (!version) {
-            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", "severe");
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", application.ErrorSeverity.SEVERE);
             return false;
         }
         if (_supportedVersions.indexOf(version) < 0) {
             application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
-                  "severe", "Supported versions are: " + _supportedVersions.join(", ") + ".");
+                    application.ErrorSeverity.SEVERE, "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }
         // loading info properties
@@ -1609,18 +1580,18 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             vertex = new Vertex(
-                  (parseFloat(version) >= 2.1 ?
-                        [
-                            parseFloat(vertexTags[i].getAttribute("x")),
-                            parseFloat(vertexTags[i].getAttribute("y")),
-                            parseFloat(vertexTags[i].getAttribute("z"))
-                        ]
-                        // version 2.0
-                        : [
-                            parseFloat(vertexTags[i].getAttribute("x")) / 10000,
-                            parseFloat(vertexTags[i].getAttribute("y")) / -10000,
-                            parseFloat(vertexTags[i].getAttribute("z")) / -10000
-                        ]));
+                    (parseFloat(version) >= 2.1 ?
+                            [
+                                parseFloat(vertexTags[i].getAttribute("x")),
+                                parseFloat(vertexTags[i].getAttribute("y")),
+                                parseFloat(vertexTags[i].getAttribute("z"))
+                            ]
+                            // version 2.0
+                            : [
+                                parseFloat(vertexTags[i].getAttribute("x")) / 10000,
+                                parseFloat(vertexTags[i].getAttribute("y")) / -10000,
+                                parseFloat(vertexTags[i].getAttribute("z")) / -10000
+                            ]));
             for (j = minLOD; j <= maxLOD; j++) {
                 this.getMeshWithLOD(j).setVertex(index, vertex);
             }
@@ -1640,26 +1611,26 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             line = new Line(
-                  parseInt(lineTags[i].getAttribute("a"), 10),
-                  parseInt(lineTags[i].getAttribute("b"), 10),
-                  (parseFloat(version) >= 2.1 ?
-                        (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"), 10)] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
-                        // version 2.0
-                        : [
-                            parseInt(lineTags[i].getAttribute("red"), 10) / 255,
-                            parseInt(lineTags[i].getAttribute("green"), 10) / 255,
-                            parseInt(lineTags[i].getAttribute("blue"), 10) / 255]),
-                  (parseFloat(version) >= 2.1 ?
-                        (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
-                        // version 2.0
-                        : parseInt(lineTags[i].getAttribute("luminosity"), 10) / 255),
-                  (parseFloat(version) >= 2.1 ?
-                        lineTags[i].getAttribute("n").split(",").map(parseFloat)
-                        // version 2.0
-                        : [
-                            parseFloat(lineTags[i].getAttribute("nx")),
-                            -parseFloat(lineTags[i].getAttribute("ny")),
-                            -parseFloat(lineTags[i].getAttribute("nz"))]));
+                    parseInt(lineTags[i].getAttribute("a"), 10),
+                    parseInt(lineTags[i].getAttribute("b"), 10),
+                    (parseFloat(version) >= 2.1 ?
+                            (colorPalette ? colorPalette[parseInt(lineTags[i].getAttribute("color"), 10)] : lineTags[i].getAttribute("color").split(",").map(parseFloat))
+                            // version 2.0
+                            : [
+                                parseInt(lineTags[i].getAttribute("red"), 10) / 255,
+                                parseInt(lineTags[i].getAttribute("green"), 10) / 255,
+                                parseInt(lineTags[i].getAttribute("blue"), 10) / 255]),
+                    (parseFloat(version) >= 2.1 ?
+                            (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
+                            // version 2.0
+                            : parseInt(lineTags[i].getAttribute("luminosity"), 10) / 255),
+                    (parseFloat(version) >= 2.1 ?
+                            lineTags[i].getAttribute("n").split(",").map(parseFloat)
+                            // version 2.0
+                            : [
+                                parseFloat(lineTags[i].getAttribute("nx")),
+                                -parseFloat(lineTags[i].getAttribute("ny")),
+                                -parseFloat(lineTags[i].getAttribute("nz"))]));
             for (j = minLOD; j <= maxLOD; j++) {
                 this.getMeshWithLOD(j).addLine(line);
             }
@@ -1680,70 +1651,70 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             params.color = parseFloat(version) >= 2.1 ?
-                  (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"), 10)] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
-                  // version 2.0
-                  : [
-                      parseInt(triangleTags[i].getAttribute("red"), 10) / 255,
-                      parseInt(triangleTags[i].getAttribute("green"), 10) / 255,
-                      parseInt(triangleTags[i].getAttribute("blue"), 10) / 255,
-                      (255 - parseInt(triangleTags[i].getAttribute("alpha"), 10)) / 255];
+                    (colorPalette ? colorPalette[parseInt(triangleTags[i].getAttribute("color"), 10)] : triangleTags[i].getAttribute("color").split(",").map(parseFloat))
+                    // version 2.0
+                    : [
+                        parseInt(triangleTags[i].getAttribute("red"), 10) / 255,
+                        parseInt(triangleTags[i].getAttribute("green"), 10) / 255,
+                        parseInt(triangleTags[i].getAttribute("blue"), 10) / 255,
+                        (255 - parseInt(triangleTags[i].getAttribute("alpha"), 10)) / 255];
             params.luminosity = parseFloat(version) >= 2.1 ?
-                  (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
-                  // version 2.0
-                  : parseInt(triangleTags[i].getAttribute("luminosity"), 10) / 255;
+                    (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("luminosity"), 10) / 255;
             params.shininess = parseFloat(version) >= 2.1 ?
-                  (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi"), 10) : defaultShininess)
-                  // version 2.0
-                  : parseInt(triangleTags[i].getAttribute("shininess"), 10);
+                    (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi"), 10) : defaultShininess)
+                    // version 2.0
+                    : parseInt(triangleTags[i].getAttribute("shininess"), 10);
             params.texCoords = parseFloat(version) >= 2.1 ?
-                  [
-                      triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
-                      triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
-                      triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
-                  ]
-                  // version 2.0
-                  : [
-                      [
-                          parseFloat(triangleTags[i].getAttribute("tax")),
-                          parseFloat(triangleTags[i].getAttribute("tay"))],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("tbx")),
-                          parseFloat(triangleTags[i].getAttribute("tby"))],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("tcx")),
-                          parseFloat(triangleTags[i].getAttribute("tcy"))]];
-            params.normals = parseFloat(version) >= 2.1 ?
-                  (triangleTags[i].hasAttribute("n") ?
-                        [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
+                    [
+                        triangleTags[i].getAttribute("ta").split(",").map(parseFloat),
+                        triangleTags[i].getAttribute("tb").split(",").map(parseFloat),
+                        triangleTags[i].getAttribute("tc").split(",").map(parseFloat)
+                    ]
+                    // version 2.0
+                    : [
                         [
-                            triangleTags[i].getAttribute("na").split(",").map(parseFloat),
-                            triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
-                            triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
-                        ])
-                  // version 2.0
-                  : [
-                      [
-                          parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
-                      [
-                          parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
-                          -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
+                            parseFloat(triangleTags[i].getAttribute("tax")),
+                            parseFloat(triangleTags[i].getAttribute("tay"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tbx")),
+                            parseFloat(triangleTags[i].getAttribute("tby"))],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("tcx")),
+                            parseFloat(triangleTags[i].getAttribute("tcy"))]];
+            params.normals = parseFloat(version) >= 2.1 ?
+                    (triangleTags[i].hasAttribute("n") ?
+                            [triangleTags[i].getAttribute("n").split(",").map(parseFloat)] :
+                            [
+                                triangleTags[i].getAttribute("na").split(",").map(parseFloat),
+                                triangleTags[i].getAttribute("nb").split(",").map(parseFloat),
+                                triangleTags[i].getAttribute("nc").split(",").map(parseFloat)
+                            ])
+                    // version 2.0
+                    : [
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nax")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nay")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("naz")) / 10000],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("nbx")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nby")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("nbz")) / 10000],
+                        [
+                            parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
+                            -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
             params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
             params.withoutLines = true;
             triangle = null;
             for (j = minLOD; j <= maxLOD; j++) {
                 if (!triangle) {
                     triangle = this.getMeshWithLOD(j).addTriangleWithParams(
-                          triangleTags[i].getAttribute("a"),
-                          triangleTags[i].getAttribute("b"),
-                          triangleTags[i].getAttribute("c"),
-                          params);
+                            triangleTags[i].getAttribute("a"),
+                            triangleTags[i].getAttribute("b"),
+                            triangleTags[i].getAttribute("c"),
+                            params);
                 } else {
                     this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
                 }
@@ -1756,6 +1727,149 @@ define([
             str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
         application.log(str, 2);
+        return true;
+    };
+    /**
+     * Loads the model data from the passed JSON object.
+     * @param {String} filename
+     * @param {Object} dataJSON
+     * @param {Number} defaultLOD
+     * @returns {Boolean} Whether the model has been successfully loaded.
+     */
+    Model.prototype.loadFromJSON = function (filename, dataJSON, defaultLOD) {
+        var i, j, str,
+                minLoadedLOD = null,
+                maxLoadedLOD = null,
+                defaultMinLOD = null,
+                defaultMaxLOD = null,
+                minLOD, maxLOD,
+                version, defaultShininess, colorPalette,
+                params,
+                nVertices, nLines, nTriangles,
+                index, vertex, line, triangle,
+                resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
+                    var lod;
+                    if (minLoadedLOD === null) {
+                        for (lod = newMinLoadedLOD; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD;
+                    } else {
+                        for (lod = newMinLoadedLOD; lod < minLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        for (lod = maxLoadedLOD + 1; lod <= newMaxLoadedLOD; lod++) {
+                            this.getMeshWithLOD(lod).resetMesh();
+                        }
+                        minLoadedLOD = newMinLoadedLOD < minLoadedLOD ? newMinLoadedLOD : minLoadedLOD;
+                        maxLoadedLOD = newMaxLoadedLOD > maxLoadedLOD ? newMaxLoadedLOD : maxLoadedLOD;
+                    }
+                }.bind(this);
+        defaultLOD = defaultLOD || 0;
+        application.log("Loading EgomModel data from file: " + filename + " ...", 2);
+        // checking the passed JSON file
+        if (typeof dataJSON !== "object") {
+            application.showError("'" + filename + "' does not appear to be an JSON file.",
+                    application.ErrorSeverity.SEVERE,
+                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
+                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
+            return false;
+        }
+        // checking EgomModel version
+        version = dataJSON.version;
+        if (!version) {
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", application.ErrorSeverity.SEVERE);
+            return false;
+        }
+        if (_supportedVersions.indexOf(version) < 0) {
+            application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
+                    application.ErrorSeverity.SEVERE, "Supported versions are: " + _supportedVersions.join(", ") + ".");
+            return false;
+        }
+        // loading info properties
+        colorPalette = null;
+        this._infoProperties = dataJSON.info || {};
+        this._name = dataJSON.info.name || null;
+        this._scale = dataJSON.info.scale || 1;
+        defaultMinLOD = dataJSON.info.defaultLOD[0];
+        defaultMaxLOD = dataJSON.info.defaultLOD[1];
+        defaultShininess = dataJSON.info.defaultShininess || 0;
+        colorPalette = dataJSON.info.colorPalette;
+        // loading vertices
+        nVertices = dataJSON.vertices.length;
+        for (i = 0; i < nVertices; i++) {
+            index = dataJSON.vertices[i].i;
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = dataJSON.vertices[i].lod ? dataJSON.vertices[i].lod[0] : minLOD;
+            maxLOD = dataJSON.vertices[i].lod ? dataJSON.vertices[i].lod[1] : maxLOD;
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            vertex = new Vertex(dataJSON.vertices[i].p);
+            for (j = minLOD; j <= maxLOD; j++) {
+                this.getMeshWithLOD(j).setVertex(index, vertex);
+            }
+        }
+        application.log("Loaded " + nVertices + " vertices.", 3);
+        // loading lines
+        nLines = dataJSON.lines.length;
+        for (i = 0; i < nLines; i++) {
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = dataJSON.lines[i].lod ? dataJSON.lines[i].lod[0] : minLOD;
+            maxLOD = dataJSON.lines[i].lod ? dataJSON.lines[i].lod[1] : maxLOD;
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            line = new Line(
+                    dataJSON.lines[i].a,
+                    dataJSON.lines[i].b,
+                    colorPalette ? colorPalette[dataJSON.lines[i].color] : dataJSON.lines[i].color,
+                    dataJSON.lines[i].lum || 0,
+                    dataJSON.lines[i].n);
+            for (j = minLOD; j <= maxLOD; j++) {
+                this.getMeshWithLOD(j).addLine(line);
+            }
+        }
+        application.log("Loaded " + nLines + " lines.", 3);
+        // loading triangles
+        nTriangles = dataJSON.triangles.length;
+        params = {};
+        for (i = 0; i < nTriangles; i++) {
+            minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
+            maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
+            minLOD = dataJSON.triangles[i].lod ? dataJSON.triangles[i].lod[0] : minLOD;
+            maxLOD = dataJSON.triangles[i].lod ? dataJSON.triangles[i].lod[1] : maxLOD;
+            this.updateLODInfo(minLOD, maxLOD);
+            resetNewLoadedMeshes(minLOD, maxLOD);
+            params.color = colorPalette ? colorPalette[dataJSON.triangles[i].color] : dataJSON.triangles[i].color;
+            params.luminosity = dataJSON.triangles[i].lum || 0;
+            params.shininess = dataJSON.triangles[i].shi || defaultShininess;
+            params.texCoords = dataJSON.triangles[i].t;
+            params.normals = dataJSON.triangles[i].n;
+            params.groupIndex = (dataJSON.triangles[i].group !== undefined) ? dataJSON.triangles[i].group : null;
+            params.withoutLines = true;
+            triangle = null;
+            for (j = minLOD; j <= maxLOD; j++) {
+                if (!triangle) {
+                    triangle = this.getMeshWithLOD(j).addTriangleWithParams(
+                            dataJSON.triangles[i].a,
+                            dataJSON.triangles[i].b,
+                            dataJSON.triangles[i].c,
+                            params);
+                } else {
+                    this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
+                }
+            }
+        }
+        application.log("Loaded " + nTriangles + " triangles.", 3);
+        application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
+        str = "Number of triangles per LOD for " + this._name + ": ";
+        for (i = this._minLOD; i <= this._maxLOD; i++) {
+            str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
+        }
+        application.log(str, 2);
+        return true;
     };
     /**
      * Returns the scale factor of this model i.e. what is the meaning of 1 coordinate
@@ -1766,113 +1880,161 @@ define([
         return this._scale;
     };
     /**
+     * Calls the given value function by passing it all of the meshes one after the other, and returns the highest value it returns from
+     * these calls. 
+     * @param {Number} [lod] If given, the functon will be called only for the mesh with the given LOD
+     * @param {Function} valueFunction
+     */
+    Model.prototype._getLargestValueOfMeshes = function (lod, valueFunction) {
+        var result, current;
+        if (lod !== undefined) {
+            return valueFunction(this.getMeshWithLOD(lod));
+        }
+        for (lod = this._minLOD; lod < this._maxLOD; lod++) {
+            current = valueFunction(this.getMeshWithLOD(lod));
+            if ((result === undefined) || (current > result)) {
+                result = current;
+            }
+        }
+        return result;
+    };
+    /**
+     * Calls the given value function by passing it all of the meshes one after the other, and returns the lowest value it returns from
+     * these calls. 
+     * @param {Number} [lod] If given, the functon will be called only for the mesh with the given LOD
+     * @param {Function} valueFunction
+     */
+    Model.prototype._getLowestValueOfMeshes = function (lod, valueFunction) {
+        var result, current;
+        if (lod !== undefined) {
+            return valueFunction(this.getMeshWithLOD(lod));
+        }
+        for (lod = this._minLOD; lod < this._maxLOD; lod++) {
+            current = valueFunction(this.getMeshWithLOD(lod));
+            if ((result === undefined) || (current < result)) {
+                result = current;
+            }
+        }
+        return result;
+    };
+    /**
      * Returns the size of the model, which is calculated as the double of the
      * farthest (X,Y or Z) vertex coordinate to be found in the model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getSize = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getSize();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getSize();
+        });
     };
 
     /**
      * Returns the greatest positive X vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMaxX = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMaxX();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMaxX();
+        });
     };
 
     /**
      * Returns the greatest negative X vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMinX = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMinX();
+        return this._getLowestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMinX();
+        });
     };
 
     /**
      * Returns the greatest positive Y vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMaxY = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMaxY();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMaxY();
+        });
     };
 
     /**
      * Returns the greatest negative Y vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMinY = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMinY();
+        return this._getLowestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMinY();
+        });
     };
 
     /**
      * Returns the greatest positive Z vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMaxZ = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMaxZ();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMaxZ();
+        });
     };
 
     /**
      * Returns the greatest negative Z vertex coordinate to be found in the 
      * model.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getMinZ = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getMinZ();
+        return this._getLowestValueOfMeshes(lod, function (mesh) {
+            return mesh.getMinZ();
+        });
     };
 
     /**
      * Returns the width of the model, which is calculated as the difference
      * between the smallest and greatest X coordinates found among the vertices.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getWidth = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getWidth();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getWidth();
+        });
     };
 
     /**
      * Returns the height of the model, which is calculated as the difference
      * between the smallest and greatest Y coordinates found among the vertices.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getHeight = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getHeight();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getHeight();
+        });
     };
 
     /**
      * Returns the depth of the model, which is calculated as the difference
      * between the smallest and greatest Z coordinates found among the vertices.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getDepth = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getDepth();
+        return this._getLargestValueOfMeshes(lod, function (mesh) {
+            return mesh.getDepth();
+        });
     };
 
     /**
@@ -1881,7 +2043,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getWidthInMeters = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getWidth(lod) * this._scale;
     };
 
@@ -1891,7 +2053,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getHeightInMeters = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getHeight(lod) * this._scale;
     };
 
@@ -1901,7 +2063,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getDepthInMeters = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getDepth(lod) * this._scale;
     };
 
@@ -1911,7 +2073,7 @@ define([
      * @returns {Number}
      */
     Model.prototype.getNumOpaqueTriangles = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getNumOpaqueTriangles();
     };
 
@@ -1921,18 +2083,19 @@ define([
      * @returns {Number}
      */
     Model.prototype.getNumTransparentTriangles = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getNumTransparentTriangles();
     };
 
     /**
      * Returns the number of triangles this model contains.
      * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
      * @returns {Number}
      */
-    Model.prototype.getNumTriangles = function (lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getNumTriangles();
+    Model.prototype.getNumTriangles = function (lod, transparent) {
+        lod = (lod !== undefined) ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getNumTriangles(transparent);
     };
 
     /**
@@ -1947,14 +2110,14 @@ define([
      * functions.
      */
     Model.prototype.addToContext = function (context, wireframe) {
-        application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
-        this._minLOD = this._minLOD || 0;
-        this._maxLOD = this._maxLOD || 0;
+        this._minLOD = (this._minLOD !== this.LOD_NOT_SET) ? this._minLOD : 0;
+        this._maxLOD = (this._maxLOD !== this.LOD_NOT_SET) ? this._maxLOD : 0;
         // get the already stored properties for easier access
         var props = this._contextProperties[context.getName()];
         // If the model hasn't been added to this context at all yet, add it with
         // the appropriate mode.
         if (!props) {
+            application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
             props = new ModelContextProperties();
             props.wireframe = wireframe;
             props.solid = !wireframe;
@@ -1967,18 +2130,22 @@ define([
             // data will need to be loaded to the buffers.
         } else {
             if (!props.wireframe && wireframe) {
+                application.log("Adding model (" + this._name + ") to context in wireframe mode)...", 2);
                 props.wireframe = true;
                 context.resetReadyState();
             }
             if (!props.solid && !wireframe) {
+                application.log("Adding model (" + this._name + ") to context in solid mode)...", 2);
                 props.solid = true;
                 context.resetReadyState();
             }
             if (props.minLOD > this._minLOD) {
+                application.log("Adding model (" + this._name + ") to context with minimum LOD " + this._minLOD + "...", 2);
                 props.minLOD = this._minLOD;
                 context.resetReadyState();
             }
             if (props.maxLOD < this._maxLOD) {
+                application.log("Adding model (" + this._name + ") to context with maximum LOD " + this._maxLOD + "...", 2);
                 props.maxLOD = this._maxLOD;
                 context.resetReadyState();
             }
@@ -2014,7 +2181,7 @@ define([
      * @returns {Object}
      */
     Model.prototype.getBufferData = function (wireframe, startIndex, lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getMeshWithLOD(lod).getBufferData(wireframe, startIndex);
     };
 
@@ -2026,8 +2193,8 @@ define([
      */
     Model.prototype.getBufferSize = function (context) {
         var i,
-              props = this._contextProperties[context.getName()],
-              result = 0;
+                props = this._contextProperties[context.getName()],
+                result = 0;
         for (i = props.minLOD; i <= props.maxLOD; i++) {
             result += this.getMeshWithLOD(i).getBufferSize(props.wireframe, props.solid);
         }
@@ -2045,7 +2212,7 @@ define([
      * @returns {Number} The number of vertices for which data has been added.
      */
     Model.prototype.loadToVertexBuffers = function (context, startIndex, lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         var props = this._contextProperties[context.getName()];
         return this.getMeshWithLOD(lod).loadToVertexBuffers(context, startIndex, props.wireframe, props.solid);
     };
@@ -2065,8 +2232,20 @@ define([
      * @param {Number} [lod=0]
      */
     Model.prototype.render = function (context, wireframe, opaque, lod) {
-        lod = lod !== undefined ? lod : this._minLOD;
+        lod = (lod !== undefined) ? lod : this._minLOD;
         this.getMeshWithLOD(lod).render(context, wireframe, opaque);
+    };
+    /**
+     * Similar to the regular render method, but this renders the given number of instances of the model using instancing.
+     * @param {ManagedGLContext} context
+     * @param {Boolean} wireframe
+     * @param {Boolean} [opaque]
+     * @param {Number} [lod=0]
+     * @param {Number} instanceCount
+     */
+    Model.prototype.renderInstances = function (context, wireframe, opaque, lod, instanceCount) {
+        lod = (lod !== undefined) ? lod : this._minLOD;
+        this.getMeshWithLOD(lod).renderInstances(context, wireframe, opaque, instanceCount);
     };
 
     /**

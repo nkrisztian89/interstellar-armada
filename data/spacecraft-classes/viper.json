@@ -1,0 +1,444 @@
+{
+    "name": "viper",
+    "type": "bomber",
+    "fullName": "Viper",
+    "description": "A light bomber class that has good self-defence and precision strike capabilities thanks to the large amount of smaller missiles it can carry and its relatively heavy armor and shielding.",
+    "showInDatabase": true,
+    "hitpoints": 45,
+    "model": "viper",
+    "shader": "ship",
+    "texture": "viper",
+    "mass": 35000,
+    "bodies": [
+        {
+            "position": [0, 30, 5],
+            "size": [25, 70, 10]
+        },
+        {
+            "position": [0, 30, -5],
+            "size": [30, 40, 10]
+        },
+        {
+            "position": [0, 20, 0],
+            "size": [50, 30, 10]
+        },
+        {
+            "position": [20, 5, 18],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 20
+                },
+                {
+                    "axis": "Y",
+                    "degrees": 40
+                }
+            ],
+            "size": [30, 25, 10]
+        },
+        {
+            "position": [-20, 5, 18],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": -20
+                },
+                {
+                    "axis": "Y",
+                    "degrees": -40
+                }
+            ],
+            "size": [30, 25, 10]
+        },
+        {
+            "position": [0, 30, -18],
+            "size": [23, 35, 17]
+        },
+        {
+            "position": [37, -6, 30],
+            "rotations": [
+                {
+                    "axis": "Y",
+                    "degrees": -60
+                }
+            ],
+            "size": [23, 35, 17]
+        },
+        {
+            "position": [-37, -6, 30],
+            "rotations": [
+                {
+                    "axis": "Y",
+                    "degrees": 60
+                }
+            ],
+            "size": [23, 35, 17]
+        }
+    ],
+    "weaponSlots": [
+        {
+            "position": [20.4, 19.2, -7.2],
+            "maxGrade": 3
+        },
+        {
+            "position": [-20.4, 19.2, -7.2],
+            "maxGrade": 3
+        }
+    ],
+    "maxPropulsionGrade": 3,
+    "thrusterSlots": [
+        {
+            "group": 1,
+            "uses": ["forward", "pitchUp"],
+            "thrusters": [
+                {
+                    "position": [0, 9.4, -18],
+                    "size": 4.0
+                }
+            ]
+        },
+        {
+            "group": 2,
+            "uses": ["forward", "yawLeft"],
+            "thrusters": [
+                {
+                    "position": [36, -25.4, 30],
+                    "size": 4.0
+                }
+            ]
+        },
+        {
+            "group": 3,
+            "uses": ["forward", "yawRight"],
+            "thrusters": [
+                {
+                    "position": [-36, -25.4, 30],
+                    "size": 4.0
+                }
+            ]
+        },
+        {
+            "group": 4,
+            "uses": ["reverse", "pitchDown"],
+            "thrusters": [
+                {
+                    "position": [0, 51.5, -12],
+                    "size": 1.8
+                },
+                {
+                    "position": [5.2, 51.5, -21],
+                    "size": 1.8
+                },
+                {
+                    "position": [-5.2, 51.5, -21],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 5,
+            "uses": ["reverse", "yawRight", "pitchUp"],
+            "thrusters": [
+                {
+                    "position": [36, 16.7, 36],
+                    "size": 1.8
+                },
+                {
+                    "position": [41.2, 16.7, 27],
+                    "size": 1.8
+                },
+                {
+                    "position": [30.8, 16.7, 27],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 6,
+            "uses": ["reverse", "yawLeft", "pitchUp"],
+            "thrusters": [
+                {
+                    "position": [-36, 16.7, 36],
+                    "size": 1.8
+                },
+                {
+                    "position": [-41.2, 16.7, 27],
+                    "size": 1.8
+                },
+                {
+                    "position": [-30.8, 16.7, 27],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 7,
+            "uses": ["rollRight", "strafeLeft", "yawLeft"],
+            "thrusters": [
+                {
+                    "position": [11.9, 30.6, -18],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 8,
+            "uses": ["rollLeft", "strafeRight", "yawRight"],
+            "thrusters": [
+                {
+                    "position": [-11.9, 30.6, -18],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 9,
+            "uses": ["rollRight", "strafeLeft"],
+            "thrusters": [
+                {
+                    "position": [11.9, 23.4, -18],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 10,
+            "uses": ["rollLeft", "strafeRight"],
+            "thrusters": [
+                {
+                    "position": [-11.9, 23.4, -18],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 11,
+            "uses": ["rollRight", "lower"],
+            "thrusters": [
+                {
+                    "position": [30.05, -4.2, 40.3],
+                    "size": 1.8
+                },
+                {
+                    "position": [30.05, -11.4, 40.3],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 12,
+            "uses": ["rollLeft", "raise", "strafeLeft", "pitchDown"],
+            "thrusters": [
+                {
+                    "position": [41.95, -4.2, 19.7],
+                    "size": 1.8
+                },
+                {
+                    "position": [41.95, -11.4, 19.7],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 13,
+            "uses": ["rollRight", "raise", "strafeRight", "pitchDown"],
+            "thrusters": [
+                {
+                    "position": [-41.95, -4.2, 19.7],
+                    "size": 1.8
+                },
+                {
+                    "position": [-41.95, -11.4, 19.7],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 14,
+            "uses": ["rollLeft", "lower"],
+            "thrusters": [
+                {
+                    "position": [-30.05, -4.2, 40.3],
+                    "size": 1.8
+                },
+                {
+                    "position": [-30.05, -11.4, 40.3],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 15,
+            "uses": ["pitchDown", "lower", "strafeLeft"],
+            "thrusters": [
+                {
+                    "position": [6.4, 33.6, 10.44],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 16,
+            "uses": ["pitchDown", "lower", "strafeRight"],
+            "thrusters": [
+                {
+                    "position": [-6.4, 33.6, 10.44],
+                    "size": 1.8
+                }
+            ]
+        },
+        {
+            "group": 17,
+            "uses": ["pitchUp", "raise"],
+            "thrusters": [
+                {
+                    "position": [8.05, 53.8, -4.7],
+                    "size": 1.8
+                },
+                {
+                    "position": [-8.05, 53.8, -4.7],
+                    "size": 1.8
+                }
+            ]
+        }
+    ],
+    "views": [
+        {
+            "name": "near",
+            "fov": 40,
+            "fovRange": [40, 40],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -38, 9.5]
+        },
+        {
+            "name": "far",
+            "fov": 55,
+            "fovRange": [55, 55],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -60, 18.5]
+        },
+        {
+            "name": "cockpit",
+            "fov": 45,
+            "fovRange": [45, 45],
+            "fps": true,
+            "followsPosition": true,
+            "movable": false,
+            "turnable": true,
+            "alphaRange": [-120, 120],
+            "betaRange": [-80, 45],
+            "rotationCenterIsObject": false,
+            "position": [0, 8.25, 1.90],
+            "shouldAutoReset": true
+        },
+        {
+            "name": "front",
+            "fov": 55,
+            "fovRange": [55, 55],
+            "followsPosition": true,
+            "movable": false,
+            "turnable": false,
+            "rotationCenterIsObject": false,
+            "position": [0, 40, 13.5],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 180
+                },
+                {
+                    "axis": "X",
+                    "degrees": -10
+                }
+            ]
+        },
+        {
+            "name": "free",
+            "fov": 45,
+            "fovRange": [30, 60],
+            "followsPosition": true,
+            "movable": true,
+            "turnable": true,
+            "rotationCenterIsObject": true,
+            "distanceRange": [22, 85],
+            "position": [0, -55, 0]
+        },
+        {
+            "name": "flyby",
+            "fps": true,
+            "fov": 45,
+            "fovRange": [45, 45],
+            "followsPosition": false,
+            "baseOrientation": "orientationFollowedObject",
+            "startsWithRelativePosition": true,
+            "lookAt": "self",
+            "movable": false,
+            "turnable": false,
+            "position": [20, 150, 15],
+            "distanceRange": [22, 200]
+        },
+        {
+            "name": "target",
+            "fps": true,
+            "fov": 55,
+            "fovRange": [30, 55],
+            "followsPosition": true,
+            "lookAt": "target",
+            "movable": true,
+            "turnable": false,
+            "rotationCenterIsObject": true,
+            "position": [0, -48, 13.5],
+            "distanceRange": [33, 90]
+        }
+    ],
+    "equipmentProfiles": [
+        {
+            "name": "default",
+            "propulsion": {
+                "class": "imperialBomberMk1"
+            }
+        },
+        {
+            "name": "full",
+            "weapons": [
+                {
+                    "class": "plasmaGun"
+                },
+                {
+                    "class": "plasmaGun"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialBomberMk1"
+            }
+        }
+    ],
+    "explosion": "bomberExplosion",
+    "showTimeRatioDuringExplosion": 0.25,
+    "damageIndicators": [
+        {
+            "hullIntegrity": 25,
+            "class": "smallFire"
+        },
+        {
+            "hullIntegrity": 10,
+            "class": "smallFire"
+        }
+    ],
+    "lights": [
+        {
+            "position": [7.44, 51.84, 5.04],
+            "color": [1, 1, 1],
+            "intensity": 6400,
+            "spotDirection": [0, 1, 0],
+            "spotCutoffAngle": 11,
+            "spotFullIntensityAngle": 5
+        }
+    ],
+    "blinkers": []
+}

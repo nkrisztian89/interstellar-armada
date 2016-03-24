@@ -1,0 +1,248 @@
+{
+    "key": {
+        "left": "balra",
+        "right": "jobbra",
+        "up": "fel",
+        "down": "le"
+    },
+    "mouse": {
+        "leftButton": "bal gomb",
+        "middleButton": "középső gomb",
+        "rightButton": "jobb gomb",
+        "fromCenter": "{move} középről {toDirection}",
+        "notFromCenter": "{move} {toDirection}",
+        "move": "mozgatás",
+        "scroll": "görgetés",
+        "leftDirection": "balra",
+        "rightDirection": "jobbra",
+        "upDirection": "felfelé",
+        "downDirection": "lefelé"
+    },
+    "joystick": {
+        "button": "{index}. gomb",
+        "axis": "{index}. tengely {direction}",
+        "positiveDirection": "hátra/jobbra",
+        "negativeDirection": "előre/balra"
+    },
+    "screen.back": "Vissza",
+    "mainMenu": {
+        "newGame": "Új játék",
+        "database": "Adatbázis",
+        "settings": "Beállítások",
+        "about": "Információ"
+    },
+    "settings": {
+        "general": "Általános beállítások",
+        "graphics": "Grafikai beállítások",
+        "controls": "Irányítás beállításai",
+        "defaults": "Alapértelmezések visszaállítása"
+    },
+    "ingameMenu": {
+        "title": "Menü",
+        "resume": "Vissza a játékba",
+        "quit": "Kilépés a főmenübe"
+    },
+    "infoBox": {
+        "header": "Információ",
+        "okButton": "Rendben"
+    },
+    "loading": {
+        "header": "Kérem várjon!",
+        "resourcesStart": "grafikus erőforrások betöltése...",
+        "resourceReady": "{resource} betöltve, állapot: {loaded} / {total}...",
+        "initWebGL": "WebGL inicializálása...",
+        "ready": "kész!"
+    },
+    "spacecraftStats": {
+        "armor": "Páncélzat"
+    },
+    "battle": {
+        "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",
+        "spectatorMode": "Nézelődő mód",
+        "pilotingMode": "{spacecraftClass} {spacecraftType} irányítása",
+        "hud": {
+            "target": "célpont",
+            "distance": "távolság",
+            "view": "{view} nézet",
+            "flightMode": "{flightMode} repülési mód",
+            "speed": "sebesség"
+        },
+        "loadingBox": {
+            "loadingLevel": "szint leíró fájl betöltése...",
+            "addingRandomElements": "véletlen elemek hozzáadása...",
+            "buildingScene": "színtér felépítése..."
+        },
+        "message": {
+            "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
+            "paused": "Játék szüneteltetve."
+        }
+    },
+    "database": {
+        "backButton": "Vissza a menübe",
+        "title": "Adatbázis",
+        "prevButton": "Előző elem",
+        "nextButton": "Következő elem",
+        "loadingBox": {
+            "initializing": "Adatbázis inicializálása..."
+        },
+        "length": "Hosszúság",
+        "mass": "Tömeg",
+        "weaponSlots": "Fegyverek",
+        "thrusters": "Hajtóműfúvókák",
+        "missingSpacecraftTypeDescription": "A leírás nem érhető el ehhez a hajótípushoz ({spacecraftType}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
+        "missingSpacecraftClassDescription": "A leírás nem érhető el ehhez a hajóosztályhoz ({spacecraftClass}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}"
+    },
+    "about": {
+        "backButton": "Vissza a menübe",
+        "title": "Információ",
+        "aboutGameHeader": "Az Interstellar Armada játékról",
+        "versionParagraph": "A játék verziója: {version}",
+        "aboutGameParagraph": "Ez a játék tanulási célú projektként indult, és még a fejlesztés korai szakaszában jár. Ez a verzió csupán a már elkészült, kezdeti funkciók tesztelésére szolgál. Egyelőre még a játék alapvető részét képező funkciók sem készültek el teljesen. Ez a verzió emellett számos hibát is tartalmazhat.",
+        "aboutAuthorLicenseHeader": "A készítőről és a licenszről",
+        "aboutAuthorLicenseParagraph": "Ezt a játékot Nagy Krisztián, a BME-n 2013-ban BSc-t végzett végzett mérnök informatikus fejleszti. A program {license} licensz alatt kerül kiadásra, ami a forráskóddal együtt részleteiben megtekinthető a projekt {github} oldalán.<br/> A játékban a Bernd Montag által készített, freeware {sansation} betűtípus  is szerepel.<br/> A forráskód részét képezi a fejlesztéshez használt {requireJS} függvénykönyvtár, mely {requireJSLicense} alatt érhető el és került felhasználásra.",
+        "theNewBSDOrMITLicenses": "az új BSD vagy az MIT licenszek"
+    },
+    "setting": {
+        "on": "be",
+        "off": "ki",
+        "veryLow": "nagyon alacsony",
+        "low": "alacsony",
+        "medium": "közepes",
+        "high": "magas",
+        "veryHigh": "nagyon magas",
+        "normal": "normál",
+        "minimum": "minimum",
+        "maximum": "maximum",
+        "few": "kevés",
+        "many": "sok"
+    },
+    "generalSettings": {
+        "backButton": "Vissza a menübe",
+        "title": "Általános beállítások",
+        "language": "Nyelv:"
+    },
+    "graphics": {
+        "back": "Vissza a menübe",
+        "title": "Grafikai beállítások",
+        "antialiasing": "Élsimítás:",
+        "filtering": "Textúrák szűrése:",
+        "bilinear": "bilineáris",
+        "trilinear": "trilineáris",
+        "anisotropic": "anizotróp",
+        "textureQuality": "Textúrák minősége:",
+        "modelDetails": "Modellek részletessége:",
+        "shaders": "Árnyalók részletessége:",
+        "shadows": "Árnyékok:",
+        "shadowQuality": "Árnyékok felbontása:",
+        "shadowDistance": "Árnyékok látótávolsága:",
+        "shadowDistanceVeryClose": "nagyon közeli",
+        "shadowDistanceClose": "közeli",
+        "shadowDistanceMedium": "közepes",
+        "shadowDistanceFar": "távoli",
+        "shadowDistanceVeryFar": "nagyon távoli",
+        "maxDynamicLights": "Dinamikus fények:"
+    },
+    "controller": {
+        "general": "Általános",
+        "fighter": "Vadászgép",
+        "camera": "Kamera"
+    },
+    "inputDevice": {
+        "keyboard": "Billentyűzet",
+        "mouse": "Egér",
+        "joystick": "Joystick"
+    },
+    "controls": {
+        "back": "Vissza a menübe",
+        "title": "Irányítás",
+        "controllerHeading": "{controllerType} irányítás",
+        "action": "Művelet"
+    },
+    "actionDescriptions": {
+        "quit": "Kilépés a menübe",
+        "pause": "Játék szüneteltetése",
+        "stopTime": "Idő megállítása a kamera irányításának megőrzésével",
+        "switchToPilotMode": "Átváltás pilóta módba",
+        "switchToSpectatorMode": "Átváltás nézelődő módba",
+        "toggleHitboxVisibility": "Találati zónák megjelenítése / elrejtése",
+        "toggleTextVisibility": "A képernyőn megjelenő szövegek megjelenítése / elrejtése",
+        "toggleMouseControls": "Egér irányítás ki-/bekapcsolása",
+        "toggleJoystickControls": "Joystick irányítás ki-/bekapcsolása",
+        "changeFlightMode": "Repülési mód váltása",
+        "nextTarget": "Következő célpont kijelölése",
+        "fire": "Tüzelés az elsődleges fegyverekkel",
+        "forward": "Gyorsítás előre (szabad repülési módban) vagy a kívánt sebesség növelése",
+        "reverse": "Gyorsítás hátrafelé (szabad repülési módban) vagy a kívánt sebesség csökkentése",
+        "strafeLeft": "Gyorsítás balra",
+        "strafeRight": "Gyorsítás jobbra",
+        "raise": "Gyorsítás felfelé",
+        "lower": "Gyorsítás lefelé",
+        "resetSpeed": "Kívánt sebesség nullára csökkentése (kontrollált repülési módokban)",
+        "yawLeft": "Fordulás balra",
+        "yawRight": "Fordulás jobbra",
+        "pitchUp": "Gép döntése felfelé",
+        "pitchDown": "Gép döntése lefelé",
+        "rollLeft": "Gép döntése balra",
+        "rollRight": "Gép döntése jobbra",
+        "controlCamera": "Amíg lenyomva van tartva, a vadászgép helyett a kamera irányítható elsődlegesen",
+        "cameraMoveLeft": "Kamera mozgatása balra (ha a nézet engedi)",
+        "cameraMoveRight": "Kamera mozgatása jobbra (ha a nézet engedi)",
+        "cameraMoveUp": "Kamera mozgatása felfelé (ha a nézet engedi)",
+        "cameraMoveDown": "Kamera mozgatása lefelé (ha a nézet engedi)",
+        "cameraMoveForward": "Kamera mozgatása előre (ha a nézet engedi)",
+        "cameraMoveBackward": "Kamera mozgatása hátra (ha a nézet engedi)",
+        "cameraTurnLeft": "Kamera fordítása balra (ha a nézet engedi)",
+        "cameraTurnRight": "Kamera fordítása jobbra (ha a nézet engedi)",
+        "cameraTurnUp": "Kamera fordítása felfelé (ha a nézet engedi)",
+        "cameraTurnDown": "Kamera fordítása lefelé (ha a nézet engedi)",
+        "cameraRollLeft": "Kamera döntése balra (ha a nézet engedi)",
+        "cameraRollRight": "Kamera döntése jobbra (ha a nézet engedi)",
+        "cameraDecreaseFOV": "Közelítés (ha a nézet engedi)",
+        "cameraIncreaseFOV": "Távolítás (ha a nézet engedi)",
+        "followNext": "Következő űrhajó követése (nézelődő módban)",
+        "followPrevious": "Előző űrhajó követése (nézelődő módban)",
+        "nextView": "Váltás a követett űrhajó vagy a hadszíntér következő nézetére",
+        "previousView": "Váltás a követett űrhajó vagy a hadszíntér előző nézetére",
+        "resetView": "Aktuális nézet visszaállítása alaphelyzetbe"
+    },
+    "spacecraftType": {
+        "interceptor": {
+            "name": "elfogó vadász"
+        },
+        "bomber": {
+            "name": "bombázó"
+        },
+        "corvette": {
+            "name": "korvett"
+        },
+        "frigate": {
+            "name": "fregatt"
+        },
+        "cruiser": {
+            "name": "cirkáló"
+        }
+    },
+    "spacecraftClass": {
+        "falcon": {
+            "name": "Sólyom",
+            "description": "A legújabb generációs elfogó vadász, melyet nemrég rendszeresítettek a Galaktikus Birodalom flottáiban. Kis keresztmetszete révén nehéz célpontot nyújt, ami sokoldalú felszerelhetőségével együtt ideálissá teszi a közelharchoz."
+        },
+        "viper": {
+            "name": "Vipera"
+        }
+    },
+    "objectView": {
+        "near": "közeli",
+        "far": "távoli",
+        "cockpit": "pilótafülke",
+        "front": "elülső",
+        "free": "szabad",
+        "flyby": "követő",
+        "target": "célpont"
+    },
+    "flightMode": {
+        "free": "szabad",
+        "compensated": "kompenzált",
+        "restricted": "korlátozott"
+    }
+}

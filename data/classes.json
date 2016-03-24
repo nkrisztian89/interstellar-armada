@@ -1,0 +1,1523 @@
+{
+    "skyboxClasses": [
+        {
+            "name": "deepspace",
+            "shader": "skybox",
+            "cubemap": "deepspace"
+        }
+    ],
+    "backgroundObjectClasses": [
+        {
+            "name": "standardSun",
+            "lightColor": [1.0, 1.0, 1.0],
+            "layers": [
+                {
+                    "size": 300,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 0.0, 1.0]
+                },
+                {
+                    "size": 250,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "smallBlueStar",
+            "lightColor": [0.02, 0.2, 0.2],
+            "layers": [
+                {
+                    "size": 150,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [0.1, 1.0, 1.0, 1.0]
+                },
+                {
+                    "size": 50,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        }
+    ],
+    "dustCloudClasses": [
+        {
+            "name": "standard",
+            "shader": "dust",
+            "numberOfParticles": 450,
+            "range": 25,
+            "color": [0.6, 0.6, 0.6]
+        }
+    ],
+    "explosionClasses": [
+        {
+            "name": "smallHitExplosion",
+            "particleEmitters": [
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 25,
+                    "velocity": 30,
+                    "velocitySpread": 8,
+                    "initialNumber": 5,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 0.35,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 0.7,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.5, 1.0],
+                            "size": 4.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.4, 1.0],
+                            "size": 0,
+                            "timeToReach": 450
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.5],
+                    "intensity": 35,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 0.6, 0.2],
+                    "intensity": 0,
+                    "timeToReach": 450
+                }
+            ]
+        },
+        {
+            "name": "mediumHitExplosion",
+            "particleEmitters": [
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 45,
+                    "velocity": 50,
+                    "velocitySpread": 18,
+                    "initialNumber": 10,
+                    "spawnNumber": 3,
+                    "spawnTime": 100,
+                    "duration": 200,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 0.65,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 1.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 10.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.4, 1.0],
+                            "size": 0,
+                            "timeToReach": 450
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 45,
+                    "velocity": 20,
+                    "velocitySpread": 6,
+                    "initialNumber": 0,
+                    "spawnNumber": 4,
+                    "spawnTime": 100,
+                    "duration": 100,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.1, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 0.0],
+                            "size": 10,
+                            "timeToReach": 500
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.6],
+                    "intensity": 350,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.1],
+                    "intensity": 200,
+                    "timeToReach": 600
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }
+            ]
+        },
+        {
+            "name": "largeHitExplosion",
+            "particleEmitters": [
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 20,
+                    "velocity": 70,
+                    "velocitySpread": 40,
+                    "initialNumber": 20,
+                    "spawnNumber": 12,
+                    "spawnTime": 100,
+                    "duration": 400,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 0.65,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 3.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 10,
+                    "velocity": 200,
+                    "velocitySpread": 20,
+                    "initialNumber": 15,
+                    "spawnNumber": 8,
+                    "spawnTime": 40,
+                    "duration": 160,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [0.3, 0.9, 1.0, 1.0],
+                            "size": 2.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.3, 1.0, 0.0],
+                            "size": 5,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [0.3, 0.9, 1.0, 1.0],
+                            "size": 30,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.6, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 450
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 45,
+                    "velocity": 20,
+                    "velocitySpread": 6,
+                    "initialNumber": 0,
+                    "spawnNumber": 4,
+                    "spawnTime": 100,
+                    "duration": 100,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.1, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 0.0],
+                            "size": 15,
+                            "timeToReach": 500
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [0.3, 0.9, 1.0],
+                    "intensity": 2025,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.3],
+                    "intensity": 400,
+                    "timeToReach": 450
+                }, {
+                    "color": [1.0, 1.0, 0.3],
+                    "intensity": 100,
+                    "timeToReach": 250
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 250
+                }
+
+            ]
+        },
+        {
+            "name": "fighterExplosion",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 45,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 0,
+                            "timeToReach": 300
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 0.0],
+                            "size": 30,
+                            "timeToReach": 700
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "velocity": 50,
+                    "velocitySpread": 30,
+                    "initialNumber": 10,
+                    "spawnNumber": 7,
+                    "spawnTime": 70,
+                    "duration": 210,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 0.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 0.8,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1.0, 0.8, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 400
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "velocity": 22,
+                    "velocitySpread": 6,
+                    "initialNumber": 14,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 3.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 10,
+                            "timeToReach": 250
+                        }, {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 300
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [8, 8, 8],
+                    "velocity": 22,
+                    "velocitySpread": 6,
+                    "initialNumber": 14,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.8, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.2, 0.0, 0.0],
+                            "size": 12,
+                            "timeToReach": 700
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.7],
+                    "intensity": 8100,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.3],
+                    "intensity": 3600,
+                    "timeToReach": 300
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }
+            ]
+        },
+        {
+            "name": "bomberExplosion",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [0.3, 0.9, 1.0, 1.0],
+                            "size": 65,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.3, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 350
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "initialNumber": 0,
+                    "spawnNumber": 1,
+                    "spawnTime": 150,
+                    "duration": 150,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 50,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.4, 1.0],
+                            "size": 0,
+                            "timeToReach": 350
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 0.0],
+                            "size": 40,
+                            "timeToReach": 850
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [10, 10, 10],
+                    "velocity": 60,
+                    "velocitySpread": 30,
+                    "initialNumber": 15,
+                    "spawnNumber": 12,
+                    "spawnTime": 50,
+                    "duration": 250,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 0.8,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 1.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1.0, 0.8, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 400
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [7, 7, 7],
+                    "velocity": 24,
+                    "velocitySpread": 8,
+                    "initialNumber": 17,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 5.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 12,
+                            "timeToReach": 250
+                        }, {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 300
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [8, 8, 8],
+                    "velocity": 26,
+                    "velocitySpread": 8,
+                    "initialNumber": 17,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.8, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.2, 0.0, 0.0],
+                            "size": 20,
+                            "timeToReach": 700
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [0.3, 0.9, 1.0],
+                    "intensity": 16900,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.4],
+                    "intensity": 6400,
+                    "timeToReach": 350
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 500
+                }
+            ]
+        },
+        {
+            "name": "smallShipExplosion",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [0.3, 0.9, 1.0, 1.0],
+                            "size": 240,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.6, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 400
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [50, 150, 50],
+                    "initialNumber": 1,
+                    "spawnNumber": 1,
+                    "spawnTime": 300,
+                    "duration": 300,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 140,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 0,
+                            "timeToReach": 350
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [30, 90, 30],
+                    "velocity": 80,
+                    "velocitySpread": 30,
+                    "initialNumber": 25,
+                    "spawnNumber": 25,
+                    "spawnTime": 100,
+                    "duration": 300,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 1.2,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 2.5,
+                            "timeToReach": 700
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 700
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [40, 120, 40],
+                    "velocity": 50,
+                    "velocitySpread": 10,
+                    "initialNumber": 20,
+                    "spawnNumber": 9,
+                    "spawnTime": 100,
+                    "duration": 600,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.5, 0.0, 1.0],
+                            "size": 25,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 7,
+                            "timeToReach": 600
+                        }, {
+                            "color": [1.0, 0.3, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 200
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [40, 120, 40],
+                    "velocity": 70,
+                    "velocitySpread": 20,
+                    "initialNumber": 24,
+                    "spawnNumber": 12,
+                    "spawnTime": 100,
+                    "duration": 500,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.4, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.7, 0.0, 1.0],
+                            "size": 30,
+                            "timeToReach": 400
+                        }, {
+                            "color": [1.0, 0.2, 0.0, 0.0],
+                            "size": 60,
+                            "timeToReach": 400
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [10, 30, 10],
+                    "velocity": 100,
+                    "velocitySpread": 5,
+                    "initialNumber": 20,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 1,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 1000
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [0.3, 0.9, 1.0],
+                    "intensity": 230400,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.4],
+                    "intensity": 78400,
+                    "timeToReach": 350
+                }, {
+                    "color": [1.0, 0.7, 0.0],
+                    "intensity": 78400,
+                    "timeToReach": 550
+                }, {
+                    "color": [1.0, 0.2, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }
+            ]
+        },
+        {
+            "name": "largeShipExplosion",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 0,
+                    "spawnNumber": 1,
+                    "spawnTime": 500,
+                    "duration": 500,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [0.5, 1.0, 1.0, 1.0],
+                            "size": 1500,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.2, 0.8, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [100, 1000, 100],
+                    "initialNumber": 0,
+                    "spawnNumber": 1,
+                    "spawnTime": 300,
+                    "duration": 1500,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [0.3, 0.9, 1.0, 1.0],
+                            "size": 500,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.3, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 400
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [100, 1000, 100],
+                    "initialNumber": 0,
+                    "spawnNumber": 1,
+                    "spawnTime": 250,
+                    "duration": 1800,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.5, 0.0],
+                            "size": 400,
+                            "timeToReach": 200
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [200, 1000, 200],
+                    "velocity": 20,
+                    "initialNumber": 4,
+                    "spawnNumber": 4,
+                    "spawnTime": 50,
+                    "duration": 800,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 200,
+                            "timeToReach": 350
+                        }, {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 400,
+                            "timeToReach": 350
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [150, 600, 150],
+                    "velocity": 400,
+                    "velocitySpread": 150,
+                    "initialNumber": 100,
+                    "spawnNumber": 100,
+                    "spawnTime": 300,
+                    "duration": 3300,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 6,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.7, 0.0, 0.0],
+                            "size": 1,
+                            "timeToReach": 600
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [200, 1200, 200],
+                    "velocity": 75,
+                    "velocitySpread": 25,
+                    "initialNumber": 0,
+                    "spawnNumber": 75,
+                    "spawnTime": 1200,
+                    "duration": 1200,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 50,
+                            "timeToReach": 400
+                        }, {
+                            "color": [1.0, 0.5, 0.0, 0.0],
+                            "size": 75,
+                            "timeToReach": 800
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [100, 900, 100],
+                    "velocity": 40,
+                    "velocitySpread": 15,
+                    "initialNumber": 30,
+                    "spawnNumber": 20,
+                    "spawnTime": 300,
+                    "duration": 1500,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 1.0, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 1.0, 0.0, 0.7],
+                            "size": 150,
+                            "timeToReach": 1200
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 0.0],
+                            "size": 300,
+                            "timeToReach": 1200
+                        }
+                    ]
+                },
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [100, 900, 100],
+                    "velocity": 40,
+                    "velocitySpread": 15,
+                    "initialNumber": 0,
+                    "spawnNumber": 3,
+                    "spawnTime": 3500,
+                    "duration": 3500,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 0.0, 0.0, 0.5],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1.0, 0.0, 0.0, 0.0],
+                            "size": 450,
+                            "timeToReach": 1000
+                        }
+                    ]
+                }
+            ],
+            "lightStates": [
+                {
+                    "color": [1.0, 1.0, 0.7],
+                    "intensity": 0,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 0.7],
+                    "intensity": 1000000,
+                    "timeToReach": 500
+                }, {
+                    "color": [0.5, 1.0, 1.0],
+                    "intensity": 5062500,
+                    "timeToReach": 0
+                }, {
+                    "color": [1.0, 1.0, 1.0],
+                    "intensity": 2250000,
+                    "timeToReach": 500
+                }, {
+                    "color": [1.0, 1.0, 0.0],
+                    "intensity": 1000000,
+                    "timeToReach": 500
+                }, {
+                    "color": [1.0, 0.0, 0.0],
+                    "intensity": 0,
+                    "timeToReach": 3000
+                }
+            ]
+        },
+        {
+            "name": "smallFire",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 30,
+                    "velocitySpread": 10,
+                    "initialNumber": 14,
+                    "spawnNumber": 0,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0.8,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.8, 0.2, 1.0],
+                            "size": 0,
+                            "timeToReach": 500
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 35,
+                    "velocity": 5,
+                    "velocitySpread": 3,
+                    "initialNumber": 0,
+                    "spawnNumber": 2,
+                    "spawnTime": 100,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 3.5,
+                            "timeToReach": 400
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "mediumFire",
+            "particleEmitters": [
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 25,
+                    "velocity": 85,
+                    "velocitySpread": 15,
+                    "initialNumber": 14,
+                    "spawnNumber": 4,
+                    "spawnTime": 250,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 1.1,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.8, 0.2, 1.0],
+                            "size": 0,
+                            "timeToReach": 1100
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 35,
+                    "velocity": 30,
+                    "velocitySpread": 6,
+                    "initialNumber": 0,
+                    "spawnNumber": 2,
+                    "spawnTime": 100,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 12.5,
+                            "timeToReach": 500
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "largeFire",
+            "particleEmitters": [
+                {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.7, 1.0],
+                            "size": 50,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 1.0, 0.3, 1.0],
+                            "size": 0,
+                            "timeToReach": 300
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 40,
+                    "velocity": 65,
+                    "velocitySpread": 15,
+                    "initialNumber": 20,
+                    "spawnNumber": 3,
+                    "spawnTime": 200,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.8, 1.0],
+                            "size": 2.3,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.9, 0.2, 1.0],
+                            "size": 0,
+                            "timeToReach": 1400
+                        }
+                    ]
+                },
+                {
+                    "type": "unidirectional",
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 25,
+                    "velocity": 45,
+                    "velocitySpread": 8,
+                    "initialNumber": 0,
+                    "spawnNumber": 3,
+                    "spawnTime": 100,
+                    "duration": 0,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [
+                        {
+                            "color": [1.0, 1.0, 0.6, 1.0],
+                            "size": 0,
+                            "timeToReach": 0
+                        },
+                        {
+                            "color": [1.0, 0.3, 0.0, 0.0],
+                            "size": 20,
+                            "timeToReach": 500
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "projectileClasses": [
+        {
+            "name": "plasma",
+            "damage": 2,
+            "shader": "billboard",
+            "texture": "plasma",
+            "size": 2.5,
+            "mass": 3,
+            "duration": 5000,
+            "intersectionPositions": [0],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [0.0, 1.0, 0.0, 1.0],
+                "size": 2.5,
+                "duration": 250
+            },
+            "lightColor": [0, 1, 0],
+            "lightIntensity": 36,
+            "explosion": "smallHitExplosion"
+        },
+        {
+            "name": "proton",
+            "damage": 35,
+            "shader": "billboard",
+            "texture": "proton",
+            "size": 8,
+            "mass": 15,
+            "duration": 5000,
+            "intersectionPositions": [0.35],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1.0, 1.0, 0.0, 1.0],
+                "size": 8,
+                "duration": 350
+            },
+            "lightColor": [1, 1, 0],
+            "lightIntensity": 400,
+            "explosion": "mediumHitExplosion"
+        },
+        {
+            "name": "ion",
+            "damage": 100,
+            "shader": "billboard",
+            "texture": "ion",
+            "size": 18,
+            "mass": 20,
+            "duration": 5000,
+            "intersectionPositions": [0],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [0.0, 0.6, 1.0, 1.0],
+                "size": 18,
+                "duration": 450
+            },
+            "lightColor": [0, 0.6, 1],
+            "lightIntensity": 1296,
+            "explosion": "largeHitExplosion"
+        }
+    ],
+    "weaponClasses": [
+        {
+            "name": "plasmaGun",
+            "shader": "ship",
+            "model": "plasma",
+            "texture": "falcon",
+            "grade": 1,
+            "cooldown": 250,
+            "barrels": [
+                {
+                    "projectile": "plasma",
+                    "projectileVelocity": 200,
+                    "position": [0, 10, 0]
+                }
+            ]
+        },
+        {
+            "name": "smallPlasmaTurret",
+            "shader": "ship",
+            "model": "turret",
+            "texture": "falcon",
+            "grade": 1,
+            "cooldown": 250,
+            "barrels": [
+                {
+                    "projectile": "plasma",
+                    "projectileVelocity": 250,
+                    "position": [2, 25, 10]
+                },
+                {
+                    "projectile": "plasma",
+                    "projectileVelocity": 250,
+                    "position": [-2, 25, 10]
+                },
+                {
+                    "projectile": "plasma",
+                    "projectileVelocity": 250,
+                    "position": [2, 25, 14]
+                },
+                {
+                    "projectile": "plasma",
+                    "projectileVelocity": 250,
+                    "position": [-2, 25, 14]
+                }
+            ]
+        },
+        {
+            "name": "smallProtonCannon",
+            "shader": "ship",
+            "model": "cannon",
+            "texture": "falcon",
+            "grade": 1,
+            "cooldown": 1500,
+            "barrels": [
+                {
+                    "projectile": "proton",
+                    "projectileVelocity": 300,
+                    "position": [0, 100, 0]
+                }
+            ]
+        },
+        {
+            "name": "largeIonCannon",
+            "shader": "ship",
+            "model": "ion_cannon",
+            "texture": "libra",
+            "grade": 1,
+            "cooldown": 3000,
+            "barrels": [
+                {
+                    "projectile": "ion",
+                    "projectileVelocity": 350,
+                    "position": [0, 320, 0]
+                }
+            ]
+        }
+    ],
+    "propulsionClasses": [
+        {
+            "name": "imperialFighterMk1",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0, 1.0],
+            "grade": 1,
+            "referenceMass": 10000,
+            "thrust": 50,
+            "angularThrust": 180,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
+        },
+        {
+            "name": "imperialBomberMk1",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0, 1.0],
+            "grade": 1,
+            "referenceMass": 35000,
+            "thrust": 30,
+            "angularThrust": 150,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
+        },
+        {
+            "name": "imperialCorvetteMk1",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0, 1.0],
+            "grade": 1,
+            "referenceMass": 9000000,
+            "thrust": 15,
+            "angularThrust": 40,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
+        },
+        {
+            "name": "imperialFrigateMk1",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0, 1.0],
+            "grade": 1,
+            "referenceMass": 20000000,
+            "thrust": 10,
+            "angularThrust": 30,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
+        },
+        {
+            "name": "imperialCruiserMk1",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0, 1.0],
+            "grade": 1,
+            "referenceMass": 250000000,
+            "thrust": 8,
+            "angularThrust": 8,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
+        }
+    ],
+    "spacecraftTypes": [
+        {
+            "name": "interceptor",
+            "fullName": "Interceptor",
+            "description": "Interceptors are small, agile space fighters designed to counter enemy fighters and bombers. They are fast and maneuverable with light armor but often considerable firepower, which allows them to take out more heavily armored bombers. Interceptor designers utilize different approaches in their models to offer protection for them in the vicinity of larger enemy ships. However, it is generally highly recommended to stay out of range of enemy ships that have significant anti-fighter capabilities.",
+            "goodAgainst": [
+                "reconFighter", "heavyFighter", "bomber"
+            ],
+            "badAgainst": [
+                "corvette", "destroyer", "cruiser"
+            ]
+        },
+        {
+            "name": "bomber",
+            "fullName": "Bomber",
+            "description": "Bombers are small spacecraft usually manned by one or two pilots, designed as a cost effective solution against small and medium size warships. Their heavy armor and shielding enables them to survive long enough to deliver their large payload, either taking out critical systems or causing significant shield and hull damage to their target. The additional mass makes them less maneuverable and thus more vulnerable against enemy fighters.",
+            "goodAgainst": [
+                "corvette", "frigate", "destroyer"
+            ],
+            "badAgainst": [
+                "reconFighter", "heavyFighter", "interceptor"
+            ]
+        },
+        {
+            "name": "reconFighter",
+            "fullName": "Reconaissance fighter",
+            "description": "Reconaissance fighters are lightly armored and armed small spacecraft that use stealth, high speed and maneuverability to stay out of enemy fire and sophisticated scanning equipment to provide vital information about hostile fleet composition and movements, location of critical targets and vulnerable spots on enemy spacecraft as well as advanced jammers to disrupt communication, navigation or weapon systems of enemy ships.",
+            "goodAgainst": [
+                "bomber", "corvette", "frigate"
+            ],
+            "badAgainst": [
+                "interceptor", "heavyFighter", "destroyer"
+            ]
+        },
+        {
+            "name": "heavyFighter",
+            "fullName": "Heavy fighter",
+            "description": "Heavy fighters are support craft usually used together with interceptors or bombers. They are the most heavily armored fighters with the highest firepower of primary weapons, providing them fair survivability even when facing anti-fighter weaponry of enemy ships. They are also the least maneuverable of all fighters, making it difficult for them to engage faster targets on their own. Their main role is to draw enemy fire from interceptors or bombers while those can destroy their priority targets. They are also an excellent choice for taking out enemy torpedo boats.",
+            "goodAgainst": [
+                "bomber", "torpedoBoat", "frigate"
+            ],
+            "badAgainst": [
+                "interceptor", "corvette", "destroyer"
+            ]
+        },
+        {
+            "name": "torpedoBoat",
+            "fullName": "Torpedo boat",
+            "description": "Along with armed transports, torpedo boats are the smallest military spacecrafts larger than fighters. Unlike the former, these ships carry a large amount of deadly torpedoes instead of boarding parties in their bay, making them a dangerous opponent against even the largest enemy warships. However as they lack anti-fighter defences, if left unescorted, they are easily taken out by enemy interceptors, bombers or heavy fighters since due to their low maneuverability, they provide an easy target.",
+            "goodAgainst": [
+                "corvette", "frigate", "cruiser"
+            ],
+            "badAgainst": [
+                "reconFighter", "heavyFighter", "destroyer"
+            ]
+        },
+        {
+            "name": "corvette",
+            "fullName": "Corvette",
+            "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.",
+            "goodAgainst": [
+                "reconFighter", "heavyFighter", "interceptor"
+            ],
+            "badAgainst": [
+                "frigate", "destroyer", "cruiser", "battleship"
+            ]
+        },
+        {
+            "name": "frigate",
+            "fullName": "Frigate",
+            "description": "Frigates are the first warships in size that are big enough to carry a cosiderable amount of supplies and mount devastating firepower. Due to this, their usual weapon arrangement focuses on getting most out of this fact and enables them to successully take on larger ships at the expence of worse defence against fighters, for which they rely on escort. Leading strike teams, these ships can be utilized for longer term missions, engaging critical targets ahead of the larger force, disrupting enemy supply lines or securing poorly defended sectors.",
+            "goodAgainst": [
+                "corvette", "destroyer", "cruiser"
+            ],
+            "badAgainst": [
+                "heavyFighter", "bomber", "torpedoBoat"
+            ]
+        },
+        {
+            "name": "destroyer",
+            "fullName": "Destroyer",
+            "description": "Destroyers, serving as the lead for battle groups, are the most versatile of all warships. Their large size provides a lot of options for configuring their equipment: they can balance fair anti-fighter and anti-ship firepower or lean towards one side, but can also be equipped for long-range artillery fire or provide larger hangar bays for fighters, bombers or transports. Destroyers, depending on their configuration, are suitable for all types of missions and against most enemy craft up to their size. Without proper escort, concentrated fire from anti-ship weapons can wear them out, and the loss of a destroyer can easily change the tide in a battle. ",
+            "goodAgainst": [
+                "heavyFighter", "torpedoBoat", "corvette"
+            ],
+            "badAgainst": [
+                "bomber", "frigate", "cruiser", "battleship"
+            ]
+        },
+        {
+            "name": "cruiser",
+            "fullName": "Cruiser",
+            "description": "Cruisers are currently the largest warships in service, representing the pinnacle of starship design and engineering. They are used as flagships of whole fleets, in the role of remote command center, base of operations for a sector or leading planetary sieges or defences. Their large size and advanced weaponry enables them to safely house a large amount of supplies, fighter craft, transports, ground assault forces or equipment and resources for establishing new planetary outposts. They have the strongest armor and shields and no compromises need to be taken when mounting them with anti-fighter and anti-ship weaponry. Due to their important role, they are also among the priority targets for the enemy and when battling a larger force, it is crucial to defend them well against torpedoes and anti-ship fire.",
+            "goodAgainst": [
+                "corvette", "destroyer"
+            ],
+            "badAgainst": [
+                "torpedoBoat", "frigate", "battleship"
+            ]
+        },
+        {
+            "name": "battleship",
+            "fullName": "Battleship",
+            "description": "",
+            "goodAgainst": [
+                "corvette", "destroyer", "cruiser"
+            ],
+            "badAgainst": [
+            ]
+        }
+    ],
+    "spacecraftClasses": [
+        {
+            "name": "falcon",
+            "source": "spacecraft-classes/falcon.json"
+        },
+        {
+            "name": "falcon-cameraTest",
+            "source": "spacecraft-classes/falcon-cameraTest.json"
+        },
+        {
+            "name": "viper",
+            "source": "spacecraft-classes/viper.json"
+        },
+        {
+            "name": "aries",
+            "source": "spacecraft-classes/aries.json"
+        },
+        {
+            "name": "taurus",
+            "source": "spacecraft-classes/taurus.json"
+        },
+        {
+            "name": "libra",
+            "source": "spacecraft-classes/libra.json"
+        }
+    ]
+}

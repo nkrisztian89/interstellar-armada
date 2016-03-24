@@ -1,0 +1,1 @@
+gl_Position = u_viewProjMatrix * gl_Position;

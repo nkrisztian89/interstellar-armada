@@ -1,24 +1,208 @@
 {
-    "version": "0.1.0:136 (2015.10.24.)",
+    "version": "0.1.0:136+refactoring-112 (2016.03.24.)",
+    "debugVersion": true,
     "logVerbosity": 1,
     "folders": {
-        "screen": "screens/",
-        "component": "components/",
-        "css": "css/",
-        "model": "models/",
-        "shader": "shaders/",
-        "texture": "textures/",
         "config": "config/",
-        "level": "levels/",
-        "environment": "levels/"
+        "strings": "{{config}}/strings/",
+        "css": "css/",
+        "data": "data/",
+        "screen": "{{data}}/screens/",
+        "component": "{{data}}/components/",
+        "model": "{{data}}/models/",
+        "shader": "{{data}}/shaders/",
+        "texture": "{{data}}/textures/",
+        "level": "{{data}}/levels/",
+        "environment": "{{data}}/levels/environments/"
     },
-    "configFileURLs": {
-        "resources": "resources.json",
-        "classes": "classes.json",
-        "settings": "settings.json",
-        "environments": "environments.json"
+    "defaultLanguage": "English",
+    "configFiles": {
+        "settings": {
+            "filename": "settings.json",
+            "folder": "config"
+        },
+        "strings": {
+            "English": {
+                "filename": "strings.json",
+                "folder": "strings"
+            },
+            "magyar": {
+                "filename": "strings-hu.json",
+                "folder": "strings"
+            }
+        }
     },
-    "levels": [
-        "level.json"
-    ]
+    "dataFiles": {
+        "graphics": {
+            "resources": {
+                "filename": "resources.json",
+                "folder": "data"
+            }
+        },
+        "logic": {
+            "classes": {
+                "filename": "classes.json",
+                "folder": "data"
+            },
+            "environments": {
+                "filename": "environments.json",
+                "folder": "environment"
+            },
+            "levels": {
+                "folder": "level",
+                "filenames": [
+                    "level.json"
+                ]
+            }
+        }
+    },
+    "control": {
+        "controllers": [
+            {
+                "type": "general",
+                "actions": [
+                    {
+                        "name": "quit"
+                    }, {
+                        "name": "pause"
+                    }, {
+                        "name": "stopTime"
+                    }, {
+                        "name": "switchToPilotMode"
+                    }, {
+                        "name": "switchToSpectatorMode"
+                    }, {
+                        "name": "toggleHitboxVisibility"
+                    }, {
+                        "name": "toggleTextVisibility"
+                    }, {
+                        "name": "toggleMouseControls"
+                    }, {
+                        "name": "toggleJoystickControls"
+                    }
+                ]
+            },
+            {
+                "type": "fighter",
+                "actions": [
+                    {
+                        "name": "changeFlightMode"
+                    }, {
+                        "name": "nextTarget"
+                    }, {
+                        "name": "fire",
+                        "continuous": true
+                    }, {
+                        "name": "forward",
+                        "continuous": true
+                    }, {
+                        "name": "reverse",
+                        "continuous": true
+                    }, {
+                        "name": "strafeLeft",
+                        "continuous": true
+                    }, {
+                        "name": "strafeRight",
+                        "continuous": true
+                    }, {
+                        "name": "raise",
+                        "continuous": true
+                    }, {
+                        "name": "lower",
+                        "continuous": true
+                    }, {
+                        "name": "resetSpeed"
+                    }, {
+                        "name": "yawLeft",
+                        "continuous": true
+                    }, {
+                        "name": "yawRight",
+                        "continuous": true
+                    }, {
+                        "name": "pitchUp",
+                        "continuous": true
+                    }, {
+                        "name": "pitchDown",
+                        "continuous": true
+                    }, {
+                        "name": "rollLeft",
+                        "continuous": true
+                    }, {
+                        "name": "rollRight",
+                        "continuous": true
+                    }
+                ]
+            },
+            {
+                "type": "camera",
+                "maxSpeed": 250,
+                "acceleration": 200,
+                "deceleration": 500,
+                "maxSpin": 180,
+                "angularAcceleration": 720,
+                "angularDeceleration": 2880,
+                "objectChangeTransitionDuration": 1200,
+                "viewChangeTransitionDuration": 600,
+                "viewResetTransitionDuration": 300,
+                "transitionStyle": "smooth",
+                "actions": [
+                    {
+                        "name": "controlCamera"
+                    }, {
+                        "name": "cameraMoveLeft",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveRight",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveUp",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveDown",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveForward",
+                        "continuous": true
+                    }, {
+                        "name": "cameraMoveBackward",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnLeft",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnRight",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnUp",
+                        "continuous": true
+                    }, {
+                        "name": "cameraTurnDown",
+                        "continuous": true
+                    }, {
+                        "name": "cameraRollLeft",
+                        "continuous": true
+                    }, {
+                        "name": "cameraRollRight",
+                        "continuous": true
+                    }, {
+                        "name": "cameraDecreaseFOV",
+                        "continuous": true
+                    }, {
+                        "name": "cameraIncreaseFOV",
+                        "continuous": true
+                    }, {
+                        "name": "followNext"
+                    }, {
+                        "name": "followPrevious"
+                    }, {
+                        "name": "nextView"
+                    }, {
+                        "name": "previousView"
+                    }, {
+                        "name": "resetView"
+                    }
+                ]
+            }
+        ]
+    }
 }

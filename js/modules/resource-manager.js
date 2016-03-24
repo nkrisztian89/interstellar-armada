@@ -19,6 +19,10 @@
 /*jslint nomen: true, plusplus: true, white: true */
 /*global define, Image */
 
+/**
+ * @param application Required for error displaying and file loading functionality
+ * @param asyncResource Uses AsyncResource as superclass for GenericResource, ResourceHolder and ResourceManager classes
+ */
 define([
     "modules/application",
     "modules/async-resource"
@@ -54,10 +58,31 @@ define([
         return this._name;
     };
     /**
+     * @param {Object} requestParams
      * @returns {Boolean}
      */
-    GenericResource.prototype.isRequested = function () {
-        return this._requested;
+    GenericResource.prototype.isRequested = function (requestParams) {
+        var requestParamName;
+        if (!this._requested) {
+            return false;
+        }
+        if (requestParams) {
+            for (requestParamName in requestParams) {
+                if (requestParams.hasOwnProperty(requestParamName)) {
+                    if (requestParams[requestParamName] !== this._requestParams[requestParamName]) {
+                        return false;
+                    }
+                }
+            }
+            for (requestParamName in this._requestParams) {
+                if (this._requestParams.hasOwnProperty(requestParamName)) {
+                    if (this._requestParams[requestParamName] !== requestParams[requestParamName]) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     };
     /**
      * @param {Object} params
@@ -152,7 +177,9 @@ define([
     };
     /**
      * @param {String} resourceName
-     * @param {Object} params
+     * @param {Object} params The parameters to be passed for the loading of the resource (and also for the check whether a reload is 
+     * required). Every resource type can use their specific parameters for the check or the loading. If the general parameter "doNotLoad"
+     * is set to true, the method will not initiate a loading of the resource, only return the resource object.
      * @returns {GenericResource}
      */
     ResourceHolder.prototype.getResource = function (resourceName, params) {
@@ -164,16 +191,18 @@ define([
             return null;
         }
         resource = this._resources[resourceName];
-
-        if (resource.requiresReload(params)) {
-            this._numRequestedResources++;
-            this.resetReadyState();
-            resource.executeWhenReady(function () {
-                this._numLoadedResources++;
-                if (this.allResourcesAreLoaded()) {
-                    this.setToReady();
-                }
-            }.bind(this));
+        if (!params || !params.doNotLoad) {
+            if (resource.requiresReload(params)) {
+                this._numRequestedResources++;
+                this.resetReadyState();
+                resource.resetReadyState();
+                resource.executeWhenReady(function () {
+                    this._numLoadedResources++;
+                    if (this.allResourcesAreLoaded()) {
+                        this.setToReady();
+                    }
+                }.bind(this));
+            }
         }
         return resource;
     };
@@ -220,15 +249,15 @@ define([
          */
         this._numRequestedResources = 0;
         /**
-         * @type Object.<String, Array.<Function>>
+         * @type Object.<String, Function[]>
          */
         this._onResourceTypeLoadFunctionQueues = {};
         /**
-         * @type Array.<Function>
+         * @type Function[]
          */
         this._onAnyResourceTypeLoadFunctionQueue = [];
         /**
-         * @type Array.<Function>
+         * @type Function[]
          */
         this._onResourceLoadFunctionQueue = [];
     }
@@ -244,6 +273,8 @@ define([
         this._onResourceTypeLoadFunctionQueues = {};
         this._onAnyResourceTypeLoadFunctionQueue = [];
         this._onResourceLoadFunctionQueue = [];
+        this._numRequestedResources = 0;
+        this._numLoadedResources = 0;
     };
     /**
      * @param {String} resourceType
@@ -260,7 +291,14 @@ define([
         this._onAnyResourceTypeLoadFunctionQueue.push(callback);
     };
     /**
-     * @param {Function} callback
+     * @typedef {Function} ResourceManager~resourceLoadCallback
+     * @param {String} resourceName
+     * @param {Number} numReqestedResources
+     * @param {Number} numLoadedResources
+     * @param {String} resourceType
+     */
+    /**
+     * @param {ResourceManager~resourceLoadCallback} callback
      */
     ResourceManager.prototype.executeOnResourceLoad = function (callback) {
         this._onResourceLoadFunctionQueue.push(callback);
@@ -282,7 +320,7 @@ define([
         var i, queue;
         queue = this._onResourceLoadFunctionQueue;
         for (i = 0; i < queue.length; i++) {
-            queue[i](resourceName, this._numRequestedResources, this._numLoadedResources);
+            queue[i](resourceName, resourceType, this._numRequestedResources, this._numLoadedResources);
         }
         if (this.allResourcesOfTypeAreLoaded(resourceType)) {
             queue = this._onResourceTypeLoadFunctionQueues[resourceType] || [];
@@ -297,7 +335,9 @@ define([
     /**
      * @param {String} resourceType
      * @param {String} resourceName
-     * @param {Object} params
+     * @param {Object} params The parameters to be passed for the loading of the resource (and also for the check whether a reload is 
+     * required). Every resource type can use their specific parameters for the check or the loading. If the general parameter "doNotLoad"
+     * is set to true, the method will not initiate a loading of the resource, only return the resource object.
      * @returns {GenericResource}
      */
     ResourceManager.prototype.getResource = function (resourceType, resourceName, params) {
@@ -309,15 +349,16 @@ define([
             }
             return null;
         }
-
-        if (resource.requiresReload(params)) {
-            this._numRequestedResources++;
-            this.resetReadyState();
-            resource.request(params);
-            resource.executeWhenReady(function () {
-                this._numLoadedResources++;
-                this._onResourceLoad(resourceType, resourceName);
-            }.bind(this));
+        if (!params || !params.doNotLoad) {
+            if (resource.requiresReload(params)) {
+                this._numRequestedResources++;
+                this.resetReadyState();
+                resource.request(params);
+                resource.executeWhenReady(function () {
+                    this._numLoadedResources++;
+                    this._onResourceLoad(resourceType, resourceName);
+                }.bind(this));
+            }
         }
         return resource;
     };
@@ -352,11 +393,12 @@ define([
     };
     /**
      * @param {String} filename
+     * @param {String} fileType
      * @param {Object.<String, Function>} resourceTypes
      * @param {Function} callback
      */
-    ResourceManager.prototype.requestConfigLoad = function (filename, resourceTypes, callback) {
-        application.requestTextFile("config", filename, function (responseText) {
+    ResourceManager.prototype.requestConfigLoad = function (filename, fileType, resourceTypes, callback) {
+        application.requestTextFile(fileType, filename, function (responseText) {
             this._loadConfigFromJSON(JSON.parse(responseText), resourceTypes);
             if (callback) {
                 callback();

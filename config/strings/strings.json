@@ -1,0 +1,183 @@
+{
+    "screen.back": "Back",
+    "mainMenu": {
+        "newGame": "New game",
+        "database": "Database",
+        "settings": "Settings",
+        "about": "About"
+    },
+    "settings": {
+        "general": "General settings",
+        "graphics": "Graphics settings",
+        "controls": "Control settings",
+        "defaults": "Reset to defaults"
+    },
+    "ingameMenu": {
+        "title": "Menu",
+        "resume": "Resume game",
+        "quit": "Quit to main menu"
+    },
+    "infoBox": {
+        "header": "Information",
+        "okButton": "OK"
+    },
+    "loading": {
+        "header": "Please wait!",
+        "resourcesStart": "loading graphical resources...",
+        "resourceReady": "loaded {resource}, total progress: {loaded} / {total}...",
+        "initWebGL": "initializing WebGL...",
+        "ready": "ready!"
+    },
+    "spacecraftStats": {
+        "armor": "Armor"
+    },
+    "battle": {
+        "developmentVersionNotice": "running an early test of Interstellar Armada, version: {version}",
+        "spectatorMode": "Spectator mode",
+        "pilotingMode": "Piloting {spacecraftClass} {spacecraftType}",
+        "hud": {
+            "target": "target",
+            "distance": "distance",
+            "view": "{view} view",
+            "flightMode": "{flightMode} flight mode",
+            "speed": "speed"
+        },
+        "loadingBox": {
+            "loadingLevel": "loading level information...",
+            "addingRandomElements": "adding random elements...",
+            "buildingScene": "building scene..."
+        },
+        "message": {
+            "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
+            "paused": "Game paused."
+        }
+    },
+    "database": {
+        "backButton": "Back to menu",
+        "title": "In-game database",
+        "prevButton": "Previous item",
+        "nextButton": "Next item",
+        "loadingBox": {
+            "initializing": "Initializing database..."
+        },
+        "length": "Length",
+        "mass": "Mass",
+        "weaponSlots": "Weapon slots",
+        "thrusters": "Thrusters",
+        "missingSpacecraftTypeDescription": "{originalDescription}",
+        "missingSpacecraftClassDescription": "{originalDescription}"
+    },
+    "about": {
+        "backButton": "Back to menu",
+        "title": "About",
+        "aboutGameHeader": "About the Interstellar Armada game",
+        "versionParagraph": "Game version: {version}",
+        "aboutGameParagraph": "This application is a learning project in the early development phase. The current version is only intended for testing the initial, already implemented features of what one day might become a functional game. Even the core features are yet under development. The application might contain numerous bugs.",
+        "aboutAuthorLicenseHeader": "About the author and license",
+        "aboutAuthorLicenseParagraph": "This project is developed by Krisztián Nagy, a BSc computer engineering graduate from Budapest University of Technology and Economics. The project is released under {license}, you can obtain the source code and the license from the project's {github} page.<br/> The application features the {sansation} font family created by Bernd Montag, which is freeware.<br/> The application uses the {requireJS} library for module management, which is available under {requireJSLicense}.",
+        "theNewBSDOrMITLicenses": "the new BSD or MIT licenses"
+    },
+    "setting": {
+        "on": "on",
+        "off": "off",
+        "veryLow": "very low",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
+        "veryHigh": "very high",
+        "normal": "normal",
+        "minimum": "minimum",
+        "maximum": "maximum",
+        "few": "few",
+        "many": "many"
+    },
+    "generalSettings": {
+        "backButton": "Back to menu",
+        "title": "General settings",
+        "language": "Language:"
+    },
+    "graphics": {
+        "back": "Back to menu",
+        "title": "Graphics settings",
+        "antialiasing": "Anti-aliasing:",
+        "filtering": "Texture filtering:",
+        "bilinear": "bilinear",
+        "trilinear": "trilinear",
+        "anisotropic": "anisotropic",
+        "textureQuality": "Texture quality:",
+        "modelDetails": "Model details:",
+        "shaders": "Shader details:",
+        "shadows": "Shadows:",
+        "shadowQuality": "Shadow resolution:",
+        "shadowDistance": "Shadow distance:",
+        "shadowDistanceVeryClose": "very close",
+        "shadowDistanceClose": "close",
+        "shadowDistanceMedium": "medium",
+        "shadowDistanceFar": "far",
+        "shadowDistanceVeryFar": "very far",
+        "maxDynamicLights": "Dynamic lights:"
+    },
+    "controller": {
+        "general": "General",
+        "fighter": "Fighter",
+        "camera": "Camera"
+    },
+    "inputDevice": {
+        "keyboard": "Keyboard",
+        "mouse": "Mouse",
+        "joystick": "Joystick"
+    },
+    "controls": {
+        "back": "Back to menu",
+        "title": "Controls",
+        "controllerHeading": "{controllerType} controls",
+        "action": "Action"
+    },
+    "actionDescriptions": {
+        "quit": "Quit to menu",
+        "pause": "Pause the game",
+        "stopTime": "Stop the time in the game, with controls still available",
+        "switchToPilotMode": "Switch to pilot mode",
+        "switchToSpectatorMode": "Switch to spectator mode",
+        "toggleHitboxVisibility": "Toggle the visibility of hitboxes",
+        "toggleTextVisibility": "Toggle the visibility of the texts on screen",
+        "toggleMouseControls": "Disable / enable mouse controls",
+        "toggleJoystickControls": "Disable / enable joystick controls",
+        "changeFlightMode": "Change flight mode",
+        "nextTarget": "Target next spacecraft",
+        "fire": "Fire primary weapons",
+        "forward": "Forward thrust (free mode) or increase speed",
+        "reverse": "Reverse thrust (free mode) or decrease speed",
+        "strafeLeft": "Strafe left",
+        "strafeRight": "Strafe right",
+        "raise": "Strafe upwards",
+        "lower": "Strafe downwards",
+        "resetSpeed": "Reset speed to zero (non-free modes)",
+        "yawLeft": "Turn to the left",
+        "yawRight": "Turn to the right",
+        "pitchUp": "Turn upwards",
+        "pitchDown": "Turn downwards",
+        "rollLeft": "Roll to the left",
+        "rollRight": "Roll to the right",
+        "controlCamera": "Hold this button to control the camera instead of your spacecraft if you have the same controls assigned",
+        "cameraMoveLeft": "Move the camera to the left (if possible for the current view)",
+        "cameraMoveRight": "Move the camera to the right (if possible for the current view)",
+        "cameraMoveUp": "Move the camera upwards (if possible for the current view)",
+        "cameraMoveDown": "Move the camera downwards (if possible for the current view)",
+        "cameraMoveForward": "Move the camera forward (if possible for the current view)",
+        "cameraMoveBackward": "Move the camera backward (if possible for the current view)",
+        "cameraTurnLeft": "Turn the camera to the left (if possible for the current view)",
+        "cameraTurnRight": "Turn the camera to the right (if possible for the current view)",
+        "cameraTurnUp": "Turn the camera upwards (if possible for the current view)",
+        "cameraTurnDown": "Turn the camera downwards (if possible for the current view)",
+        "cameraRollLeft": "Roll the camera to the left (if possible for the current view)",
+        "cameraRollRight": "Roll the camera to the right (if possible for the current view)",
+        "cameraDecreaseFOV": "Zoom in (if possible for the current view)",
+        "cameraIncreaseFOV": "Zoom out (if possible for the current view)",
+        "followNext": "Follow next spacecraft. (in spectator mode)",
+        "followPrevious": "Follow previous spacecraft. (in spectator mode)",
+        "nextView": "Change to the next view of the currently followed spacecraft or the scene",
+        "previousView": "Change to the previous view of the currently followed spacecraft or the scene",
+        "resetView": "Reset the current view to its original state"
+    }
+}

@@ -21,11 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="author" content="Krisztián Nagy"/>
 
+        <link rel="icon" href="images/favicon.ico"/>
+
         <!-- Open Graph properties -->
         <meta property="og:title" content="Interstellar Armada" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="http://nkrisztian89.github.io/interstellar-armada" />
-        <meta property="og:image" content="http://nkrisztian89.github.io/interstellar-armada/pictures/thumb.png" />
+        <meta property="og:image" content="http://nkrisztian89.github.io/interstellar-armada/images/thumb.png" />
         <meta property="og:image:width" content="500" />
         <meta property="og:image:height" content="295" />
         <meta property="og:description" content="A JavaScript/WebGL space combat game by Krisztián Nagy, currently in development." />
@@ -33,18 +35,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <title>Interstellar Armada</title>
 
         <link href="css/general.css" rel="stylesheet" type="text/css"/>
-        <link href="css/battle.css" rel="stylesheet" type="text/css"/>
-        <link href="css/database.css" rel="stylesheet" type="text/css"/>
-        <link href="css/ingame-menu.css" rel="stylesheet" type="text/css"/>
-
-        <script data-main="js/main.js" src="js/libs/require.js"></script>
     </head>
     <body>
         <div class="horizontallyCentered contentWide outerContainer pageContainer">
-            <img src="pictures/thumb.png" alt="Interstellar Armada" />
+            <img src="images/thumb.png" alt="Interstellar Armada" />
             <h3>
-                Loading...
+                <progress id="progress" class="horizontallyCentered" value="0" max="100"></progress>
             </h3>
         </div>
+        <script data-main="js/main.js" src="js/libs/require.js"></script>
     </body>
 </html>

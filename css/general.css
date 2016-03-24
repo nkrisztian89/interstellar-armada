@@ -27,7 +27,27 @@ body {
     font-size: 16px;
     margin: 0;
     padding: 0;
-    border: 5px transparent;;
+    border: 5px transparent;
+}
+
+/* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
+body.wait, body.wait * {
+    cursor: wait !important;
+}
+
+/* Put a wrapper div of this class around an element to be centered that has no fixed height */
+.pageGhost {
+    text-align: center;
+    height: 100%;
+    white-space: nowrap;
+}
+
+.pageGhost:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    margin-right: -0.25em; /* Adjusts spacing to avoid horizontal scrollbar */
 }
 
 .outerContainer {
@@ -47,16 +67,17 @@ body {
     padding: 1em;
     margin-bottom: 1em;
     margin-top: 1em;
+    white-space: normal;
 }
 
 .withBackgroundSign {
-    background-image: url(../pictures/empire_back_dark350.png);
+    background-image: url(../images/empire_back_dark350.png);
     background-position: center top;
     background-repeat: no-repeat;
 }
 
 .withSmallBackgroundSign {
-    background-image: url(../pictures/empire_back_dark200.png);
+    background-image: url(../images/empire_back_dark200.png);
     background-position: center top;
     background-repeat: no-repeat;
 }
@@ -67,6 +88,15 @@ body {
     margin-right: auto;
 }
 
+/* This centering works on elements of any height, but requires a wrapper with the pageGhost class around the element */
+.anyHeightCentered {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+/* This centering works only on fixed-height elements */
 .centered {
     position: absolute;
     top: 0; bottom: 0;
@@ -131,8 +161,8 @@ body {
     display: block;
     padding: 0.4em;
     background: 
-        url(../pictures/empire_white50.png) left center,
-        url(../pictures/empire_white50.png) right center;
+        url(../images/empire_white50.png) left center,
+        url(../images/empire_white50.png) right center;
     background-color: #111111;
     background-repeat: no-repeat;
     box-sizing: border-box; 
@@ -172,11 +202,8 @@ li {
 }
 
 a {
-    color: #000000;
+    color: #FFFFFF;
     text-decoration: none;
-    text-shadow:
-        #00FF00 0 0 0.2em,
-        #00FF00 0 0 0.2em;
     font-weight: bold;
     font-variant: small-caps;
 }
@@ -212,6 +239,9 @@ a.button {
 
 a:hover {
     color: #FFFFFF;
+    text-shadow:
+        #00FF00 0 0 0.2em,
+        #00FF00 0 0 0.2em;
 }
 
 a.button:hover {
@@ -231,12 +261,18 @@ a.button:hover {
     text-shadow: #888888 0.1em 0.1em 0.5em;
 }
 
+.highlightedText {
+    color: #44FF44;
+    font-weight: bold;
+}
+
 img {
     margin: 0.5em;
 }
 
 p {
     font-size: 14px;
+    text-align: left;
 }
 
 h1 {
@@ -260,6 +296,12 @@ h3 {
     padding: 10px;
 }
 
+.clear:after {
+    clear: both;
+    content: "";
+    display: table;
+}
+
 /* Styling of determinate progress bars */
 progress[value] {
     /* Reset the default appearance */
@@ -269,7 +311,7 @@ progress[value] {
 
     /* Get rid of default border in Firefox. */
     border: none;
-    
+
     /* Styling of the container in Firefox */
     background-color: #444444;
     border-radius: 3px;
@@ -278,9 +320,9 @@ progress[value] {
 
 /* Styling of the container in Webkit browsers */
 progress[value]::-webkit-progress-bar {
-  background-color: #444444;
-  border-radius: 3px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
+    background-color: #444444;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
 }
 
 /* Styling of the value bar in Webkit browsers */

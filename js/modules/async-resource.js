@@ -15,10 +15,11 @@
  */
 
 /*jslint nomen: true, plusplus: true */
-/*global define */
+/*global define, setTimeout */
 
 define(function () {
     "use strict";
+    // #########################################################################
     /**
      * @class Ancestor class for all classes representing resources that need to 
      * be prepared (e.g. loaded from external source) before they can be used. 
@@ -101,11 +102,18 @@ define(function () {
      * resource is ready (now or later).
      * @param {Function} [functionToExecuteIfNotReady] The function to be 
      * executed if the resource is not ready yet.
+     * @param {Boolean} forceAsync If true, the first function will not be immediately 
+     * executed even if it were possible, but it will be placed in the event queue
+     * for immediate execution instead
      * @returns {Boolean} True if the first function got executed, false if it 
      * got queued.
      */
-    AsyncResource.prototype.executeWhenReady = function (functionToExecute, functionToExecuteIfNotReady) {
+    AsyncResource.prototype.executeWhenReady = function (functionToExecute, functionToExecuteIfNotReady, forceAsync) {
         if (this._readyToUse) {
+            if (forceAsync) {
+                setTimeout(functionToExecute.bind(this), 0);
+                return false;
+            }
             functionToExecute.call(this);
             return true;
         }

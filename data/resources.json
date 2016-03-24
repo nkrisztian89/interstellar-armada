@@ -1,0 +1,809 @@
+{
+    "textures": [
+        {
+            "name": "white",
+            "basepath": "white",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "",
+                "normal": ""
+            }
+        },
+        {
+            "name": "flare",
+            "basepath": "flare",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "explosion",
+            "basepath": "explosion",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "",
+                "normal": ""
+            }
+        },
+        {
+            "name": "plasma",
+            "basepath": "plasma_full",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "proton",
+            "basepath": "proton_full",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "ion",
+            "basepath": "ion_full",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "falcon",
+            "basepath": "falcon",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "viper",
+            "basepath": "",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "viper",
+                "specular": "falcon_specular",
+                "emissive": "falcon_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "aries",
+            "basepath": "aries",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "taurus",
+            "basepath": "taurus",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "libra",
+            "basepath": "libra",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
+            "name": "crosshair",
+            "basepath": "hud/crosshair",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "target",
+            "basepath": "hud/target",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "arrow",
+            "basepath": "hud/arrow",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        }
+    ],
+    "cubemaps": [
+        {
+            "name": "deepspace",
+            "basepath": "cube/",
+            "imageNames": {
+                "posX": "cm_1c2.jpg",
+                "negX": "cm_1c2.jpg",
+                "posY": "cm_1c2.jpg",
+                "negY": "cm_1c2.jpg",
+                "posZ": "cm_1c2.jpg",
+                "negZ": "cm_1c2.jpg"
+            }
+        }
+    ],
+    "shaders": [
+        {
+            "name": "oneColor",
+            "vertexShaderSource": "mesh/oneColor.vert",
+            "fragmentShaderSource": "mesh/oneColor.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        },
+        {
+            "name": "colored",
+            "vertexShaderSource": "mesh/colored.vert",
+            "fragmentShaderSource": "mesh/colored.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_color": "color"
+            }
+        },
+        {
+            "name": "textured",
+            "vertexShaderSource": "mesh/textured.vert",
+            "fragmentShaderSource": "mesh/textured.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_color": "color"
+            }
+        },
+        {
+            "name": "lambert",
+            "vertexShaderSource": "mesh/lambert.vert",
+            "fragmentShaderSource": "mesh/lambert.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color"
+            }
+        },
+        {
+            "name": "lambert-with-luminosity",
+            "vertexShaderSource": "mesh/lambert-with-luminosity.vert",
+            "fragmentShaderSource": "mesh/lambert-with-luminosity.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity"
+            }
+        },
+        {
+            "name": "oneColorReveal",
+            "variants": {
+                "veryLow": "oneColor",
+                "low": "oneColor"
+            },
+            "vertexShaderSource": "mesh/reveal-oneColor.vert",
+            "fragmentShaderSource": "mesh/reveal-oneColor.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        },
+        {
+            "name": "ship",
+            "variants": {
+                "veryLow": "lambert-with-luminosity",
+                "low": "ship-low",
+                "veryHigh": "ship-veryHigh",
+                "withoutDynamicLights": "ship-no-dynamic-lights",
+                "withoutShadows": "ship-no-shadows"
+            },
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-low",
+            "vertexShaderSource": "mesh/ship-low.vert",
+            "fragmentShaderSource": "mesh/ship-low.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-veryHigh",
+            "variants": {
+                "withoutDynamicLights": "ship-no-dynamic-lights",
+                "withoutShadows": "ship-veryHigh-no-shadows"
+            },
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship-veryHigh.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-no-dynamic-lights",
+            "variants": {
+                "withoutShadows": "ship-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/ship-no-dynamic-lights.vert",
+            "fragmentShaderSource": "mesh/ship-no-dynamic-lights.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-no-shadows",
+            "variants": {
+                "withoutDynamicLights": "ship-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/ship-no-shadows.vert",
+            "fragmentShaderSource": "mesh/ship-no-shadows.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-no-advanced-lighting",
+            "vertexShaderSource": "mesh/ship-no-advanced-lighting.vert",
+            "fragmentShaderSource": "mesh/ship-no-advanced-lighting.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "ship-veryHigh-no-shadows",
+            "variants": {
+                "withoutDynamicLights": "ship-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/ship.vert",
+            "fragmentShaderSource": "mesh/ship-veryHigh-no-shadows.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal",
+            "variants": {
+                "veryLow": "lambert-with-luminosity",
+                "low": "ship-low",
+                "withoutDynamicLights": "reveal-no-dynamic-lights",
+                "withoutShadows": "reveal-no-shadows"
+            },
+            "vertexShaderSource": "mesh/reveal.vert",
+            "fragmentShaderSource": "mesh/reveal.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal-no-dynamic-lights",
+            "variants": {
+                "withoutShadows": "reveal-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/reveal-no-dynamic-lights.vert",
+            "fragmentShaderSource": "mesh/reveal-no-dynamic-lights.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal-no-shadows",
+            "variants": {
+                "withoutDynamicLights": "reveal-no-advanced-lighting"
+            },
+            "vertexShaderSource": "mesh/reveal-no-shadows.vert",
+            "fragmentShaderSource": "mesh/reveal-no-shadows.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "reveal-no-advanced-lighting",
+            "vertexShaderSource": "mesh/reveal-no-advanced-lighting.vert",
+            "fragmentShaderSource": "mesh/reveal-no-advanced-lighting.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord",
+                "a_normal": "normal",
+                "a_color": "color",
+                "a_luminosity": "luminosity",
+                "a_shininess": "shininess",
+                "a_groupIndex": "groupIndex",
+                "a_index": "triangleIndex"
+            }
+        },
+        {
+            "name": "skybox",
+            "vertexShaderSource": "billboard/skybox.vert",
+            "fragmentShaderSource": "billboard/skybox.frag",
+            "blendMode": "none",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        },
+        {
+            "name": "billboard",
+            "vertexShaderSource": "billboard/billboard.vert",
+            "fragmentShaderSource": "billboard/billboard.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "particle-instanced",
+            "vertexShaderSource": "billboard/particle-instanced.vert",
+            "fragmentShaderSource": "billboard/particle-instanced.frag",
+            "blendMode": "add",
+            "instanceAttributeRoles": {
+                "i_position": "u_position",
+                "i_billboardSize": "u_billboardSize",
+                "i_color": "u_color"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "particle",
+            "variants": {
+                "instanced": "particle-instanced"
+            },
+            "vertexShaderSource": "billboard/particle.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "backgroundBillboard",
+            "vertexShaderSource": "billboard/backgroundBillboard.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "dust-instanced",
+            "vertexShaderSource": "dust-instanced.vert",
+            "fragmentShaderSource": "dust.frag",
+            "blendMode": "none",
+            "instanceAttributeRoles": {
+                "i_position": "u_position"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        },
+        {
+            "name": "dust",
+            "variants": {
+                "instanced": "dust-instanced"
+            },
+            "vertexShaderSource": "dust.vert",
+            "fragmentShaderSource": "dust.frag",
+            "blendMode": "none",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        },
+        {
+            "name": "shadowMapping",
+            "vertexShaderSource": "shadow-mapping.vert",
+            "fragmentShaderSource": "shadow-mapping.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_triangleIndex": "triangleIndex"
+            }
+        },
+        {
+            "name": "ui2d",
+            "vertexShaderSource": "ui/ui2d.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui3d",
+            "vertexShaderSource": "ui/ui3d.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }
+    ],
+    "models": [
+        {
+            "name": "plasma",
+            "basepath": "weapons/plasma",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "turret",
+            "basepath": "weapons/turret",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "cannon",
+            "basepath": "weapons/cannon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "ion_cannon",
+            "basepath": "weapons/ion_cannon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "falcon",
+            "basepath": "falcon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "viper",
+            "basepath": "viper",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "aries",
+            "basepath": "aries",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "taurus",
+            "basepath": "taurus",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "libra",
+            "basepath": "libra",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        }
+    ]
+}

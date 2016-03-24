@@ -1,0 +1,1 @@
+varying lowp float v_luminosity;
