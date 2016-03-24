@@ -261,6 +261,11 @@ a.button:hover {
     text-shadow: #888888 0.1em 0.1em 0.5em;
 }
 
+.highlightedText {
+    color: #44FF44;
+    font-weight: bold;
+}
+
 img {
     margin: 0.5em;
 }

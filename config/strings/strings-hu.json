@@ -73,7 +73,7 @@
             "buildingScene": "színtér felépítése..."
         },
         "message": {
-            "ready": "Kész!",
+            "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
             "paused": "Játék szüneteltetve."
         }
     },

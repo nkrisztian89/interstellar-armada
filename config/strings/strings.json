@@ -48,7 +48,7 @@
             "buildingScene": "building scene..."
         },
         "message": {
-            "ready": "Ready!",
+            "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
             "paused": "Game paused."
         }
     },

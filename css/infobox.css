@@ -1,10 +1,10 @@
 .infoBox {
     text-align: center;
     vertical-align: middle;
-    display: block;
+    position: relative;
+    white-space: normal;
     
-    width: 200px;
-    height: 100px;
+    width: 300px;
     padding: 10px;
 }
 
@@ -18,7 +18,7 @@
     margin-right: auto;
     margin-top: 1em;
     margin-bottom: 1em;
-    width: 180px;
+    max-width: 95%;
     text-align: center;
 }
 

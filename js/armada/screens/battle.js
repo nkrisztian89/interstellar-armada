@@ -751,7 +751,9 @@ define([
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false);
                     _battleCursor = document.body.style.cursor;
-                    this.showMessage(strings.get(strings.BATTLE.MESSAGE_READY));
+                    this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
+                        menuKey: "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>"
+                    }));
                     this._loadingBox.hide();
                     this.showStats();
                     this.startRenderLoop(1000 / logic.getSetting(logic.BATTLE_SETTINGS.RENDER_FPS));
