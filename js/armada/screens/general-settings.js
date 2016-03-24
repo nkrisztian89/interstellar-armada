@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file This module manages and provides the general settings screen of the application (where e.g. the language of the game can be changed)
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -10,12 +10,12 @@
 /*global define, document, localStorage */
 
 /**
- * @param components
- * @param screens
- * @param game
- * @param constants
- * @param strings
- * @param armadaScreens
+ * @param components Used for the components (i.e. Selectors) of the screen.
+ * @param screens The settings screen is an HTMLScreen.
+ * @param game Used for navigation and managing language settings.
+ * @param constants Used for accessing the language setting in HTML5 local storage.
+ * @param strings Used for translation support.
+ * @param armadaScreens Used for common screen constants.
  */
 define([
     "modules/components",

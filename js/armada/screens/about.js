@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file This module manages and provides the About screen of the application
+ * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0
@@ -28,6 +28,7 @@ define([
             BACK_BUTTON_ID = "backButton",
             VERSION_PARAGRAPH_ID = "versionParagraph",
             ABOUT_AUTHOR_LICENSE_PARAGRAPH_ID = "aboutAuthorLicenseParagraph";
+    // ##############################################################################
     /**
      * @class A class to represent the "About" screen in the game. Describes the dynamic behaviour on that screen.
      * @extends HTMLScreen

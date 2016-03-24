@@ -128,6 +128,7 @@ define([
                     application.setFolders(configJSON.folders);
                     application.setLogVerbosity(configJSON.logVerbosity);
                     application.setVersion(configJSON.version);
+                    application.setDebugVersion(configJSON.debugVersion);
                     application.log("Game version is: " + application.getVersion(), 1);
                     _defaultLanguage = configJSON.defaultLanguage;
                     _stringsFileDescriptors = configJSON.configFiles.strings;

@@ -19,6 +19,7 @@
 
 define(function () {
     "use strict";
+    // #########################################################################
     /**
      * @class Ancestor class for all classes representing resources that need to 
      * be prepared (e.g. loaded from external source) before they can be used. 

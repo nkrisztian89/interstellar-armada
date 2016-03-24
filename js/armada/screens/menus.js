@@ -1,6 +1,6 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file 
+ * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 0.1
@@ -10,12 +10,12 @@
 /*global define */
 
 /**
- * @param screens
- * @param game
- * @param armadaScreens
- * @param logic
- * @param strings
- * @param battle
+ * @param screens The menu screens are instances of MenuScreen.
+ * @param game Used for navigation.
+ * @param armadaScreens Used for common screen constants.
+ * @param logic Used for choosing the level description file to load when a new battle is started from the main menu.
+ * @param strings Used for translation support.
+ * @param battle Used for starting / resuming the battle.
  */
 define([
     "modules/screens",

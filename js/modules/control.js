@@ -1,6 +1,15 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file Provides general functionality to handle various types of user input.
+ * Provides input interpreter classes, each capable of intercepting input from a certain device (currently keyboard, mouse and joystick/
+ * gamepad are supported) and translating it to actions using a list of bindings added to the interpreter.
+ * Also provides a generic controller class can process the actions produced by interpreters and execute functions for each triggered /
+ * non triggered action. 
+ * Finally, provides a control context class to which interpreters and controllers can be added and which integrates the collection of 
+ * actions from interpreters and passing it to the stored controllers.
+ * To use this module, create your set of controllers, create your context, add interpreters for the needed input devices to it with your
+ * bindings, add your controllers as well and then use the provided methods to start / stop listening for different devices and execute all
+ * the functions bound for currently triggered / non-triggered actions by calling control() on the context.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

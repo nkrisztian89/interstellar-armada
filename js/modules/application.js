@@ -1,9 +1,9 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file A low level module with no dependencies.
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file A low level module with no dependencies that offers general functionality useful for managing basic application functions such
+ * as accessing files from a directory structure using AJAX.
  * Usage:
- * - augment the module with your own application's functionality in your own
- * main module
+ * - augment the module with your own application's functionality in your own main module
  * - (optional) set application version
  * - set the application folders using setFolders()
  * - (optional) set if you want to bypass file caching with setFileCacheBypassEnabled()
@@ -79,7 +79,13 @@ define(function () {
              * string with no restrictions, no specific convention is enforced.
              * @type String
              */
-            _version = "";
+            _version = "",
+            /**
+             * Whether the current version should be considered a development / debug (and not release / production / distribution)
+             * version of the application.
+             * @type Boolean
+             */
+            _isDebugVersion = true;
     return {
         // -------------------------------------------------------------------------
         // Public enums
@@ -178,6 +184,22 @@ define(function () {
          */
         setVersion: function (value) {
             _version = value;
+        },
+        /**
+         * Returns whether the current version should be considered a development / debug (and not release / production / distribution)
+         * version of the application.
+         * @returns {Boolean}
+         */
+        isDebugVersion: function () {
+            return _isDebugVersion;
+        },
+        /**
+         * Sets whether the current version should be considered a development / debug (and not release / production / distribution)
+         * version of the application.
+         * @param {Boolean} value
+         */
+        setDebugVersion: function (value) {
+            _isDebugVersion = value;
         },
         /**
          * Returns the relative URL of a resource file of the given type and name.

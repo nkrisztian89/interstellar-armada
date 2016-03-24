@@ -1,7 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file This file provides a class that builds on the Control module to provide a Controller for
- * cameras of the BudaScene module
+ * @file This file provides a class that builds on the Control module to provide a Controller for cameras of the BudaScene module
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

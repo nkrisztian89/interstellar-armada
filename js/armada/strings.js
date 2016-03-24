@@ -1,6 +1,7 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file 
+ * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
+ * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 0.1
@@ -10,7 +11,7 @@
 /*global define */
 
 /**
- * @param strings
+ * @param strings This module augments the general strings module.
  */
 define([
     "modules/strings"
@@ -89,6 +90,7 @@ define([
         REQUIRE_JS_LICENSES: {name: "about.theNewBSDOrMITLicenses"}
     };
     strings.SETTING = {
+        PREFIX: {name: "setting.", optional: true},
         ON: {name: "setting.on"},
         OFF: {name: "setting.off"},
         VERY_LOW: {name: "setting.veryLow"},
@@ -108,6 +110,7 @@ define([
         LANGUAGE: {name: "generalSettings.language"}
     };
     strings.GRAPHICS = {
+        PREFIX: {name: "graphics.", optional: true},
         BACK: {name: "graphics.back"},
         TITLE: {name: "graphics.title"},
         ANTIALIASING: {name: "graphics.antialiasing"},

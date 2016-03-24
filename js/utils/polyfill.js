@@ -1,7 +1,7 @@
 /**
  * @fileOverview Polyfill functions for better cross-browser compatibility.
- * @author <a href="mailto:nkrisztian89@gmail.com">Krisztián Nagy</a>
- * @version 0.1-dev
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @version 1.0
  */
 
 /**********************************************************************

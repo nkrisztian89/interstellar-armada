@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file
+ * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0
@@ -10,20 +10,20 @@
 /*global define, document, setInterval, clearInterval, window, performance */
 
 /**
- * @param utils
- * @param vec
- * @param mat
- * @param application
- * @param components
- * @param screens
- * @param budaScene
- * @param resources
- * @param strings
- * @param armadaScreens
- * @param graphics
- * @param classes
- * @param logic
- * @param control
+ * @param utils Used for string formatting, async calls.
+ * @param vec Used for vector operation for the HUD elements.
+ * @param mat Used for matrix operation for the HUD elements, displaying matrix stats and orienting random ships.
+ * @param application Used for displaying errors and logging.
+ * @param components Used for the components of the screen (e.g. loading box)
+ * @param screens The battle screen is a HTMLScreenWithCanvases.
+ * @param budaScene Used for creating the battle scene and the nodes for the HUD elements.
+ * @param resources Used for accessing the resources for the HUD and for requesting the loading of reasourcing and setting callback for when they are ready.
+ * @param strings Used for translation support.
+ * @param armadaScreens Used for common screen constants.
+ * @param graphics Used for accessing graphics settings.
+ * @param classes Used for HUD elements for convenient acquiry of their resources.
+ * @param logic Used for creating the Level object, accessing settings and enums.
+ * @param control Used for global game control functions.
  */
 define([
     "utils/utils",
@@ -673,11 +673,15 @@ define([
         }
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
-            this._stats.setContent(
-                    mat.getMatrixCount() + " <br/>" +
-                    this.getFPS() + "<br/>" +
-                    _battleScene.getNumberOfDrawnTriangles());
-            mat.clearMatrixCount();
+            if (application.isDebugVersion()) {
+                this._stats.setContent(
+                        mat.getMatrixCount() + " <br/>" +
+                        this.getFPS() + "<br/>" +
+                        _battleScene.getNumberOfDrawnTriangles());
+                mat.clearMatrixCount();
+            } else {
+                this._stats.setContent(this.getFPS());
+            }
         }
     };
     /**

@@ -1,6 +1,6 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file 
+ * @file Contains the common constants accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -10,7 +10,7 @@
 
 define(function () {
     "use strict";
-    // constants to be accessable to all screens
+    // constants to be accessible to all screens
     return {
         // components
         SELECTOR_SOURCE: "selector.html",

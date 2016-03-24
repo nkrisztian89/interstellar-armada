@@ -1,6 +1,6 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file 
+ * @file Contains the constants accessible to all modules of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

@@ -1,6 +1,7 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
+ * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

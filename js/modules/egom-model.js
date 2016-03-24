@@ -14,8 +14,8 @@
 /*global define, Float32Array, parseFloat, Document */
 
 /**
- * @param vec
- * @param application
+ * @param vec Used for vector operations to create / manipulate normal vectors.
+ * @param application Used for displaying errors and logging.
  */
 define([
     "utils/vectors",

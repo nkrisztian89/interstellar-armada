@@ -1,6 +1,6 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file 
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

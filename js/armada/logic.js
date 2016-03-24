@@ -248,7 +248,7 @@ define([
          * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the luminosity
          * factor values of the various triangle groups.
          */
-        LUMINOSITY_FACTORS_ARRAY_NAME: {
+        UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME: {
             name: "luminosityFactorsArrayName",
             type: "string",
             defaultValue: "luminosityFactors"
@@ -2015,7 +2015,7 @@ define([
         // set the strength of which the luminosity texture is lighted
         if (graphics.areLuminosityTexturesAvailable()) {
             this._shipModel.setParameter(
-                    _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                    _context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME),
                     this._slot.group,
                     Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
         }
@@ -3346,10 +3346,10 @@ define([
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    graphics.areLuminosityTexturesAvailable() ? [_context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
+                    graphics.areLuminosityTexturesAvailable() ? [_context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
             if (graphics.areLuminosityTexturesAvailable()) {
                 this._visualModel.setParameter(
-                        _context.getSetting(GENERAL_SETTINGS.LUMINOSITY_FACTORS_ARRAY_NAME),
+                        _context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME),
                         0,
                         this._class.getGroupZeroLuminosity());
             }

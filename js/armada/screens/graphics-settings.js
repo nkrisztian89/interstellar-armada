@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -10,15 +10,15 @@
 /*global define */
 
 /**
- * @param utils
- * @param application
- * @param components
- * @param screens
- * @param managedGL
- * @param game
- * @param strings
- * @param armadaScreens
- * @param graphics
+ * @param utils Used for managing enums.
+ * @param application Used for displaying errors.
+ * @param components Used for the components (i.e. Selectors) of the screen.
+ * @param screens The graphics screen is an HTMLScreen.
+ * @param managedGL Used for the texture filtering enum type.
+ * @param game Used for navigation.
+ * @param strings Used for translation support.
+ * @param armadaScreens Used for common screen constants.
+ * @param graphics Used for accessing the graphics settings and setting options.
  */
 define([
     "utils/utils",
@@ -38,12 +38,14 @@ define([
             // private functions
             _getMapToCaptionAndValueFunction = function (stringCategory) {
                 return function (element) {
-                    var stringDefinition = stringCategory[utils.constantName(element)];
+                    var caption, stringDefinition = stringCategory.PREFIX;
+                    // if no prefix is available for this string category, try to grab the caption
                     if (!stringDefinition) {
-                        application.showError("No string specified for setting '" + element + "'!");
+                        application.showError("Cannot find caption string specified for setting '" + element + "', because no prefix is available for the corresponding string category!");
                         return [element, element];
                     }
-                    return [strings.get(stringDefinition), element];
+                    caption = strings.get(stringDefinition, element);
+                    return [caption, element];
                 };
             },
             _mapCaption = function (element) {

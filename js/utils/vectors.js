@@ -1,6 +1,6 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
- * @file 
+ * Copyright 2014-2016 Krisztián Nagy
+ * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

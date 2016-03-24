@@ -1,6 +1,7 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
+ * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -220,6 +221,22 @@ define([
                     name: "dustLengthDivisorDefineName",
                     type: "string",
                     defaultValue: "DUST_LENGTH_DIVISOR"
+                },
+                /**
+                 * The maximum amount of luminosity factors (length of the respective uniform variable) available to shaders.
+                 */
+                MAX_LUMINOSITY_FACTORS: {
+                    name: "maxLuminosityFactors",
+                    type: "number",
+                    defaultValue: 20
+                },
+                /**
+                 * The name of the #define that determines the maximum amount of luminosity factors available to shaders.
+                 */
+                MAX_LUMINOSITY_FACTORS_DEFINE_NAME: {
+                    name: "maxLuminosityFactorsDefineName",
+                    type: "string",
+                    defaultValue: "MAX_LUMINOSITY_FACTORS"
                 },
                 /**
                  * The name of the #define that determines the maximum number of available shadow map ranges (for each directional light 
@@ -818,6 +835,7 @@ define([
         replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_SHADOW_MAPS_DEFINE_NAME)] = this.getMaxDirLights() * this.getShadowDistance();
         replacedDefines[this.getShaderSetting(SHADER_SETTINGS.NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME)] = this.getNumShadowMapSamples();
         replacedDefines[this.getShaderSetting(SHADER_SETTINGS.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderSetting(SHADER_SETTINGS.DUST_LENGTH_DIVISOR);
+        replacedDefines[this.getShaderSetting(SHADER_SETTINGS.MAX_LUMINOSITY_FACTORS_DEFINE_NAME)] = this.getShaderSetting(SHADER_SETTINGS.MAX_LUMINOSITY_FACTORS);
         return this.getShader(shaderName).getManagedShader(replacedDefines);
     };
     /**

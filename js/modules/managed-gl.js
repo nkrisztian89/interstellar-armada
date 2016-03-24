@@ -5,11 +5,10 @@
  * than accessing WebGL directly.
  * Usage:
  * - create a managed context and associate it with an HTML5 canvas element
- * - create the managed resources that you want to use (textures, shaders,
- * models)
+ * - create the managed resources that you want to use (textures, shaders, models)
  * - set the data for the managed resources using their provided methods
  * - add the resources to the context
- * - initialize the context
+ * - set up the context
  * - set the shader and its uniforms using the managed resources
  * - use the render function of the model to render it to the context
  * @author Krisztián Nagy [nkrisztian89@gmail.com]

@@ -1,6 +1,7 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file 
+ * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
+ * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0

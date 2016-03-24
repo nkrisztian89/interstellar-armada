@@ -1,6 +1,9 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file Provides type checknig functionality for basic types
+ * @file Provides type checking functionality for simple types (booleans, number, strings) as well as enums (with values defined in an object),
+ * arrays and typed arrays, and custom objects through the usage of an object definition (i.e. schema) format. Types can be combined this
+ * way and constraints can be set on types (such as a range for a number of an array's length, presence of certain properties, or passing
+ * a custom check function).
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0

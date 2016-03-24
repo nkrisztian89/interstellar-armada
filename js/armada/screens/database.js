@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file
+ * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0
@@ -10,19 +10,18 @@
 /*global define, setInterval, clearInterval, document, performance */
 
 /**
- * 
- * @param utils
- * @param mat
- * @param components
- * @param screens
- * @param budaScene
- * @param game
- * @param resources
- * @param armadaScreens
- * @param strings
- * @param graphics
- * @param classes
- * @param logic
+ * @param utils Used for string formatting and async calls.
+ * @param mat Used for the rotation and scaling of item view models.
+ * @param components Used for the components (i.e. the loading box) of the screen.
+ * @param screens The database screen is a HTMLScreenWithCanvases.
+ * @param budaScene Used for creating and setting up (with light sources) the item view scene.
+ * @param game Used for navigation.
+ * @param resources Used for requesting and waiting for resource loads.
+ * @param armadaScreens Used for common screen constants.
+ * @param strings Used for translation support.
+ * @param graphics Used for accessing graphics settings and shaders appropriate for current graphics settings.
+ * @param classes Used for accessing the array of displayable spacecraft classes.
+ * @param logic Used for accessing settings and creating the spacecraft to be shown in the item view box.
  */
 define([
     "utils/utils",

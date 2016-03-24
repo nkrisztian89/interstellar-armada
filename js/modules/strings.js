@@ -1,6 +1,7 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file 
+ * @file A stateful module that stores translation strings for different languages for the application and provides functions to load these
+ * strings from an object 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 0.1
@@ -10,8 +11,7 @@
 /*global define */
 
 /**
- * Used for parsing the string definition JSON with property and type verification
- * @param types
+ * @param types Used for parsing the string definition JSON with property and type verification
  * @param application Used for displaying error messages
  */
 define([
@@ -43,6 +43,12 @@ define([
              * @type Object
              */
             _allStrings = {};
+    /**
+     * @typedef {Object} StringDefinitionObject Based on the property definition object in the types module.
+     * @property {String} name The string is identified by this key.
+     * @property {String} [defaultValue] The presence of this automatically makes the string optional.
+     * @property {Boolean} [optional] To make the string optional without a default value.
+     */
     /**
      * Returns the currently used language
      * @returns {String}
@@ -90,9 +96,38 @@ define([
         }
     }
     /**
-     * @param {String} language
-     * @param {Object} stringsJSON
-     * @param {Object} stringDefinitions
+     * @param {String} language The (ID of) the language for which to load the strings.
+     * @param {Object} stringsJSON This object needs to contain the strings for the given language. Structure:
+     * {
+     *   "categoryNameOne": {
+     *     "stringNameOne": "stringEins"
+     *   },
+     *   "categoryNameTwo": {
+     *     "stringNameTwo": "stringZwei",
+     *     "subcategoryNameOne": {
+     *       "anotherStringName": "anotherStringInGerman"
+     *     }
+     *   }
+     * @param {Object} stringDefinitions This object is used to verify the content of the strings JSON. Its structure:
+     * {
+     *   "stringCategoryOne": {
+     *     "stringWhichIsRequiredToBeInTheStringObject": {
+     *       name: "categoryNameOne.stringNameOne"
+     *     }
+     *   },
+     *   "stringCategoryTwo": {  
+     *     "thisStringIsNotRequired": {
+     *       name: "categoryNameTwo.stringNameTwo",
+     *       defaultValue: "string2"
+     *     },
+     *     "thisIsNotRequiredEitherButItDoesntHaveAValue": {
+     *       name: "categoryNameTwo.subcategoryNameOne.anotherStringName",
+     *       optional: true
+     *     }
+     *   }
+     *   The categories are matched based on what is given in the name property using dot notation, the categories in the definition object
+     *   does not need to be organized the same way (can be just one big category)
+     *   The format is based on the types module object definition format, see there for more details.
      */
     exports.loadStrings = function (language, stringsJSON, stringDefinitions) {
         var categoryName;
@@ -112,10 +147,11 @@ define([
         }
     };
     /**
-     * 
-     * @param {Object} stringDefinitionObject
-     * @param {String} [suffix]
-     * @param {String} [defaultValue]
+     * Returns the string identified by the passed definition object for the currently set language.
+     * @param {StringDefinitionObject} stringDefinitionObject If there is no available string with the name specified in this object, the
+     * default value specified in it will be returned (if it exists)
+     * @param {String} [suffix] If given, will be appended at the end of the name specified in the definition object.
+     * @param {String} [defaultValue] If given, will override the default value given in the definition object.
      * @returns {String}
      */
     exports.get = function (stringDefinitionObject, suffix, defaultValue) {
@@ -125,8 +161,8 @@ define([
                 (stringDefinitionObject.name + (suffix || ""));
     };
     /**
-     * 
-     * @param {Object} stringDefinitionObject
+     * Returns whether there is a string set for given string definition in the current language.
+     * @param {StringDefinitionObject} stringDefinitionObject
      * @param {String} [suffix]
      * @returns {Boolean}
      */
