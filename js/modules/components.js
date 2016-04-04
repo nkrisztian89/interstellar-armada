@@ -63,6 +63,7 @@ define([
             SELECTOR_PROPERTY_LABEL_ID = "property",
             SELECTOR_VALUE_BUTTON_ID = "value",
             ENTER_CODE = 13,
+            DISABLED_CLASS_NAME = "disabled",
             // ------------------------------------------------------------------------------
             // constants
             /**
@@ -279,6 +280,18 @@ define([
      */
     SimpleComponent.prototype.show = function () {
         this._element.style.display = this._displayStyle;
+    };
+    /**
+     * Adds the disabled class to the HTML element wrapped by the component.
+     */
+    SimpleComponent.prototype.disable = function () {
+        this._element.classList.add(DISABLED_CLASS_NAME);
+    };
+    /**
+     * Removes the disabled class from the HTML element wrapped by the component.
+     */
+    SimpleComponent.prototype.enable = function () {
+        this._element.classList.remove(DISABLED_CLASS_NAME);
     };
     // #########################################################################
     /**
@@ -873,6 +886,7 @@ define([
             this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
             this._valueSelector.setContent(this._valueList[0]);
             this._valueIndex = 0;
+            this.setValueList(this._valueList);
             this._valueSelector.getElement().onclick = function () {
                 this.selectNextValue();
                 return false;
@@ -893,7 +907,7 @@ define([
                 this.selectValueWithIndex(i);
             } else {
                 application.showError(
-                        "Attempted to select value: '" + value + "' for '" + this._propertyLabelDescriptor.caption || strings.get({name: this._propertyLabelDescriptor.id}) + "', which is not one of the available options.",
+                        "Attempted to select value: '" + value + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', which is not one of the available options.",
                         application.ErrorSeverity.MINOR);
             }
         } else {
@@ -905,16 +919,17 @@ define([
      * @param {Number} index
      */
     Selector.prototype.selectValueWithIndex = function (index) {
+        var originalIndex = this._valueIndex;
         if (this._rootElement) {
             if (this._valueList.length > index) {
                 this._valueIndex = index;
                 this._valueSelector.setContent(this._valueList[this._valueIndex]);
-                if (this.onChange) {
+                if ((originalIndex !== index) && this.onChange) {
                     this.onChange();
                 }
             } else {
                 application.showError(
-                        "Attempted to select value with index '" + index + "' for '" + this._propertyName + "', while the available range is: 0-" + (this._valueList.length - 1),
+                        "Attempted to select value with index '" + index + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', while the available range is: 0-" + (this._valueList.length - 1),
                         application.ErrorSeverity.MINOR);
             }
         } else {
@@ -950,6 +965,11 @@ define([
         this._valueList = valueList;
         if (this._valueIndex >= this._valueList.length) {
             this._valueIndex = 0;
+        }
+        if (this._valueList.length < 2) {
+            this._valueSelector.disable();
+        } else {
+            this._valueSelector.enable();
         }
     };
     // -------------------------------------------------------------------------

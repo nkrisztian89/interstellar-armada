@@ -78,8 +78,8 @@ module.exports = function (grunt) {
                         from: '.getPhysicalModel()',
                         to: '._physicalModel'
                     }, {
-                        from: 'setFileCacheBypassEnabled(true)',
-                        to: 'setFileCacheBypassEnabled(false)'
+                        from: 'setFileCacheBypassEnabled(!0)',
+                        to: 'setFileCacheBypassEnabled(0)'
                     }]
             },
             postOptimize: {

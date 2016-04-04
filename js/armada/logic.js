@@ -873,7 +873,7 @@ define([
                     this._class.getModel(),
                     this._class.getShader(),
                     this._class.getShader().getCubemapNames()[0],
-                    this._class.getCubemap(),
+                    this._class.getCubemap(graphics.getCubemapQualityPreferenceList()),
                     scene.getCamera()));
         }.bind(this));
     };

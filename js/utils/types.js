@@ -10,7 +10,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define */
+/*global define, localStorage */
 
 /**
  * @param utils Used for enum functionality
@@ -21,7 +21,51 @@ define([
     "modules/application"
 ], function (utils, application) {
     "use strict";
-    var exports = {};
+    var
+            /**
+             * Stores the various types of errors that can occur the type verification of a variable.
+             * @type Object
+             */
+            Errors = {
+                /**
+                 * The value provided failed to pass the provided check function.
+                 */
+                CHECK_FAIL_ERROR: "checkFailError",
+                /**
+                 * The value provided does not have the required type.
+                 */
+                TYPE_ERROR: "typeError",
+                /**
+                 * The value provided is not one of the valid values defined in the passed enum object.
+                 */
+                ENUM_VALUE_ERROR: "enumValueError",
+                /**
+                 * The enum object parameter provided is invalid (not object or has no properties)
+                 */
+                INVALID_ENUM_OBJECT_ERROR: "invalidEnumObjectError"
+            },
+    /**
+     * The log verbosity level to use when logging errors if no explicit level is given.
+     * @type Number
+     */
+    DEFAULT_ERROR_LOG_VERBOSITY_LEVEL = 1,
+            /**
+             * The object that will be returned as the public interface of this module.
+             */
+            exports = {
+                Errors: Errors
+            };
+    /**
+     * Returns an error message for the case when a variable value of any type cannot be verified because it fails the supplied check, and a
+     * default value will be used instead.
+     * @param {String} name The name of the variable to be used to refer to it in the message
+     * @param {} value
+     * @param {} defaultValue
+     * @param {String} [checkFailMessage] The explanation for message to be included
+     */
+    function _getCheckFailErrorMessage(name, value, defaultValue, checkFailMessage) {
+        return "Invalid value for '" + name + "' (" + value + ")" + (checkFailMessage ? (": " + checkFailMessage) : ".") + " Using default value " + defaultValue + " instead.";
+    }
     /**
      * Shows an error message for the case when a variable value of any type cannot be verified because it fails the supplied check, and a
      * default value will be used instead.
@@ -31,13 +75,95 @@ define([
      * @param {String} [checkFailMessage] The explanation for message to be included
      */
     function _showCheckFailError(name, value, defaultValue, checkFailMessage) {
-        application.showError("Invalid value for '" + name + "' (" + value + ")" + (checkFailMessage ? (": " + checkFailMessage) : ".") + " Using default value " + defaultValue + " instead.");
+        application.showError(_getCheckFailErrorMessage(name, value, defaultValue, checkFailMessage));
     }
-    function _showTypeError(type, name, value, defaultValue) {
-        application.showError(
-                "Invalid value for '" + name +
+    /**
+     * Logs an error message for the case when a variable value of any type cannot be verified because it fails the supplied check, and a
+     * default value will be used instead.
+     * @param {String} name
+     * @param {} value
+     * @param {} defaultValue
+     * @param {String} [checkFailMessage]
+     * @param {Number} [verbosityLevel=DEFAULT_ERROR_LOG_VERBOSITY_LEVEL]
+     */
+    function _logCheckFailError(name, value, defaultValue, checkFailMessage, verbosityLevel) {
+        application.log(_getCheckFailErrorMessage(name, value, defaultValue, checkFailMessage), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
+    }
+    /**
+     * Returns an error message to be shown / logged when a variable value of any type fails type verification because if has a different type
+     * than required.
+     * @param {String} type
+     * @param {String} name
+     * @param {} value
+     * @param {} defaultValue
+     * @returns {String}
+     */
+    function _getTypeError(type, name, value, defaultValue) {
+        return "Invalid value for '" + name +
                 "'. Expected " + type + ", got a(n) " + ((typeof value === "object") ? value.constructor.name : (typeof value)) + " (" + value +
-                "). Using default value " + ((defaultValue instanceof Array) ? ("[" + defaultValue.join(", ") + "]") : ("'" + defaultValue + "'")) + " instead.");
+                "). Using default value " + ((defaultValue instanceof Array) ? ("[" + defaultValue.join(", ") + "]") : ("'" + defaultValue + "'")) + " instead.";
+    }
+    /**
+     * Shows an error message for the case when a variable value of any type fails type verification because if has a different type
+     * than required.
+     * @param {String} type
+     * @param {String} name
+     * @param {} value
+     * @param {} defaultValue
+     * @returns {String}
+     */
+    function _showTypeError(type, name, value, defaultValue) {
+        application.showError(_getTypeError(type, name, value, defaultValue));
+    }
+    /**
+     * Logs an error message for the case when a variable value of any type fails type verification because if has a different type
+     * than required.
+     * @param {String} type
+     * @param {String} name
+     * @param {} value
+     * @param {} defaultValue
+     * @param {Number} [verbosityLevel=DEFAULT_ERROR_LOG_VERBOSITY_LEVEL]
+     * @returns {String}
+     */
+    function _logTypeError(type, name, value, defaultValue, verbosityLevel) {
+        application.log(_getTypeError(type, name, value, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
+    }
+    /**
+     * Returns an error message to be shown / logged when a variable value fails type verification because is not one of the available 
+     * values defined by a passed enum object.
+     * @param {String} name
+     * @param {} value
+     * @param {Object} enumObject
+     * @param {} defaultValue
+     * @returns {String}
+     */
+    function _getEnumValueError(name, value, enumObject, defaultValue) {
+        return "Unrecognized '" + name + "' value: '" + value + "'. Possible values are are: " + utils.getEnumValues(enumObject).join(", ") + ". Default value '" + defaultValue + "' will be used instead.";
+    }
+    /**
+     * Shows an error message for the case when a variable value fails type verification because is not one of the available values defined 
+     * by a passed enum object.
+     * @param {String} name
+     * @param {} value
+     * @param {Object} enumObject
+     * @param {} defaultValue
+     * @returns {String}
+     */
+    function _showEnumValueError(name, value, enumObject, defaultValue) {
+        application.showError(_getEnumValueError(name, value, enumObject, defaultValue));
+    }
+    /**
+     * Logs an error message for the case when a variable value fails type verification because is not one of the available values defined 
+     * by a passed enum object.
+     * @param {String} name
+     * @param {} value
+     * @param {Object} enumObject
+     * @param {} defaultValue
+     * @param {Number} [verbosityLevel=DEFAULT_ERROR_LOG_VERBOSITY_LEVEL]
+     * @returns {String}
+     */
+    function _logEnumValueError(name, value, enumObject, defaultValue, verbosityLevel) {
+        application.log(_getEnumValueError(name, value, enumObject, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
     }
     /**
      * @typedef {Function} Types~BooleanCallback
@@ -45,30 +171,52 @@ define([
      * @returns {Boolean}
      */
     /**
-     * Returns a type-safe boolean value. If the given original value is invalid, will show an error message and return the given default 
-     * value.
-     * @param {String} name The name of the variable you are trying to acquire a value for (to show in error messages)
-     * @param {} value The original value to be checked
-     * @param {Boolean} [defaultValue] If the original value is invalid, this value will be returned instead.
-     * @param {Types~BooleanCallback} [checkFunction] If the type of the value is correct and this function is given, it will be called with the 
+     * @typedef {Object} Types~BooleanValueParams
+     * @property {String} [name] The name of the variable you are trying to acquire a value for (to show in error messages)
+     * @property {Boolean} [defaultValue] If the original value is invalid, this value will be returned instead.
+     * @property {Types~BooleanCallback} [checkFunction] If the type of the value is correct and this function is given, it will be called with the 
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
-     * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
+     * @property {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @property {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
+     * @property {Boolean} [silentFallback=false]
+     * @property {String} [error] enum Errors
+     */
+    /**
+     * Returns a type-safe boolean value. If the given original value is invalid, will show an error message and return the given default 
+     * value.
+     * @param {} value The original value to be checked
+     * @param {Types~BooleanValueParams} params
      * @returns {Boolean|null}
      */
-    exports.getBooleanValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
+    exports.getBooleanValue = function (value, params) {
+        params = params || {};
+        params.name = params.name || "unnamed boolean";
         if (typeof value === "boolean") {
-            if (checkFunction) {
-                if (!checkFunction(value, parentObject)) {
-                    _showCheckFailError(name, value, defaultValue, checkFailMessage);
-                    return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
+            if (params.checkFunction && !params.checkFunction(value, params.parentObject)) {
+                params.error = Errors.CHECK_FAIL_ERROR;
+                if (!params.silentFallback) {
+                    _showCheckFailError(params.name, value, params.defaultValue, params.checkFailMessage);
+                } else {
+                    _logCheckFailError(params.name, value, params.defaultValue, params.checkFailMessage);
                 }
+            } else {
+                return value;
             }
-            return value;
+        } else {
+            params.error = Errors.TYPE_ERROR;
+            if (!params.silentFallback) {
+                _showTypeError("a boolean", params.name, value, params.defaultValue);
+            } else {
+                _logTypeError("a boolean", params.name, value, params.defaultValue);
+            }
         }
-        _showTypeError("a boolean", name, value, defaultValue);
-        return (defaultValue !== null) ? exports.getBooleanValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
+        if (params.defaultValue !== null) {
+            value = params.defaultValue;
+            params.defaultValue = null;
+            return exports.getBooleanValue(value, params);
+        }
+        return null;
     };
     /**
      * @typedef {Function} Types~NumberCallback
@@ -171,32 +319,59 @@ define([
         return (defaultValue !== null) ? exports.getStringValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
-     * If the given value is one of the possible enumeration values defined in the given enumeration object, it returns it, otherwise shows
-     * a warning message about it to the user and returns the given default.
-     * @param {String} name The name of the variable you are trying to acquire a value for (to show in error messages)
-     * @param {Object} enumObject the object containing the valid enumeration values.
-     * @param {} value The original value to be checked
-     * @param {Number} [defaultValue] If the original value is invalid, this value will be returned instead.
-     * @param {Types~NumberCallback} [checkFunction] If the type of the value is correct and this function is given, it will be called with the 
+     * @typedef {Object} Types~EnumValueParams
+     * @property {String} [name] The name of the variable you are trying to acquire a value for (to show in error messages)
+     * @property {String} [defaultValue] If the original value is invalid, this value will be returned instead.
+     * @property {Types~NumberCallback} [checkFunction] If the type of the value is correct and this function is given, it will be called with the 
      * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
      * valid.
-     * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
-     * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
+     * @property {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @property {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
+     * @property {Boolean} [silentFallback=false]
+     * @property {String} [error] enum Errors
+     */
+    /**
+     * If the given value is one of the possible enumeration values defined in the given enumeration object, it returns it, otherwise shows
+     * a warning message about it to the user and returns the given default.
+     * @param {Object} enumObject the object containing the valid enumeration values.
+     * @param {} value The original value to be checked
+     * @param {Types~EnumValueParams} params
      * @returns {}
      */
-    exports.getEnumValue = function (name, enumObject, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
+    exports.getEnumValue = function (enumObject, value, params) {
         var safeValue = utils.getSafeEnumValue(enumObject, value);
+        params = params || {};
+        params.name = params.name || "unnamed enum " + enumObject.constructor.name;
         if (safeValue !== null) {
-            if (checkFunction) {
-                if (!checkFunction(safeValue, parentObject)) {
-                    _showCheckFailError(name, safeValue, defaultValue, checkFailMessage);
-                    return defaultValue;
+            if (params.checkFunction && !params.checkFunction(safeValue, params.parentObject)) {
+                params.error = Errors.CHECK_FAIL_ERROR;
+                if (!params.silentFallback) {
+                    _showCheckFailError(params.name, safeValue, params.defaultValue, params.checkFailMessage);
+                } else {
+                    _logCheckFailError(params.name, safeValue, params.defaultValue, params.checkFailMessage);
                 }
+            } else {
+                return safeValue;
             }
-            return safeValue;
+        } else {
+            if ((typeof enumObject !== "object") || (Object.keys(enumObject).length === 0)) {
+                params.error = Errors.INVALID_ENUM_OBJECT_ERROR;
+                application.showError("Invalid enum object specified for " + params.name + ": " + enumObject + ", and thus its value (" + value + ") cannot be verified!");
+                return null;
+            }
+            params.error = Errors.ENUM_VALUE_ERROR;
+            if (!params.silentFallback) {
+                _showEnumValueError(params.name, value, enumObject, params.defaultValue);
+            } else {
+                _logEnumValueError(params.name, value, enumObject, params.defaultValue);
+            }
         }
-        application.showError("Unrecognized '" + name + "' value: '" + value + "'. Possible values are are: " + utils.getEnumValues(enumObject).join(", ") + ". Default value '" + defaultValue + "' will be used instead.");
-        return defaultValue;
+        if (params.defaultValue !== null) {
+            value = params.defaultValue;
+            params.defaultValue = null;
+            return exports.getEnumValue(enumObject, value, params);
+        }
+        return null;
     };
     /**
      * @typedef {Function} Types~ObjectCallback
@@ -275,7 +450,7 @@ define([
         }
         switch (type) {
             case "boolean":
-                return exports.getBooleanValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
+                return exports.getBooleanValue(value, {name: name, defaultValue: defaultValue, checkFunction: checkFunction, checkFailMessage: checkFailMessage, parentObject: parentObject});
             case "number":
                 if (typeParams.range) {
                     return exports.getNumberValueInRange(name, value, typeParams.range[0], typeParams.range[1], defaultValue, checkFunction, checkFailMessage, parentObject);
@@ -285,7 +460,7 @@ define([
                 return exports.getStringValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
             case "enum":
                 if (typeParams.values) {
-                    return exports.getEnumValue(name, typeParams.values, value, defaultValue, checkFunction, checkFailMessage, parentObject);
+                    return exports.getEnumValue(typeParams.values, value, {name: name, defaultValue: defaultValue, checkFunction: checkFunction, checkFailMessage: checkFailMessage, parentObject: parentObject});
                 }
                 application.showError("Missing enum definition object for '" + name + "'!");
                 return null;
@@ -295,7 +470,7 @@ define([
                 }
                 return exports.getObjectValue(name, value, defaultValue, checkFunction, checkFailMessage, parentObject);
             case "array":
-                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams, defaultValue, checkFunction, checkFailMessage, null, null, parentObject);
+                return exports.getArrayValue(name, value, typeParams.elementType, typeParams.elementTypeParams, typeParams, defaultValue, checkFunction, checkFailMessage, typeParams.elementCheck, typeParams.elementCheckFailMessage, parentObject);
             default:
                 application.showError("Unknown type specified for '" + name + "': " + type);
                 return null;
@@ -348,6 +523,7 @@ define([
                         result.push(resultElement);
                     }
                 });
+                value = result;
             }
             if (checkFunction) {
                 if (!checkFunction(value)) {
@@ -392,13 +568,19 @@ define([
                             propertyDefinition.defaultValue,
                             propertyDefinition.optional,
                             {
+                                // number
                                 range: propertyDefinition.range,
+                                // enum
                                 values: propertyDefinition.values,
+                                // array
                                 elementType: propertyDefinition.elementType,
                                 elementEnumObject: propertyDefinition.elementEnum,
                                 length: propertyDefinition.length,
                                 minLength: propertyDefinition.minLength,
                                 maxLength: propertyDefinition.maxLength,
+                                elementCheck: propertyDefinition.elementCheck,
+                                elementCheckFailMessage: propertyDefinition.elementCheckFailMessage,
+                                // object
                                 properties: propertyDefinition.properties
                             },
                             propertyDefinition.check,
@@ -439,5 +621,92 @@ define([
         application.showError("Invalid value for '" + name + "'. Expected an object, got a(n) " + (typeof value) + " (" + value + ").");
         return null;
     };
+    /**
+     * Reads, type verifies and returns a boolean value (or a supplied default) from local storage according to the specified parameters.
+     * @param {String} storageLocation The key locating the value in local storage.
+     * @param {Types~BooleanValueParams} params Same as for getBooleanValue.
+     * @returns {null|Boolean}
+     */
+    exports.getBooleanValueFromLocalStorage = function (storageLocation, params) {
+        var value;
+        if (localStorage[storageLocation] === true.toString()) {
+            value = true;
+        } else if (localStorage[storageLocation] === false.toString()) {
+            value = false;
+        } else {
+            value = localStorage[storageLocation];
+        }
+        params = params || {};
+        params.name = params.name || "localStorage." + storageLocation;
+        return exports.getBooleanValue(value, params);
+    };
+    /**
+     * Reads, type verifies and returns an enum value (or a supplied default) from local storage according to the specified parameters.
+     * @param {Object} enumObject The object describing the possible values for the enum.
+     * @param {String} storageLocation The key locating the value in local storage.
+     * @param {Types~EnumValueParams} params Same as for getEnumValue
+     * @returns {any}
+     */
+    exports.getEnumValueFromLocalStorage = function (enumObject, storageLocation, params) {
+        params = params || {};
+        params.name = params.name || "localStorage." + storageLocation;
+        return exports.getEnumValue(enumObject, localStorage[storageLocation], params);
+    };
+    /**
+     * Reads, type verifies and returns a value of a given type (or a supplied default) from local storage according to the specified 
+     * parameters. Currently only boolean and enum types are supported!
+     * @param {String|Object} type The type descriptor string or object. (currently boolean / enum only!)
+     * @param {String} storageLocation The key locating the value in local storage.
+     * @param {Types~BooleanValueParams|Types~EnumValueParams} params
+     * @returns {any}
+     */
+    exports.getValueOfTypeFromLocalStorage = function (type, storageLocation, params) {
+        if (typeof type === "object") {
+            params.values = type.values;
+            return exports.getValueOfTypeFromLocalStorage(type.baseType, storageLocation, params);
+        }
+        switch (type) {
+            case "boolean":
+                return exports.getBooleanValueFromLocalStorage(storageLocation, params);
+            case "enum":
+                return exports.getEnumValueFromLocalStorage(params.values, storageLocation, params);
+            default:
+                application.crash();
+        }
+    };
+    /**
+     * Returns a definition object defining an object structure with a string identifier ("name") and a numberic value.
+     * @param {String} valueName The name of the property storing the numeric value.
+     * @returns {Object}
+     */
+    exports.getNameAndValueDefinitionObject = function (valueName) {
+        return {
+            baseType: "object",
+            properties: {
+                NAME: {
+                    name: "name",
+                    type: "string"
+                },
+                VALUE: {
+                    name: valueName,
+                    type: "number"
+                }
+            }
+        };
+    };
+    /**
+     * Returns an object that can be used as an enum object in the type verification functions, based on an array storing the possible
+     * enumeration values.
+     * @param {Array} array
+     * @returns {Object}
+     */
+    exports.getEnumObjectForArray = function (array) {
+        var result = {}, i;
+        for (i = 0; i < array.length; i++) {
+            result[array[i]] = array[i];
+        }
+        return result;
+    };
+    // --------------------------------------------------------------------------------------------
     return exports;
 });

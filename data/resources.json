@@ -198,13 +198,18 @@
         {
             "name": "deepspace",
             "basepath": "cube/",
+            "format": "jpg",
             "imageNames": {
-                "posX": "cm_1c2.jpg",
-                "negX": "cm_1c2.jpg",
-                "posY": "cm_1c2.jpg",
-                "negY": "cm_1c2.jpg",
-                "posZ": "cm_1c2.jpg",
-                "negZ": "cm_1c2.jpg"
+                "posX": "cm_1c2",
+                "negX": "cm_1c2",
+                "posY": "cm_1c2",
+                "negY": "cm_1c2",
+                "posZ": "cm_1c2",
+                "negZ": "cm_1c2"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "normal": ""
             }
         }
     ],

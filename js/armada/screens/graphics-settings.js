@@ -48,11 +48,22 @@ define([
                     return [caption, element];
                 };
             },
+            /**
+             * A function that can be used to filter out the supported texture filtering options.
+             * @param {String} element
+             * @returns {Boolean}
+             */
+            _filterTextureFilteringValue = function (element) {
+                return managedGL.isAnisotropicFilteringAvailable() || element !== managedGL.TextureFiltering.ANISOTROPIC;
+            },
             _mapCaption = function (element) {
                 return element[0];
             },
             _getOnOffSettingValues = function () {
-                return [strings.get(strings.SETTING.ON), strings.get(strings.SETTING.OFF)];
+                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ON)];
+            },
+            _getOffSettingValue = function () {
+                return [strings.get(strings.SETTING.OFF)];
             },
             /**
              * Returns an array of arrays, storing pairs of elements, the first of which is the caption
@@ -61,27 +72,28 @@ define([
              * @returns String[][2]
              */
             _getFilteringSettingValues = function () {
-                return utils.getEnumValues(managedGL.TextureFiltering).map(_getMapToCaptionAndValueFunction(strings.GRAPHICS));
+                return utils.getEnumValues(managedGL.TextureFiltering).filter(_filterTextureFilteringValue).map(_getMapToCaptionAndValueFunction(strings.GRAPHICS));
             },
             /**
              * In the same format as the other value arrays
              * @type String[][2]
              */
             _getTextureQualitySettingValues = function () {
-                return utils.getEnumValues(graphics.getTextureQualities()).reverse().map(_getMapToCaptionAndValueFunction(strings.SETTING));
+                return graphics.getTextureQualities().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * In the same format as the other value arrays
              * @type String[][2]
              */
-            _getFullRangeSettingValues = function () {
-                return [
-                    [strings.get(strings.SETTING.VERY_LOW), 0],
-                    [strings.get(strings.SETTING.LOW), 1],
-                    [strings.get(strings.SETTING.MEDIUM), 2],
-                    [strings.get(strings.SETTING.HIGH), 3],
-                    [strings.get(strings.SETTING.VERY_HIGH), 4]
-                ];
+            _getCubemapQualitySettingValues = function () {
+                return graphics.getCubemapQualities().map(_getMapToCaptionAndValueFunction(strings.SETTING));
+            },
+            /**
+             * In the same format as the other value arrays
+             * @type String[][2]
+             */
+            _getLODSettingValues = function () {
+                return graphics.getLODLevels().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * In the same format as the other value arrays
@@ -95,34 +107,28 @@ define([
              * @type String[][2]
              */
             _getShadowQualitySettingValues = function () {
-                return [
-                    [strings.get(strings.SETTING.LOW), graphics.ShadowMapQuality.LOW],
-                    [strings.get(strings.SETTING.MEDIUM), graphics.ShadowMapQuality.MEDIUM],
-                    [strings.get(strings.SETTING.HIGH), graphics.ShadowMapQuality.HIGH]
-                ];
+                return graphics.getShadowMapQualities().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * In the same format as the other value arrays
              * @type String[][2]
              */
             _getShadowDistanceSettingValues = function () {
-                return [
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_CLOSE), 3],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_CLOSE), 4],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_MEDIUM), 5],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_FAR), 6],
-                    [strings.get(strings.GRAPHICS.SHADOW_DISTANCE_VERY_FAR), 7]
-                ];
+                return graphics.getShadowDistances().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             _getMaxDynamicLightsSettingValues = function () {
-                return [
-                    [strings.get(strings.SETTING.OFF), graphics.DynamicLightsAmount.OFF],
-                    [strings.get(strings.SETTING.MINIMUM), graphics.DynamicLightsAmount.MINIMUM],
-                    [strings.get(strings.SETTING.FEW), graphics.DynamicLightsAmount.FEW],
-                    [strings.get(strings.SETTING.MEDIUM), graphics.DynamicLightsAmount.MEDIUM],
-                    [strings.get(strings.SETTING.MANY), graphics.DynamicLightsAmount.MANY],
-                    [strings.get(strings.SETTING.MAXIMUM), graphics.DynamicLightsAmount.MAXIMUM]
-                ];
+                return graphics.getPointLightAmounts().map(_getMapToCaptionAndValueFunction(strings.SETTING));
+            },
+            /**
+             * Helper function for finding the index of a setting in an array storing caption / setting pairs.
+             * @param {} value
+             * @param {Array} array
+             * @returns {Number}
+             */
+            _findIndexOf = function (value, array) {
+                return array.findIndex(function (element) {
+                    return element[1] === value;
+                });
             },
             // ------------------------------------------------------------------------------
             // constants
@@ -132,6 +138,7 @@ define([
             AA_SELECTOR_ID = "aaSelector",
             FILTERING_SELECTOR_ID = "filteringSelector",
             TEXTURE_QUALITY_SELECTOR_ID = "textureQualitySelector",
+            CUBEMAP_QUALITY_SELECTOR_ID = "cubemapQualitySelector",
             LOD_SELECTOR_ID = "lodSelector",
             SHADER_COMPLEXITY_SELECTOR_ID = "shaderComplexitySelector",
             SHADOW_MAPPING_SELECTOR_ID = "shadowMappingSelector",
@@ -181,6 +188,10 @@ define([
         /**
          * @type Selector
          */
+        this._cubemapQualitySelector = null;
+        /**
+         * @type Selector
+         */
         this._lodSelector = null;
         /**
          * @type Selector
@@ -212,9 +223,12 @@ define([
             this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.TEXTURE_QUALITY.name,
                     _getTextureQualitySettingValues().map(_mapCaption));
+            this._cubemapQualitySelector = this._registerSelector(CUBEMAP_QUALITY_SELECTOR_ID,
+                    strings.GRAPHICS.BACKGROUND_QUALITY.name,
+                    _getCubemapQualitySettingValues().map(_mapCaption));
             this._lodSelector = this._registerSelector(LOD_SELECTOR_ID,
                     strings.GRAPHICS.MODEL_DETAILS.name,
-                    _getFullRangeSettingValues().map(_mapCaption));
+                    _getLODSettingValues().map(_mapCaption));
             this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADERS.name,
                     _getShaderComplexitySettingValues().map(_mapCaption));
@@ -259,11 +273,8 @@ define([
             graphics.setAntialiasing((this._antialiasingSelector.getSelectedIndex() === SETTING_ON_INDEX));
             graphics.setFiltering(_getFilteringSettingValues()[this._filteringSelector.getSelectedIndex()][1]);
             graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
-            graphics.setMaxLOD(_getFullRangeSettingValues()[this._lodSelector.getSelectedIndex()][1]);
-            graphics.setShadowMapping((this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX));
-            graphics.setShadowQuality(_getShadowQualitySettingValues()[this._shadowQualitySelector.getSelectedIndex()][1]);
-            graphics.setShadowDistance(_getShadowDistanceSettingValues()[this._shadowDistanceSelector.getSelectedIndex()][1]);
-            graphics.setMaxPointLights(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
+            graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
+            graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
         }.bind(this);
@@ -274,30 +285,28 @@ define([
         }.bind(this);
         this._shaderComplexitySelector.onChange = function () {
             graphics.setShaderComplexity(_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1]);
-            if (graphics.isShadowMappingAvailable()) {
-                this._shadowMappingSelector.show();
-                this._shadowMappingSelector.onChange();
-            } else {
-                this._shadowMappingSelector.hide();
-                this._shadowQualitySelector.hide();
-                this._shadowDistanceSelector.hide();
-            }
-            if (graphics.areDynamicLightsAvailable()) {
-                this._maxDynamicLightsSelector.show();
-            } else {
-                this._maxDynamicLightsSelector.hide();
-            }
+            this._updateShadowMappingSelector();
+            this._updateShadowQualitySelector();
+            this._updateShadowDistanceSelector();
+            this._updateMaxDynamicLightsSelector();
         }.bind(this);
         this._shadowMappingSelector.onChange = function () {
-            if (this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX) {
-                if (graphics.isShadowMappingAvailable()) {
-                    this._shadowQualitySelector.show();
-                    this._shadowDistanceSelector.show();
-                }
-            } else {
-                this._shadowQualitySelector.hide();
-                this._shadowDistanceSelector.hide();
-            }
+            graphics.setShadowMapping((this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX));
+            this._updateShadowQualitySelector();
+            this._updateShadowDistanceSelector();
+            this._updateMaxDynamicLightsSelector();
+        }.bind(this);
+        this._shadowQualitySelector.onChange = function () {
+            graphics.setShadowMapQuality(_getShadowQualitySettingValues()[this._shadowQualitySelector.getSelectedIndex()][1]);
+        }.bind(this);
+        this._shadowDistanceSelector.onChange = function () {
+            graphics.setShadowDistance(_getShadowDistanceSettingValues()[this._shadowDistanceSelector.getSelectedIndex()][1]);
+            this._updateMaxDynamicLightsSelector();
+        }.bind(this);
+        this._maxDynamicLightsSelector.onChange = function () {
+            graphics.setPointLightAmount(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
+            this._updateShadowMappingSelector();
+            this._updateShadowDistanceSelector();
         }.bind(this);
     };
     /**
@@ -308,10 +317,11 @@ define([
         this._backButton.setContent(strings.get(strings.GRAPHICS.BACK));
         this._titleHeading.setContent(strings.get(strings.GRAPHICS.TITLE));
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
-        this._antialiasingSelector.setValueList(_getOnOffSettingValues());
+        this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? _getOnOffSettingValues() : _getOffSettingValue());
         this._filteringSelector.setValueList(_getFilteringSettingValues().map(_mapCaption));
         this._textureQualitySelector.setValueList(_getTextureQualitySettingValues().map(_mapCaption));
-        this._lodSelector.setValueList(_getFullRangeSettingValues().map(_mapCaption));
+        this._cubemapQualitySelector.setValueList(_getCubemapQualitySettingValues().map(_mapCaption));
+        this._lodSelector.setValueList(_getLODSettingValues().map(_mapCaption));
         this._shaderComplexitySelector.setValueList(_getShaderComplexitySettingValues().map(_mapCaption));
         this._shadowMappingSelector.setValueList(_getOnOffSettingValues());
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
@@ -320,24 +330,73 @@ define([
         this._updateValues();
     };
     /**
+     * Updates both the value list and the currently selected value of the shadow mapping selector based on whether enabling shadow mapping 
+     * next to the other current settings is supported at all and whether it is actually enabled.
+     */
+    GraphicsScreen.prototype._updateShadowMappingSelector = function () {
+        if (graphics.canEnableShadowMapping()) {
+            this._shadowMappingSelector.setValueList(_getOnOffSettingValues());
+            this._shadowMappingSelector.selectValueWithIndex((graphics.isShadowMappingEnabled() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+        } else {
+            this._shadowMappingSelector.setValueList(_getOffSettingValue());
+            this._shadowMappingSelector.selectValueWithIndex(SETTING_OFF_INDEX);
+        }
+    };
+    /**
+     * Updates both the value list and the currently selected value of the shadow quality selector based on whether enabling shadow mapping 
+     * next to the other current settings is supported at all and whether it is actually enabled.
+     */
+    GraphicsScreen.prototype._updateShadowQualitySelector = function () {
+        if (graphics.canEnableShadowMapping() && graphics.isShadowMappingEnabled()) {
+            this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
+            this._shadowQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getShadowMapQuality(), _getShadowQualitySettingValues()));
+        } else {
+            this._shadowQualitySelector.setValueList(_getOffSettingValue());
+            this._shadowQualitySelector.selectValueWithIndex(SETTING_OFF_INDEX);
+        }
+    };
+    /**
+     * Updates both the value list and the currently selected value of the shadow distance selector based on whether enabling shadow mapping 
+     * next to the other current settings is supported at all, whether it is actually enabled and what the currently available distance
+     * levels are.
+     */
+    GraphicsScreen.prototype._updateShadowDistanceSelector = function () {
+        if (graphics.canEnableShadowMapping() && graphics.isShadowMappingEnabled()) {
+            this._shadowDistanceSelector.setValueList(_getShadowDistanceSettingValues().map(_mapCaption));
+            this._shadowDistanceSelector.selectValueWithIndex(_findIndexOf(graphics.getShadowDistance(), _getShadowDistanceSettingValues()));
+        } else {
+            this._shadowDistanceSelector.setValueList(_getOffSettingValue());
+            this._shadowDistanceSelector.selectValueWithIndex(SETTING_OFF_INDEX);
+        }
+    };
+    /**
+     * Updates both the value list and the currently selected value of the max dynamic lights selector based on whether dynamic lights are
+     * available at the current settings and what the available amounts are.
+     */
+    GraphicsScreen.prototype._updateMaxDynamicLightsSelector = function () {
+        if (graphics.areDynamicLightsAvailable()) {
+            this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
+            this._maxDynamicLightsSelector.selectValueWithIndex(_findIndexOf(graphics.getPointLightAmount(), _getMaxDynamicLightsSettingValues()));
+        } else {
+            this._maxDynamicLightsSelector.setValueList(_getOffSettingValue());
+            this._maxDynamicLightsSelector.selectValueWithIndex(SETTING_OFF_INDEX);
+        }
+    };
+    /**
      * Updates the component states based on the current graphics settings
      */
     GraphicsScreen.prototype._updateValues = function () {
         graphics.executeWhenReady(function () {
-            var findIndexOf = function (value, array) {
-                return array.findIndex(function (element) {
-                    return element[1] === value;
-                });
-            };
             this._antialiasingSelector.selectValueWithIndex((graphics.getAntialiasing() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
-            this._filteringSelector.selectValueWithIndex(findIndexOf(graphics.getFiltering(), _getFilteringSettingValues()));
-            this._textureQualitySelector.selectValueWithIndex(findIndexOf(graphics.getTextureQuality(), _getTextureQualitySettingValues()));
-            this._lodSelector.selectValueWithIndex(findIndexOf(graphics.getMaxLoadedLOD(), _getFullRangeSettingValues()));
-            this._shaderComplexitySelector.selectValueWithIndex(findIndexOf(graphics.getShaderComplexity(), _getShaderComplexitySettingValues()));
-            this._shadowMappingSelector.selectValueWithIndex((graphics.isShadowMappingEnabled() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
-            this._shadowQualitySelector.selectValueWithIndex(findIndexOf(graphics.getShadowQuality(), _getShadowQualitySettingValues()));
-            this._shadowDistanceSelector.selectValueWithIndex(findIndexOf(graphics.getShadowDistance(), _getShadowDistanceSettingValues()));
-            this._maxDynamicLightsSelector.selectValueWithIndex(findIndexOf(graphics.getMaxPointLights(), _getMaxDynamicLightsSettingValues()));
+            this._filteringSelector.selectValueWithIndex(_findIndexOf(graphics.getFiltering(), _getFilteringSettingValues()));
+            this._textureQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getTextureQuality(), _getTextureQualitySettingValues()));
+            this._cubemapQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getCubemapQuality(), _getCubemapQualitySettingValues()));
+            this._lodSelector.selectValueWithIndex(_findIndexOf(graphics.getLODLevel(), _getLODSettingValues()));
+            this._shaderComplexitySelector.selectValueWithIndex(_findIndexOf(graphics.getShaderComplexity(), _getShaderComplexitySettingValues()));
+            this._updateShadowMappingSelector();
+            this._updateShadowQualitySelector();
+            this._updateShadowDistanceSelector();
+            this._updateMaxDynamicLightsSelector();
         }.bind(this));
     };
     /**

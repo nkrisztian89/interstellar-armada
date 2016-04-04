@@ -119,16 +119,12 @@ define([
         TRILINEAR: {name: "graphics.trilinear"},
         ANISOTROPIC: {name: "graphics.anisotropic"},
         TEXTURE_QUALITY: {name: "graphics.textureQuality"},
+        BACKGROUND_QUALITY: {name: "graphics.backgroundQuality"},
         MODEL_DETAILS: {name: "graphics.modelDetails"},
         SHADERS: {name: "graphics.shaders"},
         SHADOWS: {name: "graphics.shadows"},
         SHADOW_QUALITY: {name: "graphics.shadowQuality"},
         SHADOW_DISTANCE: {name: "graphics.shadowDistance"},
-        SHADOW_DISTANCE_VERY_CLOSE: {name: "graphics.shadowDistanceVeryClose"},
-        SHADOW_DISTANCE_CLOSE: {name: "graphics.shadowDistanceClose"},
-        SHADOW_DISTANCE_MEDIUM: {name: "graphics.shadowDistanceMedium"},
-        SHADOW_DISTANCE_FAR: {name: "graphics.shadowDistanceFar"},
-        SHADOW_DISTANCE_VERY_FAR: {name: "graphics.shadowDistanceVeryFar"},
         MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"}
     };
     strings.CONTOLLER = {

@@ -40,6 +40,7 @@ define([
     game.setConfigFolder("config/");
     game.setConfigFileName("config.json");
     game.setFileCacheBypassEnabled(true);
+    game.setPreviouslyRunVersion(localStorage[constants.VERSION_LOCAL_STORAGE_ID]);
     // -------------------------------------------------------------------------
     // Overridden protected methods
     game._loadGameSettingsAndExecuteCallback = function (settingsJSON, callback) {
@@ -56,6 +57,7 @@ define([
     };
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
         logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);
+        graphics.loadConfigurationFromJSON(configJSON.graphics);
         control.loadConfigurationFromJSON(configJSON.control);
         _progressBar.value = 1;
         callback();
@@ -85,6 +87,7 @@ define([
                 game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, function () {
                     _progressBar.value = 5;
                     components.clearStoredDOMModels();
+                    localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
                     callback();
                 });
             });

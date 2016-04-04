@@ -368,50 +368,119 @@ define([
          */
         this._basepath = dataJSON.basepath;
         /**
+         * @type String
+         */
+        this._format = dataJSON.format;
+        /**
          * @type String[]
          */
         this._imageNames = dataJSON.imageNames;
+        /**
+         * @type Object.<String, String>
+         */
+        this._qualitySuffixes = dataJSON.qualitySuffixes;
+        /**
+         * @type Number
+         */
+        this._loadedImages = 0;
+        /**
+         * @type Number
+         */
+        this._imagesToLoad = 0;
         /**
          * @type Object.<String, Image>
          */
         this._images = {};
         /**
-         * @type ManagedCubemap
+         * @type {cubemap: ManagedCubemap, qualityPreferenceList: String[]}[]
          */
-        this._managedCubemap = null;
+        this._cachedManagedCubemaps = [];
     }
     CubemapResource.prototype = new resourceManager.GenericResource();
     CubemapResource.prototype.constructor = CubemapResource;
     /**
-     * @override
-     * @returns {Boolean}
+     * 
+     * @param {String} face
+     * @param {String} quality
+     * @returns {String}
      */
-    CubemapResource.prototype.requiresReload = function () {
-        if (this.isRequested()) {
-            return false;
-        }
-        return !this.isLoaded();
+    CubemapResource.prototype._getPath = function (face, quality) {
+        return this._basepath + this._imageNames[face] + this._qualitySuffixes[quality] + "." + this._format;
+    };
+    /**
+     * 
+     * @param {String} face
+     * @param {string} quality
+     * @returns {Function}
+     */
+    CubemapResource.prototype._getOnLoadImageFunction = function (face, quality) {
+        var path = this._getPath(face, quality);
+        return function () {
+            this._loadedImages++;
+            this._onFilesLoad(this._loadedImages === this._imagesToLoad, {path: path});
+        }.bind(this);
     };
     /**
      * @override
+     * @param {Object} params 
+     * @returns {Boolean}
      */
-    CubemapResource.prototype._requestFiles = function () {
-        var facesLoaded, face, onImageLoadFunction;
-        facesLoaded = 0;
-        onImageLoadFunction = function () {
-            facesLoaded += 1;
-            if (facesLoaded === 6) {
-                this._onFilesLoad(true);
-            }
-        }.bind(this);
+    CubemapResource.prototype.requiresReload = function (params) {
+        var face, requestedQualities, quality;
+        if (this.isRequested(params)) {
+            return false;
+        }
+        params = params || {};
+        requestedQualities = params.qualities || this._qualitySuffixes;
         for (face in this._imageNames) {
             if (this._imageNames.hasOwnProperty(face)) {
-                this._images[face] = new Image();
-                // when all faces loaded, set the resource to ready and execute queued functions
-                this._images[face].onload = onImageLoadFunction;
-                // setting the src property will automatically result in an asynchronous
-                // request to grab the texture file
-                this._images[face].src = application.getFileURL(CUBEMAP_FOLDER, this._basepath + this._imageNames[face]);
+                if (!this._images[face]) {
+                    return true;
+                }
+                for (quality in requestedQualities) {
+                    if (requestedQualities.hasOwnProperty(quality)) {
+                        if (!this._images[face][quality]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    };
+    /**
+     * @override
+     * @param {Object} params 
+     */
+    CubemapResource.prototype._requestFiles = function (params) {
+        var face, requestedQualities, quality;
+        params = params || {};
+        requestedQualities = params.qualities || this._qualitySuffixes;
+        for (face in this._imageNames) {
+            if (this._imageNames.hasOwnProperty(face)) {
+                this._images[face] = this._images[face] || {};
+                for (quality in requestedQualities) {
+                    if (requestedQualities.hasOwnProperty(quality)) {
+                        if (!this._images[face][quality]) {
+                            this._imagesToLoad++;
+                            this._images[face][quality] = new Image();
+                            this._images[face][quality].onload = this._getOnLoadImageFunction(face, quality).bind(this);
+                        }
+                    }
+                }
+            }
+        }
+        // setting the src property of an Image object will automatically result in an asynchronous
+        // request to grab the image source file
+        for (face in this._imageNames) {
+            if (this._imageNames.hasOwnProperty(face)) {
+                for (quality in requestedQualities) {
+                    if (requestedQualities.hasOwnProperty(quality)) {
+                        if (!this._images[face][quality].src) {
+                            this._images[face][quality].src = application.getFileURL(CUBEMAP_FOLDER, this._getPath(face, quality));
+                        }
+                    }
+                }
             }
         }
     };
@@ -422,23 +491,60 @@ define([
         application.log("Cubemap named '" + this.getName() + "' has been loaded.", 2);
     };
     /**
-     * 
+     * @returns {String[]}
+     */
+    CubemapResource.prototype.getQualities = function () {
+        var quality, qualitities = [];
+        for (quality in this._qualitySuffixes) {
+            if (this._qualitySuffixes.hasOwnProperty(quality)) {
+                qualitities.push(quality);
+            }
+        }
+        return qualitities;
+    };
+    /**
+     * @param {String[]} qualityPreferenceList
      * @returns {ManagedCubemap}
      */
-    CubemapResource.prototype.getManagedCubemap = function () {
+    CubemapResource.prototype.getManagedCubemap = function (qualityPreferenceList) {
+        var i, result, qualities, index, mostFittingQuality, mostFittingQualityIndex;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot get managed GL cubemap for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
-        this._managedCubemap = this._managedCubemap || new managedGL.ManagedCubemap(this.getName(), [
-            this._images.posX,
-            this._images.negX,
-            this._images.posY,
-            this._images.negY,
-            this._images.posZ,
-            this._images.negZ
+        // return from cache if possible
+        for (i = 0; i < this._cachedManagedCubemaps.length; i++) {
+            if (utils.arraysEqual(qualityPreferenceList, this._cachedManagedCubemaps[i].qualityPreferenceList)) {
+                return this._cachedManagedCubemaps[i].cubemap;
+            }
+        }
+        qualities = this.getQualities();
+        mostFittingQualityIndex = -1;
+        for (i = 0; i < qualities.length; i++) {
+            index = qualityPreferenceList.indexOf(qualities[i]);
+            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
+                mostFittingQualityIndex = index;
+                mostFittingQuality = qualityPreferenceList[index];
+            }
+        }
+        if (mostFittingQualityIndex === -1) {
+            application.showError("Cubemap '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            return null;
+        }
+        result = new managedGL.ManagedCubemap(this.getName(), [
+            this._images.posX[mostFittingQuality],
+            this._images.negX[mostFittingQuality],
+            this._images.posY[mostFittingQuality],
+            this._images.negY[mostFittingQuality],
+            this._images.posZ[mostFittingQuality],
+            this._images.negZ[mostFittingQuality]
         ]);
-        return this._managedCubemap;
+        // cache the result
+        this._cachedManagedCubemaps.push({
+            qualityPreferenceList: qualityPreferenceList,
+            cubemap: result
+        });
+        return result;
     };
     // ############################################################################################
     /**
@@ -470,7 +576,7 @@ define([
          * (enum ShaderBlendMode)
          * @type String
          */
-        this._blendMode = types.getEnumValue("shader.blendMode", managedGL.ShaderBlendMode, dataJSON.blendMode);
+        this._blendMode = types.getEnumValue(managedGL.ShaderBlendMode, dataJSON.blendMode, {name: "shader.blendMode"});
         /**
          * The roles of the vertex attributes (= the name of the data array returned by the model from which they should get their values)
          * organized by the names of the vertex attributes.
@@ -635,7 +741,8 @@ define([
      * @param {Object} params
      */
     ShaderResource.prototype._loadData = function (params) {
-        switch (types.getEnumValue("shaderType", ShaderType, params.shaderType, null)) {
+        switch (types.getEnumValue(ShaderType, params.shaderType, {
+                name: "shaderType", defaultValue: null})) {
             case ShaderType.VERTEX:
                 this._vertexShaderSource = params.text;
                 break;

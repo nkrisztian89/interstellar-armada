@@ -474,7 +474,7 @@ define([
          * (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
          * @type String
          */
-        this._filtering = types.getEnumValue("ScreenCanvas.filtering", managedGL.TextureFiltering, filtering);
+        this._filtering = types.getEnumValue(managedGL.TextureFiltering, filtering, {name: "ScreenCanvas.filtering"});
         /**
          * A reference to the managed GL context associated with this canvas.
          * @type ManagedGLContext
@@ -566,7 +566,7 @@ define([
          * (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
          * @type String
          */
-        this._filtering = htmlFilename ? types.getEnumValue("HTMLScreenWithCanvases.filtering", managedGL.TextureFiltering, filtering) : null;
+        this._filtering = htmlFilename ? types.getEnumValue(managedGL.TextureFiltering, filtering, {name: "HTMLScreenWithCanvases.filtering"}) : null;
         /**
          * Stores the canvases of the screen by their names (IDs)
          * @type Object.<String, ScreenCanvas>
@@ -721,7 +721,7 @@ define([
      */
     HTMLScreenWithCanvases.prototype.setFiltering = function (value) {
         var canvasName;
-        value = types.getEnumValue("HTMLScreenWithCanvases.filtering", managedGL.TextureFiltering, value, this._filtering);
+        value = types.getEnumValue(managedGL.TextureFiltering, value, {name: "HTMLScreenWithCanvases.filtering", defaultValue: this._filtering});
         if (value !== this._filtering) {
             this._filtering = value;
             for (canvasName in this._canvases) {

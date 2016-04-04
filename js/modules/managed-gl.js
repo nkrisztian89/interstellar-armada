@@ -17,7 +17,7 @@
  */
 
 /*jslint nomen: true, plusplus: true, white: true */
-/*global define, Image, Float32Array, parseInt */
+/*global define, Image, Float32Array, parseInt, document */
 
 /**
  * @param utils Used for enum functionality
@@ -75,41 +75,24 @@ define([
         ADD: "add"
     },
     // ----------------------------------------------------------------------
-    // constants
+    // Constants
     UNIFORM_NAME_PREFIX = "u_",
             UNIFORM_NAME_SUFFIX = "",
             TEXTURE_UNIFORM_NAME_PREFIX = "",
             TEXTURE_UNIFORM_NAME_SUFFIX = "Texture",
             CUBEMAP_UNIFORM_NAME_PREFIX = "",
-            CUBEMAP_UNIFORM_NAME_SUFFIX = "Cubemap";
+            CUBEMAP_UNIFORM_NAME_SUFFIX = "Cubemap",
+            // ----------------------------------------------------------------------
+            // Private variables
+            /**
+             * @type ManagedGLContext
+             */
+            _genericContext = null;
     Object.freeze(TextureFiltering);
     Object.freeze(ShaderVariableType);
     /**
-     * Displays information about an error that has occured in relation with WebGL,
-     * adding some basic WebGL support info for easier troubleshooting.
-     * @param {String} message A brief error message to show.
-     * @param {String} [severity] (enum application.ErrorSeverity) The severity level of the error.
-     * @param {String} [details] Additional details to show about the error,
-     * with possible explanations or tips how to correct this error.
-     * @param {WebGLRenderingContext} gl The WebGL context the error happened in
-     * relation with.
-     */
-    application.showGraphicsError = function (message, severity, details, gl) {
-        if (!gl) {
-            application.showError(message, severity, details + "\n\nThis is a graphics related error. There is " +
-                    "no information available about your graphics support.");
-        } else {
-            application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
-                    "Information about your graphics support:\n" +
-                    "WebGL version: " + gl.getParameter(gl.VERSION) + "\n" +
-                    "Shading language version: " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION) + "\n" +
-                    "WebGL vendor: " + gl.getParameter(gl.VENDOR) + "\n" +
-                    "WebGL renderer: " + gl.getParameter(gl.RENDERER));
-        }
-    };
-    /**
      * Returns the size of one variable if the passed type if it is converted to a float vector. (how many floats does it occupy)
-     * @param {type} shaderVariableType
+     * @param {String} shaderVariableType (enum ShaderVariableType)
      * @returns {Number}
      */
     function getFloatVectorSize(shaderVariableType) {
@@ -142,6 +125,51 @@ define([
                 application.showError("Cannot determine vector size of GLSL type '" + shaderVariableType + "'!");
                 return 0;
         }
+    }
+    /**
+     * Returns how many 4 component vectors does a shader variable of the passed type take in space. (for counting shader requirements)
+     * @param {String} shaderVariableType (enum ShaderVariableType)
+     * @returns {Number}
+     */
+    function getVectorCount(shaderVariableType) {
+        switch (shaderVariableType) {
+            case ShaderVariableType.NONE:
+                return 0;
+            case ShaderVariableType.FLOAT:
+                return 1;
+            case ShaderVariableType.VEC2:
+                return 1;
+            case ShaderVariableType.VEC3:
+                return 1;
+            case ShaderVariableType.VEC4:
+                return 1;
+            case ShaderVariableType.MAT2:
+                return 2;
+            case ShaderVariableType.MAT3:
+                return 3;
+            case ShaderVariableType.MAT4:
+                return 4;
+            case ShaderVariableType.SAMPLER2D:
+                return 1;
+            case ShaderVariableType.SAMPLER_CUBE:
+                return 1;
+            case ShaderVariableType.INT:
+                return 1;
+            case ShaderVariableType.BOOL:
+                return 1;
+            default:
+                application.showError("Cannot determine vector count of GLSL type '" + shaderVariableType + "'!");
+                return 0;
+        }
+    }
+    /**
+     * Returns whether a shader variable of the passed type takes a texture unit.
+     * @param {String} shaderVariableType (enum ShaderVariableType)
+     * @returns {Boolean}
+     */
+    function isTextureType(shaderVariableType) {
+        return (shaderVariableType === ShaderVariableType.SAMPLER2D) ||
+                (shaderVariableType === ShaderVariableType.SAMPLER_CUBE);
     }
     /**
      * Returns a numberic value that can be assigned as an int to a boolean GLSL variable.
@@ -448,7 +476,7 @@ define([
          * The type of variable this uniform is, from an enumeration of supported
          * types. This is used to determine the appropriate assignment function.
          */
-        this._type = types.getEnumValue("uniform " + this._name + ".type", ShaderVariableType, type, ShaderVariableType.NONE);
+        this._type = types.getEnumValue(ShaderVariableType, type, {name: "uniform " + this._name + ".type", defaultValue: ShaderVariableType.NONE});
         /**
          * The length of the array in case this uniform is declared as an array in
          * GLSL. Only float and struct arrays are supported so far.
@@ -755,6 +783,21 @@ define([
      */
     ShaderUniform.prototype.setValue = function (contextName, gl, shader, valueFunction, locationPrefix) {
         this.setConstantValue(contextName, gl, shader, valueFunction(), locationPrefix);
+    };
+    /**
+     * Returns how many 4 component vectors does this uniform variable take (for counting shader requirements).
+     * @returns {Number}
+     */
+    ShaderUniform.prototype.getVectorCount = function () {
+        var result, i;
+        if (this._type === ShaderVariableType.STRUCT) {
+            result = 0;
+            for (i = 0; i < this._members.length; i++) {
+                result += this._members[i].getVectorCount();
+            }
+            return result;
+        }
+        return getVectorCount(this._type) * (this._arraySize || 1);
     };
     // ############################################################################################
     /**
@@ -1076,6 +1119,14 @@ define([
     };
     // ############################################################################################
     /**
+     * @typedef {Object} ManagedShader~ShaderRequirements
+     * @property {Number} requiredVertexUniformVectors
+     * @property {Number} requiredAttributeVectors
+     * @property {Number} requiredVaryingVectors
+     * @property {Number} requiredTextureUnits
+     * @property {Number} requiredFragmentUniformVectors
+     */
+    /**
      * @class
      * @param {String} name
      * @param {String} vertexShaderSource
@@ -1144,6 +1195,31 @@ define([
          * @type Object.<String, String>
          */
         this._uniformNamesForInstanceAttributeNames = instanceAttributeRoles;
+        /**
+         * The numver of 4 component vectors used up by the uniforms in the vertex shader.
+         * @type Number
+         */
+        this._numVertexUniformVectors = 0;
+        /**
+         * The numver of 4 component vectors used up by the attributes in the vertex shader.
+         * @type Number
+         */
+        this._numAttributeVectors = 0;
+        /**
+         * The numver of 4 component vectors used up by the varyings in the fragment shader.
+         * @type Number
+         */
+        this._numVaryingVectors = 0;
+        /**
+         * The number of texture units used up by the uniforms in the fragment shader.
+         * @type Number
+         */
+        this._numTextureUnits = 0;
+        /**
+         * The numver of 4 component vectors used up by the uniforms in the fragment shader.
+         * @type Number
+         */
+        this._numFragmentUniformVectors = 0;
         this._parseShaderSources(vertexAttributeRoles, replacedDefines);
     }
     /**
@@ -1160,6 +1236,20 @@ define([
         return false;
     };
     /**
+     * Returns the uniform belonging to this shader having the passed name.
+     * @param {String} name
+     * @returns {ShaderUniform}
+     */
+    ManagedShader.prototype._getUniform = function (name) {
+        var i;
+        for (i = 0; i < this._uniforms.length; i++) {
+            if (this._uniforms[i].getName() === name) {
+                return this._uniforms[i];
+            }
+        }
+        return null;
+    };
+    /**
      * @param {Object.<String, String>} attributeRoles The associative array binding the attribute names in the shader source to their roles
      * (which determines what kind of data will be bound to the respective attribute array). Format: {attributeName: attributeRole, ...}
      * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
@@ -1167,10 +1257,12 @@ define([
      */
     ManagedShader.prototype._parseShaderSources = function (attributeRoles, replacedDefines) {
         var
+                VERTEX_SHADER_INDEX = 0,
+                FRAGMENT_SHADER_INDEX = 1,
                 i, k, shaderType,
                 sourceLines, words, delimiters, index,
                 attributeName, attributeSize, attributeRole,
-                uniform, uniformName, uniformType, uniformArraySize, arraySizeString,
+                uniform, uniformName, variableType, variableArraySize, arraySizeString,
                 defines = {}, sourceChanged, localVariableNames, localVariableSizes = {},
                 isNotEmptyString = function (s) {
                     return s !== "";
@@ -1203,10 +1295,10 @@ define([
                 };
         for (shaderType = 0; shaderType < 2; shaderType++) {
             switch (shaderType) {
-                case 0:
+                case VERTEX_SHADER_INDEX:
                     sourceLines = this._vertexShaderSource.split("\n");
                     break;
-                case 1:
+                case FRAGMENT_SHADER_INDEX:
                     sourceLines = this._fragmentShaderSource.split("\n");
                     break;
             }
@@ -1228,11 +1320,13 @@ define([
                         }
                     }
                     // parsing attributes
-                    else if ((shaderType === 0) && (words[0] === "attribute")) {
+                    else if ((shaderType === VERTEX_SHADER_INDEX) && (words[0] === "attribute")) {
                         index = isPrecisionQualifier(words[1]) ? 3 : 2;
                         attributeName = words[index];
-                        attributeSize = getFloatVectorSize(words[index - 1]);
+                        variableType = words[index - 1];
+                        attributeSize = getFloatVectorSize(variableType);
                         attributeRole = attributeRoles[attributeName];
+                        this._numAttributeVectors += getVectorCount(variableType);
                         if (attributeRole === undefined) {
                             if (this._uniformNamesForInstanceAttributeNames.hasOwnProperty(attributeName)) {
                                 attributeRole = this._uniformNamesForInstanceAttributeNames[attributeName];
@@ -1249,24 +1343,54 @@ define([
                     else if (words[0] === "uniform") {
                         index = isPrecisionQualifier(words[1]) ? 3 : 2;
                         uniformName = words[index];
+                        variableType = words[index - 1];
                         if (this._hasUniform(uniformName) === false) {
                             if (delimiters[index] === "[") {
                                 arraySizeString = words[index + 1];
                                 if (defines[arraySizeString]) {
                                     arraySizeString = defines[arraySizeString];
                                 }
-                                uniformArraySize = parseInt(arraySizeString, 10);
+                                variableArraySize = parseInt(arraySizeString, 10);
                             } else {
-                                uniformArraySize = 0;
+                                variableArraySize = 0;
                             }
-                            uniformType = words[index - 1];
-                            if (!isBuiltInGLSLType(uniformType)) {
-                                uniform = new ShaderUniform(uniformName, "struct", uniformArraySize);
-                                addStructMembers(uniform, uniformType);
+                            if (!isBuiltInGLSLType(variableType)) {
+                                uniform = new ShaderUniform(uniformName, "struct", variableArraySize);
+                                addStructMembers(uniform, variableType);
                                 this._uniforms.push(uniform);
                             } else {
-                                this._uniforms.push(new ShaderUniform(uniformName, uniformType, uniformArraySize));
+                                this._uniforms.push(new ShaderUniform(uniformName, variableType, variableArraySize));
                             }
+                        }
+                        switch (shaderType) {
+                            case VERTEX_SHADER_INDEX:
+                                this._numVertexUniformVectors += this._getUniform(uniformName).getVectorCount();
+                                break;
+                            case FRAGMENT_SHADER_INDEX:
+                                this._numFragmentUniformVectors += this._getUniform(uniformName).getVectorCount();
+                                if (isTextureType(variableType)) {
+                                    this._numTextureUnits += this._getUniform(uniformName).getVectorCount();
+                                }
+                                break;
+                            default:
+                                application.crash();
+                        }
+                    }
+                    // parsing varyings
+                    else if (words[0] === "varying") {
+                        index = isPrecisionQualifier(words[1]) ? 3 : 2;
+                        variableType = words[index - 1];
+                        if (shaderType === FRAGMENT_SHADER_INDEX) {
+                            if (delimiters[index] === "[") {
+                                arraySizeString = words[index + 1];
+                                if (defines[arraySizeString]) {
+                                    arraySizeString = defines[arraySizeString];
+                                }
+                                variableArraySize = parseInt(arraySizeString, 10);
+                            } else {
+                                variableArraySize = 1;
+                            }
+                            this._numVaryingVectors += getVectorCount(variableType) * variableArraySize;
                         }
                     }
                     // parsing array sizes of local variables
@@ -1318,10 +1442,10 @@ define([
             }
             if (sourceChanged) {
                 switch (shaderType) {
-                    case 0:
+                    case VERTEX_SHADER_INDEX:
                         this._vertexShaderSource = sourceLines.join("\n");
                         break;
-                    case 1:
+                    case FRAGMENT_SHADER_INDEX:
                         this._fragmentShaderSource = sourceLines.join("\n");
                         break;
                 }
@@ -1615,6 +1739,18 @@ define([
             delete this._ids[contextName];
         }
     };
+    /**
+     * Returns whether this shader is guaranteed to be supported if the passed requirements are satisfied by the graphics driver.
+     * @param {ManagedShader~ShaderRequirements} requirements
+     * @returns {Boolean}
+     */
+    ManagedShader.prototype.isAllowedByRequirements = function (requirements) {
+        return (this._numAttributeVectors <= requirements.requiredAttributeVectors) &&
+                (this._numVertexUniformVectors <= requirements.requiredVertexUniformVectors) &&
+                (this._numVaryingVectors <= requirements.requiredVaryingVectors) &&
+                (this._numTextureUnits <= requirements.requiredTextureUnits) &&
+                (this._numFragmentUniformVectors <= requirements.requiredFragmentUniformVectors);
+    };
     // ############################################################################################
     /**
      * Creates a managed WebGL context for the given HTML5 canvas element.
@@ -1632,9 +1768,10 @@ define([
      * @param {String} filtering What kind of texture filtering should be used for
      * 2D textures. Supported values are: bilinear, trilinear, anisotropic (which
      * will be 4:1)
+     * @param {Boolean} [supressAntialiasingError=false] If true, no error will be shown if antialiasing is requested but not supported.
      * @returns {ManagedGLContext}
      */
-    function ManagedGLContext(name, canvas, antialiasing, filtering) {
+    function ManagedGLContext(name, canvas, antialiasing, filtering, supressAntialiasingError) {
         asyncResource.AsyncResource.call(this);
         /**
          * The name of the context by which it can be referred to.
@@ -1785,15 +1922,16 @@ define([
          * @type Number
          */
         this._maxVaryings = 0;
-        this._createContext();
+        this._createContext(supressAntialiasingError);
         this.setFiltering(filtering);
     }
     ManagedGLContext.prototype = new asyncResource.AsyncResource();
     ManagedGLContext.prototype.constructor = ManagedGLContext;
     /**
      * Creates the underlying WebGL context and its extension objects. (the ones that are available)
+     * @param {Boolean} [supressAntialiasingError=false] If true, no error will be shown if antialiasing is requested but not supported
      */
-    ManagedGLContext.prototype._createContext = function () {
+    ManagedGLContext.prototype._createContext = function (supressAntialiasingError) {
         var gl_, contextParameters;
         application.log("Initializing WebGL context...", 1);
         // -------------------------------------------------------------------------------------------------------
@@ -1832,16 +1970,20 @@ define([
         }
         gl_ = this.gl;
         if (this._antialiasing && !(gl_.getContextAttributes().antialias)) {
-            application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
-                    application.ErrorSeverity.MINOR,
-                    "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
-                    "this error message showing up again, disable antialiasing in the graphics settings or try " +
-                    "running the application in a different browser. Antialiasing will not work, but otherwise this " +
-                    "error will have no consequences.", gl_);
+            if (!supressAntialiasingError) {
+                application.showGraphicsError("Antialiasing is enabled in graphics settings but it is not supported.",
+                        application.ErrorSeverity.MINOR,
+                        "Your graphics driver, browser or device unfortunately does not support antialiasing. To avoid " +
+                        "this error message showing up again, disable antialiasing in the graphics settings or try " +
+                        "running the application in a different browser. Antialiasing will not work, but otherwise this " +
+                        "error will have no consequences.", gl_);
+            }
+            this._antialiasing = false;
         }
         // -------------------------------------------------------------------------------------------------------
         // save the information about WebGL limits
         this._maxBoundTextures = gl_.getParameter(gl_.MAX_TEXTURE_IMAGE_UNITS);
+        this._maxVertexTextures = gl_.getParameter(gl_.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
         this._maxTextureSize = gl_.getParameter(gl_.MAX_TEXTURE_SIZE);
         this._maxCubemapSize = gl_.getParameter(gl_.MAX_CUBE_MAP_TEXTURE_SIZE);
         this._maxRenderbufferSize = gl_.getParameter(gl_.MAX_RENDERBUFFER_SIZE);
@@ -1849,15 +1991,7 @@ define([
         this._maxVertexShaderUniforms = gl_.getParameter(gl_.MAX_VERTEX_UNIFORM_VECTORS);
         this._maxFragmentShaderUniforms = gl_.getParameter(gl_.MAX_FRAGMENT_UNIFORM_VECTORS);
         this._maxVaryings = gl_.getParameter(gl_.MAX_VARYING_VECTORS);
-        application.log("WebGL context successfully created.\n" +
-                " Available texture units: " + this._maxBoundTextures + "\n" +
-                " Maximum texture size: " + this._maxTextureSize + "\n" +
-                " Maximum cubemap size: " + this._maxCubemapSize + "\n" +
-                " Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
-                " Available vertex attributes: " + this._maxVertexAttributes + "\n" +
-                " Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
-                " Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
-                " Available varying vectors: " + this._maxVaryings, 1);
+        application.log("WebGL context successfully created.\n" + this.getInfoString(), 1);
         // -------------------------------------------------------------------------------------------------------
         // initializing extensions
         // anisotropic filtering
@@ -1885,11 +2019,40 @@ define([
         gl_.frontFace(gl_.CCW);
     };
     /**
+     * Returns a string containing detailed information about the graphics support and driver limits of this context.
+     * @returns {String}
+     */
+    ManagedGLContext.prototype.getInfoString = function () {
+        return this.gl ?
+                "WebGL version: " + this.gl.getParameter(this.gl.VERSION) + "\n" +
+                "Shading language version: " + this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION) + "\n" +
+                "WebGL vendor: " + this.gl.getParameter(this.gl.VENDOR) + "\n" +
+                "WebGL renderer: " + this.gl.getParameter(this.gl.RENDERER) + "\n" +
+                "Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
+                "Available vertex attributes: " + this._maxVertexAttributes + "\n" +
+                "Available texture units in vertex shaders: " + this._maxVertexTextures + "\n" +
+                "Available varying vectors: " + this._maxVaryings + "\n" +
+                "Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
+                "Available texture units: " + this._maxBoundTextures + "\n" +
+                "Maximum texture size: " + this._maxTextureSize + "\n" +
+                "Maximum cubemap size: " + this._maxCubemapSize + "\n" +
+                "Maximum renderbuffer size: " + this._maxRenderbufferSize
+                :
+                "N/A";
+    };
+    /**
      * Returns the name of this managed context.
      * @returns {String}
      */
     ManagedGLContext.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Returns whether antialiasing is used for this context.
+     * @returns {Boolean}
+     */
+    ManagedGLContext.prototype.isAntialiased = function () {
+        return this._antialiasing;
     };
     /**
      * Returns the type of currently set texture filtering.
@@ -1920,6 +2083,13 @@ define([
                 }
             }
         }
+    };
+    /**
+     * Returns whether anisotropic filtering is supported for this context by the graphics driver.
+     * @returns {Boolean}
+     */
+    ManagedGLContext.prototype.isAnisotropicFilteringAvailable = function () {
+        return !!this.anisotropicFilterExt;
     };
     /**
      * Adds the shader reference to the list of shaders to be used when the vertex
@@ -2284,7 +2454,7 @@ define([
      * Removes the passed texture if it has been added to the context before as well as deletes its underlying WebGL texture object.
      * @param {ManagedTexture|ManagedCubemap} texture
      */
-    ManagedGLContext.removeTexture = function (texture) {
+    ManagedGLContext.prototype.removeTexture = function (texture) {
         var index = this._textures.indexOf(texture);
         if (index >= 0) {
             this.unbindTexture(texture);
@@ -2292,6 +2462,57 @@ define([
             this._textures.splice(index, 1);
         }
     };
+    /**
+     * Returns whether the graphics driver's support level satisfies the given requirements.
+     * @param {ManagedShader~ShaderRequirements} requirements
+     * @returns {Boolean}
+     */
+    ManagedGLContext.prototype.satisfiesRequirements = function (requirements) {
+        return (this._maxVertexAttributes >= requirements.requiredAttributeVectors) &&
+                (this._maxVertexShaderUniforms >= requirements.requiredVertexUniformVectors) &&
+                (this._maxVaryings >= requirements.requiredVaryingVectors) &&
+                (this._maxFragmentShaderUniforms >= requirements.requiredFragmentUniformVectors) &&
+                (this._maxBoundTextures >= requirements.requiredTextureUnits);
+    };
+    /**
+     * Returns the maximum size of textures supported by the graphics driver for this context.
+     * @returns {Number}
+     */
+    ManagedGLContext.prototype.getMaxTextureSize = function () {
+        return this._maxTextureSize;
+    };
+    /**
+     * Returns the maximum size of cube mapped textures supported by the graphics driver for this context.
+     * @returns {Number}
+     */
+    ManagedGLContext.prototype.getMaxCubemapSize = function () {
+        return this._maxCubemapSize;
+    };
+    /**
+     * Returns the maximum size of render buffers supported by the graphics driver for this context.
+     * @returns {Number}
+     */
+    ManagedGLContext.prototype.getMaxRenderbufferSize = function () {
+        return this._maxRenderbufferSize;
+    };
+    // -------------------------------------------------------------------------
+    // Augmenting application
+    /**
+     * Displays information about an error that has occured in relation with WebGL,
+     * adding some basic WebGL support info for easier troubleshooting.
+     * @param {String} message A brief error message to show.
+     * @param {String} [severity] (enum application.ErrorSeverity) The severity level of the error.
+     * @param {String} [details] Additional details to show about the error,
+     * with possible explanations or tips how to correct this error.
+     */
+    application.showGraphicsError = function (message, severity, details) {
+        application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
+                "Information about your graphics support:\n" +
+                _genericContext.getInfoString());
+    };
+    // -------------------------------------------------------------------------
+    // Initizalization
+    _genericContext = new ManagedGLContext("", document.createElement("canvas"), true, TextureFiltering.BILINEAR, true);
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -2304,7 +2525,12 @@ define([
         ManagedCubemap: ManagedCubemap,
         ManagedShader: ManagedShader,
         FrameBuffer: FrameBuffer,
-        ManagedGLContext: ManagedGLContext
+        ManagedGLContext: ManagedGLContext,
+        requirementsAreSatisfied: _genericContext.satisfiesRequirements.bind(_genericContext),
+        getMaxTextureSize: _genericContext.getMaxTextureSize.bind(_genericContext),
+        getMaxCubemapSize: _genericContext.getMaxCubemapSize.bind(_genericContext),
+        getMaxRenderbufferSize: _genericContext.getMaxRenderbufferSize.bind(_genericContext),
+        isAntialiasingAvailable: _genericContext.isAntialiased.bind(_genericContext),
+        isAnisotropicFilteringAvailable: _genericContext.isAnisotropicFilteringAvailable.bind(_genericContext)
     };
-
 });

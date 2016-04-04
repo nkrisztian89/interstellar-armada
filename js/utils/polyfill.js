@@ -51,6 +51,16 @@
     };
 
     /**
+     * Math.log2 from ECMAScript 6, only implemented in Chrome, Firefox and recent
+     * Opera.
+     * @param {Number} x
+     * @returns {Number}
+     */
+    Math.log2 = Math.log2 || function (x) {
+        return Math.log(x) / Math.LN2;
+    };
+
+    /**
      * The seed of the standard random number function is not controllable, which
      * prevents consistent testing with the same pseudo random sample data. This
      * is a quick and relatively good replacement which returns a custom seeded
@@ -72,6 +82,17 @@
 
     Math.degrees = function (radians) {
         return radians * 180 / Math.PI;
+    };
+
+    /**
+     * Number.isInteger() from ECMAScript 6, not implemented in IE and Safari.
+     * @param {Number} value
+     * @returns {Boolean}
+     */
+    Number.isInteger = Number.isInteger || function (value) {
+        return typeof value === "number" &&
+                isFinite(value) &&
+                Math.floor(value) === value;
     };
 
     /**

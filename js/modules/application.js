@@ -16,7 +16,7 @@
  */
 
 /*jslint nomen: true, plusplus: true, white: true */
-/*global define, alert, console, XMLHttpRequest, DOMParser, document */
+/*global define, require, alert, console, XMLHttpRequest, DOMParser, document, performance */
 
 /**
  * @module modules/application
@@ -85,7 +85,17 @@ define(function () {
              * version of the application.
              * @type Boolean
              */
-            _isDebugVersion = true;
+            _isDebugVersion = true,
+            /**
+             * The string identifying the version of the program that was run the last time.
+             * @type String
+             */
+            _previouslyRunVersion,
+            /**
+             * Whether the application is run for the first time.
+             * @type Boolean
+             */
+            _firstRun;
     return {
         // -------------------------------------------------------------------------
         // Public enums
@@ -155,7 +165,8 @@ define(function () {
             }
         },
         /**
-         * When set to true, "?123" is appended to the URL of file requests, so that local file cache is not used.
+         * When set to true, a query parameter with the current time is appended to the URL of file requests,
+         * so that local file cache is not used.
          * This is useful for development as prevents the application to use the old version of a source file
          * after it has been updated.
          * @param {Boolean} value The new file cache bypass state.
@@ -178,12 +189,49 @@ define(function () {
             return _version;
         },
         /**
-         * Sets a new version string. Any string cen be used, the only purpose is to let all the
+         * Return an argument that can be appended to URLs, marking them with the current application version.
+         * @returns {String}
+         */
+        getVersionURLArg: function () {
+            return "v=" + this.getVersion().split(" ")[0];
+        },
+        /**
+         * Sets a new version string. Any string can be used, the only purpose is to let all the
          * modules of an application that depend on this module access a global version ID.
          * @param {String} value
          */
         setVersion: function (value) {
             _version = value;
+            require.config({
+                urlArgs: this.getVersionURLArg()
+            });
+        },
+        /**
+         * Sets the string identifying the version of the program that was run the previous time the application was run.
+         * @param {String} value
+         */
+        setPreviouslyRunVersion: function (value) {
+            _previouslyRunVersion = value;
+            _firstRun = (_previouslyRunVersion === undefined);
+        },
+        /**
+         * Returns whether this is (knowingly) the first run of the application (only possible to know if the previously run and the current
+         * versions are set)
+         * @returns {Boolean}
+         */
+        isFirstRun: function () {
+            return _firstRun;
+        },
+        /**
+         * Returns whether the program version has changed compared to the one that was run the previous time (only possible if both are set)
+         * @returns {Boolean}
+         */
+        hasVersionChanged: function () {
+            if (_firstRun === undefined) {
+                this.showError("Cannot determine whether the game version has changed, because the previously ran version is not set!");
+            } else {
+                return (_previouslyRunVersion !== _version);
+            }
         },
         /**
          * Returns whether the current version should be considered a development / debug (and not release / production / distribution)
@@ -210,7 +258,7 @@ define(function () {
          * @returns {String}
          */
         getFileURL: function (filetype, filename) {
-            return this.getFolder(filetype) + (_fileCacheBypassEnabled ? filename + "?123" : filename);
+            return this.getFolder(filetype) + (filename + ((_fileCacheBypassEnabled || !this.getVersion()) ? ("?t=" + performance.now()) : ("?" + this.getVersionURLArg())));
         },
         /**
          * Notifies the user of an error that happened while running the game.

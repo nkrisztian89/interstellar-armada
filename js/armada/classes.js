@@ -467,15 +467,15 @@ define([
         }
     };
     /**
-     * 
+     * @param {String[]} qualityPreferenceList
      * @returns {ManagedCubemap}
      */
-    SkyboxClass.prototype.getCubemap = function () {
+    SkyboxClass.prototype.getCubemap = function (qualityPreferenceList) {
         if (this._cubemap === null) {
             this.showResourceAccessError("cubemap", this._cubemapName);
             return null;
         }
-        return this._cubemap.getManagedCubemap();
+        return this._cubemap.getManagedCubemap(qualityPreferenceList);
     };
     // ##############################################################################
     /**

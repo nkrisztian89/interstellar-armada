@@ -275,7 +275,7 @@ define([
             _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: true}, function (model) {
                 _solidModel = model;
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-                _solidModel.getNode().setShader(graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME)).getManagedShader());
+                _solidModel.getNode().setShader(graphics.getManagedShader(_getSetting(SETTINGS.SOLID_SHADER_NAME)));
                 // set the necessary uniform functions for the reveal shader
                 _solidModel.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
                     return true;
@@ -298,7 +298,7 @@ define([
             _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, function (model) {
                 _wireframeModel = model;
                 // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-                _wireframeModel.getNode().setShader(graphics.getShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME)).getManagedShader());
+                _wireframeModel.getNode().setShader(graphics.getManagedShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME)));
                 // set the necessary uniform functions for the one colored reveal shader
                 _wireframeModel.setUniformValueFunction(UNIFORM_WIREFRAME_COLOR_NAME, function () {
                     return _getSetting(SETTINGS.WIREFRAME_COLOR);
@@ -617,7 +617,7 @@ define([
                 _itemViewScene.setShadowMapping({
                     enable: true,
                     shader: graphics.getShadowMappingShader().getManagedShader(),
-                    textureSize: graphics.getShadowQuality(),
+                    textureSize: graphics.getShadowMapTextureSize(),
                     ranges: [],
                     depthRatio: graphics.getShadowDepthRatio(),
                     numSamples: graphics.getNumShadowMapSamples(),

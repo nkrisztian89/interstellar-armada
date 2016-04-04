@@ -237,15 +237,20 @@ a.button {
     box-shadow: 0em 0em 0.5em #000000;
 }
 
-a:hover {
+a:hover:not(.disabled) {
     color: #FFFFFF;
     text-shadow:
         #00FF00 0 0 0.2em,
         #00FF00 0 0 0.2em;
 }
 
-a.button:hover {
+a.button:hover:not(.disabled) {
     background-color: #333333;
+}
+
+a.button.disabled {
+    color: #AAAAAA;
+    background-color: #1A1A1A;
 }
 
 .clickable:hover {

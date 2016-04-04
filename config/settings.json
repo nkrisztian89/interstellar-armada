@@ -3,116 +3,36 @@
         "context": {
             "antialiasing": true,
             "filtering": "trilinear",
-            "textureQualities": ["low", "normal"],
             "textureQuality": "normal",
+            "cubemapQuality": "normal",
             "shadowMapping": true,
             "shadows": {
-                "quality": 2048,
-                "ranges": [2, 6, 18, 54, 162, 486, 1458],
-                "numRanges": 4,
-                "depthRatio": 1.5
+                "quality": "medium",
+                "distance": "medium"
             },
-            "maxPointLights": 48
+            "pointLightAmount": "medium"
         },
         "shaders": {
-            "complexities": [
-                {
-                    "name": "veryLow",
-                    "shadows": false,
-                    "dynamicLights": false,
-                    "maxDirLights": 1,
-                    "luminosityTextures": false,
-                    "reveal": false
-                }, {
-                    "name": "low",
-                    "shadows": false,
-                    "dynamicLights": false,
-                    "maxDirLights": 2,
-                    "luminosityTextures": false,
-                    "reveal": false
-                }, {
-                    "name": "medium",
-                    "shadows": true,
-                    "numShadowMapSamples": 3,
-                    "dynamicLights": true,
-                    "maxDirLights": 2,
-                    "maxSpotLights": 3,
-                    "luminosityTextures": true,
-                    "reveal": true
-                }, {
-                    "name": "high",
-                    "shadows": true,
-                    "numShadowMapSamples": 5,
-                    "dynamicLights": true,
-                    "maxDirLights": 2,
-                    "maxSpotLights": 5,
-                    "luminosityTextures": true,
-                    "reveal": true
-                }, {
-                    "name": "veryHigh",
-                    "shadows": true,
-                    "numShadowMapSamples": 9,
-                    "dynamicLights": true,
-                    "maxDirLights": 2,
-                    "maxSpotLights": 7,
-                    "luminosityTextures": true,
-                    "reveal": true
-                }
-            ],
-            "complexity": "medium",
-            "shadowMappingShaderName": "shadowMapping",
-            "maxDirLightsDefineName": "MAX_DIR_LIGHTS",
-            "maxPointLightsDefineName": "MAX_POINT_LIGHTS",
-            "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS",
-            "maxShadowMapRangesDefineName": "MAX_SHADOW_MAP_RANGES",
-            "maxShadowMapsDefineName": "MAX_SHADOW_MAPS",
-            "numShadowMapSamplesDefineName": "NUM_SHADOW_MAP_SAMPLES",
-            "dustLengthDivisor": "200.0",
-            "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
-            "maxLuminosityFactors": 20,
-            "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS"
+            "complexity": "medium"
         },
-        "levelOfDetailSettings": {
-            "lodLoadProfile": {
-                "maxLevel": 4,
-                "autoLimitByScreenWidth": true,
-                "limits": [
-                    {
-                        "screenSizeLessThan": 60,
-                        "level": 0
-                    }, {
-                        "screenSizeLessThan": 120,
-                        "level": 1
-                    }, {
-                        "screenSizeLessThan": 500,
-                        "level": 2
-                    }, {
-                        "screenSizeLessThan": 800,
-                        "level": 3
-                    }
-                ]
-            },
-            "lodDisplayProfile": {
-                "maxLevel": 4,
-                "compensateForObjectSize": true,
-                "referenceSize": 100,
-                "minimumRelativeSize": 0.05,
-                "limits": [
-                    {
-                        "objectSizeLessThan": 30,
-                        "level": 0
-                    }, {
-                        "objectSizeLessThan": 60,
-                        "level": 1
-                    }, {
-                        "objectSizeLessThan": 250,
-                        "level": 2
-                    }, {
-                        "objectSizeLessThan": 400,
-                        "level": 3
-                    }
-                ]
-            }
+        "levelOfDetail": {
+            "maxLevel": "veryHigh",
+            "autoLimitByScreenSize": true,
+            "limits": [
+                {
+                    "screenSizeLessThan": 640,
+                    "level": "veryLow"
+                }, {
+                    "screenSizeLessThan": 800,
+                    "level": "low"
+                }, {
+                    "screenSizeLessThan": 960,
+                    "level": "medium"
+                }, {
+                    "screenSizeLessThan": 1024,
+                    "level": "high"
+                }
+            ]
         }
     },
     "logic": {

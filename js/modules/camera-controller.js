@@ -110,7 +110,7 @@ define([
          * (enum Camera.prototype.TransitionStyle) The style of transitions applied by commands given to the camera by this controller.
          * @type String
          */
-        this._transitionStyle = types.getEnumValue("cameraController.transitionStyle", budaScene.Camera.prototype.TransitionStyle, dataJSON.transitionStyle);
+        this._transitionStyle = types.getEnumValue(budaScene.Camera.prototype.TransitionStyle, dataJSON.transitionStyle, {name: "cameraController.transitionStyle"});
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created.
         this.setActionFunctions("controlCamera", function () {
