@@ -352,7 +352,7 @@
             "betaRange": [-10, 20],
             "rotationCenterIsObject": false,
             "position": [0, 15, 2],
-            "shouldAutoReset": true
+            "resetsOnFocusChange": true
         },
         {
             "name": "far",

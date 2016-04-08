@@ -521,7 +521,7 @@
             "rotationCenterIsObject": false,
             "betaRange": [-45, 45],
             "position": [0, 400, -30],
-            "shouldAutoReset": true
+            "resetsOnFocusChange": true
         },
         {
             "name": "back-hangar",

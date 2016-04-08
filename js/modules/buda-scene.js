@@ -4392,10 +4392,10 @@ define([
      * horizontally or vertically at depth 0, depending on camera setting. The other value will be calculated basen on the aspect of the 
      * camera. In meters.
      * @param {Number} spanRange The minimum and maximum span that can be set for a camera using this configuration.
-     * @param {Boolean} shouldAutoReset An indicator whether this configuration should automatically reset to default state when the camera 
+     * @param {Boolean} resetsOnFocusChange An indicator whether this configuration should automatically reset to default state when the camera 
      * switches to it or when the camera controls go out of focus (after being in focus)
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, shouldAutoReset) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, resetsOnFocusChange) {
         Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * An optional, descriptive name of this configuration by which it can be found and referred to.
@@ -4459,7 +4459,7 @@ define([
          * camera controls go out of focus (after being in focus)
          * @type Boolean
          */
-        this._shouldAutoReset = shouldAutoReset;
+        this._resetsOnFocusChange = resetsOnFocusChange;
         /**
          * A reference to the camera that currently uses this configuration
          * @type Camera
@@ -4497,7 +4497,7 @@ define([
         this._camera = value;
         this._positionConfiguration.setCamera(value, doNotReset);
         this._orientationConfiguration.setCamera(value);
-        if (this._camera && this._shouldAutoReset && !doNotReset) {
+        if (this._camera && this._resetsOnFocusChange && !doNotReset) {
             this.resetToDefaults(true);
         }
     };
@@ -4632,8 +4632,8 @@ define([
      * controls go out of focus (after being in focus)
      * @returns {Boolean}
      */
-    CameraConfiguration.prototype.shouldAutoReset = function () {
-        return this._shouldAutoReset;
+    CameraConfiguration.prototype.resetsOnFocusChange = function () {
+        return this._resetsOnFocusChange;
     };
     /**
      * Resets all configuration values to their initial state (including position, orientation, field of view and span configuration)

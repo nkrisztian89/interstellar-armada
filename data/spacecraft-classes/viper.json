@@ -335,7 +335,7 @@
             "betaRange": [-80, 45],
             "rotationCenterIsObject": false,
             "position": [0, 8.25, 1.90],
-            "shouldAutoReset": true
+            "resetsOnFocusChange": true
         },
         {
             "name": "front",

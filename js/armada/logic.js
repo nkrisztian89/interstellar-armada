@@ -3476,7 +3476,7 @@ define([
                 view.getFOVRange() || _context.getDefaultCameraFOVRange(),
                 view.getSpan() || _context.getDefaultCameraSpan(),
                 view.getSpanRange() || _context.getDefaultCameraSpanRange(),
-                view.shouldAutoReset());
+                view.resetsOnFocusChange());
     };
     /**
      * Adds camera configuration objects that correspond to the views defined for this 
@@ -3938,7 +3938,7 @@ define([
                 view.getFOVRange() || _context.getDefaultCameraFOVRange(),
                 view.getSpan() || _context.getDefaultCameraSpan(),
                 view.getSpanRange() || _context.getDefaultCameraSpanRange(),
-                view.shouldAutoReset());
+                view.resetsOnFocusChange());
     };
     /**
      * Adds renderable objects representing all visual elements of the level to
@@ -3997,6 +3997,7 @@ define([
                 this._spacecrafts.splice(i, 1);
                 this._hitObjects[i] = null;
                 this._hitObjects.splice(i, 1);
+                i--;
             } else {
                 this._spacecrafts[i].simulate(dt);
             }
@@ -4006,6 +4007,7 @@ define([
                 this._projectiles[i].destroy();
                 this._projectiles[i] = null;
                 this._projectiles.splice(i, 1);
+                i--;
                 application.log("Projectile removed.", 2);
             } else {
                 this._projectiles[i].simulate(dt, this._hitObjects);

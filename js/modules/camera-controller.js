@@ -120,7 +120,7 @@ define([
                 application.showError("Cannot make camera controller the priority controller because it is not added to any control context!");
             }
         }.bind(this), function () {
-            if (this._controlledCamera.getConfiguration().shouldAutoReset()) {
+            if (this._controlledCamera.getConfiguration().resetsOnFocusChange()) {
                 this._controlledCamera.transitionToConfigurationDefaults(this._viewResetTransitionDuration, this._transitionStyle);
             }
             if (this._context) {

@@ -99,13 +99,13 @@ define([
         this._continuous = (duration === undefined);
     };
     /**
-     * Returns the duration for how long this force have been exerted if the
-     * given amount of time has passed since the last check. Also decreases the
-     * remaining duration of the force.
+     * Decreases the remaining exertion duration of the force by maxmimum the passed amount,
+     * and returns for how long the force was really exerted (which might be smaller if there
+     * is less duration left than the passed amount)
      * @param {Number} dt Elapsed time in milliseconds.
      * @returns {Number} The duration of the exertion of this force in milliseconds.
      */
-    Force.prototype.getExertionDuration = function (dt) {
+    Force.prototype.exert = function (dt) {
         if (this._continuous) {
             this._continuous = false;
             this._duration = 0;
@@ -188,14 +188,14 @@ define([
         this._continuous = (duration === undefined);
     };
     /**
-     * Returns the duration for how long this torque have been exerted if the
-     * given amount of time has passed since the last check. Also decreases the
-     * remaining duration of the torque.
+     * Decreases the remaining exertion duration of the torque by maxmimum the passed amount,
+     * and returns for how long the torque was really exerted (which might be smaller if there
+     * is less duration left than the passed amount)
      * @param {Number} dt Elapsed time in milliseconds.
      * @returns {Number} The duration of the exertion of this torque in 
      * milliseconds.
      */
-    Torque.prototype.getExertionDuration = function (dt) {
+    Torque.prototype.exert = function (dt) {
         if (this._continuous) {
             this._continuous = false;
             this._duration = 0;
@@ -682,7 +682,7 @@ define([
             if (this._forces.length > 0) {
                 accelerationMatrix = mat.identity4();
                 for (i = 0; i < this._forces.length; i++) {
-                    t = this._forces[i].getExertionDuration(dt) / 1000; // t is in seconds
+                    t = this._forces[i].exert(dt) / 1000; // t is in seconds
                     if (t > 0) {
                         a = this._forces[i].getAccelerationVector(this._mass);
                         mat.translateByVector(
@@ -710,7 +710,7 @@ define([
             if (this._torques.length > 0) {
                 angularAccMatrix = mat.identity4();
                 for (i = 0; i < this._torques.length; i++) {
-                    t = this._torques[i].getExertionDuration(dt) / 1000; // t is in seconds
+                    t = this._torques[i].exert(dt) / 1000; // t is in seconds
                     if (t > 0) {
                         mat.mul4(
                                 this._orientationMatrix,

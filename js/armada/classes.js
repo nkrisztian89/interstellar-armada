@@ -1866,7 +1866,7 @@ define([
          * An indicator whether this view should reset to default state when the camera controls are not in focus anymore (after being in focus)
          * @type Boolean
          */
-        this._shouldAutoReset = (typeof dataJSON.shouldAutoReset) === "boolean" ? dataJSON.shouldAutoReset : false;
+        this._resetsOnFocusChange = (typeof dataJSON.resetsOnFocusChange) === "boolean" ? dataJSON.resetsOnFocusChange : false;
         // further invalid configuration errors
         if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
             application.showError(
@@ -1927,8 +1927,8 @@ define([
     /**
      * @returns {Boolean}
      */
-    ObjectView.prototype.shouldAutoReset = function () {
-        return this._shouldAutoReset;
+    ObjectView.prototype.resetsOnFocusChange = function () {
+        return this._resetsOnFocusChange;
     };
     /**
      * @override
@@ -2035,7 +2035,7 @@ define([
     /**
      * @returns {Boolean}
      */
-    SceneView.prototype.shouldAutoReset = function () {
+    SceneView.prototype.resetsOnFocusChange = function () {
         return false;
     };
     /**
