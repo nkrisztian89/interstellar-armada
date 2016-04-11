@@ -240,34 +240,44 @@ define([
          */
         this._positionMatrix = positionMatrix;
         /**
+         * A 3D vector describing the position of the body (relative to its parent).
+         * @type Number[3]
+         */
+        this._positionVector = mat.translationVector3(positionMatrix);
+        /**
          * The 4x4 rotation matrix describing the orientation of the body 
          * (relative to its parent).
          * @type Float32Array
          */
         this._orientationMatrix = orientationMatrix;
         /**
+         * A boolean flag indicating whether this body has a non-identity orientation.
+         * @type Boolean
+         */
+        this._rotated = !mat.equal4(orientationMatrix, mat.IDENTITY4);
+        /**
          * The cached inverse of the model matrix of the body.
          * @type Float32Array
          */
         this._modelMatrixInverse = null;
         /**
-         * The size of the box this body represents along the X axis, in relative 
+         * Half of the size of the box this body represents along the X axis, in relative 
          * (unoriented) space.
          * @type Number
          */
-        this._width = dimensions[0];
+        this._halfWidth = dimensions[0] * 0.5;
         /**
-         * The size of the box this body represents along the Y axis, in relative 
+         * Half of the size of the box this body represents along the Y axis, in relative 
          * (unoriented) space.
          * @type Number
          */
-        this._height = dimensions[1];
+        this._halfHeight = dimensions[1] * 0.5;
         /**
-         * The size of the box this body represents along the Z axis, in relative 
+         * Half of the size of the box this body represents along the Z axis, in relative 
          * (unoriented) space.
          * @type Number
          */
-        this._depth = dimensions[2];
+        this._halfDepth = dimensions[2] * 0.5;
     }
     // direct getters and setters
     /**
@@ -292,7 +302,7 @@ define([
      * @returns {Number}
      */
     Body.prototype.getWidth = function () {
-        return this._width;
+        return this._halfWidth * 2;
     };
     /**
      * Returns the size of the box this body represents along the Y axis, in 
@@ -300,7 +310,7 @@ define([
      * @returns {Number}
      */
     Body.prototype.getHeight = function () {
-        return this._height;
+        return this._halfHeight * 2;
     };
     /**
      * Returns the size of the box this body represents along the Z axis, in 
@@ -308,7 +318,7 @@ define([
      * @returns {Number}
      */
     Body.prototype.getDepth = function () {
-        return this._depth;
+        return this._halfDepth * 2;
     };
     // indirect getters and setters
     /**
@@ -325,7 +335,7 @@ define([
      * @returns {Number[3]}
      */
     Body.prototype.getHalfDimensions = function () {
-        return [this._width * 0.5, this._height * 0.5, this._depth * 0.5];
+        return [this._halfWidth, this._halfHeight, this._halfDepth];
     };
     // methods
     /**
@@ -336,11 +346,13 @@ define([
      * @returns {Boolean} Whether the point is inside or not.
      */
     Body.prototype.checkHit = function (relativePositionVector) {
-        relativePositionVector = vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse());
+        relativePositionVector = this._rotated ?
+                vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse()) :
+                vec.diff3(relativePositionVector, this._positionVector);
         return (
-                (relativePositionVector[0] >= -this._width * 0.5) && (relativePositionVector[0] <= this._width * 0.5) &&
-                (relativePositionVector[1] >= -this._height * 0.5) && (relativePositionVector[1] <= this._height * 0.5) &&
-                (relativePositionVector[2] >= -this._depth * 0.5) && (relativePositionVector[2] <= this._depth * 0.5));
+                (relativePositionVector[0] >= -this._halfWidth) && (relativePositionVector[0] <= this._halfWidth) &&
+                (relativePositionVector[1] >= -this._halfHeight) && (relativePositionVector[1] <= this._halfHeight) &&
+                (relativePositionVector[2] >= -this._halfDepth) && (relativePositionVector[2] <= this._halfDepth));
     };
     // #########################################################################
     /**

@@ -3662,7 +3662,7 @@ define([
             if (k > 0) {
                 this._followedObjects.splice(i, k);
                 if (this._followedObjects.length === 0) {
-                    this._relativePositionMatrix = mat.matrix4(this._worldPositionMatrix);
+                    mat.setMatrix4(this._relativePositionMatrix, this._worldPositionMatrix || this._relativePositionMatrix || this._defaultRelativePositionMatrix);
                 }
             }
         }
@@ -4191,7 +4191,7 @@ define([
                     }
                     // point-to modes have an explicitly set fallback option, but for other modes switch to absolute orientation
                     if (!this._pointsTowardsObjects) {
-                        this._relativeOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
+                        mat.setMatrix4(this._relativeOrientationMatrix, this._worldOrientationMatrix || this._relativeOrientationMatrix || this._defaultRelativeOrientationMatrix);
                         this._fps = false;
                     }
                     this._followedObjects.splice(i, k);
