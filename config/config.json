@@ -1,6 +1,6 @@
 {
-    "version": "0.1.1:253 (2016.04.08.)",
-    "debugVersion": false,
+    "version": "0.2:254 (2016.04.11.)",
+    "debugVersion": true,
     "logVerbosity": 1,
     "folders": {
         "config": "config/",

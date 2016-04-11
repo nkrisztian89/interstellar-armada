@@ -6325,6 +6325,13 @@ define([
          * @type Boolean
          */
         this._uniformsUpdatedForFrame = false;
+        /**
+         * An associative array of boolean flags storing whether the values of the scene uniforms have been updated for the current frame 
+         * in the different shaders, with the names of the shaders being the keys. This is used to avoid updating the scene uniforms for
+         * the same shader multiple times during one frame.
+         * @type Object.<String, Boolean>
+         */
+        this._uniformsUpdated = null;
         this.clearNodes();
         this.clearPointLights();
         this._setGeneralUniformValueFunctions();
@@ -6921,9 +6928,12 @@ define([
      * @param {ManagedShader} shader
      */
     Scene.prototype.assignUniforms = function (context, shader) {
-        shader.assignUniforms(context, this._uniformValueFunctions);
-        shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
-        this._uniformsUpdatedForFrame = true;
+        if (!this._uniformsUpdated[shader.getName()]) {
+            shader.assignUniforms(context, this._uniformValueFunctions);
+            shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
+            this._uniformsUpdated[shader.getName()] = true;
+            this._uniformsUpdatedForFrame = true;
+        }
     };
     /**
      * Cleans up the whole scene graph, removing all nodes and light sources that are deleted or are marked for deletion.
@@ -6962,12 +6972,6 @@ define([
      */
     Scene.prototype._renderShadowMap = function (context) {
         var gl = context.gl;
-        gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
-        gl.clearColor(0.0, 0.0, 0.0, 0.0);
-        gl.colorMask(true, true, true, true);
-        gl.disable(gl.BLEND);
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthMask(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         this._rootNode.renderToShadowMap(context, this._width, this._height);
     };
@@ -6977,10 +6981,17 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype._renderShadowMaps = function (context) {
-        var i, j;
+        var i, j, gl = context.gl;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
             application.log("Rendering shadow maps for scene...", 4);
+            // common GL state setup
+            gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
+            gl.clearColor(0.0, 0.0, 0.0, 0.0);
+            gl.colorMask(true, true, true, true);
+            gl.disable(gl.BLEND);
+            gl.enable(gl.DEPTH_TEST);
+            gl.depthMask(true);
             // choosing the shadow map shader
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
@@ -7110,6 +7121,8 @@ define([
         this._camera.update(this._shouldUpdateCamera ? dt : 0);
         // reset triangle counter so we can count all triangles for one render
         this._numDrawnTriangles = 0;
+        // reset boolean flags as scene uniforms will have to be updated for all used shaders again
+        this._uniformsUpdated = {};
         // resetting cached values that were only valid for one render
         this._rootNode.resetForNewFrame();
         // animating all the needed nodes and preparing them for rendering by organizing them to render queues

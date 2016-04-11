@@ -498,6 +498,13 @@ define([
          * @type Object
          */
         this._locations = {};
+        /**
+         * The numeric value that was last assigned to this uniform through webGL (and thus is retained).
+         * Only used for variable types that have a numeric (not array) value to avoid assigning the same
+         * value multiple times.
+         * @type Number
+         */
+        this._numericValue = 0;
     }
     /**
      * Getter for the property _name.
@@ -539,7 +546,8 @@ define([
      */
     ShaderUniform.prototype.forgetLocations = function (contextName) {
         var i, j;
-        delete  this._locations[contextName];
+        delete this._locations[contextName];
+        this._numericValue = 0;
         if (this._members) {
             for (i = 0; i < this._arraySize; i++) {
                 for (j = 0; j < this._members.length; j++) {
@@ -686,7 +694,7 @@ define([
      * "lights[3]."
      */
     ShaderUniform.prototype.setConstantValue = function (contextName, gl, shader, value, locationPrefix) {
-        var location, i, j, memberName;
+        var location, i, j, memberName, numericValue;
         // get the location
         location = this.getLocation(contextName, gl, shader, locationPrefix);
         switch (this._type) {
@@ -694,7 +702,10 @@ define([
                 if (this._arraySize > 0) {
                     gl.uniform1fv(location, value);
                 } else {
-                    gl.uniform1f(location, value);
+                    if (locationPrefix || (this._numericValue !== value)) {
+                        gl.uniform1f(location, value);
+                        this._numericValue = value;
+                    }
                 }
                 break;
             case ShaderVariableType.VEC2:
@@ -721,14 +732,21 @@ define([
                 if (this._arraySize > 0) {
                     gl.uniform1iv(location, value);
                 } else {
-                    gl.uniform1i(location, value);
+                    if (locationPrefix || (this._numericValue !== value)) {
+                        gl.uniform1i(location, value);
+                        this._numericValue = value;
+                    }
                 }
                 break;
             case ShaderVariableType.BOOL:
                 if (this._arraySize > 0) {
                     gl.uniform1iv(location, value.map(intValueOfBool));
                 } else {
-                    gl.uniform1i(location, value ? 1 : 0);
+                    numericValue = value ? 1 : 0;
+                    if (locationPrefix || (this._numericValue !== numericValue)) {
+                        gl.uniform1i(location, numericValue);
+                        this._numericValue = numericValue;
+                    }
                 }
                 break;
             case ShaderVariableType.STRUCT:
@@ -954,7 +972,9 @@ define([
             } else {
                 context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._ids[context.getName()]);
             }
-            context.gl.enableVertexAttribArray(location);
+            if (!context.getBoundVertexBuffer(location)) {
+                context.gl.enableVertexAttribArray(location);
+            }
             context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
             if (context.instancingExt) {
                 if (instanced) {
