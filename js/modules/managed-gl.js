@@ -1574,23 +1574,11 @@ define([
         }
     };
     /**
-     * Sets the blending function in the supplied managed context according to the
-     * blending type of this shader.
-     * @param {ManagedGLContext} context
+     * Returns the blend mode to be used when rendering with this shader.
+     * @returns {String} enum ShaderBlendMode
      */
-    ManagedShader.prototype.setBlending = function (context) {
-        switch (this._blendMode) {
-            case ShaderBlendMode.MIX:
-                context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE_MINUS_SRC_ALPHA);
-                break;
-            case ShaderBlendMode.ADD:
-                context.gl.blendFunc(context.gl.SRC_ALPHA, context.gl.ONE);
-                break;
-            case ShaderBlendMode.NONE:
-                break;
-            default:
-                application.crash();
-        }
+    ManagedShader.prototype.getBlendMode = function () {
+        return this._blendMode;
     };
     /**
      * Assigns the uniforms that have an associated value function in 
@@ -1879,6 +1867,26 @@ define([
          */
         this._currentShader = null;
         /**
+         * The stored value of the current (lastly set) blend mode (enum ShaderBlendMode)
+         * @type String
+         */
+        this._currentBlendMode = null;
+        /**
+         * The stored value of the current (lastly set) color mask (Boolean[4])
+         * @type Array
+         */
+        this._currentColorMask = null;
+        /**
+         * The stored value of the current (lastly set) depth mask
+         * @type Boolean
+         */
+        this._currentDepthMask = false;
+        /**
+         * Whether blending is currently enabled for the wrapped GL context.
+         * @type Boolean
+         */
+        this._blendingEnabled = false;
+        /**
          * The list of textures added to this context.
          * @type (ManagedTexture|ManagedCubemap)[]
          */
@@ -2032,6 +2040,11 @@ define([
         // some basic settings on the context state machine
         gl_.clearDepth(1.0);
         gl_.colorMask(true, true, true, true);
+        this._currentColorMask = [true, true, true, true];
+        gl_.depthMask(true);
+        this._currentDepthMask = true;
+        gl_.enable(gl_.BLEND);
+        this._blendingEnabled = true;
         gl_.enable(gl_.DEPTH_TEST);
         gl_.depthFunc(gl_.LEQUAL);
         gl_.enable(gl_.CULL_FACE);
@@ -2110,6 +2123,47 @@ define([
      */
     ManagedGLContext.prototype.isAnisotropicFilteringAvailable = function () {
         return !!this.anisotropicFilterExt;
+    };
+    /**
+     * Updates the color mask to be used for subsequent rendering, if needed.
+     * @param {Boolean[4]} value Flags for the RGBA components - whether they should be updated when rendering.
+     */
+    ManagedGLContext.prototype.setColorMask = function (value) {
+        if (this._currentColorMask[0] !== value[0] ||
+                this._currentColorMask[1] !== value[1] ||
+                this._currentColorMask[2] !== value[2] ||
+                this._currentColorMask[3] !== value[3]) {
+            this.gl.colorMask(value[0], value[1], value[2], value[3]);
+            this._currentColorMask = value;
+        }
+    };
+    /**
+     * Updates the depth mask to be used for subsequent rendering, if needed.
+     * @param {Boolean} value Whether the depth buffer should be updated when rendering.
+     */
+    ManagedGLContext.prototype.setDepthMask = function (value) {
+        if (this._currentDepthMask !== value) {
+            this.gl.depthMask(value);
+            this._currentDepthMask = value;
+        }
+    };
+    /**
+     * Turns on blending for subsequent rendering calls.
+     */
+    ManagedGLContext.prototype.enableBlending = function () {
+        if (!this._blendingEnabled) {
+            this.gl.enable(this.gl.BLEND);
+            this._blendingEnabled = true;
+        }
+    };
+    /**
+     * Turns off blending for subsequent rendering calls.
+     */
+    ManagedGLContext.prototype.disableBlending = function () {
+        if (this._blendingEnabled) {
+            this.gl.disable(this.gl.BLEND);
+            this._blendingEnabled = false;
+        }
     };
     /**
      * Adds the shader reference to the list of shaders to be used when the vertex
@@ -2369,10 +2423,29 @@ define([
      * @returns {Boolean} Whether the current shader has been changed as a result of this call
      */
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
+        var newBlendMode;
         if (this._currentShader !== shader) {
             application.log("Switching to shader: " + shader.getName(), 3);
             this.gl.useProgram(shader.getIDForContext(this._name));
-            shader.setBlending(this);
+            newBlendMode = shader.getBlendMode();
+            switch (newBlendMode) {
+                case ShaderBlendMode.MIX:
+                    if (this._currentBlendMode !== newBlendMode) {
+                        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+                        this._currentBlendMode = newBlendMode;
+                    }
+                    break;
+                case ShaderBlendMode.ADD:
+                    if (this._currentBlendMode !== newBlendMode) {
+                        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
+                        this._currentBlendMode = newBlendMode;
+                    }
+                    break;
+                case ShaderBlendMode.NONE:
+                    break;
+                default:
+                    application.crash();
+            }
             shader.bindVertexBuffers(this);
             this._currentShader = shader;
             return true;

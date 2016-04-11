@@ -203,7 +203,12 @@ define([
              * The index of the array storing the distance - transparent render queues in the main render queues array of scenes.
              * @type Number
              */
-            DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX = 3;
+            DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX = 3,
+            /**
+             * A color mask to be set when all color components should be updated.
+             * @type Number[4]
+             */
+            COLOR_MASK_ALL_TRUE = [true, true, true, true];
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -5868,7 +5873,21 @@ define([
          * @type Boolean
          */
         this._looping = looping;
+        /**
+         * A cached value of the color vector to be assigned to uniforms (containing the RGB color and the intensity)
+         * @type Number[4]
+         */
+        this._uniformColor = null;
+        if (color) {
+            this._updateUniformColor();
+        }
     }
+    /**
+     * Updates the cached color vector to be used when assigning uniforms.
+     */
+    PointLightSource.prototype._updateUniformColor = function () {
+        this._uniformColor = this._color.concat(this._totalIntensity);
+    };
     /**
      * Updates the properties of the light source that are defined in the state list.
      * @param {Number} dt The elapsed time since the last update, in milliseconds.
@@ -5903,7 +5922,7 @@ define([
      * @param {Number} dt The time elapsed since the last update, in milliseconds
      */
     PointLightSource.prototype.update = function (dt) {
-        var i, count;
+        var i, count, previousIntensity = this._totalIntensity;
         this.updateState(dt);
         // calculate attributes that depend on the emitting objects
         if (!this._emittingObjects) {
@@ -5927,6 +5946,9 @@ define([
             this._positionVector[2] /= count;
             this._totalIntensity = this._objectIntensity * count;
         }
+        if (this._totalIntensity !== previousIntensity) {
+            this._updateUniformColor();
+        }
     };
     /**
      * Returns an object that can be used to set the uniform object representing this light source in a shader using it.
@@ -5934,7 +5956,7 @@ define([
      */
     PointLightSource.prototype.getUniformData = function () {
         return {
-            color: this._color.concat(this._totalIntensity),
+            color: this._uniformColor,
             position: this._positionVector
         };
     };
@@ -5961,6 +5983,7 @@ define([
      */
     PointLightSource.prototype.setColor = function (value) {
         this._color = value;
+        this._updateUniformColor();
     };
     /**
      * Sets a new intensity for the light emitted by the objects contributing to this light source.
@@ -6066,7 +6089,7 @@ define([
      */
     SpotLightSource.prototype.getUniformData = function () {
         return {
-            color: this._color.concat(this._totalIntensity),
+            color: this._uniformColor,
             spot: [this._spotDirection[0], this._spotDirection[1], this._spotDirection[2], this._spotCutoffCosine],
             position: this._positionVector.concat(this._spotFullIntensityCosine)
         };
@@ -6988,10 +7011,10 @@ define([
             // common GL state setup
             gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
-            gl.colorMask(true, true, true, true);
-            gl.disable(gl.BLEND);
+            context.setColorMask(COLOR_MASK_ALL_TRUE);
+            context.disableBlending();
             gl.enable(gl.DEPTH_TEST);
-            gl.depthMask(true);
+            context.setDepthMask(true);
             // choosing the shadow map shader
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
@@ -7021,13 +7044,15 @@ define([
         var gl = context.gl; // caching the variable for easier access
         application.log("Rendering background objects of scene...", 4);
         // preparing to render background objects
-        gl.enable(gl.BLEND);
+        context.enableBlending();
         gl.disable(gl.DEPTH_TEST);
-        gl.depthMask(false);
+        context.setDepthMask(false);
         // rendering background objects
         this._rootBackgroundNode.resetForNewFrame();
         this._rootBackgroundNode.render(context, this._width, this._height, false);
-        this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
+        if (application.isDebugVersion()) {
+            this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
+        }
     };
     /**
      * Renders the specified render queues of the scene with the given settings.
@@ -7074,22 +7099,30 @@ define([
         gl.enable(gl.DEPTH_TEST);
         // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
         application.log("Rendering opaque phase...", 4);
-        gl.depthMask(true);
-        gl.disable(gl.BLEND);
-        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
-        for (i = 0; i < opaqueRenderQueues.length; i++) {
-            this._renderQueue(context, opaqueRenderQueues[i], i, true);
+        if (opaqueRenderQueues.length > 0) {
+            context.setDepthMask(true);
+            context.disableBlending();
+            // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
+            for (i = 0; i < opaqueRenderQueues.length; i++) {
+                this._renderQueue(context, opaqueRenderQueues[i], i, true);
+            }
+            if (application.isDebugVersion()) {
+                this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
+            }
         }
-        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
         // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
         application.log("Rendering transparent phase...", 4);
-        gl.depthMask(false);
-        gl.enable(gl.BLEND);
-        // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
-        for (i = 0; i < transparentRenderQueues.length; i++) {
-            this._renderQueue(context, transparentRenderQueues[i], i, false);
+        if (transparentRenderQueues.length > 0) {
+            context.setDepthMask(false);
+            context.enableBlending();
+            // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
+            for (i = 0; i < transparentRenderQueues.length; i++) {
+                this._renderQueue(context, transparentRenderQueues[i], i, false);
+            }
+            if (application.isDebugVersion()) {
+                this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
+            }
         }
-        this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
     };
     /**
      * Renders the UI node tree using appropriate context settings.
@@ -7099,13 +7132,15 @@ define([
         var gl = context.gl; // caching the variable for easier access
         if (this._rootUINode.getSubnodes().length > 0) {
             // preparing to render UI objects
-            gl.enable(gl.BLEND);
+            context.enableBlending();
             gl.disable(gl.DEPTH_TEST);
-            gl.depthMask(false);
+            context.setDepthMask(false);
             // rendering background objects
             this._rootUINode.resetForNewFrame();
             this._rootUINode.render(context, this._width, this._height, false);
-            this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
+            if (application.isDebugVersion()) {
+                this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
+            }
         }
     };
     /**
@@ -7138,12 +7173,12 @@ define([
         // viewport preparation
         gl.viewport(this._left, this._top, this._width, this._height);
         if (this._shouldClearColorOnRender) {
-            gl.colorMask(this._clearColorMask[0], this._clearColorMask[1], this._clearColorMask[2], this._clearColorMask[3]);
+            context.setColorMask(this._clearColorMask);
             gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
         }
         // glClear is affected by the depth mask, so we need to turn it on here!
         // (it's disabled for the second (transparent) render pass)
-        gl.depthMask(true);
+        context.setDepthMask(true);
         // clearing color and depth buffers as set for this scene
         clearBits = this._shouldClearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
         clearBits = this._shouldClearDepthOnRender ? clearBits | gl.DEPTH_BUFFER_BIT : clearBits;
@@ -7169,8 +7204,10 @@ define([
             // switching back the camera
             this._camera = camera;
             // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
-            gl.depthMask(true);
+            context.setDepthMask(true);
             gl.clear(gl.DEPTH_BUFFER_BIT);
+            // reset boolean flags as scene uniforms will have to be updated for all used shaders again
+            this._uniformsUpdated = {};
         }
         // -----------------------------------------------------------------------
         // rendering the queues storing front (close) main objects
