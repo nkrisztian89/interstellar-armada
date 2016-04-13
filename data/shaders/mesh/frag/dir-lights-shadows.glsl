@@ -2,7 +2,6 @@
     float specularFactor;
 
     float lighted;
-    float indexDifference;
     bool covered;
     vec3 shadowMapPosition;
 
@@ -47,7 +46,8 @@
                             float depthRange = range * u_shadowMapDepthRatio;
                             // the coordinates in shadow mapping space translated to have the current map center in the origo
                             // an offset based on the normal vector of the surface is also applied to help eliminate shadow acne, which has a higher coefficient for surfaces more parallel to the light
-                            shadowMapPosition = u_dirLights[i].translationVector * range + v_shadowMapPosition[i].xyz + normalize(v_shadowMapNormal[i]) * (NORMAL_OFFSET_SCALE * range * (-1.0 * diffuseFactor * diffuseFactor + 1.0));
+                            float normalOffsetScale = NORMAL_OFFSET_SCALE / u_shadowMapTextureSize;
+                            shadowMapPosition = u_dirLights[i].translationVector * range + v_shadowMapPosition[i].xyz + normalize(v_shadowMapNormal[i]) * (normalOffsetScale * range * (-1.0 * diffuseFactor * diffuseFactor + 1.0));
                             if ((j == u_numRanges - 1) && (distFromEye > range)) {
                                 shade = 1.0 - clamp((((distFromEye - range) / range) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0, 1.0);
                             }
@@ -113,19 +113,15 @@
                                         if (shMapIndex == 14) {
                                             shadowMapTexel[k] = texture2D(u_shadowMaps[14], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         }
-                                        // depth check is performed with a tolerance for small errors
-                                        float absErrorTolerance = 1.0 / 255.0 * depthRange;
-                                        // the depth value is stored in the second two components of the texel
-                                        float texelDepth = (shadowMapTexel[k].z / 256.0) + shadowMapTexel[k].w;
+                                        // unpacking the depth value
+                                        float texelDepth = dot(shadowMapTexel[k].ba, vec2(1.0 / 255.0, 1.0));
+                                        // values for checking if the depth is in the area not covered by previous shadow maps
                                         float absDepth = (texelDepth * 2.0 * depthRange) - (depthRange + shadowMapPosition.z);
+                                        float absErrorTolerance = 1.0 / 255.0 * depthRange;
                                         // check if there is depth content on the texel, which is in a range not checked before
                                         // (by depth or by coordinates)
                                         if ((texelDepth > 0.0) && ((absDepth >= minDepthAbove - absErrorTolerance) || (absDepth <= maxDepthBelow + absErrorTolerance) || !covered)) {
-                                            // the triangle index value is stored in the first two components of the texel
-                                            indexDifference = length(v_index - shadowMapTexel[k].rg);
-                                            // check if the fragment is obscured by a triangle with a different index
-                                            if((texelDepth > depth + DEPTH_ERROR_TOLERANCE) && (indexDifference > INDEX_ERROR_TOLERANCE)) {
-                                                // for very small shadows (that would appear very pixelated), add a fade out factor
+                                            if(texelDepth > (depth + DEPTH_ERROR_TOLERANCE)) {
                                                 lighted = max(0.0, lighted - shade / float(NUM_SHADOW_MAP_SAMPLES));
                                                 if (lighted == 0.0) {
                                                     break;

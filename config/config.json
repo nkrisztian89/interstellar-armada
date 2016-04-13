@@ -1,5 +1,5 @@
 {
-    "version": "0.2:256 (2016.04.11.)",
+    "version": "0.2:257 (2016.04.13.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -106,7 +106,7 @@
                         "numRanges": 7
                     }
                 ],
-                "depthRatio": 1.5
+                "depthRatio": 16
             },
             "pointLightAmounts": [
                 {
@@ -136,8 +136,6 @@
                     "requiredVertexUniformVectorsPer": {
                         "dirLight": 5
                     },
-                    "requiredAttributeVectors": 1,
-                    "requiredVaryingVectors": 1,
                     "requiredVaryingVectorsPer": {
                         "dirLight": 4
                     },
