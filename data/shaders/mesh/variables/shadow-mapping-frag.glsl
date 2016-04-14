@@ -10,6 +10,8 @@
 
 #define NORMAL_OFFSET_SCALE 0.85
 
+#define DEPTH_TEXTURES 0
+
 uniform sampler2D u_shadowMaps[MAX_SHADOW_MAPS];
 uniform bool u_shadows;
 uniform float u_shadowMapRanges[MAX_SHADOW_MAP_RANGES];

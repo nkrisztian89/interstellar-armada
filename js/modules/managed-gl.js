@@ -1015,9 +1015,11 @@ define([
      * @param {String} name The name of the buffer to be created and later be referred to.
      * @param {Number} width The width of the frame buffer. (pixels/texels)
      * @param {Number} height The height of the frame buffer. (pixels/texels)
+     * @param {Boolean} [depthOnly=false] If true and depth textures are supported, then only a depth texture will be attached to this 
+     * framebuffer object.
      * @returns {FrameBuffer}
      */
-    function FrameBuffer(name, width, height) {
+    function FrameBuffer(name, width, height, depthOnly) {
         /**
          * The name by which this buffer can be referred to.
          * @type String
@@ -1038,6 +1040,11 @@ define([
          * @type Number
          */
         this._height = height;
+        /**
+         * If true and depth textures are supported, then only a depth texture will be attached to this framebuffer object.
+         * @type Boolean
+         */
+        this._depthOnly = !!depthOnly;
         /**
          * The WebGL handle for the texture object created for this buffer's color
          * attachment.
@@ -1101,12 +1108,36 @@ define([
         this._textureLocation = context.bindTexture(this);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.NEAREST);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.NEAREST);
-        context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
-        this._renderBufferID = context.gl.createRenderbuffer();
-        context.gl.bindRenderbuffer(context.gl.RENDERBUFFER, this._renderBufferID);
-        context.gl.renderbufferStorage(context.gl.RENDERBUFFER, context.gl.DEPTH_COMPONENT16, this._width, this._height);
-        context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.COLOR_ATTACHMENT0, context.gl.TEXTURE_2D, this._textureID, 0);
-        context.gl.framebufferRenderbuffer(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.RENDERBUFFER, this._renderBufferID);
+        if (this._depthOnly && context.areDepthTexturesAvailable()) {
+            context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.DEPTH_COMPONENT, this._width, this._height, 0, context.gl.DEPTH_COMPONENT, context.gl.UNSIGNED_SHORT, null);
+            context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.TEXTURE_2D, this._textureID, 0);
+        } else {
+            context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.RGBA, this._width, this._height, 0, context.gl.RGBA, context.gl.UNSIGNED_BYTE, null);
+            this._renderBufferID = context.gl.createRenderbuffer();
+            context.gl.bindRenderbuffer(context.gl.RENDERBUFFER, this._renderBufferID);
+            context.gl.renderbufferStorage(context.gl.RENDERBUFFER, context.gl.DEPTH_COMPONENT16, this._width, this._height);
+            context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.COLOR_ATTACHMENT0, context.gl.TEXTURE_2D, this._textureID, 0);
+            context.gl.framebufferRenderbuffer(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.RENDERBUFFER, this._renderBufferID);
+        }
+        switch (context.gl.checkFramebufferStatus(context.gl.FRAMEBUFFER)) {
+            case context.gl.FRAMEBUFFER_COMPLETE:
+                application.log("Framebuffer '" + this._name + "' successfully created.");
+                break;
+            case context.gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': The attachment types are mismatched or not all framebuffer attachment points are framebuffer attachment complete.");
+                break;
+            case context.gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': Attachment missing.");
+                break;
+            case context.gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': Height and width of the attachment are not the same.");
+                break;
+            case context.gl.FRAMEBUFFER_UNSUPPORTED:
+                application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': The format of the attachment is not supported or depth and stencil attachments are not the same renderbuffer.");
+                break;
+            default:
+                application.showGraphicsError("Unknown framebuffer status for '" + this._name + "'!");
+        }
     };
     /**
      * Binds the frame buffer to the given context. Subsequent rendering will
@@ -1133,7 +1164,9 @@ define([
      */
     FrameBuffer.prototype.delete = function (context) {
         context.gl.deleteTexture(this._textureID);
-        context.gl.deleteRenderbuffer(this._renderBufferID);
+        if (!this._depthOnly || !context.areDepthTexturesAvailable()) {
+            context.gl.deleteRenderbuffer(this._renderBufferID);
+        }
         context.gl.deleteFramebuffer(this._id);
         this._id = null;
     };
@@ -1817,9 +1850,14 @@ define([
         this.anisotropicFilterExt = null;
         /**
          * Holder for the handle of the ANGLE_instanced_arrays WebGL extension.
-         * @type Object
+         * @type ANGLEInstancedArrays
          */
         this.instancingExt = null;
+        /**
+         * Holder for the handle of the WEBGL_depth_texture WebGL extension.
+         * @type WebGLDepthTexture
+         */
+        this.depthTextureExt = null;
         /**
          * The list of associated shaders. This needs to be stored in order to bind
          * the vertex buffer objects to the corresponding attributes of the shaders
@@ -2036,6 +2074,13 @@ define([
         } else {
             application.log("Instancing successfully initialized.", 1);
         }
+        // depth textures
+        this.depthTextureExt = gl_.getExtension("WEBGL_depth_texture");
+        if (this.depthTextureExt === null) {
+            application.log("Depth textures not available, and so will be disabled.", 1);
+        } else {
+            application.log("Depth texture extension successfully initialized.", 1);
+        }
         // -------------------------------------------------------------------------------------------------------
         // some basic settings on the context state machine
         gl_.clearDepth(1.0);
@@ -2123,6 +2168,13 @@ define([
      */
     ManagedGLContext.prototype.isAnisotropicFilteringAvailable = function () {
         return !!this.anisotropicFilterExt;
+    };
+    /**
+     * Returns whether depth textures are supported for this context by the graphics driver.
+     * @returns {Boolean}
+     */
+    ManagedGLContext.prototype.areDepthTexturesAvailable = function () {
+        return !!this.depthTextureExt;
     };
     /**
      * Updates the color mask to be used for subsequent rendering, if needed.
@@ -2624,6 +2676,7 @@ define([
         getMaxCubemapSize: _genericContext.getMaxCubemapSize.bind(_genericContext),
         getMaxRenderbufferSize: _genericContext.getMaxRenderbufferSize.bind(_genericContext),
         isAntialiasingAvailable: _genericContext.isAntialiased.bind(_genericContext),
-        isAnisotropicFilteringAvailable: _genericContext.isAnisotropicFilteringAvailable.bind(_genericContext)
+        isAnisotropicFilteringAvailable: _genericContext.isAnisotropicFilteringAvailable.bind(_genericContext),
+        areDepthTexturesAvailable: _genericContext.areDepthTexturesAvailable.bind(_genericContext)
     };
 });

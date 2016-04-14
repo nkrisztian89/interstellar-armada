@@ -465,6 +465,13 @@ define([
                 NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME: {
                     name: "numShadowMapSamplesDefineName",
                     type: "string"
+                },
+                /**
+                 * The name of the #define that informs the shader whether depth textures are used (1) or not (0).
+                 */
+                DEPTH_TEXTURES_DEFINE_NAME: {
+                    name: "depthTexturesDefineName",
+                    type: "string"
                 }
             },
     /**
@@ -1815,6 +1822,7 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME)] = this.getNumShadowMapSamples();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.DEPTH_TEXTURES_DEFINE_NAME)] = managedGL.areDepthTexturesAvailable() ? "1" : "0";
         result = this.getShader(shaderName).getManagedShader(replacedDefines);
         if (!result.isAllowedByRequirements(this._getShaderRequirements())) {
             application.showError("Shader '" + shaderName + "' has too high requirements!");

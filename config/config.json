@@ -1,5 +1,5 @@
 {
-    "version": "0.2:257 (2016.04.13.)",
+    "version": "0.2:258 (2016.04.14.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -282,7 +282,8 @@
             "dustLengthDivisor": "200.0",
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
             "maxLuminosityFactors": 20,
-            "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS"
+            "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS",
+            "depthTexturesDefineName": "DEPTH_TEXTURES"
         },
         "levelOfDetailSettings": {
             "lodLevels": [

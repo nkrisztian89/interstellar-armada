@@ -5730,7 +5730,7 @@ define([
         if (shadowMappingEnabled) {
             for (i = 0; i < numRanges; i++) {
                 if (!context.getFrameBuffer(this.getShadowMapBufferName(i))) {
-                    context.addFrameBuffer(new managedGL.FrameBuffer(this.getShadowMapBufferName(i), shadowMapTextureSize, shadowMapTextureSize));
+                    context.addFrameBuffer(new managedGL.FrameBuffer(this.getShadowMapBufferName(i), shadowMapTextureSize, shadowMapTextureSize, true));
                 }
             }
         }

@@ -114,7 +114,11 @@
                                             shadowMapTexel[k] = texture2D(u_shadowMaps[14], shMapTexCoords + shadowMapSampleOffset / u_shadowMapTextureSize);
                                         }
                                         // unpacking the depth value
+                                        #if !DEPTH_TEXTURES
                                         float texelDepth = dot(shadowMapTexel[k].ba, vec2(1.0 / 255.0, 1.0));
+                                        #else
+                                        float texelDepth = 1.0 - shadowMapTexel[k].r;
+                                        #endif
                                         // values for checking if the depth is in the area not covered by previous shadow maps
                                         float absDepth = (texelDepth * 2.0 * depthRange) - (depthRange + shadowMapPosition.z);
                                         float absErrorTolerance = 1.0 / 255.0 * depthRange;
