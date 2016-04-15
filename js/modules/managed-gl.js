@@ -1121,7 +1121,7 @@ define([
         }
         switch (context.gl.checkFramebufferStatus(context.gl.FRAMEBUFFER)) {
             case context.gl.FRAMEBUFFER_COMPLETE:
-                application.log("Framebuffer '" + this._name + "' successfully created.");
+                application.log("Framebuffer '" + this._name + "' successfully created.", 2);
                 break;
             case context.gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
                 application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': The attachment types are mismatched or not all framebuffer attachment points are framebuffer attachment complete.");

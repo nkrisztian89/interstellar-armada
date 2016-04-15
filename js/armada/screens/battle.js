@@ -675,6 +675,7 @@ define([
         if (_battleScene) {
             if (application.isDebugVersion()) {
                 this._stats.setContent(
+                        budaScene.getDebugInfo() + "<br/>" +
                         mat.getMatrixCount() + " <br/>" +
                         this.getFPS() + "<br/>" +
                         _battleScene.getNumberOfDrawnTriangles());

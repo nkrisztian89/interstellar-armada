@@ -1078,7 +1078,7 @@ define([
         }
         resources.executeWhenReady(function () {
             var j, node;
-            this._visualModel = new budaScene.RenderableObject(null, false, false);
+            this._visualModel = new budaScene.RenderableObject(null, false, false, undefined, false);
             node = scene.addNode(new budaScene.RenderableNode(this._visualModel, true));
             for (j = 0; j < n; j++) {
                 this._particles[j].addToScene(node, j === 0);
@@ -2726,6 +2726,7 @@ define([
      * station etc.) in the game.
      * @param {SpacecraftClass} spacecraftClass The class of the spacecraft that
      * describes its general properties.
+     * @param {String} [name] An optional name to identify this spacecraft by.
      * @param {Float32Array} [positionMatrix] The translation matrix describing
      * the initial position of the spacecraft.
      * @param {Float32Array} [orientationMatrix] The rotation matrix describing
@@ -2739,12 +2740,17 @@ define([
      * in the same battle simulation as this one.
      * @returns {Spacecraft}
      */
-    function Spacecraft(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
+    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
         /**
          * The class of this spacecraft that describes its general properties.
          * @type SpacecraftClass
          */
         this._class = null;
+        /**
+         * An optional name by which this spacecraft can be identified.
+         * @type String
+         */
+        this._name = null;
         /**
          * The number of hitpoints indicate the amount of damage the ship can take. Successful hits by
          * projectiles on the ship reduce the amount of hitpoints based on the damage value of the 
@@ -2825,7 +2831,7 @@ define([
         this._autoTarget = false;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
-            this._init(spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
+            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
         }
     }
     // initializer
@@ -2833,6 +2839,7 @@ define([
      * Initializes the properties of the spacecraft. Used by the constructor
      * and the methods that load the data from an external source.
      * @param {SpacecraftClass} spacecraftClass
+     * @param {String} [name]
      * @param {Float32Array} [positionMatrix]
      * @param {Float32Array} [orientationMatrix]
      * @param {Projectile[]} [projectileArray]
@@ -2840,8 +2847,9 @@ define([
      * @param {Spacecraft[]} [spacecraftArray]
      * @see Spacecraft
      */
-    Spacecraft.prototype._init = function (spacecraftClass, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
+    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
         this._class = spacecraftClass;
+        this._name = name || "";
         this._hitpoints = this._class.getHitpoints();
         this._physicalModel = new physics.PhysicalObject(
                 this._class.getMass(),
@@ -2870,6 +2878,13 @@ define([
      */
     Spacecraft.prototype.getClass = function () {
         return this._class;
+    };
+    /**
+     * Returns the name of this spacecraft that can be used to identify a specific spacecraft / display to the user.
+     * @returns {String}
+     */
+    Spacecraft.prototype.getName = function () {
+        return this._name;
     };
     /**
      * Returns the current amount of hit points this spacecraft has left.
@@ -3059,6 +3074,7 @@ define([
         var equipmentProfile;
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
+                dataJSON.name,
                 mat.translation4v(dataJSON.position),
                 mat.rotation4FromJSON(dataJSON.rotations),
                 projectileArray,
@@ -3347,6 +3363,9 @@ define([
                     (wireframe === true),
                     lod,
                     graphics.areLuminosityTexturesAvailable() ? [_context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
+            if (this._name) {
+                this._visualModel.setName(this._name);
+            }
             if (graphics.areLuminosityTexturesAvailable()) {
                 this._visualModel.setParameter(
                         _context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME),

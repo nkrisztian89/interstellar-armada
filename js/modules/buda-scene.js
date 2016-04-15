@@ -208,7 +208,28 @@ define([
              * A color mask to be set when all color components should be updated.
              * @type Number[4]
              */
-            COLOR_MASK_ALL_TRUE = [true, true, true, true];
+            COLOR_MASK_ALL_TRUE = [true, true, true, true],
+            /**
+             * If no suitable LOD is available for a model when querying it for the current frame and there is no previously set LOD cached, 
+             * this LOD will be chosen.
+             * @type Number
+             */
+            DEFAULT_LOD = 0,
+            /**
+             * This string is available to other modules through a public function so that an arbitrary piece of information from this 
+             * module can be exposed for debug purposes.
+             * @type String
+             */
+            _debugInfo = "";
+    // -------------------------------------------------------------------------
+    // Public functions
+    /**
+     * Queries a module-level string for debug purposes.
+     * @returns {String}
+     */
+    function getDebugInfo() {
+        return _debugInfo;
+    }
     // #########################################################################
     /**
      * @struct Holds a certain LOD configuration to be used for making LOD 
@@ -298,16 +319,30 @@ define([
          */
         this._scalingMatrix = scalingMatrix || mat.identity4();
         /**
-         * Cache variable to store the calculated value of the combined model
-         * matrix.
+         * The cached calculated value of the cascaded scaling matrix (with the scaling of the parent nodes applied) for the current frame.
+         * @type Float32Array
+         */
+        this._cascadeScalingMatrixForFrame = null;
+        /**
+         * Cache variable to store the calculated value of the combined model matrix.
          * @type Float32Array
          */
         this._modelMatrix = null;
+        /**
+         * The cached calculated value of the cascaded model matrix (with the transformations of the parents applied) for the current frame.
+         */
+        this._modelMatrixForFrame = null;
         /**
          * Cache variable to store the calculated value of the inverse of the combined model matrix.
          * @type Float32Array
          */
         this._modelMatrixInverse = null;
+        /**
+         * The cached calculated value of the cascaded inverse model matrix (with the transformations of the parents applied) for the 
+         * current frame.
+         * @type Float32Array
+         */
+        this._modelMatrixInverseForFrame = null;
         /**
          * @type Number
          */
@@ -348,6 +383,9 @@ define([
          */
         function resetCachedValues() {
             this._positionMatrixInCameraSpace = null;
+            this._cascadeScalingMatrixForFrame = null;
+            this._modelMatrixForFrame = null;
+            this._modelMatrixInverseForFrame = null;
         }
         /**
          * Return the parent (might be null).
@@ -521,31 +559,39 @@ define([
          * @returns {Float32Array}
          */
         function getCascadeScalingMatrix() {
-            return this._parent ?
-                    mat.prod4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
-                    this._scalingMatrix;
+            if (!this._cascadeScalingMatrixForFrame) {
+                this._cascadeScalingMatrixForFrame = this._parent ?
+                        mat.prod4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
+                        this._scalingMatrix;
+            }
+            return this._cascadeScalingMatrixForFrame;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
-         * Returns the calculated combined model matrix of this object. Uses
-         * cache.
+         * Returns the calculated combined model matrix of this object (and its parents). Uses cache.
          * @returns {Float32Array}
          */
         function getModelMatrix() {
-            this._modelMatrix = this._modelMatrix || mat.prod34(this._scalingMatrix, this._orientationMatrix, this._positionMatrix);
-            return this._parent ?
-                    mat.prod4(this._modelMatrix, this._parent.getModelMatrix()) :
-                    this._modelMatrix;
+            if (!this._modelMatrixForFrame) {
+                this._modelMatrix = this._modelMatrix || mat.prod34(this._scalingMatrix, this._orientationMatrix, this._positionMatrix);
+                this._modelMatrixForFrame = this._parent ?
+                        mat.prod4(this._modelMatrix, this._parent.getModelMatrix()) :
+                        this._modelMatrix;
+            }
+            return this._modelMatrixForFrame;
         }
         /**
-         * Returns the calculated inverse of the combined model matrix of this object. Uses cache.
+         * Returns the calculated inverse of the combined model matrix of this object (and its parents). Uses cache.
          * @returns {Float32Array}
          */
         function getModelMatrixInverse() {
-            this._modelMatrixInverse = this._modelMatrixInverse || mat.inverse4(this.getModelMatrix());
-            return this._parent ?
-                    mat.prod4(this._parent.getModelMatrixInverse(), this._modelMatrixInverse) :
-                    this._modelMatrixInverse;
+            if (!this._modelMatrixInverseForFrame) {
+                this._modelMatrixInverse = this._modelMatrixInverse || mat.inverse4(this.getModelMatrix());
+                this._modelMatrixInverseForFrame = this._parent ?
+                        mat.prod4(this._parent.getModelMatrixInverse(), this._modelMatrixInverse) :
+                        this._modelMatrixInverse;
+            }
+            return this._modelMatrixInverseForFrame;
         }
         /**
          * Returns the size of this object.
@@ -585,13 +631,10 @@ define([
          * @returns {Float32Array}
          */
         function getPositionMatrixInCameraSpace(camera) {
-            if (this._positionMatrixInCameraSpace) {
-                return this._positionMatrixInCameraSpace;
+            if (!this._positionMatrixInCameraSpace) {
+                this._positionMatrixInCameraSpace =
+                        mat.translation4v(vec.mulVec4Mat4(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
             }
-            this._positionMatrixInCameraSpace =
-                    mat.translation4m4(mat.prod4(
-                            this.getModelMatrix(),
-                            camera.getViewMatrix()));
             return this._positionMatrixInCameraSpace;
         }
         /**
@@ -631,7 +674,8 @@ define([
             yOffsetPosition = vec.mulVec4Mat4([0.0, size, 0.0, 1.0], fullMatrix);
             xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
             yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
-            if (!(((position[0] + xOffset < -1) && (position[0] - xOffset < -1)) || ((position[0] + xOffset > 1) && (position[0] - xOffset > 1))) && !(((position[1] + yOffset < -1) && (position[1] - yOffset < -1)) || ((position[1] + yOffset > 1) && (position[1] - yOffset > 1)))) {
+            if (!((position[0] + xOffset < -1) || (position[0] - xOffset > 1)) &&
+                    !((position[1] + yOffset < -1) || (position[1] - yOffset > 1))) {
                 this._lastSizeInsideViewFrustum.width = xOffset;
                 this._lastSizeInsideViewFrustum.height = yOffset;
                 return this._lastSizeInsideViewFrustum;
@@ -640,6 +684,24 @@ define([
             this._lastSizeInsideViewFrustum.height = 0;
             return this._lastSizeInsideViewFrustum;
         }
+        /**
+         * Returns whether the object (or at least a part of it) lies within a specific shadow map region.
+         * @param {Float32Array} lightMatrix The 4x4 matrix to transform coordinates from world into shadow (light) space.
+         * @param {Number} range The world-space distance from the center to the sides of planes of shadow map region perpendicular to the
+         * light.
+         * @param {Number} depthRatio The factor by which the depth of the shadow map region (its size along the axis parallel to light
+         * rays) is larger than its width/height (specified by range).
+         * @returns {Boolean}
+         */
+        function isInsideShadowRegion(lightMatrix, range, depthRatio) {
+            var positionInLightSpace, size;
+            positionInLightSpace = vec.mulVec4Mat4(mat.translationVector4(this.getModelMatrix()), lightMatrix);
+            size = this.getScaledSize();
+            return (Math.abs(positionInLightSpace[0]) - size < range) &&
+                    (Math.abs(positionInLightSpace[1]) - size < range) &&
+                    (Math.abs(positionInLightSpace[2]) - size < range * depthRatio);
+        }
+        // interface of an Object3D mixin
         return function () {
             this.prototype.resetCachedValues = resetCachedValues;
             this.prototype.getParent = getParent;
@@ -667,6 +729,7 @@ define([
             this.prototype.isInsideParent = isInsideParent;
             this.prototype.getPositionMatrixInCameraSpace = getPositionMatrixInCameraSpace;
             this.prototype.getSizeInsideViewFrustum = getSizeInsideViewFrustum;
+            this.prototype.isInsideShadowRegion = isInsideShadowRegion;
         };
     };
     makeObject3DMixinClass = makeObject3DMixinClassFunction();
@@ -686,9 +749,12 @@ define([
      * @param {Number} dt
      * @param {Boolean} [useInstancing=false] 
      * @param {Number} [instanceQueueIndex]
+     * @param {Float32Array} [lightMatrix]
+     * @param {Number} [range]
+     * @param {Number} [depthRatio]
      * @returns {RenderParameters}
      */
-    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt, useInstancing, instanceQueueIndex) {
+    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt, useInstancing, instanceQueueIndex, lightMatrix, range, depthRatio) {
         /**
          * @type ManagedGLContext
          */
@@ -733,6 +799,18 @@ define([
          * @type Number
          */
         this.instanceQueueIndex = instanceQueueIndex;
+        /**
+         * @type Float32Array
+         */
+        this.lightMatrix = lightMatrix;
+        /**
+         * @type Number
+         */
+        this.shadowMapRange = range;
+        /**
+         * @type Number
+         */
+        this.shadowMapDepthRatio = depthRatio;
     }
     // #########################################################################
     /**
@@ -1158,8 +1236,11 @@ define([
      * @param {Boolean} depthMask
      * @param {Boolean} [useInstancing=false] 
      * @param {Number} [instanceQueueIndex]
+     * @param {Float32Array} [lightMatrix]
+     * @param {Number} [range]
+     * @param {Number} [depthRatio]
      */
-    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex) {
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex, lightMatrix, range, depthRatio) {
         this._renderParameters.context = context;
         this._renderParameters.depthMask = depthMask;
         this._renderParameters.scene = this._scene;
@@ -1170,6 +1251,9 @@ define([
         this._renderParameters.lodContext = this._scene.getLODContext();
         this._renderParameters.useInstancing = useInstancing;
         this._renderParameters.instanceQueueIndex = instanceQueueIndex;
+        this._renderParameters.lightMatrix = lightMatrix;
+        this._renderParameters.shadowMapRange = range;
+        this._renderParameters.shadowMapDepthRatio = depthRatio;
     };
     /**
      * Renders the object at this node and all subnodes, if visible.
@@ -1220,23 +1304,28 @@ define([
         this._renderableObject.renderInstances(context, instanceQueueIndex, instanceCount);
     };
     /**
-     * Renders the object at this node and all subnodes to the shadow map, if 
-     * visible.
+     * Renders the object at this node and all subnodes to the shadow map, if it is visible.
      * @param {ManagedGLContext} context
      * @param {Number} screenWidth
      * @param {Number} screenHeight
+     * @param {Float32Array} [lightMatrix]
+     * @param {Number} [range]
+     * @param {Number} [depthRatio]
+     * @returns {Boolean}
      */
-    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight) {
-        var i;
+    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight, lightMatrix, range, depthRatio) {
+        var i, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, true);
-            this._renderableObject.renderToShadowMap(this._renderParameters);
+            this.setRenderParameters(context, screenWidth, screenHeight, true, undefined, undefined, lightMatrix, range, depthRatio);
+            result = this._renderableObject.renderToShadowMap(this._renderParameters);
             // recursive rendering of all subnodes
             for (i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].renderToShadowMap(context, screenWidth, screenHeight);
+                this._subnodes[i].renderToShadowMap(context, screenWidth, screenHeight, lightMatrix, range, depthRatio);
             }
+            return result;
         }
+        return false;
     };
     /**
      * Adds and sets up all resources needed to render the held object and all
@@ -1344,8 +1433,9 @@ define([
      * @param {Boolean} [renderedWithoutDepthMask=true] Tells whether this object should be rendered when the depth mask is off (= it contains 
      * transparent triangles)
      * @param {ManagedShader} [instancedShader]
+     * @param {Boolean} [castsShadows=true] If true, this object will be rendered to shadow maps.
      */
-    function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader) {
+    function RenderableObject(shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader, castsShadows) {
         /**
          * A reference to the node holding this object.
          * @type RenderableNode
@@ -1396,6 +1486,22 @@ define([
          * @type Boolean
          */
         this._visible = true;
+        /**
+         * If true, this object is rendered to shadow maps.
+         * @type Boolean
+         */
+        this._castsShadows = (castsShadows !== undefined) ? castsShadows : true;
+        /**
+         * Whether the object has been rendered to the last shadow map. Can be used by children objects when rendering them to the same 
+         * shadow map - if they go together with their parent, so no additional tests need to be performed for them.
+         * @type Boolean
+         */
+        this._wasRenderedToShadowMap = false;
+        /**
+         * An optional string ID by which a particular renderable object can be identified.
+         * @type String
+         */
+        this._name = null;
     }
     /**
      * Returns the node that contains this object. If there is no such node,
@@ -1468,6 +1574,20 @@ define([
      */
     RenderableObject.prototype.setUniformValueFunction = function (rawUniformName, valueFunction, alternativeThis) {
         this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(alternativeThis || this);
+    };
+    /*
+     * Sets a name for this object by which later it can be identified.
+     * @param {String} value
+     */
+    RenderableObject.prototype.setName = function (value) {
+        this._name = value;
+    };
+    /**
+     * Returns the name set for this object.
+     * @returns {String}
+     */
+    RenderableObject.prototype.getName = function () {
+        return this._name;
     };
     /**
      * Returns a function that obtains the texture location of the texture with
@@ -1545,6 +1665,7 @@ define([
      */
     RenderableObject.prototype.resetForNewFrame = function () {
         this._wasRendered = false;
+        this._wasRenderedToShadowMap = false;
     };
     /**
      * Returns a combination of bits corresponding to which rendered queues (based on distance) should this object be added to for rendering
@@ -1660,7 +1781,14 @@ define([
      * @returns {Boolean}
      */
     RenderableObject.prototype.shouldBeRenderedToShadowMap = function () {
-        return !this._canBeReused;
+        return !this._canBeReused && this._visible && this._castsShadows;
+    };
+    /**
+     * Returns whether this object has been rendered to the last shadow map.
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.wasRenderedToShadowMap = function () {
+        return this._wasRenderedToShadowMap;
     };
     /**
      * Called before every shadow map render, after the object passes the test 
@@ -1682,12 +1810,17 @@ define([
      * Handles the full shadow map render flow, with checks and preparations. 
      * Don't override this.
      * @param {RenderParameters} renderParameters
+     * @returns {Boolean} Whether the object actually has been rendered to the shadow map (it passed all checks)
      */
     RenderableObject.prototype.renderToShadowMap = function (renderParameters) {
         if (this.shouldBeRenderedToShadowMap(renderParameters)) {
             this.prepareForRenderToShadowMap(renderParameters);
             this.performRenderToShadowMap(renderParameters);
+            this._wasRenderedToShadowMap = true;
+            return true;
         }
+        this._wasRenderedToShadowMap = false;
+        return false;
     };
     /**
      * Returns whether animation should be performed for this object. Override this
@@ -1763,11 +1896,12 @@ define([
      * @param {Float32Array} [orientationMatrix] Initial orientation.
      * @param {Float32Array} [scalingMatrix] Initial scaling.
      * @param {ManagedShader} [instancedShader]
+     * @param {Number} [size=1]
      * @returns {RenderableObject3D}
      */
-    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader) {
+    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size) {
         RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
-        Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix);
+        Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix, size);
         /**
          * The cached value of the size of this object on the screen from the 
          * last frustum calculation.
@@ -1832,18 +1966,6 @@ define([
         return Math.max(this._visibleSize.width * renderParameters.viewportWidth / 2, this._visibleSize.height * renderParameters.viewportHeight / 2);
     };
     /**
-     * Returns whether the object is within the shadow cast frustum, using the
-     * passed camera. Uses caching.
-     * @param {Camera} camera
-     * @returns {Boolean}
-     */
-    RenderableObject3D.prototype.isInsideShadowCastFrustum = function (camera) {
-        if (this._insideShadowCastFrustum === null) {
-            this._insideShadowCastFrustum = this.getSizeInsideViewFrustum(camera).width > 0;
-        }
-        return this._insideShadowCastFrustum;
-    };
-    /**
      * @override
      * Extend's the superclass method, erases cached values.
      */
@@ -1901,6 +2023,21 @@ define([
                 return false;
             }
             return this.isInsideViewFrustum(renderParameters);
+        }
+        return false;
+    };
+    /**
+     * Aside from the checks of regular renderable objects, checks whether this object (or its parent, if it is located inside the parent)
+     * is inside the respective shadow map region.
+     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
+     */
+    RenderableObject3D.prototype.shouldBeRenderedToShadowMap = function (renderParameters) {
+        if (RenderableObject.prototype.shouldBeRenderedToShadowMap.call(this, renderParameters)) {
+            if (this.isInsideParent() === true) {
+                return renderParameters.parent.wasRenderedToShadowMap();
+            }
+            return this.isInsideShadowRegion(renderParameters.lightMatrix, renderParameters.shadowMapRange, renderParameters.shadowMapDepthRatio);
         }
         return false;
     };
@@ -2006,6 +2143,12 @@ define([
          */
         this._currentLOD = this.LOD_NOT_SET;
         /**
+         * A saved value of the last valid LOD that was chosen to render this object. This is used e.g. when rendering the shadow of
+         * an object that itself is no longer inside the view frustum, and so it doesn't have a valid current LOD anymore.
+         * @type Number
+         */
+        this._lastLOD = this.LOD_NOT_SET;
+        /**
          * Stores the size of the largest model (of any LOD) representing this
          * object. It is the double of the (absolute) largest coordinate found 
          * among the vertices of the model.
@@ -2107,18 +2250,24 @@ define([
             } else {
                 visibleSize = this.getSizeInPixels(renderParameters);
                 lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
-                for (i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
-                    if ((this._currentLOD === this.LOD_NOT_SET) || ((i <= renderParameters.lodContext.maxEnabledLOD) && ((this._currentLOD > renderParameters.lodContext.maxEnabledLOD) ||
-                            ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize)) ||
-                            ((renderParameters.lodContext.thresholds[this._currentLOD] <= lodSize) && (renderParameters.lodContext.thresholds[i] <= lodSize) && (i > this._currentLOD)) ||
-                            ((renderParameters.lodContext.thresholds[this._currentLOD] > lodSize) && (renderParameters.lodContext.thresholds[i] > lodSize) && (i < this._currentLOD))
-                            ))) {
-                        this._currentLOD = i;
+                if (lodSize > 0) {
+                    for (i = Math.min(this._model.getMaxLOD(), renderParameters.lodContext.maxEnabledLOD); i >= this._model.getMinLOD(); i--) {
+                        if (renderParameters.lodContext.thresholds[i] <= lodSize) {
+                            this._currentLOD = i;
+                            break;
+                        }
                     }
                 }
             }
         }
-        return this._currentLOD;
+        if (this._currentLOD !== this.LOD_NOT_SET) {
+            this._lastLOD = this._currentLOD;
+            return this._currentLOD;
+        }
+        if (this._lastLOD !== this.LOD_NOT_SET) {
+            return this._lastLOD;
+        }
+        return DEFAULT_LOD;
     };
     /**
      * @override
@@ -2163,7 +2312,7 @@ define([
      */
     ShadedLODMesh.prototype.shouldBeRenderedToShadowMap = function (renderParameters) {
         if (RenderableObject3D.prototype.shouldBeRenderedToShadowMap.call(this, renderParameters)) {
-            return this.shouldBeRendered(renderParameters);
+            return this._model.getNumOpaqueTriangles(this.getCurrentLOD(renderParameters)) > 0;
         }
     };
     /**
@@ -2179,6 +2328,7 @@ define([
      */
     ShadedLODMesh.prototype.performRenderToShadowMap = function (renderParameters) {
         this._model.render(renderParameters.context, this._wireframe, true, this.getCurrentLOD(renderParameters));
+        application.log("Rendered model (" + this._model.getName() + ") to shadow map.", 5);
     };
     /**
      * @override
@@ -2311,6 +2461,13 @@ define([
      */
     Billboard.prototype.performRender = function (renderParameters) {
         this._model.render(renderParameters.context, false);
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    Billboard.prototype.shouldBeRenderedToShadowMap = function () {
+        return false;
     };
     /**
      * @override
@@ -2562,6 +2719,13 @@ define([
      */
     Particle.prototype._peformRenderInstances = function (context, instanceCount) {
         this._model.renderInstances(context, false, undefined, undefined, instanceCount);
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    Particle.prototype.shouldBeRenderedToShadowMap = function () {
+        return false;
     };
     /**
      * @override
@@ -3258,8 +3422,20 @@ define([
     PointParticle.prototype.performRender = function (renderParameters) {
         this._model.render(renderParameters.context, true);
     };
+    /**
+     * @override
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceCount
+     */
     PointParticle.prototype._peformRenderInstances = function (context, instanceCount) {
         this._model.renderInstances(context, true, false, undefined, instanceCount);
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    PointParticle.prototype.shouldBeRenderedToShadowMap = function () {
+        return false;
     };
     /**
      * Always returns false, there are no animations for this type of objects.
@@ -5693,7 +5869,7 @@ define([
          * ranges.
          * @type Float32Array
          */
-        this._matrix = null;
+        this._baseMatrix = null;
         /**
          * A unit vector that points from the camera center towards the centers of the shadow maps (which reside in from of the camera), 
          * for the current camera that is used to render a scene with this light source. Using this vector, shaders can calculate the
@@ -5701,6 +5877,12 @@ define([
          * @type Float32Array
          */
         this._translationVector = null;
+        /**
+         * The matrix that transforms world coordinates into shadow (light) space coordinates, taking into account the camera position and
+         * orientation.
+         * @type Float32Array
+         */
+        this._translatedMatrix = null;
         /**
          * The prefix to use for creating frambuffer names for the shadow maps of different ranges for this light source.
          * @type String
@@ -5740,8 +5922,17 @@ define([
      * @returns {undefined}
      */
     DirectionalLightSource.prototype.reset = function () {
-        this._matrix = null;
+        this._baseMatrix = null;
         this._translationVector = null;
+        this._translatedMatrix = null;
+    };
+    /**
+     * Returns the 4x4 transformation matrix that can transform world-space coordinates into the current light space of this light source.
+     * (taking into account camera position and orientation)
+     * @returns {Float32Array}
+     */
+    DirectionalLightSource.prototype.getTranslatedMatrix = function () {
+        return this._translatedMatrix;
     };
     /**
      * Performs all actions necesary to set up the passed context for rendering the shadow map of the given range for this light source.
@@ -5755,19 +5946,19 @@ define([
      * @param {Number} translationLength The length of the vector that point from the camera position center to the center of this shadow map.
      */
     DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth, translationLength) {
-        var matrix, uniformValueFunctions = {};
+        var uniformValueFunctions = {};
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
         // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
         // considering also that the center of the shadow map is ahead of the camera
-        matrix = mat.prod34(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), translationLength)), this._orientationMatrix);
+        this._translatedMatrix = mat.prod34(camera.getInversePositionMatrix(), mat.translation4v(vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), translationLength)), this._orientationMatrix);
         // a matrix referring to shadow map that would have its center at the camera and the unit vector that points from this center towards
         // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
         // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
-        this._matrix = this._matrix || mat.prod4(camera.getInversePositionMatrix(), this._orientationMatrix);
-        this._translationVector = this._translationVector || vec.normal3(vec.diff3(mat.translationVector3(matrix), mat.translationVector3(this._matrix)));
+        this._baseMatrix = this._baseMatrix || mat.prod4(camera.getInversePositionMatrix(), this._orientationMatrix);
+        this._translationVector = this._translationVector || vec.normal3(vec.diff3(mat.translationVector3(this._translatedMatrix), mat.translationVector3(this._baseMatrix)));
         uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
-            return matrix;
-        };
+            return this._translatedMatrix;
+        }.bind(this);
         uniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_DEPTH_NAME)] = function () {
             return depth;
         };
@@ -5785,7 +5976,7 @@ define([
         return {
             color: this._color,
             direction: this._direction,
-            matrix: this._matrix || mat.IDENTITY4,
+            matrix: this._baseMatrix || mat.IDENTITY4,
             translationVector: this._translationVector || vec.NULL3
         };
     };
@@ -6342,6 +6533,11 @@ define([
          */
         this._renderQueues = [];
         /**
+         * The array of renderable nodes to be rendered to the next shadow map.
+         * @type RenderableNode[]
+         */
+        this._shadowQueue = null;
+        /**
          * A flag storing whether the scene uniforms have already been assigned at least once during the current frame. If the whole scene
          * is rendered using just one shader, there are no shader switches and thus no automatic scene uniform assignments, so this flag
          * is used to make sure that uniform values get updated for each frame even in this case.
@@ -6725,13 +6921,14 @@ define([
             this._rootBackgroundNode.destroy();
         }
         // we are adding RenderableObject3D so if nodes with object 3D-s are added, they will have a parent with position and orientation
-        this._rootBackgroundNode = new RenderableNode(new RenderableObject3D(null, false, false));
+        // a size of 0 is specified so that no child 3D objects will ever think they are inside their parent
+        this._rootBackgroundNode = new RenderableNode(new RenderableObject3D(null, false, false, undefined, undefined, undefined, undefined, 0));
         this._rootBackgroundNode.setScene(this);
         // clearing main scene objects
         if (this._rootNode) {
             this._rootNode.destroy();
         }
-        this._rootNode = new RenderableNode(new RenderableObject3D(null, false, false));
+        this._rootNode = new RenderableNode(new RenderableObject3D(null, false, false, undefined, undefined, undefined, undefined, 0));
         this._rootNode.setScene(this);
         // clearing resource objects
         if (this._rootResourceNode) {
@@ -6743,7 +6940,7 @@ define([
         if (this._rootUINode) {
             this._rootUINode.destroy();
         }
-        this._rootUINode = new RenderableNode(new RenderableObject3D(null, false, false));
+        this._rootUINode = new RenderableNode(new RenderableObject3D(null, false, false, undefined, undefined, undefined, undefined, 0));
         this._rootUINode.setScene(this);
     };
     /**
@@ -6992,11 +7189,27 @@ define([
      * Renders the main scene objects for a shadow map after it has been set up appropriately for a light source and shadow map range.
      * This method only performs the rendering itself (clearing the background and rendering the nodes on it)
      * @param {ManagedGLContext} context
+     * @param {Float32Array} lightMatrix
+     * @param {Number} range
+     * @param {Number} depthRatio
      */
-    Scene.prototype._renderShadowMap = function (context) {
-        var gl = context.gl;
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this._rootNode.renderToShadowMap(context, this._width, this._height);
+    Scene.prototype._renderShadowMap = function (context, lightMatrix, range, depthRatio) {
+        var gl = context.gl, i, newShadowQueue;
+        application.log("Starting new shadow map...", 4);
+        if (this._shadowQueue.length > 0) {
+            if (managedGL.areDepthTexturesAvailable()) {
+                gl.clear(gl.DEPTH_BUFFER_BIT);
+            } else {
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            }
+            newShadowQueue = [];
+            for (i = 0; i < this._shadowQueue.length; i++) {
+                if (this._shadowQueue[i].renderToShadowMap(context, this._width, this._height, lightMatrix, range, depthRatio)) {
+                    newShadowQueue.push(this._shadowQueue[i]);
+                }
+            }
+            this._shadowQueue = newShadowQueue;
+        }
     };
     /**
      * If shadow mapping is enabled, renders all the shadow maps according to the current settings to separate textures, and binds all these
@@ -7021,9 +7234,12 @@ define([
             // rendering for each light source and shadow map range
             for (i = 0; i < this._directionalLights.length; i++) {
                 this._directionalLights[i].reset();
-                for (j = 0; j < this._shadowMapRanges.length; j++) {
+                this._shadowQueue = [];
+                this._shadowQueue = this._shadowQueue.concat(this._rootNode.getSubnodes());
+                application.log("Rendering shadow maps for light " + i + "...", 4);
+                for (j = this._shadowMapRanges.length - 1; j >= 0; j--) {
                     this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, this._shadowMapRanges[j]);
-                    this._renderShadowMap(context);
+                    this._renderShadowMap(context, this._directionalLights[i].getTranslatedMatrix(), this._shadowMapRanges[j], this._shadowMapDepthRatio);
                 }
             }
             // binding the created textures to be used by the subsequent rendering calls
@@ -7230,6 +7446,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        getDebugInfo: getDebugInfo,
         LODContext: LODContext,
         Scene: Scene,
         DirectionalLightSource: DirectionalLightSource,

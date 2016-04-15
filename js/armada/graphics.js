@@ -1863,7 +1863,7 @@ define([
         return shouldUseShadowMapping() ?
                 {
                     enable: true,
-                    shader: getShadowMappingShader().getManagedShader(),
+                    shader: _context.getManagedShader(_context.getShadowMappingShaderName()),
                     textureSize: _context.getShadowMapTextureSize(),
                     ranges: _context.getShadowRanges(),
                     depthRatio: _context.getShadowDepthRatio(),

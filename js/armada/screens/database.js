@@ -263,6 +263,7 @@ define([
         // create a ship that can be used to add the models to the scene
         _currentItem = new logic.Spacecraft(
                 classes.getSpacecraftClassesInArray(true)[_currentItemIndex],
+                null,
                 mat.identity4(),
                 mat.identity4(),
                 null,
@@ -578,7 +579,7 @@ define([
      * Carries out the resource loading and scene setup that needs to be done the first time an item is displayed.
      */
     DatabaseScreen.prototype._initializeCanvas = function () {
-        var canvas, i, lightSources;
+        var canvas, i, lightSources, shadowMappingSettings;
         _firstLoad = true;
         document.body.classList.add("wait");
         if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {
@@ -613,19 +614,12 @@ define([
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
         }
         resources.executeWhenReady(function () {
-            if (graphics.shouldUseShadowMapping()) {
-                _itemViewScene.setShadowMapping({
-                    enable: true,
-                    shader: graphics.getShadowMappingShader().getManagedShader(),
-                    textureSize: graphics.getShadowMapTextureSize(),
-                    ranges: [],
-                    depthRatio: graphics.getShadowDepthRatio(),
-                    numSamples: graphics.getNumShadowMapSamples(),
-                    deferSetup: true
-                });
-            } else {
-                _itemViewScene.setShadowMapping(null);
+            shadowMappingSettings = graphics.getShadowMappingSettings();
+            if (shadowMappingSettings) {
+                shadowMappingSettings.ranges = [];
+                shadowMappingSettings.deferSetup = true;
             }
+            _itemViewScene.setShadowMapping(shadowMappingSettings);
         }.bind(this));
         if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_INITIAL_PROGRESS);
