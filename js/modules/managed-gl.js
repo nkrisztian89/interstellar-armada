@@ -1108,6 +1108,8 @@ define([
         this._textureLocation = context.bindTexture(this);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MAG_FILTER, context.gl.NEAREST);
         context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_MIN_FILTER, context.gl.NEAREST);
+        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_WRAP_S, context.gl.CLAMP_TO_EDGE);
+        context.gl.texParameteri(context.gl.TEXTURE_2D, context.gl.TEXTURE_WRAP_T, context.gl.CLAMP_TO_EDGE);
         if (this._depthOnly && context.areDepthTexturesAvailable()) {
             context.gl.texImage2D(context.gl.TEXTURE_2D, 0, context.gl.DEPTH_COMPONENT, this._width, this._height, 0, context.gl.DEPTH_COMPONENT, context.gl.UNSIGNED_SHORT, null);
             context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.TEXTURE_2D, this._textureID, 0);

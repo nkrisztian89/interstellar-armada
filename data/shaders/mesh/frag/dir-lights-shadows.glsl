@@ -149,7 +149,7 @@
                 }
 
                 if (lighted > 0.0) {
-                    specularFactor = v_shininess > 0.0 ? pow(max(dot(reflDir, u_dirLights[i].direction), 0.0), v_shininess) : 0.0;
+                    specularFactor = v_shininess > 0.0 ? pow(max(dot(normal, normalize(u_dirLights[i].direction - viewDir)), 0.0), v_shininess) : 0.0;
 
                     gl_FragColor.rgb += lighted *
                         vec3(

@@ -9,7 +9,7 @@
             direction = normalize(direction);
             float diffuseFactor = max(0.0, dot(direction, normal));
             intensity = u_pointLights[i].color.a;
-            gl_FragColor.rgb += clamp(u_pointLights[i].color.rgb * diffuseFactor  * intensity / (dist * dist), 0.0, 1.0) * diffuseColor.rgb;
+            gl_FragColor.rgb += min(u_pointLights[i].color.rgb * diffuseFactor  * intensity / (dist * dist), 1.0) * diffuseColor.rgb;
         }
     }
     // handling spotlights
@@ -28,7 +28,7 @@
                 if (u_spotLights[i].position.a > 0.0) {
                     cutoffFactor = clamp((cosine - u_spotLights[i].spot.a) / (u_spotLights[i].position.a - u_spotLights[i].spot.a), 0.0, 1.0);
                 }
-                gl_FragColor.rgb += clamp(u_spotLights[i].color.rgb * diffuseFactor  * intensity / (dist * dist), 0.0, 1.0) * cutoffFactor * diffuseColor.rgb;
+                gl_FragColor.rgb += min(u_spotLights[i].color.rgb * diffuseFactor  * intensity / (dist * dist), 1.0) * cutoffFactor * diffuseColor.rgb;
             }
         }
     }
