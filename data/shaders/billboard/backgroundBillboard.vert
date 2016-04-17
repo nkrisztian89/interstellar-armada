@@ -17,6 +17,7 @@ void main() {
 	gl_Position = u_cameraOrientationMatrix * vec4(u_position, 1.0);
 	gl_Position.xy+=a_position.xy*u_billboardSize*(1.0-u_relAge);
 	gl_Position = u_projMatrix * gl_Position;
+        gl_Position.z = gl_Position.w;
 	
 	v_texCoord = a_texCoord;
 }

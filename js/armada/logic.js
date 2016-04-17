@@ -3912,6 +3912,7 @@ define([
                     this._spacecrafts.push(
                             new Spacecraft(
                                     classes.getSpacecraftClass(shipClass),
+                                    "",
                                     mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
                                     orientation,
                                     this._projectiles,

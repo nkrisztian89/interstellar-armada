@@ -7226,7 +7226,6 @@ define([
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
             context.setColorMask(COLOR_MASK_ALL_TRUE);
             context.disableBlending();
-            gl.enable(gl.DEPTH_TEST);
             context.setDepthMask(true);
             // choosing the shadow map shader
             context.setCurrentShader(this._shadowMappingShader);
@@ -7257,11 +7256,9 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype._renderBackgroundObjects = function (context) {
-        var gl = context.gl; // caching the variable for easier access
         application.log("Rendering background objects of scene...", 4);
         // preparing to render background objects
         context.enableBlending();
-        gl.disable(gl.DEPTH_TEST);
         context.setDepthMask(false);
         // rendering background objects
         this._rootBackgroundNode.resetForNewFrame();
@@ -7307,12 +7304,11 @@ define([
      * In these queues should be the nodes that contain objects that should be rendered in opaque mode.
      * @param {RenderableNode[][]} transparentRenderQueues In these queues should be the nodes that contain objects that should be rendered 
      * in transparent mode.
+     * @param {Boolean} renderBackground If true, the background objects are rendered as well.
      */
-    Scene.prototype._renderMainObjects = function (context, opaqueRenderQueues, transparentRenderQueues) {
-        var i, gl;
-        gl = context.gl; // caching the variable for easier access
+    Scene.prototype._renderMainObjects = function (context, opaqueRenderQueues, transparentRenderQueues, renderBackground) {
+        var i;
         // preparing to render main scene objects
-        gl.enable(gl.DEPTH_TEST);
         // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
         application.log("Rendering opaque phase...", 4);
         if (opaqueRenderQueues.length > 0) {
@@ -7325,6 +7321,12 @@ define([
             if (application.isDebugVersion()) {
                 this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
             }
+        }
+        // rendering the background objects after the opaque pass so background will only be rendered where it is not occluded by opaque
+        // triangles. Transparent triangles are not changing the depth buffer so they would be overwritten by the background if it was 
+        // rendered after them
+        if (renderBackground) {
+            this._renderBackgroundObjects(context);
         }
         // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
         application.log("Rendering transparent phase...", 4);
@@ -7357,6 +7359,7 @@ define([
             if (application.isDebugVersion()) {
                 this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
             }
+            gl.enable(gl.DEPTH_TEST);
         }
     };
     /**
@@ -7366,7 +7369,7 @@ define([
      * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
      */
     Scene.prototype.render = function (context, dt) {
-        var gl = context.gl, clearBits, camera, frontQueuesNotEmpty;
+        var gl = context.gl, clearBits, camera, frontQueuesNotEmpty, distanceQueuesNotEmpty;
         application.log("Rendering scene...", 3);
         // updating camera
         this._camera.update(this._shouldUpdateCamera ? dt : 0);
@@ -7380,6 +7383,7 @@ define([
         this._renderQueues = [[], [], [], []];
         this._rootNode.animateAndAddToRenderQueues(this._renderQueues, this._camera, dt);
         frontQueuesNotEmpty = (this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
+        distanceQueuesNotEmpty = (this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
         // rendering shadow maps
         if (frontQueuesNotEmpty) {
             this._renderShadowMaps(context);
@@ -7406,17 +7410,14 @@ define([
         }
         this._uniformsUpdatedForFrame = false;
         // -----------------------------------------------------------------------
-        // rendering the background objects
-        this._renderBackgroundObjects(context);
-        // -----------------------------------------------------------------------
         // rendering the queues storing distant main objects
-        if ((this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0)) {
+        if (distanceQueuesNotEmpty) {
             // switching to an extended camera
             camera = this._camera;
             this._camera = this._camera.getExtendedCamera();
             // dynamic lights are not support for these objects as they are not really visible but expensive
             this._clearDynamicLightUniformData();
-            this._renderMainObjects(context, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
+            this._renderMainObjects(context, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX], true);
             // switching back the camera
             this._camera = camera;
             // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
@@ -7433,7 +7434,7 @@ define([
             // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
             // same as the last one used for the distant objects
             this.assignUniforms(context, context.getCurrentShader());
-            this._renderMainObjects(context, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
+            this._renderMainObjects(context, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX], !distanceQueuesNotEmpty);
         }
         // -----------------------------------------------------------------------
         // rendering the UI objects
