@@ -1065,6 +1065,11 @@ define([
          */
         this._screenCenter = [0, 0];
         /**
+         * A cahced value of the mininum of the X and Y coordinates of the screen center.
+         * @type Number
+         */
+        this._screenSize = 0;
+        /**
          * The current mouse position as obtained from the mouse event.
          * @type Number[2]
          */
@@ -1087,10 +1092,17 @@ define([
         this._moveSensitivity = 0;
         /**
          * The intensity of actions derived from displacement of the mouse from the
-         * center will be multiplied by this factor.
+         * center will reach 1.0 at the distance that is the screen size (the smaller one of width / height)
+         * multiplied by this factor.
          * @type Number
          */
-        this._displacementSensitivity = 0;
+        this._displacementAreaRelativeSize = 0;
+        /**
+         * The factor mouse displacement will be multiplied by to get the action intensity (maximum 1.0)
+         * based on the displacement area relative size and the screen size (cached value).
+         * @type Number
+         */
+        this._displacementFactor = 1;
         /**
          * The actions the would derive their intensity from displacement of the mouse 
          * from the center will not be triggered unless the displacement exceeds this
@@ -1103,6 +1115,13 @@ define([
     MouseInputInterpreter.prototype = new InputInterpreter();
     MouseInputInterpreter.prototype.constructor = MouseInputInterpreter;
     /**
+     * Updates the factor mouse displacement will be multiplied by to get the action intensity (maximum 1.0)
+     * based on the displacement area relative size and the screen size.
+     */
+    MouseInputInterpreter.prototype._updateDisplacementFactor = function () {
+        this._displacementFactor = 1 / ((this._screenSize || 1) * this._displacementAreaRelativeSize);
+    };
+    /**
      * Updates the screen center relative to which the mouse position is sent to the
      * binding to check if they are triggered. Needs to be called when the center
      * changes, e.g. the window is resized.
@@ -1111,6 +1130,8 @@ define([
      */
     MouseInputInterpreter.prototype.setScreenCenter = function (x, y) {
         this._screenCenter = [x, y];
+        this._screenSize = Math.min(x, y);
+        this._updateDisplacementFactor();
         this._mousePosition = null;
         this._mousePositionChange = [0, 0];
         this._scrollChange = [0, 0];
@@ -1134,11 +1155,12 @@ define([
     };
     /**
      * Sets the mouse displacement sensitivity and stores the setting in HTML5 local storage.
-     * @param {Number} displacementSensitivity
+     * @param {Number} displacementAreaRelativeSize
      */
-    MouseInputInterpreter.prototype.setAndStoreDisplacementSensitivity = function (displacementSensitivity) {
-        this._displacementSensitivity = displacementSensitivity;
-        localStorage[_modulePrefix + "mouse_displacementSensitivity"] = this._displacementSensitivity;
+    MouseInputInterpreter.prototype.setAndStoreDisplacementAreaRelativeSize = function (displacementAreaRelativeSize) {
+        this._displacementAreaRelativeSize = displacementAreaRelativeSize;
+        this._updateDisplacementFactor();
+        localStorage[_modulePrefix + "mouse_displacementAreaRelativeSize"] = this._displacementAreaRelativeSize;
     };
     /**
      * Sets the mouse displacement deadzone and stores the setting in HTML5 local storage.
@@ -1157,7 +1179,8 @@ define([
     MouseInputInterpreter.prototype.loadFromJSON = function (dataJSON) {
         InputInterpreter.prototype.loadFromJSON.call(this, dataJSON);
         this._moveSensitivity = dataJSON.sensitivityProfile.moveSensitivity;
-        this._displacementSensitivity = dataJSON.sensitivityProfile.displacementSensitivity;
+        this._displacementAreaRelativeSize = dataJSON.sensitivityProfile.displacementAreaRelativeSize;
+        this._updateDisplacementFactor();
         this._displacementDeadzone = dataJSON.sensitivityProfile.displacementDeadzone;
     };
     /**
@@ -1170,8 +1193,9 @@ define([
         if (localStorage[_modulePrefix + "mouse_moveSensitivity"] !== undefined) {
             this._moveSensitivity = parseFloat(localStorage[_modulePrefix + "mouse_moveSensitivity"]);
         }
-        if (localStorage[_modulePrefix + "mouse_displacementSensitivity"] !== undefined) {
-            this._displacementSensitivity = parseFloat(localStorage[_modulePrefix + "mouse_displacementSensitivity"]);
+        if (localStorage[_modulePrefix + "mouse_displacementAreaRelativeSize"] !== undefined) {
+            this._displacementAreaRelativeSize = parseFloat(localStorage[_modulePrefix + "mouse_displacementAreaRelativeSize"]);
+            this._updateDisplacementFactor();
         }
         if (localStorage[_modulePrefix + "mouse_displacementDeadzone"] !== undefined) {
             this._displacementDeadzone = parseInt(localStorage[_modulePrefix + "mouse_displacementDeadzone"], 10);
@@ -1184,7 +1208,7 @@ define([
     MouseInputInterpreter.prototype.removeFromLocalStorage = function () {
         InputInterpreter.prototype.removeFromLocalStorage.call(this);
         localStorage.removeItem(_modulePrefix + "mouse_moveSensitivity");
-        localStorage.removeItem(_modulePrefix + "mouse_displacementSensitivity");
+        localStorage.removeItem(_modulePrefix + "mouse_displacementAreaRelativeSize");
         localStorage.removeItem(_modulePrefix + "mouse_displacementDeadzone");
     };
     /**
@@ -1313,7 +1337,7 @@ define([
                 {
                     name: actionName,
                     intensity: (this._bindings[actionName].isMeasuredFromCenter() === true) ?
-                            Math.max(0, (actionIntensity - this._displacementDeadzone) * this._displacementSensitivity) :
+                            Math.min(1, Math.max(0, actionIntensity - this._displacementDeadzone) * this._displacementFactor) :
                             (actionIntensity * this._moveSensitivity)
                 } :
                 null;
@@ -1493,6 +1517,11 @@ define([
          */
         this._staticSensitivity = (dataJSON.staticSensitivity === true);
         /**
+         * If set to true, the intensity of triggered actions in this group will be based on the squared value
+         * of the intensity reported by the gamepad.
+         */
+        this._quadraticIntensity = (dataJSON.quadraticSensitivity === true);
+        /**
          * This array stores the names of action the sensitivity modifiers should apply to.
          * @type Array
          */
@@ -1510,7 +1539,7 @@ define([
      */
     GamepadSensitivityActionGroup.prototype.getIntensityForAction = function (baseIntensity, actionName) {
         if (this._actionNames.indexOf(actionName) >= 0) {
-            return this._staticSensitivity ? undefined : (baseIntensity * this._sensitivityFactor);
+            return this._staticSensitivity ? undefined : (baseIntensity * (this._quadraticIntensity ? baseIntensity : 1) * this._sensitivityFactor);
         }
         return -1;
     };

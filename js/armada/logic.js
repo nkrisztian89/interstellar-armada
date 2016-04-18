@@ -2562,8 +2562,8 @@ define([
         }
     };
     /**
-     * Sets the target angular velocity to yaw to the left with intensity (maxed
-     * out at the turning limit), or if no intensity was given, with the turning
+     * Sets the target angular velocity to yaw to the left with the given intensity 
+     * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
      * @param {Number} [intensity]
      */
@@ -2576,7 +2576,7 @@ define([
             // if a specific intensity was set, set the target to it, capping it out at
             // the maximum allowed turning speed
         } else if (intensity > 0) {
-            this._yawTarget = -Math.min(intensity, this._turningLimit);
+            this._yawTarget = -intensity * this._turningLimit;
             // if a zero or negative intensity was given, set the target to zero,
             // but only if it is set to turn to left
         } else if (this._yawTarget < 0) {
@@ -2584,8 +2584,8 @@ define([
         }
     };
     /**
-     * Sets the target angular velocity to yaw to the right with intensity (maxed
-     * out at the turning limit), or if no intensity was given, with the turning
+     * Sets the target angular velocity to yaw to the right with the given intensity 
+     * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
      * @param {Number} [intensity]
      */
@@ -2593,14 +2593,14 @@ define([
         if ((intensity === null) || (intensity === undefined)) {
             this._yawTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._yawTarget = Math.min(intensity, this._turningLimit);
+            this._yawTarget = intensity * this._turningLimit;
         } else if (this._yawTarget > 0) {
             this._yawTarget = 0;
         }
     };
     /**
-     * Sets the target angular velocity to pitch down with intensity (maxed
-     * out at the turning limit), or if no intensity was given, with the turning
+     * Sets the target angular velocity to pitch down with the given intensity 
+     * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
      * @param {Number} [intensity]
      */
@@ -2608,14 +2608,14 @@ define([
         if ((intensity === null) || (intensity === undefined)) {
             this._pitchTarget = -this._turningLimit;
         } else if (intensity > 0) {
-            this._pitchTarget = -Math.min(intensity, this._turningLimit);
+            this._pitchTarget = -intensity * this._turningLimit;
         } else if (this._pitchTarget < 0) {
             this._pitchTarget = 0;
         }
     };
     /**
-     * Sets the target angular velocity to pitch up with intensity (maxed
-     * out at the turning limit), or if no intensity was given, with the turning
+     * Sets the target angular velocity to pitch up with the given intensity 
+     * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
      * @param {Number} [intensity]
      */
@@ -2623,14 +2623,14 @@ define([
         if ((intensity === null) || (intensity === undefined)) {
             this._pitchTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._pitchTarget = Math.min(intensity, this._turningLimit);
+            this._pitchTarget = intensity * this._turningLimit;
         } else if (this._pitchTarget > 0) {
             this._pitchTarget = 0;
         }
     };
     /**
-     * Sets the target angular velocity to roll to the left with intensity (maxed
-     * out at the turning limit), or if no intensity was given, with the turning
+     * Sets the target angular velocity to roll to the left with the given intensity 
+     * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
      * @param {Number} [intensity]
      */
@@ -2638,14 +2638,14 @@ define([
         if ((intensity === null) || (intensity === undefined)) {
             this._rollTarget = -this._turningLimit;
         } else if (intensity > 0) {
-            this._rollTarget = -Math.min(intensity, this._turningLimit);
+            this._rollTarget = -intensity * this._turningLimit;
         } else if (this._rollTarget < 0) {
             this._rollTarget = 0;
         }
     };
     /**
-     * Sets the target angular velocity to roll to the right with intensity (maxed
-     * out at the turning limit), or if no intensity was given, with the turning
+     * Sets the target angular velocity to roll to the right with the given intensity 
+     * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
      * @param {Number} [intensity]
      */
@@ -2653,7 +2653,7 @@ define([
         if ((intensity === null) || (intensity === undefined)) {
             this._rollTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._rollTarget = Math.min(intensity, this._turningLimit);
+            this._rollTarget = intensity * this._turningLimit;
         } else if (this._rollTarget > 0) {
             this._rollTarget = 0;
         }

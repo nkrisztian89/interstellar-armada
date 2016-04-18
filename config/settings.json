@@ -295,7 +295,7 @@
                 "type": "mouse",
                 "sensitivityProfile": {
                     "moveSensitivity": 10,
-                    "displacementSensitivity": 0.00002,
+                    "displacementAreaRelativeSize": 0.75,
                     "displacementDeadzone": 6
                 },
                 "bindings": [
@@ -356,7 +356,7 @@
                 "sensitivityProfile": {
                     "actionGroups": [
                         {
-                            "sensitivityFactor": 0.0075,
+                            "quadraticSensitivity": true,
                             "actionNames": ["yawLeft", "yawRight", "pitchUp", "pitchDown", "rollLeft", "rollRight"]
                         }, {
                             "staticSensitivity": true,
