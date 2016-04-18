@@ -131,7 +131,13 @@
             "hudTargetIndicatorColor": [1, 0, 0, 0.75],
             "hudTargetCrosshairTexture": "crosshair",
             "hudTargetCrosshairSize": [0.05, 0.05],
-            "hudTargetCrosshairColor": [0, 1, 0, 0.75]
+            "hudTargetCrosshairColor": [0, 1, 0, 0.75],
+            "hudTargetViewPosition": [0.75, 0.75],
+            "hudTargetViewSize": [0.25, 0.25],
+            "hudTargetViewViewDistance": 1500,
+            "hudTargetViewFOV": 40,
+            "hudTargetViewTargetItemShader": "oneColor",
+            "hudTargetViewTargetItemColor": [0, 1, 0, 1]
         },
         "camera": {
             "defaultFOV": 40,

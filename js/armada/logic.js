@@ -813,6 +813,34 @@ define([
             name: "hudTargetCrosshairColor",
             type: _customTypes.COLOR4,
             defaultValue: [0, 1, 0, 0.75]
+        },
+        HUD_TARGET_VIEW_POSITION: {
+            name: "hudTargetViewPosition",
+            type: "array",
+            elementType: "number",
+            length: 2
+        },
+        HUD_TARGET_VIEW_SIZE: {
+            name: "hudTargetViewSize",
+            type: "array",
+            elementType: "number",
+            length: 2
+        },
+        HUD_TARGET_VIEW_VIEW_DISTANCE: {
+            name: "hudTargetViewViewDistance",
+            type: "number"
+        },
+        HUD_TARGET_VIEW_FOV: {
+            name: "hudTargetViewFOV",
+            type: "number"
+        },
+        HUD_TARGET_VIEW_TARGET_ITEM_SHADER: {
+            name: "hudTargetViewTargetItemShader",
+            type: "string"
+        },
+        HUD_TARGET_VIEW_TARGET_ITEM_COLOR: {
+            name: "hudTargetViewTargetItemColor",
+            type: _customTypes.COLOR4
         }
     };
     CAMERA_SETTINGS = {
@@ -1807,21 +1835,29 @@ define([
      * value is given, all available LODs will be loaded for dynamic rendering.
      * @param {Boolean} wireframe Whether to add the model in wireframe rendering
      * mode.
+     * @param {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
      */
-    Weapon.prototype.addToScene = function (parentNode, lod, wireframe) {
+    Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName) {
+        var visualModel;
         this.acquireResources();
+        if (shaderName) {
+            graphics.getShader(shaderName);
+        }
         resources.executeWhenReady(function () {
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
-            this._visualModel = new budaScene.ShadedLODMesh(
+            visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
-                    this._class.getShader(),
+                    shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader(),
                     this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     this._slot.positionMatrix,
                     this._slot.orientationMatrix,
                     mat.identity4(),
                     (wireframe === true),
                     lod);
-            parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+            parentNode.addSubnode(new budaScene.RenderableNode(visualModel));
+            if (!this._visualModel) {
+                this._visualModel = visualModel;
+            }
         }.bind(this));
     };
     /**
@@ -1990,9 +2026,10 @@ define([
      * that has this thruster)
      */
     Thruster.prototype.addToScene = function (parentNode) {
+        var visualModel;
         this._propulsionClass.acquireResources();
         resources.executeWhenReady(function () {
-            this._visualModel = budaScene.staticParticle(
+            visualModel = budaScene.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
                     this._propulsionClass.getThrusterBurnParticle().getTexturesOfTypes(this._propulsionClass.getThrusterBurnParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -2000,9 +2037,12 @@ define([
                     this._slot.size,
                     mat.translation4v(this._slot.positionVector),
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
-            this._visualModel.setRelativeSize(0);
-            parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
-            this._shipModel = parentNode.getRenderableObject();
+            visualModel.setRelativeSize(0);
+            parentNode.addSubnode(new budaScene.RenderableNode(visualModel, false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
+            if (!this._visualModel) {
+                this._visualModel = visualModel;
+                this._shipModel = parentNode.getRenderableObject();
+            }
         }.bind(this));
     };
     /**
@@ -3284,13 +3324,20 @@ define([
                         false);
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
-    Spacecraft.prototype.acquireResources = function (lod, hitbox) {
+    /**
+     * 
+     * @param {Number} lod
+     * @param {Boolean} hitbox
+     * @param {Boolean} customShader
+     */
+    Spacecraft.prototype.acquireResources = function (lod, hitbox, customShader) {
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME));
             resources.getTexture(_context.getSetting(BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
+        params.omitShader = customShader;
         this._class.acquireResources(params);
     };
     /**
@@ -3303,6 +3350,12 @@ define([
      * @property {Boolean} cameraConfigurations
      * @property {Boolean} lightSources
      * @property {Boolean} blinkers
+     */
+    /**
+     * @typedef {Object} Spacecraft~AddToSceneParams
+     * @property {String} [shaderName]
+     * @property {Float32Array} [positionMatrix]
+     * @property {Float32Array} [orientationMatrix]
      */
     /**
      * @typedef {Function} Spacecraft~addToSceneCallback
@@ -3322,13 +3375,18 @@ define([
      * basic representation of the ship. Contains boolean properties for each
      * possible supplement, marking if that particular supplement should be 
      * added.
+     * @param {Spacecraft~AddToSceneParams} [params]
      * @param {Spacecraft~addToSceneCallback} callback
      */
-    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, callback) {
-        var i, blinkers;
+    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback) {
+        var i, blinkers, visualModel;
         addSupplements = addSupplements || {};
+        params = params || {};
         // getting resources
-        this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true));
+        this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true), !!params.shaderName);
+        if (params.shaderName) {
+            graphics.getShader(params.shaderName);
+        }
         if (addSupplements.weapons === true) {
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
@@ -3353,26 +3411,29 @@ define([
         resources.executeWhenReady(function () {
             var node, explosion, lightSources;
             application.log("Adding spacecraft (" + this._class.getFullName() + ") to scene...", 2);
-            this._visualModel = new budaScene.ParameterizedMesh(
+            visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
-                    this._class.getShader(),
+                    params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
                     this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                    this._physicalModel.getPositionMatrix(),
-                    this._physicalModel.getOrientationMatrix(),
+                    params.positionMatrix || this._physicalModel.getPositionMatrix(),
+                    params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
                     graphics.areLuminosityTexturesAvailable() ? [_context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
+            if (!this._visualModel) {
+                this._visualModel = visualModel;
+            }
             if (this._name) {
-                this._visualModel.setName(this._name);
+                visualModel.setName(this._name);
             }
             if (graphics.areLuminosityTexturesAvailable()) {
-                this._visualModel.setParameter(
+                visualModel.setParameter(
                         _context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME),
                         0,
                         this._class.getGroupZeroLuminosity());
             }
-            node = scene.addObject(this._visualModel);
+            node = scene.addObject(visualModel);
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {
                 // add the parent objects for the hitboxes
@@ -3390,7 +3451,7 @@ define([
             // add the weapons
             if (addSupplements.weapons === true) {
                 for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].addToScene(node, lod, wireframe);
+                    this._weapons[i].addToScene(node, lod, wireframe, params.shaderName);
                 }
             }
             // add the thruster particles
@@ -3419,10 +3480,10 @@ define([
                 lightSources = this._class.getLightSources();
                 for (i = 0; i < lightSources.length; i++) {
                     if (lightSources[i].spotDirection) {
-                        scene.addSpotLightSource(new budaScene.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [this._visualModel]));
+                        scene.addSpotLightSource(new budaScene.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [visualModel]));
                     } else {
                         scene.addPointLightSource(
-                                new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [this._visualModel]),
+                                new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [visualModel]),
                                 SPACECRAFT_LIGHT_PRIORITY);
                     }
                 }
@@ -3448,7 +3509,7 @@ define([
                                         blinkers[i].getLightColor(),
                                         0,
                                         blinkers[i].getPosition(),
-                                        [this._visualModel],
+                                        [visualModel],
                                         blinkers[i].getLightStates(),
                                         true),
                                 BLINKER_LIGHT_PRIORITY);
@@ -3456,7 +3517,7 @@ define([
                 }
             }
             if (callback) {
-                callback(this._visualModel);
+                callback(visualModel);
             }
         }.bind(this));
     };
@@ -3963,14 +4024,15 @@ define([
     /**
      * Adds renderable objects representing all visual elements of the level to
      * the passed scene.
-     * @param {Scene} scene
+     * @param {Scene} battleScene
+     * @param {Scene} targetScene
      */
-    Level.prototype.addToScene = function (scene) {
+    Level.prototype.addToScene = function (battleScene, targetScene) {
         var i;
-        this._environment.addToScene(scene);
+        this._environment.addToScene(battleScene);
         this._hitObjects = [];
         for (i = 0; i < this._spacecrafts.length; i++) {
-            this._spacecrafts[i].addToScene(scene, undefined, false, {
+            this._spacecrafts[i].addToScene(battleScene, undefined, false, {
                 hitboxes: true,
                 weapons: true,
                 thrusterParticles: true,
@@ -3980,14 +4042,21 @@ define([
                 lightSources: true,
                 blinkers: true
             });
+            if (targetScene) {
+                this._spacecrafts[i].addToScene(targetScene, graphics.getMaxLoadedLOD(), true, {
+                    weapons: true
+                }, {
+                    shaderName: _context.getSetting(BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER)
+                });
+            }
             this._hitObjects.push(this._spacecrafts[i]);
         }
         resources.executeWhenReady(function () {
             for (i = 0; i < this._views.length; i++) {
-                scene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], scene));
+                battleScene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], battleScene));
                 if (i === 0) {
-                    scene.getCamera().followNode(null, true, 0);
-                    scene.getCamera().update(0);
+                    battleScene.getCamera().followNode(null, true, 0);
+                    battleScene.getCamera().update(0);
                 }
             }
         }.bind(this));

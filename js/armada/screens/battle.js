@@ -133,6 +133,16 @@ define([
              */
             _targetArrow,
             /**
+             * The scene to which a view of the currently selected target ship is rendered.
+             * @type Scene
+             */
+            _targetScene,
+            /**
+             * A reference to the currently displayed spacecraft in the target view screen.
+             * @type Spacecraft
+             */
+            _targetViewItem,
+            /**
              * The object that will be returned as this module
              * @type Battle
              */
@@ -635,10 +645,30 @@ define([
                 } else {
                     _targetArrow.hide();
                 }
+                // target view
+                if (_targetViewItem !== target) {
+                    _targetScene.clearNodes();
+                    _targetViewItem = target;
+                    _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
+                        shaderName: logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER),
+                        positionMatrix: mat.translation4(0, 0, 0),
+                        orientationMatrix: mat.identity4()
+                    }, function (model) {
+                        var color = logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_COLOR);
+                        model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
+                            return color;
+                        });
+                        _targetScene.getCamera().moveToPosition([0, 0, 2 * model.getScaledSize()], 0);
+                    });
+                }
             } else {
                 _targetIndicator.hide();
                 _targetCrosshair.hide();
                 _targetArrow.hide();
+                if (_targetViewItem) {
+                    _targetScene.clearNodes();
+                    _targetViewItem = null;
+                }
             }
             // updating the HTML5 UI
             this._ui.setContent(
@@ -716,7 +746,7 @@ define([
                 graphics.getShadowMappingShader();
             }
             _battleScene = new budaScene.Scene(
-                    0, 0, canvas.width, canvas.height,
+                    0, 0, 1, 1,
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
                     graphics.getLODContext(),
@@ -730,8 +760,26 @@ define([
                         transitionDuration: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
+            _targetScene = new budaScene.Scene(
+                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[0],
+                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[1],
+                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[0],
+                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[1],
+                    false, [true, true, true, true],
+                    [0, 0, 0, 0], true,
+                    graphics.getLODContext(),
+                    0,
+                    0,
+                    {
+                        useVerticalValues: logic.getSetting(logic.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                        viewDistance: logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_VIEW_DISTANCE),
+                        fov: logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_FOV),
+                        span: logic.getSetting(logic.CAMERA_SETTINGS.DEFAULT_SPAN),
+                        transitionDuration: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
+                        transitionStyle: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                    });
             this.hideUI();
-            _level.addToScene(_battleScene);
+            _level.addToScene(_battleScene, _targetScene);
             _addUIToScene();
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
@@ -739,13 +787,15 @@ define([
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             resources.executeWhenReady(function () {
-                _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
+                _battleScene.setShadowMapping(graphics.getShadowMappingSettings());                
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {
                     this.setAntialiasing(graphics.getAntialiasing());
                     this.setFiltering(graphics.getFiltering());
                     this.clearSceneCanvasBindings();
                     this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
+                    this.bindSceneToCanvas(_targetScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
+                    _targetScene.clearNodes();
                     this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
                     application.log("Game data loaded in " + ((performance.now() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                     this._smallHeader.setContent(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});

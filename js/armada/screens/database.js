@@ -273,10 +273,11 @@ define([
         graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));
         if (_getSetting(SETTINGS.SHOW_SOLID_MODEL)) {
             // add the ship to the scene in triangle drawing mode
-            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: true}, function (model) {
-                _solidModel = model;
+            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: true}, {
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
-                _solidModel.getNode().setShader(graphics.getManagedShader(_getSetting(SETTINGS.SOLID_SHADER_NAME)));
+                shaderName: _getSetting(SETTINGS.SOLID_SHADER_NAME)
+            }, function (model) {
+                _solidModel = model;
                 // set the necessary uniform functions for the reveal shader
                 _solidModel.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
                     return true;
@@ -296,10 +297,11 @@ define([
         }
         if (_showWireframeModel()) {
             // add the ship to the scene in line drawing mode as well
-            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, function (model) {
-                _wireframeModel = model;
+            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
                 // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
-                _wireframeModel.getNode().setShader(graphics.getManagedShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME)));
+                shaderName: _getSetting(SETTINGS.WIREFRAME_SHADER_NAME)
+            }, function (model) {
+                _wireframeModel = model;
                 // set the necessary uniform functions for the one colored reveal shader
                 _wireframeModel.setUniformValueFunction(UNIFORM_WIREFRAME_COLOR_NAME, function () {
                     return _getSetting(SETTINGS.WIREFRAME_COLOR);
@@ -592,7 +594,7 @@ define([
         }
         canvas = this.getScreenCanvas(DATABASE_CANVAS_NAME).getCanvasElement();
         _itemViewScene = new budaScene.Scene(
-                0, 0, canvas.clientWidth, canvas.clientHeight,
+                0, 0, 1, 1,
                 true, [true, true, true, true],
                 _getSetting(SETTINGS.BACKGROUND_COLOR), true,
                 graphics.getLODContext(),

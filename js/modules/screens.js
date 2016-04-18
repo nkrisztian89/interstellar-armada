@@ -820,7 +820,7 @@ define([
      * @param {String} name
      */
     HTMLScreenWithCanvases.prototype.resizeCanvas = function (name) {
-        var i,
+        var
                 canvasElement = this._canvases[name].getCanvasElement(),
                 width = canvasElement.clientWidth,
                 height = canvasElement.clientHeight;
@@ -829,14 +829,6 @@ define([
             // Change the size of the canvas to match the size it's being displayed
             canvasElement.width = width;
             canvasElement.height = height;
-        }
-        // updated the variables in the scenes
-        for (i = 0; i < this._sceneCanvasBindings.length; i++) {
-            if (this._sceneCanvasBindings[i].canvas === this._canvases[name]) {
-                this._sceneCanvasBindings[i].scene.resizeViewport(
-                        canvasElement.width,
-                        canvasElement.height);
-            }
         }
     };
     /**

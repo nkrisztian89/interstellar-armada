@@ -2136,6 +2136,9 @@ define([
          * @type Boolean
          */
         this._wireframe = (wireframe === true);
+        if (this._wireframe) {
+            this._isRenderedWithDepthMask = false;
+        }
         /**
          * The model currently chosen for rendering. Acts as a cached reference
          * to be used after the proper model has been chosen for a frame.
@@ -2383,7 +2386,8 @@ define([
                 }
                 this.setUniformValueFunction(parameterArrayNames[i], this.createGetParameterArrayFunction(parameterArrayNames[i]));
             } else {
-                application.showError("Cannot initialize parameter array '" + parameterArrayNames[i] + "' for parameterized mesh, as the given shader (" + shader.getName() + ") does not have a uniform array named '" + uniformArrayName + "'!");
+                application.log("Note: cannot initialize parameter array '" + parameterArrayNames[i] + "' for parameterized mesh, as the given shader (" + shader.getName() + ") does not have a uniform array named '" + uniformArrayName + "'.", 2);
+                this._parameterArrays[parameterArrayNames[i]] = new Float32Array();
             }
         }
     }
@@ -6303,10 +6307,10 @@ define([
      */
     /**
      * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
-     * @param {Number} left The X coordinate of the top left corner of the viewport on the canvas.
-     * @param {Number} top The Y coordinate of the top left corner of the viewport on the canvas.
-     * @param {Number} width The width of the viewport in pixels.
-     * @param {Number} height The height of the viewport in pixels.
+     * @param {Number} left The relative X position of the bottom left corner of the viewport on the canvas in 0-1 range.
+     * @param {Number} bottom The relative Y position of the bottom left corner of the viewport on the canvas in 0-1 range.
+     * @param {Number} width The width of the viewport relative to the canvas.
+     * @param {Number} height The height of the viewport relative to the canvas.
      * @param {Boolean} clearColorOnRender Whether to clear the color buffer every time at the beginning of rendering the scene.
      * @param {Boolean[4]} clearColorMask Which components shall be cleared if the color buffer is to be cleared.
      * @param {Number[4]} clearColor What color to use when clearing the buffer (RGBA components).
@@ -6317,24 +6321,24 @@ define([
      * @param {Number} maxRenderedSpotLights The maximum number of spot lights that should be considered when rendering this scene.
      * @param {Scene~CameraSettings} cameraSettings The properties based on which the camera for this scene will be set up.
      */
-    function Scene(left, top, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings) {
+    function Scene(left, bottom, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings) {
         /**
-         * The X coordinate of the top left corner of the viewport on the canvas.
+         * The relative X coordinate of the bottom left corner of the viewport on the canvas in 0-1 range.
          * @type Number
          */
         this._left = left;
         /**
-         * The Y coordinate of the top left corner of the viewport on the canvas.
+         * The relative Y coordinate of the bottom left corner of the viewport on the canvas in 0-1 range.
          * @type Number
          */
-        this._top = top;
+        this._bottom = bottom;
         /**
-         * The width of the viewport in pixels.
+         * The width of the viewport relative to the canvas.
          * @type Number
          */
         this._width = width;
         /**
-         * The height of the viewport in pixels.
+         * The height of the viewport relative to the canvas.
          * @type Number
          */
         this._height = height;
@@ -7120,16 +7124,6 @@ define([
         return this._rootNode.getCameraConfigurationsWithName(name);
     };
     /**
-     * Sets a new viewport size and recalculates the perspective matrix of the camera of the scene according to the new aspect ratio.
-     * @param {Number} newWidth
-     * @param {Number} newHeight
-     */
-    Scene.prototype.resizeViewport = function (newWidth, newHeight) {
-        this._width = newWidth;
-        this._height = newHeight;
-        this._camera.setAspect(this._width / this._height);
-    };
-    /**
      * Hides the UI node tree (it will not be rendered in subsequent render calls until shown again)
      */
     Scene.prototype.hideUI = function () {
@@ -7189,11 +7183,13 @@ define([
      * Renders the main scene objects for a shadow map after it has been set up appropriately for a light source and shadow map range.
      * This method only performs the rendering itself (clearing the background and rendering the nodes on it)
      * @param {ManagedGLContext} context
+     * @param {Number} widthInPixels The width of the viewport in pixels.
+     * @param {Number} heightInPixels The height of the viewport in pixels.
      * @param {Float32Array} lightMatrix
      * @param {Number} range
      * @param {Number} depthRatio
      */
-    Scene.prototype._renderShadowMap = function (context, lightMatrix, range, depthRatio) {
+    Scene.prototype._renderShadowMap = function (context, widthInPixels, heightInPixels, lightMatrix, range, depthRatio) {
         var gl = context.gl, i, newShadowQueue;
         application.log("Starting new shadow map...", 4);
         if (this._shadowQueue.length > 0) {
@@ -7204,7 +7200,7 @@ define([
             }
             newShadowQueue = [];
             for (i = 0; i < this._shadowQueue.length; i++) {
-                if (this._shadowQueue[i].renderToShadowMap(context, this._width, this._height, lightMatrix, range, depthRatio)) {
+                if (this._shadowQueue[i].renderToShadowMap(context, widthInPixels, heightInPixels, lightMatrix, range, depthRatio)) {
                     newShadowQueue.push(this._shadowQueue[i]);
                 }
             }
@@ -7215,8 +7211,10 @@ define([
      * If shadow mapping is enabled, renders all the shadow maps according to the current settings to separate textures, and binds all these
      * textures to be used by subsequent shaders.
      * @param {ManagedGLContext} context
+     * @param {Number} widthInPixels The width of the viewport in pixels.
+     * @param {Number} heightInPixels The height of the viewport in pixels.
      */
-    Scene.prototype._renderShadowMaps = function (context) {
+    Scene.prototype._renderShadowMaps = function (context, widthInPixels, heightInPixels) {
         var i, j, gl = context.gl;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
@@ -7238,7 +7236,7 @@ define([
                 application.log("Rendering shadow maps for light " + i + "...", 4);
                 for (j = this._shadowMapRanges.length - 1; j >= 0; j--) {
                     this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, this._shadowMapRanges[j]);
-                    this._renderShadowMap(context, this._directionalLights[i].getTranslatedMatrix(), this._shadowMapRanges[j], this._shadowMapDepthRatio);
+                    this._renderShadowMap(context, widthInPixels, heightInPixels, this._directionalLights[i].getTranslatedMatrix(), this._shadowMapRanges[j], this._shadowMapDepthRatio);
                 }
             }
             // binding the created textures to be used by the subsequent rendering calls
@@ -7254,15 +7252,17 @@ define([
     /**
      * Renders the background node tree using appropriate context settings.
      * @param {ManagedGLContext} context
+     * @param {Number} widthInPixels The width of the viewport in pixels.
+     * @param {Number} heightInPixels The height of the viewport in pixels.
      */
-    Scene.prototype._renderBackgroundObjects = function (context) {
+    Scene.prototype._renderBackgroundObjects = function (context, widthInPixels, heightInPixels) {
         application.log("Rendering background objects of scene...", 4);
         // preparing to render background objects
         context.enableBlending();
         context.setDepthMask(false);
         // rendering background objects
         this._rootBackgroundNode.resetForNewFrame();
-        this._rootBackgroundNode.render(context, this._width, this._height, false);
+        this._rootBackgroundNode.render(context, widthInPixels, heightInPixels, false);
         if (application.isDebugVersion()) {
             this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
         }
@@ -7274,7 +7274,7 @@ define([
      * @param {Number} index This is the index to identify the queue in case it is rendered in instanced mode.
      * @param {Boolean} depthMask
      */
-    Scene.prototype._renderQueue = function (context, renderQueue, index, depthMask) {
+    Scene.prototype._renderQueue = function (context, widthInPixels, heightInPixels, renderQueue, index, depthMask) {
         var i, queueLength = renderQueue.length, minimumInstancingCount, count;
         if (queueLength > 0) {
             minimumInstancingCount = renderQueue[0].getMinimumCountForInstancing();
@@ -7282,7 +7282,7 @@ define([
                 count = 0;
                 renderQueue[0].prepareForInstancedRender(context, index, queueLength);
                 for (i = 0; i < queueLength; i++) {
-                    if (renderQueue[i].render(context, this._width, this._height, depthMask, true, true, index)) {
+                    if (renderQueue[i].render(context, widthInPixels, heightInPixels, depthMask, true, true, index)) {
                         count++;
                     }
                 }
@@ -7291,7 +7291,7 @@ define([
                 }
             } else {
                 for (i = 0; i < queueLength; i++) {
-                    renderQueue[i].render(context, this._width, this._height, depthMask, true);
+                    renderQueue[i].render(context, widthInPixels, heightInPixels, depthMask, true);
                 }
             }
         }
@@ -7306,7 +7306,7 @@ define([
      * in transparent mode.
      * @param {Boolean} renderBackground If true, the background objects are rendered as well.
      */
-    Scene.prototype._renderMainObjects = function (context, opaqueRenderQueues, transparentRenderQueues, renderBackground) {
+    Scene.prototype._renderMainObjects = function (context, widthInPixels, heightInPixels, opaqueRenderQueues, transparentRenderQueues, renderBackground) {
         var i;
         // preparing to render main scene objects
         // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
@@ -7316,7 +7316,7 @@ define([
             context.disableBlending();
             // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
             for (i = 0; i < opaqueRenderQueues.length; i++) {
-                this._renderQueue(context, opaqueRenderQueues[i], i, true);
+                this._renderQueue(context, widthInPixels, heightInPixels, opaqueRenderQueues[i], i, true);
             }
             if (application.isDebugVersion()) {
                 this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
@@ -7326,7 +7326,7 @@ define([
         // triangles. Transparent triangles are not changing the depth buffer so they would be overwritten by the background if it was 
         // rendered after them
         if (renderBackground) {
-            this._renderBackgroundObjects(context);
+            this._renderBackgroundObjects(context, widthInPixels, heightInPixels);
         }
         // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
         application.log("Rendering transparent phase...", 4);
@@ -7335,7 +7335,7 @@ define([
             context.enableBlending();
             // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
             for (i = 0; i < transparentRenderQueues.length; i++) {
-                this._renderQueue(context, transparentRenderQueues[i], i, false);
+                this._renderQueue(context, widthInPixels, heightInPixels, transparentRenderQueues[i], i, false);
             }
             if (application.isDebugVersion()) {
                 this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
@@ -7345,8 +7345,10 @@ define([
     /**
      * Renders the UI node tree using appropriate context settings.
      * @param {ManagedGLContext} context
+     * @param {Number} widthInPixels The width of the viewport in pixels.
+     * @param {Number} heightInPixels The height of the viewport in pixels.
      */
-    Scene.prototype._renderUIObjects = function (context) {
+    Scene.prototype._renderUIObjects = function (context, widthInPixels, heightInPixels) {
         var gl = context.gl; // caching the variable for easier access
         if (this._rootUINode.getSubnodes().length > 0) {
             // preparing to render UI objects
@@ -7355,7 +7357,7 @@ define([
             context.setDepthMask(false);
             // rendering background objects
             this._rootUINode.resetForNewFrame();
-            this._rootUINode.render(context, this._width, this._height, false);
+            this._rootUINode.render(context, widthInPixels, heightInPixels, false);
             if (application.isDebugVersion()) {
                 this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
             }
@@ -7369,8 +7371,14 @@ define([
      * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
      */
     Scene.prototype.render = function (context, dt) {
-        var gl = context.gl, clearBits, camera, frontQueuesNotEmpty, distanceQueuesNotEmpty;
+        var gl = context.gl,
+                clearBits, camera, frontQueuesNotEmpty, distanceQueuesNotEmpty,
+                bufferWidth = gl.drawingBufferWidth,
+                bufferHeight = gl.drawingBufferHeight,
+                widthInPixels = bufferWidth * this._width,
+                heightInPixels = bufferHeight * this._height;
         application.log("Rendering scene...", 3);
+        this._camera.setAspect(widthInPixels / heightInPixels);
         // updating camera
         this._camera.update(this._shouldUpdateCamera ? dt : 0);
         // reset triangle counter so we can count all triangles for one render
@@ -7386,12 +7394,12 @@ define([
         distanceQueuesNotEmpty = (this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
         // rendering shadow maps
         if (frontQueuesNotEmpty) {
-            this._renderShadowMaps(context);
+            this._renderShadowMaps(context, widthInPixels, heightInPixels);
         }
         // updating the light matrices to be consistent with the shadow maps
         this._updateStaticLightUniformData();
         // viewport preparation
-        gl.viewport(this._left, this._top, this._width, this._height);
+        gl.viewport(this._left * bufferWidth, this._bottom * bufferHeight, widthInPixels, heightInPixels);
         if (this._shouldClearColorOnRender) {
             context.setColorMask(this._clearColorMask);
             gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
@@ -7417,7 +7425,7 @@ define([
             this._camera = this._camera.getExtendedCamera();
             // dynamic lights are not support for these objects as they are not really visible but expensive
             this._clearDynamicLightUniformData();
-            this._renderMainObjects(context, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX], true);
+            this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX], true);
             // switching back the camera
             this._camera = camera;
             // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
@@ -7434,19 +7442,20 @@ define([
             // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
             // same as the last one used for the distant objects
             this.assignUniforms(context, context.getCurrentShader());
-            this._renderMainObjects(context, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX], !distanceQueuesNotEmpty);
+            this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX], !distanceQueuesNotEmpty);
         }
         // -----------------------------------------------------------------------
         // rendering the UI objects
         // rendering UI elements based on 3D positions should work both for positions inside the front and the distance range
         camera = this._camera;
         this._camera = this._camera.getExtendedCamera(true);
-        this._renderUIObjects(context);
+        this._renderUIObjects(context, widthInPixels, heightInPixels);
         this._camera = camera;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        UNIFORM_COLOR_NAME: UNIFORM_COLOR_NAME,
         getDebugInfo: getDebugInfo,
         LODContext: LODContext,
         Scene: Scene,

@@ -336,13 +336,16 @@ define([
         this._overrideData(null, dataJSON);
     };
     /**
-     * 
+     * @param {Object} params
      */
-    ShadedClass.prototype.acquireResources = function () {
-        this._shader = graphics.getShader(this._shaderName);
-        this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName("instanced");
-        if (this._instancedShaderName) {
-            this._instancedShader = graphics.getShader(this._instancedShaderName);
+    ShadedClass.prototype.acquireResources = function (params) {
+        params = params || {};
+        if (!params.omitShader) {
+            this._shader = graphics.getShader(this._shaderName);
+            this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName("instanced");
+            if (this._instancedShaderName) {
+                this._instancedShader = graphics.getShader(this._instancedShaderName);
+            }
         }
     };
     /**
@@ -409,7 +412,7 @@ define([
      * @param {Object} params
      */
     ShadedModelClass.prototype.acquireResources = function (params) {
-        ShadedClass.prototype.acquireResources.call(this);
+        ShadedClass.prototype.acquireResources.call(this, params);
         if (params && params.model) {
             this._model = resources.getOrAddModel(params.model);
             this._modelName = this._model.getName();
@@ -1221,10 +1224,11 @@ define([
     };
     /**
      * @override
+     * @param {Object} params
      */
-    WeaponClass.prototype.acquireResources = function () {
+    WeaponClass.prototype.acquireResources = function (params) {
         var i;
-        TexturedModelClass.prototype.acquireResources.call(this);
+        TexturedModelClass.prototype.acquireResources.call(this, params);
         for (i = 0; i < this._barrels.length; i++) {
             this._barrels[i].acquireResources();
         }
@@ -2587,10 +2591,11 @@ define([
     };
     /**
      * @override
+     * @param {Object} params
      */
-    SpacecraftClass.prototype.acquireResources = function () {
+    SpacecraftClass.prototype.acquireResources = function (params) {
         var i;
-        TexturedModelClass.prototype.acquireResources.call(this);
+        TexturedModelClass.prototype.acquireResources.call(this, params);
         this._explosionClass.acquireResources();
         for (i = 0; i < this._damageIndicators.length; i++) {
             this._damageIndicators[i].explosionClass.acquireResources();
