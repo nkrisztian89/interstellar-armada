@@ -93,6 +93,7 @@
             "minimumThrusterParticleCountForInstancing": 1,
             "minimumBlinkerParticleCountForInstancing": 1,
             "viewDistance": 5000,
+            "moveToOrigoDistance": 2000,
             "cameraDefaultTransitionDuration": 1000,
             "cameraDefaultTransitionStyle": "smooth",
             "cameraPilotingSwitchTransitionDuration": 800,

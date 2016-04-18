@@ -552,6 +552,14 @@ define([
     };
     // methods
     /**
+     * Translates the position of the object by the given vector.
+     * @param {Number[3]} v A 3D vector.
+     */
+    PhysicalObject.prototype.moveByVector = function (v) {
+        mat.translateByVector(this._positionMatrix, v);
+        this._modelMatrixInverse = null;
+    };
+    /**
      * Checks the forces for one with the given ID, if it exists, renews its
      * properties, if it does not, adds a new force with the given parameters. It
      * will renew the first force found with the given ID, if more than one exists.

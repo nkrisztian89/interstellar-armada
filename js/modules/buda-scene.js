@@ -6985,6 +6985,19 @@ define([
         return result;
     };
     /**
+     * Moves (translates) all movable root level main object in the scene by the passed vector.
+     * @param {Number[3]} v A 3D vector.
+     */
+    Scene.prototype.moveAllObjectsByVector = function (v) {
+        var i, o, subnodes = this._rootNode.getSubnodes();
+        for (i = 0; i < subnodes.length; i++) {
+            o = subnodes[i].getRenderableObject();
+            if (o.translatev) {
+                o.translatev(v);
+            }
+        }
+    };
+    /**
      * Returns the node storing the first added main scene object.
      * @returns {RenderableNode}
      */
@@ -7270,6 +7283,8 @@ define([
     /**
      * Renders the specified render queues of the scene with the given settings.
      * @param {ManagedGLContext} context
+     * @param {Number} widthInPixels The width of the viewport in pixels.
+     * @param {Number} heightInPixels The height of the viewport in pixels.
      * @param {RenderableNode[]} renderQueue
      * @param {Number} index This is the index to identify the queue in case it is rendered in instanced mode.
      * @param {Boolean} depthMask
@@ -7300,6 +7315,8 @@ define([
      * Renders all the objects stored in the passed render queues in two passes (one for transparent and another for opaque triangles) with
      * appropriate context settings.
      * @param {ManagedGLContext} context
+     * @param {Number} widthInPixels The width of the viewport in pixels.
+     * @param {Number} heightInPixels The height of the viewport in pixels.
      * @param {RenderableNode[][]} opaqueRenderQueues The queues storing the nodes to render, with nodes using the same shader in each queue.
      * In these queues should be the nodes that contain objects that should be rendered in opaque mode.
      * @param {RenderableNode[][]} transparentRenderQueues In these queues should be the nodes that contain objects that should be rendered 

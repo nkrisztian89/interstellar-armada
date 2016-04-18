@@ -157,7 +157,7 @@ define([
             var curDate = performance.now();
             control.control(curDate - _prevDate);
             if (!_isTimeStopped) {
-                _level.tick(curDate - _prevDate);
+                _level.tick(curDate - _prevDate, [_battleScene]);
             }
             _prevDate = curDate;
         }
@@ -787,7 +787,7 @@ define([
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             resources.executeWhenReady(function () {
-                _battleScene.setShadowMapping(graphics.getShadowMappingSettings());                
+                _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {
                     this.setAntialiasing(graphics.getAntialiasing());

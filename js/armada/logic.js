@@ -565,6 +565,13 @@ define([
             defaultValue: 5000
         },
         /**
+         * When one of the coordinates of the player's ship exceeds this number, the whole scene is moved so that the player's ship is in the origo.
+         */
+        MOVE_TO_ORIGO_DISTANCE: {
+            name: "moveToOrigoDistance",
+            type: "number"
+        },
+        /**
          * The default duration of camera transitions for the battle scene (will be overridden by specific settings for specific transition cases)
          */
         CAMERA_DEFAULT_TRANSITION_DURATION: {
@@ -1682,6 +1689,13 @@ define([
      */
     Projectile.prototype.getVisualModel = function () {
         return this._visualModel;
+    };
+    /**
+     * Translates the position of the projectile by the given vector.
+     * @param {Number[3]} v A 3D vector.
+     */
+    Projectile.prototype.moveByVector = function (v) {
+        this._physicalModel.moveByVector(v);
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
@@ -3147,6 +3161,13 @@ define([
         this._spacecraftArray = spacecraftArray;
     };
     /**
+     * Translates the position of the spacecraft by the given vector.
+     * @param {Number[3]} v A 3D vector.
+     */
+    Spacecraft.prototype.moveByVector = function (v) {
+        this._physicalModel.moveByVector(v);
+    };
+    /**
      * Returns a string representation of the current flight mode set for this
      * craft. (free / compensated / restricted)
      * @returns {String}
@@ -4073,11 +4094,11 @@ define([
     /**
      * Performs the physics and game logic simulation of all the object in the
      * level.
-     * @param {Number} dt The time passed since the last simulation step, in
-     * milliseconds.
+     * @param {Number} dt The time passed since the last simulation step, in milliseconds.
+     * @param {Scene[]} [scenes] When given, these scenes are updated according to the simulation.
      */
-    Level.prototype.tick = function (dt) {
-        var i;
+    Level.prototype.tick = function (dt, scenes) {
+        var i, m, v, d;
         this._environment.simulate();
         for (i = 0; i < this._spacecrafts.length; i++) {
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
@@ -4100,6 +4121,25 @@ define([
                 application.log("Projectile removed.", 2);
             } else {
                 this._projectiles[i].simulate(dt, this._hitObjects);
+            }
+        }
+        // moving the scene back to the origo if the player's ship is too far away to avoid floating point errors becoming visible
+        if (this._pilotedCraft) {
+            m = this._pilotedCraft.getPhysicalPositionMatrix();
+            d = _context.getSetting(BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE);
+            if ((m[12] > d) || (m[12] < -d) || (m[13] > d) || (m[13] < -d) || (m[14] > d) || (m[14] < -d)) {
+                v = [-m[12], -m[13], -m[14]];
+                for (i = 0; i < this._spacecrafts.length; i++) {
+                    this._spacecrafts[i].moveByVector(v);
+                }
+                for (i = 0; i < this._projectiles.length; i++) {
+                    this._projectiles[i].moveByVector(v);
+                }
+                if (scenes) {
+                    for (i = 0; i < scenes.length; i++) {
+                        scenes[i].moveAllObjectsByVector(v);
+                    }
+                }
             }
         }
     };
