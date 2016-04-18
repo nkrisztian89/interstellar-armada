@@ -804,22 +804,26 @@ define([
             type: _customTypes.COLOR4,
             defaultValue: [1, 0, 0, 0.75]
         },
-        HUD_TARGET_CROSSHAIR_TEXTURE: {
-            name: "hudTargetCrosshairTexture",
+        HUD_WEAPON_IMPACT_INDICATOR_TEXTURE: {
+            name: "hudWeaponImpactIndicatorTexture",
             type: "string",
             defaultValue: "crosshair"
         },
-        HUD_TARGET_CROSSHAIR_SIZE: {
-            name: "hudTargetCrosshairSize",
+        HUD_WEAPON_IMPACT_INDICATOR_SIZE: {
+            name: "hudWeaponImpactIndicatorSize",
             type: "array",
             elementType: "number",
             length: 2,
             defaultValue: [0.05, 0.05]
         },
-        HUD_TARGET_CROSSHAIR_COLOR: {
-            name: "hudTargetCrosshairColor",
+        HUD_WEAPON_IMPACT_INDICATOR_COLOR: {
+            name: "hudWeaponImpactIndicatorColor",
             type: _customTypes.COLOR4,
             defaultValue: [0, 1, 0, 0.75]
+        },
+        HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR: {
+            name: "hudWeaponImpactIndicatorOutOfRangeColor",
+            type: _customTypes.COLOR4
         },
         HUD_TARGET_VIEW_POSITION: {
             name: "hudTargetViewPosition",
@@ -1834,10 +1838,31 @@ define([
         this._visualModel = null;
     }
     /**
-     * 
+     * Returns the weapon slot this weapon is equipped to.
+     * @returns {WeaponSlot}
      */
-    Weapon.prototype.acquireResources = function () {
-        this._class.acquireResources();
+    Weapon.prototype.getSlot = function () {
+        return this._slot;
+    };
+    /**
+     * Returns the class of the projectiles the first barrel of this weapon fires.
+     * @returns {ProjectileClass}
+     */
+    Weapon.prototype.getProjectileClass = function () {
+        return this._class.getProjectileClass();
+    };
+    /**
+     * Returns the velocity in m/s at which the first barrel of this weapon is firing projectiles.
+     */
+    Weapon.prototype.getProjectileVelocity = function () {
+        return this._class.getProjectileVelocity();
+    };
+    /**
+     * Marks the resources necessary to render this weapon for loading.
+     * @param {Object} params
+     */
+    Weapon.prototype.acquireResources = function (params) {
+        this._class.acquireResources(params);
     };
     /**
      * Adds a renderable node representing this weapon to the scene under the
@@ -1853,7 +1878,7 @@ define([
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName) {
         var visualModel;
-        this.acquireResources();
+        this.acquireResources({omitShader: !!shaderName});
         if (shaderName) {
             graphics.getShader(shaderName);
         }
@@ -2883,6 +2908,11 @@ define([
          * @type Boolean
          */
         this._autoTarget = false;
+        /**
+         * Cached value of the matrix representing the relative velocity (translation in m/s in the coordinate space of the spacecraft)
+         * of the spacecraft.
+         */
+        this._relativeVelocityMatrix = null;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
@@ -2978,6 +3008,13 @@ define([
         return this._class.getSpacecraftType().getFullName();
     };
     /**
+     * Returns the array of weapon equipped on this spacecraft.
+     * @returns {Weapon[]}
+     */
+    Spacecraft.prototype.getWeapons = function () {
+        return this._weapons;
+    };
+    /**
      * Returns whether this spacecraft object can be reused to represent a new
      * spacecraft.
      * @returns {Boolean}
@@ -3019,13 +3056,16 @@ define([
     };
     /**
      * Returns the 4x4 translation matrix describing the current velocity of this
-     * spacecraft in relative (model) space.
+     * spacecraft in relative (model) space. Uses caching.
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
-        return mat.prod4(
-                this._physicalModel.getVelocityMatrix(),
-                mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+        if (!this._relativeVelocityMatrix) {
+            this._relativeVelocityMatrix = mat.prod4(
+                    this._physicalModel.getVelocityMatrix(),
+                    mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
+        }
+        return this._relativeVelocityMatrix;
     };
     /**
      * Returns the 4x4 rotation matrix describing the current rotation of this
@@ -3036,7 +3076,7 @@ define([
         return mat.prod34(
                 this._physicalModel.getOrientationMatrix(),
                 this._physicalModel.getAngularVelocityMatrix(),
-                mat.matrix4from3(mat.matrix3from4(this._physicalModel.getRotationMatrixInverse())));
+                mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
     };
     /**
      * Returns the maximum acceleration the spacecraft can achieve using its
@@ -3794,6 +3834,7 @@ define([
             }
         }
         this._physicalModel.simulate(dt);
+        this._relativeVelocityMatrix = null;
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {

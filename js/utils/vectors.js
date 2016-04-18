@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
+/*jslint nomen: true, white: true, plusplus: true */
 /*global define, Float32Array */
 
 define(function () {
@@ -171,6 +171,20 @@ define(function () {
      */
     vec.sum3 = function (v1, v2) {
         return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
+    };
+    /**
+     * Returns the sum of the 3D vectors given in the passed array.
+     * @param {Number[3][]} vectors
+     * @returns {Number[3]}
+     */
+    vec.sumArray3 = function (vectors) {
+        var result = [0, 0, 0], i;
+        for (i = 0; i < vectors.length; i++) {
+            result[0] += vectors[i][0];
+            result[1] += vectors[i][1];
+            result[2] += vectors[i][2];
+        }
+        return result;
     };
     /**
      * Returns the difference of two 3D vectors.

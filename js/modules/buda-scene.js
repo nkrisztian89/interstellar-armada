@@ -3530,6 +3530,13 @@ define([
         this._position = value;
     };
     /**
+     * Sets a new color for this element.
+     * @param {Number[4]} value An RGBA color
+     */
+    UIElement.prototype.setColor = function (value) {
+        this._color = value;
+    };
+    /**
      * Sets a new rotation matrix for this element based on the given rotation angle.
      * @param {Number} value The angle by which to rotate, in radians.
      */

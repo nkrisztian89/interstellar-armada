@@ -1160,6 +1160,13 @@ define([
         return this._projectileClass;
     };
     /**
+     * Returns the velocity (m/s) at which this barrel is firing projectiles.
+     * @returns {Number}
+     */
+    Barrel.prototype.getProjectileVelocity = function () {
+        return this._projectileVelocity;
+    };
+    /**
      * @param {Number} duration In milliseconds
      * @returns {Number}
      */
@@ -1257,6 +1264,20 @@ define([
      */
     WeaponClass.prototype.getBarrels = function () {
         return this._barrels;
+    };
+    /**
+     * Returns the class of projectiles the first barrel of this weapon class fires.
+     * @returns {ProjectileClass}
+     */
+    WeaponClass.prototype.getProjectileClass = function () {
+        return this._barrels[0].getProjectileClass();
+    };
+    /**
+     * Returns the velocity (m/s) at which the first barrel of this weapon class fires projectiles.
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getProjectileVelocity = function () {
+        return this._barrels[0].getProjectileVelocity();
     };
     // ##############################################################################
     /**

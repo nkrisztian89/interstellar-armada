@@ -6,7 +6,7 @@
  * @version 2.0
  */
 
-/*jslint nomen: true, white: true*/
+/*jslint nomen: true, white: true, plusplus: true*/
 /*global define, document, setInterval, clearInterval, window, performance */
 
 /**
@@ -121,11 +121,11 @@ define([
              */
             _targetIndicator,
             /**
-             * This HUD element represents a crosshair that is shown in the line of fire of the controlled ship, at the same distance as its
-             * current target.
-             * @type HUDElement
+             * These HUD elements represent the crosshairs that are shown in the line of fire of the weapons of the controlled ship, at the 
+             * same distance as its current target.
+             * @type HUDElement[]
              */
-            _targetCrosshair,
+            _weaponImpactIndicators,
             /**
              * This HUD element represents an arrow that is shown point in the direction of the current target, if it is not visible on the
              * screen.
@@ -363,8 +363,30 @@ define([
             this._visualModel.setAngle(value);
         }
     };
+    /**
+     * Sets a new color for this HUD elements and its visual representation, if that exists.
+     * @param {Number[4]} value RGBA color
+     */
+    HUDElement.prototype.setColor = function (value) {
+        this._color = value;
+        if (this._visualModel) {
+            this._visualModel.setColor(value);
+        }
+    };
     // ------------------------------------------------------------------------------
-    // public functions
+    // private functions
+    /**
+     * Creates and returns a new HUD element that can be used as a weapon impact indicator.
+     * @returns {HUDElement}
+     */
+    function _getWeaponImpactIndicator() {
+        return new HUDElement(
+                UI_3D_SHADER_NAME,
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_TEXTURE),
+                [0, 0, 0],
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE),
+                logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+    }
     /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
      * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
@@ -392,13 +414,8 @@ define([
                 logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
                 logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_COLOR));
         _targetIndicator.addToScene(_battleScene);
-        _targetCrosshair = new HUDElement(
-                UI_3D_SHADER_NAME,
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_CROSSHAIR_TEXTURE),
-                [0, 0, 0],
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_CROSSHAIR_SIZE),
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_CROSSHAIR_COLOR));
-        _targetCrosshair.addToScene(_battleScene);
+        _weaponImpactIndicators = [_getWeaponImpactIndicator()];
+        _weaponImpactIndicators[0].addToScene(_battleScene);
     }
     // ##############################################################################
     /**
@@ -614,7 +631,21 @@ define([
      * Updates the contents of the UI with information about the currently controlled spacecraft
      */
     BattleScreen.prototype._updateUI = function () {
-        var craft = _level ? _level.getPilotedSpacecraft() : null, target, distance, direction, behind, aspect;
+        var
+                /**
+                 * A reference to the currently piloted spacecraft.
+                 * @type Spacecraft
+                 */
+                craft = _level ? _level.getPilotedSpacecraft() : null,
+                /**
+                 * A reference to the target of the piloted spacecraft.
+                 * @type Spacecraft
+                 */
+                target,
+                /**
+                 * @type Number
+                 */
+                distance, direction, behind, aspect, weapons, i, m, slotPosition, scale, relativeVelocity;
         if (craft) {
             target = craft.getTarget();
             // updating the WebGL HUD
@@ -623,11 +654,29 @@ define([
                 // targeting reticle at the target position
                 _targetIndicator.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
                 _targetIndicator.show();
-                // targeting crosshair in the line of fire
-                _targetCrosshair.setPosition(vec.sum3(
+                // targeting crosshairs in the line of fire
+                weapons = craft.getWeapons();
+                m = craft.getVisualModel().getOrientationMatrix();
+                relativeVelocity = craft.getRelativeVelocityMatrix();
+                scale = craft.getVisualModel().getScalingMatrix()[0];
+                for (i = 0; i < weapons.length; i++) {
+                    if (_weaponImpactIndicators.length <= i) {
+                        _weaponImpactIndicators.push(_getWeaponImpactIndicator());
+                        _weaponImpactIndicators[i].addToScene(_battleScene);
+                    }
+                    slotPosition = weapons[i].getSlot().positionMatrix;
+                    _weaponImpactIndicators[i].setPosition(vec.sumArray3([
                         mat.translationVector3(craft.getVisualModel().getPositionMatrix()),
-                        vec.scaled3(mat.getRowB43(craft.getVisualModel().getOrientationMatrix()), distance)));
-                _targetCrosshair.show();
+                        vec.scaled3(mat.getRowB43(m), distance),
+                        vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
+                        vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
+                    if (distance <= (relativeVelocity[13] + weapons[i].getProjectileVelocity()) * weapons[i].getProjectileClass().getDuration() / 1000) {
+                        _weaponImpactIndicators[i].setColor(logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+                    } else {
+                        _weaponImpactIndicators[i].setColor(logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
+                    }
+                    _weaponImpactIndicators[i].show();
+                }
                 // target arrow, if the target is not visible on the screen
                 direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.prod34(target.getVisualModel().getPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
                 behind = direction[3] < 0;
@@ -663,7 +712,9 @@ define([
                 }
             } else {
                 _targetIndicator.hide();
-                _targetCrosshair.hide();
+                for (i = 0; i < _weaponImpactIndicators.length; i++) {
+                    _weaponImpactIndicators[i].hide();
+                }
                 _targetArrow.hide();
                 if (_targetViewItem) {
                     _targetScene.clearNodes();
