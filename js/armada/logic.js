@@ -1736,7 +1736,9 @@ define([
      * the projectile to hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjects) {
-        var i, positionVector, relPos, relDir, velocityVector, velocity, velocityDir, explosion, physicalHitObject;
+        var i, positionVector, relDir, velocityVector, velocity, velocityDir, explosion, physicalHitObject, relativeHitPositionVector, absoluteHitPositionMatrix, hitCheckDT;
+        // avoid hit checking right after the projectile is fired, as it could hit the firing ship
+        hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
         this._timeLeft -= dt;
         if (this._timeLeft <= 0) {
             this.destroy();
@@ -1748,39 +1750,42 @@ define([
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 physicalHitObject = hitObjects[i].getPhysicalModel();
-                if (physicalHitObject && (_context.getSetting(BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin)) && (physicalHitObject.checkHit(positionVector, [], 0))) {
-                    relPos = vec.diff3(positionVector, mat.translationVector3(physicalHitObject.getPositionMatrix()));
+                if (physicalHitObject && (_context.getSetting(BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin))) {
                     velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
-                    velocity = vec.length3(velocityVector);
-                    velocityDir = vec.normal3(velocityVector);
-                    physicalHitObject.addForceAndTorque(relPos, velocityDir, velocity * this._physicalModel.getMass() * 1000 / _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION), _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION));
-                    explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), mat.identity4(), vec.scaled3(velocityDir, -1), true);
-                    explosion.addToScene(this._visualModel.getNode().getScene());
-                    relPos = vec.mulVec4Mat4(positionVector, hitObjects[i].getVisualModel().getModelMatrixInverse());
-                    relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
-                    hitObjects[i].damage(this._class.getDamage(), relPos, vec.scaled3(relDir, -1));
-                    // auto targeting on hit
-                    if (hitObjects[i] !== this._origin) {
-                        switch (_context.getSetting(BATTLE_SETTINGS.AUTO_TARGETING)) {
-                            case AutoTargeting.HIT_AND_NO_TARGET:
-                                if (!this._origin.getTarget()) {
-                                    this._origin.setTarget(hitObjects[i], true);
-                                }
-                                break;
-                            case AutoTargeting.HIT_AND_AUTO_TARGET:
-                                if (!this._origin.hasManualTarget() && (this._origin.getTarget() !== hitObjects[i])) {
-                                    this._origin.setTarget(hitObjects[i], true);
-                                }
-                                break;
-                            case AutoTargeting.ALWAYS_WHEN_HIT:
-                                if (this._origin.getTarget() !== hitObjects[i]) {
-                                    this._origin.setTarget(hitObjects[i], true);
-                                }
-                                break;
+                    relativeHitPositionVector = physicalHitObject.checkHit(positionVector, velocityVector, hitCheckDT);
+                    if (relativeHitPositionVector) {
+                        velocityDir = vec.normal3(velocityVector);
+                        velocity = vec.length3(velocityVector);
+                        absoluteHitPositionMatrix = mat.translation4v(vec.mulVec4Mat4(relativeHitPositionVector, hitObjects[i].getVisualModel().getModelMatrix()));
+                        relativeHitPositionVector = vec.mulVec4Mat4(relativeHitPositionVector, physicalHitObject.getScalingMatrix());
+                        physicalHitObject.addForceAndTorque(relativeHitPositionVector, velocityDir, velocity * this._physicalModel.getMass() * 1000 / _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION), _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION));
+                        explosion = new Explosion(this._class.getExplosionClass(), absoluteHitPositionMatrix, mat.identity4(), vec.scaled3(velocityDir, -1), true);
+                        explosion.addToScene(this._visualModel.getNode().getScene());
+                        relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
+                        hitObjects[i].damage(this._class.getDamage(), relativeHitPositionVector, vec.scaled3(relDir, -1));
+                        // auto targeting on hit
+                        if (hitObjects[i] !== this._origin) {
+                            switch (_context.getSetting(BATTLE_SETTINGS.AUTO_TARGETING)) {
+                                case AutoTargeting.HIT_AND_NO_TARGET:
+                                    if (!this._origin.getTarget()) {
+                                        this._origin.setTarget(hitObjects[i], true);
+                                    }
+                                    break;
+                                case AutoTargeting.HIT_AND_AUTO_TARGET:
+                                    if (!this._origin.hasManualTarget() && (this._origin.getTarget() !== hitObjects[i])) {
+                                        this._origin.setTarget(hitObjects[i], true);
+                                    }
+                                    break;
+                                case AutoTargeting.ALWAYS_WHEN_HIT:
+                                    if (this._origin.getTarget() !== hitObjects[i]) {
+                                        this._origin.setTarget(hitObjects[i], true);
+                                    }
+                                    break;
+                            }
                         }
+                        this.destroy();
+                        return;
                     }
-
-                    this.destroy();
                 }
             }
         }
@@ -4165,7 +4170,7 @@ define([
             }
         }
         // moving the scene back to the origo if the player's ship is too far away to avoid floating point errors becoming visible
-        if (this._pilotedCraft) {
+        if (this._pilotedCraft && !this._pilotedCraft.canBeReused()) {
             m = this._pilotedCraft.getPhysicalPositionMatrix();
             d = _context.getSetting(BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE);
             if ((m[12] > d) || (m[12] < -d) || (m[13] > d) || (m[13] < -d) || (m[14] > d) || (m[14] < -d)) {

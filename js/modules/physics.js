@@ -10,13 +10,15 @@
 /*global define */
 
 /**
+ * @param utils Used for point in rectangle checks
  * @param vec Used for vector operations
  * @param mat Used for matrix operations
  */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices"
-], function (vec, mat) {
+], function (utils, vec, mat) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -322,6 +324,16 @@ define([
     };
     // indirect getters and setters
     /**
+     * Transforms and returns the given 4D vector according to the position and orientation of this body.
+     * @param {Number[4]} vector
+     * @returns {Number[4]}
+     */
+    Body.prototype._modelTransform = function (vector) {
+        return this._rotated ?
+                vec.mulVec4Mat4(vector, mat.prod4(this._orientationMatrix, this._positionMatrix)) :
+                vec.sum3(vector, this._positionVector).concat(1);
+    };
+    /**
      * Returns the inverse of the model matrix (the matrix representing both the
      * position and orientation of the body)
      * @returns {Float32Array} A 4x4 transformation matrix.
@@ -339,20 +351,111 @@ define([
     };
     // methods
     /**
-     * Checks whether a particular point in space is located inside this body.
-     * @param {Number[3]} relativePositionVector A 3D vector describing the
-     * position of the point to check in the same space the position and
-     * orientation of this body is stored (model space of the parent)
-     * @returns {Boolean} Whether the point is inside or not.
+     * Checks whether a point-like body moving along a given vector has hit this body.
+     * @param {Number[4]} relativePositionVector A 4D vector describing the current position of the point-like body in model space.
+     * @param {Number[3]} relativeDirectionVector A 3D unit (one meter long) vector describing the direction the body is moving towards
+     * in model space.
+     * @param {Number} range The distance from the current position within which the hit point is to be located in order to count it as a
+     * hit, in meters. E.g. to check whether an object moving at 10 m/s has hit this body within the past 5 seconds, this should be 50.
+     * @returns {Number[4]|null} The point of intersection where the object has hit or null if it did not.
      */
-    Body.prototype.checkHit = function (relativePositionVector) {
+    Body.prototype.checkHit = function (relativePositionVector, relativeDirectionVector, range) {
+        var d, ipx, ipy;
+        // first transform the coordinates from model-space (physical object space) to body-space
         relativePositionVector = this._rotated ?
                 vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse()) :
                 vec.diff3(relativePositionVector, this._positionVector);
-        return (
-                (relativePositionVector[0] >= -this._halfWidth) && (relativePositionVector[0] <= this._halfWidth) &&
-                (relativePositionVector[1] >= -this._halfHeight) && (relativePositionVector[1] <= this._halfHeight) &&
-                (relativePositionVector[2] >= -this._halfDepth) && (relativePositionVector[2] <= this._halfDepth));
+        if (this._rotated) {
+            relativeDirectionVector = vec.mulVec3Mat3(relativeDirectionVector, mat.matrix3from4(mat.inverseOfRotation4(this._orientationMatrix)));
+        }
+        // if the object has a velocity along X, it is possible it has hit at the left or right planes
+        if (relativeDirectionVector[0] !== 0) {
+            // if the object has a positive velocity, it could have hit the left plane (or a plane at other axes, but not the right plane)
+            if (relativeDirectionVector[0] > 0) {
+                // calculate the distance from the given point at which the object reached / will reach the left plane
+                // we are actually calculating the fraction (ratio) of the relative direction vector at which the plane is reached, but
+                // since the length on the direction vector is one meter, this will equal the distance
+                // a positive number will indicate impact with the plane in the future and a negative one will indicate impact in the past
+                d = (-this._halfWidth - relativePositionVector[0]) / relativeDirectionVector[0];
+                // calculate the coordinates of the intersection point with the left plane (Y and Z coordinates)
+                ipx = relativePositionVector[1] + relativeDirectionVector[1] * d;
+                ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
+                // check if the intersection point is within the left face of this box, which means the object entered or will enter the
+                // box through the left face
+                if (utils.pointInRect(ipx, ipy, -this._halfHeight, -this._halfDepth, this._halfHeight, this._halfDepth)) {
+                    // if the impact already happened and it happened within the given range then we can return the intersection point
+                    // (transformed back into model (physical object) space)
+                    if ((d <= 0) && (d >= -range)) {
+                        return this._modelTransform([-this._halfWidth, ipx, ipy, 1]);
+                    }
+                    // if the entry point is on the left face but the impact did not happen yet or happened too far in the past (which means 
+                    // it is possible it did not even happen as this is just an extrapolation of the path to a whole infinite line, while 
+                    // the object only was created at a certain point and it could have changed direction), then it means there is no hit
+                    // (yet) and no need to check the other faces, since we found the one where the entry happens
+                    return null;
+                }
+            } else {
+                // if the object has a negative velocity along X, check for the right face of the box the same way
+                d = (this._halfWidth - relativePositionVector[0]) / relativeDirectionVector[0];
+                ipx = relativePositionVector[1] + relativeDirectionVector[1] * d;
+                ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
+                if (utils.pointInRect(ipx, ipy, -this._halfHeight, -this._halfDepth, this._halfHeight, this._halfDepth)) {
+                    if ((d <= 0) && (d >= -range)) {
+                        return this._modelTransform([this._halfWidth, ipx, ipy, 1]);
+                    }
+                    return null;
+                }
+            }
+        }
+        // if the entry point of the object's path in not on the left or right faces of the box, check for the faces along the other 2 axes
+        // exactly the same way
+        if (relativeDirectionVector[1] !== 0) {
+            if (relativeDirectionVector[1] > 0) {
+                d = (-this._halfHeight - relativePositionVector[1]) / relativeDirectionVector[1];
+                ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
+                ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
+                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfDepth, this._halfWidth, this._halfDepth)) {
+                    if ((d <= 0) && (d >= -range)) {
+                        return this._modelTransform([ipx, -this._halfHeight, ipy, 1]);
+                    }
+                    return null;
+                }
+            } else {
+                d = (this._halfHeight - relativePositionVector[1]) / relativeDirectionVector[1];
+                ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
+                ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
+                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfDepth, this._halfWidth, this._halfDepth)) {
+                    if ((d <= 0) && (d >= -range)) {
+                        return this._modelTransform([ipx, this._halfHeight, ipy, 1]);
+                    }
+                    return null;
+                }
+            }
+        }
+        if (relativeDirectionVector[2] !== 0) {
+            if (relativeDirectionVector[2] > 0) {
+                d = (-this._halfDepth - relativePositionVector[2]) / relativeDirectionVector[2];
+                ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
+                ipy = relativePositionVector[1] + relativeDirectionVector[1] * d;
+                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfHeight, this._halfWidth, this._halfHeight)) {
+                    if ((d <= 0) && (d >= -range)) {
+                        return this._modelTransform([ipx, ipy, -this._halfDepth, 1]);
+                    }
+                    return null;
+                }
+            } else {
+                d = (this._halfDepth - relativePositionVector[2]) / relativeDirectionVector[2];
+                ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
+                ipy = relativePositionVector[1] + relativeDirectionVector[1] * d;
+                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfHeight, this._halfWidth, this._halfHeight)) {
+                    if ((d <= 0) && (d >= -range)) {
+                        return this._modelTransform([ipx, ipy, this._halfDepth, 1]);
+                    }
+                    return null;
+                }
+            }
+        }
+        return null;
     };
     // #########################################################################
     /**
@@ -653,22 +756,29 @@ define([
         }
     };
     /**
-     * Checks whether a particular point in space is located inside the structure
-     * of this object.
-     * @param {Number[3]} positionVector A 3D vector describing the
-     * position of the point in worlds space. (in meters)
-     * @returns {Boolean} Whether the point is inside the structure or not.
+     * Checks whether a point-like object travelling along a straight path with a given speed has hit this pyhical object recently and
+     * if so, returns the intersection point where it did.
+     * @param {Number[3]} positionVector A 3D vector describing the position of the point in worlds space. (in meters)
+     * @param {Number[3]} velocityVector The vector in world space that describes the velocity of the travelling object in m/s.
+     * @param {Number} dt The time interval in milliseconds within which to check for the hit.
+     * @returns {Number[4]|null} If the object has hit, the intersection point where the hit happened in object space, otherwise null.
      */
-    PhysicalObject.prototype.checkHit = function (positionVector) {
-        var relativePos, i, result = false;
+    PhysicalObject.prototype.checkHit = function (positionVector, velocityVector, dt) {
+        var relativePos, relativeVelocityVector, i, range, result = null;
         // make the vector 4D for the matrix multiplication
         positionVector.push(1);
-        // first, preliminary check based on position relative to the whole object
+        // transforms the position to object-space for preliminary check
         relativePos = vec.mulVec4Mat4(positionVector, this.getModelMatrixInverse());
-        if ((Math.abs(relativePos[0]) < this._bodySize) && (Math.abs(relativePos[1]) < this._bodySize) && (Math.abs(relativePos[2]) < this._bodySize)) {
+        // calculate the relative velocity of the two objects in world space
+        relativeVelocityVector = vec.diff3(velocityVector, mat.translationVector3(this.getVelocityMatrix()));
+        range = vec.length3(relativeVelocityVector) * dt / 1000 / this._scalingMatrix[0];
+        // first, preliminary check based on position relative to the whole object
+        if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
-            for (i = 0; (result === false) && (i < this._bodies.length); i++) {
-                result = this._bodies[i].checkHit(relativePos);
+            relativeVelocityVector = vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4(this.getRotationMatrixInverse()));
+            vec.normalize3(relativeVelocityVector);
+            for (i = 0; (result === null) && (i < this._bodies.length); i++) {
+                result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range);
             }
         }
         return result;

@@ -333,5 +333,18 @@ define(function () {
     exports.executeAsync = function (functionToExecute) {
         setTimeout(functionToExecute, 0);
     };
+    /**
+     * Returns whether a given 2D point is within a given 2D rectangle.
+     * @param {Number} x The X coordinate of the point to check.
+     * @param {Number} y The Y coordinate of the point to check.
+     * @param {Number} left The X coordinate of the left side of the rectangle.
+     * @param {Number} bottom The Y coordinate of the bottom side of the rectangle. (the smaller Y coordinate)
+     * @param {Number} right The X coordinate of the right side of the rectangle.
+     * @param {Number} top The Y coordinate of the bottom side of the rectangle. (the larger Y coordinate)
+     * @returns {Boolean}
+     */
+    exports.pointInRect = function (x, y, left, bottom, right, top) {
+        return (x >= left) && (x <= right) && (y >= bottom) && (y <= top);
+    };
     return exports;
 });
