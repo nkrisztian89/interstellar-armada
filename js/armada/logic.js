@@ -1736,7 +1736,7 @@ define([
      * the projectile to hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjects) {
-        var i, positionVector, relDir, velocityVector, velocity, velocityDir, explosion, physicalHitObject, relativeHitPositionVector, absoluteHitPositionMatrix, hitCheckDT;
+        var i, positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace, relativeVelocityVectorInWorldSpace, relativeVelocity, relativeVelocityDirectionInWorldSpace, explosion, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hitCheckDT;
         // avoid hit checking right after the projectile is fired, as it could hit the firing ship
         hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
         this._timeLeft -= dt;
@@ -1746,23 +1746,24 @@ define([
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
-            positionVector = mat.translationVector3(this._physicalModel.getPositionMatrix());
+            positionVectorInWorldSpace = mat.translationVector3(this._physicalModel.getPositionMatrix());
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 physicalHitObject = hitObjects[i].getPhysicalModel();
                 if (physicalHitObject && (_context.getSetting(BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin))) {
-                    velocityVector = mat.translationVector3(this._physicalModel.getVelocityMatrix());
-                    relativeHitPositionVector = physicalHitObject.checkHit(positionVector, velocityVector, hitCheckDT);
-                    if (relativeHitPositionVector) {
-                        velocityDir = vec.normal3(velocityVector);
-                        velocity = vec.length3(velocityVector);
-                        absoluteHitPositionMatrix = mat.translation4v(vec.mulVec4Mat4(relativeHitPositionVector, hitObjects[i].getVisualModel().getModelMatrix()));
-                        relativeHitPositionVector = vec.mulVec4Mat4(relativeHitPositionVector, physicalHitObject.getScalingMatrix());
-                        physicalHitObject.addForceAndTorque(relativeHitPositionVector, velocityDir, velocity * this._physicalModel.getMass() * 1000 / _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION), _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION));
-                        explosion = new Explosion(this._class.getExplosionClass(), absoluteHitPositionMatrix, mat.identity4(), vec.scaled3(velocityDir, -1), true);
+                    velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
+                    hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT);
+                    if (hitPositionVectorInObjectSpace) {
+                        relativeVelocityVectorInWorldSpace = vec.diff3(velocityVectorInWorldSpace, mat.translationVector3(physicalHitObject.getVelocityMatrix()));
+                        relativeVelocityDirectionInWorldSpace = vec.normal3(relativeVelocityVectorInWorldSpace);
+                        relativeVelocity = vec.length3(relativeVelocityVectorInWorldSpace);
+                        relativeVelocityDirectionInObjectSpace = vec.mulVec3Mat4(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
+                        hitPositionVectorInWorldSpace = vec.mulVec4Mat4(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
+                        relativeHitPositionVectorInWorldSpace = vec.diff3(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
+                        physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION), _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION));
+                        explosion = new Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true);
                         explosion.addToScene(this._visualModel.getNode().getScene());
-                        relDir = vec.mulVec3Mat4(velocityDir, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
-                        hitObjects[i].damage(this._class.getDamage(), relativeHitPositionVector, vec.scaled3(relDir, -1));
+                        hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1));
                         // auto targeting on hit
                         if (hitObjects[i] !== this._origin) {
                             switch (_context.getSetting(BATTLE_SETTINGS.AUTO_TARGETING)) {
