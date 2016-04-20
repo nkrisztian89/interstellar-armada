@@ -31,6 +31,12 @@
     "spacecraftStats": {
         "armor": "Armor"
     },
+    "level": {
+        "1v1": "One versus one",
+        "3v3": "Three versus three",
+        "bombers": "Bombers",
+        "level": "Test level"
+    },
     "battle": {
         "developmentVersionNotice": "running an early test of Interstellar Armada, version: {version}",
         "spectatorMode": "Spectator mode",

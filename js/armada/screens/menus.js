@@ -6,10 +6,11 @@
  * @version 0.1
  */
 
-/*jslint nomen: true, white: true*/
+/*jslint nomen: true, white: true, plusplus: true*/
 /*global define */
 
 /**
+ * @param utils Used for trimming filename extensions.
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
  * @param armadaScreens Used for common screen constants.
@@ -18,14 +19,42 @@
  * @param battle Used for starting / resuming the battle.
  */
 define([
+    "utils/utils",
     "modules/screens",
     "modules/game",
     "armada/screens/shared",
     "armada/logic",
     "armada/strings",
     "armada/screens/battle"
-], function (screens, game, armadaScreens, logic, strings, battle) {
+], function (utils, screens, game, armadaScreens, logic, strings, battle) {
     "use strict";
+    // -------------------------------------------------------------------------
+    // Private functions
+    /**
+     * Creates and returns the menu options for the level selection screen.
+     * @returns {MenuComponent~MenuOption[]}
+     */
+    function _getLevelOptions() {
+        var result = [], i, actionFunction = function (levelFilename) {
+            game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
+            game.getScreen().startNewBattle(levelFilename);
+        };
+        for (i = 0; i < logic.getLevelFileCount(); i++) {
+            result.push({
+                id: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(logic.getLevelFileName(i)),
+                action: actionFunction.bind(this, logic.getLevelFileName(i))
+            });
+        }
+        result.push({
+            id: strings.SCREEN.BACK.name,
+            action: function () {
+                game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+            }
+        });
+        return result;
+    }
+    // -------------------------------------------------------------------------
+    // The public interface of the module
     return {
         mainMenuScreen: new screens.MenuScreen(
                 armadaScreens.MAIN_MENU_SCREEN_NAME,
@@ -43,8 +72,7 @@ define([
                 [{
                         id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
-                            game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
-                            game.getScreen().startNewBattle(logic.getLevelFileName(0));
+                            game.setScreen(armadaScreens.LEVEL_MENU_SCREEN_NAME);
                         }
                     }, {
                         id: strings.MAIN_MENU.DATABASE.name,
@@ -62,6 +90,21 @@ define([
                             game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                         }
                     }], armadaScreens.MAIN_MENU_CONTAINER_ID),
+        levelSelectionMenuScreen: new screens.MenuScreen(
+                armadaScreens.LEVEL_MENU_SCREEN_NAME,
+                armadaScreens.LEVEL_MENU_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                armadaScreens.MENU_COMPONENT_SOURCE,
+                {
+                    menuClassName: armadaScreens.MENU_CLASS_NAME,
+                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
+                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
+                },
+                _getLevelOptions(),
+                armadaScreens.SETTINGS_MENU_CONTAINER_ID),
         settingsMenuScreen: new screens.MenuScreen(
                 armadaScreens.SETTINGS_SCREEN_NAME,
                 armadaScreens.SETTINGS_SCREEN_SOURCE,

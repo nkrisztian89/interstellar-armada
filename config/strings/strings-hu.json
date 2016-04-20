@@ -56,6 +56,12 @@
     "spacecraftStats": {
         "armor": "Páncélzat"
     },
+    "level": {
+        "1v1": "Egy egy ellen",
+        "3v3": "Három három ellen",
+        "bombers": "Bombázók",
+        "level": "Teszt"
+    },
     "battle": {
         "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",
         "spectatorMode": "Nézelődő mód",

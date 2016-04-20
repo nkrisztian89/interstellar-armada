@@ -688,46 +688,6 @@ define([
             defaultValue: "lambert-with-luminosity"
         },
         /**
-         * The amount of randomly positioned ships to add to the level at start by class
-         */
-        RANDOM_SHIPS: {
-            name: "randomShips",
-            type: "object",
-            defaultValue: {}
-        },
-        /**
-         * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
-         */
-        RANDOM_SHIPS_MAP_SIZE: {
-            name: "randomShipsMapSize",
-            type: "number",
-            defaultValue: 3000
-        },
-        /**
-         * The added random ships are rotated around the Z axis by this angle (in degrees)
-         */
-        RANDOM_SHIPS_HEADING_ANGLE: {
-            name: "randomShipsHeadingAngle",
-            type: _customTypes.ANGLE_DEGREES,
-            defaultValue: 0
-        },
-        /**
-         * Whether to rotate the added random ships to a random heading (around axis Z)
-         */
-        RANDOM_SHIPS_RANDOM_HEADING: {
-            name: "randomShipsRandomHeading",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The added random ships will be equipped with the profile having this name, if they have such
-         */
-        RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME: {
-            name: "randomShipsEquipmentProfileName",
-            type: "string",
-            defaultValue: "default"
-        },
-        /**
          * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
          * spacecraft)
          */
@@ -1368,6 +1328,13 @@ define([
      */
     LogicContext.prototype.getEnvironment = function (name) {
         return this._environments[name] || null;
+    };
+    /**
+     * Returns the number of available level files.
+     * @returns {Number}
+     */
+    LogicContext.prototype.getLevelFileCount = function () {
+        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames.length;
     };
     /**
      * Returns the name of the level file (without path) of the given index.
@@ -3940,6 +3907,26 @@ define([
          * @type PhysicalObject[]
          */
         this._hitObjects = null;
+        /**
+         * The amount of randomly positioned ships to add to the level at start by class
+         */
+        this._randomShips = null;
+        /**
+         * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
+         */
+        this._randomShipsMapSize = 0;
+        /**
+         * The added random ships are rotated around the Z axis by this angle (in degrees)
+         */
+        this._randomShipsHeadingAngle = 0;
+        /**
+         * Whether to rotate the added random ships to a random heading (around axis Z)
+         */
+        this._randomShipsRandomHeading = false;
+        /**
+         * The added random ships will be equipped with the profile having this name, if they have such
+         */
+        this._randomShipsEquipmentProfileName = null;
     }
     // #########################################################################
     // indirect getters and setters
@@ -3972,7 +3959,8 @@ define([
         }.bind(this));
     };
     /**
-     * Loads all the data describing this level from the passed JSON object.
+     * Loads all the data describing this level from the passed JSON object. Does not add random ships to the level, only loads their 
+     * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
      * @param {Object} dataJSON
      */
     Level.prototype.loadFromJSON = function (dataJSON) {
@@ -4001,51 +3989,37 @@ define([
             }
             this._spacecrafts.push(spacecraft);
         }
+        this._randomShips = dataJSON.randomShips || {};
+        this._randomShipsMapSize = dataJSON.randomShipsMapSize;
+        this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
+        this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
+        this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
         application.log("Level successfully loaded.", 2);
     };
     /**
-     * Adds spacecrafts to the level at random positions.
-     * @param {Object} shipNumbersPerClass An associative array describing how
-     * many ships of different classes to add. The keys are the class names, the
-     * values are the number of ships to add.
-     * @param {Number} mapSize The size (width, height and depth, all the same) 
-     * of the area within to add the ships (centered at the origo)
-     * @param {Float32Array} orientationMatrix The matrix describing the 
-     * orientation of the added ships.
-     * @param {Boolean} randomTurnAroundX Whether to randomly turn the placed
-     * ships around the X axis of their orientation matrix.
-     * @param {Boolean} randomTurnAroundY Whether to randomly turn the placed
-     * ships around the Y axis of thier orientation matrix.
-     * @param {Boolean} randomTurnAroundZ Whether to randomly turn the placed
-     * ships around the Z axis of their orientation matrix.
+     * Adds spacecrafts to the level at random positions based on the configuration loaded from JSON before.
      * @param {Number} [randomSeed]
      */
-    Level.prototype.addRandomShips = function (shipNumbersPerClass, mapSize, orientationMatrix, randomTurnAroundX, randomTurnAroundY, randomTurnAroundZ, randomSeed) {
-        var random, shipClass, i, orientation;
+    Level.prototype.addRandomShips = function (randomSeed) {
+        var random, shipClass, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle));
         randomSeed = randomSeed || _context.getSetting(GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
-        for (shipClass in shipNumbersPerClass) {
-            if (shipNumbersPerClass.hasOwnProperty(shipClass)) {
-                for (i = 0; i < shipNumbersPerClass[shipClass]; i++) {
+        for (shipClass in this._randomShips) {
+            if (this._randomShips.hasOwnProperty(shipClass)) {
+                for (i = 0; i < this._randomShips[shipClass]; i++) {
                     orientation = orientationMatrix ?
                             mat.matrix4(orientationMatrix) : mat.identity4();
-                    if (randomTurnAroundZ) {
+                    if (this._randomShipsRandomHeading) {
                         mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
-                    }
-                    if (randomTurnAroundX) {
-                        mat.mul4(orientation, mat.rotation4(mat.getRowA4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
-                    }
-                    if (randomTurnAroundY) {
-                        mat.mul4(orientation, mat.rotation4(mat.getRowB4(orientationMatrix || mat.identity4()), random() * Math.PI * 2));
                     }
                     this._spacecrafts.push(
                             new Spacecraft(
                                     classes.getSpacecraftClass(shipClass),
                                     "",
-                                    mat.translation4(random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2, random() * mapSize - mapSize / 2),
+                                    mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
                                     orientation,
                                     this._projectiles,
-                                    _context.getSetting(BATTLE_SETTINGS.RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME),
+                                    this._randomShipsEquipmentProfileName,
                                     this._spacecrafts));
                 }
             }
@@ -4240,6 +4214,7 @@ define([
         CAMERA_SETTINGS: CAMERA_SETTINGS,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
+        getLevelFileCount: _context.getLevelFileCount.bind(_context),
         getLevelFileName: _context.getLevelFileName.bind(_context),
         getSetting: _context.getSetting.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),

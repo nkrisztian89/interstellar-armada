@@ -153,5 +153,15 @@
                 }
             ]
         }
-    ]
+    ],
+    "randomShips": {
+        "falcon": 3,
+        "viper": 2,
+        "aries": 1,
+        "taurus": 1
+    },
+    "randomShipsMapSize": 3000,
+    "randomShipsEquipmentProfileName": "default",
+    "randomShipsHeadingAngle": 90,
+    "randomShipsRandomHeading": true
 }

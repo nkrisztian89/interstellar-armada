@@ -28,6 +28,35 @@
                     "class": "standard"
                 }
             ]
+        },
+        {
+            "name": "deepSpaceWhiteRedStars",
+            "skyboxes": [
+                {
+                    "class": "deepspace"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": 80
+                    }
+                },
+                {
+                    "class": "redStar",
+                    "position": {
+                        "angleAlpha": 180,
+                        "angleBeta": -40
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
         }
     ]
 }

@@ -1,5 +1,5 @@
 {
-    "version": "0.2:267 (2016.04.19.)",
+    "version": "0.2:268 (2016.04.20.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -51,6 +51,9 @@
             "levels": {
                 "folder": "level",
                 "filenames": [
+                    "1v1.json",
+                    "3v3.json",
+                    "bombers.json",
                     "level.json"
                 ]
             }

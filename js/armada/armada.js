@@ -73,6 +73,7 @@ define([
             "armada/screens/about"
         ], function (menus, battle, database, generalSettings, graphicsScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
+            game.addScreen(menus.levelSelectionMenuScreen);
             game.addScreen(battle.battleScreen);
             game.addScreen(database.databaseScreen);
             game.addScreen(menus.settingsMenuScreen);

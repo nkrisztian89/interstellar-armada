@@ -1,0 +1,110 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStars"
+    },
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 1150, -80],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "class": "viper",
+            "piloted": true,
+            "position": [0, 0, 0],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "viper",
+            "position": [35, -35, 0],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ],
+                "propulsion": {
+                    "class": "imperialBomberMk1"
+                }
+            }
+        },
+        {
+            "class": "viper",
+            "position": [-35, -35, 0],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ],
+                "propulsion": {
+                    "class": "imperialBomberMk1"
+                }
+            }
+        },
+        {
+            "class": "viper",
+            "position": [0, 1200, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "viper",
+            "position": [-35, 1235, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ],
+                "propulsion": {
+                    "class": "imperialBomberMk1"
+                }
+            }
+        },
+        {
+            "class": "viper",
+            "position": [35, 1235, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ],
+                "propulsion": {
+                    "class": "imperialBomberMk1"
+                }
+            }
+        }
+    ]
+}

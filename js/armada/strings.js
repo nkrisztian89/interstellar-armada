@@ -51,6 +51,9 @@ define([
     strings.SPACECRAFT_STATS = {
         ARMOR: {name: "spacecraftStats.armor"}
     };
+    strings.LEVEL = {
+        PREFIX: {name: "level.", optional: true}
+    };
     strings.BATTLE = {
         DEVELOPMENT_VERSION_NOTICE: {name: "battle.developmentVersionNotice"},
         SPECTATOR_MODE: {name: "battle.spectatorMode"},

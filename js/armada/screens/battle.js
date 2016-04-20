@@ -787,11 +787,7 @@ define([
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
         _level.requestLoadFromFile(levelSourceFilename, function () {
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
-            _level.addRandomShips(
-                    logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS),
-                    logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_MAP_SIZE),
-                    mat.rotation4([0, 0, 1], Math.radians(logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_HEADING_ANGLE))),
-                    false, false, logic.getSetting(logic.BATTLE_SETTINGS.RANDOM_SHIPS_RANDOM_HEADING));
+            _level.addRandomShips();
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();

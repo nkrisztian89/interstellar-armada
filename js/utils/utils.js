@@ -346,5 +346,14 @@ define(function () {
     exports.pointInRect = function (x, y, left, bottom, right, top) {
         return (x >= left) && (x <= right) && (y >= bottom) && (y <= top);
     };
+    /**
+     * Trears the passed string as a filename and returns the part of it that comes before its extension (if it has any).
+     * @param {String} filename
+     * @returns {String}
+     */
+    exports.getFilenameWithoutExtension = function (filename) {
+        var dotIndex = filename.lastIndexOf(".");
+        return (dotIndex > 0) ? filename.substr(0, dotIndex) : filename;
+    };
     return exports;
 });
