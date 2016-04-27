@@ -240,10 +240,8 @@ define([
         ]);
     };
     /**
-     * Returns a new 4x4 transformation matrix describing a rotation along an
-     * arbitrary axis.
-     * @param {Number[]} axis An array of 3 numbers describing the axis of the
-     * rotation
+     * Returns a new 4x4 transformation matrix describing a rotation around an arbitrary axis.
+     * @param {Number[]} axis A 3D unit vector describing the axis of the rotation
      * @param {Number} angle The angle of rotation in radian
      */
     mat.rotation4 = function (axis, angle) {
@@ -688,9 +686,9 @@ define([
      */
     mat.getYawAndPitch = function (m) {
         var pitchMatrix, result = {};
-        if (Math.abs(m [6]) > CLOSE_TO_ONE_THRESHOLD) {
+        if (Math.abs(m[6]) > CLOSE_TO_ONE_THRESHOLD) {
             result.yaw = 0;
-            result.pitch = (m [6] > 0) ? -Math.PI / 2 : Math.PI / 2;
+            result.pitch = (m[6] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
             result.yaw = vec.angle2uCapped([0, 1], vec.normal2(m[10] > 0 ? [m[4], m[5]] : [-m[4], -m[5]]));
             if (m[4] * m[10] < 0) {

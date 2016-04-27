@@ -22,6 +22,7 @@ define([
     };
     strings.MAIN_MENU = {
         NEW_GAME: {name: "mainMenu.newGame"},
+        DEMO: {name: "mainMenu.demo"},
         DATABASE: {name: "mainMenu.database"},
         SETTINGS: {name: "mainMenu.settings"},
         ABOUT: {name: "mainMenu.about"}

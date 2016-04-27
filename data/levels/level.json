@@ -161,7 +161,7 @@
         "taurus": 1
     },
     "randomShipsMapSize": 3000,
-    "randomShipsEquipmentProfileName": "default",
+    "randomShipsEquipmentProfileName": "full",
     "randomShipsHeadingAngle": 90,
     "randomShipsRandomHeading": true
 }

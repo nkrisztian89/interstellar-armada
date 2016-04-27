@@ -1404,6 +1404,7 @@
     "spacecraftTypes": [
         {
             "name": "interceptor",
+            "isFighterType": true,
             "fullName": "Interceptor",
             "description": "Interceptors are small, agile space fighters designed to counter enemy fighters and bombers. They are fast and maneuverable with light armor but often considerable firepower, which allows them to take out more heavily armored bombers. Interceptor designers utilize different approaches in their models to offer protection for them in the vicinity of larger enemy ships. However, it is generally highly recommended to stay out of range of enemy ships that have significant anti-fighter capabilities.",
             "goodAgainst": [
@@ -1415,6 +1416,7 @@
         },
         {
             "name": "bomber",
+            "isFighterType": true,
             "fullName": "Bomber",
             "description": "Bombers are small spacecraft usually manned by one or two pilots, designed as a cost effective solution against small and medium size warships. Their heavy armor and shielding enables them to survive long enough to deliver their large payload, either taking out critical systems or causing significant shield and hull damage to their target. The additional mass makes them less maneuverable and thus more vulnerable against enemy fighters.",
             "goodAgainst": [
@@ -1426,6 +1428,7 @@
         },
         {
             "name": "reconFighter",
+            "isFighterType": true,
             "fullName": "Reconaissance fighter",
             "description": "Reconaissance fighters are lightly armored and armed small spacecraft that use stealth, high speed and maneuverability to stay out of enemy fire and sophisticated scanning equipment to provide vital information about hostile fleet composition and movements, location of critical targets and vulnerable spots on enemy spacecraft as well as advanced jammers to disrupt communication, navigation or weapon systems of enemy ships.",
             "goodAgainst": [
@@ -1437,6 +1440,7 @@
         },
         {
             "name": "heavyFighter",
+            "isFighterType": true,
             "fullName": "Heavy fighter",
             "description": "Heavy fighters are support craft usually used together with interceptors or bombers. They are the most heavily armored fighters with the highest firepower of primary weapons, providing them fair survivability even when facing anti-fighter weaponry of enemy ships. They are also the least maneuverable of all fighters, making it difficult for them to engage faster targets on their own. Their main role is to draw enemy fire from interceptors or bombers while those can destroy their priority targets. They are also an excellent choice for taking out enemy torpedo boats.",
             "goodAgainst": [
@@ -1448,6 +1452,7 @@
         },
         {
             "name": "torpedoBoat",
+            "isFighterType": false,
             "fullName": "Torpedo boat",
             "description": "Along with armed transports, torpedo boats are the smallest military spacecrafts larger than fighters. Unlike the former, these ships carry a large amount of deadly torpedoes instead of boarding parties in their bay, making them a dangerous opponent against even the largest enemy warships. However as they lack anti-fighter defences, if left unescorted, they are easily taken out by enemy interceptors, bombers or heavy fighters since due to their low maneuverability, they provide an easy target.",
             "goodAgainst": [
@@ -1459,6 +1464,7 @@
         },
         {
             "name": "corvette",
+            "isFighterType": false,
             "fullName": "Corvette",
             "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.",
             "goodAgainst": [
@@ -1470,6 +1476,7 @@
         },
         {
             "name": "frigate",
+            "isFighterType": false,
             "fullName": "Frigate",
             "description": "Frigates are the first warships in size that are big enough to carry a cosiderable amount of supplies and mount devastating firepower. Due to this, their usual weapon arrangement focuses on getting most out of this fact and enables them to successully take on larger ships at the expence of worse defence against fighters, for which they rely on escort. Leading strike teams, these ships can be utilized for longer term missions, engaging critical targets ahead of the larger force, disrupting enemy supply lines or securing poorly defended sectors.",
             "goodAgainst": [
@@ -1481,6 +1488,7 @@
         },
         {
             "name": "destroyer",
+            "isFighterType": false,
             "fullName": "Destroyer",
             "description": "Destroyers, serving as the lead for battle groups, are the most versatile of all warships. Their large size provides a lot of options for configuring their equipment: they can balance fair anti-fighter and anti-ship firepower or lean towards one side, but can also be equipped for long-range artillery fire or provide larger hangar bays for fighters, bombers or transports. Destroyers, depending on their configuration, are suitable for all types of missions and against most enemy craft up to their size. Without proper escort, concentrated fire from anti-ship weapons can wear them out, and the loss of a destroyer can easily change the tide in a battle. ",
             "goodAgainst": [
@@ -1492,6 +1500,7 @@
         },
         {
             "name": "cruiser",
+            "isFighterType": false,
             "fullName": "Cruiser",
             "description": "Cruisers are currently the largest warships in service, representing the pinnacle of starship design and engineering. They are used as flagships of whole fleets, in the role of remote command center, base of operations for a sector or leading planetary sieges or defences. Their large size and advanced weaponry enables them to safely house a large amount of supplies, fighter craft, transports, ground assault forces or equipment and resources for establishing new planetary outposts. They have the strongest armor and shields and no compromises need to be taken when mounting them with anti-fighter and anti-ship weaponry. Due to their important role, they are also among the priority targets for the enemy and when battling a larger force, it is crucial to defend them well against torpedoes and anti-ship fire.",
             "goodAgainst": [
@@ -1503,6 +1512,7 @@
         },
         {
             "name": "battleship",
+            "isFighterType": false,
             "fullName": "Battleship",
             "description": "",
             "goodAgainst": [

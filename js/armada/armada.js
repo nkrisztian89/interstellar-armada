@@ -15,7 +15,8 @@
  * @param components Used to clear the cached DOM models of all loaded components after the game has been initialized
  * @param constants Used to access the language setting location in the local storage
  * @param graphics Used to load the graphics settings
- * @param logic Used to load the configuration and settings of the game and access main functionality
+ * @param config Used to load general game configuration and settings
+ * @param logic Used to load the environments
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
  */
@@ -24,10 +25,11 @@ define([
     "modules/components",
     "armada/constants",
     "armada/graphics",
+    "armada/configuration",
     "armada/logic",
     "armada/control",
     "armada/strings"
-], function (game, components, constants, graphics, logic, control, strings) {
+], function (game, components, constants, graphics, config, logic, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -47,16 +49,19 @@ define([
         // load defaults from the JSON files and then overwrite with local preferences (of which only differences from defaults are stored)
         graphics.loadSettingsFromJSON(settingsJSON.graphics);
         graphics.loadSettingsFromLocalStorage();
-        logic.loadSettingsFromJSON(settingsJSON.logic);
+        config.loadSettingsFromJSON(settingsJSON.logic);
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
-        logic.executeWhenReady(function () {
-            _progressBar.value = 2;
-            callback();
+        config.executeWhenReady(function () {
+            logic.requestEnvironmentsLoad();
+            logic.executeWhenReady(function () {
+                _progressBar.value = 2;
+                callback();
+            });
         });
     };
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
-        logic.loadConfigurationFromJSON(configJSON.dataFiles.logic);
+        config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
         graphics.loadConfigurationFromJSON(configJSON.graphics);
         control.loadConfigurationFromJSON(configJSON.control);
         _progressBar.value = 1;
@@ -74,6 +79,7 @@ define([
         ], function (menus, battle, database, generalSettings, graphicsScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(menus.levelSelectionMenuScreen);
+            game.addScreen(menus.demoLevelSelectionMenuScreen);
             game.addScreen(battle.battleScreen);
             game.addScreen(database.databaseScreen);
             game.addScreen(menus.settingsMenuScreen);

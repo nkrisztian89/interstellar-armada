@@ -14,6 +14,7 @@ define(function () {
     var vec = {},
             // -----------------------------------------------------------------------------
             // Constants
+            CLOSE_TO_ONE = 0.99999,
             CLOSE_TO_ZERO = 0.0000001;
     // -----------------------------------------------------------------------------
     // Constant vectors
@@ -91,7 +92,36 @@ define(function () {
         decimals = decimals || 2;
         return v[0].toFixed(decimals) + " " + v[1].toFixed(decimals) + " " + v[2].toFixed(decimals) + " " + v[3].toFixed(decimals);
     };
-
+    /**
+     * @typedef {Object} YawAndPitch
+     * @property {Number} yaw The yaw angle in radians
+     * @property {Number} pitch The pitch angle in radians
+     */
+    /**
+     * Returns a pair of angles: (yaw;pitch) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * direction, a positive yaw corresponding to a counter-clockwise rotation angle around the Z axis in radians and the pitch 
+     * corresponding to a counter-clockwise rotation around the yaw-rotated X axis in radians.
+     * @param {Number[3]} v
+     * @returns {YawAndPitch}
+     */
+    vec.getYawAndPitch = function (v) {
+        var result = {};
+        if (Math.abs(v[2]) > CLOSE_TO_ONE) {
+            result.yaw = 0;
+            result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
+        } else {
+            result.yaw = vec.angle2uCapped([0, 1], vec.normal2([v[0], v[1]]));
+            if (v[0] > 0) {
+                result.yaw = -result.yaw;
+            }
+            vec.rotate2(v, -result.yaw);
+            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([v[1], v[2]]));
+            if (v[2] < 0) {
+                result.pitch = -result.pitch;
+            }
+        }
+        return result;
+    };
     // -----------------------------------------------------------------------------
     // Functions that transform a vector and return a new, transformed vector
 
@@ -405,6 +435,19 @@ define(function () {
         v1[0] = v31 * v2[2] - v32 * v2[1];
         v1[1] = v32 * v2[0] - v30 * v2[2];
         v1[2] = v30 * v2[1] - v31 * v2[0];
+    };
+    /**
+     * Rotates the given 2D vector (or the first to components of a 3D, 4D vector) counter-clockwise, modifying it in-place.
+     * @param {Number[2]} v 
+     * @param {Number} angle The angle of rotation, in radians
+     */
+    vec.rotate2 = function (v, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                x = v[0];
+        v[0] = v[0] * cosAngle + v[1] * -sinAngle;
+        v[1] = x * sinAngle + v[1] * cosAngle;
     };
     return vec;
 });

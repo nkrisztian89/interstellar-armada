@@ -11,7 +11,7 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [0, 1150, -80],
+            "position": [0, 1100, -80],
             "rotations": [
                 {
                     "axis": "x",
@@ -23,7 +23,7 @@
     "spacecrafts": [
         {
             "team": "empire",
-            "class": "viper",
+            "class": "falcon",
             "piloted": true,
             "position": [0, 0, 0],
             "equipment": {
@@ -32,9 +32,30 @@
         },
         {
             "team": "empire",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [35, -35, 0]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [-35, -35, 0]
+        },
+        {
+            "team": "empire",
             "class": "viper",
             "ai": "fighter",
-            "position": [35, -35, 0],
+            "position": [0, -50, -50],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "empire",
+            "class": "viper",
+            "ai": "fighter",
+            "position": [35, -85, -50],
             "equipment": {
                 "weapons": [
                     {
@@ -50,7 +71,7 @@
             "team": "empire",
             "class": "viper",
             "ai": "fighter",
-            "position": [-35, -35, 0],
+            "position": [-35, -85, -50],
             "equipment": {
                 "weapons": [
                     {
@@ -64,9 +85,45 @@
         },
         {
             "team": "rebels",
-            "class": "viper",
+            "class": "falcon",
             "ai": "fighter",
             "position": [0, 1200, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [-35, 1235, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [35, 1235, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "ai": "fighter",
+            "position": [0, 1250, -150],
             "rotations": [
                 {
                     "axis": "z",
@@ -81,7 +138,7 @@
             "team": "rebels",
             "class": "viper",
             "ai": "fighter",
-            "position": [-35, 1235, -100],
+            "position": [-35, 1285, -150],
             "rotations": [
                 {
                     "axis": "z",
@@ -103,7 +160,7 @@
             "team": "rebels",
             "class": "viper",
             "ai": "fighter",
-            "position": [35, 1235, -100],
+            "position": [35, 1285, -150],
             "rotations": [
                 {
                     "axis": "z",

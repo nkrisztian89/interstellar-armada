@@ -357,10 +357,11 @@ define([
      * in model space.
      * @param {Number} range The distance from the current position within which the hit point is to be located in order to count it as a
      * hit, in meters. E.g. to check whether an object moving at 10 m/s has hit this body within the past 5 seconds, this should be 50.
+     * @param {Number} offset The boundaries of the box of the body are offset (the size increased) by this much (in model space)
      * @returns {Number[4]|null} The point of intersection where the object has hit or null if it did not.
      */
-    Body.prototype.checkHit = function (relativePositionVector, relativeDirectionVector, range) {
-        var d, ipx, ipy;
+    Body.prototype.checkHit = function (relativePositionVector, relativeDirectionVector, range, offset) {
+        var d, ipx, ipy, halfWidth = this._halfWidth + offset, halfHeight = this._halfHeight + offset, halfDepth = this._halfDepth + offset;
         // first transform the coordinates from model-space (physical object space) to body-space
         relativePositionVector = this._rotated ?
                 vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse()) :
@@ -376,17 +377,17 @@ define([
                 // we are actually calculating the fraction (ratio) of the relative direction vector at which the plane is reached, but
                 // since the length on the direction vector is one meter, this will equal the distance
                 // a positive number will indicate impact with the plane in the future and a negative one will indicate impact in the past
-                d = (-this._halfWidth - relativePositionVector[0]) / relativeDirectionVector[0];
+                d = (-halfWidth - relativePositionVector[0]) / relativeDirectionVector[0];
                 // calculate the coordinates of the intersection point with the left plane (Y and Z coordinates)
                 ipx = relativePositionVector[1] + relativeDirectionVector[1] * d;
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
                 // check if the intersection point is within the left face of this box, which means the object entered or will enter the
                 // box through the left face
-                if (utils.pointInRect(ipx, ipy, -this._halfHeight, -this._halfDepth, this._halfHeight, this._halfDepth)) {
+                if (utils.pointInRect(ipx, ipy, -halfHeight, -halfDepth, halfHeight, halfDepth)) {
                     // if the impact already happened and it happened within the given range then we can return the intersection point
                     // (transformed back into model (physical object) space)
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([-this._halfWidth, ipx, ipy, 1]);
+                        return this._modelTransform([-halfWidth, ipx, ipy, 1]);
                     }
                     // if the entry point is on the left face but the impact did not happen yet or happened too far in the past (which means 
                     // it is possible it did not even happen as this is just an extrapolation of the path to a whole infinite line, while 
@@ -396,12 +397,12 @@ define([
                 }
             } else {
                 // if the object has a negative velocity along X, check for the right face of the box the same way
-                d = (this._halfWidth - relativePositionVector[0]) / relativeDirectionVector[0];
+                d = (halfWidth - relativePositionVector[0]) / relativeDirectionVector[0];
                 ipx = relativePositionVector[1] + relativeDirectionVector[1] * d;
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
-                if (utils.pointInRect(ipx, ipy, -this._halfHeight, -this._halfDepth, this._halfHeight, this._halfDepth)) {
+                if (utils.pointInRect(ipx, ipy, -halfHeight, -halfDepth, halfHeight, halfDepth)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([this._halfWidth, ipx, ipy, 1]);
+                        return this._modelTransform([halfWidth, ipx, ipy, 1]);
                     }
                     return null;
                 }
@@ -411,22 +412,22 @@ define([
         // exactly the same way
         if (relativeDirectionVector[1] !== 0) {
             if (relativeDirectionVector[1] > 0) {
-                d = (-this._halfHeight - relativePositionVector[1]) / relativeDirectionVector[1];
+                d = (-halfHeight - relativePositionVector[1]) / relativeDirectionVector[1];
                 ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
-                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfDepth, this._halfWidth, this._halfDepth)) {
+                if (utils.pointInRect(ipx, ipy, -halfWidth, -halfDepth, halfWidth, halfDepth)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, -this._halfHeight, ipy, 1]);
+                        return this._modelTransform([ipx, -halfHeight, ipy, 1]);
                     }
                     return null;
                 }
             } else {
-                d = (this._halfHeight - relativePositionVector[1]) / relativeDirectionVector[1];
+                d = (halfHeight - relativePositionVector[1]) / relativeDirectionVector[1];
                 ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
-                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfDepth, this._halfWidth, this._halfDepth)) {
+                if (utils.pointInRect(ipx, ipy, -halfWidth, -halfDepth, halfWidth, halfDepth)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, this._halfHeight, ipy, 1]);
+                        return this._modelTransform([ipx, halfHeight, ipy, 1]);
                     }
                     return null;
                 }
@@ -434,22 +435,22 @@ define([
         }
         if (relativeDirectionVector[2] !== 0) {
             if (relativeDirectionVector[2] > 0) {
-                d = (-this._halfDepth - relativePositionVector[2]) / relativeDirectionVector[2];
+                d = (-halfDepth - relativePositionVector[2]) / relativeDirectionVector[2];
                 ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
                 ipy = relativePositionVector[1] + relativeDirectionVector[1] * d;
-                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfHeight, this._halfWidth, this._halfHeight)) {
+                if (utils.pointInRect(ipx, ipy, -halfWidth, -halfHeight, halfWidth, halfHeight)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, ipy, -this._halfDepth, 1]);
+                        return this._modelTransform([ipx, ipy, -halfDepth, 1]);
                     }
                     return null;
                 }
             } else {
-                d = (this._halfDepth - relativePositionVector[2]) / relativeDirectionVector[2];
+                d = (halfDepth - relativePositionVector[2]) / relativeDirectionVector[2];
                 ipx = relativePositionVector[0] + relativeDirectionVector[0] * d;
                 ipy = relativePositionVector[1] + relativeDirectionVector[1] * d;
-                if (utils.pointInRect(ipx, ipy, -this._halfWidth, -this._halfHeight, this._halfWidth, this._halfHeight)) {
+                if (utils.pointInRect(ipx, ipy, -halfWidth, -halfHeight, halfWidth, halfHeight)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, ipy, this._halfDepth, 1]);
+                        return this._modelTransform([ipx, ipy, halfDepth, 1]);
                     }
                     return null;
                 }
@@ -758,13 +759,17 @@ define([
     /**
      * Checks whether a point-like object travelling along a straight path with a given speed has hit this pyhical object recently and
      * if so, returns the intersection point where it did.
-     * @param {Number[3]} positionVector A 3D vector describing the position of the point in worlds space. (in meters)
+     * @param {Number[3]} positionVector A 3D vector describing the position of the point in world space. (in meters)
      * @param {Number[3]} velocityVector The vector in world space that describes the velocity of the travelling object in m/s.
      * @param {Number} dt The time interval in milliseconds within which to check for the hit.
+     * @param {Number} [offset=0] If given, the bounderies of (all the bodies of) the object are offset (the size increased) by this amount
+     * (meters in world space)
      * @returns {Number[4]|null} If the object has hit, the intersection point where the hit happened in object space, otherwise null.
      */
-    PhysicalObject.prototype.checkHit = function (positionVector, velocityVector, dt) {
+    PhysicalObject.prototype.checkHit = function (positionVector, velocityVector, dt, offset) {
         var relativePos, relativeVelocityVector, i, range, result = null;
+        offset = offset || 0;
+        offset /= this._scalingMatrix[0];
         // make the vector 4D for the matrix multiplication
         positionVector.push(1);
         // transforms the position to object-space for preliminary check
@@ -778,7 +783,7 @@ define([
             relativeVelocityVector = vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4(this.getRotationMatrixInverse()));
             vec.normalize3(relativeVelocityVector);
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
-                result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range);
+                result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range, offset);
             }
         }
         return result;

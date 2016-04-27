@@ -328,6 +328,20 @@
             "propulsion": {
                 "class": "imperialCorvetteMk1"
             }
+        },
+        {
+            "name": "full",
+            "weapons": [
+                {
+                    "class": "smallPlasmaTurret"
+                },
+                {
+                    "class": "smallPlasmaTurret"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialCorvetteMk1"
+            }
         }
     ],
     "explosion": "smallShipExplosion",

@@ -22,8 +22,10 @@
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing graphics settings.
  * @param classes Used for HUD elements for convenient acquiry of their resources.
- * @param logic Used for creating the Level object, accessing settings and enums.
+ * @param config Used to access game setting / configuration.
+ * @param logic Used for creating the Level object, accessing enums.
  * @param control Used for global game control functions.
+ * @param ai Used for performing the AI control operations in the battle simulation loop.
  */
 define([
     "utils/utils",
@@ -38,10 +40,12 @@ define([
     "armada/screens/shared",
     "armada/graphics",
     "armada/classes",
+    "armada/configuration",
     "armada/logic",
     "armada/control",
+    "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, classes, logic, control) {
+], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, classes, config, logic, control, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -146,18 +150,53 @@ define([
              * The object that will be returned as this module
              * @type Battle
              */
-            _battle = {};
+            _battle = {},
+            /**
+             * Whether the game is in demo mode, in which all spacecrafts are controlled by AI and automatic camera switching is performed.
+             * @type Boolean
+             */
+            _demoMode,
+            /**
+             * The time elapsed since last switching view in demo mode, in milliseconds.
+             * @type Number
+             */
+            _timeInSameView;
     // ------------------------------------------------------------------------------
     // private functions
     /**
      * Executes one simulation (and control) step for the battle.
      */
     function _simulationLoopFunction() {
+        var followedCraft, curDate, dt;
         if (_simulationLoop !== LOOP_CANCELED) {
-            var curDate = performance.now();
-            control.control(curDate - _prevDate);
+            curDate = performance.now();
+            dt = curDate - _prevDate;
+            control.control(dt);
+            ai.control(dt);
+            followedCraft = _level.getFollowedSpacecraftForScene(_battleScene);
             if (!_isTimeStopped) {
-                _level.tick(curDate - _prevDate, [_battleScene]);
+                _level.tick(dt, _battleScene);
+            }
+            if (followedCraft) {
+                // handling the loss of the spacecraft that is followed by the camera
+                if (followedCraft.canBeReused()) {
+                    if (control.isInPilotMode()) {
+                        control.switchToSpectatorMode(true);
+                    } else if (_demoMode) {
+                        _battleScene.getCamera().followNextNode();
+                        _timeInSameView = 0;
+                    }
+                } else if (_demoMode) {
+                    // automatic view switching in demo mode
+                    _timeInSameView += dt;
+                    if (_timeInSameView > config.getSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCH_INTERVAL)) {
+                        _timeInSameView = 0;
+                        _battleScene.getCamera().changeToNextView();
+                        if (Math.random() < config.getSetting(config.BATTLE_SETTINGS.DEMO_DOUBLE_VIEW_SWITCH_CHANCE)) {
+                            _battleScene.getCamera().changeToNextView();
+                        }
+                    }
+                }
             }
             _prevDate = curDate;
         }
@@ -235,10 +274,10 @@ define([
                 }
                 _battleScene.setShouldUpdateCamera(true);
             }
-            if (logic.getSetting(logic.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
+            if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
                 _simulationLoop = LOOP_REQUESTANIMFRAME;
             } else {
-                _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (logic.getSetting(logic.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+                _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
             }
             control.startListening();
         } else {
@@ -382,10 +421,10 @@ define([
     function _getWeaponImpactIndicator() {
         return new HUDElement(
                 UI_3D_SHADER_NAME,
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_TEXTURE),
                 [0, 0, 0],
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE),
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
     }
     /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
@@ -395,24 +434,24 @@ define([
         // keep the ons with the same shader together for faster rendering
         _centerCrosshair = new HUDElement(
                 UI_2D_SHADER_NAME,
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_TEXTURE),
                 [0, 0],
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SIZE),
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_COLOR));
         _centerCrosshair.addToScene(_battleScene);
         _targetArrow = new HUDElement(
                 UI_2D_SHADER_NAME,
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_ARROW_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_TEXTURE),
                 [0, 0],
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE),
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_ARROW_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_COLOR));
         _targetArrow.addToScene(_battleScene);
         _targetIndicator = new HUDElement(
                 UI_3D_SHADER_NAME,
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_TEXTURE),
                 [0, 0, 0],
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
-                logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_COLOR));
         _targetIndicator.addToScene(_battleScene);
         _weaponImpactIndicators = [_getWeaponImpactIndicator()];
         _weaponImpactIndicators[0].addToScene(_battleScene);
@@ -433,7 +472,7 @@ define([
                 },
                 graphics.getAntialiasing(),
                 graphics.getFiltering(),
-                logic.getSetting(logic.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
+                config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
         /**
          * @type SimpleComponent
          */
@@ -474,7 +513,12 @@ define([
                 },
                 function () {
                     resumeBattle();
-                    control.switchToPilotMode(_level.getPilotedSpacecraft());
+                    if (!_demoMode) {
+                        control.switchToPilotMode(_level.getPilotedSpacecraft());
+                    } else {
+                        _battleScene.getCamera().followNextNode();
+                        _timeInSameView = 0;
+                    }
                 }.bind(this),
                 strings.INFO_BOX.HEADER.name,
                 strings.INFO_BOX.OK_BUTTON.name));
@@ -636,7 +680,7 @@ define([
                  * A reference to the currently piloted spacecraft.
                  * @type Spacecraft
                  */
-                craft = _level ? _level.getPilotedSpacecraft() : null,
+                craft = _level ? _level.getFollowedSpacecraftForScene(_battleScene) : null,
                 /**
                  * A reference to the target of the piloted spacecraft.
                  * @type Spacecraft
@@ -670,10 +714,10 @@ define([
                         vec.scaled3(mat.getRowB43(m), distance),
                         vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
                         vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
-                    if (distance <= (relativeVelocity[13] + weapons[i].getProjectileVelocity()) * weapons[i].getProjectileClass().getDuration() / 1000) {
-                        _weaponImpactIndicators[i].setColor(logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+                    if (distance <= weapons[i].getRange(relativeVelocity[13])) {
+                        _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
                     } else {
-                        _weaponImpactIndicators[i].setColor(logic.getSetting(logic.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
+                        _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
                     }
                     _weaponImpactIndicators[i].show();
                 }
@@ -699,11 +743,11 @@ define([
                     _targetScene.clearNodes();
                     _targetViewItem = target;
                     _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
-                        shaderName: logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER),
+                        shaderName: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER),
                         positionMatrix: mat.translation4(0, 0, 0),
                         orientationMatrix: mat.identity4()
                     }, function (model) {
-                        var color = logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_COLOR);
+                        var color = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_COLOR);
                         model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
                             return color;
                         });
@@ -737,6 +781,8 @@ define([
                     ((craft.getFlightMode() !== logic.FlightMode.FREE) ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
         } else {
             _battleScene.hideUI();
+            _targetScene.clearNodes();
+            _targetViewItem = null;
         }
     };
     /**
@@ -770,11 +816,13 @@ define([
      * Loads the specified level description file and sets a callback to create a new game-logic model and scene for the simulated battle
      * based on the level description and current settings
      * @param {String} levelSourceFilename
+     * @param {Boolean} demoMode If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the level.
      */
-    BattleScreen.prototype.startNewBattle = function (levelSourceFilename) {
+    BattleScreen.prototype.startNewBattle = function (levelSourceFilename, demoMode) {
         var
                 loadingStartTime = performance.now(),
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
+        _demoMode = demoMode;
         _clearData();
         document.body.classList.add("wait");
         this.hideStats();
@@ -785,9 +833,9 @@ define([
                 canvas.height / 2);
         _level = new logic.Level();
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
-        _level.requestLoadFromFile(levelSourceFilename, function () {
+        _level.requestLoadFromFile(levelSourceFilename, demoMode, function () {
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
-            _level.addRandomShips();
+            _level.addRandomShips(undefined, demoMode);
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();
@@ -800,30 +848,30 @@ define([
                     graphics.getMaxPointLights(),
                     graphics.getMaxSpotLights(),
                     {
-                        useVerticalValues: logic.getSetting(logic.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
-                        viewDistance: logic.getSetting(logic.BATTLE_SETTINGS.VIEW_DISTANCE),
+                        useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                        viewDistance: config.getSetting(config.BATTLE_SETTINGS.VIEW_DISTANCE),
                         fov: INITIAL_CAMERA_FOV,
                         span: INITIAL_CAMERA_SPAN,
-                        transitionDuration: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
-                        transitionStyle: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                        transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
+                        transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
             _targetScene = new budaScene.Scene(
-                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[0],
-                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[1],
-                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[0],
-                    logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[1],
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[0],
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[1],
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[0],
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[1],
                     false, [true, true, true, true],
                     [0, 0, 0, 0], true,
                     graphics.getLODContext(),
                     0,
                     0,
                     {
-                        useVerticalValues: logic.getSetting(logic.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
-                        viewDistance: logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_VIEW_DISTANCE),
-                        fov: logic.getSetting(logic.BATTLE_SETTINGS.HUD_TARGET_VIEW_FOV),
-                        span: logic.getSetting(logic.CAMERA_SETTINGS.DEFAULT_SPAN),
-                        transitionDuration: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
-                        transitionStyle: logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                        useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                        viewDistance: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_VIEW_DISTANCE),
+                        fov: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_FOV),
+                        span: config.getSetting(config.CAMERA_SETTINGS.DEFAULT_SPAN),
+                        transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
+                        transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
             this.hideUI();
             _level.addToScene(_battleScene, _targetScene);
@@ -847,14 +895,14 @@ define([
                     application.log("Game data loaded in " + ((performance.now() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                     this._smallHeader.setContent(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
-                    control.switchToSpectatorMode(false);
+                    control.switchToSpectatorMode(false, true);
                     _battleCursor = document.body.style.cursor;
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>"
                     }));
                     this._loadingBox.hide();
                     this.showStats();
-                    this.startRenderLoop(1000 / logic.getSetting(logic.BATTLE_SETTINGS.RENDER_FPS));
+                    this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
                 }.bind(this));
             }.bind(this));
 

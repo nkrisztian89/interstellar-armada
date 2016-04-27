@@ -14,7 +14,7 @@
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
  * @param armadaScreens Used for common screen constants.
- * @param logic Used for choosing the level description file to load when a new battle is started from the main menu.
+ * @param config Used for choosing the level description file to load when a new battle is started from the main menu.
  * @param strings Used for translation support.
  * @param battle Used for starting / resuming the battle.
  */
@@ -23,26 +23,27 @@ define([
     "modules/screens",
     "modules/game",
     "armada/screens/shared",
-    "armada/logic",
+    "armada/configuration",
     "armada/strings",
     "armada/screens/battle"
-], function (utils, screens, game, armadaScreens, logic, strings, battle) {
+], function (utils, screens, game, armadaScreens, config, strings, battle) {
     "use strict";
     // -------------------------------------------------------------------------
     // Private functions
     /**
      * Creates and returns the menu options for the level selection screen.
+     * @param {Boolean} demoMode
      * @returns {MenuComponent~MenuOption[]}
      */
-    function _getLevelOptions() {
+    function _getLevelOptions(demoMode) {
         var result = [], i, actionFunction = function (levelFilename) {
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
-            game.getScreen().startNewBattle(levelFilename);
+            game.getScreen().startNewBattle(levelFilename, demoMode);
         };
-        for (i = 0; i < logic.getLevelFileCount(); i++) {
+        for (i = 0; i < config.getLevelFileCount(); i++) {
             result.push({
-                id: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(logic.getLevelFileName(i)),
-                action: actionFunction.bind(this, logic.getLevelFileName(i))
+                id: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(config.getLevelFileName(i)),
+                action: actionFunction.bind(this, config.getLevelFileName(i))
             });
         }
         result.push({
@@ -75,6 +76,11 @@ define([
                             game.setScreen(armadaScreens.LEVEL_MENU_SCREEN_NAME);
                         }
                     }, {
+                        id: strings.MAIN_MENU.DEMO.name,
+                        action: function () {
+                            game.setScreen(armadaScreens.DEMO_LEVEL_MENU_SCREEN_NAME);
+                        }
+                    }, {
                         id: strings.MAIN_MENU.DATABASE.name,
                         action: function () {
                             game.setScreen(armadaScreens.DATABASE_SCREEN_NAME);
@@ -103,8 +109,23 @@ define([
                     buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
                     buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
                 },
-                _getLevelOptions(),
-                armadaScreens.SETTINGS_MENU_CONTAINER_ID),
+                _getLevelOptions(false),
+                armadaScreens.LEVEL_MENU_CONTAINER_ID),
+        demoLevelSelectionMenuScreen: new screens.MenuScreen(
+                armadaScreens.DEMO_LEVEL_MENU_SCREEN_NAME,
+                armadaScreens.DEMO_LEVEL_MENU_SCREEN_SOURCE,
+                {
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                armadaScreens.MENU_COMPONENT_SOURCE,
+                {
+                    menuClassName: armadaScreens.MENU_CLASS_NAME,
+                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
+                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
+                },
+                _getLevelOptions(true),
+                armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID),
         settingsMenuScreen: new screens.MenuScreen(
                 armadaScreens.SETTINGS_SCREEN_NAME,
                 armadaScreens.SETTINGS_SCREEN_SOURCE,

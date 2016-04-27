@@ -1,5 +1,5 @@
 {
-    "version": "0.2:268 (2016.04.20.)",
+    "version": "0.2:269 (2016.04.27.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -54,7 +54,10 @@
                     "1v1.json",
                     "3v3.json",
                     "bombers.json",
-                    "level.json"
+                    "mixed.json",
+                    "level.json",
+                    "staticAvoidance.json",
+                    "dynamicAvoidance.json"
                 ]
             }
         }

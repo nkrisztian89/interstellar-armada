@@ -2,6 +2,10 @@
     "environment": {
         "createFrom": "deepSpaceWhiteRedStars"
     },
+    "teams": [
+        "empire",
+        "rebels"
+    ],
     "views": [
         {
             "name": "free",
@@ -18,6 +22,7 @@
     ],
     "spacecrafts": [
         {
+            "team": "empire",
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, 0],
@@ -26,15 +31,21 @@
             }
         },
         {
+            "team": "empire",
             "class": "falcon",
+            "ai": "fighter",
             "position": [35, -35, 0]
         },
         {
+            "team": "empire",
             "class": "falcon",
+            "ai": "fighter",
             "position": [-35, -35, 0]
         },
         {
+            "team": "rebels",
             "class": "falcon",
+            "ai": "fighter",
             "position": [0, 1200, -100],
             "rotations": [
                 {
@@ -44,7 +55,9 @@
             ]
         },
         {
+            "team": "rebels",
             "class": "falcon",
+            "ai": "fighter",
             "position": [-35, 1235, -100],
             "rotations": [
                 {
@@ -54,7 +67,9 @@
             ]
         },
         {
+            "team": "rebels",
             "class": "falcon",
+            "ai": "fighter",
             "position": [35, 1235, -100],
             "rotations": [
                 {

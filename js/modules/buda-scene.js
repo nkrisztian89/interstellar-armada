@@ -3760,13 +3760,24 @@ define([
     /**
      * Directly sets a new relative position matrix for this configuration.
      * @param {Float32Array} value A 4x4 translation matrix.
-     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this reset
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
      */
     CameraPositionConfiguration.prototype.setRelativePositionMatrix = function (value, doNotNotifyCamera) {
         if (this._camera && !doNotNotifyCamera) {
             this._camera.positionConfigurationWillChange();
         }
         this._relativePositionMatrix = value;
+    };
+    /**
+     * Moves the relative position of the configuration by the passed 3D vector.
+     * @param {Number[3]} vector
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
+     */
+    CameraPositionConfiguration.prototype.moveByVector = function (vector, doNotNotifyCamera) {
+        if (this._camera && !doNotNotifyCamera) {
+            this._camera.positionConfigurationWillChange();
+        }
+        mat.translateByVector(this._relativePositionMatrix, vector);
     };
     /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
@@ -4702,6 +4713,14 @@ define([
         this._positionConfiguration.setRelativePositionMatrix(value, doNotNotifyCamera);
     };
     /**
+     * Moves the relative (or absolute, depending on the configuration properties) position of the configuration by the passed 3D vector.
+     * @param {Number[3]} vector
+     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
+     */
+    CameraConfiguration.prototype.moveByVector = function (vector, doNotNotifyCamera) {
+        this._positionConfiguration.moveByVector(vector, doNotNotifyCamera);
+    };
+    /**
      * Sets a new relative (or absolute, depending on the configuration properties) orientation matrix for this configuration.
      * @param {Float32Array} value A 4x4 rotation matrix.
      * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
@@ -5525,6 +5544,28 @@ define([
     Camera.prototype.configurationWillChange = function () {
         this.transitionToSameConfiguration();
     };
+    Camera.prototype.getFollowedNode = function () {
+        return this._followedNode;
+    };
+    /**
+     * If the current position of the camera exceeds plus/minus the given limit on any axis, moves the camera back to the origo and returns
+     * the vector by which the objects in the scene need to be moved to stay in sync with the new camera position, otherwise returns null.
+     * @param {Number} limit
+     * @returns {Number[3]|null}
+     */
+    Camera.prototype.moveToOrigoIfNeeded = function (limit) {
+        var m = this.getCameraPositionMatrix(), result = null;
+        if ((m[12] > limit) || (m[12] < -limit) || (m[13] > limit) || (m[13] < -limit) || (m[14] > limit) || (m[14] < -limit)) {
+            result = [-m[12], -m[13], -m[14]];
+            if (!this._currentConfiguration.positionFollowsObjects()) {
+                this._currentConfiguration.setRelativePositionMatrix(mat.identity4(), true);
+            }
+            if (this._previousConfiguration && !this._previousConfiguration.positionFollowsObjects()) {
+                this._previousConfiguration.moveByVector(result, true);
+            }
+        }
+        return result;
+    };
     /**
      * Start a transition to the first camera configuration associated with the passed renderable node, if any.
      * @param {RenderableNode} [node] If no node is given, the method will start a transition to the first camera configuration associated
@@ -5621,14 +5662,17 @@ define([
      * will be used.
      */
     Camera.prototype.followNextNode = function (considerScene, duration, style) {
-        var node = this._scene.getNextNode(this._followedNode);
-        if (considerScene && this._followedNode && (node === this._scene.getFirstNode())) {
-            if (this.followNode(null, true, duration, style)) {
-                return;
+        var node = this._scene.getNextNode(this._followedNode), originalNode = this._followedNode;
+        while ((node !== originalNode) && node && !node.getNextCameraConfiguration()) {
+            if (!originalNode) {
+                originalNode = node;
             }
-        }
-        while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
             node = this._scene.getNextNode(node);
+            if (considerScene && this._followedNode && (node === this._scene.getFirstNode())) {
+                if (this.followNode(null, true, duration, style)) {
+                    return;
+                }
+            }
         }
         if (node && node.getNextCameraConfiguration()) {
             this.followNode(node, true, duration, style);
@@ -5643,14 +5687,12 @@ define([
      * will be used.
      */
     Camera.prototype.followPreviousNode = function (considerScene, duration, style) {
-        var firstNode = this._scene.getFirstNode(), node = this._scene.getPreviousNode(this._followedNode);
-        if (considerScene && (this._followedNode === firstNode)) {
-            if (this.followNode(null, true, duration, style)) {
-                return;
+        var firstNode = this._scene.getFirstNode(), node = this._scene.getPreviousNode(this._followedNode), originalNode = this._followedNode;
+        while ((node !== originalNode) && node && !node.getNextCameraConfiguration()) {
+            if (!originalNode) {
+                originalNode = node;
             }
-        }
-        while ((node !== this._followedNode) && node && !node.getNextCameraConfiguration()) {
-            if (node === firstNode) {
+            if (considerScene && (node === firstNode)) {
                 if (this.followNode(null, true, duration, style)) {
                     return;
                 }
@@ -7003,6 +7045,20 @@ define([
                 o.translatev(v);
             }
         }
+    };
+    /**
+     * If the current positon of the scene's camera exceeds plus/minus the given limit on any of the three axes, moves the camera back to 
+     * the origo and moves all the objects in the scene to stay in sync with the camera as well as returns the vector by which the objects
+     * have been moved. Otherwise returns null.
+     * @param {Number} limit
+     * @returns {Number[3]|null}
+     */
+    Scene.prototype.moveCameraToOrigoIfNeeded = function (limit) {
+        var result = this._camera.moveToOrigoIfNeeded(limit);
+        if (result) {
+            this.moveAllObjectsByVector(result);
+        }
+        return result;
     };
     /**
      * Returns the node storing the first added main scene object.

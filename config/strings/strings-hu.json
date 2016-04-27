@@ -27,6 +27,7 @@
     "screen.back": "Vissza",
     "mainMenu": {
         "newGame": "Új játék",
+        "demo": "Demo",
         "database": "Adatbázis",
         "settings": "Beállítások",
         "about": "Információ"
@@ -60,7 +61,10 @@
         "1v1": "Egy egy ellen",
         "3v3": "Három három ellen",
         "bombers": "Bombázók",
-        "level": "Teszt"
+        "mixed": "Vegyes",
+        "level": "Teszt",
+        "staticAvoidance": "Statikus akadály teszt",
+        "dynamicAvoidance": "Dinamikus akadály teszt"
     },
     "battle": {
         "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",

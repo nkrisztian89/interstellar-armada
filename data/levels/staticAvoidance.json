@@ -11,7 +11,7 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [0, 1150, -80],
+            "position": [0, -300, 20],
             "rotations": [
                 {
                     "axis": "x",
@@ -24,23 +24,32 @@
         {
             "team": "empire",
             "class": "falcon",
-            "piloted": true,
-            "position": [0, 0, 0],
+            "ai": "fighter",
+            "position": [-100, 0, 0],
             "equipment": {
                 "profile": "full"
             }
         },
         {
+            "team": "empire",
+            "class": "aries",
+            "position": [0, 0, 0],
+            "equipment": {
+                "propulsion": {
+                    "class": "imperialCorvetteMk1"
+                }
+            }
+        },
+        {
             "team": "rebels",
             "class": "falcon",
-            "ai": "fighter",
-            "position": [0, 1200, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "position": [100, 0, 0]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, -250, 0]
         }
     ]
 }

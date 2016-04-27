@@ -129,7 +129,10 @@
             "hudTargetViewViewDistance": 1500,
             "hudTargetViewFOV": 40,
             "hudTargetViewTargetItemShader": "oneColor",
-            "hudTargetViewTargetItemColor": [0, 1, 0, 1]
+            "hudTargetViewTargetItemColor": [0, 1, 0, 1],
+            "demoFighterAI": "fighter",
+            "demoViewSwitchInterval": 6000,
+            "demoDoubleViewSwitchChance": 0.5
         },
         "camera": {
             "defaultFOV": 40,

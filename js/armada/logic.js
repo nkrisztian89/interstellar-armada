@@ -1,8 +1,7 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file Stores the current game configuration and settings and provides functions to load and access them as well as constructor functions
- * for top-level in-game entitites that can be instantiated. Inside it manages the relations among the various in-game objects to simulate
- * a space battle.
+ * @file Provides constructor functions for top-level in-game entitites that can be instantiated. Inside it manages the relations among the 
+ * various in-game objects to simulate a space battle.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0
@@ -12,7 +11,6 @@
 /*global define, Element, this */
 
 /**
- * @param types Used for verifying the types of settings loaded from JSON
  * @param vec Vector operations are needed for several logic functions
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
@@ -22,10 +20,11 @@
  * @param resources Used to access the loaded graphics resources
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
+ * @param config Used to access game settings/configuration
  * @param classes Used to load and access the classes of Interstellar Armada
+ * @param ai Used for setting the artificial intelligence pilots when creating a level.
  */
 define([
-    "utils/types",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -36,61 +35,40 @@ define([
     "modules/buda-scene",
     "armada/graphics",
     "armada/classes",
+    "armada/configuration",
+    "armada/ai",
     "utils/polyfill"
-], function (types, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, classes) {
+], function (vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, classes, config, ai) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // enums
             /**
              * @enum {String}
-             * The options for auto targeting.
+             * The available flight modes.
              */
-            AutoTargeting = {
+            FlightMode = {
                 /**
-                 * Automatic targeting is completely switched off
+                 * The pilot can freely control all thrusters
                  */
-                NEVER: "never",
+                FREE: "free",
                 /**
-                 * If a ship is hit, it is automatically selected as a target if no ships are selected as target yet
+                 * The maneuvering computer automatically adds thrust to compensate for drift and keep the set speed
                  */
-                HIT_AND_NO_TARGET: "hitAndNoTarget",
+                COMPENSATED: "compensated",
                 /**
-                 * If a ship is hit, it is automatically selected as a (new) target unless the player has manually set a different target before
+                 * Turning faster than it would be possible to comensate for drift is not allowed by the maneuvering computer 
                  */
-                HIT_AND_AUTO_TARGET: "hitAndAutoTarget",
-                /**
-                 * If a ship is hit, it is always selected as a (new) target
-                 */
-                ALWAYS_WHEN_HIT: "alwaysWhenHit"
+                RESTRICTED: "restricted"
             },
+    // ------------------------------------------------------------------------------
+    // constants
     /**
-     * @enum {String}
-     * The available flight modes.
+     * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
+     * the corresponding hitbox model is created
+     * @type String
      */
-    FlightMode = {
-        /**
-         * The pilot can freely control all thrusters
-         */
-        FREE: "free",
-        /**
-         * The maneuvering computer automatically adds thrust to compensate for drift and keep the set speed
-         */
-        COMPENSATED: "compensated",
-        /**
-         * Turning faster than it would be possible to comensate for drift is not allowed by the maneuvering computer 
-         */
-        RESTRICTED: "restricted"
-    },
-    /**
-     * This object holds the definition objects for custom types that are used for object property verification
-     * @type Object
-     */
-    _customTypes = {},
-            /**
-             * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
-             * the corresponding hitbox model is created
-             * @type String
-             */
-            HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
+    HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
             /**
              * Static lights anchored to spacecrafts will be added to their scenes with this priority
              * @type Number
@@ -111,741 +89,30 @@ define([
              * @type Number
              */
             BLINKER_LIGHT_PRIORITY = 3,
+            // ------------------------------------------------------------------------------
+            // private variables
             /**
-             * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
-             * @type Object
+             * Cached value of the configuration setting whether self-fire (a spacecraft hitting itself with its own projectiles) is enabled.
+             * @type Boolean
              */
-            CONFIGURATION,
+            _isSelfFireEnabled = false,
             /**
-             * The definition object for general settings that can be used to verify the data loaded from JSON as well as refer to the 
-             * individual settings later.
-             * @type Object
+             * Cached value of the configuration setting of how long does a momentary action (e.g. firing a projectile) take in terms of 
+             * physics simulation, in milliseconds.
+             * @type Number
              */
-            GENERAL_SETTINGS,
+            _momentDuration = 0,
             /**
-             * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
-             * individual settings later.
-             * @type Object
+             * Cached value of the configuration setting of the name of the uniform array storing the luminosity factors for a spacecraft.
+             * @type String
              */
-            DATABASE_SETTINGS,
-            /**
-             * The definition object for battle settings that can be used to verify the data loaded from JSON as well as refer to the 
-             * individual settings later.
-             * @type Object
-             */
-            BATTLE_SETTINGS,
-            /**
-             * The definition object for camera settings that can be used to verify the data loaded from JSON as well as refer to the 
-             * individual settings later.
-             * @type Object
-             */
-            CAMERA_SETTINGS,
+            _luminosityFactorsArrayName = null,
             /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
             _context;
-    _customTypes.VECTOR3 = {
-        baseType: "array",
-        length: 3,
-        elementType: "number"
-    };
-    _customTypes.COLOR3 = {
-        baseType: "array",
-        length: 3,
-        elementType: "number",
-        elementTypeParams: {
-            range: [0, 1]
-        }
-    };
-    _customTypes.COLOR4 = {
-        baseType: "array",
-        length: 4,
-        elementType: "number",
-        elementTypeParams: {
-            range: [0, 1]
-        }
-    };
-    _customTypes.DURATION = {
-        baseType: "number",
-        range: [0, undefined]
-    };
-    _customTypes.FILE_DESCRIPTOR = {
-        baseType: "object",
-        properties: {
-            FILENAME: {
-                name: "filename",
-                type: "string"
-            },
-            FOLDER: {
-                name: "folder",
-                type: "string"
-            }
-        }
-    };
-    _customTypes.ANGLE_DEGREES = {
-        baseType: "number",
-        range: [-360, 360]
-    };
-    _customTypes.LIGHT_SOURCE = {
-        baseType: "object",
-        properties: {
-            COLOR: {
-                name: "color",
-                type: _customTypes.COLOR3
-            },
-            DIRECTION: {
-                name: "direction",
-                type: _customTypes.VECTOR3
-            }
-        }
-    };
-    CONFIGURATION = {
-        CLASSES_SOURCE_FILE: {
-            name: "classes",
-            type: _customTypes.FILE_DESCRIPTOR
-        },
-        ENVIRONMENTS_SOURCE_FILE: {
-            name: "environments",
-            type: _customTypes.FILE_DESCRIPTOR
-        },
-        LEVEL_FILES: {
-            name: "levels",
-            type: {
-                baseType: "object",
-                properties: {
-                    FOLDER: {
-                        name: "folder",
-                        type: "string"
-                    },
-                    FILENAMES: {
-                        name: "filenames",
-                        type: "array",
-                        elementType: "string"
-                    }
-                }
-            }
-        }
-    };
-    GENERAL_SETTINGS = {
-        /**
-         * Whether the RequestAnimationFrame API should be used for the render loops (as opposed to setInterval)
-         */
-        USE_REQUEST_ANIM_FRAME: {
-            name: "useRequestAnimFrame",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * Default seed to use for generating random numbers to allow consistent and comparable testing.
-         */
-        DEFAULT_RANDOM_SEED: {
-            name: "defaultRandomSeed",
-            type: "number",
-            defaultValue: 4718
-        },
-        /**
-         * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the luminosity
-         * factor values of the various triangle groups.
-         */
-        UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME: {
-            name: "luminosityFactorsArrayName",
-            type: "string",
-            defaultValue: "luminosityFactors"
-        },
-        /**
-         * Whether to interpret given field of view, span and other camera property values as vertical or horizontal.
-         */
-        USE_VERTICAL_CAMERA_VALUES: {
-            name: "useVerticalCameraValues",
-            type: "boolean",
-            defaultValue: true
-        }
-    };
-    DATABASE_SETTINGS = {
-        /**
-         * Whether to show the loading box when loading the first item after navigating to the database screen
-         */
-        SHOW_LOADING_BOX_FIRST_TIME: {
-            name: "showLoadingBoxFirstTime",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * Whether to show the loading box when switching to another item on the database screen
-         */
-        SHOW_LOADING_BOX_ON_ITEM_CHANGE: {
-            name: "showLoadingBoxOnItemChange",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The background color for the canvas that shows the models in the database
-         */
-        BACKGROUND_COLOR: {
-            name: "backgroundColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0, 0, 0, 0]
-        },
-        /**
-         * The view distance of the scene in which the current item is displayed
-         */
-        ITEM_VIEW_DISTANCE: {
-            name: "itemViewDistance",
-            type: "number",
-            defaultValue: 2000
-        },
-        /**
-         * The field of view of the camera of the scene in which the current item is displayed (in degrees)
-         */
-        ITEM_VIEW_FOV: {
-            name: "itemViewFOV",
-            type: "number",
-            defaultValue: 60
-        },
-        /**
-         * The span of the camera of the scene in which the current item is displayed (in degrees)
-         */
-        ITEM_VIEW_SPAN: {
-            name: "itemViewSpan",
-            type: "number",
-            defaultValue: 0.2
-        },
-        /**
-         * If true, the wireframe model will be visible in the database unless the shaders can only show one model and the solid model is also set to show
-         */
-        SHOW_WIREFRAME_MODEL: {
-            name: "showWireframeModel",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The name of the shader to use when rendering the wireframe model
-         */
-        WIREFRAME_SHADER_NAME: {
-            name: "wireframeShaderName",
-            type: "string",
-            defaultValue: "oneColorReveal"
-        },
-        /**
-         * If the wireframe model is visible, it will be colored (homogenously) with this color
-         */
-        WIREFRAME_COLOR: {
-            name: "wireframeColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1, 0, 0, 1]
-        },
-        /**
-         * If true, the solid model will be visible in the database (it will face in after the wireframe model, if that is also visible and reveal is active)
-         */
-        SHOW_SOLID_MODEL: {
-            name: "showSolidModel",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The name of the shader to use when rendering the solid model
-         */
-        SOLID_SHADER_NAME: {
-            name: "solidShaderName",
-            type: "string",
-            defaultValue: "shadowMapReveal"
-        },
-        /**
-         * The light sources that will be added to the item view scene in the database
-         */
-        LIGHT_SOURCES: {
-            name: "lightSources",
-            type: "array",
-            elementType: _customTypes.LIGHT_SOURCE,
-            minLength: 1,
-            maxLength: 2
-        },
-        /**
-         * The name of the equipment profile that should be equipped on the spacecrafts shown in the database 
-         */
-        EQUIPMENT_PROFILE_NAME: {
-            name: "equipmentProfileName",
-            type: "string",
-            defaultValue: "default"
-        },
-        /**
-         * The size of every model shown will be multiplied by this factor in the database when switching to it
-         */
-        START_SIZE_FACTOR: {
-            name: "startSizeFactor",
-            type: "number",
-            defaultValue: "1"
-        },
-        /**
-         * If the model size is changed by the user in the database, it cannot go below the original size multiplied by this factor
-         */
-        MIN_SIZE_FACTOR: {
-            name: "minimumSizeFactor",
-            type: "number",
-            defaultValue: "0.9"
-        },
-        /**
-         * If the model size is changed by the user in the database, it cannot go above the original size multiplied by this factor
-         */
-        MAX_SIZE_FACTOR: {
-            name: "maximumSizeFactor",
-            type: "number",
-            defaultValue: "1.6"
-        },
-        /**
-         * If true, the models in the database will be rotated automatically
-         */
-        MODEL_AUTO_ROTATION: {
-            name: "modelAutoRotation",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * If true, the models in the database can be rotated by the mouse
-         */
-        MODEL_MOUSE_ROTATION: {
-            name: "modelMouseRotation",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The rotation animation (if turned on) will be carried out at this many frames per second
-         */
-        ROTATION_FPS: {
-            name: "rotationFPS",
-            type: "number",
-            defaultValue: 60
-        },
-        /**
-         * When starting the rotation and the review animations at the same time, the rotation angle will initially be set to this (in degrees)
-         */
-        ROTATION_REVEAL_START_ANGLE: {
-            name: "rotationRevealStartAngle",
-            type: _customTypes.ANGLE_DEGREES,
-            defaultValue: 90
-        },
-        /**
-         * When starting the rotation animation without the reveal animation, the rotation angle will initially be set to this (in degrees)
-         */
-        ROTATION_START_ANGLE: {
-            name: "rotationStartAngle",
-            type: _customTypes.ANGLE_DEGREES,
-            defaultValue: 180
-        },
-        /**
-         * The viewing angle that remains constant as the models rotate in the database (in degrees)
-         */
-        ROTATION_VIEW_ANGLE: {
-            name: "rotationViewAngle",
-            type: _customTypes.ANGLE_DEGREES,
-            defaultValue: 60
-        },
-        /**
-         * If the automatic rotation is turned on, the model will rotate 360 degrees during this much time, in milliseconds
-         */
-        ROTATION_DURATION: {
-            name: "rotationDuration",
-            type: "number",
-            defaultValue: 4000
-        },
-        /**
-         * If the user rotates the model in the database using the mouse, this will determine the rate or the rotation in degrees / pixels
-         */
-        ROTATION_MOUSE_SENSITIVITY: {
-            name: "rotationMouseSensitivity",
-            type: "number",
-            defaultValue: 1
-        },
-        /**
-         * If the shaders are not simplified, this setting will toggle the fade-in reveal animation
-         */
-        MODEL_REVEAL_ANIMATION: {
-            name: "modelRevealAnimation",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The models will fade in from this color while being revealed
-         */
-        REVEAL_COLOR: {
-            name: "revealColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1.0, 1.0, 1.0, 1.0]
-        },
-        /**
-         * The reveal animation will be carried out at this many frames per second
-         */
-        REVEAL_FPS: {
-            name: "revealFPS",
-            type: "number",
-            defaultValue: 60
-        },
-        /**
-         * The amount of time needed for the reveal animation to fully reveal a (wireframe/solid) model, in milliseconds
-         */
-        REVEAL_DURATION: {
-            name: "revealDuration",
-            type: _customTypes.DURATION,
-            defaultValue: 2000
-        },
-        /**
-         * This much delay will be applied between the revealing of the wireframe and the solid models, in milliseconds
-         */
-        REVEAL_SOLID_DELAY_DURATION: {
-            name: "revealSolidDelayDuration",
-            type: _customTypes.DURATION,
-            defaultValue: 2000
-        },
-        /**
-         * The transition from the reveal color to the model color will this much part of the model's length
-         */
-        REVEAL_TRANSITION_LENGTH_FACTOR: {
-            name: "revealTransitionLengthFactor",
-            type: "number",
-            defaultValue: 0.15
-        },
-        /**
-         * The rendering of the item view scene will happen at this many frames per second
-         */
-        RENDER_FPS: {
-            name: "databaseRenderFPS",
-            type: "number",
-            defaultValue: 60
-        }
-    };
-    BATTLE_SETTINGS = {
-        /**
-         * The rendering of the battle scene will happen at this many frames per second
-         */
-        RENDER_FPS: {
-            name: "battleRenderFPS",
-            type: "number",
-            defaultValue: 60
-        },
-        /**
-         * The simulation loop will be executed this many times per second during the battle
-         */
-        SIMULATION_STEPS_PER_SECOND: {
-            name: "simulationStepsPerSecond",
-            type: "number",
-            defaultValue: 60
-        },
-        MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumDustParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumExplosionParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumMuzzleFlashParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumThrusterParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumBlinkerParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        /**
-         * The view distance in the battle scene
-         */
-        VIEW_DISTANCE: {
-            name: "viewDistance",
-            type: "number",
-            defaultValue: 5000
-        },
-        /**
-         * When one of the coordinates of the player's ship exceeds this number, the whole scene is moved so that the player's ship is in the origo.
-         */
-        MOVE_TO_ORIGO_DISTANCE: {
-            name: "moveToOrigoDistance",
-            type: "number"
-        },
-        /**
-         * The default duration of camera transitions for the battle scene (will be overridden by specific settings for specific transition cases)
-         */
-        CAMERA_DEFAULT_TRANSITION_DURATION: {
-            name: "cameraDefaultTransitionDuration",
-            type: "number",
-            defaultValue: 1000
-        },
-        /**
-         * The default style of camera transitions for the battle scene (will be overridden by specific settings for specific transition cases)
-         */
-        CAMERA_DEFAULT_TRANSITION_STYLE: {
-            name: "cameraDefaultTransitionStyle",
-            type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle,
-            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
-        },
-        /**
-         * The duration of camera transitions happening when the user switches to piloting mode
-         */
-        CAMERA_PILOTING_SWITCH_TRANSITION_DURATION: {
-            name: "cameraPilotingSwitchTransitionDuration",
-            type: "number",
-            defaultValue: 1000
-        },
-        /**
-         * The style of camera transitions happening when the user switches to piloting mode
-         */
-        CAMERA_PILOTING_SWITCH_TRANSITION_STYLE: {
-            name: "cameraPilotingSwitchTransitionStyle",
-            type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle,
-            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
-        },
-        /**
-         * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
-         */
-        MOMENT_DURATION: {
-            name: "momentDuration",
-            type: _customTypes.DURATION,
-            defaultValue: 1
-        },
-        /**
-         * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
-         */
-        BACKGROUND_OBJECT_DISTANCE: {
-            name: "backgroundObjectDistance",
-            type: "number",
-            defaultValue: 4500
-        },
-        /**
-         * When turning, (maneuvering computers of) spacecrafts allow the turn rate to accelerate for a maximum of this duration 
-         * (around each axis), in seconds.
-         */
-        TURN_ACCELERATION_DURATION_S: {
-            name: "turnAccelerationDurationInSeconds",
-            type: _customTypes.DURATION,
-            defaultValue: 0.5
-        },
-        /**
-         * If a muzzle flash particle has no set duration (by its projectile class), this duration will be applied. In milliseconds
-         */
-        DEFAULT_MUZZLE_FLASH_DURATION: {
-            name: "defaultMuzzleFlashDuration",
-            type: _customTypes.DURATION,
-            defaultValue: 500
-        },
-        /**
-         * If true, spacecrafts can hit themselves with their own projectiles
-         */
-        SELF_FIRE: {
-            name: "selfFire",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
-         * The default auto-targeting mode to use
-         */
-        AUTO_TARGETING: {
-            name: "autoTargeting",
-            type: "enum",
-            values: AutoTargeting,
-            defaultValue: AutoTargeting.HIT_AND_AUTO_TARGET
-        },
-        /**
-         * If no profile name is given, new spacecraft are equipped with the profile having this name, if they have such
-         */
-        DEFAULT_EQUIPMENT_PROFILE_NAME: {
-            name: "defaultEquipmentProfileName",
-            type: "string",
-            defaultValue: "default"
-        },
-        /**
-         * When displayed, hitboxes will be modulated with this color.
-         */
-        HITBOX_COLOR: {
-            name: "hitboxColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0.0, 0.5, 0.5, 0.5]
-        },
-        /**
-         * The texture resource with this name will be applied to hitboxes when they are displayed.
-         */
-        HITBOX_TEXTURE_NAME: {
-            name: "hitboxTexture",
-            type: "string",
-            defaultValue: "white"
-        },
-        /**
-         * The shader resource with this name will be used for hitboxes when they are displayed.
-         */
-        HITBOX_SHADER_NAME: {
-            name: "hitboxShader",
-            type: "string",
-            defaultValue: "lambert-with-luminosity"
-        },
-        /**
-         * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
-         * spacecraft)
-         */
-        TARGET_VIEW_NAME: {
-            name: "targetViewName",
-            type: "string",
-            defaultValue: "target"
-        },
-        /**
-         * The duration of camera transitions of target views when the target is changed, in milliseconds
-         */
-        TARGET_CHANGE_TRANSITION_DURATION: {
-            name: "targetChangeTransitonDuration",
-            type: _customTypes.DURATION,
-            defaultValue: 300
-        },
-        /**
-         * The style of camera transitions of target views when the target is changed
-         */
-        TARGET_CHANGE_TRANSITION_STYLE: {
-            name: "targetChangeTransitionStyle",
-            type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle,
-            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
-        },
-        HUD_CENTER_CROSSHAIR_TEXTURE: {
-            name: "hudCenterCrosshairTexture",
-            type: "string",
-            defaultValue: "crosshair"
-        },
-        HUD_CENTER_CROSSHAIR_SIZE: {
-            name: "hudCenterCrosshairSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.05, 0.05]
-        },
-        HUD_CENTER_CROSSHAIR_COLOR: {
-            name: "hudCenterCrosshairColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0, 1, 0, 0.25]
-        },
-        HUD_TARGET_ARROW_TEXTURE: {
-            name: "hudTargetArrowTexture",
-            type: "string",
-            defaultValue: "arrow"
-        },
-        HUD_TARGET_ARROW_SIZE: {
-            name: "hudTargetArrowSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.075, 0.075]
-        },
-        HUD_TARGET_ARROW_COLOR: {
-            name: "hudTargetArrowColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1, 0, 0, 0.75]
-        },
-        HUD_TARGET_INDICATOR_TEXTURE: {
-            name: "hudTargetIndicatorTexture",
-            type: "string",
-            defaultValue: "target"
-        },
-        HUD_TARGET_INDICATOR_SIZE: {
-            name: "hudTargetIndicatorSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.1, 0.1]
-        },
-        HUD_TARGET_INDICATOR_COLOR: {
-            name: "hudTargetIndicatorColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1, 0, 0, 0.75]
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_TEXTURE: {
-            name: "hudWeaponImpactIndicatorTexture",
-            type: "string",
-            defaultValue: "crosshair"
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_SIZE: {
-            name: "hudWeaponImpactIndicatorSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.05, 0.05]
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_COLOR: {
-            name: "hudWeaponImpactIndicatorColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0, 1, 0, 0.75]
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR: {
-            name: "hudWeaponImpactIndicatorOutOfRangeColor",
-            type: _customTypes.COLOR4
-        },
-        HUD_TARGET_VIEW_POSITION: {
-            name: "hudTargetViewPosition",
-            type: "array",
-            elementType: "number",
-            length: 2
-        },
-        HUD_TARGET_VIEW_SIZE: {
-            name: "hudTargetViewSize",
-            type: "array",
-            elementType: "number",
-            length: 2
-        },
-        HUD_TARGET_VIEW_VIEW_DISTANCE: {
-            name: "hudTargetViewViewDistance",
-            type: "number"
-        },
-        HUD_TARGET_VIEW_FOV: {
-            name: "hudTargetViewFOV",
-            type: "number"
-        },
-        HUD_TARGET_VIEW_TARGET_ITEM_SHADER: {
-            name: "hudTargetViewTargetItemShader",
-            type: "string"
-        },
-        HUD_TARGET_VIEW_TARGET_ITEM_COLOR: {
-            name: "hudTargetViewTargetItemColor",
-            type: _customTypes.COLOR4
-        }
-    };
-    CAMERA_SETTINGS = {
-        DEFAULT_FOV: {
-            name: "defaultFOV",
-            type: "number"
-        },
-        DEFAULT_FOV_RANGE: {
-            name: "defaultFOVRange",
-            type: "array",
-            length: 2
-        },
-        DEFAULT_SPAN: {
-            name: "defaultSpan",
-            type: "number"
-        },
-        DEFAULT_SPAN_RANGE: {
-            name: "defaultSpanRange",
-            type: "array",
-            length: 2
-        },
-        DEFAULT_BASE_ORIENTATION: {
-            name: "defaultBaseOrientation",
-            type: "enum",
-            values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
-        },
-        DEFAULT_POINT_TO_FALLBACK: {
-            name: "defaultPointToFallback",
-            type: "enum",
-            values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
-        }
-    };
-    Object.freeze(AutoTargeting);
-    Object.freeze(_customTypes);
+    Object.freeze(FlightMode);
     // ##############################################################################
     /**
      * @class Represents a skybox that can be added to a scene to render the
@@ -927,7 +194,7 @@ define([
                         layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         layers[i].getColor(),
                         layers[i].getSize(),
-                        mat.translation4v(vec.scaled3(this._direction, _context.getSetting(BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
+                        mat.translation4v(vec.scaled3(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
                 layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);
             }
@@ -983,7 +250,7 @@ define([
                 this._positionVector,
                 addOwnProperties ? this._cloud.getClass().getColor() : null,
                 addOwnProperties ? this._range : null);
-        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
+        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
     };
     /**
      * @returns {PointParticle}
@@ -1243,84 +510,9 @@ define([
          * @type Object.<String, Environment>
          */
         this._environments = null;
-        /**
-         * An object storing all the configuration settings. (verified against CONFIGURATION)
-         * @type
-         */
-        this._configuration = null;
-        /**
-         * An object storing all the general settings. (verified against GENERAL_SETTINGS)
-         * @type Object
-         */
-        this._settings = null;
     }
     LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
-    /**
-     * 
-     * @param {Object} configJSON
-     */
-    LogicContext.prototype.loadConfigurationFromJSON = function (configJSON) {
-        this._configuration = types.getVerifiedObject("configuration", configJSON, CONFIGURATION);
-    };
-    /**
-     * Returns the configuration setting value for the passed setting definition object (from CONFIGURATION).
-     * @param {Object} settingDefinitionObject
-     */
-    LogicContext.prototype.getConfigurationSetting = function (settingDefinitionObject) {
-        return this._configuration[settingDefinitionObject.name];
-    };
-    /**
-     * Returns the setting value for the passed setting definition object.
-     * @param {Object} settingDefinitionObject
-     */
-    LogicContext.prototype.getSetting = function (settingDefinitionObject) {
-        return this._settings[settingDefinitionObject.name];
-    };
-    /**
-     * Returns the default starting field of view value for camera configurations, in degrees
-     * @returns {Number}
-     */
-    LogicContext.prototype.getDefaultCameraFOV = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_FOV);
-    };
-    /**
-     * Returns the default minimum and maximum field of view values for camera configurations, in degrees
-     * @returns {Number[2]}
-     */
-    LogicContext.prototype.getDefaultCameraFOVRange = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_FOV_RANGE);
-    };
-    /**
-     * Returns the default starting span value for camera configurations, in meters
-     * @returns {Number}
-     */
-    LogicContext.prototype.getDefaultCameraSpan = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN);
-    };
-    /**
-     * Returns the default minimum and maximum span values for camera configurations, in meters
-     * @returns {Number[2]}
-     */
-    LogicContext.prototype.getDefaultCameraSpanRange = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN_RANGE);
-    };
-    /**
-     * (enum CameraOrientationConfiguration.prototype.BaseOrientation) Returns the default base orientation mode to use for camera 
-     * configurations
-     * @returns {String}
-     */
-    LogicContext.prototype.getDefaultCameraBaseOrientation = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION);
-    };
-    /**
-     * (enum CameraOrientationConfiguration.prototype.PointToFallback) Returns the default point-to fallback mode to use for camera 
-     * configurations
-     * @returns {String}
-     */
-    LogicContext.prototype.getDefaultCameraPointToFallback = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
-    };
     /**
      * Return the reusable environment with the given name if it exists, otherwise null.
      * @param {String} name
@@ -1328,21 +520,6 @@ define([
      */
     LogicContext.prototype.getEnvironment = function (name) {
         return this._environments[name] || null;
-    };
-    /**
-     * Returns the number of available level files.
-     * @returns {Number}
-     */
-    LogicContext.prototype.getLevelFileCount = function () {
-        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames.length;
-    };
-    /**
-     * Returns the name of the level file (without path) of the given index.
-     * @param {number} index
-     * @returns {string}
-     */
-    LogicContext.prototype.getLevelFileName = function (index) {
-        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames[index];
     };
     // methods
     /**
@@ -1352,8 +529,8 @@ define([
      */
     LogicContext.prototype.requestEnvironmentsLoad = function () {
         application.requestTextFile(
-                this.getConfigurationSetting(CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
-                this.getConfigurationSetting(CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
+                config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
+                config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
                 function (responseText) {
                     this.loadEnvironmentsFromJSON(JSON.parse(responseText));
                     this.setToReady();
@@ -1372,21 +549,6 @@ define([
             this._environments[dataJSON.environments[i].name] = environment;
         }
     };
-    /**
-     * Loads all the setting and references from the passed JSON object and
-     * initiates the request(s) necessary to load additional configuration from
-     * referenced files.
-     * @param {Object} dataJSON
-     */
-    LogicContext.prototype.loadSettingsFromJSON = function (dataJSON) {
-        this._settings = types.getVerifiedObject("general", dataJSON.general, GENERAL_SETTINGS);
-        types.getVerifiedObject("database", dataJSON.database, DATABASE_SETTINGS, this._settings);
-        types.getVerifiedObject("battle", dataJSON.battle, BATTLE_SETTINGS, this._settings);
-        types.getVerifiedObject("camera", dataJSON.camera, CAMERA_SETTINGS, this._settings);
-        classes.requestLoad(this.getConfigurationSetting(CONFIGURATION.CLASSES_SOURCE_FILE), function () {
-            this.requestEnvironmentsLoad();
-        }.bind(this));
-    };
     // ##############################################################################
     /**
      * @class Logic domain class used for explosions and fires. Uses a particle system for
@@ -1399,8 +561,9 @@ define([
      * particles towards or perpendicular to this vector)
      * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
      * and change position and/or orientation with it, even after they have been emitted
+     * @param {Float32Array} velocityMatrix A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
      */
-    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles) {
+    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, velocityMatrix) {
         /**
          * The class that contains the general attributes of the type of explosion the instance represents.
          * @type ExplosionClass
@@ -1428,6 +591,11 @@ define([
          * @type Boolean
          */
         this._carriesParticles = (carriesParticles === true);
+        /**
+         * A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
+         * @type Float32Array
+         */
+        this._velocityMatrix = velocityMatrix || mat.identity4();
         /**
          * Holds a reference to the particle system that is used to visualize the explosion.
          * @type ParticleSystem
@@ -1516,12 +684,12 @@ define([
         }
         this._visualModel = this._visualModel || new budaScene.ParticleSystem(
                 this._positionMatrix,
-                mat.identity4(),
+                this._velocityMatrix,
                 particleEmitters,
                 this._class.getTotalDuration(),
                 this._class.isContinuous(),
                 this._carriesParticles,
-                _context.getSetting(BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING));
+                config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING));
     };
     /**
      * Adds a renderable node representing this explosion to the passed scene.
@@ -1717,7 +885,7 @@ define([
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 physicalHitObject = hitObjects[i].getPhysicalModel();
-                if (physicalHitObject && (_context.getSetting(BATTLE_SETTINGS.SELF_FIRE) || (hitObjects[i] !== this._origin))) {
+                if (physicalHitObject && (_isSelfFireEnabled || (hitObjects[i] !== this._origin))) {
                     velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT);
                     if (hitPositionVectorInObjectSpace) {
@@ -1727,24 +895,24 @@ define([
                         relativeVelocityDirectionInObjectSpace = vec.mulVec3Mat4(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
                         hitPositionVectorInWorldSpace = vec.mulVec4Mat4(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                         relativeHitPositionVectorInWorldSpace = vec.diff3(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
-                        physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION), _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION));
+                        physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         explosion = new Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true);
                         explosion.addToScene(this._visualModel.getNode().getScene());
-                        hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1));
-                        // auto targeting on hit
-                        if (hitObjects[i] !== this._origin) {
-                            switch (_context.getSetting(BATTLE_SETTINGS.AUTO_TARGETING)) {
-                                case AutoTargeting.HIT_AND_NO_TARGET:
+                        hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
+                        // auto targeting on hit (only for hostile targets)
+                        if ((hitObjects[i] !== this._origin) && (this._origin.isHostile(hitObjects[i]))) {
+                            switch (config.getSetting(config.BATTLE_SETTINGS.AUTO_TARGETING)) {
+                                case config.AutoTargetingMode.HIT_AND_NO_TARGET:
                                     if (!this._origin.getTarget()) {
                                         this._origin.setTarget(hitObjects[i], true);
                                     }
                                     break;
-                                case AutoTargeting.HIT_AND_AUTO_TARGET:
+                                case config.AutoTargetingMode.HIT_AND_AUTO_TARGET:
                                     if (!this._origin.hasManualTarget() && (this._origin.getTarget() !== hitObjects[i])) {
                                         this._origin.setTarget(hitObjects[i], true);
                                     }
                                     break;
-                                case AutoTargeting.ALWAYS_WHEN_HIT:
+                                case config.AutoTargetingMode.ALWAYS_WHEN_HIT:
                                     if (this._origin.getTarget() !== hitObjects[i]) {
                                         this._origin.setTarget(hitObjects[i], true);
                                     }
@@ -1831,6 +999,22 @@ define([
         return this._class.getProjectileVelocity();
     };
     /**
+     * Returns the relative range of the weapon, based on the first barrel, that is the farthest distance the fired projectiles will reach
+     * if the weapon itself is travelling with the given speed along its firing line in world space.
+     * @param {Number} baseSpeed
+     * @returns {Number}
+     */
+    Weapon.prototype.getRange = function (baseSpeed) {
+        return (this._class.getProjectileVelocity() + (baseSpeed || 0)) * this._class.getProjectileClass().getDuration() / 1000;
+    };
+    /**
+     * Return the duration this weapon needs between shots, in milliseconds.
+     * @returns {Number}
+     */
+    Weapon.prototype.getCooldown = function () {
+        return this._class.getCooldown();
+    };
+    /**
      * Marks the resources necessary to render this weapon for loading.
      * @param {Object} params
      */
@@ -1889,7 +1073,7 @@ define([
                 projectileClass.getMuzzleFlash().getColor(),
                 projectileClass.getMuzzleFlash().getSize(),
                 muzzleFlashPosMatrix,
-                projectileClass.getMuzzleFlash().getDuration() || _context.getSetting(BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION),
+                projectileClass.getMuzzleFlash().getDuration() || config.getSetting(config.BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION),
                 projectileClass.getMuzzleFlash().getInstancedShader());
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
@@ -1949,14 +1133,14 @@ define([
                 projectilePosMatrix = mat.prod4(weaponSlotPosMatrix, mat.translation4v(barrelPosVector));
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i);
-                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING));
+                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING));
                 // add the projectile of this barrel
                 p = new Projectile(
                         projectileClass,
                         projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
-                        new physics.Force("", barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)));
+                        new physics.Force("", barrels[i].getForceForDuration(_momentDuration), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _momentDuration));
                 p.addToScene(scene);
                 projectiles.push(p);
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
@@ -1972,8 +1156,8 @@ define([
                                 mat.translationVector3(projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
-                        barrels[i].getForceForDuration(_context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)),
-                        _context.getSetting(BATTLE_SETTINGS.MOMENT_DURATION)
+                        barrels[i].getForceForDuration(_momentDuration),
+                        _momentDuration
                         );
             }
             for (projClassName in projectileLights) {
@@ -2050,7 +1234,7 @@ define([
                     mat.translation4v(this._slot.positionVector),
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             visualModel.setRelativeSize(0);
-            parentNode.addSubnode(new budaScene.RenderableNode(visualModel, false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
+            parentNode.addSubnode(new budaScene.RenderableNode(visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
             if (!this._visualModel) {
                 this._visualModel = visualModel;
                 this._shipModel = parentNode.getRenderableObject();
@@ -2067,7 +1251,7 @@ define([
         // set the strength of which the luminosity texture is lighted
         if (graphics.areLuminosityTexturesAvailable()) {
             this._shipModel.setParameter(
-                    _context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME),
+                    _luminosityFactorsArrayName,
                     this._slot.group,
                     Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
         }
@@ -2413,7 +1597,7 @@ define([
      * turning rate to in TURN_ACCELERATION_DURATION_S seconds with the current propulsion system.
      */
     ManeuveringComputer.prototype.updateTurningLimit = function () {
-        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() * _context.getSetting(BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S;
+        this._turningLimit = this._spacecraft.getMaxAngularAcceleration() * config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S;
     };
     /**
      * Updates all stored state variables to reflect the current state of the propulsion on the spacecraft of this computer
@@ -2571,6 +1755,15 @@ define([
     ManeuveringComputer.prototype.resetSpeed = function () {
         if (this._compensated) {
             this._speedTarget = 0;
+        }
+    };
+    /**
+     * Sets a new forward/reverse speed target in non-free flight modes.
+     * @param {Number} value A positive number means a forward target, a negative one a reverse target, in m/s.
+     */
+    ManeuveringComputer.prototype.setSpeedTarget = function (value) {
+        if (this._compensated) {
+            this._speedTarget = value;
         }
     };
     /**
@@ -2774,6 +1967,19 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Function} Spacecraft~beingTargetedCallback
+     * @param {Spacecraft} targetedBy
+     */
+    /**
+     * @typedef {Function} Spacecraft~beingHitCallback
+     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile.
+     * @param {Number[3]} hitPosition The position where the projectile has hit the spacecraft, in model-space.
+     */
+    /**
+     * @typedef {Function} Spacecraft~anySpacecraftHitCallback
+     * @param {Spacecraft} spacecraft The spacecraft that was hit.
+     */
+    /**
      * @class Represents a specific spacecraft (fighter, warship, freighter, space
      * station etc.) in the game.
      * @param {SpacecraftClass} spacecraftClass The class of the spacecraft that
@@ -2884,8 +2090,49 @@ define([
         /**
          * Cached value of the matrix representing the relative velocity (translation in m/s in the coordinate space of the spacecraft)
          * of the spacecraft.
+         * @type Float32Array
          */
         this._relativeVelocityMatrix = null;
+        /**
+         * An array of references to the spacecrafts that have this spacecraft targeted currently.
+         * @type Spacecraft[]
+         */
+        this._targetedBy = [];
+        /**
+         * A callback function to execute when auto-targeting is performed by this spacecraft.
+         * @type Function
+         */
+        this._onAutoTargeting = null;
+        /**
+         * A callback function to execute when another spacecraft targets this spacecraft.
+         * @type Spacecraft~beingTargetedCallback
+         */
+        this._onBeingTargeted = null;
+        /**
+         * A callback function to execute when a projectile hits this spacecraft.
+         * @type Spacecraft~beingHitCallback
+         */
+        this._onBeingHit = null;
+        /**
+         * A callback to execute when a projectile fired by this spacecraft successfully hits the current target.
+         * @type Function
+         */
+        this._onTargetHit = null;
+        /**
+         * A callback to execute when a projectile fired by this spacecraft hits any spacecraft (including itself or its current target)
+         * @type Spacecraft~anySpacecraftHitCallback
+         */
+        this._onAnySpacecraftHit = null;
+        /**
+         * A callback to execute when the current target of this spacecraft fires.
+         * @type Function
+         */
+        this._onTargetFired = null;
+        /**
+         * The ID of the team this spacecraft belongs to (governing who is friend or foe).
+         * @type String
+         */
+        this._team = null;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
@@ -2927,14 +2174,52 @@ define([
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
         }
         this._spacecraftArray = spacecraftArray || null;
+        this._team = null;
     };
     // direct getters and setters
+    /**
+     * Sets a new team affiliation for the spacecraft.
+     * @param {String} value The ID of the team to set.
+     */
+    Spacecraft.prototype.setTeam = function (value) {
+        this._team = value;
+    };
+    /**
+     * Returns the ID of the team this spacecraft belongs to.
+     * @returns {String}
+     */
+    Spacecraft.prototype.getTeam = function () {
+        return this._team;
+    };
+    /**
+     * Returns whether the passed spacecraft is friendly to this one.
+     * @param {Spacecraft} spacecraft
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isFriendly = function (spacecraft) {
+        return (spacecraft.getTeam() === this._team);
+    };
+    /**
+     * Returns whether the passed spacecraft is hostile to this one.
+     * @param {Spacecraft} spacecraft
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isHostile = function (spacecraft) {
+        return (spacecraft.getTeam() !== this._team);
+    };
     /**
      * Returns the object describing class of this spacecraft.
      * @returns {SpacecraftClass}
      */
     Spacecraft.prototype.getClass = function () {
         return this._class;
+    };
+    /**
+     * Returns whether this spacecraft belongs to a fighter class.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isFighter = function () {
+        return this._class.isFighterClass();
     };
     /**
      * Returns the name of this spacecraft that can be used to identify a specific spacecraft / display to the user.
@@ -3103,8 +2388,8 @@ define([
      */
     Spacecraft.prototype.getHitboxTextures = function () {
         var
-                textureTypes = resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes(),
-                textureResource = resources.getTexture(_context.getSetting(BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+                textureTypes = resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes(),
+                textureResource = resources.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         return textureResource.getManagedTexturesOfTypes(textureTypes, graphics.getTextureQualityPreferenceList());
     };
     /**
@@ -3161,8 +2446,8 @@ define([
                 this.equipProfile(equipmentProfile);
             }
             // if there is no equipment tag, attempt to load the default profile
-        } else if (this._class.getEquipmentProfile(_context.getSetting(BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
-            this.equipProfile(this._class.getEquipmentProfile(_context.getSetting(BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
+        } else if (this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
+            this.equipProfile(this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
         }
     };
     /**
@@ -3286,6 +2571,13 @@ define([
         this._maneuveringComputer.resetSpeed();
     };
     /**
+     * Sets a new forward/reverse speed target in non-free flight modes.
+     * @param {Number} value A positive number means a forward target, a negative one a reverse target, in m/s.
+     */
+    Spacecraft.prototype.setSpeedTarget = function (value) {
+        this._maneuveringComputer.setSpeedTarget(value);
+    };
+    /**
      * Control command for the maneuvering computer to yaw to the left.
      * @param {Number} [intensity] Optional intensity for the command, if the
      * player uses an input device that has intensity control (e.g. mouse, joystick)
@@ -3347,10 +2639,10 @@ define([
                                 this._class.getBodies()[index].getWidth(),
                                 this._class.getBodies()[index].getHeight(),
                                 this._class.getBodies()[index].getDepth(),
-                                _context.getSetting(BATTLE_SETTINGS.HITBOX_COLOR))),
+                                config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR))),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
-                        resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
+                        resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
                         this.getHitboxTextures(),
                         mat.translation4m4(this._class.getBodies()[index].getPositionMatrix()),
                         this._class.getBodies()[index].getOrientationMatrix(),
@@ -3368,8 +2660,8 @@ define([
         application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
-            resources.getShader(_context.getSetting(BATTLE_SETTINGS.HITBOX_SHADER_NAME));
-            resources.getTexture(_context.getSetting(BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+            resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
+            resources.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
         params.omitShader = customShader;
         this._class.acquireResources(params);
@@ -3454,7 +2746,7 @@ define([
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    graphics.areLuminosityTexturesAvailable() ? [_context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME)] : []);
+                    graphics.areLuminosityTexturesAvailable() ? [_luminosityFactorsArrayName] : []);
             if (!this._visualModel) {
                 this._visualModel = visualModel;
             }
@@ -3463,7 +2755,7 @@ define([
             }
             if (graphics.areLuminosityTexturesAvailable()) {
                 visualModel.setParameter(
-                        _context.getSetting(GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME),
+                        _luminosityFactorsArrayName,
                         0,
                         this._class.getGroupZeroLuminosity());
             }
@@ -3536,7 +2828,7 @@ define([
                                     true,
                                     blinkers[i].getParticle().getInstancedShader(),
                                     0),
-                            false, _context.getSetting(BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
+                            false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
                     if ((addSupplements.lightSources === true) && (blinkers[i].getIntensity() > 0)) {
                         scene.addPointLightSource(
                                 new budaScene.PointLightSource(
@@ -3568,7 +2860,7 @@ define([
                 view.movesRelativeToObject(),
                 view.getPositionFollowedObjectsForObject(this._visualModel),
                 view.startsWithRelativePosition(),
-                view.getPositionMatrix(),
+                mat.matrix4(view.getPositionMatrix()),
                 view.getDistanceRange(),
                 view.getConfines(),
                 view.resetsWhenLeavingConfines());
@@ -3577,19 +2869,19 @@ define([
                 view.pointsTowardsObjects(),
                 view.isFPS(),
                 view.getOrientationFollowedObjectsForObject(this._visualModel),
-                view.getOrientationMatrix(),
+                mat.matrix4(view.getOrientationMatrix()),
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 view.getAlphaRange(),
                 view.getBetaRange(),
-                view.getBaseOrientation() || _context.getDefaultCameraBaseOrientation(),
-                view.getPointToFallback() || _context.getDefaultCameraPointToFallback());
+                view.getBaseOrientation() || config.getDefaultCameraBaseOrientation(),
+                view.getPointToFallback() || config.getDefaultCameraPointToFallback());
         return new budaScene.CameraConfiguration(
                 view.getName(),
                 positionConfiguration, orientationConfiguration,
-                view.getFOV() || _context.getDefaultCameraFOV(),
-                view.getFOVRange() || _context.getDefaultCameraFOVRange(),
-                view.getSpan() || _context.getDefaultCameraSpan(),
-                view.getSpanRange() || _context.getDefaultCameraSpanRange(),
+                view.getFOV() || config.getDefaultCameraFOV(),
+                view.getFOVRange() || config.getDefaultCameraFOVRange(),
+                view.getSpan() || config.getDefaultCameraSpan(),
+                view.getSpanRange() || config.getDefaultCameraSpanRange(),
                 view.resetsOnFocusChange());
     };
     /**
@@ -3650,6 +2942,25 @@ define([
         for (i = 0; i < this._weapons.length; i++) {
             this._weapons[i].fire(this._projectileArray);
         }
+        // executing callbacks
+        for (i = 0; i < this._targetedBy.length; i++) {
+            this._targetedBy[i].handleTargetFired();
+        }
+    };
+    /**
+     * Sets up this spacecraft as being targeted by the passed spacecraft. (updating target reference list and executing the related callback)
+     * @param {spacecraft} targetedBy
+     */
+    Spacecraft.prototype._setBeingTargeted = function (targetedBy) {
+        this._targetedBy.push(targetedBy);
+        this.handleBeingTargeted(targetedBy);
+    };
+    /**
+     * Sets up this spacecraft as not being targeted by the passed spacecraft anymore.
+     * @param {Spacecraft} targetedBy
+     */
+    Spacecraft.prototype._setBeingUntargeted = function (targetedBy) {
+        this._targetedBy.splice(this._targetedBy.indexOf(targetedBy), 1);
     };
     /**
      * Targets the given spacecraft and executes related operations, such as changing target views. 
@@ -3658,17 +2969,29 @@ define([
      */
     Spacecraft.prototype.setTarget = function (target, auto) {
         var i, camConfigs;
-        this._target = target;
-        this._autoTarget = auto || false;
-        if (this._visualModel) {
-            camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(_context.getSetting(BATTLE_SETTINGS.TARGET_VIEW_NAME));
-            for (i = 0; i < camConfigs.length; i++) {
-                if (this._visualModel.getNode().getScene().getCamera().getConfiguration() === camConfigs[i]) {
-                    this._visualModel.getNode().getScene().getCamera().transitionToSameConfiguration(
-                            _context.getSetting(BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
-                            _context.getSetting(BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
+        auto = auto || false;
+        if ((target !== this._target) || (this._autoTarget && !auto)) {
+            if (this._target) {
+                this._target._setBeingUntargeted(this);
+            }
+            this._target = target;
+            this._autoTarget = auto || false;
+            if (this._visualModel) {
+                camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(config.getSetting(config.BATTLE_SETTINGS.TARGET_VIEW_NAME));
+                for (i = 0; i < camConfigs.length; i++) {
+                    if (this._visualModel.getNode().getScene().getCamera().getConfiguration() === camConfigs[i]) {
+                        this._visualModel.getNode().getScene().getCamera().transitionToSameConfiguration(
+                                config.getSetting(config.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
+                                config.getSetting(config.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
+                    }
+                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : [], true);
                 }
-                camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : [], true);
+            }
+            if (this._target) {
+                this._target._setBeingTargeted(this);
+            }
+            if (auto) {
+                this.handleAutoTargeting();
             }
         }
     };
@@ -3685,6 +3008,24 @@ define([
             }
             if (this._spacecraftArray[index] !== this) {
                 this.setTarget(this._spacecraftArray[index], false);
+            }
+        }
+    };
+    /**
+     * Targets the next hostile spacecraft in the lists of spacecrafts and marks it as a manual target.
+     */
+    Spacecraft.prototype.targetNextHostile = function () {
+        var index, count;
+        if (this._spacecraftArray && (this._spacecraftArray.length > 0)) {
+            index = (this._spacecraftArray.indexOf(this._target) + 1) % this._spacecraftArray.length;
+            count = 0;
+            while (count < this._spacecraftArray.length) {
+                if ((this._spacecraftArray[index] !== this) && (this._spacecraftArray[index].isHostile(this))) {
+                    this.setTarget(this._spacecraftArray[index], false);
+                    return;
+                }
+                index = (index + 1) % this._spacecraftArray.length;
+                count++;
             }
         }
     };
@@ -3742,8 +3083,9 @@ define([
      * Needs to take into consideration the position, orientation and scaling of the spacecraft.
      * @param {Number[3]} damageDir The relative direction whector indicating where the damage came from.
      * Also needs to take into consideration the orientation of the spacecraft.
+     * @param {Spacecraft} hitBy The spacecraft that caused the damage (fired the hitting projectile)
      */
-    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir) {
+    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
         var i, damageIndicator, hitpointThreshold, explosion;
         // logic simulation: modify hitpoints
         this._hitpoints -= damage;
@@ -3766,6 +3108,12 @@ define([
                 }
             }
         }
+        // callbacks
+        this.handleBeingHit(hitBy, damagePosition);
+        if (hitBy.getTarget() === this) {
+            hitBy.handleTargetHit();
+        }
+        hitBy.handleAnySpacecraftHit(this);
     };
     /**
      * Performs all the phyics and logic simulation of this spacecraft.
@@ -3784,7 +3132,13 @@ define([
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {
                 this._timeElapsedSinceDestruction = 0;
-                explosion = new Explosion(this._class.getExplosionClass(), this._physicalModel.getPositionMatrix(), this._physicalModel.getOrientationMatrix(), mat.getRowC43(this._physicalModel.getPositionMatrix()), false);
+                explosion = new Explosion(
+                        this._class.getExplosionClass(),
+                        mat.matrix4(this._physicalModel.getPositionMatrix()),
+                        mat.matrix4(this._physicalModel.getOrientationMatrix()),
+                        mat.getRowC43(this._physicalModel.getPositionMatrix()),
+                        true,
+                        mat.matrix4(this._physicalModel.getVelocityMatrix()));
                 explosion.addToScene(this._visualModel.getNode().getScene());
                 for (i = 0; i < this._activeDamageIndicators; i++) {
                     this._activeDamageIndicators[i].finish();
@@ -3812,6 +3166,101 @@ define([
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {
             this._maneuveringComputer.updateSpeedIncrement(dt);
+        }
+    };
+    /**
+     * Sets a function that will be executed every time this spacecraft auto-targets a new spacecraft.
+     * @param {Function} value
+     */
+    Spacecraft.prototype.setOnAutoTargeting = function (value) {
+        this._onAutoTargeting = value;
+    };
+    /**
+     * Executes the callback for auto-targeting, if any.
+     */
+    Spacecraft.prototype.handleAutoTargeting = function () {
+        if (this._onAutoTargeting) {
+            this._onAutoTargeting();
+        }
+    };
+    /**
+     * Sets a function that will be executed every time this spacecraft gets targeted by another one.
+     * @param {Spacecraft~beingTargetedCallback} value
+     */
+    Spacecraft.prototype.setOnBeingTargeted = function (value) {
+        this._onBeingTargeted = value;
+    };
+    /**
+     * Executes the callback for being targeted, if any.
+     */
+    Spacecraft.prototype.handleBeingTargeted = function () {
+        if (this._onBeingTargeted) {
+            this._onBeingTargeted();
+        }
+    };
+    /**
+     * Sets a function that will be executed every time this spacecraft gets hit by a projectile.
+     * @param {Spacecraft~beingHitCallback} value
+     */
+    Spacecraft.prototype.setOnBeingHit = function (value) {
+        this._onBeingHit = value;
+    };
+    /**
+     * Executes the callback for being hit, if any.
+     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile which hit this spacecraft.
+     * @param {Number[3]} hitPosition The position vector of the hit in model space.
+     */
+    Spacecraft.prototype.handleBeingHit = function (spacecraft, hitPosition) {
+        if (this._onBeingHit) {
+            this._onBeingHit(spacecraft, hitPosition);
+        }
+    };
+    /**
+     * Sets a function that will be executed every time the current target of this spacecraft is successfully hit by a projectile fired from
+     * this spacecraft.
+     * @param {Function} value
+     */
+    Spacecraft.prototype.setOnTargetHit = function (value) {
+        this._onTargetHit = value;
+    };
+    /**
+     * Executed the callback for the target being hit, if any.
+     */
+    Spacecraft.prototype.handleTargetHit = function () {
+        if (this._onTargetHit) {
+            this._onTargetHit();
+        }
+    };
+    /**
+     * Sets a function that will be executed every time any spacecraft (including itself and its target) gets hit by a projectile fired from
+     * this spacecraft.
+     * @param {Spacecraft~anySpacecraftHitCallback} value
+     */
+    Spacecraft.prototype.setOnAnySpacecraftHit = function (value) {
+        this._onAnySpacecraftHit = value;
+    };
+    /**
+     * Executes the callback for any spacecraft being hit a projectile of this spacecraft, if it is set.
+     * @param {Spacecraft} spacecraft The spacecraft that was hit.
+     */
+    Spacecraft.prototype.handleAnySpacecraftHit = function (spacecraft) {
+        if (this._onAnySpacecraftHit) {
+            this._onAnySpacecraftHit(spacecraft);
+        }
+    };
+    /**
+     * Sets a function that will be executed every time the current target of this spacecraft fires.
+     * @param {Function} value
+     */
+    Spacecraft.prototype.setOnTargetFired = function (value) {
+        this._onTargetFired = value;
+    };
+    /**
+     * Executes the callback for the target of this spacecraft firing, if it is set.
+     */
+    Spacecraft.prototype.handleTargetFired = function () {
+        if (this._onTargetFired) {
+            this._onTargetFired();
         }
     };
     /**
@@ -3886,6 +3335,11 @@ define([
          */
         this._views = null;
         /**
+         * The list of valid string IDs for teams in this level (so that IDs can be validated against this list to detect typos)
+         * @type String[]
+         */
+        this._teams = null;
+        /**
          * The list of spacecrafts that are placed on the map of this level.
          * @type Spacecraft[]
          */
@@ -3940,6 +3394,25 @@ define([
         }
         return null;
     };
+    /**
+     * Returns whether the passed spacecraft has the given renderable object as its visual model.
+     * @param {RenderableObject} visualModel
+     * @param {Spacecraft} spacecraft
+     * @returns {Boolean}
+     */
+    Level.prototype._spacecraftHasVisualModel = function (visualModel, spacecraft) {
+        return spacecraft.getVisualModel() === visualModel;
+    };
+    /**
+     * Returns the spacecraft from this level that the current view is following in the passed scene, if any.
+     * @param {Scene} scene
+     * @returns {Spacecraft|null}
+     */
+    Level.prototype.getFollowedSpacecraftForScene = function (scene) {
+        return scene.getCamera().getFollowedNode() ?
+                this._spacecrafts.find(this._spacecraftHasVisualModel.bind(this, scene.getCamera().getFollowedNode().getRenderableObject())) :
+                null;
+    };
     // #########################################################################
     // methods
     /**
@@ -3947,12 +3420,14 @@ define([
      * the level folder and initializes the level data when the file has been
      * loaded.
      * @param {String} filename
+     * @param {Boolean} demoMode If true, the data from the level file will be loaded in demo mode, so that the piloted craft is not set
+     * and a suitable AI is added to all spacecrafts if possible.
      * @param {Function} [callback] An optional function to execute after the
      * level has been loaded.
      */
-    Level.prototype.requestLoadFromFile = function (filename, callback) {
-        application.requestTextFile(_context.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).folder, filename, function (responseText) {
-            this.loadFromJSON(JSON.parse(responseText));
+    Level.prototype.requestLoadFromFile = function (filename, demoMode, callback) {
+        application.requestTextFile(config.getConfigurationSetting(config.CONFIGURATION.LEVEL_FILES).folder, filename, function (responseText) {
+            this.loadFromJSON(JSON.parse(responseText), demoMode);
             if (callback) {
                 callback();
             }
@@ -3962,9 +3437,11 @@ define([
      * Loads all the data describing this level from the passed JSON object. Does not add random ships to the level, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
      * @param {Object} dataJSON
+     * @param {Boolean} demoMode If true, the data from the JSON object will be loaded in demo mode, so that the piloted craft is not set
+     * and a suitable AI is added to all spacecrafts if possible.
      */
-    Level.prototype.loadFromJSON = function (dataJSON) {
-        var i, spacecraft;
+    Level.prototype.loadFromJSON = function (dataJSON, demoMode) {
+        var i, spacecraft, team, teamCount, aiType;
         application.log("Loading level from JSON file...", 2);
         if (dataJSON.environment.createFrom) {
             this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
@@ -3973,6 +3450,7 @@ define([
             this._environment = new Environment(dataJSON.environment);
             this._ownsEnvironment = true;
         }
+        this._teams = dataJSON.teams;
         this._views = [];
         if (dataJSON.views) {
             for (i = 0; i < dataJSON.views.length; i++) {
@@ -3981,11 +3459,33 @@ define([
         }
         this._projectiles = [];
         this._spacecrafts = [];
+        teamCount = 0;
+        ai.clearAIs();
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
             spacecraft = new Spacecraft();
             spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectiles, this._spacecrafts);
-            if (dataJSON.spacecrafts[i].piloted) {
+            if (!demoMode && dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraft = spacecraft;
+            }
+            aiType = dataJSON.spacecrafts[i].ai;
+            if (!aiType && demoMode) {
+                if (spacecraft.isFighter()) {
+                    aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE);
+                }
+            }
+            if (aiType) {
+                ai.addAI(aiType, spacecraft);
+            }
+            team = dataJSON.spacecrafts[i].team;
+            if (team) {
+                if (this._teams.indexOf(team) >= 0) {
+                    spacecraft.setTeam(dataJSON.spacecrafts[i].team);
+                } else {
+                    application.showError("Invalid team '" + team + "' specified for " + spacecraft.getClassName() + "!");
+                }
+            } else if (demoMode) {
+                spacecraft.setTeam(teamCount.toString());
+                teamCount++;
             }
             this._spacecrafts.push(spacecraft);
         }
@@ -3993,17 +3493,19 @@ define([
         this._randomShipsMapSize = dataJSON.randomShipsMapSize;
         this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
-        this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
+        this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
         application.log("Level successfully loaded.", 2);
     };
     /**
      * Adds spacecrafts to the level at random positions based on the configuration loaded from JSON before.
      * @param {Number} [randomSeed]
+     * @param {Boolean} demoMode If true, a suitable AI and a unique team will be set for each added random ship.
      */
-    Level.prototype.addRandomShips = function (randomSeed) {
-        var random, shipClass, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle));
-        randomSeed = randomSeed || _context.getSetting(GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
+    Level.prototype.addRandomShips = function (randomSeed, demoMode) {
+        var random, shipClass, spacecraft, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle)), teamCount;
+        randomSeed = randomSeed || config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
+        teamCount = 0;
         for (shipClass in this._randomShips) {
             if (this._randomShips.hasOwnProperty(shipClass)) {
                 for (i = 0; i < this._randomShips[shipClass]; i++) {
@@ -4012,15 +3514,22 @@ define([
                     if (this._randomShipsRandomHeading) {
                         mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
                     }
-                    this._spacecrafts.push(
-                            new Spacecraft(
-                                    classes.getSpacecraftClass(shipClass),
-                                    "",
-                                    mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
-                                    orientation,
-                                    this._projectiles,
-                                    this._randomShipsEquipmentProfileName,
-                                    this._spacecrafts));
+                    spacecraft = new Spacecraft(
+                            classes.getSpacecraftClass(shipClass),
+                            "",
+                            mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
+                            orientation,
+                            this._projectiles,
+                            this._randomShipsEquipmentProfileName,
+                            this._spacecrafts);
+                    if (demoMode) {
+                        if (spacecraft.isFighter()) {
+                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), spacecraft);
+                        }
+                        spacecraft.setTeam("r" + teamCount);
+                        teamCount++;
+                    }
+                    this._spacecrafts.push(spacecraft);
                 }
             }
         }
@@ -4039,7 +3548,7 @@ define([
                 view.movesRelativeToObject(),
                 view.getPositionFollowedObjectsForScene(scene),
                 view.startsWithRelativePosition(),
-                view.getPositionMatrix(),
+                mat.matrix4(view.getPositionMatrix()),
                 view.getDistanceRange(),
                 view.getConfines(),
                 view.resetsWhenLeavingConfines());
@@ -4048,19 +3557,19 @@ define([
                 view.pointsTowardsObjects(),
                 view.isFPS(),
                 view.getOrientationFollowedObjectsForScene(scene),
-                view.getOrientationMatrix(),
+                mat.matrix4(view.getOrientationMatrix()),
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 view.getAlphaRange(),
                 view.getBetaRange(),
-                view.getBaseOrientation() || _context.getDefaultCameraBaseOrientation(),
-                view.getPointToFallback() || _context.getDefaultCameraPointToFallback());
+                view.getBaseOrientation() || config.getDefaultCameraBaseOrientation(),
+                view.getPointToFallback() || config.getDefaultCameraPointToFallback());
         return new budaScene.CameraConfiguration(
                 view.getName(),
                 positionConfiguration, orientationConfiguration,
-                view.getFOV() || _context.getDefaultCameraFOV(),
-                view.getFOVRange() || _context.getDefaultCameraFOVRange(),
-                view.getSpan() || _context.getDefaultCameraSpan(),
-                view.getSpanRange() || _context.getDefaultCameraSpanRange(),
+                view.getFOV() || config.getDefaultCameraFOV(),
+                view.getFOVRange() || config.getDefaultCameraFOVRange(),
+                view.getSpan() || config.getDefaultCameraSpan(),
+                view.getSpanRange() || config.getDefaultCameraSpanRange(),
                 view.resetsOnFocusChange());
     };
     /**
@@ -4088,7 +3597,7 @@ define([
                 this._spacecrafts[i].addToScene(targetScene, graphics.getMaxLoadedLOD(), true, {
                     weapons: true
                 }, {
-                    shaderName: _context.getSetting(BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER)
+                    shaderName: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER)
                 });
             }
             this._hitObjects.push(this._spacecrafts[i]);
@@ -4116,12 +3625,13 @@ define([
      * Performs the physics and game logic simulation of all the object in the
      * level.
      * @param {Number} dt The time passed since the last simulation step, in milliseconds.
-     * @param {Scene[]} [scenes] When given, these scenes are updated according to the simulation.
+     * @param {Scene} mainScene When given, this scene is updated according to the simulation.
      */
-    Level.prototype.tick = function (dt, scenes) {
-        var i, m, v, d;
+    Level.prototype.tick = function (dt, mainScene) {
+        var i, v;
         this._environment.simulate();
         for (i = 0; i < this._spacecrafts.length; i++) {
+            this._spacecrafts[i].simulate(dt);
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
                 this._spacecrafts[i].destroy();
                 this._spacecrafts[i] = null;
@@ -4129,38 +3639,23 @@ define([
                 this._hitObjects[i] = null;
                 this._hitObjects.splice(i, 1);
                 i--;
-            } else {
-                this._spacecrafts[i].simulate(dt);
             }
         }
         for (i = 0; i < this._projectiles.length; i++) {
+            this._projectiles[i].simulate(dt, this._hitObjects);
             if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
                 this._projectiles[i].destroy();
                 this._projectiles[i] = null;
                 this._projectiles.splice(i, 1);
                 i--;
                 application.log("Projectile removed.", 2);
-            } else {
-                this._projectiles[i].simulate(dt, this._hitObjects);
             }
         }
-        // moving the scene back to the origo if the player's ship is too far away to avoid floating point errors becoming visible
-        if (this._pilotedCraft && !this._pilotedCraft.canBeReused()) {
-            m = this._pilotedCraft.getPhysicalPositionMatrix();
-            d = _context.getSetting(BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE);
-            if ((m[12] > d) || (m[12] < -d) || (m[13] > d) || (m[13] < -d) || (m[14] > d) || (m[14] < -d)) {
-                v = [-m[12], -m[13], -m[14]];
-                for (i = 0; i < this._spacecrafts.length; i++) {
-                    this._spacecrafts[i].moveByVector(v);
-                }
-                for (i = 0; i < this._projectiles.length; i++) {
-                    this._projectiles[i].moveByVector(v);
-                }
-                if (scenes) {
-                    for (i = 0; i < scenes.length; i++) {
-                        scenes[i].moveAllObjectsByVector(v);
-                    }
-                }
+        // moving the scene back to the origo if the camera is too far away to avoid floating point errors becoming visible
+        if (mainScene) {
+            v = mainScene.moveCameraToOrigoIfNeeded(config.getSetting(config.BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE));
+            if (v) {
+                ai.handleSceneMoved(v);
             }
         }
     };
@@ -4203,20 +3698,19 @@ define([
         this._pilotedCraft = null;
         this._hitObjects = null;
     };
+    // creating the default context
     _context = new LogicContext();
+    // caching configuration settings
+    config.executeWhenReady(function () {
+        _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
+        _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
+        _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         FlightMode: FlightMode,
-        GENERAL_SETTINGS: GENERAL_SETTINGS,
-        BATTLE_SETTINGS: BATTLE_SETTINGS,
-        DATABASE_SETTINGS: DATABASE_SETTINGS,
-        CAMERA_SETTINGS: CAMERA_SETTINGS,
-        loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
-        loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
-        getLevelFileCount: _context.getLevelFileCount.bind(_context),
-        getLevelFileName: _context.getLevelFileName.bind(_context),
-        getSetting: _context.getSetting.bind(_context),
+        requestEnvironmentsLoad: _context.requestEnvironmentsLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         Spacecraft: Spacecraft,
         Level: Level

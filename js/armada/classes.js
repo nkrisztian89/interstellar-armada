@@ -1397,6 +1397,10 @@ define([
     SpacecraftType.prototype._loadData = function (dataJSON) {
         GenericClass.prototype._loadData.call(this, dataJSON);
         /**
+         * @type Boolean
+         */
+        this._isFighterType = dataJSON ? (typeof (dataJSON.isFighterType) === "boolean" ? dataJSON.isFighterType : _showMissingPropertyError(this, "isFighterType")) : false;
+        /**
          * The full name of this type as displayed in the game.
          * @type String
          */
@@ -1413,6 +1417,12 @@ define([
          * @type String[]
          */
         this._badAgainstTypeNames = dataJSON ? (dataJSON.badAgainst || []) : null;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SpacecraftType.prototype.isFighterType = function () {
+        return this._isFighterType;
     };
     /**
      * @returns {String}
@@ -2513,6 +2523,13 @@ define([
      */
     SpacecraftClass.prototype.getSpacecraftType = function () {
         return this._spacecraftType;
+    };
+    /**
+     * 
+     * @returns {Boolean}
+     */
+    SpacecraftClass.prototype.isFighterClass = function () {
+        return this._spacecraftType.isFighterType();
     };
     /**
      * @returns {String}

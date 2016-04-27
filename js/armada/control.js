@@ -15,7 +15,7 @@
  * @param game To access screen-changing functionality
  * @param armadaScreens Used for navigation
  * @param strings Used for translation support
- * @param logic Used to access settings
+ * @param config Used to access settings
  */
 define([
     "modules/control",
@@ -23,8 +23,8 @@ define([
     "modules/game",
     "armada/screens/shared",
     "armada/strings",
-    "armada/logic"
-], function (control, cameraController, game, armadaScreens, strings, logic) {
+    "armada/configuration"
+], function (control, cameraController, game, armadaScreens, strings, config) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ define([
         }.bind(this));
         // switching to spectator mode
         this.setActionFunction("switchToSpectatorMode", true, function () {
-            _context.switchToSpectatorMode(true);
+            _context.switchToSpectatorMode(true, true);
         });
         // toggling the visibility of hitboxes
         this.setActionFunction("toggleHitboxVisibility", true, function () {
@@ -302,8 +302,8 @@ define([
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
                 pilotedSpacecraft.getVisualModel(),
-                logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
-                logic.getSetting(logic.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE));
+                config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
+                config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         game.getScreen().setHeaderContent(strings.get(strings.BATTLE.PILOTING_MODE), {
@@ -319,18 +319,23 @@ define([
      * Switches to spectator mode, in which the player can freely move the camera
      * around or follow and inspect any object in the scene.
      * @param {Boolean} [freeCamera=false] Whether to set the camera free at the current position and location.
+     * @param {Boolean} [force=false] If true, the settings for spectator mode will be (re)applied even if the current state is already set
+     * as spectator mode (useful for first time initialization and to force switch to free camera when following a spacecraft in spectator 
+     * mode)
      */
-    ArmadaControlContext.prototype.switchToSpectatorMode = function (freeCamera) {
-        this._pilotingMode = false;
-        this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(null);
-        if (freeCamera) {
-            this.getController(CAMERA_CONTROLLER_NAME).setToFreeCamera(false);
+    ArmadaControlContext.prototype.switchToSpectatorMode = function (freeCamera, force) {
+        if (this._pilotingMode || force) {
+            this._pilotingMode = false;
+            this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(null);
+            if (freeCamera) {
+                this.getController(CAMERA_CONTROLLER_NAME).setToFreeCamera(false);
+            }
+            this.enableAction("followNext");
+            this.enableAction("followPrevious");
+            game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
+            game.getScreen().hideUI();
+            document.body.style.cursor = 'default';
         }
-        this.enableAction("followNext");
-        this.enableAction("followPrevious");
-        game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
-        game.getScreen().hideUI();
-        document.body.style.cursor = 'default';
     };
     _context = new ArmadaControlContext();
     // -------------------------------------------------------------------------
@@ -357,6 +362,7 @@ define([
         stopListening: _context.stopListening.bind(_context),
         setScreenCenter: _context.setScreenCenter.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
+        isInPilotMode: _context.isInPilotMode.bind(_context),
         switchToPilotMode: _context.switchToPilotMode.bind(_context),
         switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context)
     };

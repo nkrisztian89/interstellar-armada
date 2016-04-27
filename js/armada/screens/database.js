@@ -21,7 +21,8 @@
  * @param strings Used for translation support.
  * @param graphics Used for accessing graphics settings and shaders appropriate for current graphics settings.
  * @param classes Used for accessing the array of displayable spacecraft classes.
- * @param logic Used for accessing settings and creating the spacecraft to be shown in the item view box.
+ * @param config Used for accessing settings 
+ * @param logic Used for creating the spacecraft to be shown in the item view box.
  */
 define([
     "utils/utils",
@@ -35,9 +36,10 @@ define([
     "armada/strings",
     "armada/graphics",
     "armada/classes",
+    "armada/configuration",
     "armada/logic",
     "utils/polyfill"
-], function (utils, mat, components, screens, budaScene, game, resources, armadaScreens, strings, graphics, classes, logic) {
+], function (utils, mat, components, screens, budaScene, game, resources, armadaScreens, strings, graphics, classes, config, logic) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -68,7 +70,7 @@ define([
             UNIFORM_WIREFRAME_COLOR_NAME = "color",
             ENLARGE_FACTOR = 1.05,
             SHRINK_FACTOR = 0.95,
-            SETTINGS = logic.DATABASE_SETTINGS,
+            SETTINGS = config.DATABASE_SETTINGS,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -148,7 +150,7 @@ define([
      * @param {Object} settingDescriptor
      */
     function _getSetting(settingDescriptor) {
-        return logic.getSetting(settingDescriptor);
+        return config.getSetting(settingDescriptor);
     }
     /**
      * A shortcut that returns whether the wireframe model should be rendered according to the current settings
@@ -427,7 +429,7 @@ define([
                 },
                 graphics.getAntialiasing(),
                 graphics.getFiltering(),
-                logic.getSetting(logic.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
+                _getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
         /**
          * @type SimpleComponent
          */
@@ -601,7 +603,7 @@ define([
                 graphics.getMaxPointLights(),
                 graphics.getMaxSpotLights(),
                 {
-                    useVerticalValues: logic.getSetting(logic.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    useVerticalValues: _getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
                     viewDistance: _getSetting(SETTINGS.ITEM_VIEW_DISTANCE),
                     fov: _getSetting(SETTINGS.ITEM_VIEW_FOV),
                     span: _getSetting(SETTINGS.ITEM_VIEW_SPAN)
