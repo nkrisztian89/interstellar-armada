@@ -179,6 +179,7 @@
         "toggleMouseControls": "Egér irányítás ki-/bekapcsolása",
         "toggleJoystickControls": "Joystick irányítás ki-/bekapcsolása",
         "changeFlightMode": "Repülési mód váltása",
+        "nextHostileTarget": "Következő ellenséges célpont kijelölése",
         "nextTarget": "Következő célpont kijelölése",
         "fire": "Tüzelés az elsődleges fegyverekkel",
         "forward": "Gyorsítás előre (szabad repülési módban) vagy a kívánt sebesség növelése",

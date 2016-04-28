@@ -42,7 +42,7 @@ define(function () {
                 "left window": 91, "right window": 92, "select": 93,
                 "numpad 0": 96, "numpad 1": 97, "numpad 2": 98, "numpad 3": 99, "numpad 4": 100,
                 "numpad 5": 101, "numpad 6": 102, "numpad 7": 103, "numpad 8": 104, "numpad 9": 105,
-                "*": 106, "numpad '+'": 107, "numpad '-'": 109, "/": 111,
+                "*": 106, "numpad +": 107, "numpad -": 109, "/": 111,
                 "f1": 112, "f2": 113, "f3": 114, "f4": 115, "f5": 116, "f6": 117, "f7": 118, "f8": 119, "f9": 120,
                 "f10": 121, "f11": 122, "f12": 123,
                 "-": 173, ",": 188, ".": 190

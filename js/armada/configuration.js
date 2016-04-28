@@ -681,10 +681,13 @@ define([
             length: 2,
             defaultValue: [0.075, 0.075]
         },
-        HUD_TARGET_ARROW_COLOR: {
-            name: "hudTargetArrowColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1, 0, 0, 0.75]
+        HUD_TARGET_ARROW_HOSTILE_COLOR: {
+            name: "hudTargetArrowHostileColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_ARROW_FRIENDLY_COLOR: {
+            name: "hudTargetArrowFriendlyColor",
+            type: _customTypes.COLOR4
         },
         HUD_TARGET_INDICATOR_TEXTURE: {
             name: "hudTargetIndicatorTexture",
@@ -698,10 +701,13 @@ define([
             length: 2,
             defaultValue: [0.1, 0.1]
         },
-        HUD_TARGET_INDICATOR_COLOR: {
-            name: "hudTargetIndicatorColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [1, 0, 0, 0.75]
+        HUD_TARGET_INDICATOR_HOSTILE_COLOR: {
+            name: "hudTargetIndicatorHostileColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_INDICATOR_FRIENDLY_COLOR: {
+            name: "hudTargetIndicatorFriendlyColor",
+            type: _customTypes.COLOR4
         },
         HUD_WEAPON_IMPACT_INDICATOR_TEXTURE: {
             name: "hudWeaponImpactIndicatorTexture",

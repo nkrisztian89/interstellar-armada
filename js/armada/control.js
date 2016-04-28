@@ -165,7 +165,11 @@ define([
         this.setActionFunction("changeFlightMode", true, function () {
             this._controlledSpacecraft.changeFlightMode();
         }.bind(this));
-        // switch to next target
+        // switch to next hostile target
+        this.setActionFunction("nextHostileTarget", true, function () {
+            this._controlledSpacecraft.targetNextHostile();
+        }.bind(this));
+        // switch to next target (any)
         this.setActionFunction("nextTarget", true, function () {
             this._controlledSpacecraft.targetNext();
         }.bind(this));

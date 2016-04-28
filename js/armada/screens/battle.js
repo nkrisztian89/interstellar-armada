@@ -444,14 +444,14 @@ define([
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_TEXTURE),
                 [0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR));
         _targetArrow.addToScene(_battleScene);
         _targetIndicator = new HUDElement(
                 UI_3D_SHADER_NAME,
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_TEXTURE),
                 [0, 0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR));
         _targetIndicator.addToScene(_battleScene);
         _weaponImpactIndicators = [_getWeaponImpactIndicator()];
         _weaponImpactIndicators[0].addToScene(_battleScene);
@@ -697,6 +697,9 @@ define([
                 distance = vec.length3(vec.diff3(target.getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector()));
                 // targeting reticle at the target position
                 _targetIndicator.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
+                _targetIndicator.setColor(target.isHostile(craft) ?
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR) :
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_FRIENDLY_COLOR));
                 _targetIndicator.show();
                 // targeting crosshairs in the line of fire
                 weapons = craft.getWeapons();
@@ -735,6 +738,9 @@ define([
                     }
                     _targetArrow.setPosition(vec.scaled2([direction[0], direction[1] * aspect], 0.3));
                     _targetArrow.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
+                    _targetArrow.setColor(target.isHostile(craft) ?
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR) :
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_FRIENDLY_COLOR));
                 } else {
                     _targetArrow.hide();
                 }

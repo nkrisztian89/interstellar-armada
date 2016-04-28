@@ -116,10 +116,12 @@
             "hudCenterCrosshairColor": [0, 1, 0, 0.25],
             "hudTargetArrowTexture": "arrow",
             "hudTargetArrowSize": [0.075, 0.075],
-            "hudTargetArrowColor": [1, 0, 0, 0.75],
+            "hudTargetArrowHostileColor": [1, 0, 0, 0.75],
+            "hudTargetArrowFriendlyColor": [0, 1, 0, 0.75],
             "hudTargetIndicatorTexture": "target",
             "hudTargetIndicatorSize": [0.1, 0.1],
-            "hudTargetIndicatorColor": [1, 0, 0, 0.75],
+            "hudTargetIndicatorHostileColor": [1, 0, 0, 0.75],
+            "hudTargetIndicatorFriendlyColor": [0, 1, 0, 0.75],
             "hudWeaponImpactIndicatorTexture": "crosshair",
             "hudWeaponImpactIndicatorSize": [0.025, 0.025],
             "hudWeaponImpactIndicatorColor": [0, 1, 0, 0.75],
@@ -152,9 +154,12 @@
                         "action": "fire",
                         "key": "space"
                     }, {
-                        "action": "nextTarget",
+                        "action": "nextHostileTarget",
                         "key": "t"
                     }, {
+                        "action": "nextTarget",
+                        "key": "z"
+                    },{
                         "action": "changeFlightMode",
                         "key": "tab"
                     }, {
@@ -237,10 +242,10 @@
                         "key": "s"
                     }, {
                         "action": "cameraDecreaseFOV",
-                        "key": "z"
+                        "key": "numpad +"
                     }, {
                         "action": "cameraIncreaseFOV",
-                        "key": "u"
+                        "key": "numpad -"
                     }, {
                         "action": "nextView",
                         "key": "v"
@@ -310,7 +315,7 @@
                         "action": "fire",
                         "button": "left"
                     }, {
-                        "action": "nextTarget",
+                        "action": "nextHostileTarget",
                         "button": "middle"
                     }, {
                         "action": "yawLeft",
@@ -364,7 +369,7 @@
                         "action": "fire",
                         "button": 0
                     }, {
-                        "action": "nextTarget",
+                        "action": "nextHostileTarget",
                         "button": 1
                     }, {
                         "action": "yawLeft",

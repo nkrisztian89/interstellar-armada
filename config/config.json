@@ -1,5 +1,5 @@
 {
-    "version": "0.2:270 (2016.04.28.)",
+    "version": "0.2:271 (2016.04.28.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -363,6 +363,8 @@
                 "actions": [
                     {
                         "name": "changeFlightMode"
+                    }, {
+                        "name": "nextHostileTarget"
                     }, {
                         "name": "nextTarget"
                     }, {

@@ -154,6 +154,7 @@
         "toggleMouseControls": "Disable / enable mouse controls",
         "toggleJoystickControls": "Disable / enable joystick controls",
         "changeFlightMode": "Change flight mode",
+        "nextHostileTarget": "Target next hostile spacecraft",
         "nextTarget": "Target next spacecraft",
         "fire": "Fire primary weapons",
         "forward": "Forward thrust (free mode) or increase speed",
