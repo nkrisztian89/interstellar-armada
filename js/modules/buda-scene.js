@@ -7519,9 +7519,11 @@ define([
         if (frontQueuesNotEmpty) {
             // filling the arrays storing the light source data for uniforms that need it
             this._updateDynamicLightUniformData(this._shouldAnimate ? dt : 0);
-            // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
-            // same as the last one used for the distant objects
-            this.assignUniforms(context, context.getCurrentShader());
+            if (context.getCurrentShader()) {
+                // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
+                // same as the last one used for the distant objects
+                this.assignUniforms(context, context.getCurrentShader());
+            }
             this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX], !distanceQueuesNotEmpty);
         }
         // -----------------------------------------------------------------------

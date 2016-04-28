@@ -499,12 +499,13 @@ define([
          */
         this._locations = {};
         /**
-         * The numeric value that was last assigned to this uniform through webGL (and thus is retained).
-         * Only used for variable types that have a numeric (not array) value to avoid assigning the same
-         * value multiple times.
-         * @type Number
+         * The associative array of numeric values that were last assigned to this uniform through webGL 
+         * (and thus are retained) for each managed context, organized by the names of the contexts.
+         * Only used for variable types that have a numeric (not array) value. 
+         * Used to avoid assigning the same value multiple times.
+         * @type Object
          */
-        this._numericValue = 0;
+        this._numericValues = {};
     }
     /**
      * Getter for the property _name.
@@ -547,7 +548,7 @@ define([
     ShaderUniform.prototype.forgetLocations = function (contextName) {
         var i, j;
         delete this._locations[contextName];
-        this._numericValue = 0;
+        this._numericValues = {};
         if (this._members) {
             for (i = 0; i < this._arraySize; i++) {
                 for (j = 0; j < this._members.length; j++) {
@@ -702,9 +703,9 @@ define([
                 if (this._arraySize > 0) {
                     gl.uniform1fv(location, value);
                 } else {
-                    if (locationPrefix || (this._numericValue !== value)) {
+                    if (locationPrefix || (this._numericValues[contextName] !== value)) {
                         gl.uniform1f(location, value);
-                        this._numericValue = value;
+                        this._numericValues[contextName] = value;
                     }
                 }
                 break;
@@ -732,9 +733,9 @@ define([
                 if (this._arraySize > 0) {
                     gl.uniform1iv(location, value);
                 } else {
-                    if (locationPrefix || (this._numericValue !== value)) {
+                    if (locationPrefix || (this._numericValues[contextName] !== value)) {
                         gl.uniform1i(location, value);
-                        this._numericValue = value;
+                        this._numericValues[contextName] = value;
                     }
                 }
                 break;
@@ -743,9 +744,9 @@ define([
                     gl.uniform1iv(location, value.map(intValueOfBool));
                 } else {
                     numericValue = value ? 1 : 0;
-                    if (locationPrefix || (this._numericValue !== numericValue)) {
+                    if (locationPrefix || (this._numericValues[contextName] !== numericValue)) {
                         gl.uniform1i(location, numericValue);
-                        this._numericValue = numericValue;
+                        this._numericValues[contextName] = numericValue;
                     }
                 }
                 break;
