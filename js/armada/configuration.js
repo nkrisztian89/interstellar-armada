@@ -754,8 +754,16 @@ define([
             name: "hudTargetViewTargetItemShader",
             type: "string"
         },
-        HUD_TARGET_VIEW_TARGET_ITEM_COLOR: {
-            name: "hudTargetViewTargetItemColor",
+        HUD_TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR: {
+            name: "hudTargetViewTargetItemFullIntegrityColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR: {
+            name: "hudTargetViewTargetItemHalfIntegrityColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR: {
+            name: "hudTargetViewTargetItemZeroIntegrityColor",
             type: _customTypes.COLOR4
         },
         DEMO_FIGHTER_AI_TYPE: {

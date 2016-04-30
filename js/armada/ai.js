@@ -371,7 +371,7 @@ define([
         if (!this._isBlockedBy && (this._evasiveManeuverTime < 0)) {
             this._evasiveManeuverTime = 0;
             // marking the direction opposite to the hit position so an appropriate evasive vector can be calculated
-            this._evasiveVelocityVector[0] = -hitPosition[1];
+            this._evasiveVelocityVector[0] = -hitPosition[0];
             this._evasiveVelocityVector[1] = -hitPosition[2];
             vec.normalize2(this._evasiveVelocityVector);
         }

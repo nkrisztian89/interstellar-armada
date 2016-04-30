@@ -131,7 +131,9 @@
             "hudTargetViewViewDistance": 1500,
             "hudTargetViewFOV": 40,
             "hudTargetViewTargetItemShader": "oneColor",
-            "hudTargetViewTargetItemColor": [0, 1, 0, 1],
+            "hudTargetViewTargetItemFullIntegrityColor": [0, 1, 0, 1],
+            "hudTargetViewTargetItemHalfIntegrityColor": [1, 1, 0, 1],
+            "hudTargetViewTargetItemZeroIntegrityColor": [1, 0, 0, 1],
             "demoFighterAI": "fighter",
             "demoViewSwitchInterval": 6000,
             "demoDoubleViewSwitchChance": 0.5

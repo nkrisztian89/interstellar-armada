@@ -355,5 +355,23 @@ define(function () {
         var dotIndex = filename.lastIndexOf(".");
         return (dotIndex > 0) ? filename.substr(0, dotIndex) : filename;
     };
+    /**
+     * Returns an RGBA color that is the result of mixing the two passed RGBA colors with the second color
+     * having the given ratio. (using a simple linear combination of the components of the colors)
+     * @param {Number[4]} color1
+     * @param {Number[4]} color2
+     * @param {Number} color2Ratio A number between 0.0 and 1.0 indicating the relative amount of the second
+     * color in the result.
+     * @returns {Number[4]}
+     */
+    exports.getMixedColor = function (color1, color2, color2Ratio) {
+        var color1Ratio = 1 - color2Ratio;
+        return [
+            color1[0] * color1Ratio + color2[0] * color2Ratio,
+            color1[1] * color1Ratio + color2[1] * color2Ratio,
+            color1[2] * color1Ratio + color2[2] * color2Ratio,
+            color1[3] * color1Ratio + color2[3] * color2Ratio
+        ];
+    };
     return exports;
 });

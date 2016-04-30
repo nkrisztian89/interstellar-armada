@@ -147,6 +147,11 @@ define([
              */
             _targetViewItem,
             /**
+             * The RGBA color of the currently displayed spacecraft in the target view screen.
+             * @type Number[4]
+             */
+            _targetViewItemColor,
+            /**
              * The object that will be returned as this module
              * @type Battle
              */
@@ -689,7 +694,7 @@ define([
                 /**
                  * @type Number
                  */
-                distance, direction, behind, aspect, weapons, i, m, slotPosition, scale, relativeVelocity;
+                distance, direction, behind, aspect, weapons, i, m, slotPosition, scale, relativeVelocity, targetIntegrity;
         if (craft) {
             target = craft.getTarget();
             // updating the WebGL HUD
@@ -745,6 +750,16 @@ define([
                     _targetArrow.hide();
                 }
                 // target view
+                targetIntegrity = target.getHullIntegrity();
+                _targetViewItemColor = (targetIntegrity > 0.5) ?
+                        utils.getMixedColor(
+                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
+                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
+                                (targetIntegrity - 0.5) * 2) :
+                        utils.getMixedColor(
+                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR),
+                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
+                                targetIntegrity * 2);
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes();
                     _targetViewItem = target;
@@ -753,9 +768,8 @@ define([
                         positionMatrix: mat.translation4(0, 0, 0),
                         orientationMatrix: mat.identity4()
                     }, function (model) {
-                        var color = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_COLOR);
                         model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
-                            return color;
+                            return _targetViewItemColor;
                         });
                         _targetScene.getCamera().moveToPosition([0, 0, 2 * model.getScaledSize()], 0);
                     });
@@ -911,7 +925,6 @@ define([
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
                 }.bind(this));
             }.bind(this));
-
             resources.requestResourceLoad();
         }.bind(this));
     };
