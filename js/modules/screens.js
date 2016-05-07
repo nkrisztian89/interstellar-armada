@@ -11,6 +11,7 @@
 /*global define, document, alert, window, setInterval, clearInterval, performance */
 
 /**
+ * @param utils Used for converting RGBA color to CSS color strings and for format strings
  * @param types Used for handling enum values
  * @param application Used for logging and file loading functionality
  * @param asyncResource Screens are subclassed from AsyncResource as they are loaded from external XML files
@@ -20,6 +21,7 @@
  * @param strings Used to offer translation support
  */
 define([
+    "utils/utils",
     "utils/types",
     "modules/application",
     "modules/async-resource",
@@ -27,7 +29,7 @@ define([
     "modules/managed-gl",
     "modules/graphics-resources",
     "modules/strings"
-], function (types, application, asyncResource, components, managedGL, resources, strings) {
+], function (utils, types, application, asyncResource, components, managedGL, resources, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -256,11 +258,7 @@ define([
     HTMLScreen.prototype.superimposeOnPage = function (backgroundColor, parentNode) {
         if (this._container && this._background) {
             if (backgroundColor) {
-                this._background.style.backgroundColor = "rgba(" +
-                        Math.round(backgroundColor[0] * 255) + "," +
-                        Math.round(backgroundColor[1] * 255) + "," +
-                        Math.round(backgroundColor[2] * 255) + "," +
-                        backgroundColor[3] + ")";
+                this._background.style.backgroundColor = utils.getCSSColor(backgroundColor);
             }
             this._background.style.display = "block";
             parentNode = parentNode || document.body;
@@ -448,6 +446,702 @@ define([
     };
     // #########################################################################
     /**
+     * @class
+     * A text with associated state (layout and style) that can be rendered on 2D canvases.
+     * @param {Number[2]} position The starting position of the text in the clip space of the canvas.
+     * @param {String} text The starting value of the text to display.
+     * @param {String} font The name of the font to use (as in CSS font-family)
+     * @param {Number} size The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
+     * @param {String} scaleMode enum ScaleMode The scaling mode to use when determining the font size for rendering
+     * @param {Number[4]} color The RGBA color to use when rendering
+     * @param {String} [align="left"] The horizontal alignment mode for the text
+     */
+    function CanvasText(position, text, font, size, scaleMode, color, align) {
+        /**
+         * The X coordinate of the relative position of the text in the clip space of the canvas it is rendered to.
+         * @type Number
+         */
+        this._x = position[0];
+        /**
+         * The Y coordinate of the relative position of the text in the clip space of the canvas it is rendered to.
+         * @type Number
+         */
+        this._y = position[1];
+        /**
+         * The current text to render.
+         * @type String
+         */
+        this._text = text;
+        /**
+         * The name of the font to use (as in CSS font-family)
+         * @type String
+         */
+        this._font = font;
+        /**
+         * The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
+         * @type Number
+         */
+        this._size = size;
+        /**
+         * (enum ScaleMode) The scaling mode to use when determining the font size for rendering
+         * @type String
+         */
+        this._scaleMode = types.getEnumValue(utils.ScaleMode, scaleMode);
+        if (this._scaleMode === utils.ScaleMode.ASPECT) {
+            application.showError("Cannot set the scaling mode to aspect for fonts!");
+        }
+        /**
+         * The RGBA color to use when rendering
+         * @type Number[4]
+         */
+        this._color = color;
+        /**
+         * The horizontal alignment mode for the text
+         * @type String
+         */
+        this._align = align || "left";
+        /**
+         * Whether the text is currently visible (should be rendered when calling render())
+         * @type Boolean
+         */
+        this._visible = true;
+    }
+    /**
+     * Returns a string defining the font and its settings to be used for rendering to a canvas with the passed viewport size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {String}
+     */
+    CanvasText.prototype._getCSSFont = function (viewportWidth, viewportHeight) {
+        var result;
+        if (utils.scalesWithWidth(this._scaleMode, viewportWidth, viewportHeight)) {
+            result = this._size * viewportWidth + "px";
+        } else {
+            result = this._size * viewportHeight + "px";
+        }
+        result = result + " " + this._font;
+        return result;
+    };
+    /**
+     * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
+     * @param {CanvasRenderingContext2D} context
+     */
+    CanvasText.prototype.render = function (context) {
+        var width, height;
+        if (this._visible) {
+            context.fillStyle = utils.getCSSColor(this._color);
+            width = context.canvas.width;
+            height = context.canvas.height;
+            context.font = this._getCSSFont(width, height);
+            context.textAlign = this._align;
+            context.fillText(this._text, (this._x + 1) / 2 * width, (1 - this._y) / 2 * height);
+        }
+    };
+    /**
+     * Sets a new position for the text (in the clip space of the canvas it is rendered to)
+     * @param {Number[2]} position
+     */
+    CanvasText.prototype.setPosition = function (position) {
+        this._x = position[0];
+        this._y = position[1];
+    };
+    /**
+     * Sets a new value for the actual text that is displayed when rendering this object.
+     * @param {String} text
+     * @param {Object} [replacements] If given, the provided text is taken as a format strings, with its references replaced by the values
+     * provided in this object. (e.g. "hello, {w}", {w: "world"} -> "hello, world"
+     */
+    CanvasText.prototype.setText = function (text, replacements) {
+        this._text = replacements ? utils.formatString(text, replacements) : text;
+    };
+    /**
+     * Sets a new RGBA color to use when rendering this text
+     * @param {Number[4]} color
+     */
+    CanvasText.prototype.setColor = function (color) {
+        this._color = color;
+    };
+    /**
+     * After calling this, the text is rendered whenever calling render() (until hidden)
+     */
+    CanvasText.prototype.show = function () {
+        this._visible = true;
+    };
+    /**
+     * After calling this, the text is not rendered anymore when calling render() (until shown)
+     */
+    CanvasText.prototype.hide = function () {
+        this._visible = false;
+    };
+    // #########################################################################
+    /**
+     * @typedef {Object} LayoutDescriptor
+     * @property {Number} [left]
+     * @property {Number} [centerX]
+     * @property {Number} [right]
+     * @property {Number} [top]
+     * @property {Number} [centerY]
+     * @property {Number} [bottom]
+     * @property {Number} [width]
+     * @property {Number} [height]
+     * @property {String} scaleMode enum ScaleMode
+     * @property {String} [xScaleMode] enum ScaleMode
+     * @property {String} [yScaleMode] enum ScaleMode
+     */
+    /**
+     * @class
+     * Stores a set of layout settings given using clip-space coordinates and can calculate and provide coordinates of the rectangle defined
+     * by these settings in different coordinate systems / scaled to a specific viewport.
+     * @param {LayoutDescriptor} layoutDescriptor The descriptor object to load the settings from
+     */
+    function ClipSpaceLayout(layoutDescriptor) {
+        /**
+         * If given, the left side of the rectangle should be located at this X coordinate in clip-space.
+         * @type Number
+         */
+        this._left = layoutDescriptor.left;
+        /**
+         * If given, the horizontal center of the rectangle should be located at this X coordinate in clip-space.
+         * @type Number
+         */
+        this._centerX = layoutDescriptor.centerX;
+        /**
+         * If given, the right side of the rectangle should be located at this X coordinate in clip-space.
+         * @type Number
+         */
+        this._right = layoutDescriptor.right;
+        /**
+         * If given, the top side of the rectangle should be located at this Y coordinate in clip-space.
+         * @type Number
+         */
+        this._top = layoutDescriptor.top;
+        /**
+         * If given, the vertical center of the rectangle should be located at this Y coordinate in clip-space.
+         * @type Number
+         */
+        this._centerY = layoutDescriptor.centerY;
+        /**
+         * If given, the bottom side of the rectangle should be located at this Y coordinate in clip-space.
+         * @type Number
+         */
+        this._bottom = layoutDescriptor.bottom;
+        /**
+         * If given, the width of the rectangle should equal this distance in clip-space.
+         * @type Number
+         */
+        this._width = layoutDescriptor.width;
+        /**
+         * If given, the height of the rectangle should equal this distance in clip-space.
+         * @type Number
+         */
+        this._height = layoutDescriptor.height;
+        /**
+         * (enum ScaleMode) Determines how the actual size of the rectangle is calculated when scaled to a specific viewport.
+         * @type String
+         */
+        this._scaleMode = types.getEnumValue(utils.ScaleMode, layoutDescriptor.scaleMode);
+        /**
+         * (enum ScaleMode) Determines how the X coordinate of the position of the rectangle is calculated when scaling to a specific 
+         * viewport. If a left coordinate is stored in this layout, the appropriate scaling is applied from the left side of the viewport, 
+         * if a center X coordinate is stored, the scaling is applied from the horizontal center of the viewport and if a right coordinate
+         * is stored, from the right side of the viewport.
+         * @type String
+         */
+        this._xScaleMode = types.getEnumValue(utils.ScaleMode, layoutDescriptor.xScaleMode || utils.ScaleMode.ASPECT);
+        /**
+         * (enum ScaleMode) Determines how the Y coordinate of the position of the rectangle is calculated when scaling to a specific 
+         * viewport. If a top coordinate is stored in this layout, the appropriate scaling is applied from the top of the viewport, 
+         * if a center Y coordinate is stored, the scaling is applied from the vertical center of the viewport and if a bottom coordinate
+         * is stored, from the bottom of the viewport.
+         * @type String
+         */
+        this._yScaleMode = types.getEnumValue(utils.ScaleMode, layoutDescriptor.yScaleMode || utils.ScaleMode.ASPECT);
+        if (!this._isValid()) {
+            application.showError("Invalid layout specified!");
+        }
+    }
+    /**
+     * Returns whether this object contains settings for which all coordinates can be calculated without ambiguity.
+     * @returns {Boolean}
+     */
+    ClipSpaceLayout.prototype._isValid = function () {
+        var numAnchors;
+        if (this._width !== undefined) {
+            numAnchors = 0;
+            if (this._left !== undefined) {
+                numAnchors++;
+            }
+            if (this._centerX !== undefined) {
+                numAnchors++;
+            }
+            if (this._right !== undefined) {
+                numAnchors++;
+            }
+            if (numAnchors !== 1) {
+                return false;
+            }
+        } else {
+            if ((this._left === undefined) || (this._centerX !== undefined) || (this._right === undefined)) {
+                return false;
+            }
+            if ((this._scaleMode !== utils.ScaleMode.ASPECT) || (this._xScaleMode !== utils.ScaleMode.ASPECT)) {
+                return false;
+            }
+        }
+        if (this._height !== undefined) {
+            numAnchors = 0;
+            if (this._top !== undefined) {
+                numAnchors++;
+            }
+            if (this._centerY !== undefined) {
+                numAnchors++;
+            }
+            if (this._bottom !== undefined) {
+                numAnchors++;
+            }
+            if (numAnchors !== 1) {
+                return false;
+            }
+        } else {
+            if ((this._top === undefined) || (this._centerY !== undefined) || (this._bottom === undefined)) {
+                return false;
+            }
+            if ((this._scaleMode !== utils.ScaleMode.ASPECT) || (this._yScaleMode !== utils.ScaleMode.ASPECT)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    /**
+     * Returns the X coordinate of the horizontal center of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceCenterX = function () {
+        if (this._centerX !== undefined) {
+            return this._centerX;
+        }
+        if (this._width !== undefined) {
+            if (this._left !== undefined) {
+                return this._left + this._width / 2;
+            }
+            return this._right - this._width / 2;
+        }
+        return (this._left + this._right) / 2;
+    };
+    /**
+     * Returns the Y coordinate of the vertical center of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceCenterY = function () {
+        if (this._centerY !== undefined) {
+            return this._centerY;
+        }
+        if (this._height !== undefined) {
+            if (this._bottom !== undefined) {
+                return this._bottom + this._height / 2;
+            }
+            return this._top - this._height / 2;
+        }
+        return (this._bottom + this._top) / 2;
+    };
+    /**
+     * Returns the position of the center of the rectangle specified by this layout in clip-space.
+     * @returns {Number[2]}
+     */
+    ClipSpaceLayout.prototype.getClipSpacePosition = function () {
+        return [
+            this.getClipSpaceCenterX(),
+            this.getClipSpaceCenterY()];
+    };
+    /**
+     * Returns the width of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceWidth = function () {
+        if (this._width !== undefined) {
+            return this._width;
+        }
+        return this._right - this._left;
+    };
+    /**
+     * Returns the height of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceHeight = function () {
+        if (this._height !== undefined) {
+            return this._height;
+        }
+        return this._top - this._bottom;
+    };
+    /**
+     * Returns the width and height of the rectangle specified by this layout in clip-space.
+     * @returns {Number[2]}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceSize = function () {
+        return [
+            this.getClipSpaceWidth(),
+            this.getClipSpaceHeight()];
+    };
+    /**
+     * Returns the X coordinate of the left edge of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceLeft = function () {
+        if (this._left !== undefined) {
+            return this._left;
+        }
+        return this.getClipSpaceCenterX() - this.getClipSpaceWidth() / 2;
+    };
+    /**
+     * Returns the X coordinate of the right edge of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceRight = function () {
+        if (this._right !== undefined) {
+            return this._right;
+        }
+        return this.getClipSpaceCenterX() + this.getClipSpaceWidth() / 2;
+    };
+    /**
+     * Returns the Y coordinate of the bottom edge of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceBottom = function () {
+        if (this._bottom !== undefined) {
+            return this._bottom;
+        }
+        return this.getClipSpaceCenterY() - this.getClipSpaceHeight() / 2;
+    };
+    /**
+     * Returns the Y coordinate of the top edge of the rectangle specified by this layout in clip-space.
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getClipSpaceTop = function () {
+        if (this._top !== undefined) {
+            return this._top;
+        }
+        return this.getClipSpaceCenterY() + this.getClipSpaceHeight() / 2;
+    };
+    /**
+     * Returns the width of the rectangle specified by this layout in pixels when scaled to a viewport of the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getWidth = function (viewportWidth, viewportHeight) {
+        return this.getClipSpaceWidth() / 2 * (
+                utils.xScalesWithWidth(this._scaleMode, viewportWidth, viewportHeight) ?
+                viewportWidth :
+                viewportHeight);
+    };
+    /**
+     * Returns the height of the rectangle specified by this layout in pixels when scaled to a viewport of the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getHeight = function (viewportWidth, viewportHeight) {
+        return this.getClipSpaceHeight() / 2 * (
+                utils.yScalesWithHeight(this._scaleMode, viewportWidth, viewportHeight) ?
+                viewportHeight :
+                viewportWidth);
+    };
+    /**
+     * Returns the width and height of the rectangle specified by this layout in pixels when scaled to a viewport of the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getSize = function (viewportWidth, viewportHeight) {
+        return [
+            this.getWidth(viewportWidth, viewportHeight),
+            this.getHeight(viewportWidth, viewportHeight)];
+    };
+    /**
+     * Returns the X coordinate of the horizontal center of the rectangle specified by this layout in pixels when scaled to a viewport of 
+     * the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getCenterX = function (viewportWidth, viewportHeight) {
+        var scale;
+        if (utils.xScalesWithWidth(this._xScaleMode, viewportWidth, viewportHeight)) {
+            scale = viewportWidth;
+        } else {
+            scale = viewportHeight;
+        }
+        if (this._left !== undefined) {
+            return (this.getClipSpaceLeft() + 1) / 2 * scale + this.getWidth(viewportWidth, viewportHeight) / 2;
+        }
+        if (this._centerX !== undefined) {
+            return viewportWidth / 2 + this.getClipSpaceCenterX() / 2 * scale;
+        }
+        return viewportWidth - (1 - this.getClipSpaceRight()) / 2 * scale - this.getWidth(viewportWidth, viewportHeight) / 2;
+    };
+    /**
+     * Returns the Y coordinate of the vertical center of the rectangle specified by this layout in pixels when scaled to a viewport of 
+     * the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getCenterY = function (viewportWidth, viewportHeight) {
+        var scale;
+        if (utils.yScalesWithHeight(this._yScaleMode, viewportWidth, viewportHeight)) {
+            scale = viewportHeight;
+        } else {
+            scale = viewportWidth;
+        }
+        if (this._top !== undefined) {
+            return (1 - this.getClipSpaceTop()) / 2 * scale + this.getHeight(viewportWidth, viewportHeight) / 2;
+        }
+        if (this._centerY !== undefined) {
+            return viewportHeight / 2 - this.getClipSpaceCenterY() / 2 * scale;
+        }
+        return viewportHeight - (this.getClipSpaceBottom() + 1) / 2 * scale - this.getHeight(viewportWidth, viewportHeight) / 2;
+    };
+    /**
+     * Returns the position of the center of the rectangle specified by this layout in pixels when scaled to a viewport of the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number[2]}
+     */
+    ClipSpaceLayout.prototype.getPosition = function (viewportWidth, viewportHeight) {
+        return [
+            this.getCenterX(viewportWidth, viewportHeight),
+            this.getCenterY(viewportWidth, viewportHeight)];
+    };
+    /**
+     * Returns the X coordinate of the left edge of the rectangle specified by this layout in pixels when scaled to a viewport of the given 
+     * size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getLeft = function (viewportWidth, viewportHeight) {
+        var scale;
+        if (utils.xScalesWithWidth(this._xScaleMode, viewportWidth, viewportHeight)) {
+            scale = viewportWidth;
+        } else {
+            scale = viewportHeight;
+        }
+        if (this._left !== undefined) {
+            return (this.getClipSpaceLeft() + 1) / 2 * scale;
+        }
+        if (this._centerX !== undefined) {
+            return viewportWidth / 2 + this.getClipSpaceCenterX() / 2 * scale - this.getWidth(viewportWidth, viewportHeight) / 2;
+        }
+        return viewportWidth - (1 - this.getClipSpaceRight()) / 2 * scale - this.getWidth(viewportWidth, viewportHeight);
+    };
+    /**
+     * Returns the Y coordinate of the top edge of the rectangle specified by this layout in pixels when scaled to a viewport of the given 
+     * size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getTop = function (viewportWidth, viewportHeight) {
+        var scale;
+        if (utils.yScalesWithHeight(this._yScaleMode, viewportWidth, viewportHeight)) {
+            scale = viewportHeight;
+        } else {
+            scale = viewportWidth;
+        }
+        if (this._top !== undefined) {
+            return (1 - this.getClipSpaceTop()) / 2 * scale;
+        }
+        if (this._centerY !== undefined) {
+            return viewportHeight / 2 - this.getClipSpaceCenterY() / 2 * scale - this.getHeight(viewportWidth, viewportHeight) / 2;
+        }
+        return viewportHeight - (this.getClipSpaceBottom() + 1) / 2 * scale - this.getHeight(viewportWidth, viewportHeight);
+    };
+    /**
+     * Returns the Y coordinate of the bottom edge of the rectangle specified by this layout in pixels when scaled to a viewport of the 
+     * given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getBottom = function (viewportWidth, viewportHeight) {
+        var scale;
+        if (utils.yScalesWithHeight(this._yScaleMode, viewportWidth, viewportHeight)) {
+            scale = viewportHeight;
+        } else {
+            scale = viewportWidth;
+        }
+        if (this._top !== undefined) {
+            return (1 - this.getClipSpaceTop()) / 2 * scale + this.getHeight(viewportWidth, viewportHeight);
+        }
+        if (this._centerY !== undefined) {
+            return viewportHeight / 2 - this.getClipSpaceCenterY() / 2 * scale + this.getHeight(viewportWidth, viewportHeight) / 2;
+        }
+        return viewportHeight - (this.getClipSpaceBottom() + 1) / 2 * scale;
+    };
+    /**
+     * Returns the X coordinate of the left edge of the rectangle specified by this layout in positive-relative space ([0;0]: bottom-left -
+     * [1;1]: top right) when scaled to a viewport of the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getPositiveLeft = function (viewportWidth, viewportHeight) {
+        return this.getLeft(viewportWidth, viewportHeight) / viewportWidth;
+    };
+    /**
+     * Returns the Y coordinate of the bottom edge of the rectangle specified by this layout in positive-relative space ([0;0]: bottom-left -
+     * [1;1]: top right) when scaled to a viewport of the given size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getPositiveBottom = function (viewportWidth, viewportHeight) {
+        return 1 - this.getBottom(viewportWidth, viewportHeight) / viewportHeight;
+    };
+    /**
+     * Returns the width of the rectangle specified by this layout in positive-relative space (0-1) when scaled to a viewport of the given 
+     * size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getPositiveWidth = function (viewportWidth, viewportHeight) {
+        return this.getWidth(viewportWidth, viewportHeight) / viewportWidth;
+    };
+    /**
+     * Returns the height of the rectangle specified by this layout in positive-relative space (0-1) when scaled to a viewport of the given 
+     * size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     * @returns {Number}
+     */
+    ClipSpaceLayout.prototype.getPositiveHeight = function (viewportWidth, viewportHeight) {
+        return this.getHeight(viewportWidth, viewportHeight) / viewportHeight;
+    };
+    /**
+     * (enum ScaleMode) Returns the scaling mode set for the size of the rectangle specified by this layout.
+     * @returns {String}
+     */
+    ClipSpaceLayout.prototype.getScaleMode = function () {
+        return this._scaleMode;
+    };
+    // #########################################################################
+    /**
+     * @class
+     * Represents a rectangular area to which texts can be added and rendered to, with a layout specified in the clip-space of a containing 
+     * larger viewport. Implemented using a 2D canvas.
+     * @param {LayoutDescriptor} layoutDescriptor The object describing the layout settings for the area
+     */
+    function TextLayer(layoutDescriptor) {
+        /**
+         * The canvas used to render this text layer.
+         * @type HTMLCanvasElement
+         */
+        this._canvas = document.createElement("canvas");
+        /**
+         * The object storing the layout settings for this text layer.
+         * @type ClipSpaceLayout
+         */
+        this._clipSpaceLayout = new ClipSpaceLayout(layoutDescriptor);
+        /**
+         * The 2D context used to render the texts on this layer.
+         * @type CanvasRenderingContext2D
+         */
+        this._context = this._canvas.getContext("2d");
+        this._context.textBaseline = "top";
+        /**
+         * The list of stored texts that are rendered when this layer is rendered.
+         * @type CanvasText[]
+         */
+        this._texts = [];
+        /**
+         * Whether the texts on this layer should be rendered when the layer is rendered.
+         * @type Boolean
+         */
+        this._visible = true;
+        /**
+         * Whether the area of this text layer is currently cleared to transparent color.
+         * @type Boolean
+         */
+        this._cleared = true;
+    }
+    /**
+     * Clears the whole area of this text layer of all the previously rendered texts.
+     * @param {String} [borderStyle] If given, a border with this style will be drawn at the edges of the area of this text layer.
+     */
+    TextLayer.prototype.clearContext = function (borderStyle) {
+        this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        if (borderStyle) {
+            this._context.strokeStyle = borderStyle;
+            this._context.strokeRect(0, 0, this._canvas.width, this._canvas.height);
+        }
+    };
+    /**
+     * Adds a new text object to the list of texts that are rendered on this layer.
+     * @param {CanvasText} value
+     */
+    TextLayer.prototype.addText = function (value) {
+        this._texts.push(value);
+    };
+    /**
+     * If currently visible, rendered all (visible) texts to this layer.
+     */
+    TextLayer.prototype.render = function () {
+        var i;
+        if (this._visible) {
+            this.clearContext();
+            for (i = 0; i < this._texts.length; i++) {
+                this._texts[i].render(this._context);
+            }
+            this._cleared = false;
+        }
+    };
+    /**
+     * Repositions and resizes the text layer area accordingly if the size of the containing viewport has changed as given.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     */
+    TextLayer.prototype.handleResize = function (viewportWidth, viewportHeight) {
+        this._canvas.style.top = this._clipSpaceLayout.getTop(viewportWidth, viewportHeight) + "px";
+        this._canvas.style.left = this._clipSpaceLayout.getLeft(viewportWidth, viewportHeight) + "px";
+        this._canvas.width = this._clipSpaceLayout.getWidth(viewportWidth, viewportHeight);
+        this._canvas.height = this._clipSpaceLayout.getHeight(viewportWidth, viewportHeight);
+    };
+    /**
+     * Sets a new containing canvas the position and size of which will determine the position and size of this text layer.
+     * @param {HTMLCanvasElement} container
+     */
+    TextLayer.prototype.setContainer = function (container) {
+        this.handleResize(container.width, container.height);
+        container.parentNode.appendChild(this._canvas);
+        this._canvas.style.position = "absolute";
+        this._canvas.zIndex = container.zIndex + 1;
+    };
+    /**
+     * After calling this, the (visible) texts on this layer are rendered whenever calling render()
+     */
+    TextLayer.prototype.show = function () {
+        this._visible = true;
+    };
+    /**
+     * Clears the text layer and after calling this, no texts on this layer are rendered when calling render()
+     */
+    TextLayer.prototype.hide = function () {
+        if (!this._cleared) {
+            this.clearContext();
+            this._cleared = true;
+        }
+        this._visible = false;
+    };
+    /**
+     * Returns the layout object specifying the positioning and sizing rules for this text layer.
+     * @returns {ClipSpaceLayout}
+     */
+    TextLayer.prototype.getLayout = function () {
+        return this._clipSpaceLayout;
+    };
+    // #########################################################################
+    /**
      * @class An enhanced canvas element (a wrapper around a regular HTML canvas), 
      * that can create and hold a reference to a managed WebGL context for the canvas.
      * @param {HTMLCanvasElement} canvas The canvas around which this object should be created.
@@ -480,6 +1174,13 @@ define([
          * @type ManagedGLContext
          */
         this._context = null;
+        /**
+         * The list of stored text layers that can be used to render 2D text, using smaller canvases with 2D rendering contexts superimposed
+         * on the main canvas. (this way not the whole area of the canvas needs to be cleared for each frame, only the parts that contain
+         * text)
+         * @type TextLayer[]
+         */
+        this._textLayers = [];
     }
     /**
      * Returns the stored HTML canvas element.
@@ -541,6 +1242,41 @@ define([
             if (this._context) {
                 this._context.setFiltering(this._filtering);
             }
+        }
+    };
+    /**
+     * Resizes the viewport of the wrapped canvas and any text layer canvases. To be called in case the window size changes.
+     */
+    ScreenCanvas.prototype.handleResize = function () {
+        var
+                width = this._canvas.clientWidth,
+                height = this._canvas.clientHeight,
+                i;
+        if (this._canvas.width !== width ||
+                this._canvas.height !== height) {
+            // Change the size of the canvas to match the size it's being displayed
+            this._canvas.width = width;
+            this._canvas.height = height;
+            for (i = 0; i < this._textLayers.length; i++) {
+                this._textLayers[i].handleResize(width, height);
+            }
+        }
+    };
+    /**
+     * Adds the passed text layer to the list of text layers rendered on top of this canvas.
+     * @param {TextLayer} value
+     */
+    ScreenCanvas.prototype.addTextLayer = function (value) {
+        this._textLayers.push(value);
+        value.setContainer(this._canvas);
+    };
+    /**
+     * Renders all the text layers that were added on top of this canvas.
+     */
+    ScreenCanvas.prototype.renderTextLayers = function () {
+        var i;
+        for (i = 0; i < this._textLayers.length; i++) {
+            this._textLayers[i].render();
         }
     };
     // #########################################################################
@@ -737,10 +1473,14 @@ define([
      * @param {Number} dt The time passed since the last render in milliseconds.
      */
     HTMLScreenWithCanvases.prototype._render = function (dt) {
-        var i;
+        var i, canvasNames;
+        canvasNames = Object.keys(this._canvases);
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
             this._sceneCanvasBindings[i].scene.cleanUp();
             this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext(), dt);
+        }
+        for (i = 0; i < canvasNames.length; i++) {
+            this._canvases[canvasNames[i]].renderTextLayers();
         }
     };
     /**
@@ -815,25 +1555,7 @@ define([
         return this._renderTimes.length;
     };
     /**
-     * Updates the size of the HTMLCanvasElement associated with the ScreenCanvas contained in this screen with the passed name and all its
-     * bound scenes to match the current display size
-     * @param {String} name
-     */
-    HTMLScreenWithCanvases.prototype.resizeCanvas = function (name) {
-        var
-                canvasElement = this._canvases[name].getCanvasElement(),
-                width = canvasElement.clientWidth,
-                height = canvasElement.clientHeight;
-        if (canvasElement.width !== width ||
-                canvasElement.height !== height) {
-            // Change the size of the canvas to match the size it's being displayed
-            canvasElement.width = width;
-            canvasElement.height = height;
-        }
-    };
-    /**
-     * Updates all needed variables when the screen is resized (camera perspective
-     * matrices as well)
+     * Updates all needed variables when the screen is resized.
      */
     HTMLScreenWithCanvases.prototype.resizeCanvases = function () {
         var canvasName;
@@ -842,7 +1564,7 @@ define([
         for (canvasName in this._canvases) {
             if (this._canvases.hasOwnProperty(canvasName)) {
                 if (this._canvases[canvasName].isResizeable() === true) {
-                    this.resizeCanvas(canvasName);
+                    this._canvases[canvasName].handleResize();
                 }
             }
         }
@@ -892,6 +1614,9 @@ define([
     return {
         ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
         HTMLScreen: HTMLScreen,
+        CanvasText: CanvasText,
+        ClipSpaceLayout: ClipSpaceLayout,
+        TextLayer: TextLayer,
         HTMLScreenWithCanvases: HTMLScreenWithCanvases,
         MenuScreen: MenuScreen
     };

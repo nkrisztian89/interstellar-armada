@@ -5,6 +5,7 @@
     "views": [
         {
             "name": "near",
+            "isAimingView": true,
             "fov": 40,
             "fovRange": [40, 40],
             "followsPosition": true,
@@ -15,6 +16,7 @@
         },
         {
             "name": "far",
+            "isAimingView": true,
             "fov": 55,
             "fovRange": [55, 55],
             "followsPosition": true,
@@ -25,6 +27,7 @@
         },
         {
             "name": "cockpit",
+            "isAimingView": true,
             "fov": 40,
             "fovRange": [40, 40],
             "fps": true,
@@ -38,6 +41,7 @@
         },
         {
             "name": "front",
+            "isAimingView": false,
             "fov": 55,
             "fovRange": [55, 55],
             "followsPosition": true,
@@ -58,6 +62,7 @@
         },
         {
             "name": "top",
+            "isAimingView": false,
             "fov": 60,
             "followsPosition": true,
             "movable": false,
@@ -73,6 +78,7 @@
         },
         {
             "name": "above",
+            "isAimingView": true,
             "followsPosition": true,
             "movable": false,
             "turnable": true,
@@ -81,6 +87,7 @@
         },
         {
             "name": "below",
+            "isAimingView": true,
             "fps": true,
             "followsPosition": true,
             "movable": false,
@@ -90,6 +97,7 @@
         },
         {
             "name": "above-free",
+            "isAimingView": false,
             "followsPosition": true,
             "movable": true,
             "turnable": true,
@@ -98,6 +106,7 @@
         },
         {
             "name": "above-confined",
+            "isAimingView": false,
             "followsPosition": true,
             "movesRelativeToObject": true,
             "movable": true,
@@ -108,6 +117,7 @@
         },
         {
             "name": "below-free",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "movable": true,
@@ -117,6 +127,7 @@
         },
         {
             "name": "free-turnaround",
+            "isAimingView": false,
             "followsPosition": true,
             "movable": false,
             "turnable": true,
@@ -125,6 +136,7 @@
         },
         {
             "name": "fps-turnaround",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "movable": false,
@@ -144,6 +156,7 @@
         },
         {
             "name": "free-turnaround-absolute",
+            "isAimingView": false,
             "followsPosition": true,
             "followsOrientation": false,
             "movable": false,
@@ -153,6 +166,7 @@
         },
         {
             "name": "fps-turnaround-absolute",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "followsOrientation": false,
@@ -173,6 +187,7 @@
         },
         {
             "name": "free-turnaround-zoom",
+            "isAimingView": false,
             "followsPosition": true,
             "movable": true,
             "turnable": true,
@@ -182,6 +197,7 @@
         },
         {
             "name": "fps-turnaround-zoom",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "movable": true,
@@ -202,6 +218,7 @@
         },
         {
             "name": "free-turnaround-absolute-zoom",
+            "isAimingView": false,
             "followsPosition": true,
             "followsOrientation": false,
             "movable": true,
@@ -212,6 +229,7 @@
         },
         {
             "name": "fps-turnaround-absolute-zoom",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "followsOrientation": false,
@@ -233,6 +251,7 @@
         },
         {
             "name": "lookAt-fixed-absolute",
+            "isAimingView": false,
             "followsPosition": false,
             "lookAt": "self",
             "movable": false,
@@ -241,6 +260,7 @@
         },
         {
             "name": "lookAt-fixed-absolute-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -251,6 +271,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -260,6 +281,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -271,6 +293,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-resetting",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -282,6 +305,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-fps-resetting",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -295,6 +319,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-position-confined",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -305,6 +330,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-position-confined-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -317,6 +343,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-distance-confined",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -327,6 +354,7 @@
         },
         {
             "name": "lookAt-fixed-relative-start-distance-confined-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -339,6 +367,7 @@
         },
         {
             "name": "lookAt-free-absolute",
+            "isAimingView": false,
             "followsPosition": false,
             "lookAt": "self",
             "movable": true,
@@ -348,6 +377,7 @@
         },
         {
             "name": "lookAt-free-absolute-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -359,6 +389,7 @@
         },
         {
             "name": "lookAt-free-relative-start",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -369,6 +400,7 @@
         },
         {
             "name": "lookAt-free-relative-start-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -381,6 +413,7 @@
         },
         {
             "name": "lookAt-free-relative-start-resetting",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -393,6 +426,7 @@
         },
         {
             "name": "lookAt-free-relative-start-fps-resetting",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -407,6 +441,7 @@
         },
         {
             "name": "lookAt-free-relative-start-position-confined",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -418,6 +453,7 @@
         },
         {
             "name": "lookAt-free-relative-start-position-confined-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -431,6 +467,7 @@
         },
         {
             "name": "lookAt-free-relative-start-distance-confined",
+            "isAimingView": false,
             "followsPosition": false,
             "startsWithRelativePosition": true,
             "lookAt": "self",
@@ -441,6 +478,7 @@
         },
         {
             "name": "lookAt-free-relative-start-distance-confined-fps",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": false,
             "baseOrientation": "orientationFollowedObject",
@@ -453,6 +491,7 @@
         },
         {
             "name": "target",
+            "isAimingView": false,
             "followsPosition": true,
             "lookAt": "target",
             "movable": false,
@@ -462,6 +501,7 @@
         },
         {
             "name": "target",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "lookAt": "target",
@@ -472,6 +512,7 @@
         },
         {
             "name": "target",
+            "isAimingView": false,
             "followsPosition": true,
             "lookAt": "target",
             "movable": true,
@@ -482,6 +523,7 @@
         },
         {
             "name": "target",
+            "isAimingView": false,
             "fps": true,
             "followsPosition": true,
             "lookAt": "target",

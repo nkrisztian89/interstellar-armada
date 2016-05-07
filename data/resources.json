@@ -6,6 +6,7 @@
             "format": "png",
             "useMipmap": false,
             "typeSuffixes": {
+                "color": "",
                 "diffuse": "",
                 "specular": "",
                 "emissive": ""
@@ -158,10 +159,22 @@
             }
         },
         {
+            "name": "center",
+            "basepath": "hud/center",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
             "name": "crosshair",
             "basepath": "hud/crosshair",
             "format": "png",
-            "useMipmap": false,
+            "useMipmap": true,
             "typeSuffixes": {
                 "color": ""
             },
@@ -184,6 +197,42 @@
         {
             "name": "arrow",
             "basepath": "hud/arrow",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "cursor-still",
+            "basepath": "hud/cursor-still",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "cursor-turn",
+            "basepath": "hud/cursor-turn",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        },
+        {
+            "name": "drift-arrow",
+            "basepath": "hud/drift-arrow",
             "format": "png",
             "useMipmap": false,
             "typeSuffixes": {
@@ -595,6 +644,56 @@
             "name": "ui3d",
             "vertexShaderSource": "ui/ui3d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui2d-mix",
+            "vertexShaderSource": "ui/ui2d.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui2d-clip",
+            "vertexShaderSource": "ui/ui2d.vert",
+            "fragmentShaderSource": "ui/ui2d-clip.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui2d-viewport",
+            "vertexShaderSource": "ui/ui2d-viewport.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui2d-mix-viewport",
+            "vertexShaderSource": "ui/ui2d-viewport.vert",
+            "fragmentShaderSource": "ui/ui2d.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
+            "name": "ui2d-clip-viewport",
+            "vertexShaderSource": "ui/ui2d-viewport.vert",
+            "fragmentShaderSource": "ui/ui2d-clip.frag",
             "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",

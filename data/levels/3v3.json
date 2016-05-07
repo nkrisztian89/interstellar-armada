@@ -25,6 +25,10 @@
             "team": "empire",
             "class": "falcon",
             "piloted": true,
+            "squad": {
+                "name": "alpha",
+                "index": 1
+            },
             "position": [0, 0, 0],
             "equipment": {
                 "profile": "full"
@@ -33,18 +37,30 @@
         {
             "team": "empire",
             "class": "falcon",
+            "squad": {
+                "name": "alpha",
+                "index": 2
+            },
             "ai": "fighter",
             "position": [35, -35, 0]
         },
         {
             "team": "empire",
             "class": "falcon",
+            "squad": {
+                "name": "alpha",
+                "index": 3
+            },
             "ai": "fighter",
             "position": [-35, -35, 0]
         },
         {
             "team": "rebels",
             "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 1
+            },
             "ai": "fighter",
             "position": [0, 1200, -100],
             "rotations": [
@@ -57,6 +73,10 @@
         {
             "team": "rebels",
             "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 2
+            },
             "ai": "fighter",
             "position": [-35, 1235, -100],
             "rotations": [
@@ -69,6 +89,10 @@
         {
             "team": "rebels",
             "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 3
+            },
             "ai": "fighter",
             "position": [35, 1235, -100],
             "rotations": [

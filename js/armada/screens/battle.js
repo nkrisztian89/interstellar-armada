@@ -51,16 +51,11 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             STATS_PARAGRAPH_ID = "stats",
-            UI_PARAGRAPH_ID = "ui",
-            SMALL_HEADER_ID = "smallHeader",
-            BIG_HEADER_ID = "bigHeader",
-            DEBUG_LABEL_PARAGRAPH_ID = "debugLabel",
             LOADING_BOX_ID = "loadingBox",
             INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
             LOOP_CANCELED = -1,
             LOOP_REQUESTANIMFRAME = -2,
-            TARGET_INFO_SEPARATOR = "---------------",
             LOADING_RANDOM_ITEMS_PROGRESS = 5,
             LOADING_BUILDING_SCENE_PROGRESS = 10,
             LOADING_RESOURCES_START_PROGRESS = 20,
@@ -77,6 +72,8 @@ define([
             HUD_ELEMENT_MODEL_NAME = "squareModel",
             UI_2D_SHADER_NAME = "ui2d",
             UI_3D_SHADER_NAME = "ui3d",
+            UI_2D_MIX_VIEWPORT_SHADER_NAME = "ui2d-mix-viewport",
+            UI_2D_CLIP_VIEWPORT_SHADER_NAME = "ui2d-clip-viewport",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -115,43 +112,6 @@ define([
              */
             _handleResize,
             /**
-             * This HUD element represents a crosshair that is always shown at the center of the screen when a spacecraft is controlled.
-             * @type HUDElement
-             */
-            _centerCrosshair,
-            /**
-             * This HUD element represents a reticle that is shown at the location of the target of the controlled spacecraft, if that exists.
-             * @type HUDElement
-             */
-            _targetIndicator,
-            /**
-             * These HUD elements represent the crosshairs that are shown in the line of fire of the weapons of the controlled ship, at the 
-             * same distance as its current target.
-             * @type HUDElement[]
-             */
-            _weaponImpactIndicators,
-            /**
-             * This HUD element represents an arrow that is shown point in the direction of the current target, if it is not visible on the
-             * screen.
-             * @type HUDElement
-             */
-            _targetArrow,
-            /**
-             * The scene to which a view of the currently selected target ship is rendered.
-             * @type Scene
-             */
-            _targetScene,
-            /**
-             * A reference to the currently displayed spacecraft in the target view screen.
-             * @type Spacecraft
-             */
-            _targetViewItem,
-            /**
-             * The RGBA color of the currently displayed spacecraft in the target view screen.
-             * @type Number[4]
-             */
-            _targetViewItemColor,
-            /**
              * The object that will be returned as this module
              * @type Battle
              */
@@ -165,7 +125,273 @@ define([
              * The time elapsed since last switching view in demo mode, in milliseconds.
              * @type Number
              */
-            _timeInSameView;
+            _timeInSameView,
+            // ................................................................................................
+            // elements of the HUD and their stored state
+            /**
+             * Whether the HUD should be currently displayed.
+             * @type Boolean
+             */
+            _isHUDVisible,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // central elements
+            /**
+             * A crosshair that is always shown at the center of the screen when the camera is set to an aiming view of a spacecraft.
+             * @type HUDElement
+             */
+            _centerCrosshair,
+            /**
+             * Crosshairs that are shown in the line of fire of the weapons of the followed ship, at the same distance as the estimated
+             * hit position.
+             * @type HUDElement[]
+             */
+            _weaponImpactIndicators,
+            /**
+             * A bar showing the hull integrity of the current target near the center of the HUD.
+             * @type HUDElement
+             */
+            _targetHullIntegrityQuickViewBar,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // cursor
+            /**
+             * When a spacecraft is controlled by the mouse, this HUD element is shown at the position of the cursor if it is within the 
+             * deadzone (is not triggering a turn of the controlled spacecraft).
+             * @type HUDElement
+             */
+            _hudStillCursor,
+            /**
+             * When a spacecraft is controlled by the mouse, this HUD element is shown at the position of the cursor if it is outside the 
+             * deadzone (is triggering a turn of the controlled spacecraft), pointing towards the direction of the triggered turn.
+             * @type HUDElement
+             */
+            _hudTurnCursor,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // 3D position based target info
+            /**
+             * A reticle that is shown at the location of the target of the followed spacecraft, if that exists.
+             * @type HUDElement
+             */
+            _targetIndicator,
+            /**
+             * An arrow that points in the direction of the current target, if it is not visible on the screen.
+             * @type HUDElement
+             */
+            _targetArrow,
+            /**
+             * A reticle that is shown at the estimated location towards which the followed spacecraft has to fire in order to hit the
+             * current target, given the current velocity of both and the speed of the first fired projectile of the first equipped weapon.
+             * @type HUDElement
+             */
+            _aimAssistIndicator,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // target info panel
+            /**
+             * The scene to which a view of the currently selected target ship is rendered.
+             * @type Scene
+             */
+            _targetScene,
+            /**
+             * A reference to the currently displayed spacecraft in the target view scene.
+             * @type Spacecraft
+             */
+            _targetViewItem,
+            /**
+             * The RGBA color of the currently displayed spacecraft in the target view screen. (based on its hull integrity)
+             * @type Number[4]
+             */
+            _targetViewItemColor,
+            /**
+             * A rectangle displayed as the background of the panel showing the information about the current target (including the target
+             * view scene, hull integrity bar, textual information...), if there is one selected.
+             * @type HUDElement
+             */
+            _targetInfoBackground,
+            /**
+             * A bar showing the current hull integrity of the selected target within the target info panel.
+             * @type HUDElement
+             */
+            _targetHullIntegrityBar,
+            /**
+             * Houses all the texts that display information about the current target within the target info panel.
+             * @type TextLayer
+             */
+            _targetInfoTextLayer,
+            /**
+             * Displays the name of the currently targeted spacecraft within the target info panel.
+             * @type CanvasText
+             */
+            _targetInfoNameText,
+            /**
+             * Displays the name of the class of the currently targeted spacecraft within the target info panel.
+             * @type CanvasText
+             */
+            _targetInfoClassText,
+            /**
+             * Displays the name of the team of the currently targeted spacecraft within the target info panel.
+             * @type CanvasText
+             */
+            _targetInfoTeamText,
+            /**
+             * Displays the distance from the currently targeted spacecraft within the target info panel.
+             * @type CanvasText
+             */
+            _targetInfoDistanceText,
+            /**
+             * Displays the velocity of the currently targeted spacecraft within the target info panel.
+             * @type CanvasText
+             */
+            _targetInfoVelocityText,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // speed and drift indicators
+            /**
+             * Displays the current forward or reverse speed compared to a calculated maximum in the form of a partially filled bar.
+             * @type HUDElement
+             */
+            _speedBar,
+            /**
+             * Highlights the current target (intended) forward or reverse speed within the speed bar.
+             * @type HUDElement
+             */
+            _speedTargetIndicator,
+            /**
+             * Houses the texts displaying the current and reference speed values.
+             * @type TextLayer
+             */
+            _speedTextLayer,
+            /**
+             * Displays the current calculated reference (forward or reverse) speed (relative to which the speed bar is filled) next to (the 
+             * top or bottom of) the speed bar.
+             * @type CanvasText
+             */
+            _maxSpeedText,
+            /**
+             * Displays the current (forward or reverse) speed of the followed spacecraft next to the speed bar.
+             * @type CanvasText
+             */
+            _currentSpeedText,
+            /**
+             * An arrow pointing towards the direction the followed spacecraft is drifting towards with a color based on the intensity of
+             * the drift.
+             * @type HUDElement
+             */
+            _driftArrow,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // hull integrity bar
+            /**
+             * Displayed behind (and around) the hull integrity bar so that it can be visually separated from the scene background (e.g.
+             * cockpit)
+             * @type HUDElement
+             */
+            _hullIntegrityBarBackground,
+            /**
+             * Displays the hull integrity of the followed spacecraft.
+             * @type HUDElement
+             */
+            _hullIntegrityBar,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // flight mode indicator
+            /**
+             * A rectangle displayed as the background for the flight mode indicator panel.
+             * @type HUDElement
+             */
+            _flightModeIndicatorBackground,
+            /**
+             * Houses the texts of the flight mode indicator panel.
+             * @type TextLayer
+             */
+            _flightModeIndicatorTextLayer,
+            /**
+             * Displays the header text (i.e. "Flight mode:") on the flight mode indicator panel.
+             * @type CanvasText
+             */
+            _flightModeHeaderText,
+            /**
+             * Displays the current flight mode on the flight mode indicator panel.
+             * @type CanvasText
+             */
+            _flightModeText,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // headers
+            /**
+             * Houses the header texts.
+             * @type TextLayer
+             */
+            _headerTextLayer,
+            /**
+             * Displays a smaller header text at the top center of the screen, shown/hidden independently from the HUD, used for displaying
+             * version info.
+             * @type TextLayer
+             */
+            _smallHeaderText,
+            /**
+             * Displays a larger header text below the small one, shown/hidden with the rest of the HUD.
+             * @type TextLayer
+             */
+            _bigHeaderText,
+            // ................................................................................................
+            // cached references of setting values used for the layout of the HUD
+            /**
+             * (enum ScaleMode) Stores the scaling mode to use for the center crosshair for quicker access.
+             * @type String
+             */
+            _centerCrosshairScaleMode,
+            /**
+             * Stores a reference to the layout used for the target view scene for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _targetViewLayout,
+            /**
+             * Stores a reference to the layout used for the target info background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _targetInfoBackgroundLayout,
+            /**
+             * Stores a reference to the layout used for the target hull integrity bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _targetHullIntegrityBarLayout,
+            /**
+             * Stores a reference to the layout used for the speed bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _speedBarLayout,
+            /**
+             * Stores a reference to the size used for the speed target indicator HUD element for quicker access.
+             * @type Number[2]
+             */
+            _speedTargetIndicatorSize,
+            /**
+             * Stores a reference to the layout used for the hull integrity bar background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _hullIntegrityBarBackgroundLayout,
+            /**
+             * Stores a reference to the layout used for the hull integrity bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _hullIntegrityBarLayout,
+            /**
+             * Stores a reference to the layout used for the flight mode indicator background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _flightModeIndicatorBackgroundLayout,
+            /**
+             * Stores a reference to the layout used for the target hull integrity quick view bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _targetHullIntegrityQuickViewBarLayout,
+            // ................................................................................................
+            // other cached setting values used for the HUD
+            /**
+             * The minimum drift speed at which the drift arrow HUD element is displayed.
+             * @type Number
+             */
+            _driftArrowMinSpeed,
+            /**
+             * The amount of drift speed needed above the minimum drift speed for the drift arrow to be displayed with the max speed color.
+             * @type Number
+             */
+            _driftArrowSpeedInterval;
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -292,6 +518,24 @@ define([
                     "No action was taken, to avoid double-running the simulation.");
         }
     }
+    /**
+     * Hides all elements of the HUD. (rendering the battle screen after this will not show the HUD)
+     */
+    function hideHUD() {
+        _isHUDVisible = false;
+    }
+    /**
+     * Shows all elements of the HUD. (rendering the battle screen after this will show the HUD)
+     */
+    function showHUD() {
+        _isHUDVisible = true;
+    }
+    /**
+     * Switches the current state of visibility of the HUD to its opposite.
+     */
+    function toggleHUDVisibility() {
+        _isHUDVisible = !_isHUDVisible;
+    }
     // ##############################################################################
     /**
      * @class Can be used to represent an element of the HUD, for which it can create an appropriate UIElement and add it to the battle scene.
@@ -299,9 +543,11 @@ define([
      * @param {String} textureName The name of the common texture resource to use for this element.
      * @param {Number[2]|Number[3]} position The 2D or 3D (starting) position of the element (depending on the shader used)
      * @param {Number[2]} size The 2D size factor of the element to scale it.
-     * @param {Number[4]} color An RGBA color for the element it can be modulated with.
+     * @param {String} scaleMode (enum ScaleMode) The scaling mode to be used to size this element.
+     * @param {Number[4]} color An RGBA color for the element it can be modulated with. (inside the clip zone)
+     * @param {Number[4]} clipColor An RGBA color to be used for modulation outside the clip zone set for the element.
      */
-    function HUDElement(shaderName, textureName, position, size, color) {
+    function HUDElement(shaderName, textureName, position, size, scaleMode, color, clipColor) {
         /**
          * Manages the acquiry of appropriate resources.
          * @type TexturedModelClass
@@ -317,12 +563,17 @@ define([
          */
         this._position = position;
         /**
-         * The 2D size factor of the element to scale it.
+         * The 2D factor of the element to scale it.
          * @type Number[2]
          */
-        this._size = size;
+        this._scale = [0.5 * size[0], 0.5 * size[1]]; // square model coordinates are -1 to 1, resulting in a scale of 1 corresponding to a size of 2
         /**
-         * An RGBA color for the element it can be modulated with.
+         * (enum ScaleMode) The scaling mode to be used to size this element.
+         * @type String
+         */
+        this._scaleMode = scaleMode;
+        /**
+         * An RGBA color for the element it can be modulated with. (inside the clip zone)
          * @type Number[4]
          */
         this._color = color;
@@ -331,6 +582,18 @@ define([
          * @type Number
          */
         this._angle = 0;
+        /**
+         * The coordinates specifying the clip zone for this element, in the form of [minX, maxX, minY, maxY], where the area outside the
+         * min-max range on either the X or Y is considered to be outside the clip zone, and all coordinates go from -1 (left / bottom) to
+         * 1 (right / top), corresponding to a relative position within the element.
+         * @type Number[4]
+         */
+        this._clipCoordinates = budaScene.CLIP_COORDINATES_NO_CLIP.slice();
+        /**
+         * An RGBA color to be used for modulation outside the clip zone set for the element.
+         * @type Number[4]
+         */
+        this._clipColor = clipColor || [0, 0, 0, 0];
         /**
          * A reference to the visual model that is used to add a representation of this element to the scene.
          * @type UIElement
@@ -357,9 +620,26 @@ define([
                 this._class.getShader(),
                 this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._position,
-                this._size,
+                this._scale,
+                this._scaleMode,
                 this._color,
-                Math.degrees(this._angle));
+                Math.degrees(this._angle),
+                this._clipCoordinates,
+                this._clipColor);
+    };
+    /**
+     * Returns the current 2D/3D position set for this element.
+     * @returns {Number[2]|Number[3]}
+     */
+    HUDElement.prototype.getPosition = function () {
+        return this._position;
+    };
+    /**
+     * Returns the current scale factor used (on the X and Y axes) for the element.
+     * @returns {Number[2]}
+     */
+    HUDElement.prototype.getScale = function () {
+        return this._scale;
     };
     /**
      * Marks all needed resources for loading and sets a callback to add the visual model of this element to the passed scene if when all
@@ -398,6 +678,17 @@ define([
         }
     };
     /**
+     * Sets a new size for the element to be used for scaling it when rendering.
+     * @param {Number[2]} value
+     */
+    HUDElement.prototype.setSize = function (value) {
+        // square model coordinates are -1 to 1, resulting in a scale of 1 corresponding to a size of 2
+        this._scale = [0.5 * value[0], 0.5 * value[1]];
+        if (this._visualModel) {
+            this._visualModel.setSize(this._scale);
+        }
+    };
+    /**
      * Sets a new angle for this HUD element and its visual representation, if that exists.
      * @param {Number} value The new angle, in radians
      */
@@ -417,6 +708,51 @@ define([
             this._visualModel.setColor(value);
         }
     };
+    /**
+     * Sets new minimum and maximum X coordinates for the clip zone of the element.
+     * @param {Number} minimum
+     * @param {Number} maximum
+     */
+    HUDElement.prototype.clipX = function (minimum, maximum) {
+        this._clipCoordinates[0] = minimum;
+        this._clipCoordinates[1] = maximum;
+        if (this._visualModel) {
+            this._visualModel.clipX(minimum, maximum);
+        }
+    };
+    /**
+     * Sets new minimum and maximum Y coordinates for the clip zone of the element.
+     * @param {Number} minimum
+     * @param {Number} maximum
+     */
+    HUDElement.prototype.clipY = function (minimum, maximum) {
+        this._clipCoordinates[2] = 1 - maximum;
+        this._clipCoordinates[3] = 1 - minimum;
+        if (this._visualModel) {
+            this._visualModel.clipY(minimum, maximum);
+        }
+    };
+    /**
+     * Sets a new RGBA color for the element to be used for coloring it outsite its clip zone.
+     * @param {Number[4]} value
+     */
+    HUDElement.prototype.setClipColor = function (value) {
+        this._clipColor = value;
+        if (this._visualModel) {
+            this._visualModel.setClipColor(value);
+        }
+    };
+    /**
+     * Sets new absolute (viewport) coordinates for the position and size of the element applying the rules
+     * of the passed clip space layout to a viewport of the given size.
+     * @param {ClipSpaceLayout} layout
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     */
+    HUDElement.prototype.applyLayout = function (layout, viewportWidth, viewportHeight) {
+        this.setPosition(layout.getPosition(viewportWidth, viewportHeight));
+        this.setSize(layout.getSize(viewportWidth, viewportHeight));
+    };
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -429,37 +765,145 @@ define([
                 config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_TEXTURE),
                 [0, 0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SCALE_MODE),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
     }
     /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
      * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
      */
-    function _addUIToScene() {
+    function _addHUDToScene() {
+        var i;
         // keep the ons with the same shader together for faster rendering
-        _centerCrosshair = new HUDElement(
+        _centerCrosshair = _centerCrosshair || new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_TEXTURE),
                 [0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SIZE),
+                _centerCrosshairScaleMode,
                 config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_COLOR));
         _centerCrosshair.addToScene(_battleScene);
-        _targetArrow = new HUDElement(
+        _driftArrow = _driftArrow || new HUDElement(
+                UI_2D_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_TEXTURE),
+                [0, 0],
+                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_SCALE_MODE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR));
+        _driftArrow.addToScene(_battleScene);
+        _targetArrow = _targetArrow || new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_TEXTURE),
                 [0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SCALE_MODE),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR));
         _targetArrow.addToScene(_battleScene);
-        _targetIndicator = new HUDElement(
+        _targetIndicator = _targetIndicator || new HUDElement(
                 UI_3D_SHADER_NAME,
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_TEXTURE),
                 [0, 0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SCALE_MODE),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR));
         _targetIndicator.addToScene(_battleScene);
-        _weaponImpactIndicators = [_getWeaponImpactIndicator()];
-        _weaponImpactIndicators[0].addToScene(_battleScene);
+        _aimAssistIndicator = _aimAssistIndicator || new HUDElement(
+                UI_3D_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_TEXTURE),
+                [0, 0, 0],
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_SCALE_MODE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR));
+        _aimAssistIndicator.addToScene(_battleScene);
+        if (!_weaponImpactIndicators) {
+            _weaponImpactIndicators = [_getWeaponImpactIndicator()];
+        }
+        for (i = 0; i < _weaponImpactIndicators.length; i++) {
+            _weaponImpactIndicators[i].addToScene(_battleScene);
+        }
+        _targetInfoBackground = _targetInfoBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_TEXTURE),
+                _targetInfoBackgroundLayout.getClipSpacePosition(),
+                _targetInfoBackgroundLayout.getClipSpaceSize(),
+                _targetInfoBackgroundLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_COLOR));
+        _targetInfoBackground.addToScene(_battleScene);
+        _hullIntegrityBarBackground = _hullIntegrityBarBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_BACKGROUND_TEXTURE),
+                _hullIntegrityBarBackgroundLayout.getClipSpacePosition(),
+                _hullIntegrityBarBackgroundLayout.getClipSpaceSize(),
+                _hullIntegrityBarBackgroundLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_BACKGROUND_COLOR));
+        _hullIntegrityBarBackground.addToScene(_battleScene);
+        _flightModeIndicatorBackground = _flightModeIndicatorBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE),
+                _flightModeIndicatorBackgroundLayout.getClipSpacePosition(),
+                _flightModeIndicatorBackgroundLayout.getClipSpaceSize(),
+                _flightModeIndicatorBackgroundLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR));
+        _flightModeIndicatorBackground.addToScene(_battleScene);
+        _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE),
+                _targetHullIntegrityBarLayout.getClipSpacePosition(),
+                _targetHullIntegrityBarLayout.getClipSpaceSize(),
+                _targetHullIntegrityBarLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_FILLED_COLOR),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR));
+        _targetHullIntegrityBar.addToScene(_battleScene);
+        _speedBar = _speedBar || new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_TEXTURE),
+                _speedBarLayout.getClipSpacePosition(),
+                _speedBarLayout.getClipSpaceSize(),
+                _speedBarLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_FILLED_COLOR),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR));
+        _speedBar.addToScene(_battleScene);
+        _speedTargetIndicator = _speedTargetIndicator || new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_TEXTURE),
+                _speedBarLayout.getClipSpacePosition(),
+                _speedBarLayout.getClipSpaceSize(),
+                _speedBarLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_COLOR));
+        _speedTargetIndicator.addToScene(_battleScene);
+        _hullIntegrityBar = _hullIntegrityBar || new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_TEXTURE),
+                _hullIntegrityBarLayout.getClipSpacePosition(),
+                _hullIntegrityBarLayout.getClipSpaceSize(),
+                _hullIntegrityBarLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_FILLED_COLOR),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR));
+        _hullIntegrityBar.addToScene(_battleScene);
+        _targetHullIntegrityQuickViewBar = _targetHullIntegrityQuickViewBar || new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE),
+                _targetHullIntegrityQuickViewBarLayout.getClipSpacePosition(),
+                _targetHullIntegrityQuickViewBarLayout.getClipSpaceSize(),
+                _targetHullIntegrityQuickViewBarLayout.getScaleMode(),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR));
+        _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
+        _hudStillCursor = _hudStillCursor || new HUDElement(
+                UI_2D_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_STILL_TEXTURE),
+                [0, 0],
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SCALE_MODE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_COLOR));
+        _hudStillCursor.addToScene(_battleScene);
+        _hudTurnCursor = _hudTurnCursor || new HUDElement(
+                UI_2D_SHADER_NAME,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_TURN_TEXTURE),
+                [0, 0],
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SCALE_MODE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_COLOR));
+        _hudTurnCursor.addToScene(_battleScene);
     }
     // ##############################################################################
     /**
@@ -482,22 +926,6 @@ define([
          * @type SimpleComponent
          */
         this._stats = this.registerSimpleComponent(STATS_PARAGRAPH_ID);
-        /**
-         * @type SimpleComponent
-         */
-        this._ui = this.registerSimpleComponent(UI_PARAGRAPH_ID);
-        /**
-         * @type SimpleComponent
-         */
-        this._smallHeader = this.registerSimpleComponent(SMALL_HEADER_ID);
-        /**
-         * @type SimpleComponent
-         */
-        this._bigHeader = this.registerSimpleComponent(BIG_HEADER_ID);
-        /**
-         * @type SimpleComponent
-         */
-        this._debugLabel = this.registerSimpleComponent(DEBUG_LABEL_PARAGRAPH_ID);
         /**
          * @type LoadingBox
          */
@@ -597,67 +1025,147 @@ define([
                 LOADING_RESOURCES_START_PROGRESS + (loadedResources / totalResources) * LOADING_RESOURCE_PROGRESS);
     };
     /**
-     * 
-     * @param {String} message
+     * Adds the text layers and texts of the HUD to the screen if needed.
      */
-    BattleScreen.prototype.setDebugLabel = function (message) {
-        this._debugLabel.setContent(message);
+    BattleScreen.prototype._addUITexts = function () {
+        var
+                screenCanvas = this.getScreenCanvas(BATTLE_CANVAS_ID),
+                getTargetInfoText = function (textPosition) {
+                    return new screens.CanvasText(
+                            textPosition,
+                            "",
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FONT_NAME),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FONT_SIZE),
+                            _targetInfoBackgroundLayout.getScaleMode(),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR));
+                },
+                getSpeedText = function (textPosition) {
+                    return new screens.CanvasText(
+                            textPosition,
+                            "",
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_FONT_NAME),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_FONT_SIZE),
+                            _speedBarLayout.getScaleMode(),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_COLOR));
+                };
+        // ..............................................................................
+        // target info
+        if (!_targetInfoTextLayer) {
+            _targetInfoTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_LAYER_LAYOUT));
+            screenCanvas.addTextLayer(_targetInfoTextLayer);
+        }
+        if (!_targetInfoNameText) {
+            _targetInfoNameText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_NAME_TEXT_POSITION));
+            _targetInfoTextLayer.addText(_targetInfoNameText);
+        }
+        if (!_targetInfoClassText) {
+            _targetInfoClassText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_CLASS_TEXT_POSITION));
+            _targetInfoTextLayer.addText(_targetInfoClassText);
+        }
+        if (!_targetInfoTeamText) {
+            _targetInfoTeamText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEAM_TEXT_POSITION));
+            _targetInfoTextLayer.addText(_targetInfoTeamText);
+        }
+        if (!_targetInfoDistanceText) {
+            _targetInfoDistanceText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_DISTANCE_TEXT_POSITION));
+            _targetInfoTextLayer.addText(_targetInfoDistanceText);
+        }
+        if (!_targetInfoVelocityText) {
+            _targetInfoVelocityText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_VELOCITY_TEXT_POSITION));
+            _targetInfoTextLayer.addText(_targetInfoVelocityText);
+        }
+        // ..............................................................................
+        // speed bar
+        if (!_speedTextLayer) {
+            _speedTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_LAYER_LAYOUT));
+            screenCanvas.addTextLayer(_speedTextLayer);
+        }
+        if (!_maxSpeedText) {
+            _maxSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_SPEED_TEXT_POSITION));
+            _speedTextLayer.addText(_maxSpeedText);
+        }
+        if (!_currentSpeedText) {
+            _currentSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_SPEED_TEXT_POSITION));
+            _speedTextLayer.addText(_currentSpeedText);
+        }
+        // ..............................................................................
+        // flight mode
+        if (!_flightModeIndicatorTextLayer) {
+            _flightModeIndicatorTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
+            screenCanvas.addTextLayer(_flightModeIndicatorTextLayer);
+        }
+        if (!_flightModeHeaderText) {
+            _flightModeHeaderText = new screens.CanvasText(
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_POSITION),
+                    "",
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_FONT_NAME),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_FONT_SIZE),
+                    _flightModeIndicatorBackgroundLayout.getScaleMode(),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_COLOR));
+            _flightModeIndicatorTextLayer.addText(_flightModeHeaderText);
+        }
+        _flightModeHeaderText.setText(strings.get(strings.BATTLE.HUD_FLIGHT_MODE));
+        if (!_flightModeText) {
+            _flightModeText = new screens.CanvasText(
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT_POSITION),
+                    "",
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT_FONT_NAME),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT_FONT_SIZE),
+                    _flightModeIndicatorBackgroundLayout.getScaleMode(),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR));
+            _flightModeIndicatorTextLayer.addText(_flightModeText);
+        }
+        // ..............................................................................
+        // headers
+        if (!_headerTextLayer) {
+            _headerTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_HEADER_TEXT_LAYER_LAYOUT));
+            screenCanvas.addTextLayer(_headerTextLayer);
+        }
+        if (!_smallHeaderText) {
+            _smallHeaderText = new screens.CanvasText(
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_POSITION),
+                    "",
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_FONT_NAME),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_FONT_SIZE),
+                    _headerTextLayer.getLayout().getScaleMode(),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_COLOR),
+                    "center");
+            _headerTextLayer.addText(_smallHeaderText);
+        }
+        if (!_bigHeaderText) {
+            _bigHeaderText = new screens.CanvasText(
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_POSITION),
+                    "",
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_FONT_NAME),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_FONT_SIZE),
+                    _headerTextLayer.getLayout().getScaleMode(),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_COLOR),
+                    "center");
+            _headerTextLayer.addText(_bigHeaderText);
+        }
     };
     /**
      * Shows the stats (FPS, draw stats) component.
      */
-    BattleScreen.prototype.showStats = function () {
+    BattleScreen.prototype.showDevelopmentInfo = function () {
         this._stats.show();
+        _smallHeaderText.show();
     };
     /**
      * Hides the stats (FPS, draw stats) component.
      */
-    BattleScreen.prototype.hideStats = function () {
+    BattleScreen.prototype.hideDevelopmentInfo = function () {
         this._stats.hide();
+        _smallHeaderText.hide();
     };
     /**
-     * Shows the UI (information about controlled spacecraft) component.
+     * Toggles the visibility of the development related information (e.g. version info header and FPS count) on the screen.
      */
-    BattleScreen.prototype.showUI = function () {
-        this._ui.show();
-        if (_battleScene) {
-            _battleScene.showUI();
-        }
-    };
-    /**
-     * Hides the UI (information about controlled spacecraft) component.
-     */
-    BattleScreen.prototype.hideUI = function () {
-        this._ui.hide();
-        if (_battleScene) {
-            _battleScene.hideUI();
-        }
-    };
-    /**
-     * Shows the headers in the top center of the screen.
-     */
-    BattleScreen.prototype.showHeaders = function () {
-        this._bigHeader.show();
-        this._smallHeader.show();
-    };
-    /**
-     * Hides the headers.
-     */
-    BattleScreen.prototype.hideHeaders = function () {
-        this._bigHeader.hide();
-        this._smallHeader.hide();
-    };
-    /**
-     * Toggles the visibility of the texts (headers and statistics) on the screen.
-     * @returns {undefined}
-     */
-    BattleScreen.prototype.toggleTextVisibility = function () {
-        if (this._bigHeader.isVisible()) {
-            this.hideHeaders();
-            this.hideStats();
+    BattleScreen.prototype.toggleDevInfoVisibility = function () {
+        if (this._stats.isVisible()) {
+            this.hideDevelopmentInfo();
         } else {
-            this.showHeaders();
-            this.showStats();
+            this.showDevelopmentInfo();
         }
     };
     /**
@@ -674,63 +1182,241 @@ define([
      * @param {Object} [replacements]
      */
     BattleScreen.prototype.setHeaderContent = function (content, replacements) {
-        this._bigHeader.setContent(content, replacements);
+        if (_bigHeaderText) {
+            _bigHeaderText.setText(content, replacements);
+        }
     };
     /**
-     * Updates the contents of the UI with information about the currently controlled spacecraft
+     * Updates the contents of the HUDF with information about the currently followed spacecraft
      */
-    BattleScreen.prototype._updateUI = function () {
+    BattleScreen.prototype._updateHUD = function () {
         var
-                /**
-                 * A reference to the currently piloted spacecraft.
-                 * @type Spacecraft
-                 */
+                /** @type Spacecraft */
                 craft = _level ? _level.getFollowedSpacecraftForScene(_battleScene) : null,
-                /**
-                 * A reference to the target of the piloted spacecraft.
-                 * @type Spacecraft
-                 */
                 target,
-                /**
-                 * @type Number
-                 */
-                distance, direction, behind, aspect, weapons, i, m, slotPosition, scale, relativeVelocity, targetIntegrity;
-        if (craft) {
+                /** @type Number */
+                distance, aspect, i, scale, futureDistance,
+                hullIntegrity,
+                speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, arrowPositionRadius,
+                /** @type Weapon[] */
+                weapons,
+                /** @type Number[2] */
+                position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition,
+                /** @type Number[3] */
+                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, relativeVelocity,
+                /** @type Number[4] */
+                direction, targetInfoTextColor,
+                /** @type Float32Array */
+                m,
+                /** @type HTMLCanvasElement */
+                canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
+                /** @type Boolean */
+                isInAimingView, behind, targetInRange, targetIsHostile,
+                /** @type MouseInputIntepreter */
+                mouseInputInterpreter;
+        if (craft && _isHUDVisible) {
+            isInAimingView = craft.getView(_battleScene.getCamera().getConfiguration().getName()).isAimingView();
+            // .....................................................................................................
+            // header
+            _bigHeaderText.show();
+            // .....................................................................................................
+            // center crosshair
+            if (isInAimingView) {
+                _centerCrosshair.show();
+            } else {
+                _centerCrosshair.hide();
+            }
+            // .....................................................................................................
+            // cursor
+            mouseInputInterpreter = control.getInputInterpreter(control.MOUSE_NAME);
+            if (mouseInputInterpreter.isEnabled() && control.isInPilotMode() && !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME)) {
+                position2D = mouseInputInterpreter.getMousePosition();
+                position2D = [
+                    (position2D[0] / canvas.width - 0.5) * 2,
+                    (0.5 - position2D[1] / canvas.height) * 2
+                ];
+                direction2D = vec.normal2([position2D[0] * canvas.width / canvas.height, position2D[1]]);
+                if (mouseInputInterpreter.isMouseDisplaced()) {
+                    _hudStillCursor.hide();
+                    _hudTurnCursor.show();
+                    _hudTurnCursor.setPosition(position2D);
+                    _hudTurnCursor.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                } else {
+                    _hudStillCursor.show();
+                    _hudTurnCursor.hide();
+                    _hudStillCursor.setPosition(position2D);
+                    _hudStillCursor.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                }
+            } else {
+                _hudStillCursor.hide();
+                _hudTurnCursor.hide();
+            }
+            // .....................................................................................................
+            // speed bar
+            relativeVelocity = craft.getRelativeVelocityMatrix();
+            speed = relativeVelocity[13];
+            absSpeed = Math.abs(speed);
+            maxSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_BASE_MAX_SPEED);
+            stepFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_MAX_SPEED_STEP_FACTOR);
+            while (maxSpeed < absSpeed) {
+                maxSpeed *= stepFactor;
+            }
+            if (craft.hasSpeedTarget()) {
+                speedTarget = craft.getSpeedTarget();
+                if (speed * speedTarget >= 0) {
+                    speedTarget = Math.abs(speedTarget);
+                    while (maxSpeed < speedTarget) {
+                        maxSpeed *= stepFactor;
+                    }
+                } else {
+                    speedTarget = 0;
+                }
+            }
+            speedRatio = absSpeed / maxSpeed;
+            maxSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_SPEED_TEXT_POSITION);
+            maxReverseSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_REVERSE_SPEED_TEXT_POSITION);
+            if (speed >= 0) {
+                _speedBar.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_FILLED_COLOR));
+                _speedBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR));
+                _speedBar.clipY(0, speedRatio);
+                _maxSpeedText.setPosition(maxSpeedTextPosition);
+                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_COLOR));
+                _maxSpeedText.setText(maxSpeed.toFixed());
+                _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
+                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_COLOR));
+                _currentSpeedText.setText(absSpeed.toFixed());
+                _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
+                if (craft.hasSpeedTarget()) {
+                    _speedTargetIndicator.clipY(speedTarget / maxSpeed - _speedTargetIndicatorSize[1] / 2, speedTarget / maxSpeed + _speedTargetIndicatorSize[1] / 2);
+                    _speedTargetIndicator.show();
+                } else {
+                    _speedTargetIndicator.hide();
+                }
+            } else {
+                _speedBar.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_BAR_FILLED_COLOR));
+                _speedBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_BAR_EMPTY_COLOR));
+                _speedBar.clipY(1 - speedRatio, 1);
+                _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
+                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_TEXT_COLOR));
+                _maxSpeedText.setText("-" + maxSpeed.toFixed());
+                _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
+                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_TEXT_COLOR));
+                _currentSpeedText.setText("-" + absSpeed.toFixed());
+                _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
+                if (craft.hasSpeedTarget()) {
+                    _speedTargetIndicator.clipY(1 - (speedTarget / maxSpeed + _speedTargetIndicatorSize[1] / 2), 1 - (speedTarget / maxSpeed - _speedTargetIndicatorSize[1] / 2));
+                    _speedTargetIndicator.show();
+                } else {
+                    _speedTargetIndicator.hide();
+                }
+            }
+            _speedBar.applyLayout(_speedBarLayout, canvas.width, canvas.height);
+            _speedTargetIndicator.applyLayout(_speedBarLayout, canvas.width, canvas.height);
+            _speedTextLayer.show();
+            // .....................................................................................................
+            // drift arrow
+            if (isInAimingView) {
+                direction2D = [relativeVelocity[12], relativeVelocity[14]];
+                driftSpeed = vec.length2(direction2D);
+                vec.normalize2(direction2D);
+                if (driftSpeed > _driftArrowMinSpeed) {
+                    _driftArrow.show();
+                    aspect = _battleScene.getCamera().getAspect();
+                    arrowPositionRadius = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? 1 : aspect);
+                    _driftArrow.setPosition(vec.scaled2([direction2D[0] / aspect, direction2D[1]], arrowPositionRadius));
+                    _driftArrow.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                    _driftArrow.setColor(utils.getMixedColor(
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED_COLOR),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR),
+                            Math.min((driftSpeed - _driftArrowMinSpeed) / _driftArrowSpeedInterval, 1.0)));
+                } else {
+                    _driftArrow.hide();
+                }
+            } else {
+                _driftArrow.hide();
+            }
+            // .....................................................................................................
+            // hull integrity bar
+            hullIntegrity = craft.getHullIntegrity();
+            _hullIntegrityBar.clipX(0.5 - hullIntegrity / 2, 0.5 + hullIntegrity / 2);
+            _hullIntegrityBar.applyLayout(_hullIntegrityBarLayout, canvas.width, canvas.height);
+            _hullIntegrityBarBackground.applyLayout(_hullIntegrityBarBackgroundLayout, canvas.width, canvas.height);
+            // .....................................................................................................
+            // flight mode indicator
+            _flightModeIndicatorBackground.applyLayout(_flightModeIndicatorBackgroundLayout, canvas.width, canvas.height);
+            _flightModeText.setText(strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode()));
+            switch (craft.getFlightMode()) {
+                case logic.FlightMode.FREE:
+                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FREE_FLIGHT_MODE_TEXT_COLOR));
+                    break;
+                case logic.FlightMode.COMPENSATED:
+                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR));
+                    break;
+                case logic.FlightMode.RESTRICTED:
+                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_RESTRICTED_FLIGHT_MODE_TEXT_COLOR));
+                    break;
+                default:
+                    application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
+            }
+            _flightModeIndicatorTextLayer.show();
+            // .....................................................................................................
+            // target related information
             target = craft.getTarget();
-            // updating the WebGL HUD
             if (target) {
-                distance = vec.length3(vec.diff3(target.getVisualModel().getPositionVector(), craft.getVisualModel().getPositionVector()));
+                targetPosition = target.getPhysicalPositionVector();
+                position = craft.getPhysicalPositionVector();
+                vectorToTarget = vec.diff3(targetPosition, position);
+                distance = vec.length3(vectorToTarget);
+                weapons = craft.getWeapons();
                 // targeting reticle at the target position
-                _targetIndicator.setPosition(mat.translationVector3(target.getVisualModel().getPositionMatrix()));
-                _targetIndicator.setColor(target.isHostile(craft) ?
+                _targetIndicator.setPosition(targetPosition);
+                targetIsHostile = target.isHostile(craft);
+                _targetIndicator.setColor(targetIsHostile ?
                         config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR) :
                         config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_FRIENDLY_COLOR));
                 _targetIndicator.show();
-                // targeting crosshairs in the line of fire
-                weapons = craft.getWeapons();
-                m = craft.getVisualModel().getOrientationMatrix();
-                relativeVelocity = craft.getRelativeVelocityMatrix();
-                scale = craft.getVisualModel().getScalingMatrix()[0];
-                for (i = 0; i < weapons.length; i++) {
-                    if (_weaponImpactIndicators.length <= i) {
-                        _weaponImpactIndicators.push(_getWeaponImpactIndicator());
-                        _weaponImpactIndicators[i].addToScene(_battleScene);
+                if (weapons.length > 0) {
+                    // aim assist indicator at the expected future position of the target
+                    futureTargetPosition = craft.getTargetHitPosition();
+                    _aimAssistIndicator.setPosition(futureTargetPosition);
+                    _aimAssistIndicator.setColor(targetIsHostile ?
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR) :
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_FRIENDLY_COLOR));
+                    _aimAssistIndicator.show();
+                    // weapon crosshairs in the lines of fire
+                    futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
+                    m = craft.getPhysicalModel().getOrientationMatrix();
+                    scale = craft.getVisualModel().getScalingMatrix()[0];
+                    targetInRange = false;
+                    for (i = 0; i < weapons.length; i++) {
+                        if (_weaponImpactIndicators.length <= i) {
+                            _weaponImpactIndicators.push(_getWeaponImpactIndicator());
+                            _weaponImpactIndicators[i].addToScene(_battleScene);
+                        }
+                        slotPosition = weapons[i].getSlot().positionMatrix;
+                        _weaponImpactIndicators[i].setPosition(vec.sumArray3([
+                            position,
+                            vec.scaled3(mat.getRowB43(m), futureDistance),
+                            vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
+                            vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
+                        if (futureDistance <= weapons[i].getRange(speed)) {
+                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+                            targetInRange = true;
+                        } else {
+                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
+                        }
+                        _weaponImpactIndicators[i].show();
                     }
-                    slotPosition = weapons[i].getSlot().positionMatrix;
-                    _weaponImpactIndicators[i].setPosition(vec.sumArray3([
-                        mat.translationVector3(craft.getVisualModel().getPositionMatrix()),
-                        vec.scaled3(mat.getRowB43(m), distance),
-                        vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
-                        vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
-                    if (distance <= weapons[i].getRange(relativeVelocity[13])) {
-                        _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
-                    } else {
-                        _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
+                    while (i < _weaponImpactIndicators.length) {
+                        _weaponImpactIndicators[i].hide();
+                        i++;
                     }
-                    _weaponImpactIndicators[i].show();
+                    if (!targetInRange || (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0)) {
+                        _aimAssistIndicator.hide();
+                    }
                 }
                 // target arrow, if the target is not visible on the screen
-                direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.prod34(target.getVisualModel().getPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
+                direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.prod34(target.getPhysicalPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
                 behind = direction[3] < 0;
                 vec.normalize4D(direction);
                 if (behind || (direction[0] < -1) || (direction[0] > 1) || (direction[1] < -1) || (direction[1] > 1)) {
@@ -741,25 +1427,29 @@ define([
                     if (behind) {
                         vec.negate2(direction);
                     }
-                    _targetArrow.setPosition(vec.scaled2([direction[0], direction[1] * aspect], 0.3));
+                    arrowPositionRadius = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
+                    _targetArrow.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
                     _targetArrow.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
-                    _targetArrow.setColor(target.isHostile(craft) ?
+                    _targetArrow.setColor(targetIsHostile ?
                             config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR) :
                             config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_FRIENDLY_COLOR));
                 } else {
                     _targetArrow.hide();
                 }
+                // target info panel
+                _targetInfoBackground.applyLayout(_targetInfoBackgroundLayout, canvas.width, canvas.height);
+                _targetInfoBackground.show();
                 // target view
-                targetIntegrity = target.getHullIntegrity();
-                _targetViewItemColor = (targetIntegrity > 0.5) ?
+                hullIntegrity = target.getHullIntegrity();
+                _targetViewItemColor = (hullIntegrity > 0.5) ?
                         utils.getMixedColor(
                                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
                                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
-                                (targetIntegrity - 0.5) * 2) :
+                                (hullIntegrity - 0.5) * 2) :
                         utils.getMixedColor(
                                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR),
                                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
-                                targetIntegrity * 2);
+                                hullIntegrity * 2);
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes();
                     _targetViewItem = target;
@@ -774,8 +1464,50 @@ define([
                         _targetScene.getCamera().moveToPosition([0, 0, 2 * model.getScaledSize()], 0);
                     });
                 }
+                _targetScene.setRelativeViewport(
+                        _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
+                        _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
+                        _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
+                        _targetViewLayout.getPositiveHeight(canvas.width, canvas.height));
+                // target hull integrity bar
+                _targetHullIntegrityBar.clipX(0, hullIntegrity);
+                _targetHullIntegrityBar.applyLayout(_targetHullIntegrityBarLayout, canvas.width, canvas.height);
+                _targetHullIntegrityBar.show();
+                // target info texts
+                targetInfoTextColor = targetIsHostile ?
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_HOSTILE_COLOR) :
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR);
+                _targetInfoNameText.setColor(targetInfoTextColor);
+                _targetInfoNameText.setText(target.getName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                _targetInfoTeamText.setColor(targetInfoTextColor);
+                _targetInfoTeamText.setText(target.getTeam() ? target.getTeam().getDisplayName() : strings.get(strings.BATTLE.HUD_TEAM_UNKNOWN));
+                _targetInfoClassText.setColor(targetInfoTextColor);
+                _targetInfoClassText.setText(target.getClass().getDisplayName());
+                _targetInfoDistanceText.setColor(targetInfoTextColor);
+                _targetInfoDistanceText.setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
+                _targetInfoVelocityText.setColor(targetInfoTextColor);
+                _targetInfoVelocityText.setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + vec.length3(mat.translationVector3(target.getVelocityMatrix())).toFixed() + " m/s");
+                _targetInfoTextLayer.show();
+                // .....................................................................................................
+                // target integrity quick view bar
+                if (isInAimingView) {
+                    _targetHullIntegrityQuickViewBar.clipX(0.5 - hullIntegrity / 2, 0.5 + hullIntegrity / 2);
+                    _targetHullIntegrityQuickViewBar.applyLayout(_targetHullIntegrityQuickViewBarLayout, canvas.width, canvas.height);
+                    _targetHullIntegrityQuickViewBar.setColor(targetIsHostile ?
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR) :
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_FILLED_COLOR));
+                    _targetHullIntegrityQuickViewBar.setClipColor(targetIsHostile ?
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_EMPTY_COLOR) :
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_EMPTY_COLOR));
+                    _targetHullIntegrityQuickViewBar.show();
+                } else {
+                    _targetHullIntegrityQuickViewBar.hide();
+                }
             } else {
+                // if there is no target
+                _targetInfoBackground.hide();
                 _targetIndicator.hide();
+                _aimAssistIndicator.hide();
                 for (i = 0; i < _weaponImpactIndicators.length; i++) {
                     _weaponImpactIndicators[i].hide();
                 }
@@ -784,25 +1516,24 @@ define([
                     _targetScene.clearNodes();
                     _targetViewItem = null;
                 }
+                _targetHullIntegrityBar.hide();
+                _targetInfoTextLayer.hide();
+                _targetHullIntegrityQuickViewBar.hide();
             }
-            // updating the HTML5 UI
-            this._ui.setContent(
-                    (target ? (strings.get(strings.BATTLE.HUD_TARGET) + ": " + strings.getSpacecraftClassName(target.getClass()) + " (" + target.getHitpoints() + "/" + target.getClass().getHitpoints() + ")<br/>") : "") +
-                    (target ? (strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance)) +
-                            "<br/>" + TARGET_INFO_SEPARATOR + "<br/>" : "") +
-                    utils.formatString(strings.get(strings.BATTLE.HUD_VIEW), {
-                        view: strings.get(strings.OBJECT_VIEW.PREFIX, _battleScene.getCamera().getConfiguration().getName(), _battleScene.getCamera().getConfiguration().getName())
-                    }) + "<br/>" +
-                    strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": " + craft.getHitpoints() + "/" + craft.getClass().getHitpoints() + "<br/>" +
-                    utils.formatString(strings.get(strings.BATTLE.HUD_FLIGHT_MODE), {
-                        flightMode: strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode())
-                    }) + "<br/>" +
-                    strings.get(strings.BATTLE.HUD_SPEED) + ": " + craft.getRelativeVelocityMatrix()[13].toFixed() +
-                    ((craft.getFlightMode() !== logic.FlightMode.FREE) ? (" / " + craft._maneuveringComputer._speedTarget.toFixed()) : ""));
+            _battleScene.showUI();
         } else {
+            // if there is no followed spacecraft
+            if (_isHUDVisible) {
+                _bigHeaderText.show();
+            } else {
+                _bigHeaderText.hide();
+            }
             _battleScene.hideUI();
             _targetScene.clearNodes();
             _targetViewItem = null;
+            _targetInfoTextLayer.hide();
+            _speedTextLayer.hide();
+            _flightModeIndicatorTextLayer.hide();
         }
     };
     /**
@@ -816,7 +1547,7 @@ define([
             _simulationLoopFunction();
         }
         if (_battleScene) {
-            this._updateUI();
+            this._updateHUD();
         }
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
@@ -845,7 +1576,6 @@ define([
         _demoMode = demoMode;
         _clearData();
         document.body.classList.add("wait");
-        this.hideStats();
         this._loadingBox.show();
         this.resizeCanvases();
         control.setScreenCenter(
@@ -876,10 +1606,10 @@ define([
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
             _targetScene = new budaScene.Scene(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[0],
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_POSITION)[1],
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[0],
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_SIZE)[1],
+                    _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
+                    _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
+                    _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
+                    _targetViewLayout.getPositiveHeight(canvas.width, canvas.height),
                     false, [true, true, true, true],
                     [0, 0, 0, 0], true,
                     graphics.getLODContext(),
@@ -893,9 +1623,9 @@ define([
                         transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
-            this.hideUI();
             _level.addToScene(_battleScene, _targetScene);
-            _addUIToScene();
+            _addHUDToScene();
+            this._addUITexts();
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
@@ -913,7 +1643,7 @@ define([
                     _targetScene.clearNodes();
                     this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
                     application.log("Game data loaded in " + ((performance.now() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
-                    this._smallHeader.setContent(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
+                    _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false, true);
                     _battleCursor = document.body.style.cursor;
@@ -921,13 +1651,29 @@ define([
                         menuKey: "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>"
                     }));
                     this._loadingBox.hide();
-                    this.showStats();
+                    showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
                 }.bind(this));
             }.bind(this));
             resources.requestResourceLoad();
         }.bind(this));
     };
+    // -------------------------------------------------------------------------
+    // Caching frequently needed setting values
+    config.executeWhenReady(function () {
+        _centerCrosshairScaleMode = config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SCALE_MODE);
+        _speedTargetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_SIZE);
+        _targetViewLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_LAYOUT));
+        _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_LAYOUT));
+        _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_LAYOUT));
+        _speedBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_LAYOUT));
+        _hullIntegrityBarBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_BACKGROUND_LAYOUT));
+        _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_LAYOUT));
+        _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
+        _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
+        _driftArrowSpeedInterval = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED) - _driftArrowMinSpeed;
+        _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT));
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     _battle.battleScreen = new BattleScreen();
@@ -936,5 +1682,8 @@ define([
     _battle.toggleTime = toggleTime;
     _battle.pauseBattle = pauseBattle;
     _battle.resumeBattle = resumeBattle;
+    _battle.showHUD = showHUD;
+    _battle.hideHUD = hideHUD;
+    _battle.toggleHUDVisibility = toggleHUDVisibility;
     return _battle;
 });

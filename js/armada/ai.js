@@ -332,7 +332,6 @@ define([
          */
         this._isBlockedBy = null;
         // attaching handlers to the various spacecraft events
-        this._spacecraft.setOnAutoTargeting(this._handleTargetSwitch.bind(this));
         this._spacecraft.setOnBeingHit(this._handleBeingHit.bind(this));
         this._spacecraft.setOnTargetHit(this._handleTargetHit.bind(this));
         this._spacecraft.setOnAnySpacecraftHit(this._handleAnySpacecraftHit.bind(this));

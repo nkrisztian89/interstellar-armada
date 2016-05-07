@@ -10,46 +10,26 @@
 /*global define */
 
 /**
+ * @param utils Used for accessing the ScaleMode enum
  * @param types Used for verifying the types of settings loaded from JSON
- * @param asyncResource
- * @param budaScene
- * @param classes
+ * @param asyncResource ConfigurationContext is a subclass of AsyncResource
+ * @param budaScene Used for accessing the enum types in this module
+ * @param classes Loading the game configuration initiates loading the classes.
  */
 define([
+    "utils/utils",
     "utils/types",
     "modules/async-resource",
     "modules/buda-scene",
     "armada/classes"
-], function (types, asyncResource, budaScene, classes) {
+], function (utils, types, asyncResource, budaScene, classes) {
     "use strict";
     var
             /**
-             * @enum {String}
-             * The options for auto targeting.
+             * This object holds the definition objects for custom types that are used for object property verification
+             * @type Object
              */
-            AutoTargetingMode = {
-                /**
-                 * Automatic targeting is completely switched off
-                 */
-                NEVER: "never",
-                /**
-                 * If a ship is hit, it is automatically selected as a target if no ships are selected as target yet
-                 */
-                HIT_AND_NO_TARGET: "hitAndNoTarget",
-                /**
-                 * If a ship is hit, it is automatically selected as a (new) target unless the player has manually set a different target before
-                 */
-                HIT_AND_AUTO_TARGET: "hitAndAutoTarget",
-                /**
-                 * If a ship is hit, it is always selected as a (new) target
-                 */
-                ALWAYS_WHEN_HIT: "alwaysWhenHit"
-            },
-    /**
-     * This object holds the definition objects for custom types that are used for object property verification
-     * @type Object
-     */
-    _customTypes = {},
+            _customTypes = {},
             /**
              * Definition object for cofiguration settings that can be used to verify the data loaded from JSON
              * @type Object
@@ -84,6 +64,11 @@ define([
              * @type ConfigurationContext
              */
             _context;
+    _customTypes.VECTOR2 = {
+        baseType: "array",
+        length: 2,
+        elementType: "number"
+    };
     _customTypes.VECTOR3 = {
         baseType: "array",
         length: 3,
@@ -136,6 +121,68 @@ define([
             DIRECTION: {
                 name: "direction",
                 type: _customTypes.VECTOR3
+            }
+        }
+    };
+    _customTypes.LAYOUT_DESCRIPTOR = {
+        baseType: "object",
+        properties: {
+            LEFT: {
+                name: "left",
+                type: "number",
+                optional: true
+            },
+            CENTER_X: {
+                name: "centerX",
+                type: "number",
+                optional: true
+            },
+            RIGHT: {
+                name: "right",
+                type: "number",
+                optional: true
+            },
+            TOP: {
+                name: "top",
+                type: "number",
+                optional: true
+            },
+            CENTER_Y: {
+                name: "centerY",
+                type: "number",
+                optional: true
+            },
+            BOTTOM: {
+                name: "bottom",
+                type: "number",
+                optional: true
+            },
+            WIDTH: {
+                name: "width",
+                type: "number",
+                optional: true
+            },
+            HEIGHT: {
+                name: "height",
+                type: "number",
+                optional: true
+            },
+            SCALE_MODE: {
+                name: "scaleMode",
+                type: "enum",
+                values: utils.ScaleMode
+            },
+            X_SCALE_MODE: {
+                name: "xScaleMode",
+                type: "enum",
+                values: utils.ScaleMode,
+                optional: true
+            },
+            Y_SCALE_MODE: {
+                name: "yScaleMode",
+                type: "enum",
+                values: utils.ScaleMode,
+                optional: true
             }
         }
     };
@@ -586,15 +633,6 @@ define([
             defaultValue: true
         },
         /**
-         * The default auto-targeting mode to use
-         */
-        AUTO_TARGETING: {
-            name: "autoTargeting",
-            type: "enum",
-            values: AutoTargetingMode,
-            defaultValue: AutoTargetingMode.HIT_AND_AUTO_TARGET
-        },
-        /**
          * If no profile name is given, new spacecraft are equipped with the profile having this name, if they have such
          */
         DEFAULT_EQUIPMENT_PROFILE_NAME: {
@@ -649,37 +687,62 @@ define([
         TARGET_CHANGE_TRANSITION_STYLE: {
             name: "targetChangeTransitionStyle",
             type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle,
-            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+            values: budaScene.Camera.prototype.TransitionStyle
         },
         HUD_CENTER_CROSSHAIR_TEXTURE: {
             name: "hudCenterCrosshairTexture",
-            type: "string",
-            defaultValue: "crosshair"
+            type: "string"
         },
         HUD_CENTER_CROSSHAIR_SIZE: {
             name: "hudCenterCrosshairSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.05, 0.05]
+            type: _customTypes.VECTOR2
+        },
+        HUD_CENTER_CROSSHAIR_SCALE_MODE: {
+            name: "hudCenterCrosshairScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
         },
         HUD_CENTER_CROSSHAIR_COLOR: {
             name: "hudCenterCrosshairColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0, 1, 0, 0.25]
+            type: _customTypes.COLOR4
+        },
+        HUD_CURSOR_STILL_TEXTURE: {
+            name: "hudCursorStillTexture",
+            type: "string"
+        },
+        HUD_CURSOR_TURN_TEXTURE: {
+            name: "hudCursorTurnTexture",
+            type: "string"
+        },
+        HUD_CURSOR_SIZE: {
+            name: "hudCursorSize",
+            type: _customTypes.VECTOR2
+        },
+        HUD_CURSOR_SCALE_MODE: {
+            name: "hudCursorScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
+        },
+        HUD_CURSOR_COLOR: {
+            name: "hudCursorColor",
+            type: _customTypes.COLOR4
         },
         HUD_TARGET_ARROW_TEXTURE: {
             name: "hudTargetArrowTexture",
-            type: "string",
-            defaultValue: "arrow"
+            type: "string"
+        },
+        HUD_TARGET_ARROW_POSITION_RADIUS: {
+            name: "hudTargetArrowPositionRadius",
+            type: "number"
         },
         HUD_TARGET_ARROW_SIZE: {
             name: "hudTargetArrowSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.075, 0.075]
+            type: _customTypes.VECTOR2
+        },
+        HUD_TARGET_ARROW_SCALE_MODE: {
+            name: "hudTargetArrowScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
         },
         HUD_TARGET_ARROW_HOSTILE_COLOR: {
             name: "hudTargetArrowHostileColor",
@@ -691,15 +754,16 @@ define([
         },
         HUD_TARGET_INDICATOR_TEXTURE: {
             name: "hudTargetIndicatorTexture",
-            type: "string",
-            defaultValue: "target"
+            type: "string"
         },
         HUD_TARGET_INDICATOR_SIZE: {
             name: "hudTargetIndicatorSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.1, 0.1]
+            type: _customTypes.VECTOR2
+        },
+        HUD_TARGET_INDICATOR_SCALE_MODE: {
+            name: "hudTargetIndicatorScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
         },
         HUD_TARGET_INDICATOR_HOSTILE_COLOR: {
             name: "hudTargetIndicatorHostileColor",
@@ -709,38 +773,51 @@ define([
             name: "hudTargetIndicatorFriendlyColor",
             type: _customTypes.COLOR4
         },
+        HUD_AIM_ASSIST_INDICATOR_TEXTURE: {
+            name: "hudAimAssistIndicatorTexture",
+            type: "string"
+        },
+        HUD_AIM_ASSIST_INDICATOR_SIZE: {
+            name: "hudAimAssistIndicatorSize",
+            type: _customTypes.VECTOR2
+        },
+        HUD_AIM_ASSIST_INDICATOR_SCALE_MODE: {
+            name: "hudAimAssistIndicatorScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
+        },
+        HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR: {
+            name: "hudAimAssistIndicatorHostileColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_AIM_ASSIST_INDICATOR_FRIENDLY_COLOR: {
+            name: "hudAimAssistIndicatorFriendlyColor",
+            type: _customTypes.COLOR4
+        },
         HUD_WEAPON_IMPACT_INDICATOR_TEXTURE: {
             name: "hudWeaponImpactIndicatorTexture",
-            type: "string",
-            defaultValue: "crosshair"
+            type: "string"
         },
         HUD_WEAPON_IMPACT_INDICATOR_SIZE: {
             name: "hudWeaponImpactIndicatorSize",
-            type: "array",
-            elementType: "number",
-            length: 2,
-            defaultValue: [0.05, 0.05]
+            type: _customTypes.VECTOR2
+        },
+        HUD_WEAPON_IMPACT_INDICATOR_SCALE_MODE: {
+            name: "hudWeaponImpactIndicatorScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
         },
         HUD_WEAPON_IMPACT_INDICATOR_COLOR: {
             name: "hudWeaponImpactIndicatorColor",
-            type: _customTypes.COLOR4,
-            defaultValue: [0, 1, 0, 0.75]
+            type: _customTypes.COLOR4
         },
         HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR: {
             name: "hudWeaponImpactIndicatorOutOfRangeColor",
             type: _customTypes.COLOR4
         },
-        HUD_TARGET_VIEW_POSITION: {
-            name: "hudTargetViewPosition",
-            type: "array",
-            elementType: "number",
-            length: 2
-        },
-        HUD_TARGET_VIEW_SIZE: {
-            name: "hudTargetViewSize",
-            type: "array",
-            elementType: "number",
-            length: 2
+        HUD_TARGET_VIEW_LAYOUT: {
+            name: "hudTargetViewLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
         },
         HUD_TARGET_VIEW_VIEW_DISTANCE: {
             name: "hudTargetViewViewDistance",
@@ -766,6 +843,319 @@ define([
             name: "hudTargetViewTargetItemZeroIntegrityColor",
             type: _customTypes.COLOR4
         },
+        HUD_TARGET_INFO_BACKGROUND_TEXTURE: {
+            name: "hudTargetInfoBackgroundTexture",
+            type: "string"
+        },
+        HUD_TARGET_INFO_BACKGROUND_LAYOUT: {
+            name: "hudTargetInfoBackgroundLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_TARGET_INFO_BACKGROUND_COLOR: {
+            name: "hudTargetInfoBackgroundColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE: {
+            name: "hudTargetHullIntegrityBarTexture",
+            type: "string"
+        },
+        HUD_TARGET_HULL_INTEGRITY_BAR_LAYOUT: {
+            name: "hudTargetHullIntegrityBarLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_TARGET_HULL_INTEGRITY_BAR_FILLED_COLOR: {
+            name: "hudTargetHullIntegrityBarFilledColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR: {
+            name: "hudTargetHullIntegrityBarEmptyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_INFO_TEXT_LAYER_LAYOUT: {
+            name: "hudTargetInfoTextLayerLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_TARGET_INFO_TEXT_HOSTILE_COLOR: {
+            name: "hudTargetInfoTextHostileColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR: {
+            name: "hudTargetInfoTextFriendlyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_INFO_TEXT_FONT_SIZE: {
+            name: "hudTargetInfoTextFontSize",
+            type: "number"
+        },
+        HUD_TARGET_INFO_TEXT_FONT_NAME: {
+            name: "hudTargetInfoTextFontName",
+            type: "string"
+        },
+        HUD_TARGET_INFO_NAME_TEXT_POSITION: {
+            name: "hudTargetInfoNameTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_TARGET_INFO_CLASS_TEXT_POSITION: {
+            name: "hudTargetInfoClassTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_TARGET_INFO_TEAM_TEXT_POSITION: {
+            name: "hudTargetInfoTeamTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_TARGET_INFO_DISTANCE_TEXT_POSITION: {
+            name: "hudTargetInfoDistanceTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_TARGET_INFO_VELOCITY_TEXT_POSITION: {
+            name: "hudTargetInfoVelocityTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_SPEED_BAR_TEXTURE: {
+            name: "hudSpeedBarTexture",
+            type: "string"
+        },
+        HUD_SPEED_BAR_LAYOUT: {
+            name: "hudSpeedBarLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_SPEED_BAR_FILLED_COLOR: {
+            name: "hudSpeedBarFilledColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_SPEED_BAR_EMPTY_COLOR: {
+            name: "hudSpeedBarEmptyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_REVERSE_SPEED_BAR_FILLED_COLOR: {
+            name: "hudReverseSpeedBarFilledColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_REVERSE_SPEED_BAR_EMPTY_COLOR: {
+            name: "hudReverseSpeedBarEmptyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_SPEED_BAR_BASE_MAX_SPEED: {
+            name: "hudSpeedBarBaseMaxSpeed",
+            type: "number"
+        },
+        HUD_SPEED_BAR_MAX_SPEED_STEP_FACTOR: {
+            name: "hudSpeedBarMaxSpeedStepFactor",
+            type: "number"
+        },
+        HUD_SPEED_TEXT_LAYER_LAYOUT: {
+            name: "hudSpeedTextLayerLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_SPEED_TEXT_COLOR: {
+            name: "hudSpeedTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_REVERSE_SPEED_TEXT_COLOR: {
+            name: "hudReverseSpeedTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_SPEED_TEXT_FONT_SIZE: {
+            name: "hudSpeedTextFontSize",
+            type: "number"
+        },
+        HUD_SPEED_TEXT_FONT_NAME: {
+            name: "hudSpeedTextFontName",
+            type: "string"
+        },
+        HUD_MAX_SPEED_TEXT_POSITION: {
+            name: "hudMaxSpeedTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_MAX_REVERSE_SPEED_TEXT_POSITION: {
+            name: "hudMaxReverseSpeedTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_SPEED_TARGET_INDICATOR_TEXTURE: {
+            name: "hudSpeedTargetIndicatorTexture",
+            type: "string"
+        },
+        HUD_SPEED_TARGET_INDICATOR_COLOR: {
+            name: "hudSpeedTargetIndicatorColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_SPEED_TARGET_INDICATOR_SIZE: {
+            name: "hudSpeedTargetIndicatorSize",
+            type: _customTypes.VECTOR2
+        },
+        HUD_HULL_INTEGRITY_BAR_BACKGROUND_TEXTURE: {
+            name: "hudHullIntegrityBarBackgroundTexture",
+            type: "string"
+        },
+        HUD_HULL_INTEGRITY_BAR_BACKGROUND_LAYOUT: {
+            name: "hudHullIntegrityBarBackgroundLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_HULL_INTEGRITY_BAR_BACKGROUND_COLOR: {
+            name: "hudHullIntegrityBarBackgroundColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_HULL_INTEGRITY_BAR_TEXTURE: {
+            name: "hudHullIntegrityBarTexture",
+            type: "string"
+        },
+        HUD_HULL_INTEGRITY_BAR_LAYOUT: {
+            name: "hudHullIntegrityBarLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_HULL_INTEGRITY_BAR_FILLED_COLOR: {
+            name: "hudHullIntegrityBarFilledColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR: {
+            name: "hudHullIntegrityBarEmptyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE: {
+            name: "hudFlightModeIndicatorBackgroundTexture",
+            type: "string"
+        },
+        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT: {
+            name: "hudFlightModeIndicatorBackgroundLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR: {
+            name: "hudFlightModeIndicatorBackgroundColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_FLIGHT_MODE_HEADER_TEXT_COLOR: {
+            name: "hudFlightModeHeaderTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_FLIGHT_MODE_HEADER_TEXT_FONT_SIZE: {
+            name: "hudFlightModeHeaderTextFontSize",
+            type: "number"
+        },
+        HUD_FLIGHT_MODE_HEADER_TEXT_FONT_NAME: {
+            name: "hudFlightModeHeaderTextFontName",
+            type: "string"
+        },
+        HUD_FLIGHT_MODE_HEADER_TEXT_POSITION: {
+            name: "hudFlightModeHeaderTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_FREE_FLIGHT_MODE_TEXT_COLOR: {
+            name: "hudFreeFlightModeTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR: {
+            name: "hudCompensatedFlightModeTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_RESTRICTED_FLIGHT_MODE_TEXT_COLOR: {
+            name: "hudRestrictedFlightModeTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_FLIGHT_MODE_TEXT_FONT_SIZE: {
+            name: "hudFlightModeTextFontSize",
+            type: "number"
+        },
+        HUD_FLIGHT_MODE_TEXT_FONT_NAME: {
+            name: "hudFlightModeTextFontName",
+            type: "string"
+        },
+        HUD_FLIGHT_MODE_TEXT_POSITION: {
+            name: "hudFlightModeTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_DRIFT_ARROW_TEXTURE: {
+            name: "hudDriftArrowTexture",
+            type: "string"
+        },
+        HUD_DRIFT_ARROW_POSITION_RADIUS: {
+            name: "hudDriftArrowPositionRadius",
+            type: "number"
+        },
+        HUD_DRIFT_ARROW_SIZE: {
+            name: "hudDriftArrowSize",
+            type: _customTypes.VECTOR2
+        },
+        HUD_DRIFT_ARROW_SCALE_MODE: {
+            name: "hudDriftArrowScaleMode",
+            type: "enum",
+            values: utils.ScaleMode
+        },
+        HUD_DRIFT_ARROW_MIN_SPEED_COLOR: {
+            name: "hudDriftArrowMinSpeedColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_DRIFT_ARROW_MAX_SPEED_COLOR: {
+            name: "hudDriftArrowMaxSpeedColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_DRIFT_ARROW_MIN_SPEED: {
+            name: "hudDriftArrowMinSpeed",
+            type: "number"
+        },
+        HUD_DRIFT_ARROW_MAX_SPEED: {
+            name: "hudDriftArrowMaxSpeed",
+            type: "number"
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE: {
+            name: "hudTargetHullIntegrityQuickViewBarTexture",
+            type: "string"
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT: {
+            name: "hudTargetHullIntegrityQuickViewBarLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR: {
+            name: "hudTargetHullIntegrityQuickViewBarHostileFilledColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_EMPTY_COLOR: {
+            name: "hudTargetHullIntegrityQuickViewBarHostileEmptyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_FILLED_COLOR: {
+            name: "hudTargetHullIntegrityQuickViewBarFriendlyFilledColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_EMPTY_COLOR: {
+            name: "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_HEADER_TEXT_LAYER_LAYOUT: {
+            name: "hudHeaderTextLayerLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
+        },
+        HUD_SMALL_HEADER_TEXT_COLOR: {
+            name: "hudSmallHeaderTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_SMALL_HEADER_TEXT_FONT_SIZE: {
+            name: "hudSmallHeaderTextFontSize",
+            type: "number"
+        },
+        HUD_SMALL_HEADER_TEXT_FONT_NAME: {
+            name: "hudSmallHeaderTextFontName",
+            type: "string"
+        },
+        HUD_SMALL_HEADER_TEXT_POSITION: {
+            name: "hudSmallHeaderTextPosition",
+            type: _customTypes.VECTOR2
+        },
+        HUD_BIG_HEADER_TEXT_COLOR: {
+            name: "hudBigHeaderTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_BIG_HEADER_TEXT_FONT_SIZE: {
+            name: "hudBigHeaderTextFontSize",
+            type: "number"
+        },
+        HUD_BIG_HEADER_TEXT_FONT_NAME: {
+            name: "hudBigHeaderTextFontName",
+            type: "string"
+        },
+        HUD_BIG_HEADER_TEXT_POSITION: {
+            name: "hudBigHeaderTextPosition",
+            type: _customTypes.VECTOR2
+        },
         DEMO_FIGHTER_AI_TYPE: {
             name: "demoFighterAI",
             type: "string"
@@ -786,8 +1176,7 @@ define([
         },
         DEFAULT_FOV_RANGE: {
             name: "defaultFOVRange",
-            type: "array",
-            length: 2
+            type: _customTypes.VECTOR2
         },
         DEFAULT_SPAN: {
             name: "defaultSpan",
@@ -795,8 +1184,7 @@ define([
         },
         DEFAULT_SPAN_RANGE: {
             name: "defaultSpanRange",
-            type: "array",
-            length: 2
+            type: _customTypes.VECTOR2
         },
         DEFAULT_BASE_ORIENTATION: {
             name: "defaultBaseOrientation",
@@ -810,7 +1198,6 @@ define([
         }
     };
     Object.freeze(_customTypes);
-    Object.freeze(AutoTargetingMode);
     // #########################################################################
     /**
      * @class A class responsible for loading and storing game logic related 
@@ -932,7 +1319,6 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        AutoTargetingMode: AutoTargetingMode,
         CONFIGURATION: CONFIGURATION,
         GENERAL_SETTINGS: GENERAL_SETTINGS,
         BATTLE_SETTINGS: BATTLE_SETTINGS,

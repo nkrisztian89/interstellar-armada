@@ -106,7 +106,10 @@ define([
             UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME = "farthestZ",
             UNIFORM_POSITION_NAME = "position",
             UNIFORM_SIZE_NAME = "size",
+            UNIFORM_SCALE_MODE_NAME = "scaleMode",
             UNIFORM_ROTATION_MATRIX_NAME = "rotationMatrix",
+            UNIFORM_CLIP_COORDINATES_NAME = "clipCoords",
+            UNIFORM_CLIP_COLOR_NAME = "clipColor",
             /**
              * When creating a shadow map framebuffer, this prefix will be added before the light index for which it is created.
              * @type String
@@ -154,6 +157,7 @@ define([
             UNIFORM_VIEW_PROJECTION_MATRIX_NAME = "viewProjMatrix",
             UNIFORM_VIEW_ORIENTATION_MATRIX_NAME = "cameraOrientationMatrix",
             UNIFORM_VIEW_ASPECT_NAME = "aspect",
+            UNIFORM_VIEWPORT_SIZE_NAME = "viewportSize",
             UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
             UNIFORM_SHADOW_MAPPING_ENABLED_NAME = "shadows",
             UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
@@ -216,11 +220,39 @@ define([
              */
             DEFAULT_LOD = 0,
             /**
+             * Using these as clip coordinates specifies a clip zone that includes the whole element.
+             * @type Number[4]
+             */
+            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1],
+            /**
              * This string is available to other modules through a public function so that an arbitrary piece of information from this 
              * module can be exposed for debug purposes.
              * @type String
              */
             _debugInfo = "";
+    // -------------------------------------------------------------------------
+    // Private functions
+    /**
+     * Converts a scale mode variable of the enum type defined in utils to a number that can be passed to shaders.
+     * @param {String} scaleMode (enum ScaleMode)
+     * @returns {Number}
+     */
+    function _getScaleModeInt(scaleMode) {
+        switch (scaleMode) {
+            case utils.ScaleMode.WIDTH:
+                return 0;
+            case utils.ScaleMode.HEIGHT:
+                return 1;
+            case utils.ScaleMode.ASPECT:
+                return 2;
+            case utils.ScaleMode.MINIMUM:
+                return 3;
+            case utils.ScaleMode.MAXIMUM:
+                return 4;
+            default:
+                application.crash();
+        }
+    }
     // -------------------------------------------------------------------------
     // Public functions
     /**
@@ -3468,11 +3500,16 @@ define([
      * @param {Number[2]|Number[3]} position The position of the element either on the screen (2D) or in world space (3D), depending on the
      * shader to be used.
      * @param {Number[2]} size The size of the element by which the model can be scaled.
-     * @param {Number[4]} color A color to modulate the element with.
+     * @param {String} scaleMode (enum ScaleMode) The scale mode to be used for sizing this element.
+     * @param {Number[4]} color A color to modulate the element with. (inside its clip zone)
      * @param {Number} [angle] An angle based on which a 2D rotation matrix will be created and stored that can be used to rotate the 
      * element in 2D.
+     * @param {Numbe[4]} [clipCoordinates] The coordinates specifying the clip zone for this element, in the form of [minX, maxX, minY, 
+     * maxY], where the area outside the min-max range on either the X or Y is considered to be outside the clip zone, and all coordinates 
+     * go from -1 (left / bottom) to 1 (right / top), corresponding to a relative position within the element.
+     * @param {Number[4]} [clipColor] A color to modulate the element with outside its clip zone.
      */
-    function UIElement(model, shader, textures, position, size, color, angle) {
+    function UIElement(model, shader, textures, position, size, scaleMode, color, angle, clipCoordinates, clipColor) {
         RenderableObject.call(this, shader, false, true);
         this.setTextures(textures);
         /**
@@ -3486,7 +3523,7 @@ define([
          */
         this._position = position;
         /**
-         * The currently active color of the color used to modulate the texture color when rendering.
+         * The currently active color of the color used to modulate the texture color when rendering inside the clip zone.
          * @type Number[4]
          */
         this._color = color;
@@ -3496,20 +3533,47 @@ define([
          */
         this._size = size;
         /**
+         * This number is passed to the shader to indicate the scaling mode to be used to size the element.
+         * @type Number
+         */
+        this._scaleMode = _getScaleModeInt(scaleMode);
+        /**
          * A 2D rotation matrix that can be used by the shader to rotate the element.
+         * @type Floar32Array
          */
         this._rotationMatrix = mat.rotation2(Math.radians(angle || 0));
+        /**
+         * The coordinates specifying the clip zone for this element, in the form of [minX, maxX, minY, maxY], where the area outside the 
+         * min-max range on either the X or Y is considered to be outside the clip zone, and all coordinates  go from -1 (left / bottom) to 
+         * 1 (right / top), corresponding to a relative position within the element.
+         * @type Number[4]
+         */
+        this._clipCoordinates = clipCoordinates || CLIP_COORDINATES_NO_CLIP.slice();
+        /**
+         * The currently active color of the color used to modulate the texture color when rendering outside of the clip zone.
+         * @type Number[4]
+         */
+        this._clipColor = clipColor || [0, 0, 0, 0];
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
             return this._position;
         });
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function () {
             return this._size;
         });
+        this.setUniformValueFunction(UNIFORM_SCALE_MODE_NAME, function () {
+            return this._scaleMode;
+        });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
         });
         this.setUniformValueFunction(UNIFORM_ROTATION_MATRIX_NAME, function () {
             return this._rotationMatrix;
+        });
+        this.setUniformValueFunction(UNIFORM_CLIP_COORDINATES_NAME, function () {
+            return this._clipCoordinates;
+        });
+        this.setUniformValueFunction(UNIFORM_CLIP_COLOR_NAME, function () {
+            return this._clipColor;
         });
     }
     UIElement.prototype = new RenderableObject();
@@ -3530,6 +3594,13 @@ define([
         this._position = value;
     };
     /**
+     * Sets a new size to be used for scaling the element.
+     * @param {Number[2]} value
+     */
+    UIElement.prototype.setSize = function (value) {
+        this._size = value;
+    };
+    /**
      * Sets a new color for this element.
      * @param {Number[4]} value An RGBA color
      */
@@ -3542,6 +3613,38 @@ define([
      */
     UIElement.prototype.setAngle = function (value) {
         this._rotationMatrix = mat.rotation2(value);
+    };
+    /**
+     * Sets a new set of clip coordinates ([minX, maxX, minY, maxY]) to define the clip zone of the element.
+     * @param {Number[4]} value
+     */
+    UIElement.prototype.setClipCoordinates = function (value) {
+        this._clipCoordinates = value;
+    };
+    /**
+     * Sets new minimum and maximum X coordinates for the clip zone of the element.
+     * @param {Number} minimum
+     * @param {Number} maximum
+     */
+    UIElement.prototype.clipX = function (minimum, maximum) {
+        this._clipCoordinates[0] = minimum;
+        this._clipCoordinates[1] = maximum;
+    };
+    /**
+     * Sets new minimum and maximum Y coordinates for the clip zone of the element.
+     * @param {Number} minimum
+     * @param {Number} maximum
+     */
+    UIElement.prototype.clipY = function (minimum, maximum) {
+        this._clipCoordinates[2] = 1 - maximum;
+        this._clipCoordinates[3] = 1 - minimum;
+    };
+    /**
+     * Sets a new color to be used when rendering the parts of this element outside of its clip zone.
+     * @param {Number[4]} value
+     */
+    UIElement.prototype.setClipColor = function (value) {
+        this._clipColor = value;
     };
     // #########################################################################
     /**
@@ -6654,6 +6757,21 @@ define([
         });
     };
     /**
+     * Sets the uniform value functions for the scene that can be used to set all the uniforms referring to data that is uniform for all
+     * objects within this scene while rendering to the associated context with the passed index. (but might be different for different
+     * contexts)
+     * @param {Number} contextIndex
+     */
+    Scene.prototype._setContextUniformValueFunctions = function (contextIndex) {
+        var gl = this._contexts[contextIndex].gl;
+        this.setContextUniformValueFunction(contextIndex, UNIFORM_VIEWPORT_SIZE_NAME, function () {
+            return [
+                gl.drawingBufferWidth * this._width,
+                gl.drawingBufferHeight * this._height
+            ];
+        });
+    };
+    /**
      * Sets the uniform value functions for the uniforms that are needed by shaders that want to use shadow mapping to provide the up-to-date
      * data for this scene.
      * @param {Number} [contextIndex] Shadow maps to be passed to uniforms are different for each context, and so this index tells which
@@ -6772,6 +6890,7 @@ define([
         var i;
         // if a specific index is given, set up the corresponding context
         if (contextIndex !== undefined) {
+            this._setContextUniformValueFunctions(contextIndex);
             // if shadow mapping is to be used, some additional preparations are needed
             if (this._shadowMappingEnabled) {
                 this._contexts[contextIndex].addShader(this._shadowMappingShader);
@@ -6786,6 +6905,20 @@ define([
                 this._setupContext(i);
             }
         }
+    };
+    /**
+     * Sets new relative coordinates for the viewport of this scene - when the scene is rendered to a canvas, its viewport will be 
+     * calculated by scaling these relative coordinates to the size of the canvas.
+     * @param {Number} left
+     * @param {Number} bottom
+     * @param {Number} width
+     * @param {Number} height
+     */
+    Scene.prototype.setRelativeViewport = function (left, bottom, width, height) {
+        this._left = left;
+        this._bottom = bottom;
+        this._width = width;
+        this._height = height;
     };
     /**
      * The scene can be rendered on a managed context after it has been added to it using this function. This makes sure the context is
@@ -7538,6 +7671,7 @@ define([
     // The public interface of the module
     return {
         UNIFORM_COLOR_NAME: UNIFORM_COLOR_NAME,
+        CLIP_COORDINATES_NO_CLIP: CLIP_COORDINATES_NO_CLIP,
         getDebugInfo: getDebugInfo,
         LODContext: LODContext,
         Scene: Scene,

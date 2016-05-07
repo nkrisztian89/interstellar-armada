@@ -93,16 +93,20 @@ define([
         this.setActionFunction("toggleHitboxVisibility", true, function () {
             this._level.toggleHitboxVisibility();
         }.bind(this));
-        // toggling the visibility of texts on screen
-        this.setActionFunction("toggleTextVisibility", true, function () {
-            game.getScreen().toggleTextVisibility();
+        // toggling the visibility of development-related info (version, FPS count) on screen
+        this.setActionFunction("toggleDevInfoVisibility", true, function () {
+            game.getScreen().toggleDevInfoVisibility();
         });
+        // toggling the visibility of the HUD
+        this.setActionFunction("toggleHUDVisibility", true, function () {
+            this._battle.toggleHUDVisibility();
+        }.bind(this));
         // toggling the mouse controls
         this.setActionFunction("toggleMouseControls", true, function () {
             _context.getInputInterpreter(MOUSE_NAME).toggleEnabled();
             if (_context.isInPilotMode()) {
                 if (_context.getInputInterpreter(MOUSE_NAME).isEnabled()) {
-                    document.body.style.cursor = 'crosshair';
+                    document.body.style.cursor = 'none';
                 } else {
                     document.body.style.cursor = 'default';
                 }
@@ -155,6 +159,11 @@ define([
          * @type Spacecraft
          */
         this._controlledSpacecraft = null;
+        /**
+         * Whether auto-targeting is currently turned on for this controller.
+         * @type Boolean
+         */
+        this._autoTargeting = true;
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created
         // fire the primary weapons of the fighter
@@ -170,8 +179,12 @@ define([
             this._controlledSpacecraft.targetNextHostile();
         }.bind(this));
         // switch to next target (any)
-        this.setActionFunction("nextTarget", true, function () {
-            this._controlledSpacecraft.targetNext();
+        this.setActionFunction("nextNonHostileTarget", true, function () {
+            this._controlledSpacecraft.targetNextNonHostile();
+        }.bind(this));
+        // toggle auto targeting
+        this.setActionFunction("toggleAutoTargeting", true, function () {
+            this._autoTargeting = !this._autoTargeting;
         }.bind(this));
         // forward burn
         this.setActionFunctions("forward", function (i) {
@@ -258,7 +271,12 @@ define([
     FighterController.prototype.executeActions = function (triggeredActions) {
         if (this._controlledSpacecraft) {
             if (!this._controlledSpacecraft.canBeReused()) {
+                // executing user-triggered actions
                 control.Controller.prototype.executeActions.call(this, triggeredActions);
+                // executing automatic actions
+                if (this._autoTargeting && !this._controlledSpacecraft.getTarget()) {
+                    this._controlledSpacecraft.targetNextHostile();
+                }
             } else {
                 this._controlledSpacecraft = null;
             }
@@ -310,13 +328,9 @@ define([
                 config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
-        game.getScreen().setHeaderContent(strings.get(strings.BATTLE.PILOTING_MODE), {
-            spacecraftClass: strings.getSpacecraftClassName(pilotedSpacecraft.getClass()),
-            spacecraftType: strings.getSpacecraftTypeName(pilotedSpacecraft.getClass().getSpacecraftType())
-        });
-        game.getScreen().showUI();
+        game.getScreen().setHeaderContent("");
         if (this.getInputInterpreter(MOUSE_NAME).isEnabled()) {
-            document.body.style.cursor = 'crosshair';
+            document.body.style.cursor = 'none';
         }
     };
     /**
@@ -337,7 +351,6 @@ define([
             this.enableAction("followNext");
             this.enableAction("followPrevious");
             game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
-            game.getScreen().hideUI();
             document.body.style.cursor = 'default';
         }
     };
@@ -359,6 +372,7 @@ define([
         restoreDefaults: _context.restoreDefaults.bind(_context),
         getControllers: _context.getControllers.bind(_context),
         getController: _context.getController.bind(_context),
+        isControllerPriority: _context.isControllerPriority.bind(_context),
         getInputInterpreters: _context.getInputInterpreters.bind(_context),
         getInputInterpreter: _context.getInputInterpreter.bind(_context),
         control: _context.control.bind(_context),

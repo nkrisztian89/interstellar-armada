@@ -305,6 +305,7 @@
     "views": [
         {
             "name": "near",
+            "isAimingView": true,
             "fov": 40,
             "fovRange": [40, 40],
             "followsPosition": true,
@@ -315,16 +316,18 @@
         },
         {
             "name": "far",
+            "isAimingView": true,
             "fov": 55,
             "fovRange": [55, 55],
             "followsPosition": true,
             "movable": false,
             "turnable": false,
             "rotationCenterIsObject": true,
-            "position": [0, -60, 18.5]
+            "position": [0, -65, 18.5]
         },
         {
             "name": "cockpit",
+            "isAimingView": true,
             "fov": 45,
             "fovRange": [45, 45],
             "fps": true,
@@ -339,6 +342,7 @@
         },
         {
             "name": "front",
+            "isAimingView": false,
             "fov": 55,
             "fovRange": [55, 55],
             "followsPosition": true,
@@ -359,6 +363,7 @@
         },
         {
             "name": "free",
+            "isAimingView": false,
             "fov": 45,
             "fovRange": [30, 60],
             "followsPosition": true,
@@ -370,6 +375,7 @@
         },
         {
             "name": "flyby",
+            "isAimingView": false,
             "fps": true,
             "fov": 45,
             "fovRange": [45, 45],
@@ -384,6 +390,7 @@
         },
         {
             "name": "target",
+            "isAimingView": false,
             "fps": true,
             "fov": 55,
             "fovRange": [30, 55],

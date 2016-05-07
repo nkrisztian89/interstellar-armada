@@ -55,6 +55,14 @@ define(function () {
     // -----------------------------------------------------------------------------
     // Functions of a single vector
     /**
+     * Returns the length of a 2D vector.
+     * @param {Number[2]} v The 2D vector.
+     * @returns {Number} Length of v.
+     */
+    vec.length2 = function (v) {
+        return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+    };
+    /**
      * Returns the length of a 3D vector.
      * @param {Number[3]} v The 3D vector.
      * @returns {Number} Length of v.

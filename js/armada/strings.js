@@ -55,12 +55,20 @@ define([
     strings.LEVEL = {
         PREFIX: {name: "level.", optional: true}
     };
+    strings.TEAM = {
+        PREFIX: {name: "team.", optional: true}
+    };
+    strings.SQUAD = {
+        PREFIX: {name: "squad.", optional: true}
+    };
     strings.BATTLE = {
         DEVELOPMENT_VERSION_NOTICE: {name: "battle.developmentVersionNotice"},
         SPECTATOR_MODE: {name: "battle.spectatorMode"},
-        PILOTING_MODE: {name: "battle.pilotingMode"},
         HUD_TARGET: {name: "battle.hud.target"},
         HUD_DISTANCE: {name: "battle.hud.distance"},
+        HUD_VELOCITY: {name: "battle.hud.velocity"},
+        HUD_SPACECRAFT_NAME_UNKNOWN: {name: "battle.hud.spacecraftNameUnknown"},
+        HUD_TEAM_UNKNOWN: {name: "battle.hud.teamUnknown"},
         HUD_VIEW: {name: "battle.hud.view"},
         HUD_FLIGHT_MODE: {name: "battle.hud.flightMode"},
         HUD_SPEED: {name: "battle.hud.speed"},
@@ -167,26 +175,6 @@ define([
     };
     strings.FLIGHT_MODE = {
         PREFIX: {name: "flightMode.", optional: true}
-    };
-    /**
-     * A shortcut for getting the translated (if available) or original spacecraft class name.
-     * @param {SpacecraftClass} spacecraftClass
-     * @returns {String}
-     */
-    strings.getSpacecraftClassName = function (spacecraftClass) {
-        return strings.get(
-                strings.SPACECRAFT_CLASS.PREFIX, spacecraftClass.getName() + strings.SPACECRAFT_CLASS.NAME_SUFFIX.name,
-                spacecraftClass.getFullName());
-    };
-    /**
-     * A shortcut for getting the translated (if available) or original spacecraft type name.
-     * @param {SpacecraftType} spacecraftType
-     * @returns {String}
-     */
-    strings.getSpacecraftTypeName = function (spacecraftType) {
-        return strings.get(
-                strings.SPACECRAFT_TYPE.PREFIX, spacecraftType.getName() + strings.SPACECRAFT_TYPE.NAME_SUFFIX.name,
-                spacecraftType.getFullName());
     };
     return strings;
 });

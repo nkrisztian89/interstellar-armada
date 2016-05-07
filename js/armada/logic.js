@@ -11,6 +11,7 @@
 /*global define, Element, this */
 
 /**
+ * @param utils Used for format strings and solving quadratic equations
  * @param vec Vector operations are needed for several logic functions
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
@@ -21,10 +22,12 @@
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
  * @param config Used to access game settings/configuration
+ * @param strings Used for translation support
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param ai Used for setting the artificial intelligence pilots when creating a level.
  */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -36,9 +39,10 @@ define([
     "armada/graphics",
     "armada/classes",
     "armada/configuration",
+    "armada/strings",
     "armada/ai",
     "utils/polyfill"
-], function (vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, classes, config, ai) {
+], function (utils, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, classes, config, strings, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -89,6 +93,12 @@ define([
              * @type Number
              */
             BLINKER_LIGHT_PRIORITY = 3,
+            /**
+             * When adding random ships or ships without a team to a level in demo mode, they will be automatically put into a team with
+             * this name, with an ID that equals the index of the spacecraft added + 1 (converted to string).
+             * @type String
+             */
+            GENERIC_TEAM_NAME = "team",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -899,26 +909,6 @@ define([
                         explosion = new Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true);
                         explosion.addToScene(this._visualModel.getNode().getScene());
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
-                        // auto targeting on hit (only for hostile targets)
-                        if ((hitObjects[i] !== this._origin) && (this._origin.isHostile(hitObjects[i]))) {
-                            switch (config.getSetting(config.BATTLE_SETTINGS.AUTO_TARGETING)) {
-                                case config.AutoTargetingMode.HIT_AND_NO_TARGET:
-                                    if (!this._origin.getTarget()) {
-                                        this._origin.setTarget(hitObjects[i], true);
-                                    }
-                                    break;
-                                case config.AutoTargetingMode.HIT_AND_AUTO_TARGET:
-                                    if (!this._origin.hasManualTarget() && (this._origin.getTarget() !== hitObjects[i])) {
-                                        this._origin.setTarget(hitObjects[i], true);
-                                    }
-                                    break;
-                                case config.AutoTargetingMode.ALWAYS_WHEN_HIT:
-                                    if (this._origin.getTarget() !== hitObjects[i]) {
-                                        this._origin.setTarget(hitObjects[i], true);
-                                    }
-                                    break;
-                            }
-                        }
                         this.destroy();
                         return;
                     }
@@ -1767,6 +1757,20 @@ define([
         }
     };
     /**
+     * Return the currently set target for forward (positive) / reverse (negative) speed, in m/s. Only meaninful in compensated flight modes.
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getSpeedTarget = function () {
+        return this._speedTarget;
+    };
+    /**
+     * Returns whether the maneuvering computer has a meaningful speed target in its current flight mode.
+     * @returns {Boolean}
+     */
+    ManeuveringComputer.prototype.hasSpeedTarget = function () {
+        return this._compensated;
+    };
+    /**
      * Sets the target angular velocity to yaw to the left with the given intensity 
      * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
@@ -1967,6 +1971,49 @@ define([
     };
     // #########################################################################
     /**
+     * @class
+     * A team to which spacecrafts can belong to that determines which spacecrafts are hostile and friendly towards each other.
+     * @param {String|Object} idOrParams
+     */
+    function Team(idOrParams) {
+        /**
+         * The unique string ID of this team.
+         * @type String
+         */
+        this._id = null;
+        /**
+         * A string name of this team to be used for chosing the translated displayed name.
+         * @type String
+         */
+        this._name = null;
+        if (typeof idOrParams === "string") {
+            this._id = idOrParams;
+            this._name = idOrParams;
+        } else if (typeof idOrParams === "object") {
+            this._id = idOrParams.id;
+            this._name = idOrParams.name;
+        } else {
+            application.showError("Invalid parameter specified for Team constructor!");
+        }
+    }
+    /**
+     * Returns the unique string ID of this team.
+     * @returns {String}
+     */
+    Team.prototype.getID = function () {
+        return this._id;
+    };
+    /**
+     * Returns the translated, human-readable unique name of this team.
+     * @returns {String}
+     */
+    Team.prototype.getDisplayName = function () {
+        return utils.formatString(strings.get(strings.TEAM.PREFIX, this._name), {
+            id: this._id
+        });
+    };
+    // #########################################################################
+    /**
      * @typedef {Function} Spacecraft~beingTargetedCallback
      * @param {Spacecraft} targetedBy
      */
@@ -2083,11 +2130,6 @@ define([
          */
         this._target = null;
         /**
-         * Whether the currently targeted spacecraft was selected automatically.
-         * @type Boolean
-         */
-        this._autoTarget = false;
-        /**
          * Cached value of the matrix representing the relative velocity (translation in m/s in the coordinate space of the spacecraft)
          * of the spacecraft.
          * @type Float32Array
@@ -2098,11 +2140,6 @@ define([
          * @type Spacecraft[]
          */
         this._targetedBy = [];
-        /**
-         * A callback function to execute when auto-targeting is performed by this spacecraft.
-         * @type Function
-         */
-        this._onAutoTargeting = null;
         /**
          * A callback function to execute when another spacecraft targets this spacecraft.
          * @type Spacecraft~beingTargetedCallback
@@ -2129,10 +2166,20 @@ define([
          */
         this._onTargetFired = null;
         /**
-         * The ID of the team this spacecraft belongs to (governing who is friend or foe).
-         * @type String
+         * A reference to the team this spacecraft belongs to (governing who is friend or foe).
+         * @type Team
          */
         this._team = null;
+        /**
+         * A string ID of the squad this spacecraft belongs to.
+         * @type String
+         */
+        this._squad = null;
+        /**
+         * The index of this spacecraft that specifies its place within its squad.
+         * @type Number
+         */
+        this._indexInSquad = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
@@ -2179,17 +2226,26 @@ define([
     // direct getters and setters
     /**
      * Sets a new team affiliation for the spacecraft.
-     * @param {String} value The ID of the team to set.
+     * @param {Team} value The team to set.
      */
     Spacecraft.prototype.setTeam = function (value) {
         this._team = value;
     };
     /**
-     * Returns the ID of the team this spacecraft belongs to.
-     * @returns {String}
+     * Returns the team this spacecraft belongs to.
+     * @returns {Team}
      */
     Spacecraft.prototype.getTeam = function () {
         return this._team;
+    };
+    /**
+     * Sets a new squad and related index for this spacecraft.
+     * @param {String} squadName
+     * @param {Number} indexInSquad
+     */
+    Spacecraft.prototype.setSquad = function (squadName, indexInSquad) {
+        this._squad = squadName;
+        this._indexInSquad = indexInSquad;
     };
     /**
      * Returns whether the passed spacecraft is friendly to this one.
@@ -2226,7 +2282,9 @@ define([
      * @returns {String}
      */
     Spacecraft.prototype.getName = function () {
-        return this._name;
+        return (this._name || !this._squad) ?
+                this._name :
+                (strings.get(strings.SQUAD.PREFIX, this._squad)) + " " + this._indexInSquad.toString();
     };
     /**
      * Returns the current amount of hit points this spacecraft has left.
@@ -2266,19 +2324,26 @@ define([
     };
     // indirect getters and setters
     /**
-     * Returns the name of the class of this spacecraft. (e.g. Falcon or Aries)
+     * Returns the name (ID) of the class of this spacecraft. (e.g. falcon or aries)
      * @returns {String}
      */
     Spacecraft.prototype.getClassName = function () {
-        return this._class.getFullName();
+        return this._class.getName();
     };
     /**
-     * Returns the name of the type of this spacecraft. (e.g. Interceptor or
-     * Corvette)
+     * Returns the name (ID) of the type of this spacecraft. (e.g. interceptor or corvette)
      * @returns {String}
      */
     Spacecraft.prototype.getTypeName = function () {
-        return this._class.getSpacecraftType().getFullName();
+        return this._class.getSpacecraftType().getName();
+    };
+    /**
+     * Returns the (first) object view associated with this spacecraft that has the given name.
+     * @param {String} name
+     * @returns {ObjectView}
+     */
+    Spacecraft.prototype.getView = function (name) {
+        return this._class.getView(name);
     };
     /**
      * Returns the array of weapon equipped on this spacecraft.
@@ -2302,6 +2367,13 @@ define([
      */
     Spacecraft.prototype.getPhysicalPositionMatrix = function () {
         return this._physicalModel.getPositionMatrix();
+    };
+    /**
+     * Returns the 3D vector describing the position of this spacecraft in world space.
+     * @returns {Number[3]}
+     */
+    Spacecraft.prototype.getPhysicalPositionVector = function () {
+        return mat.translationVector3(this._physicalModel.getPositionMatrix());
     };
     /**
      * Returns the 4x4 rotation matrix describing the orientation of this 
@@ -2447,6 +2519,9 @@ define([
                 projectileArray,
                 undefined,
                 spacecraftArray);
+        if (dataJSON.squad) {
+            this.setSquad(dataJSON.squad.name, dataJSON.squad.index);
+        }
         // equipping the created spacecraft
         // if there is an quipment tag...
         if (dataJSON.equipment) {
@@ -2593,6 +2668,20 @@ define([
         this._maneuveringComputer.setSpeedTarget(value);
     };
     /**
+     * Return the currently set target for forward (positive) / reverse (negative) speed, in m/s. Only meaninful in compensated flight modes.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getSpeedTarget = function () {
+        return this._maneuveringComputer.getSpeedTarget();
+    };
+    /**
+     * Returns whether the spacecraft has a meaningful speed target in its current flight mode.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.hasSpeedTarget = function () {
+        return this._maneuveringComputer.hasSpeedTarget();
+    };
+    /**
      * Control command for the maneuvering computer to yaw to the left.
      * @param {Number} [intensity] Optional intensity for the command, if the
      * player uses an input device that has intensity control (e.g. mouse, joystick)
@@ -2672,7 +2761,7 @@ define([
      * @param {Boolean} customShader
      */
     Spacecraft.prototype.acquireResources = function (lod, hitbox, customShader) {
-        application.log("Requesting resources for spacecraft (" + this._class.getFullName() + ")...", 2);
+        application.log("Requesting resources for spacecraft (" + this._class.getName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
@@ -2751,7 +2840,7 @@ define([
         }
         resources.executeWhenReady(function () {
             var node, explosion, lightSources;
-            application.log("Adding spacecraft (" + this._class.getFullName() + ") to scene...", 2);
+            application.log("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
             visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
@@ -2980,18 +3069,16 @@ define([
     /**
      * Targets the given spacecraft and executes related operations, such as changing target views. 
      * @param {Spacecraft|null} target If null is given, the current target will be canceled.
-     * @param {Boolean} [auto=false] Whether this targeting operation is the result of auto-targeting (or is a manual action)
      */
-    Spacecraft.prototype.setTarget = function (target, auto) {
+    Spacecraft.prototype.setTarget = function (target) {
         var i, camConfigs;
-        auto = auto || false;
-        if ((target !== this._target) || (this._autoTarget && !auto)) {
+        if (target !== this._target) {
             if (this._target) {
                 this._target._setBeingUntargeted(this);
             }
             this._target = target;
-            this._autoTarget = auto || false;
             if (this._visualModel) {
+                // set the target following views to follow the new target
                 camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(config.getSetting(config.BATTLE_SETTINGS.TARGET_VIEW_NAME));
                 for (i = 0; i < camConfigs.length; i++) {
                     if (this._visualModel.getNode().getScene().getCamera().getConfiguration() === camConfigs[i]) {
@@ -3004,9 +3091,6 @@ define([
             }
             if (this._target) {
                 this._target._setBeingTargeted(this);
-            }
-            if (auto) {
-                this.handleAutoTargeting();
             }
         }
     };
@@ -3022,7 +3106,7 @@ define([
                 index = (index + 1) % this._spacecraftArray.length;
             }
             if (this._spacecraftArray[index] !== this) {
-                this.setTarget(this._spacecraftArray[index], false);
+                this.setTarget(this._spacecraftArray[index]);
             }
         }
     };
@@ -3036,7 +3120,25 @@ define([
             count = 0;
             while (count < this._spacecraftArray.length) {
                 if ((this._spacecraftArray[index] !== this) && (this._spacecraftArray[index].isHostile(this))) {
-                    this.setTarget(this._spacecraftArray[index], false);
+                    this.setTarget(this._spacecraftArray[index]);
+                    return;
+                }
+                index = (index + 1) % this._spacecraftArray.length;
+                count++;
+            }
+        }
+    };
+    /**
+     * Targets the next non-hostile (friendly or neutral) spacecraft in the lists of spacecrafts and marks it as a manual target.
+     */
+    Spacecraft.prototype.targetNextNonHostile = function () {
+        var index, count;
+        if (this._spacecraftArray && (this._spacecraftArray.length > 0)) {
+            index = (this._spacecraftArray.indexOf(this._target) + 1) % this._spacecraftArray.length;
+            count = 0;
+            while (count < this._spacecraftArray.length) {
+                if ((this._spacecraftArray[index] !== this) && (!this._spacecraftArray[index].isHostile(this))) {
+                    this.setTarget(this._spacecraftArray[index]);
                     return;
                 }
                 index = (index + 1) % this._spacecraftArray.length;
@@ -3055,11 +3157,32 @@ define([
         return this._target;
     };
     /**
-     * Returns whether the currently targeted spacecraft was selected manually
-     * @returns {Boolean}
+     * Returns the estimated position towards which the spacecraft needs to fire to hit its current target in case both itself and the 
+     * target retain their current velocity, based on the speed of the projectile fired from the first barrel of the first equipped weapon.
+     * @returns {Number[3]}
      */
-    Spacecraft.prototype.hasManualTarget = function () {
-        return this._target && !this._autoTarget;
+    Spacecraft.prototype.getTargetHitPosition = function () {
+        var
+                position = this.getPhysicalPositionVector(),
+                targetPosition = this._target.getPhysicalPositionVector(),
+                relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this.getVelocityMatrix())),
+                projectileSpeed = this._weapons[0].getProjectileVelocity(),
+                a, b, c, i, hitTime;
+        a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
+        b = 0;
+        for (i = 0; i < 3; i++) {
+            b += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
+        }
+        c = 0;
+        for (i = 0; i < 3; i++) {
+            c += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
+        }
+        hitTime = utils.getGreaterSolutionOfQuadraticEquation(a, b, c);
+        return [
+            targetPosition[0] + hitTime * relativeTargetVelocity[0],
+            targetPosition[1] + hitTime * relativeTargetVelocity[1],
+            targetPosition[2] + hitTime * relativeTargetVelocity[2]
+        ];
     };
     /**
      * Resets all the thruster burn levels of the spacecraft to zero.
@@ -3181,21 +3304,6 @@ define([
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {
             this._maneuveringComputer.updateSpeedIncrement(dt);
-        }
-    };
-    /**
-     * Sets a function that will be executed every time this spacecraft auto-targets a new spacecraft.
-     * @param {Function} value
-     */
-    Spacecraft.prototype.setOnAutoTargeting = function (value) {
-        this._onAutoTargeting = value;
-    };
-    /**
-     * Executes the callback for auto-targeting, if any.
-     */
-    Spacecraft.prototype.handleAutoTargeting = function () {
-        if (this._onAutoTargeting) {
-            this._onAutoTargeting();
         }
     };
     /**
@@ -3428,6 +3536,21 @@ define([
                 this._spacecrafts.find(this._spacecraftHasVisualModel.bind(this, scene.getCamera().getFollowedNode().getRenderableObject())) :
                 null;
     };
+    /**
+     * Returns the team with the given ID from the list of teams added to this level.
+     * @param {String} id
+     * @returns {Team}
+     */
+    Level.prototype.getTeam = function (id) {
+        var i;
+        for (i = 0; i < this._teams.length; i++) {
+            if (this._teams[i].getID() === id) {
+                return this._teams[i];
+            }
+        }
+        application.showError("No team exists with ID '" + id + "'!");
+        return null;
+    };
     // #########################################################################
     // methods
     /**
@@ -3456,7 +3579,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Level.prototype.loadFromJSON = function (dataJSON, demoMode) {
-        var i, spacecraft, team, teamCount, aiType;
+        var i, spacecraft, teamID, team, aiType;
         application.log("Loading level from JSON file...", 2);
         if (dataJSON.environment.createFrom) {
             this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
@@ -3465,7 +3588,12 @@ define([
             this._environment = new Environment(dataJSON.environment);
             this._ownsEnvironment = true;
         }
-        this._teams = dataJSON.teams;
+        this._teams = [];
+        if (dataJSON.teams) {
+            for (i = 0; i < dataJSON.teams.length; i++) {
+                this._teams.push(new Team(dataJSON.teams[i]));
+            }
+        }
         this._views = [];
         if (dataJSON.views) {
             for (i = 0; i < dataJSON.views.length; i++) {
@@ -3474,7 +3602,6 @@ define([
         }
         this._projectiles = [];
         this._spacecrafts = [];
-        teamCount = 0;
         ai.clearAIs();
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
             spacecraft = new Spacecraft();
@@ -3491,16 +3618,21 @@ define([
             if (aiType) {
                 ai.addAI(aiType, spacecraft);
             }
-            team = dataJSON.spacecrafts[i].team;
-            if (team) {
-                if (this._teams.indexOf(team) >= 0) {
-                    spacecraft.setTeam(dataJSON.spacecrafts[i].team);
+            teamID = dataJSON.spacecrafts[i].team;
+            if (teamID) {
+                team = this.getTeam(teamID);
+                if (team) {
+                    spacecraft.setTeam(team);
                 } else {
-                    application.showError("Invalid team '" + team + "' specified for " + spacecraft.getClassName() + "!");
+                    application.showError("Invalid team ID '" + teamID + "' specified for " + spacecraft.getClassName() + "!");
                 }
             } else if (demoMode) {
-                spacecraft.setTeam(teamCount.toString());
-                teamCount++;
+                team = new Team({
+                    name: GENERIC_TEAM_NAME,
+                    id: (this._teams.length + 1).toString()
+                });
+                this._teams.push(team);
+                spacecraft.setTeam(team);
             }
             this._spacecrafts.push(spacecraft);
         }
@@ -3517,10 +3649,9 @@ define([
      * @param {Boolean} demoMode If true, a suitable AI and a unique team will be set for each added random ship.
      */
     Level.prototype.addRandomShips = function (randomSeed, demoMode) {
-        var random, shipClass, spacecraft, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle)), teamCount;
+        var random, shipClass, spacecraft, team, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle));
         randomSeed = randomSeed || config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
-        teamCount = 0;
         for (shipClass in this._randomShips) {
             if (this._randomShips.hasOwnProperty(shipClass)) {
                 for (i = 0; i < this._randomShips[shipClass]; i++) {
@@ -3541,8 +3672,12 @@ define([
                         if (spacecraft.isFighter()) {
                             ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), spacecraft);
                         }
-                        spacecraft.setTeam("r" + teamCount);
-                        teamCount++;
+                        team = new Team({
+                            name: GENERIC_TEAM_NAME,
+                            id: (this._teams.length + 1).toString()
+                        });
+                        this._teams.push(team);
+                        spacecraft.setTeam(team);
                     }
                     this._spacecrafts.push(spacecraft);
                 }

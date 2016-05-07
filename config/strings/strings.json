@@ -41,15 +41,31 @@
         "staticAvoidance": "Static avoidance test",
         "dynamicAvoidance": "Dynamic avoidance test"
     },
+    "team": {
+        "team": "Team {id}",
+        "empire": "Galactic Empire",
+        "rebels": "Separatist rebels"
+    },
+    "squad": {
+        "alpha": "Alpha",
+        "beta": "Beta",
+        "gamma": "Gamma",
+        "delta": "Delta",
+        "omega": "Omega",
+        "wraith": "Wraith",
+        "phantom": "Phantom"
+    },
     "battle": {
         "developmentVersionNotice": "running an early test of Interstellar Armada, version: {version}",
         "spectatorMode": "Spectator mode",
-        "pilotingMode": "Piloting {spacecraftClass} {spacecraftType}",
         "hud": {
             "target": "target",
-            "distance": "distance",
+            "distance": "Distance",
+            "velocity": "Velocity",
+            "spacecraftNameUnknown": "Unknown designation",
+            "teamUnknown": "-",
             "view": "{view} view",
-            "flightMode": "{flightMode} flight mode",
+            "flightMode": "Flight mode:",
             "speed": "speed"
         },
         "loadingBox": {
@@ -150,12 +166,14 @@
         "switchToPilotMode": "Switch to pilot mode",
         "switchToSpectatorMode": "Switch to spectator mode",
         "toggleHitboxVisibility": "Toggle the visibility of hitboxes",
-        "toggleTextVisibility": "Toggle the visibility of the texts on screen",
+        "toggleDevInfoVisibility": "Toggle the visibility of version information and framerate",
+        "toggleHUDVisibility": "Toggle HUD visibility",
         "toggleMouseControls": "Disable / enable mouse controls",
         "toggleJoystickControls": "Disable / enable joystick controls",
         "changeFlightMode": "Change flight mode",
         "nextHostileTarget": "Target next hostile spacecraft",
-        "nextTarget": "Target next spacecraft",
+        "nextNonHostileTarget": "Target next non-hostile (friendly or neutral) spacecraft",
+        "toggleAutoTargeting": "Toggle automatic targeting of hostiles",
         "fire": "Fire primary weapons",
         "forward": "Forward thrust (free mode) or increase speed",
         "reverse": "Reverse thrust (free mode) or decrease speed",

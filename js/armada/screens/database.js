@@ -58,7 +58,6 @@ define([
             NEXT_BUTTON_ID = "nextButton",
             LOADING_BOX_ID = "loadingBox",
             DATABASE_CANVAS_NAME = "databaseCanvas",
-            DATABASE_CANVAS_ID = DATABASE_CANVAS_NAME,
             LOADING_INITIAL_PROGRESS = 15,
             LOADING_RESOURCES_START_PROGRESS = 15,
             LOADING_RESOURCE_PROGRESS = 60,
@@ -514,8 +513,8 @@ define([
         _currentItemLengthInMeters = _currentItem ? _currentItem.getVisualModel().getHeightInMeters() : 0;
         // full names can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise the stock value is displayed
-        this._itemNameHeader.setContent(strings.getSpacecraftClassName(shipClass));
-        this._itemTypeHeader.setContent(strings.getSpacecraftTypeName(shipClass.getSpacecraftType()));
+        this._itemNameHeader.setContent(shipClass.getDisplayName());
+        this._itemTypeHeader.setContent(shipClass.getSpacecraftType().getDisplayName());
         this._itemStatsParagraph.setContent(getStatsFormatString(), {
             length: (_currentItemLengthInMeters && utils.getLengthString(_currentItemLengthInMeters)) || "-",
             mass: utils.getMassString(shipClass.getMass()) || "-",
@@ -525,20 +524,9 @@ define([
         });
         // descriptions can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise an info about the missing description is displayed
-        this._itemDescriptionParagraph.setContent(
-                strings.get(
-                        strings.SPACECRAFT_CLASS.PREFIX, shipClass.getName() + strings.SPACECRAFT_CLASS.DESCRIPTION_SUFFIX.name,
-                        utils.formatString(strings.get(strings.DATABASE.MISSING_SPACECRAFT_CLASS_DESCRIPTION), {
-                            spacecraftClass: strings.get(strings.SPACECRAFT_CLASS.PREFIX, shipClass.getName() + strings.SPACECRAFT_CLASS.NAME_SUFFIX.name, shipClass.getFullName()),
-                            originalDescription: shipClass.getDescription()
-                        })) +
+        this._itemDescriptionParagraph.setContent(shipClass.getDisplayDescription() +
                 "<br/>" + "<br/>" +
-                strings.get(
-                        strings.SPACECRAFT_TYPE.PREFIX, shipClass.getSpacecraftType().getName() + strings.SPACECRAFT_TYPE.DESCRIPTION_SUFFIX.name,
-                        utils.formatString(strings.get(strings.DATABASE.MISSING_SPACECRAFT_TYPE_DESCRIPTION), {
-                            spacecraftType: strings.get(strings.SPACECRAFT_TYPE.PREFIX, shipClass.getSpacecraftType().getName() + strings.SPACECRAFT_TYPE.NAME_SUFFIX.name, shipClass.getSpacecraftType().getFullName()),
-                            originalDescription: shipClass.getSpacecraftType().getDescription()
-                        })));
+                shipClass.getSpacecraftType().getDisplayDescription());
     };
     /**
      * @override
@@ -590,7 +578,7 @@ define([
             this._loadingBox.show();
         }
         this._updateLoadingStatus(strings.get(strings.DATABASE.LOADING_BOX_INITIALIZING), 0);
-        this.resizeCanvas(this._getElementID(DATABASE_CANVAS_ID));
+        this.getScreenCanvas(DATABASE_CANVAS_NAME).handleResize();
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }

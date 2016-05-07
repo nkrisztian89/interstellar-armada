@@ -7,13 +7,45 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, setTimeout */
+/*global define, setTimeout, NaN */
 
 define(function () {
     "use strict";
     var
-            NUMBER_THOUSANDS_DELIMITER = " ",
-            exports = {},
+            // ------------------------------------------------------------------------------
+            // enums
+            /**
+             * Indicates a method to be used when scaling a clip-space (or otherwise relative) coordinate to a viewport.
+             * @enum {String}
+             * @type Object
+             */
+            ScaleMode = {
+                /**
+                 * Scale the coordinate using the width of the viewport.
+                 */
+                WIDTH: "width",
+                /**
+                 * Scale the coordinate using the height of the viewport.
+                 */
+                HEIGHT: "height",
+                /**
+                 * Scale X coordinates using the width and Y coordinates using the height of the viewport.
+                 */
+                ASPECT: "aspect",
+                /**
+                 * Scale the coordinate using either the width or the height of the viewport, whichever is smaller.
+                 */
+                MINIMUM: "minimum",
+                /**
+                 * Scale the coordinate using either the width or the height of the viewport, whichever is larger.
+                 */
+                MAXIMUM: "maximum"
+            },
+    // ------------------------------------------------------------------------------
+    // constants
+    NUMBER_THOUSANDS_DELIMITER = " ",
+            // ------------------------------------------------------------------------------
+            // private variables
             _keyCodeTable = {
                 "backspace": 8,
                 "tab": 9,
@@ -46,7 +78,45 @@ define(function () {
                 "f1": 112, "f2": 113, "f3": 114, "f4": 115, "f5": 116, "f6": 117, "f7": 118, "f8": 119, "f9": 120,
                 "f10": 121, "f11": 122, "f12": 123,
                 "-": 173, ",": 188, ".": 190
-            };
+            },
+    // ------------------------------------------------------------------------------
+    // interface
+    exports = {};
+    exports.ScaleMode = ScaleMode;
+    /**
+     * Returns whether generic coordinates or sizes (in cases where there is no separate X and Y and thus no aspect scaling possible, such
+     * as for font sizes) should scale with the width of the viewport according to the passed scaling mode, if the viewport has the passed
+     * size.
+     * @param {ScaleMode} scaleMode
+     * @param {Number} width
+     * @param {Number} height
+     * @returns {Boolean}
+     */
+    exports.scalesWithWidth = function (scaleMode, width, height) {
+        return ((scaleMode === ScaleMode.WIDTH) || ((scaleMode === ScaleMode.MINIMUM) && (width < height)) || ((scaleMode === ScaleMode.MAXIMUM) && (width >= height)));
+    };
+    /**
+     * Returns whether X coordinates or widths should scale with the width of the viewport according to the passed scaling mode, if the 
+     * viewport has the passed size.
+     * @param {ScaleMode} scaleMode
+     * @param {Number} width
+     * @param {Number} height
+     * @returns {Boolean}
+     */
+    exports.xScalesWithWidth = function (scaleMode, width, height) {
+        return ((scaleMode === ScaleMode.ASPECT) || (scaleMode === ScaleMode.WIDTH) || ((scaleMode === ScaleMode.MINIMUM) && (width < height)) || ((scaleMode === ScaleMode.MAXIMUM) && (width >= height)));
+    };
+    /**
+     * Returns whether Y coordinates or heights should scale with the height of the viewport according to the passed scaling mode, if the 
+     * viewport has the passed size.
+     * @param {ScaleMode} scaleMode
+     * @param {Number} width
+     * @param {Number} height
+     * @returns {Boolean}
+     */
+    exports.yScalesWithHeight = function (scaleMode, width, height) {
+        return ((scaleMode === ScaleMode.ASPECT) || (scaleMode === ScaleMode.HEIGHT) || ((scaleMode === ScaleMode.MINIMUM) && (height < width)) || ((scaleMode === ScaleMode.MAXIMUM) && (height >= width)));
+    };
     /**
      * Returns a [red,green,blue] array representing an RGB color based on the
      * data stored in the attributes of the passed XML tag.
@@ -372,6 +442,30 @@ define(function () {
             color1[2] * color1Ratio + color2[2] * color2Ratio,
             color1[3] * color1Ratio + color2[3] * color2Ratio
         ];
+    };
+    /**
+     * Converts the passed RGBA color from a 4 component float vector format to a string that can be used to set that color in CSS.
+     * @param {Number[4]} color
+     * @returns {String}
+     */
+    exports.getCSSColor = function (color) {
+        return "rgba(" +
+                Math.round(color[0] * 255) + "," +
+                Math.round(color[1] * 255) + "," +
+                Math.round(color[2] * 255) + "," +
+                color[3] + ")";
+    };
+    /**
+     * Solves the quadratic equation a * x^2 + b * x + c = 0 for x, and returns the greater of the two solutions. Returns NaN if there is
+     * no solution.
+     * @param {Number} a
+     * @param {Number} b
+     * @param {Number} c
+     * @returns {Number}
+     */
+    exports.getGreaterSolutionOfQuadraticEquation = function (a, b, c) {
+        var d = b * b - 4 * a * c;
+        return (d >= 0) ? ((Math.sqrt(d) - b) / (2 * a)) : NaN;
     };
     return exports;
 });

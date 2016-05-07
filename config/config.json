@@ -1,5 +1,5 @@
 {
-    "version": "0.2:272 (2016.04.30.)",
+    "version": "0.2:273 (2016.05.07.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -350,7 +350,9 @@
                     }, {
                         "name": "toggleHitboxVisibility"
                     }, {
-                        "name": "toggleTextVisibility"
+                        "name": "toggleDevInfoVisibility"
+                    }, {
+                        "name": "toggleHUDVisibility"
                     }, {
                         "name": "toggleMouseControls"
                     }, {
@@ -366,7 +368,9 @@
                     }, {
                         "name": "nextHostileTarget"
                     }, {
-                        "name": "nextTarget"
+                        "name": "nextNonHostileTarget"
+                    }, {
+                        "name": "toggleAutoTargeting"
                     }, {
                         "name": "fire",
                         "continuous": true

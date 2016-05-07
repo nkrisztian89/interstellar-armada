@@ -1073,7 +1073,7 @@ define([
          * The current mouse position as obtained from the mouse event.
          * @type Number[2]
          */
-        this._mousePosition = null;
+        this._mousePosition = [0, 0];
         /**
          * The change in mouse position since the last time the inputs were processed.
          * @type Number[2]
@@ -1132,7 +1132,7 @@ define([
         this._screenCenter = [x, y];
         this._screenSize = Math.min(x, y);
         this._updateDisplacementFactor();
-        this._mousePosition = null;
+        this._mousePosition = [x, y];
         this._mousePositionChange = [0, 0];
         this._scrollChange = [0, 0];
     };
@@ -1247,7 +1247,7 @@ define([
      * @param {MouseEvent} event
      */
     MouseInputInterpreter.prototype.handleMouseMove = function (event) {
-        if (this._mousePosition !== null) {
+        if (this._mousePositionChange !== null) {
             // we add up all movements of the mouse and null it out after every query for triggered actions, so all movements between two
             // queries are considered
             this._mousePositionChange = [
@@ -1277,8 +1277,7 @@ define([
     MouseInputInterpreter.prototype.startListening = function () {
         InputInterpreter.prototype.startListening.call(this);
         this.cancelPressedButtons();
-        this._mousePosition = null;
-        this._mousePositionChange = [0, 0];
+        this._mousePositionChange = null;
         document.onmousedown = function (event) {
             this.handleMouseDown(event);
         }.bind(this);
@@ -1315,8 +1314,7 @@ define([
         document.onclick = null;
         document.oncontextmenu = null;
         this.cancelPressedButtons();
-        this._mousePosition = null;
-        this._mousePositionChange = [0, 0];
+        this._mousePositionChange = null;
         this._scrollChange = [0, 0];
     };
     /**
@@ -1330,7 +1328,7 @@ define([
                 this._bindings[actionName].getTriggeredIntensity(
                 this._currentlyPressedButtons,
                 this._mousePosition,
-                this._mousePositionChange,
+                this._mousePositionChange || [0, 0],
                 this._screenCenter,
                 this._scrollChange);
         return (actionIntensity >= 0) ?
@@ -1354,9 +1352,24 @@ define([
     MouseInputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
         var result = InputInterpreter.prototype.getTriggeredActions.call(this, actionFilterFunction);
         // null out the mouse movements added up since the last query
-        this._mousePositionChange = [0, 0];
+        this._mousePositionChange = null;
         this._scrollChange = [0, 0];
         return result;
+    };
+    /**
+     * Returns the currently stored mouse position.
+     * @returns {Number[2]}
+     */
+    MouseInputInterpreter.prototype.getMousePosition = function () {
+        return this._mousePosition;
+    };
+    /**
+     * Returns whether the currently stored mouse position is outside the set displacement deadzone.
+     * @returns {Boolean}
+     */
+    MouseInputInterpreter.prototype.isMouseDisplaced = function () {
+        return (Math.abs(this._mousePosition[0] - this._screenCenter[0]) > this._displacementDeadzone) ||
+                (Math.abs(this._mousePosition[1] - this._screenCenter[1]) > this._displacementDeadzone);
     };
     // #########################################################################
     /**
@@ -2213,6 +2226,14 @@ define([
                 this._controllersPriorityQueue.push(this._controllers[i]);
             }
         }
+    };
+    /**
+     * Returns whether the (/ a) controller with the given type name is th first in the controller priority queue.
+     * @param {String} controllerTypeName
+     * @returns {Boolean}
+     */
+    ControlContext.prototype.isControllerPriority = function (controllerTypeName) {
+        return (this._controllersPriorityQueue.length > 0) && (this._controllersPriorityQueue[0] === this.getController(controllerTypeName));
     };
     /**
      * Resets the default priority order of the stored controllers (the order in which they were added).

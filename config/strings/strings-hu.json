@@ -57,6 +57,20 @@
     "spacecraftStats": {
         "armor": "Páncélzat"
     },
+    "team": {
+        "team": "{id}. csapat",
+        "empire": "Galaktikus Birodalom",
+        "rebels": "Szeparatista lázadók"
+    },
+    "squad": {
+        "alpha": "Alfa",
+        "beta": "Béta",
+        "gamma": "Gamma",
+        "delta": "Delta",
+        "omega": "Omega",
+        "wraith": "Lidérc",
+        "phantom": "Fantom"
+    },
     "level": {
         "1v1": "Egy egy ellen",
         "3v3": "Három három ellen",
@@ -69,12 +83,14 @@
     "battle": {
         "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",
         "spectatorMode": "Nézelődő mód",
-        "pilotingMode": "{spacecraftClass} {spacecraftType} irányítása",
         "hud": {
             "target": "célpont",
-            "distance": "távolság",
+            "distance": "Távolság",
+            "velocity": "Sebesség",
+            "spacecraftNameUnknown": "Azonosító nélküli",
+            "teamUnknown": "-",
             "view": "{view} nézet",
-            "flightMode": "{flightMode} repülési mód",
+            "flightMode": "Repülési mód:",
             "speed": "sebesség"
         },
         "loadingBox": {
@@ -175,12 +191,14 @@
         "switchToPilotMode": "Átváltás pilóta módba",
         "switchToSpectatorMode": "Átváltás nézelődő módba",
         "toggleHitboxVisibility": "Találati zónák megjelenítése / elrejtése",
-        "toggleTextVisibility": "A képernyőn megjelenő szövegek megjelenítése / elrejtése",
+        "toggleDevInfoVisibility": "Verziószám és képfrissítési arány (FPS) megjelenítése / elrejtése",
+        "toggleHUDVisibility": "Űrhajó irányítófelületének megjelenítése / elrejtése",
         "toggleMouseControls": "Egér irányítás ki-/bekapcsolása",
         "toggleJoystickControls": "Joystick irányítás ki-/bekapcsolása",
         "changeFlightMode": "Repülési mód váltása",
         "nextHostileTarget": "Következő ellenséges célpont kijelölése",
-        "nextTarget": "Következő célpont kijelölése",
+        "nextNonHostileTarget": "Következő nem ellenséges (baráti vagy semleges) célpont kijelölése",
+        "toggleAutoTargeting": "Ellenséges célpontok automatikus kijelölésének ki-/bekapcsolása",
         "fire": "Tüzelés az elsődleges fegyverekkel",
         "forward": "Gyorsítás előre (szabad repülési módban) vagy a kívánt sebesség növelése",
         "reverse": "Gyorsítás hátrafelé (szabad repülési módban) vagy a kívánt sebesség csökkentése",

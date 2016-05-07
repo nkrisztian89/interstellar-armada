@@ -21,6 +21,7 @@
  * @param resources This module accesses graphics resources to assign them to classes when they are initialized
  * @param budaScene Required for parsing camera related enums
  * @param graphics Required to access resources according to current graphics settings
+ * @param strings Used for translation support
  */
 define([
     "utils/utils",
@@ -32,8 +33,9 @@ define([
     "modules/physics",
     "modules/graphics-resources",
     "modules/buda-scene",
-    "armada/graphics"
-], function (utils, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics) {
+    "armada/graphics",
+    "armada/strings"
+], function (utils, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -1427,14 +1429,21 @@ define([
     /**
      * @returns {String}
      */
-    SpacecraftType.prototype.getFullName = function () {
-        return this._fullName;
+    SpacecraftType.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.SPACECRAFT_TYPE.PREFIX, this.getName() + strings.SPACECRAFT_TYPE.NAME_SUFFIX.name,
+                this._fullName);
     };
     /**
      * @returns {String}
      */
-    SpacecraftType.prototype.getDescription = function () {
-        return this._description;
+    SpacecraftType.prototype.getDisplayDescription = function () {
+        return strings.get(
+                strings.SPACECRAFT_TYPE.PREFIX, this.getName() + strings.SPACECRAFT_TYPE.DESCRIPTION_SUFFIX.name,
+                utils.formatString(strings.get(strings.DATABASE.MISSING_SPACECRAFT_TYPE_DESCRIPTION), {
+                    spacecraftType: this.getDisplayName(),
+                    originalDescription: this._description
+                }));
     };
     /**
      * @returns {SpacecraftType[]}
@@ -1820,13 +1829,18 @@ define([
     };
     // ##############################################################################
     /**
-     * @class Describes the parameters of a certain view of an object, based on which
-     * a camera can be created if that object is deployed in a scene.
+     * @class Describes the parameters of a certain view of an object, based on which a camera can be created if that object is deployed in 
+     * a scene.
      * @extends GenericView
      * @param {Object} dataJSON
      */
     function ObjectView(dataJSON) {
         GenericView.call(this, dataJSON);
+        /**
+         * Whether this view is an aiming view, meaning it points towards the same direction as the weapons of the followed object (spacecraft).
+         * @type Boolean
+         */
+        this._isAimingView = (typeof dataJSON.isAimingView) === "boolean" ? dataJSON.isAimingView : _showMissingPropertyError(this, "isAimingView");
         /**
          * Whether the position of the view should follow the position of the object it is associated with (making the set position relative
          * to it)
@@ -1915,6 +1929,12 @@ define([
     }
     ObjectView.prototype = new GenericView();
     ObjectView.prototype.constructor = ObjectView;
+    /**
+     * @returns {Boolean}
+     */
+    ObjectView.prototype.isAimingView = function () {
+        return this._isAimingView;
+    };
     /**
      * @returns {Boolean}
      */
@@ -2534,14 +2554,21 @@ define([
     /**
      * @returns {String}
      */
-    SpacecraftClass.prototype.getFullName = function () {
-        return this._fullName;
+    SpacecraftClass.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.SPACECRAFT_CLASS.PREFIX, this.getName() + strings.SPACECRAFT_CLASS.NAME_SUFFIX.name,
+                this._fullName);
     };
     /**
      * @returns {String}
      */
-    SpacecraftClass.prototype.getDescription = function () {
-        return this._description;
+    SpacecraftClass.prototype.getDisplayDescription = function () {
+        return strings.get(
+                strings.SPACECRAFT_CLASS.PREFIX, this.getName() + strings.SPACECRAFT_CLASS.DESCRIPTION_SUFFIX.name,
+                utils.formatString(strings.get(strings.DATABASE.MISSING_SPACECRAFT_CLASS_DESCRIPTION), {
+                    spacecraftClass: this.getDisplayName(),
+                    originalDescription: this._description
+                }));
     };
     /**
      * @returns {Boolean}
@@ -2596,6 +2623,19 @@ define([
      */
     SpacecraftClass.prototype.getViews = function () {
         return this._views;
+    };
+    /**
+     * @param {String} name
+     * @returns {ObjectView}
+     */
+    SpacecraftClass.prototype.getView = function (name) {
+        var i;
+        for (i = 0; i < this._views.length; i++) {
+            if (this._views[i].getName() === name) {
+                return this._views[i];
+            }
+        }
+        return null;
     };
     /**
      * @returns {ExplosionClass}
