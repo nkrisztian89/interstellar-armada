@@ -1247,16 +1247,10 @@ define([
      * @param {MouseEvent} event
      */
     MouseInputInterpreter.prototype.handleMouseMove = function (event) {
-        if (this._mousePositionChange !== null) {
-            // we add up all movements of the mouse and null it out after every query for triggered actions, so all movements between two
-            // queries are considered
-            this._mousePositionChange = [
-                this._mousePositionChange[0] + (event.clientX - this._mousePosition[0]),
-                this._mousePositionChange[1] + (event.clientY - this._mousePosition[1])
-            ];
-        } else {
-            this._mousePositionChange = [0, 0];
-        }
+        // we add up all movements of the mouse and null it out after every query for triggered actions, so all movements between two
+        // queries are considered
+        this._mousePositionChange[0] += (event.clientX - this._mousePosition[0]);
+        this._mousePositionChange[1] += (event.clientY - this._mousePosition[1]);
         this._mousePosition = [event.clientX, event.clientY];
     };
     /**
@@ -1277,7 +1271,7 @@ define([
     MouseInputInterpreter.prototype.startListening = function () {
         InputInterpreter.prototype.startListening.call(this);
         this.cancelPressedButtons();
-        this._mousePositionChange = null;
+        this._mousePositionChange = [0, 0];
         document.onmousedown = function (event) {
             this.handleMouseDown(event);
         }.bind(this);
@@ -1314,7 +1308,7 @@ define([
         document.onclick = null;
         document.oncontextmenu = null;
         this.cancelPressedButtons();
-        this._mousePositionChange = null;
+        this._mousePositionChange = [0, 0];
         this._scrollChange = [0, 0];
     };
     /**
@@ -1328,7 +1322,7 @@ define([
                 this._bindings[actionName].getTriggeredIntensity(
                 this._currentlyPressedButtons,
                 this._mousePosition,
-                this._mousePositionChange || [0, 0],
+                this._mousePositionChange,
                 this._screenCenter,
                 this._scrollChange);
         return (actionIntensity >= 0) ?
@@ -1352,7 +1346,7 @@ define([
     MouseInputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
         var result = InputInterpreter.prototype.getTriggeredActions.call(this, actionFilterFunction);
         // null out the mouse movements added up since the last query
-        this._mousePositionChange = null;
+        this._mousePositionChange = [0, 0];
         this._scrollChange = [0, 0];
         return result;
     };

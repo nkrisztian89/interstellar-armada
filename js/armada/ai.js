@@ -71,19 +71,19 @@ define([
              * multiplied by this factor.
              * @type Number
              */
-            BASE_MAX_DISTANCE_FACTOR = 0.5,
+            BASE_MAX_DISTANCE_FACTOR = 0.3,
             /**
              * When closing in on a target because of having difficulties hitting it at the current distance, the maximum approach distance 
              * factor will be decreased to this value maximum (gradually).
              * @type Number
              */
-            CLOSE_MAX_DISTANCE_FACTOR = 0.2,
+            CLOSE_MAX_DISTANCE_FACTOR = 0.125,
             /**
              * When closing in on a target because of having difficulties hitting it at the current distance, the maximum approach distance 
              * is decreased this much in one step.
              * @type Number
              */
-            MAX_DISTANCE_FACTOR_DECREMENT = 0.1,
+            MAX_DISTANCE_FACTOR_DECREMENT = 0.05,
             /**
              * The maximum approach ditance factor will be decreased by one step (decrement) after this many missed shots at the target.
              * @type Number
@@ -94,7 +94,7 @@ define([
              * from the target.
              * @type Number
              */
-            MIN_DISTANCE_FACTOR = 0.1,
+            MIN_DISTANCE_FACTOR = 0.06,
             /**
              * During normal (not charge) attacks, fighters will approach / back off with a maximum speed equal to their acceleration
              * multiplied by this factor.

@@ -36,6 +36,7 @@ define([
     strings.INGAME_MENU = {
         TITLE: {name: "ingameMenu.title"},
         RESUME: {name: "ingameMenu.resume"},
+        RESTART: {name: "ingameMenu.restart"},
         QUIT: {name: "ingameMenu.quit"}
     };
     strings.INFO_BOX = {

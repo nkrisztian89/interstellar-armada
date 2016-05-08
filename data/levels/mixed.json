@@ -11,7 +11,7 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [0, 1100, -80],
+            "position": [0, 3100, -80],
             "rotations": [
                 {
                     "axis": "x",
@@ -115,7 +115,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [0, 1200, -100],
+            "position": [0, 3200, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -131,7 +131,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-35, 1235, -100],
+            "position": [-35, 3235, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -147,7 +147,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [35, 1235, -100],
+            "position": [35, 3235, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -163,7 +163,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [0, 1250, -150],
+            "position": [0, 3250, -150],
             "rotations": [
                 {
                     "axis": "z",
@@ -182,7 +182,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-35, 1285, -150],
+            "position": [-35, 3285, -150],
             "rotations": [
                 {
                     "axis": "z",
@@ -208,7 +208,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [35, 1285, -150],
+            "position": [35, 3285, -150],
             "rotations": [
                 {
                     "axis": "z",

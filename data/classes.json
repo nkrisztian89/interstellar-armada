@@ -1207,8 +1207,8 @@
             "shader": "billboard",
             "texture": "plasma",
             "size": 2.5,
-            "mass": 3,
-            "duration": 5000,
+            "mass": 2,
+            "duration": 4000,
             "intersectionPositions": [0],
             "muzzleFlash": {
                 "shader": "particle",
@@ -1227,8 +1227,8 @@
             "shader": "billboard",
             "texture": "proton",
             "size": 8,
-            "mass": 15,
-            "duration": 5000,
+            "mass": 10,
+            "duration": 4000,
             "intersectionPositions": [0.35],
             "muzzleFlash": {
                 "shader": "particle",
@@ -1247,8 +1247,8 @@
             "shader": "billboard",
             "texture": "ion",
             "size": 18,
-            "mass": 20,
-            "duration": 5000,
+            "mass": 16,
+            "duration": 4000,
             "intersectionPositions": [0],
             "muzzleFlash": {
                 "shader": "particle",
@@ -1273,7 +1273,7 @@
             "barrels": [
                 {
                     "projectile": "plasma",
-                    "projectileVelocity": 400,
+                    "projectileVelocity": 650,
                     "position": [0, 10, 0]
                 }
             ]
@@ -1288,22 +1288,22 @@
             "barrels": [
                 {
                     "projectile": "plasma",
-                    "projectileVelocity": 500,
+                    "projectileVelocity": 750,
                     "position": [2, 25, 10]
                 },
                 {
                     "projectile": "plasma",
-                    "projectileVelocity": 500,
+                    "projectileVelocity": 750,
                     "position": [-2, 25, 10]
                 },
                 {
                     "projectile": "plasma",
-                    "projectileVelocity": 500,
+                    "projectileVelocity": 750,
                     "position": [2, 25, 14]
                 },
                 {
                     "projectile": "plasma",
-                    "projectileVelocity": 500,
+                    "projectileVelocity": 750,
                     "position": [-2, 25, 14]
                 }
             ]
@@ -1318,7 +1318,7 @@
             "barrels": [
                 {
                     "projectile": "proton",
-                    "projectileVelocity": 600,
+                    "projectileVelocity": 900,
                     "position": [0, 100, 0]
                 }
             ]
@@ -1333,7 +1333,7 @@
             "barrels": [
                 {
                     "projectile": "ion",
-                    "projectileVelocity": 700,
+                    "projectileVelocity": 1000,
                     "position": [0, 320, 0]
                 }
             ]
@@ -1348,7 +1348,7 @@
             "grade": 1,
             "referenceMass": 10000,
             "thrust": 50,
-            "angularThrust": 180,
+            "angularThrust": 270,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35
         },
@@ -1360,7 +1360,7 @@
             "grade": 1,
             "referenceMass": 35000,
             "thrust": 30,
-            "angularThrust": 150,
+            "angularThrust": 225,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35
         },
@@ -1372,7 +1372,7 @@
             "grade": 1,
             "referenceMass": 9000000,
             "thrust": 15,
-            "angularThrust": 40,
+            "angularThrust": 120,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35
         },
@@ -1384,7 +1384,7 @@
             "grade": 1,
             "referenceMass": 20000000,
             "thrust": 10,
-            "angularThrust": 30,
+            "angularThrust": 90,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35
         },
@@ -1396,7 +1396,7 @@
             "grade": 1,
             "referenceMass": 250000000,
             "thrust": 8,
-            "angularThrust": 8,
+            "angularThrust": 24,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35
         }

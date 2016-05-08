@@ -38,7 +38,9 @@ define([
     function _getLevelOptions(demoMode) {
         var result = [], i, actionFunction = function (levelFilename) {
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
-            game.getScreen().startNewBattle(levelFilename, demoMode);
+            game.getScreen().startNewBattle({
+                levelSourceFilename: levelFilename,
+                demoMode: demoMode});
         };
         for (i = 0; i < config.getLevelFileCount(); i++) {
             result.push({
@@ -184,6 +186,14 @@ define([
                         id: strings.SETTINGS.CONTROLS.name,
                         action: function () {
                             game.setScreen(armadaScreens.CONTROLS_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
+                        }
+                    }, {
+                        id: strings.INGAME_MENU.RESTART.name,
+                        action: function () {
+                            game.closeSuperimposedScreen();
+                            game.getScreen().startNewBattle({
+                                restart: true
+                            });
                         }
                     }, {
                         id: strings.INGAME_MENU.QUIT.name,

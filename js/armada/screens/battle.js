@@ -117,6 +117,11 @@ define([
              */
             _battle = {},
             /**
+             * The name (including the path within the level folder) of the loaded level file.
+             * @type String
+             */
+            _levelSourceFilename,
+            /**
              * Whether the game is in demo mode, in which all spacecrafts are controlled by AI and automatic camera switching is performed.
              * @type Boolean
              */
@@ -1564,16 +1569,32 @@ define([
         }
     };
     /**
+     * @typedef {Object} BattleScreen~BattleParams
+     * @property {String} [levelSourceFilename]
+     * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the level.
+     * @property {Boolean} [restart]
+     */
+    /**
      * Loads the specified level description file and sets a callback to create a new game-logic model and scene for the simulated battle
      * based on the level description and current settings
-     * @param {String} levelSourceFilename
-     * @param {Boolean} demoMode If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the level.
+     * @param {BattleScreen~BattleParams} [params]
      */
-    BattleScreen.prototype.startNewBattle = function (levelSourceFilename, demoMode) {
+    BattleScreen.prototype.startNewBattle = function (params) {
         var
                 loadingStartTime = performance.now(),
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
-        _demoMode = demoMode;
+        params = params || {};
+        if (params.restart) {
+            this.stopRenderLoop();
+            pauseBattle();
+            _clearData();
+        }
+        if (params.levelSourceFilename !== undefined) {
+            _levelSourceFilename = params.levelSourceFilename;
+        }
+        if (params.demoMode !== undefined) {
+            _demoMode = params.demoMode;
+        }
         _clearData();
         document.body.classList.add("wait");
         this._loadingBox.show();
@@ -1583,9 +1604,9 @@ define([
                 canvas.height / 2);
         _level = new logic.Level();
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
-        _level.requestLoadFromFile(levelSourceFilename, demoMode, function () {
+        _level.requestLoadFromFile(_levelSourceFilename, _demoMode, function () {
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
-            _level.addRandomShips(undefined, demoMode);
+            _level.addRandomShips(undefined, _demoMode);
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();

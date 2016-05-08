@@ -41,6 +41,7 @@
     "ingameMenu": {
         "title": "Menü",
         "resume": "Vissza a játékba",
+        "restart": "Pálya újrakezdése",
         "quit": "Kilépés a főmenübe"
     },
     "infoBox": {

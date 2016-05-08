@@ -100,7 +100,7 @@
             "cameraPilotingSwitchTransitionStyle": "smooth",
             "momentDuration": 1,
             "backgroundObjectDistance": 4500,
-            "turnAccelerationDurationInSeconds": 0.5,
+            "turnAccelerationDurationInSeconds": 0.333,
             "defaultMuzzleFlashDuration": 500,
             "selfFire": true,
             "defaultEquipmentProfileName": "default",
