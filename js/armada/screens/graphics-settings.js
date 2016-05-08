@@ -116,8 +116,19 @@ define([
             _getShadowDistanceSettingValues = function () {
                 return graphics.getShadowDistances().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
+            /**
+             * In the same format as the other value arrays
+             * @type String[][2]
+             */
             _getMaxDynamicLightsSettingValues = function () {
                 return graphics.getPointLightAmounts().map(_getMapToCaptionAndValueFunction(strings.SETTING));
+            },
+            /**
+             * In the same format as the other value arrays
+             * @type String[][2]
+             */
+            _getDustParticleAmountSettingValues = function () {
+                return graphics.getDustParticleAmounts().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * Helper function for finding the index of a setting in an array storing caption / setting pairs.
@@ -145,6 +156,7 @@ define([
             SHADOW_QUALITY_SELECTOR_ID = "shadowQualitySelector",
             SHADOW_DISTANCE_SELECTOR_ID = "shadowDistanceSelector",
             MAX_DYNAMIC_LIGHTS_SELECTOR_ID = "maxDynamicLightSelector",
+            DUST_PARTICLE_AMOUNT_SELECTOR_ID = "dustParticleAmountSelector",
             OPTION_PARENT_ID = "settingsDiv",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
@@ -213,6 +225,10 @@ define([
          * @type Selector
          */
         this._maxDynamicLightsSelector = null;
+        /**
+         * @type Selector
+         */
+        this._dustParticleAmountSelector = null;
         graphics.executeWhenReady(function () {
             this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
@@ -244,6 +260,9 @@ define([
             this._maxDynamicLightsSelector = this._registerSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
                     strings.GRAPHICS.MAX_DYNAMIC_LIGHTS.name,
                     _getMaxDynamicLightsSettingValues().map(_mapCaption));
+            this._dustParticleAmountSelector = this._registerSelector(DUST_PARTICLE_AMOUNT_SELECTOR_ID,
+                    strings.GRAPHICS.DUST_PARTICLE_AMOUNT.name,
+                    _getDustParticleAmountSettingValues().map(_mapCaption));
         }.bind(this));
     }
     GraphicsScreen.prototype = new screens.HTMLScreen();
@@ -275,6 +294,7 @@ define([
             graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
             graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
             graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
+            graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
         }.bind(this);
@@ -327,6 +347,7 @@ define([
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
         this._shadowDistanceSelector.setValueList(_getShadowDistanceSettingValues().map(_mapCaption));
         this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
+        this._dustParticleAmountSelector.setValueList(_getDustParticleAmountSettingValues().map(_mapCaption));
         this._updateValues();
     };
     /**
@@ -397,6 +418,7 @@ define([
             this._updateShadowQualitySelector();
             this._updateShadowDistanceSelector();
             this._updateMaxDynamicLightsSelector();
+            this._dustParticleAmountSelector.selectValueWithIndex(_findIndexOf(graphics.getDustParticleAmount(), _getDustParticleAmountSettingValues()));
         }.bind(this));
     };
     /**

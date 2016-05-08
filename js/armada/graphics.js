@@ -495,6 +495,14 @@ define([
              * @type Object
              */
             DYNAMIC_LIGHT_AMOUNT_DESCRIPTOR_TYPE = types.getNameAndValueDefinitionObject("maxLights"),
+            // ............................................................................................
+            // Amount of dust particles
+            /**
+             * The definition object for dust particle amount descriptors, based on which the array of descriptors defined in the config JSON
+             * is type-verified.
+             * @type Object
+             */
+            DUST_PARTICLE_AMOUNT_DESCRIPTOR_TYPE = types.getNameAndValueDefinitionObject("particleCountFactor"),
             // ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
             // Settings
             // ............................................................................................
@@ -574,6 +582,13 @@ define([
              * @type String
              */
             POINT_LIGHT_AMOUNT_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "pointLightAmount",
+            // ............................................................................................
+            // Amount of dust particles
+            /**
+             * The key identifying the location where the dust particle amount setting is stored in local storage.
+             * @type String
+             */
+            DUST_PARTICLE_AMOUNT_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "dustParticleAmount",
             // ............................................................................................
             /**
              * Shaders that implement the same function but without shadows should be referenced among the variant shaders with this type key
@@ -993,6 +1008,10 @@ define([
          */
         this._pointLightAmount = null;
         /**
+         * @type OrderedNamedNumericOptions
+         */
+        this._dustParticleAmount = null;
+        /**
          * An object storing all the configuration settings for this context (such as lists of valied values for the different options)
          * @type Object
          */
@@ -1135,6 +1154,10 @@ define([
                 dataJSON.context.pointLightAmounts,
                 DYNAMIC_LIGHT_AMOUNT_DESCRIPTOR_TYPE,
                 "config.graphics.context.pointLightAmounts");
+        this._dustParticleAmount = new OrderedNamedNumericOptions(
+                dataJSON.context.dustParticleAmounts,
+                DUST_PARTICLE_AMOUNT_DESCRIPTOR_TYPE,
+                "config.graphics.context.dustParticleAmounts");
         this._lodLevel = new OrderedNamedNumericOptions(
                 dataJSON.levelOfDetailSettings.lodLevels,
                 LOD_LEVEL_DESCRIPTOR_TYPE,
@@ -1187,17 +1210,35 @@ define([
         }
         // load the LOD load settings (maximum loaded LOD)
         this.setLODLevel(dataJSON.levelOfDetail.maxLevel, false);
-        // if the maximum loaded LOD is limited by screen width, check the current width and apply the limit
+        // if the maximum loaded LOD is limited by screen size, check the current size and apply the limit
         if (dataJSON.levelOfDetail.autoLimitByScreenSize === true) {
             screenSize = Math.max(screen.width, screen.height);
             for (i = 0, n = dataJSON.levelOfDetail.limits.length; i < n; i++) {
-                // take the width of the window, therefore playing in a small window
-                // will not use unnecesarily high detail, even if the screen is big
                 limit = dataJSON.levelOfDetail.limits[i];
                 if ((screenSize < limit.screenSizeLessThan) &&
                         (this.getMaxLoadedLOD() > this._lodLevel.getValueForName(limit.level))) {
                     this.setLODLevel(limit.level, false);
                 }
+            }
+        }
+        // load the dut particle amount settings
+        this.setDustParticleAmount(dataJSON.dustParticleAmount.amount, false);
+        // if the dust particle amount is limited by screen size, check the current size and apply the limit
+        if (dataJSON.dustParticleAmount.autoLimitByScreenSize === true) {
+            screenSize = Math.max(screen.width, screen.height);
+            for (i = 0, n = dataJSON.dustParticleAmount.limits.length; i < n; i++) {
+                limit = dataJSON.dustParticleAmount.limits[i];
+                if ((screenSize < limit.screenSizeLessThan) &&
+                        (this.getDustParticleCountFactor() > this._dustParticleAmount.getValueForName(limit.amount))) {
+                    this.setDustParticleAmount(limit.amount, false);
+                }
+            }
+        }
+        // if the dust particle amount should be automatically decreased by a level if there is no instancing available, apply this decrease
+        // as necessary
+        if (dataJSON.dustParticleAmount.autoDecreaseIfInstancingNotAvailable === true) {
+            if (!managedGL.isInstancingAvailable()) {
+                this._dustParticleAmount.decrease();
             }
         }
         // now that all default settings are loaded, descrease the shader complexity until it is at a level where the requirements with
@@ -1237,6 +1278,7 @@ define([
             // otherwise the shadow distances will be an empty array, and we cannot verify the value
         }
         loadSetting(POINT_LIGHT_AMOUNT_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getPointLightAmounts())}, this.getPointLightAmount(), this.setPointLightAmount.bind(this));
+        loadSetting(DUST_PARTICLE_AMOUNT_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getDustParticleAmounts())}, this.getDustParticleAmount(), this.setDustParticleAmount.bind(this));
         this.setToReady();
     };
     /**
@@ -1733,6 +1775,45 @@ define([
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.MAX_SPOT_LIGHTS.name];
     };
     /**
+     * Returns the list of strings identifying the available dust particle amount settings, in ascending order.
+     * @returns {String[]}
+     */
+    GraphicsContext.prototype.getDustParticleAmounts = function () {
+        return this._dustParticleAmount.getNameList();
+    };
+    /**
+     * Returns the string identifying the current dust particle amount setting.
+     * @returns {String}
+     */
+    GraphicsContext.prototype.getDustParticleAmount = function () {
+        return this._dustParticleAmount.getCurrentName();
+    };
+    /**
+     * Returns the factor by which the dust particle count should be multiplied according to current settings.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getDustParticleCountFactor = function () {
+        return this._dustParticleAmount.getCurrentValue();
+    };
+    /**
+     * Sets a new dust particle amount.
+     * @param {String} value The string ID identifying the desired option.
+     * @param {Boolean} [saveToLocalStorage=true]
+     * @param {Boolean} [fallbackToHighest=false] If true, then in case the passed value cannot be set (because it is not valid e.g. 
+     * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
+     * option is set.
+     */
+    GraphicsContext.prototype.setDustParticleAmount = function (value, saveToLocalStorage, fallbackToHighest) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        if (this._dustParticleAmount.setCurrent(value, fallbackToHighest)) {
+            if (saveToLocalStorage) {
+                localStorage[DUST_PARTICLE_AMOUNT_LOCAL_STORAGE_ID] = value;
+            }
+        }
+    };
+    /**
      * Returns the shader configuration value corresponding to the passed property definition object.
      * @param {Object} propertyDefinition A property definition object from SHADER_CONFIG
      * @returns {}
@@ -1916,6 +1997,10 @@ define([
         getPointLightAmount: _context.getPointLightAmount.bind(_context),
         getMaxPointLights: _context.getMaxPointLights.bind(_context),
         setPointLightAmount: _context.setPointLightAmount.bind(_context),
+        getDustParticleAmounts: _context.getDustParticleAmounts.bind(_context),
+        getDustParticleAmount: _context.getDustParticleAmount.bind(_context),
+        getDustParticleCountFactor: _context.getDustParticleCountFactor.bind(_context),
+        setDustParticleAmount: _context.setDustParticleAmount.bind(_context),
         getMaxSpotLights: _context.getMaxSpotLights.bind(_context),
         isShadowMappingAvailable: _context.isShadowMappingAvailable.bind(_context),
         areLuminosityTexturesAvailable: _context.areLuminosityTexturesAvailable.bind(_context),

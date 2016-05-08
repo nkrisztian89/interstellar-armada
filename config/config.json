@@ -134,6 +134,24 @@
                     "name": "maximum",
                     "maxLights": 192
                 }
+            ],
+            "dustParticleAmounts": [
+                {
+                    "name": "minimum",
+                    "particleCountFactor": 0.1
+                }, {
+                    "name": "low",
+                    "particleCountFactor": 0.25
+                }, {
+                    "name": "medium",
+                    "particleCountFactor": 0.5
+                }, {
+                    "name": "high",
+                    "particleCountFactor": 0.75
+                }, {
+                    "name": "maximum",
+                    "particleCountFactor": 1
+                }
             ]
         },
         "shaders": {

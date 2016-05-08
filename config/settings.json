@@ -33,6 +33,23 @@
                     "level": "high"
                 }
             ]
+        },
+        "dustParticleAmount": {
+            "amount": "maximum",
+            "autoLimitByScreenSize": true,
+            "limits": [
+                {
+                    "screenSizeLessThan": 960,
+                    "amount": "low"
+                }, {
+                    "screenSizeLessThan": 1024,
+                    "amount": "medium"
+                }, {
+                    "screenSizeLessThan": 1280,
+                    "amount": "high"
+                }
+            ],
+            "autoDecreaseIfInstancingNotAvailable": true
         }
     },
     "logic": {

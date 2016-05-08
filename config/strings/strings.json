@@ -142,7 +142,8 @@
         "shadows": "Shadows:",
         "shadowQuality": "Shadow resolution:",
         "shadowDistance": "Shadow distance:",
-        "maxDynamicLights": "Dynamic lights:"
+        "maxDynamicLights": "Dynamic lights:",
+        "dustParticleAmount": "Space dust density:"
     },
     "controller": {
         "general": "General",

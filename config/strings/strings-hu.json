@@ -167,7 +167,8 @@
         "shadows": "Árnyékok:",
         "shadowQuality": "Árnyékok felbontása:",
         "shadowDistance": "Árnyékok látótávolsága:",
-        "maxDynamicLights": "Dinamikus fények:"
+        "maxDynamicLights": "Dinamikus fények:",
+        "dustParticleAmount": "Porrészecskék száma:"
     },
     "controller": {
         "general": "Általános",

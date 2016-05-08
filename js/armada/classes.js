@@ -733,7 +733,7 @@ define([
      * @returns {Number}
      */
     DustCloudClass.prototype.getNumberOfParticles = function () {
-        return this._numberOfParticles;
+        return this._numberOfParticles * graphics.getDustParticleCountFactor();
     };
     /**
      * @returns {Number[3]}
@@ -2355,7 +2355,7 @@ define([
          */
         this._hitpoints = otherSpacecraftClass ?
                 (dataJSON.hitpoints || otherSpacecraftClass._hitpoints) :
-                (dataJSON.hitpoints || _showMissingPropertyError(this, "hitpoints"));
+                (dataJSON.hitpoints || _showMissingPropertyError(this, "hitpoints") || 0);
         /**
          * The mass of the spacecraft in kilograms.
          * @type Number

@@ -2173,6 +2173,13 @@ define([
         return !!this.anisotropicFilterExt;
     };
     /**
+     * Returns whether instancing is supported for this context by the graphics driver.
+     * @returns {Boolean}
+     */
+    ManagedGLContext.prototype.isInstancingAvailable = function () {
+        return !!this.instancingExt;
+    };
+    /**
      * Returns whether depth textures are supported for this context by the graphics driver.
      * @returns {Boolean}
      */
@@ -2680,6 +2687,7 @@ define([
         getMaxRenderbufferSize: _genericContext.getMaxRenderbufferSize.bind(_genericContext),
         isAntialiasingAvailable: _genericContext.isAntialiased.bind(_genericContext),
         isAnisotropicFilteringAvailable: _genericContext.isAnisotropicFilteringAvailable.bind(_genericContext),
+        isInstancingAvailable: _genericContext.isInstancingAvailable.bind(_genericContext),
         areDepthTexturesAvailable: _genericContext.areDepthTexturesAvailable.bind(_genericContext)
     };
 });

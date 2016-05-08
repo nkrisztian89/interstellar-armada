@@ -138,7 +138,8 @@ define([
         SHADOWS: {name: "graphics.shadows"},
         SHADOW_QUALITY: {name: "graphics.shadowQuality"},
         SHADOW_DISTANCE: {name: "graphics.shadowDistance"},
-        MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"}
+        MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"},
+        DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"}
     };
     strings.CONTOLLER = {
         PREFIX: {name: "controller.", optional: true},
