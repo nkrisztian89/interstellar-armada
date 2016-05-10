@@ -1,5 +1,5 @@
 {
-    "version": "0.2:276 (2016.05.08.)",
+    "version": "0.2.1:277 (2016.05.11.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -51,6 +51,7 @@
             "levels": {
                 "folder": "level",
                 "filenames": [
+                    "targetPracticeBoxes.json",
                     "1v1.json",
                     "3v3.json",
                     "bombers.json",

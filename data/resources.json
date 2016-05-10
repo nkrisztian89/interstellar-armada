@@ -32,6 +32,21 @@
             }
         },
         {
+            "name": "brownPlanet",
+            "basepath": "brownPlanet",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
             "name": "explosion",
             "basepath": "explosion",
             "format": "png",
@@ -250,6 +265,23 @@
             "format": "jpg",
             "imageNames": {
                 "posX": "cm_1c2",
+                "negX": "cm_1c2",
+                "posY": "cm_1c2",
+                "negY": "cm_1c2",
+                "posZ": "cm_1c2",
+                "negZ": "cm_1c2"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "normal": ""
+            }
+        },
+        {
+            "name": "deepspaceBlueNebula",
+            "basepath": "cube/",
+            "format": "jpg",
+            "imageNames": {
+                "posX": "blueNebula",
                 "negX": "cm_1c2",
                 "posY": "cm_1c2",
                 "negY": "cm_1c2",
@@ -597,6 +629,16 @@
             }
         },
         {
+            "name": "backgroundFixBillboard",
+            "vertexShaderSource": "billboard/backgroundFixBillboard.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
             "name": "dust-instanced",
             "vertexShaderSource": "dust-instanced.vert",
             "fragmentShaderSource": "dust.frag",
@@ -774,6 +816,29 @@
         {
             "name": "ion_cannon",
             "basepath": "weapons/ion_cannon",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "box",
+            "basepath": "box",
             "format": "egm",
             "files": [
                 {

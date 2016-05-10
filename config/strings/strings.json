@@ -34,6 +34,7 @@
         "armor": "Armor"
     },
     "level": {
+        "targetPracticeBoxes": "Target practice",
         "1v1": "One versus one",
         "3v3": "Three versus three",
         "bombers": "Bombers",
@@ -45,7 +46,8 @@
     "team": {
         "team": "Team {id}",
         "empire": "Galactic Empire",
-        "rebels": "Separatist rebels"
+        "rebels": "Separatist rebels",
+        "practiceTargets": "Practice tool"
     },
     "squad": {
         "alpha": "Alpha",

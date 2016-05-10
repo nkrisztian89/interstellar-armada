@@ -61,7 +61,8 @@
     "team": {
         "team": "{id}. csapat",
         "empire": "Galaktikus Birodalom",
-        "rebels": "Szeparatista lázadók"
+        "rebels": "Szeparatista lázadók",
+        "practiceTargets": "Gyakorlóeszköz"
     },
     "squad": {
         "alpha": "Alfa",
@@ -73,6 +74,7 @@
         "phantom": "Fantom"
     },
     "level": {
+        "targetPracticeBoxes": "Lőgyakorlat",
         "1v1": "Egy egy ellen",
         "3v3": "Három három ellen",
         "bombers": "Bombázók",
@@ -254,6 +256,9 @@
         }
     },
     "spacecraftClass": {
+        "container": {
+            "name": "SMCU-11 Konténer"
+        },
         "falcon": {
             "name": "Sólyom",
             "description": "A legújabb generációs elfogó vadász, melyet nemrég rendszeresítettek a Galaktikus Birodalom flottáiban. Kis keresztmetszete révén nehéz célpontot nyújt, ami sokoldalú felszerelhetőségével együtt ideálissá teszi a közelharchoz."

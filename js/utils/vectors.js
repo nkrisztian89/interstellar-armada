@@ -113,7 +113,7 @@ define(function () {
      * @returns {YawAndPitch}
      */
     vec.getYawAndPitch = function (v) {
-        var result = {};
+        var result = {}, yawRotated;
         if (Math.abs(v[2]) > CLOSE_TO_ONE) {
             result.yaw = 0;
             result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
@@ -122,8 +122,8 @@ define(function () {
             if (v[0] > 0) {
                 result.yaw = -result.yaw;
             }
-            vec.rotate2(v, -result.yaw);
-            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([v[1], v[2]]));
+            yawRotated = vec.rotated2(v, -result.yaw);
+            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([yawRotated[1], v[2]]));
             if (v[2] < 0) {
                 result.pitch = -result.pitch;
             }
@@ -196,6 +196,21 @@ define(function () {
         return [
             v[0] * s, v[1] * s, v[2] * s, v[3] * s
         ];
+    };
+    /**
+     * Returns the vector which Rotating the given 2D vector (or the first to components of a 3D, 4D vector) counter-clockwise results in.
+     * @param {Number[2]} v 
+     * @param {Number} angle The angle of rotation, in radians
+     * @returns {Number[2]} 
+     */
+    vec.rotated2 = function (v, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                result = [0, 0];
+        result[0] = v[0] * cosAngle + v[1] * -sinAngle;
+        result[1] = v[0] * sinAngle + v[1] * cosAngle;
+        return result;
     };
 
     // -----------------------------------------------------------------------------

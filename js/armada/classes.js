@@ -2348,7 +2348,7 @@ define([
          */
         this._showInDatabase = otherSpacecraftClass ?
                 (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : otherSpacecraftClass._showInDatabase) :
-                (dataJSON.showInDatabase || _showMissingPropertyError(this, "showInDatabase"));
+                (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : _showMissingPropertyError(this, "showInDatabase"));
         /**
          * The amount of damage a ship of this class can take before being destroyed.
          * @type Number

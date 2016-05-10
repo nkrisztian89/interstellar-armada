@@ -2873,9 +2873,29 @@ define([
      * @param {Number} size Will be available to the shader as the uniform 
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position. Should be
      * a far away position in the distance for objects part of te background
+     * @param {Number} angle This angle is used to calculate the orientation of the object - it will be rotated around its position vector
+     * by this angle (in radians), with 0 meaning the Y vector of the object should point upwards
      */
-    function BackgroundBillboard(model, shader, textures, color, size, positionMatrix) {
+    function BackgroundBillboard(model, shader, textures, color, size, positionMatrix, angle) {
+        var up, direction, directionYawAndPitch, v;
         Particle.call(this, model, shader, textures, positionMatrix, [new ParticleState(color, size, 0)], false);
+        // calculating an orientation matrix that has the Z vector pointing opposite to the position of the object, and a Y vector rotated
+        // by the given angle compared to pointing towards the zenith ([0,0,1])
+        v = [0, 1];
+        vec.rotate2(v, angle);
+        up = [v[0], 0, v[1]];
+        direction = vec.normal3(mat.translationVector3(positionMatrix));
+        directionYawAndPitch = vec.getYawAndPitch(direction);
+        v = [0, v[1]];
+        vec.rotate2(v, directionYawAndPitch.pitch);
+        up = [up[0], v[0], v[1]];
+        v = [up[0], v[0]];
+        vec.rotate2(v, directionYawAndPitch.yaw);
+        up = [v[0], v[1], up[2]];
+        this.setOrientationMatrix(mat.lookTowards4(vec.scaled3(direction, -1), up));
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
+            return this.getModelMatrix();
+        });
     }
     BackgroundBillboard.prototype = new Particle();
     BackgroundBillboard.prototype.constructor = BackgroundBillboard;

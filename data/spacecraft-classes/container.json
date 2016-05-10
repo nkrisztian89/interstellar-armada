@@ -1,0 +1,46 @@
+{
+    "name": "container",
+    "type": "container",
+    "fullName": "SMCU-11 Container",
+    "description": "-",
+    "showInDatabase": false,
+    "hitpoints": 5,
+    "model": "box",
+    "shader": "ship",
+    "texture": "libra",
+    "mass": 500,
+    "bodies": [
+        {
+            "position": [0, 0, 0],
+            "size": [4, 4, 4]
+        }
+    ],
+    "weaponSlots": [],
+    "maxPropulsionGrade": 1,
+    "thrusterSlots": [],
+    "views": [
+        {
+            "name": "free",
+            "isAimingView": false,
+            "fov": 45,
+            "fovRange": [30, 60],
+            "followsPosition": true,
+            "movable": true,
+            "turnable": true,
+            "rotationCenterIsObject": true,
+            "distanceRange": [6, 25],
+            "position": [0, -10, 0]
+        }
+    ],
+    "equipmentProfiles": [
+        {
+            "name": "default",
+            "weapons": []
+        }
+    ],
+    "explosion": "containerExplosion",
+    "showTimeRatioDuringExplosion": 0.25,
+    "damageIndicators": [],
+    "lights": [],
+    "blinkers": []
+}

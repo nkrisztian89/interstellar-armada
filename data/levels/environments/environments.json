@@ -57,6 +57,101 @@
                     "class": "standard"
                 }
             ]
+        },
+        {
+            "name": "deepSpaceWhiteRedStarsFromSides",
+            "skyboxes": [
+                {
+                    "class": "deepspace"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": -15,
+                        "angleBeta": 50
+                    }
+                },
+                {
+                    "class": "redStar",
+                    "position": {
+                        "angleAlpha": 220,
+                        "angleBeta": -10
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
+        },
+        {
+            "name": "deepSpaceBlueNebula",
+            "skyboxes": [
+                {
+                    "class": "deepspaceBlueNebula"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": 135,
+                        "angleBeta": 45
+                    }
+                },
+                {
+                    "class": "whiteStarBlueLight",
+                    "position": {
+                        "angleAlpha": -1.25,
+                        "angleBeta": -1.25
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
+        },
+        {
+            "name": "deepSpaceBrownPlanet",
+            "skyboxes": [
+                {
+                    "class": "deepspace"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": 0,
+                        "angleBeta": 85
+                    }
+                },
+                {
+                    "class": "smallRedStar",
+                    "position": {
+                        "angleAlpha": 180,
+                        "angleBeta": 15
+                    }
+                },
+                {
+                    "class": "brownPlanet",
+                    "position": {
+                        "angleAlpha": 180,
+                        "angleBeta": 0,
+                        "angleGamma": 81
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
         }
     ]
 }

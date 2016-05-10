@@ -1,0 +1,339 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+    },
+    "teams": [
+        "empire",
+        "practiceTargets"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [-200, 400, 15],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, 0, 0]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [0, 100, 20],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-240, 500, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-220, 480, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 460, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 500, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-180, 480, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-160, 500, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-180, 520, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 540, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-220, 520, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-240, 500, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-220, 480, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 460, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 500, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-180, 480, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-160, 500, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-180, 520, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 540, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-220, 520, 28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-240, 500, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-220, 480, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 460, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 500, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-180, 480, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-160, 500, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-180, 520, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-200, 540, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "container",
+            "position": [-220, 520, -28],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 45
+                }
+            ]
+        }
+    ]
+}

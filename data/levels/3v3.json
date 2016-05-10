@@ -1,6 +1,6 @@
 {
     "environment": {
-        "createFrom": "deepSpaceWhiteRedStars"
+        "createFrom": "deepSpaceBlueNebula"
     },
     "teams": [
         "empire",

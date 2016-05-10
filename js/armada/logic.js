@@ -169,8 +169,10 @@ define([
      * direction in which this object is positioned on the XZ plane in degrees.
      * @param {Number} degreesBeta The angle between the XZ plane and the
      * direction in which this object is positioned.
+     * @param {Number} degreesGamma  The angle by which the object is rotated around its
+     * center in 2D (in case it has a fixed orientation), in degrees.
      */
-    function BackgroundObject(backgroundObjectClass, degreesAlpha, degreesBeta) {
+    function BackgroundObject(backgroundObjectClass, degreesAlpha, degreesBeta, degreesGamma) {
         /**
          * The class storing the general characteristics of this object.
          * @type BackgroundObjectClass
@@ -185,6 +187,12 @@ define([
             Math.sin(Math.radians(degreesAlpha)) * Math.cos(Math.radians(degreesBeta)),
             Math.sin(Math.radians(degreesBeta))
         ];
+        /**
+         * The angle by which the object is rotated around its center in 2D (in case it has a 
+         * fixed orientation), in degrees.
+         * @type Number
+         */
+        this._angle = Math.radians(degreesGamma) || 0;
     }
     /**
      * Adds the layered texture object and the light source belonging to this
@@ -204,7 +212,8 @@ define([
                         layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         layers[i].getColor(),
                         layers[i].getSize(),
-                        mat.translation4v(vec.scaled3(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))));
+                        mat.translation4v(vec.scaled3(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))),
+                        this._angle);
                 layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);
             }
@@ -444,7 +453,8 @@ define([
             this._backgroundObjects.push(new BackgroundObject(
                     classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
                     dataJSON.backgroundObjects[i].position.angleAlpha,
-                    dataJSON.backgroundObjects[i].position.angleBeta
+                    dataJSON.backgroundObjects[i].position.angleBeta,
+                    dataJSON.backgroundObjects[i].position.angleGamma || 0
                     ));
         }
 
