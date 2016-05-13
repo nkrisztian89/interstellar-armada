@@ -62,7 +62,7 @@
             "name": "deepSpaceWhiteRedStarsFromSides",
             "skyboxes": [
                 {
-                    "class": "deepspace"
+                    "class": "deepspaceRedNebula"
                 }
             ],
             "backgroundObjects": [
@@ -76,8 +76,8 @@
                 {
                     "class": "redStar",
                     "position": {
-                        "angleAlpha": 220,
-                        "angleBeta": -10
+                        "angleAlpha": 200,
+                        "angleBeta": 0.5
                     }
                 }
             ],

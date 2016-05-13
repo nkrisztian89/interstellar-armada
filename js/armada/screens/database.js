@@ -221,7 +221,7 @@ define([
         var
                 prevDate = performance.now(),
                 curDate,
-                startOrientationMatrix = mat.prod4(
+                startOrientationMatrix = mat.prod3x3SubOf4(
                         mat.rotation4([0.0, 0.0, 1.0], Math.radians(startAngle)),
                         mat.rotation4([1.0, 0.0, 0.0], Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
         // setting the starting orientation

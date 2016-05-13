@@ -251,7 +251,8 @@
                 "bottom": -0.925,
                 "width": 0.85,
                 "height": 0.09,
-                "scaleMode": "minimum"
+                "scaleMode": "minimum",
+                "yScaleMode": "minimum"
             },
             "hudHullIntegrityBarBackgroundColor": [0, 0, 0, 0.5],
             "hudHullIntegrityBarTexture": "white",
@@ -260,7 +261,8 @@
                 "bottom": -0.9,
                 "width": 0.75,
                 "height": 0.04,
-                "scaleMode": "minimum"
+                "scaleMode": "minimum",
+                "yScaleMode": "minimum"
             },
             "hudHullIntegrityBarFilledColor": [0, 1, 0, 0.75],
             "hudHullIntegrityBarEmptyColor": [1, 0, 0, 0.5],

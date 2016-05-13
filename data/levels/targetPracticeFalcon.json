@@ -1,0 +1,94 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+    },
+    "teams": [
+        "empire",
+        "practiceTargets"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 2350, 20],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, 0, 0],
+            "equipment": {
+                "profile": "default"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [0, 2400, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "training"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [6000, 12000, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "training"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [-6000, 12000, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "training"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "falcon",
+            "ai": "fighter",
+            "position": [0, 20000, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "trainingFull"
+            }
+        }
+    ]
+}

@@ -62,7 +62,7 @@
         "team": "{id}. csapat",
         "empire": "Galaktikus Birodalom",
         "rebels": "Szeparatista lázadók",
-        "practiceTargets": "Gyakorlóeszköz"
+        "practiceTargets": "Gyakorló cél"
     },
     "squad": {
         "alpha": "Alfa",
@@ -74,7 +74,9 @@
         "phantom": "Fantom"
     },
     "level": {
-        "targetPracticeBoxes": "Lőgyakorlat",
+        "targetPracticeBoxes": "Kezdő lőgyakorlat",
+        "targetPracticeDrones": "Középhaladó lőgyakorlat",
+        "targetPracticeFalcon": "Haladó lőgyakorlat",
         "1v1": "Egy egy ellen",
         "3v3": "Három három ellen",
         "bombers": "Bombázók",
@@ -239,6 +241,9 @@
         "resetView": "Aktuális nézet visszaállítása alaphelyzetbe"
     },
     "spacecraftType": {
+        "drone": {
+            "name": "drón"
+        },
         "interceptor": {
             "name": "elfogó vadász"
         },
@@ -258,6 +263,9 @@
     "spacecraftClass": {
         "container": {
             "name": "SMCU-11 Konténer"
+        },
+        "drone": {
+            "name": "Kiképzó drón"
         },
         "falcon": {
             "name": "Sólyom",

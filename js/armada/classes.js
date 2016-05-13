@@ -1230,6 +1230,11 @@ define([
                 _showMissingPropertyError(this, "barrels");
             }
         }
+        /**
+         * The position of the point in model space where the weapon should be attached to the weapon slot it is equipped to.
+         * @type Number[3]
+         */
+        this._attachmentPoint = dataJSON ? (dataJSON.attachmentPoint || _showMissingPropertyError(this, "attachmentPoint")) : null;
     };
     /**
      * @override
@@ -1266,6 +1271,13 @@ define([
      */
     WeaponClass.prototype.getBarrels = function () {
         return this._barrels;
+    };
+    /**
+     * 
+     * @returns {Number[3]}
+     */
+    WeaponClass.prototype.getAttachmentPoint = function () {
+        return this._attachmentPoint;
     };
     /**
      * Returns the class of projectiles the first barrel of this weapon class fires.

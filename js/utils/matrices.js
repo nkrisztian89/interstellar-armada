@@ -694,7 +694,7 @@ define([
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchMatrix = mat.correctedOrthogonal4(mat.prod4(m, mat.rotation4([0, 0, 1], -result.yaw)));
+            pitchMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4(m, mat.rotation4([0, 0, 1], -result.yaw)));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
             if (pitchMatrix[6] > 0) {
                 result.pitch = -result.pitch;
@@ -726,7 +726,7 @@ define([
             result.alpha -= 2 * Math.PI;
         }
         // calculate the matrix we would get if we rotated the Y vector into position
-        halfMatrix = mat.correctedOrthogonal4(mat.prod4(m, mat.rotation4(result.alphaAxis, -result.alpha)));
+        halfMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4(m, mat.rotation4(result.alphaAxis, -result.alpha)));
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
         dot = vec.dot3([1, 0, 0], mat.getRowA43(halfMatrix));
@@ -1172,6 +1172,69 @@ define([
         ]);
     };
     /**
+     * Multiplies the upper left 3x3 submatrices of two 4x4 matrices and returns the result.
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 3x3 matrix.
+     */
+    mat.prod3x3SubOf43 = function (m1, m2) {
+        _matrixCount++;
+        return new Float32Array([
+            m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8],
+            m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9],
+            m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10],
+            m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8],
+            m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9],
+            m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10],
+            m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8],
+            m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9],
+            m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10]
+        ]);
+    };
+    /**
+     * Multiplies the upper left 3x3 submatrices of two 4x4 matrices and returns the result padded to a 4x4 matrix.
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 4x4 matrix.
+     */
+    mat.prod3x3SubOf4 = function (m1, m2) {
+        _matrixCount++;
+        return new Float32Array([
+            m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8],
+            m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9],
+            m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10],
+            0,
+            m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8],
+            m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9],
+            m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10],
+            0,
+            m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8],
+            m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9],
+            m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10],
+            0,
+            0, 0, 0, 1
+        ]);
+    };
+    /**
+     * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right
+     * matrix if a rotation (or scaled rotation, but without projection or translation) matrix.
+     * @param {Float32Array} t A 4x4 translation matrix, without rotation, scaling or projection.
+     * @param {Float32Array} r A 4x4 rotation or scaling and rotation matrix, without translation or projection.
+     * @returns {Float32Array} The product of the two matrices.
+     */
+    mat.prodTranslationRotation4 = function (t, r) {
+        _matrixCount++;
+        return new Float32Array([
+            r[0], r[1], r[2], 0,
+            r[4], r[5], r[6], 0,
+            r[8], r[9], r[10], 0,
+            r[0] * t[12] + r[4] * t[13] + r[8] * t[14],
+            r[1] * t[12] + r[5] * t[13] + r[9] * t[14],
+            r[2] * t[12] + r[6] * t[13] + r[10] * t[14],
+            1
+        ]);
+    };
+    /**
      * Multiplies three 4x4 matrices and returns the result.
      * @param {Float32Array} m1 The first (leftmost) 4x4 matrix
      * @param {Float32Array} m2 The second (middle) 4x4 matrix
@@ -1182,6 +1245,21 @@ define([
         var result = mat.prod4(m1, m2);
         mat.mul4(result, m3);
         return result;
+    };
+    /**
+     * Returns a 4x4 transformation matrix, which is the result of translating m by the translation vector v.
+     * @param {Float32Array} m A 4x4 transformation matrix.
+     * @param {Float32Array} v A 3D vector
+     * @returns {Float32Array}
+     */
+    mat.translatedByVector = function (m, v) {
+        _matrixCount++;
+        return new Float32Array([
+            m[0], m[1], m[2], m[3],
+            m[4], m[5], m[6], m[7],
+            m[8], m[9], m[10], m[11],
+            m[12] + v[0], m[13] + v[1], m[14] + v[2], m[15]
+        ]);
     };
     /**
      * Returns a 4x4 transformation matrix, which is the result of translating m1

@@ -1,0 +1,91 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+    },
+    "teams": [
+        "empire",
+        "practiceTargets"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 50, 10],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, 0, 0],
+            "equipment": {
+                "profile": "training"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "drone",
+            "ai": "fighter",
+            "position": [0, 100, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "practiceTargets",
+            "class": "drone",
+            "ai": "fighter",
+            "position": [2000, 4100, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "drone",
+            "ai": "fighter",
+            "position": [-4000, 8100, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "practiceTargets",
+            "class": "drone",
+            "ai": "fighter",
+            "position": [-4200, 8000, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        }
+    ]
+}

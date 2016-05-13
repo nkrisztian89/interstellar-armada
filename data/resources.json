@@ -60,6 +60,19 @@
             }
         },
         {
+            "name": "trainingProjectile",
+            "basepath": "trainingProjectile",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
             "name": "plasma",
             "basepath": "plasma_full",
             "format": "png",
@@ -283,6 +296,23 @@
             "imageNames": {
                 "posX": "blueNebula",
                 "negX": "cm_1c2",
+                "posY": "cm_1c2",
+                "negY": "cm_1c2",
+                "posZ": "cm_1c2",
+                "negZ": "cm_1c2"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "normal": ""
+            }
+        },
+        {
+            "name": "deepspaceRedNebula",
+            "basepath": "cube/",
+            "format": "jpg",
+            "imageNames": {
+                "posX": "cm_1c2",
+                "negX": "redNebula",
                 "posY": "cm_1c2",
                 "negY": "cm_1c2",
                 "posZ": "cm_1c2",
@@ -745,6 +775,29 @@
     ],
     "models": [
         {
+            "name": "trainingGun",
+            "basepath": "weapons/trainingGun",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
             "name": "plasma",
             "basepath": "weapons/plasma",
             "format": "egm",
@@ -839,6 +892,29 @@
         {
             "name": "box",
             "basepath": "box",
+            "format": "egm",
+            "files": [
+                {
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }
+            ]
+        },
+        {
+            "name": "drone",
+            "basepath": "drone",
             "format": "egm",
             "files": [
                 {

@@ -118,6 +118,11 @@ define([
              */
             _luminosityFactorsArrayName = null,
             /**
+             * Cached value of the configuration setting of minimum number of muzzle flash particles that should trigger their instanced rendering.
+             * @type Number
+             */
+            _minimumMuzzleFlashParticleCountForInstancing = 0,
+            /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
@@ -977,6 +982,18 @@ define([
          * @type RenderableObject
          */
         this._visualModel = null;
+        /**
+         * Stores the calculated value of the position of the origo of the weapon in model space based on the position and orientation of
+         * the weapon slot and the point of attachment. (4x4 translation matrix)
+         * @type Float32Array
+         */
+        this._origoPositionMatrix = null;
+        /**
+         * Stores the calculated value of the scaling matrix of the parent spacecraft and the orientation of the weapon slot for speeding
+         * up calculations.
+         * @type Float32Array
+         */
+        this._scaledOriMatrix = null;
     }
     /**
      * Returns the weapon slot this weapon is equipped to.
@@ -1015,6 +1032,29 @@ define([
         return this._class.getCooldown();
     };
     /**
+     * Returns the calculated value of the position of the origo of the weapon in model space based on the position and orientation of
+     * the weapon slot and the point of attachment. (4x4 translation matrix)
+     * @returns {Float32Array}
+     */
+    Weapon.prototype.getOrigoPositionMatrix = function () {
+        this._origoPositionMatrix = this._origoPositionMatrix || mat.translatedByVector(
+                this._slot.positionMatrix,
+                vec.mulVec3Mat4(
+                        vec.scaled3(this._class.getAttachmentPoint(), -1),
+                        mat.prod3x3SubOf4(
+                                mat.scaling4(this._class.getModel().getScale() / this._spacecraft.getPhysicalScalingMatrix()[0]),
+                                this._slot.orientationMatrix)));
+        return this._origoPositionMatrix;
+    };
+    /**
+     * Returns the calculated value of the scaling matrix of the parent spacecraft and the orientation of the weapon slot.
+     * @returns {Float32Array}
+     */
+    Weapon.prototype.getScaledOriMatrix = function () {
+        this._scaledOriMatrix = this._scaledOriMatrix || mat.prod3x3SubOf4(this._visualModel.getScalingMatrix(), this._slot.orientationMatrix);
+        return this._scaledOriMatrix;
+    };
+    /**
      * Marks the resources necessary to render this weapon for loading.
      * @param {Object} params
      */
@@ -1034,20 +1074,21 @@ define([
      * @param {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName) {
-        var visualModel;
         this.acquireResources({omitShader: !!shaderName});
         if (shaderName) {
             graphics.getShader(shaderName);
         }
         resources.executeWhenReady(function () {
+            var visualModel, scale;
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
+            scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
             visualModel = new budaScene.ShadedLODMesh(
                     this._class.getModel(),
                     shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader(),
                     this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                    this._slot.positionMatrix,
+                    this.getOrigoPositionMatrix(),
                     this._slot.orientationMatrix,
-                    mat.identity4(),
+                    mat.scaling4(scale),
                     (wireframe === true),
                     lod);
             parentNode.addSubnode(new budaScene.RenderableNode(visualModel));
@@ -1119,21 +1160,21 @@ define([
             this._cooldown = 0;
             // cache the matrices valid for the whole weapon
             orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
-            scaledOriMatrix = mat.prod4(this._spacecraft.getPhysicalScalingMatrix(), orientationMatrix);
-            weaponSlotPosVector = vec.mulVec4Mat4(mat.translationVector4(this._slot.positionMatrix), scaledOriMatrix);
-            weaponSlotPosMatrix = mat.prod4(this._spacecraft.getPhysicalPositionMatrix(), mat.translation4v(weaponSlotPosVector));
-            projectileOriMatrix = mat.prod4(this._slot.orientationMatrix, orientationMatrix);
+            scaledOriMatrix = mat.prod3x3SubOf4(this._spacecraft.getPhysicalScalingMatrix(), orientationMatrix);
+            weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), scaledOriMatrix);
+            weaponSlotPosMatrix = mat.translatedByVector(this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
+            projectileOriMatrix = mat.prod3x3SubOf4(this._slot.orientationMatrix, orientationMatrix);
             barrels = this._class.getBarrels();
             projectileLights = {};
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
                 projectileClass = barrels[i].getProjectileClass();
-                barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.matrix3from4(mat.prod4(this._slot.orientationMatrix, scaledOriMatrix)));
-                projectilePosMatrix = mat.prod4(weaponSlotPosMatrix, mat.translation4v(barrelPosVector));
+                barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.prod3x3SubOf43(this.getScaledOriMatrix(), scaledOriMatrix));
+                projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i);
-                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING));
+                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
                 p = new Projectile(
                         projectileClass,
@@ -2146,6 +2187,12 @@ define([
          */
         this._relativeVelocityMatrix = null;
         /**
+         * Cached value of the matrix representing the turning the current angular velocity of the object causes over 
+         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds in model space.
+         * @type Float32Array
+         */
+        this._turningMatrix = null;
+        /**
          * An array of references to the spacecrafts that have this spacecraft targeted currently.
          * @type Spacecraft[]
          */
@@ -2402,42 +2449,41 @@ define([
         return this._physicalModel.getScalingMatrix();
     };
     /**
-     * Returns the 4x4 translation matrix describing the current velocity of this
-     * spacecraft in world space.
+     * Returns the 4x4 translation matrix describing the current velocity of this spacecraft in world space.
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getVelocityMatrix = function () {
         return this._physicalModel.getVelocityMatrix();
     };
     /**
-     * Returns the 4x4 translation matrix describing the current velocity of this
-     * spacecraft in relative (model) space. Uses caching.
+     * Returns the 4x4 translation matrix describing the current velocity of this spacecraft in relative (model) space. Uses caching.
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
         if (!this._relativeVelocityMatrix) {
-            this._relativeVelocityMatrix = mat.prod4(
+            this._relativeVelocityMatrix = mat.prodTranslationRotation4(
                     this._physicalModel.getVelocityMatrix(),
                     mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
         }
         return this._relativeVelocityMatrix;
     };
     /**
-     * Returns the 4x4 rotation matrix describing the current rotation of this
-     * spacecraft in relative (model) space.
+     * Returns the 4x4 rotation matrix describing the current rotation of this spacecraft in relative (model) space.
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getTurningMatrix = function () {
-        return mat.prod34(
-                this._physicalModel.getOrientationMatrix(),
-                this._physicalModel.getAngularVelocityMatrix(),
-                mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
+        if (!this._turningMatrix) {
+            this._turningMatrix = mat.prod3x3SubOf4(
+                    mat.prod3x3SubOf4(
+                            this._physicalModel.getOrientationMatrix(),
+                            this._physicalModel.getAngularVelocityMatrix()),
+                    mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
+        }
+        return this._turningMatrix;
     };
     /**
-     * Returns the maximum acceleration the spacecraft can achieve using its
-     * currently equipped propulsion system.
-     * @returns {?Number} The acceleration, in m/s^2. Null, if no propulsion
-     * is equipped.
+     * Returns the maximum acceleration the spacecraft can achieve using its currently equipped propulsion system.
+     * @returns {?Number} The acceleration, in m/s^2. Null, if no propulsion is equipped.
      */
     Spacecraft.prototype.getMaxAcceleration = function () {
         return this._propulsion ?
@@ -2445,10 +2491,8 @@ define([
                 null;
     };
     /**
-     * Returns the maximum angular acceleration the spacecraft can achieve using
-     * its currently equipped propulsion system.
-     * @returns {Number} The angular acceleration, in rad/s^2. Zero, if
-     * no propulsion is equipped.
+     * Returns the maximum angular acceleration the spacecraft can achieve using its currently equipped propulsion system.
+     * @returns {Number} The angular acceleration, in rad/s^2. Zero, if no propulsion is equipped.
      */
     Spacecraft.prototype.getMaxAngularAcceleration = function () {
         return this._propulsion ?
@@ -3310,6 +3354,7 @@ define([
         }
         this._physicalModel.simulate(dt);
         this._relativeVelocityMatrix = null;
+        this._turningMatrix = null;
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {
@@ -3865,6 +3910,7 @@ define([
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
+        _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

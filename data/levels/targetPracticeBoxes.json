@@ -11,11 +11,11 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [-200, 400, 15],
+            "position": [-200, 400, 35],
             "rotations": [
                 {
                     "axis": "x",
-                    "degrees": -75
+                    "degrees": -60
                 }
             ]
         }
@@ -25,7 +25,10 @@
             "team": "empire",
             "class": "falcon",
             "piloted": true,
-            "position": [0, 0, 0]
+            "position": [0, 0, 0],
+            "equipment": {
+                "profile": "training"
+            }
         },
         {
             "team": "practiceTargets",

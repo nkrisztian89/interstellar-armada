@@ -954,6 +954,7 @@ define([
                     if (!_demoMode) {
                         control.switchToPilotMode(_level.getPilotedSpacecraft());
                     } else {
+                        control.switchToSpectatorMode(false, true);
                         _battleScene.getCamera().followNextNode();
                         _timeInSameView = 0;
                     }
@@ -1398,7 +1399,7 @@ define([
                             _weaponImpactIndicators.push(_getWeaponImpactIndicator());
                             _weaponImpactIndicators[i].addToScene(_battleScene);
                         }
-                        slotPosition = weapons[i].getSlot().positionMatrix;
+                        slotPosition = weapons[i].getOrigoPositionMatrix();
                         _weaponImpactIndicators[i].setPosition(vec.sumArray3([
                             position,
                             vec.scaled3(mat.getRowB43(m), futureDistance),
@@ -1418,6 +1419,12 @@ define([
                     }
                     if (!targetInRange || (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0)) {
                         _aimAssistIndicator.hide();
+                    }
+                } else {
+                    // if there are no weapons equipped
+                    _aimAssistIndicator.hide();
+                    for (i = 0; i < _weaponImpactIndicators.length; i++) {
+                        _weaponImpactIndicators[i].hide();
                     }
                 }
                 // target arrow, if the target is not visible on the screen
@@ -1667,6 +1674,7 @@ define([
                     _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false, true);
+                    this.setHeaderContent(strings.get(strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(_levelSourceFilename)));
                     _battleCursor = document.body.style.cursor;
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>"

@@ -25,19 +25,19 @@
     ],
     "weaponSlots": [
         {
-            "position": [14, 15, 1],
+            "position": [14, 13, 1.75],
             "maxGrade": 3
         },
         {
-            "position": [-14, 15, 1],
+            "position": [-14, 13, 1.75],
             "maxGrade": 3
         },
         {
-            "position": [22, 11, 1],
+            "position": [22, 9, 1.75],
             "maxGrade": 3
         },
         {
-            "position": [-22, 11, 1],
+            "position": [-22, 9, 1.75],
             "maxGrade": 3
         }
     ],
@@ -392,6 +392,40 @@
                 },
                 {
                     "class": "plasmaGun"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialFighterMk1"
+            }
+        },
+        {
+            "name": "training",
+            "weapons": [
+                {
+                    "class": "trainingGun"
+                },
+                {
+                    "class": "trainingGun"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialFighterMk1"
+            }
+        },
+        {
+            "name": "trainingFull",
+            "weapons": [
+                {
+                    "class": "trainingGun"
+                },
+                {
+                    "class": "trainingGun"
+                },
+                {
+                    "class": "trainingGun"
+                },
+                {
+                    "class": "trainingGun"
                 }
             ],
             "propulsion": {

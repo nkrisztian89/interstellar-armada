@@ -324,13 +324,13 @@ define([
     };
     // indirect getters and setters
     /**
-     * Transforms and returns the given 4D vector according to the position and orientation of this body.
-     * @param {Number[4]} vector
+     * Transforms and returns the given 3D vector according to the position and orientation of this body. Returns a 4D vector.
+     * @param {Number[3]} vector
      * @returns {Number[4]}
      */
     Body.prototype._modelTransform = function (vector) {
         return this._rotated ?
-                vec.mulVec4Mat4(vector, mat.prod4(this._orientationMatrix, this._positionMatrix)) :
+                vec.sum3(vec.mulVec3Mat4(vector, this._orientationMatrix), this._positionVector).concat(1) :
                 vec.sum3(vector, this._positionVector).concat(1);
     };
     /**
@@ -339,7 +339,7 @@ define([
      * @returns {Float32Array} A 4x4 transformation matrix.
      */
     Body.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || mat.prod4(mat.inverseOfTranslation4(this._positionMatrix), mat.inverseOfRotation4(this._orientationMatrix));
+        this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(mat.inverseOfTranslation4(this._positionMatrix), mat.inverseOfRotation4(this._orientationMatrix));
         return this._modelMatrixInverse;
     };
     /**
@@ -648,10 +648,11 @@ define([
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || mat.prod34(
+        this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(
                 mat.inverseOfTranslation4(this._positionMatrix),
-                this.getRotationMatrixInverse(),
-                mat.inverseOfScaling4(this._scalingMatrix));
+                mat.prod3x3SubOf4(
+                        this.getRotationMatrixInverse(),
+                        mat.inverseOfScaling4(this._scalingMatrix)));
         return this._modelMatrixInverse;
     };
     // methods
@@ -743,9 +744,9 @@ define([
         this._bodySize = 0;
         for (i = 0; i < this._bodies.length; i++) {
             bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
-            halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.matrix3from4(mat.prod4(
+            halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
                     this._orientationMatrix,
-                    this._bodies[i].getOrientationMatrix())));
+                    this._bodies[i].getOrientationMatrix()));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, halfDim)));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [halfDim[0], halfDim[1], -halfDim[2]])));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [halfDim[0], -halfDim[1], halfDim[2]])));

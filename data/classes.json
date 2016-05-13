@@ -9,6 +9,11 @@
             "name": "deepspaceBlueNebula",
             "shader": "skybox",
             "cubemap": "deepspaceBlueNebula"
+        },
+        {
+            "name": "deepspaceRedNebula",
+            "shader": "skybox",
+            "cubemap": "deepspaceRedNebula"
         }
     ],
     "backgroundObjectClasses": [
@@ -1376,6 +1381,26 @@
     ],
     "projectileClasses": [
         {
+            "name": "training",
+            "damage": 1,
+            "shader": "billboard",
+            "texture": "trainingProjectile",
+            "size": 3.0,
+            "mass": 1,
+            "duration": 4000,
+            "intersectionPositions": [0],
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1.0, 1.0, 1.0, 1.0],
+                "size": 1.8,
+                "duration": 200
+            },
+            "lightColor": [1, 1, 1],
+            "lightIntensity": 30,
+            "explosion": "smallHitExplosion"
+        },
+        {
             "name": "plasma",
             "damage": 2,
             "shader": "billboard",
@@ -1438,6 +1463,22 @@
     ],
     "weaponClasses": [
         {
+            "name": "trainingGun",
+            "shader": "ship",
+            "model": "trainingGun",
+            "texture": "libra",
+            "grade": 1,
+            "cooldown": 1000,
+            "barrels": [
+                {
+                    "projectile": "training",
+                    "projectileVelocity": 400,
+                    "position": [0, 210, 0]
+                }
+            ],
+            "attachmentPoint": [0, -20, 39.6]
+        },
+        {
             "name": "plasmaGun",
             "shader": "ship",
             "model": "plasma",
@@ -1450,7 +1491,8 @@
                     "projectileVelocity": 650,
                     "position": [0, 10, 0]
                 }
-            ]
+            ],
+            "attachmentPoint": [0, -4, 1.2]
         },
         {
             "name": "smallPlasmaTurret",
@@ -1480,7 +1522,8 @@
                     "projectileVelocity": 750,
                     "position": [-2, 25, 14]
                 }
-            ]
+            ],
+            "attachmentPoint": [0, 0, 0]
         },
         {
             "name": "smallProtonCannon",
@@ -1495,7 +1538,8 @@
                     "projectileVelocity": 900,
                     "position": [0, 100, 0]
                 }
-            ]
+            ],
+            "attachmentPoint": [0, 0, 0]
         },
         {
             "name": "largeIonCannon",
@@ -1510,10 +1554,23 @@
                     "projectileVelocity": 1000,
                     "position": [0, 320, 0]
                 }
-            ]
+            ],
+            "attachmentPoint": [0, 0, 0]
         }
     ],
     "propulsionClasses": [
+        {
+            "name": "imperialDrone",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0.0, 0.8, 1.0, 1.0],
+            "grade": 1,
+            "referenceMass": 2000,
+            "thrust": 20,
+            "angularThrust": 150,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35
+        },
         {
             "name": "imperialFighterMk1",
             "shader": "particle",
@@ -1581,6 +1638,14 @@
             "isFighterType": false,
             "fullName": "Container",
             "description": "",
+            "goodAgainst": [],
+            "badAgainst": []
+        },
+        {
+            "name": "drone",
+            "isFighterType": true,
+            "fullName": "Drone",
+            "description": "Unmanned space fighters were in widespread use within the military for most of the last century. Their superior maneuverability, cost-effectiveness and the low casualties greatly outweighed the effect of occasional disputes around the ethical and moral concerns regarding their use when it resulted in the loss of civilian lives. All changed when Earth was brought down to its knees as a skilled team of separatist hackers managed to break the thought-to-be-unbreakable safety protocols and took over the control of almost two thirds of the united government's space forces. Drones are still used in the military today, but to a much more limited degree.",
             "goodAgainst": [],
             "badAgainst": []
         },
@@ -1720,6 +1785,10 @@
         {
             "name": "viper",
             "source": "spacecraft-classes/viper.json"
+        },
+        {
+            "name": "drone",
+            "source": "spacecraft-classes/drone.json"
         },
         {
             "name": "aries",
