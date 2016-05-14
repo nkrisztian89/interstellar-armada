@@ -378,6 +378,7 @@ define([
         control: _context.control.bind(_context),
         startListening: _context.startListening.bind(_context),
         stopListening: _context.stopListening.bind(_context),
+        isListening: _context.isListening.bind(_context),
         setScreenCenter: _context.setScreenCenter.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         isInPilotMode: _context.isInPilotMode.bind(_context),

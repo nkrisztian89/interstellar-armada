@@ -3541,22 +3541,27 @@ define([
         this._hitObjects = null;
         /**
          * The amount of randomly positioned ships to add to the level at start by class
+         * @type Object.<String, Number>
          */
         this._randomShips = null;
         /**
          * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
+         * @type Number
          */
         this._randomShipsMapSize = 0;
         /**
          * The added random ships are rotated around the Z axis by this angle (in degrees)
+         * @type Number
          */
         this._randomShipsHeadingAngle = 0;
         /**
          * Whether to rotate the added random ships to a random heading (around axis Z)
+         * @type Boolean
          */
         this._randomShipsRandomHeading = false;
         /**
          * The added random ships will be equipped with the profile having this name, if they have such
+         * @type string
          */
         this._randomShipsEquipmentProfileName = null;
     }
@@ -3571,6 +3576,29 @@ define([
             return this._pilotedCraft;
         }
         return null;
+    };
+    /**
+     * Returns whether according to the current state of the level, the controlled spacecraft has won.
+     * @returns {Boolean}
+     */
+    Level.prototype.isWon = function () {
+        var i, craft = this.getPilotedSpacecraft();
+        if (craft) {
+            for (i = 0; i < this._spacecrafts.length; i++) {
+                if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && craft.isHostile(this._spacecrafts[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+    /**
+     * Returns whether according to the current state of the level, the controlled spacecraft has lost. 
+     * @returns {Boolean}
+     */
+    Level.prototype.isLost = function () {
+        return !this._pilotedCraft || this._pilotedCraft.canBeReused();
     };
     /**
      * Returns whether the passed spacecraft has the given renderable object as its visual model.

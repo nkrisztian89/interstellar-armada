@@ -80,7 +80,9 @@
         },
         "message": {
             "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
-            "paused": "Game paused."
+            "paused": "Game paused.",
+            "victory": "Victory!<br/>Congratulations, you have completed this level! You can keep flying around or press the {menuKey} key to open the menu.",
+            "defeat": "Defeat!<br/>You ship has been destroyed. You can keep looking around in spectator mode or press the {menuKey} key to open the menu."
         }
     },
     "database": {

@@ -131,6 +131,21 @@ define([
              * @type Number
              */
             _timeInSameView,
+            /**
+             * Whether the game's end state has already changed to victory or defeat in the current battle.
+             * @type Boolean
+             */
+            _gameStateChanged,
+            /**
+             * Whether the game's end state (victory / defeat) has already been displayed for the player.
+             * @type Boolean
+             */
+            _gameStateShown,
+            /**
+             * The elapsed simulation time since the game's end state changed to victory or defeat.
+             * @type Number
+             */
+            _timeSinceGameStateChanged,
             // ................................................................................................
             // elements of the HUD and their stored state
             /**
@@ -915,6 +930,13 @@ define([
                 config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_COLOR));
         _hudTurnCursor.addToScene(_battleScene);
     }
+    /**
+     * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
+     * @returns {String}
+     */
+    function _getMenuKeyHTMLString() {
+        return "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>";
+    }
     // ##############################################################################
     /**
      * @class Represents the battle screen.
@@ -957,7 +979,9 @@ define([
                 function () {
                     resumeBattle();
                     if (!_demoMode) {
-                        control.switchToPilotMode(_level.getPilotedSpacecraft());
+                        if (_level.getPilotedSpacecraft()) {
+                            control.switchToPilotMode(_level.getPilotedSpacecraft());
+                        }
                     } else {
                         control.switchToSpectatorMode(false, true);
                         _battleScene.getCamera().followNextNode();
@@ -1267,7 +1291,7 @@ define([
             // .....................................................................................................
             // cursor
             mouseInputInterpreter = control.getInputInterpreter(control.MOUSE_NAME);
-            if (mouseInputInterpreter.isEnabled() && control.isInPilotMode() && !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME)) {
+            if (control.isListening() && mouseInputInterpreter.isEnabled() && control.isInPilotMode() && !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME)) {
                 position2D = mouseInputInterpreter.getMousePosition();
                 position2D = [
                     (position2D[0] / canvas.width - 0.5) * 2,
@@ -1607,6 +1631,25 @@ define([
                 this._stats.setContent(this.getFPS());
             }
         }
+        // displaying the victory or defeat message
+        if ((_simulationLoop !== LOOP_CANCELED) && !_demoMode) {
+            // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
+            // right after it destroyed the last enemy can change the state from victory to defeat
+            if (!_gameStateChanged) {
+                if (_level && (_level.isWon() || _level.isLost())) {
+                    _gameStateChanged = true;
+                    _timeSinceGameStateChanged = 0;
+                }
+            } else if (!_gameStateShown) {
+                _timeSinceGameStateChanged += dt;
+                if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
+                    this.showMessage(utils.formatString(strings.get(_level.isLost() ? strings.BATTLE.MESSAGE_DEFEAT : strings.BATTLE.MESSAGE_VICTORY), {
+                        menuKey: _getMenuKeyHTMLString()
+                    }));
+                    _gameStateShown = true;
+                }
+            }
+        }
     };
     /**
      * @typedef {Object} BattleScreen~BattleParams
@@ -1624,10 +1667,11 @@ define([
                 loadingStartTime = performance.now(),
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         params = params || {};
+        _gameStateChanged = false;
+        _gameStateShown = false;
         if (params.restart) {
             this.stopRenderLoop();
             pauseBattle();
-            _clearData();
         }
         if (params.levelSourceFilename !== undefined) {
             _levelSourceFilename = params.levelSourceFilename;
@@ -1647,6 +1691,11 @@ define([
         _level.requestLoadFromFile(_levelSourceFilename, _demoMode, function () {
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
             _level.addRandomShips(undefined, _demoMode);
+            // for levels that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
+            // victory / defeat message
+            if (_level.isWon() || _level.isLost()) {
+                _gameStateShown = true;
+            }
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();
@@ -1710,7 +1759,7 @@ define([
                     this.setHeaderContent(strings.get(strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(_levelSourceFilename)));
                     _battleCursor = document.body.style.cursor;
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
-                        menuKey: "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>"
+                        menuKey: _getMenuKeyHTMLString()
                     }));
                     this._loadingBox.hide();
                     showHUD();

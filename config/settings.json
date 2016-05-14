@@ -127,6 +127,7 @@
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
             "targetChangeTransitionStyle": "smooth",
+            "gameStateDisplayDelay": 2000,
             "hudCenterCrosshairTexture": "center",
             "hudCenterCrosshairSize": [0.65, 0.65],
             "hudCenterCrosshairScaleMode": "minimum",

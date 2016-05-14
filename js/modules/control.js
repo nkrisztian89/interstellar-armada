@@ -272,6 +272,13 @@ define([
         return "Generic";
     };
     /**
+     * Resets the stored state of the input device. Automatically called every time listening is stopped or started.
+     * Needs to be overridden for every specific interpreter.
+     */
+    InputInterpreter.prototype.resetState = function () {
+        application.showError("Cannot reset the state of a generic input interpreter!");
+    };
+    /**
      * Whether the interpreter is currently listening for input (and thus also intercepting it, preventing most default actions)
      * @returns {Boolean}
      */
@@ -285,7 +292,10 @@ define([
      * Needs to be overridden to set add the setting of event handlers and other optional settings.
      */
     InputInterpreter.prototype.startListening = function () {
-        this._listening = true;
+        if (!this._listening) {
+            this.resetState();
+            this._listening = true;
+        }
     };
     /**
      * The interpreter will stop listening after calling this method, canceling any event handlers related to its input device. Since its
@@ -294,7 +304,10 @@ define([
      * Needs to be overridden to set add the canceling of event handlers and other optional settings.
      */
     InputInterpreter.prototype.stopListening = function () {
-        this._listening = false;
+        if (this._listening) {
+            this.resetState();
+            this._listening = false;
+        }
     };
     /**
      * Changes the listening state of the interpreter to its opposite.
@@ -680,6 +693,16 @@ define([
         return "keyboard";
     };
     /**
+     * @override
+     * Updates the internally stored state of the keyboard, marking all keys as non-pressed.
+     */
+    KeyboardInputInterpreter.prototype.resetState = function () {
+        var i;
+        for (i = 0; i < this._currentlyPressedKeys.length; i++) {
+            this._currentlyPressedKeys[i] = false;
+        }
+    };
+    /**
      * Returns whether the default browser actions for the key of the passed code
      * should be enabled while this interpreter is active.
      * @param {Number} keyCode
@@ -687,16 +710,6 @@ define([
      */
     KeyboardInputInterpreter.prototype.defaultActionEnabledForKey = function (keyCode) {
         return ["f5", "f11", 'escape'].indexOf(utils.getKeyOfCode(keyCode)) >= 0;
-    };
-    /**
-     * Updates the internally stored state of the keyboard, marking all keys as 
-     * non-pressed.
-     */
-    KeyboardInputInterpreter.prototype.cancelPressedKeys = function () {
-        var i;
-        for (i = 0; i < this._currentlyPressedKeys.length; i++) {
-            this._currentlyPressedKeys[i] = false;
-        }
     };
     /**
      * An event handler for the keydown event, updating the stored state of the 
@@ -730,7 +743,6 @@ define([
      */
     KeyboardInputInterpreter.prototype.startListening = function () {
         InputInterpreter.prototype.startListening.call(this);
-        this.cancelPressedKeys();
         document.onkeydown = function (event) {
             this.handleKeyDown(event);
         }.bind(this);
@@ -754,7 +766,6 @@ define([
         InputInterpreter.prototype.stopListening.call(this);
         document.onkeydown = null;
         document.onkeyup = null;
-        this.cancelPressedKeys();
     };
     /**
      * @override
@@ -1012,11 +1023,20 @@ define([
         // movement in the negative direction is represented by '-1' value of _moveX/Y,
         // therefore multiplying with the actual movement will be positive if it was
         // in the same direction
-        relativeX = this._measuredFromCenter ? mousePosition[0] - screenCenter[0] : mousePositionChange[0];
+        // only calculate the displacement if we have a valid mouse position
+        relativeX = this._measuredFromCenter ?
+                ((mousePosition[0] >= 0) ?
+                        mousePosition[0] - screenCenter[0] :
+                        0) :
+                mousePositionChange[0];
         if (this._moveX !== 0) {
             return relativeX * this._moveX;
         }
-        relativeY = this._measuredFromCenter ? mousePosition[1] - screenCenter[1] : mousePositionChange[1];
+        relativeY = this._measuredFromCenter ?
+                ((mousePosition[1] >= 0) ?
+                        mousePosition[1] - screenCenter[1] :
+                        0) :
+                mousePositionChange[1];
         if (this._moveY !== 0) {
             return relativeY * this._moveY;
         }
@@ -1073,7 +1093,7 @@ define([
          * The current mouse position as obtained from the mouse event.
          * @type Number[2]
          */
-        this._mousePosition = [0, 0];
+        this._mousePosition = [-1, -1];
         /**
          * The change in mouse position since the last time the inputs were processed.
          * @type Number[2]
@@ -1146,6 +1166,18 @@ define([
         return "mouse";
     };
     /**
+     * @override
+     */
+    MouseInputInterpreter.prototype.resetState = function () {
+        var i;
+        for (i = 0; i < this._currentlyPressedButtons.length; i++) {
+            this._currentlyPressedButtons[i] = false;
+        }
+        this._mousePosition = [-1, -1];
+        this._mousePositionChange = [0, 0];
+        this._scrollChange = [0, 0];
+    };
+    /**
      * Sets the mouse move sensitivity and stores the setting in HTML5 local storage.
      * @param {Number} moveSensitivity
      */
@@ -1212,16 +1244,6 @@ define([
         localStorage.removeItem(_modulePrefix + "mouse_displacementDeadzone");
     };
     /**
-     * Updates the internally stored state of the mouse buttons, marking all buttons 
-     * as non-pressed.
-     */
-    MouseInputInterpreter.prototype.cancelPressedButtons = function () {
-        var i;
-        for (i = 0; i < this._currentlyPressedButtons.length; i++) {
-            this._currentlyPressedButtons[i] = false;
-        }
-    };
-    /**
      * An event handler for the mousedown event, updating the stored state of the 
      * mouse.
      * @param {MouseEvent} event
@@ -1249,8 +1271,11 @@ define([
     MouseInputInterpreter.prototype.handleMouseMove = function (event) {
         // we add up all movements of the mouse and null it out after every query for triggered actions, so all movements between two
         // queries are considered
-        this._mousePositionChange[0] += (event.clientX - this._mousePosition[0]);
-        this._mousePositionChange[1] += (event.clientY - this._mousePosition[1]);
+        // only add the movement if we have a valid mouse position
+        if (this._mousePosition[0] >= 0) {
+            this._mousePositionChange[0] += (event.clientX - this._mousePosition[0]);
+            this._mousePositionChange[1] += (event.clientY - this._mousePosition[1]);
+        }
         this._mousePosition = [event.clientX, event.clientY];
     };
     /**
@@ -1270,8 +1295,6 @@ define([
      */
     MouseInputInterpreter.prototype.startListening = function () {
         InputInterpreter.prototype.startListening.call(this);
-        this.cancelPressedButtons();
-        this._mousePositionChange = [0, 0];
         document.onmousedown = function (event) {
             this.handleMouseDown(event);
         }.bind(this);
@@ -1307,9 +1330,6 @@ define([
         document.onwheel = null;
         document.onclick = null;
         document.oncontextmenu = null;
-        this.cancelPressedButtons();
-        this._mousePositionChange = [0, 0];
-        this._scrollChange = [0, 0];
     };
     /**
      * @override
@@ -1586,6 +1606,12 @@ define([
     };
     /**
      * @override
+     */
+    GamepadInputInterpreter.prototype.resetState = function () {
+        this._gamepad = null;
+    };
+    /**
+     * @override
      * Loads the properties of the interpreter such as the (default) gamepad bindings
      * from the passed JSON object.
      * @param {Object} dataJSON
@@ -1631,7 +1657,6 @@ define([
     GamepadInputInterpreter.prototype.stopListening = function () {
         InputInterpreter.prototype.stopListening.call(this);
         window.ongamepadconnected = null;
-        this._gamepad = null;
     };
     /**
      * @override
@@ -2360,8 +2385,7 @@ define([
         });
     };
     /**
-     * Cancel all event handlers that listen for user input for each stored input
-     * interpreter.
+     * Cancel all event handlers that listen for user input for each stored input interpreter.
      */
     ControlContext.prototype.stopListening = function () {
         this.executeWhenReady(function () {
@@ -2371,6 +2395,13 @@ define([
             }
             this._listening = false;
         });
+    };
+    /**
+     * Returns whether the context is currently set to listen for user input through its interpreters.
+     * @returns {Boolean}
+     */
+    ControlContext.prototype.isListening = function () {
+        return this._listening;
     };
     /**
      * Sets the screen center to the given coordinates for all input interpreters

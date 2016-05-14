@@ -77,7 +77,9 @@ define([
         LOADING_BOX_ADDING_RANDOM_ELEMENTS: {name: "battle.loadingBox.addingRandomElements"},
         LOADING_BOX_BUILDING_SCENE: {name: "battle.loadingBox.buildingScene"},
         MESSAGE_READY: {name: "battle.message.ready"},
-        MESSAGE_PAUSED: {name: "battle.message.paused"}
+        MESSAGE_PAUSED: {name: "battle.message.paused"},
+        MESSAGE_VICTORY: {name: "battle.message.victory"},
+        MESSAGE_DEFEAT: {name: "battle.message.defeat"}
     };
     strings.DATABASE = {
         BACK: {name: "database.backButton"},

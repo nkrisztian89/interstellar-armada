@@ -689,6 +689,14 @@ define([
             type: "enum",
             values: budaScene.Camera.prototype.TransitionStyle
         },
+        /**
+         * The amount of time to wait after the game state changes to victory or defeat before actually displaying the result. (as for
+         * example incoming projectiles destroying the player's ship right after victory can change the state to defeat)
+         */
+        GAME_STATE_DISPLAY_DELAY: {
+            name: "gameStateDisplayDelay",
+            type: "number"
+        },
         HUD_CENTER_CROSSHAIR_TEXTURE: {
             name: "hudCenterCrosshairTexture",
             type: "string"
