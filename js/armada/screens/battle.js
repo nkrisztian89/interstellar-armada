@@ -325,14 +325,19 @@ define([
             /**
              * Displays a smaller header text at the top center of the screen, shown/hidden independently from the HUD, used for displaying
              * version info.
-             * @type TextLayer
+             * @type CanvasText
              */
             _smallHeaderText,
             /**
              * Displays a larger header text below the small one, shown/hidden with the rest of the HUD.
-             * @type TextLayer
+             * @type CanvasText
              */
             _bigHeaderText,
+            /**
+             * Displays a smaller header text below the big one, shown/hidden with the rest of the HUD.
+             * @type CanvasText
+             */
+            _subheaderText,
             // ................................................................................................
             // cached references of setting values used for the layout of the HUD
             /**
@@ -1149,6 +1154,17 @@ define([
                     "center");
             _headerTextLayer.addText(_bigHeaderText);
         }
+        if (!_subheaderText) {
+            _subheaderText = new screens.CanvasText(
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_POSITION),
+                    "",
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_FONT_NAME),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_FONT_SIZE),
+                    _headerTextLayer.getLayout().getScaleMode(),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_COLOR),
+                    "center");
+            _headerTextLayer.addText(_subheaderText);
+        }
     };
     /**
      * Shows the stats (FPS, draw stats) component.
@@ -1193,6 +1209,16 @@ define([
         }
     };
     /**
+     * Updates the subheader's content on the screen.
+     * @param {String} content
+     * @param {Object} [replacements]
+     */
+    BattleScreen.prototype.setSubheaderContent = function (content, replacements) {
+        if (_subheaderText) {
+            _subheaderText.setText(content, replacements);
+        }
+    };
+    /**
      * Updates the contents of the HUDF with information about the currently followed spacecraft
      */
     BattleScreen.prototype._updateHUD = function () {
@@ -1225,6 +1251,12 @@ define([
             // .....................................................................................................
             // header
             _bigHeaderText.show();
+            if (control.isInPilotMode()) {
+                _subheaderText.hide();
+            } else {
+                _subheaderText.setText(craft.getName() || craft.getClass().getDisplayName());
+                _subheaderText.show();
+            }
             // .....................................................................................................
             // center crosshair
             if (isInAimingView) {
@@ -1540,6 +1572,7 @@ define([
             } else {
                 _bigHeaderText.hide();
             }
+            _subheaderText.hide();
             _battleScene.hideUI();
             _targetScene.clearNodes();
             _targetViewItem = null;

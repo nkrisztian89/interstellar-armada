@@ -311,9 +311,9 @@
             "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor": [0, 1, 0, 0],
             "hudHeaderTextLayerLayout": {
                 "centerX": 0,
-                "top": 0.98,
+                "top": 0.97,
                 "width": 0.85,
-                "height": 0.12,
+                "height": 0.155,
                 "scaleMode": "maximum",
                 "xScaleMode": "maximum",
                 "yScaleMode": "maximum"
@@ -325,7 +325,11 @@
             "hudBigHeaderTextColor": [1, 1, 1, 1],
             "hudBigHeaderTextFontSize": 0.06,
             "hudBigHeaderTextFontName": "gameFont",
-            "hudBigHeaderTextPosition": [0, -0.7],
+            "hudBigHeaderTextPosition": [0, -0.35],
+            "hudSubheaderTextColor": [1, 1, 1, 1],
+            "hudSubheaderTextFontSize": 0.025,
+            "hudSubheaderTextFontName": "gameFont",
+            "hudSubheaderTextPosition": [0, -0.85],
             "demoFighterAI": "fighter",
             "demoViewSwitchInterval": 6000,
             "demoDoubleViewSwitchChance": 0.5

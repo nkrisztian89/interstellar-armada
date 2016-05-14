@@ -1156,6 +1156,22 @@ define([
             name: "hudBigHeaderTextPosition",
             type: _customTypes.VECTOR2
         },
+        HUD_SUBHEADER_TEXT_COLOR: {
+            name: "hudSubheaderTextColor",
+            type: _customTypes.COLOR4
+        },
+        HUD_SUBHEADER_TEXT_FONT_SIZE: {
+            name: "hudSubheaderTextFontSize",
+            type: "number"
+        },
+        HUD_SUBHEADER_TEXT_FONT_NAME: {
+            name: "hudSubheaderTextFontName",
+            type: "string"
+        },
+        HUD_SUBHEADER_TEXT_POSITION: {
+            name: "hudSubheaderTextPosition",
+            type: _customTypes.VECTOR2
+        },
         DEMO_FIGHTER_AI_TYPE: {
             name: "demoFighterAI",
             type: "string"
