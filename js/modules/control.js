@@ -1862,7 +1862,7 @@ define([
         if (this._continuous === true) {
             if (this._triggered === true) {
                 if (this._executeTriggered !== null) {
-                    this._executeTriggered((this._intensity >= 0) ? this._intensity : null);
+                    this._executeTriggered((this._intensity >= 0) ? this._intensity : undefined);
                 }
             } else {
                 if (this._executeNonTriggered !== null) {
@@ -1872,7 +1872,7 @@ define([
         } else {
             if ((this._triggered === true) && (this._executed === false)) {
                 if (this._executeTriggered !== null) {
-                    this._executeTriggered((this._intensity >= 0) ? this._intensity : null);
+                    this._executeTriggered((this._intensity >= 0) ? this._intensity : undefined);
                 }
                 this._executed = true;
             } else {

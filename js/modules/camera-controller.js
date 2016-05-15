@@ -131,7 +131,7 @@ define([
         }.bind(this));
         // turning the camera in the six directions
         this.setActionFunctions("cameraTurnLeft", function (intensity) {
-            if ((intensity === undefined) || (intensity === null)) {
+            if (intensity === undefined) {
                 if (this._angularVelocityTargetVector[1] > -this._maxAngularVelocity) {
                     this._angularVelocityTargetVector[1] = -this._maxAngularVelocity;
                 }
@@ -146,7 +146,7 @@ define([
             }
         }.bind(this));
         this.setActionFunctions("cameraTurnRight", function (intensity) {
-            if ((intensity === undefined) || (intensity === null)) {
+            if (intensity === undefined) {
                 if (this._angularVelocityTargetVector[1] < this._maxAngularVelocity) {
                     this._angularVelocityTargetVector[1] = this._maxAngularVelocity;
                 }
@@ -161,7 +161,7 @@ define([
             }
         }.bind(this));
         this.setActionFunctions("cameraTurnUp", function (intensity) {
-            if ((intensity === undefined) || (intensity === null)) {
+            if (intensity === undefined) {
                 if (this._angularVelocityTargetVector[0] > -this._maxAngularVelocity) {
                     this._angularVelocityTargetVector[0] = -this._maxAngularVelocity;
                 }
@@ -176,7 +176,7 @@ define([
             }
         }.bind(this));
         this.setActionFunctions("cameraTurnDown", function (intensity) {
-            if ((intensity === undefined) || (intensity === null)) {
+            if (intensity === undefined) {
                 if (this._angularVelocityTargetVector[0] < this._maxAngularVelocity) {
                     this._angularVelocityTargetVector[0] = this._maxAngularVelocity;
                 }
@@ -191,7 +191,7 @@ define([
             }
         }.bind(this));
         this.setActionFunctions("cameraRollLeft", function (intensity) {
-            if ((intensity === undefined) || (intensity === null)) {
+            if (intensity === undefined) {
                 if (this._angularVelocityTargetVector[2] > -this._maxAngularVelocity) {
                     this._angularVelocityTargetVector[2] = -this._maxAngularVelocity;
                 }
@@ -206,7 +206,7 @@ define([
             }
         }.bind(this));
         this.setActionFunctions("cameraRollRight", function (intensity) {
-            if ((intensity === undefined) || (intensity === null)) {
+            if (intensity === undefined) {
                 if (this._angularVelocityTargetVector[2] < this._maxAngularVelocity) {
                     this._angularVelocityTargetVector[2] = this._maxAngularVelocity;
                 }

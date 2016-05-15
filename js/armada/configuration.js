@@ -613,8 +613,15 @@ define([
          */
         TURN_ACCELERATION_DURATION_S: {
             name: "turnAccelerationDurationInSeconds",
-            type: _customTypes.DURATION,
-            defaultValue: 0.5
+            type: _customTypes.DURATION
+        },
+        /**
+         * When strafing, the controlled spacecraft will accelerate to maximum a speed (along the strafing axis) that is its acceleration 
+         * multiplied by this factor.
+         */
+        STRAFE_SPEED_FACTOR: {
+            name: "strafeSpeedFactor",
+            type: "number"
         },
         /**
          * If a muzzle flash particle has no set duration (by its projectile class), this duration will be applied. In milliseconds
@@ -943,8 +950,12 @@ define([
             name: "hudReverseSpeedBarEmptyColor",
             type: _customTypes.COLOR4
         },
-        HUD_SPEED_BAR_BASE_MAX_SPEED: {
-            name: "hudSpeedBarBaseMaxSpeed",
+        HUD_SPEED_BAR_BASE_MAX_SPEED_FACTOR: {
+            name: "hudSpeedBarBaseMaxSpeedFactor",
+            type: "number"
+        },
+        HUD_SPEED_BAR_DEFAULT_BASE_MAX_SPEED: {
+            name: "hudSpeedBarDefaultBaseMaxSpeed",
             type: "number"
         },
         HUD_SPEED_BAR_MAX_SPEED_STEP_FACTOR: {
@@ -1100,8 +1111,8 @@ define([
             name: "hudDriftArrowMinSpeed",
             type: "number"
         },
-        HUD_DRIFT_ARROW_MAX_SPEED: {
-            name: "hudDriftArrowMaxSpeed",
+        HUD_DRIFT_ARROW_MAX_SPEED_FACTOR: {
+            name: "hudDriftArrowMaxSpeedFactor",
             type: "number"
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE: {

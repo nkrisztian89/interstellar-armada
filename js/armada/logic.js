@@ -1724,7 +1724,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeLeft = function (intensity) {
-        this._strafeTarget = intensity ? -intensity : -Number.MAX_VALUE;
+        this._strafeTarget = (this._compensated && intensity) ? -intensity : -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1742,7 +1742,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeRight = function (intensity) {
-        this._strafeTarget = intensity || Number.MAX_VALUE;
+        this._strafeTarget = (this._compensated && intensity) || Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1760,7 +1760,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.lower = function (intensity) {
-        this._liftTarget = intensity ? -intensity : -Number.MAX_VALUE;
+        this._liftTarget = (this._compensated && intensity) ? -intensity : -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for lifting to zero, if was set to a speed to lift
@@ -1778,7 +1778,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.raise = function (intensity) {
-        this._liftTarget = intensity || Number.MAX_VALUE;
+        this._liftTarget = (this._compensated && intensity) || Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to lift
@@ -1831,7 +1831,7 @@ define([
         // if no intensity was given for the turn, turn with maximum power (mouse or
         // joystick control can have fine intensity control, while with keyboard,
         // when the key is pressed, we just call this without parameter)
-        if ((intensity === null) || (intensity === undefined)) {
+        if (intensity === undefined) {
             this._yawTarget = -this._turningLimit;
             // if a specific intensity was set, set the target to it, capping it out at
             // the maximum allowed turning speed
@@ -1850,7 +1850,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.yawRight = function (intensity) {
-        if ((intensity === null) || (intensity === undefined)) {
+        if (intensity === undefined) {
             this._yawTarget = this._turningLimit;
         } else if (intensity > 0) {
             this._yawTarget = intensity * this._turningLimit;
@@ -1865,7 +1865,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.pitchDown = function (intensity) {
-        if ((intensity === null) || (intensity === undefined)) {
+        if (intensity === undefined) {
             this._pitchTarget = -this._turningLimit;
         } else if (intensity > 0) {
             this._pitchTarget = -intensity * this._turningLimit;
@@ -1880,7 +1880,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.pitchUp = function (intensity) {
-        if ((intensity === null) || (intensity === undefined)) {
+        if (intensity === undefined) {
             this._pitchTarget = this._turningLimit;
         } else if (intensity > 0) {
             this._pitchTarget = intensity * this._turningLimit;
@@ -1895,7 +1895,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.rollLeft = function (intensity) {
-        if ((intensity === null) || (intensity === undefined)) {
+        if (intensity === undefined) {
             this._rollTarget = -this._turningLimit;
         } else if (intensity > 0) {
             this._rollTarget = -intensity * this._turningLimit;
@@ -1910,7 +1910,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.rollRight = function (intensity) {
-        if ((intensity === null) || (intensity === undefined)) {
+        if (intensity === undefined) {
             this._rollTarget = this._turningLimit;
         } else if (intensity > 0) {
             this._rollTarget = intensity * this._turningLimit;
@@ -2521,7 +2521,7 @@ define([
      * @returns {Number} The turning rate in rad/s.
      */
     Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
-        return Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed));
+        return Math.asin(Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed)));
     };
     /**
      * Returns the managed textures to be used for rendering the hitboxes of this spacecraft, in an associated array, by texture types.

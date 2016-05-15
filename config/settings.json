@@ -118,6 +118,7 @@
             "momentDuration": 1,
             "backgroundObjectDistance": 4500,
             "turnAccelerationDurationInSeconds": 0.333,
+            "strafeSpeedFactor": 2, 
             "defaultMuzzleFlashDuration": 500,
             "selfFire": true,
             "defaultEquipmentProfileName": "default",
@@ -227,7 +228,8 @@
             "hudSpeedBarEmptyColor": [0, 1, 1, 0.2],
             "hudReverseSpeedBarFilledColor": [1, 0.75, 0, 0.75],
             "hudReverseSpeedBarEmptyColor": [1, 0.75, 0, 0.2],
-            "hudSpeedBarBaseMaxSpeed": 50,
+            "hudSpeedBarBaseMaxSpeedFactor": 1,
+            "hudSpeedBarDefaultBaseMaxSpeed": 10,
             "hudSpeedBarMaxSpeedStepFactor": 4,
             "hudSpeedTextLayerLayout": {
                 "centerX": 0.65,
@@ -295,7 +297,7 @@
             "hudDriftArrowMinSpeedColor": [0, 1, 1, 0.0],
             "hudDriftArrowMaxSpeedColor": [0, 1, 1, 0.75],
             "hudDriftArrowMinSpeed": 0.5,
-            "hudDriftArrowMaxSpeed": 100,
+            "hudDriftArrowMaxSpeedFactor": 2,
             "hudTargetHullIntegrityQuickViewBarTexture": "white",
             "hudTargetHullIntegrityQuickViewBarLayout": {
                 "centerX": 0,

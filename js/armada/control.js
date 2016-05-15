@@ -39,6 +39,11 @@ define([
             // ------------------------------------------------------------------------------
             // private variables
             /**
+             * Cached value of the configuration setting for strafe speed factor.
+             * @type Number
+             */
+            _strafeSpeedFactor,
+            /**
              * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
              * @type ArmadaControlContext
              */
@@ -160,6 +165,11 @@ define([
          */
         this._controlledSpacecraft = null;
         /**
+         * The strafing speed to be used for the controlled spacecraft, in m/s.
+         * @type Number
+         */
+        this._strafeSpeed = 0;
+        /**
          * Whether auto-targeting is currently turned on for this controller.
          * @type Boolean
          */
@@ -200,23 +210,23 @@ define([
         }.bind(this));
         // strafing to left and right
         this.setActionFunctions("strafeLeft", function (i) {
-            this._controlledSpacecraft.strafeLeft(i);
+            this._controlledSpacecraft.strafeLeft(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopLeftStrafe();
         }.bind(this));
         this.setActionFunctions("strafeRight", function (i) {
-            this._controlledSpacecraft.strafeRight(i);
+            this._controlledSpacecraft.strafeRight(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopRightStrafe();
         }.bind(this));
         // strafing up and down
         this.setActionFunctions("raise", function (i) {
-            this._controlledSpacecraft.raise(i);
+            this._controlledSpacecraft.raise(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopRaise();
         }.bind(this));
         this.setActionFunctions("lower", function (i) {
-            this._controlledSpacecraft.lower(i);
+            this._controlledSpacecraft.lower(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopLower();
         }.bind(this));
@@ -262,6 +272,9 @@ define([
      */
     FighterController.prototype.setControlledSpacecraft = function (controlledSpacecraft) {
         this._controlledSpacecraft = controlledSpacecraft;
+        if (this._controlledSpacecraft) {
+            this._strafeSpeed = _strafeSpeedFactor * this._controlledSpacecraft.getMaxAcceleration();
+        }
     };
     /**
      * Same as the method of the parent class, but with a check if there if there is
@@ -355,6 +368,11 @@ define([
         }
     };
     _context = new ArmadaControlContext();
+    // -------------------------------------------------------------------------
+    // Caching configuration settings
+    config.executeWhenReady(function () {
+        _strafeSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.STRAFE_SPEED_FACTOR);
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

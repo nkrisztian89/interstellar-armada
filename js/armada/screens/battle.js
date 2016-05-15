@@ -413,10 +413,11 @@ define([
              */
             _driftArrowMinSpeed,
             /**
-             * The amount of drift speed needed above the minimum drift speed for the drift arrow to be displayed with the max speed color.
+             * The factor by which to multiply the acceleration of the followed spacecraft to get the drift speed at which the drift arrow is
+             * displayed with the max speed color.
              * @type Number
              */
-            _driftArrowSpeedInterval;
+            _driftArrowMaxSpeedFactor;
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -1253,7 +1254,7 @@ define([
                 /** @type Number */
                 distance, aspect, i, scale, futureDistance,
                 hullIntegrity,
-                speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, arrowPositionRadius,
+                acceleration, speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
@@ -1318,7 +1319,9 @@ define([
             relativeVelocity = craft.getRelativeVelocityMatrix();
             speed = relativeVelocity[13];
             absSpeed = Math.abs(speed);
-            maxSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_BASE_MAX_SPEED);
+            acceleration = craft.getMaxAcceleration();
+            maxSpeed = (config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
             stepFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_MAX_SPEED_STEP_FACTOR);
             while (maxSpeed < absSpeed) {
                 maxSpeed *= stepFactor;
@@ -1387,10 +1390,14 @@ define([
                     arrowPositionRadius = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? 1 : aspect);
                     _driftArrow.setPosition(vec.scaled2([direction2D[0] / aspect, direction2D[1]], arrowPositionRadius));
                     _driftArrow.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                    driftArrowMaxSpeed = _driftArrowMaxSpeedFactor * acceleration;
+                    if (driftArrowMaxSpeed === 0) {
+                        driftArrowMaxSpeed = maxSpeed;
+                    }
                     _driftArrow.setColor(utils.getMixedColor(
                             config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED_COLOR),
                             config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR),
-                            Math.min((driftSpeed - _driftArrowMinSpeed) / _driftArrowSpeedInterval, 1.0)));
+                            Math.min((driftSpeed - _driftArrowMinSpeed) / (driftArrowMaxSpeed - _driftArrowMinSpeed), 1.0)));
                 } else {
                     _driftArrow.hide();
                 }
@@ -1782,7 +1789,7 @@ define([
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_LAYOUT));
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
         _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
-        _driftArrowSpeedInterval = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED) - _driftArrowMinSpeed;
+        _driftArrowMaxSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT));
     });
     // -------------------------------------------------------------------------
