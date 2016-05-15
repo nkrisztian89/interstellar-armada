@@ -1,5 +1,5 @@
 {
-    "version": "0.2.1:281 (2016.05.15.)",
+    "version": "0.2.1:282 (2016.05.15.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -136,6 +136,21 @@
                 }, {
                     "name": "maximum",
                     "maxLights": 192
+                }
+            ],
+            "particleAmounts": [
+                {
+                    "name": "low",
+                    "particleCountFactor": 0.25
+                }, {
+                    "name": "medium",
+                    "particleCountFactor": 0.5
+                }, {
+                    "name": "high",
+                    "particleCountFactor": 0.75
+                }, {
+                    "name": "maximum",
+                    "particleCountFactor": 1
                 }
             ],
             "dustParticleAmounts": [

@@ -498,11 +498,11 @@ define([
             // ............................................................................................
             // Amount of dust particles
             /**
-             * The definition object for dust particle amount descriptors, based on which the array of descriptors defined in the config JSON
-             * is type-verified.
+             * The definition object for particle amount descriptors, based on which the arrays of descriptors defined in the config JSON
+             * are type-verified.
              * @type Object
              */
-            DUST_PARTICLE_AMOUNT_DESCRIPTOR_TYPE = types.getNameAndValueDefinitionObject("particleCountFactor"),
+            PARTICLE_AMOUNT_DESCRIPTOR_TYPE = types.getNameAndValueDefinitionObject("particleCountFactor"),
             // ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
             // Settings
             // ............................................................................................
@@ -582,6 +582,13 @@ define([
              * @type String
              */
             POINT_LIGHT_AMOUNT_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "pointLightAmount",
+            // ............................................................................................
+            // Amount of particles (for particle systems)
+            /**
+             * The key identifying the location where the particle amount setting is stored in local storage.
+             * @type String
+             */
+            PARTICLE_AMOUNT_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "particleAmount",
             // ............................................................................................
             // Amount of dust particles
             /**
@@ -1008,6 +1015,12 @@ define([
          */
         this._pointLightAmount = null;
         /**
+         * The available and currently set amount (factor) for particle count in particle systems.
+         * @type OrderedNamedNumericOptions
+         */
+        this._particleAmount = null;
+        /**
+         * The available and currently set amount (factor) for dust particle count.
          * @type OrderedNamedNumericOptions
          */
         this._dustParticleAmount = null;
@@ -1154,9 +1167,13 @@ define([
                 dataJSON.context.pointLightAmounts,
                 DYNAMIC_LIGHT_AMOUNT_DESCRIPTOR_TYPE,
                 "config.graphics.context.pointLightAmounts");
+        this._particleAmount = new OrderedNamedNumericOptions(
+                dataJSON.context.particleAmounts,
+                PARTICLE_AMOUNT_DESCRIPTOR_TYPE,
+                "config.graphics.context.particleAmounts");
         this._dustParticleAmount = new OrderedNamedNumericOptions(
                 dataJSON.context.dustParticleAmounts,
-                DUST_PARTICLE_AMOUNT_DESCRIPTOR_TYPE,
+                PARTICLE_AMOUNT_DESCRIPTOR_TYPE,
                 "config.graphics.context.dustParticleAmounts");
         this._lodLevel = new OrderedNamedNumericOptions(
                 dataJSON.levelOfDetailSettings.lodLevels,
@@ -1221,7 +1238,27 @@ define([
                 }
             }
         }
-        // load the dut particle amount settings
+        // load the particle amount settings
+        this.setParticleAmount(dataJSON.particleAmount.amount, false);
+        // if the particle amount is limited by screen size, check the current size and apply the limit
+        if (dataJSON.particleAmount.autoLimitByScreenSize === true) {
+            screenSize = Math.max(screen.width, screen.height);
+            for (i = 0, n = dataJSON.particleAmount.limits.length; i < n; i++) {
+                limit = dataJSON.particleAmount.limits[i];
+                if ((screenSize < limit.screenSizeLessThan) &&
+                        (this.getParticleCountFactor() > this._particleAmount.getValueForName(limit.amount))) {
+                    this.setParticleAmount(limit.amount, false);
+                }
+            }
+        }
+        // if the particle amount should be automatically decreased by a level if there is no instancing available, apply this decrease
+        // as necessary
+        if (dataJSON.particleAmount.autoDecreaseIfInstancingNotAvailable === true) {
+            if (!managedGL.isInstancingAvailable()) {
+                this._particleAmount.decrease();
+            }
+        }
+        // load the dust particle amount settings
         this.setDustParticleAmount(dataJSON.dustParticleAmount.amount, false);
         // if the dust particle amount is limited by screen size, check the current size and apply the limit
         if (dataJSON.dustParticleAmount.autoLimitByScreenSize === true) {
@@ -1278,6 +1315,7 @@ define([
             // otherwise the shadow distances will be an empty array, and we cannot verify the value
         }
         loadSetting(POINT_LIGHT_AMOUNT_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getPointLightAmounts())}, this.getPointLightAmount(), this.setPointLightAmount.bind(this));
+        loadSetting(PARTICLE_AMOUNT_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getParticleAmounts())}, this.getParticleAmount(), this.setParticleAmount.bind(this));
         loadSetting(DUST_PARTICLE_AMOUNT_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getDustParticleAmounts())}, this.getDustParticleAmount(), this.setDustParticleAmount.bind(this));
         this.setToReady();
     };
@@ -1775,6 +1813,45 @@ define([
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.MAX_SPOT_LIGHTS.name];
     };
     /**
+     * Returns the list of strings identifying the available particle amount settings, in ascending order.
+     * @returns {String[]}
+     */
+    GraphicsContext.prototype.getParticleAmounts = function () {
+        return this._particleAmount.getNameList();
+    };
+    /**
+     * Returns the string identifying the current particle amount setting.
+     * @returns {String}
+     */
+    GraphicsContext.prototype.getParticleAmount = function () {
+        return this._particleAmount.getCurrentName();
+    };
+    /**
+     * Returns the factor by which the particle count should be multiplied according to current settings.
+     * @returns {Number}
+     */
+    GraphicsContext.prototype.getParticleCountFactor = function () {
+        return this._particleAmount.getCurrentValue();
+    };
+    /**
+     * Sets a new particle amount.
+     * @param {String} value The string ID identifying the desired option.
+     * @param {Boolean} [saveToLocalStorage=true]
+     * @param {Boolean} [fallbackToHighest=false] If true, then in case the passed value cannot be set (because it is not valid e.g. 
+     * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
+     * option is set.
+     */
+    GraphicsContext.prototype.setParticleAmount = function (value, saveToLocalStorage, fallbackToHighest) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        if (this._particleAmount.setCurrent(value, fallbackToHighest)) {
+            if (saveToLocalStorage) {
+                localStorage[PARTICLE_AMOUNT_LOCAL_STORAGE_ID] = value;
+            }
+        }
+    };
+    /**
      * Returns the list of strings identifying the available dust particle amount settings, in ascending order.
      * @returns {String[]}
      */
@@ -1997,6 +2074,10 @@ define([
         getPointLightAmount: _context.getPointLightAmount.bind(_context),
         getMaxPointLights: _context.getMaxPointLights.bind(_context),
         setPointLightAmount: _context.setPointLightAmount.bind(_context),
+        getParticleAmounts: _context.getParticleAmounts.bind(_context),
+        getParticleAmount: _context.getParticleAmount.bind(_context),
+        getParticleCountFactor: _context.getParticleCountFactor.bind(_context),
+        setParticleAmount: _context.setParticleAmount.bind(_context),
         getDustParticleAmounts: _context.getDustParticleAmounts.bind(_context),
         getDustParticleAmount: _context.getDustParticleAmount.bind(_context),
         getDustParticleCountFactor: _context.getDustParticleCountFactor.bind(_context),

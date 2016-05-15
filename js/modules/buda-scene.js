@@ -3033,19 +3033,31 @@ define([
     /**
      * Returns the array of particles emitted by this emitter in the past dt milliseconds 
      * @param {Number} dt The time passed since this function was last called, in milliseconds
+     * @param {Number} [particleCountFactor=1] The number of created particles will be multiplied by this factor
      * @returns {Particle[]} The array of the emitted particles
      */
-    ParticleEmitter.prototype.emitParticles = function (dt) {
-        var particles, i;
+    ParticleEmitter.prototype.emitParticles = function (dt, particleCountFactor) {
+        var particles, i, n;
         particles = [];
+        if (particleCountFactor === undefined) {
+            particleCountFactor = 1;
+        }
         if (this._age === 0) {
-            for (i = 0; i < this._initialNumber; i++) {
+            n = Math.round(this._initialNumber * particleCountFactor);
+            if ((this._initialNumber > 0) && (n < 1)) {
+                n = 1;
+            }
+            for (i = 0; i < n; i++) {
                 particles.push(this._createParticle());
             }
         }
         this._age += dt;
         while (((this._age - this._lastSpawn) > this._spawnTime) && ((this._lastSpawn <= this._duration) || (this._duration === 0))) {
-            for (i = 0; i < this._spawnNumber; i++) {
+            n = Math.round(this._spawnNumber * particleCountFactor);
+            if ((this._spawnNumber > 0) && (n < 1)) {
+                n = 1;
+            }
+            for (i = 0; i < n; i++) {
                 particles.push(this._createParticle());
             }
             this._lastSpawn += this._spawnTime;
@@ -3257,8 +3269,9 @@ define([
      * add them directly to the scene root.
      * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
      * by this particle system will turn on instancing for their render queue.
+     * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing) {
+    function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
         RenderableObject3D.call(this, null, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
@@ -3298,6 +3311,11 @@ define([
          * @type Number
          */
         this._minimumCountForInstancing = minimumCountForInstancing;
+        /**
+         * The number of particles created by this particle system are multiplied by this factor (compared to the emitter settings)
+         * @type Number
+         */
+        this._particleCountFactor = (particleCountFactor !== undefined) ? particleCountFactor : 1;
     }
     ParticleSystem.prototype = new RenderableObject3D();
     ParticleSystem.prototype.constructor = ParticleSystem;
@@ -3323,7 +3341,7 @@ define([
         this._age += dt;
         if (this._emitters) {
             for (i = 0; i < this._emitters.length; i++) {
-                particles = this._emitters[i].emitParticles(dt);
+                particles = this._emitters[i].emitParticles(dt, this._particleCountFactor);
                 if (this._carriesParticles) {
                     for (j = 0; j < particles.length; j++) {
                         this.getNode().addSubnode(new RenderableNode(particles[j], false, this._minimumCountForInstancing));

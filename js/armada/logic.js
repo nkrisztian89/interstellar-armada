@@ -714,7 +714,8 @@ define([
                 this._class.getTotalDuration(),
                 this._class.isContinuous(),
                 this._carriesParticles,
-                config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING));
+                config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
+                graphics.getParticleCountFactor());
     };
     /**
      * Adds a renderable node representing this explosion to the passed scene.

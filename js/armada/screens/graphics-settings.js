@@ -127,6 +127,13 @@ define([
              * In the same format as the other value arrays
              * @type String[][2]
              */
+            _getParticleAmountSettingValues = function () {
+                return graphics.getParticleAmounts().map(_getMapToCaptionAndValueFunction(strings.SETTING));
+            },
+            /**
+             * In the same format as the other value arrays
+             * @type String[][2]
+             */
             _getDustParticleAmountSettingValues = function () {
                 return graphics.getDustParticleAmounts().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
@@ -156,6 +163,7 @@ define([
             SHADOW_QUALITY_SELECTOR_ID = "shadowQualitySelector",
             SHADOW_DISTANCE_SELECTOR_ID = "shadowDistanceSelector",
             MAX_DYNAMIC_LIGHTS_SELECTOR_ID = "maxDynamicLightSelector",
+            PARTICLE_AMOUNT_SELECTOR_ID = "particleAmountSelector",
             DUST_PARTICLE_AMOUNT_SELECTOR_ID = "dustParticleAmountSelector",
             OPTION_PARENT_ID = "settingsDiv",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
@@ -228,6 +236,10 @@ define([
         /**
          * @type Selector
          */
+        this._particleAmountSelector = null;
+        /**
+         * @type Selector
+         */
         this._dustParticleAmountSelector = null;
         graphics.executeWhenReady(function () {
             this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
@@ -260,6 +272,9 @@ define([
             this._maxDynamicLightsSelector = this._registerSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
                     strings.GRAPHICS.MAX_DYNAMIC_LIGHTS.name,
                     _getMaxDynamicLightsSettingValues().map(_mapCaption));
+            this._particleAmountSelector = this._registerSelector(PARTICLE_AMOUNT_SELECTOR_ID,
+                    strings.GRAPHICS.PARTICLE_AMOUNT.name,
+                    _getParticleAmountSettingValues().map(_mapCaption));
             this._dustParticleAmountSelector = this._registerSelector(DUST_PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.DUST_PARTICLE_AMOUNT.name,
                     _getDustParticleAmountSettingValues().map(_mapCaption));
@@ -294,6 +309,7 @@ define([
             graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
             graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
             graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
+            graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
             graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
@@ -347,6 +363,7 @@ define([
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
         this._shadowDistanceSelector.setValueList(_getShadowDistanceSettingValues().map(_mapCaption));
         this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
+        this._particleAmountSelector.setValueList(_getParticleAmountSettingValues().map(_mapCaption));
         this._dustParticleAmountSelector.setValueList(_getDustParticleAmountSettingValues().map(_mapCaption));
         this._updateValues();
     };
@@ -418,6 +435,7 @@ define([
             this._updateShadowQualitySelector();
             this._updateShadowDistanceSelector();
             this._updateMaxDynamicLightsSelector();
+            this._particleAmountSelector.selectValueWithIndex(_findIndexOf(graphics.getParticleAmount(), _getParticleAmountSettingValues()));
             this._dustParticleAmountSelector.selectValueWithIndex(_findIndexOf(graphics.getDustParticleAmount(), _getDustParticleAmountSettingValues()));
         }.bind(this));
     };

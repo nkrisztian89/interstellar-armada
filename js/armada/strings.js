@@ -141,6 +141,7 @@ define([
         SHADOW_QUALITY: {name: "graphics.shadowQuality"},
         SHADOW_DISTANCE: {name: "graphics.shadowDistance"},
         MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"},
+        PARTICLE_AMOUNT: {name: "graphics.particleAmount"},
         DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"}
     };
     strings.CONTOLLER = {
