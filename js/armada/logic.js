@@ -123,6 +123,16 @@ define([
              */
             _minimumMuzzleFlashParticleCountForInstancing = 0,
             /**
+             * Cached value of the configuration setting for compensated forward speed factor.
+             * @type Number
+             */
+            _compensatedForwardSpeedFactor,
+            /**
+             * Cached value of the configuration setting for compensated  reverse speed factor.
+             * @type Number
+             */
+            _compensatedReverseSpeedFactor,
+            /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
@@ -1601,6 +1611,16 @@ define([
          */
         this._speedIncrement = 0;
         /**
+         * In compensated modes, the forward speed target cannot exceed this. (in m/s)
+         * @type Number
+         */
+        this._maxCompensatedForwardSpeed = 0;
+        /**
+         * In compensated modes, the forward speed target cannot go below this. (negative, in m/s)
+         * @type Number
+         */
+        this._maxCompensatedReverseSpeed = 0;
+        /**
          * The maximum angle between vectors of the relative angular acceleration 
          * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
          * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
@@ -1647,6 +1667,8 @@ define([
      */
     ManeuveringComputer.prototype.updateForNewPropulsion = function () {
         this.updateSpeedIncrementPerSecond();
+        this._maxCompensatedForwardSpeed = _compensatedForwardSpeedFactor * this._spacecraft.getMaxAcceleration();
+        this._maxCompensatedReverseSpeed = _compensatedReverseSpeedFactor * -this._spacecraft.getMaxAcceleration();
         this.updateTurningLimit();
         this._maxMoveBurnLevel = this._spacecraft.getMaxThrusterMoveBurnLevel();
         this._maxTurnBurnLevel = this._spacecraft.getMaxThrusterTurnBurnLevel();
@@ -1665,7 +1687,10 @@ define([
     ManeuveringComputer.prototype.changeFlightMode = function () {
         if (!this._compensated) {
             this._compensated = true;
-            this._speedTarget = mat.translationLength(this._spacecraft.getVelocityMatrix());
+            this._speedTarget = Math.min(Math.max(
+                    this._maxCompensatedReverseSpeed,
+                    this._spacecraft.getRelativeVelocityMatrix()[13]),
+                    this._maxCompensatedForwardSpeed);
         } else if (!this._restricted) {
             this._restricted = true;
         } else {
@@ -1680,7 +1705,7 @@ define([
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
         this._speedTarget = this._compensated ?
-                this._speedTarget + (intensity || this._speedIncrement) :
+                Math.min(this._speedTarget + (intensity || this._speedIncrement), this._maxCompensatedForwardSpeed) :
                 Number.MAX_VALUE;
     };
     /**
@@ -1702,7 +1727,7 @@ define([
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
         this._speedTarget = this._compensated ?
-                this._speedTarget - (intensity || this._speedIncrement) :
+                Math.max(this._speedTarget - (intensity || this._speedIncrement), this._maxCompensatedReverseSpeed) :
                 -Number.MAX_VALUE;
     };
     /**
@@ -3941,6 +3966,8 @@ define([
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
+        _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
+        _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

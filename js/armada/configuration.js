@@ -616,7 +616,23 @@ define([
             type: _customTypes.DURATION
         },
         /**
-         * When strafing, the controlled spacecraft will accelerate to maximum a speed (along the strafing axis) that is its acceleration 
+         * When moving forward in compensated flight modes, the controlled spacecraft will accelerate to maximum a speed 
+         * that equals its acceleration multiplied by this factor.
+         */
+        COMPENSATED_FORWARD_SPEED_FACTOR: {
+            name: "compensatedForwardSpeedFactor",
+            type: "number"
+        },
+        /**
+         * When moving backward in compensated flight modes, the controlled spacecraft will accelerate to maximum a reverse speed 
+         * that equals its acceleration multiplied by this factor.
+         */
+        COMPENSATED_REVERSE_SPEED_FACTOR: {
+            name: "compensatedReverseSpeedFactor",
+            type: "number"
+        },
+        /**
+         * When strafing, the controlled spacecraft will accelerate to maximum a speed (along the strafing axis) that equals its acceleration 
          * multiplied by this factor.
          */
         STRAFE_SPEED_FACTOR: {
