@@ -7,7 +7,7 @@
             "cubemapQuality": "normal",
             "shadowMapping": true,
             "shadows": {
-                "quality": "medium",
+                "quality": "low",
                 "distance": "medium"
             },
             "pointLightAmount": "medium"
