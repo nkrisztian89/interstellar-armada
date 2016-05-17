@@ -2522,7 +2522,8 @@ define([
      * @returns {Number} The turning rate in rad/s.
      */
     Spacecraft.prototype.getMaxTurnRateAtSpeed = function (speed) {
-        return Math.asin(Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed)));
+        var sinTurn = Math.abs(this._propulsion.getThrust() / (this._physicalModel.getMass() * speed));
+        return (sinTurn <= 1) ? Math.asin(sinTurn) : Number.MAX_VALUE;
     };
     /**
      * Returns the managed textures to be used for rendering the hitboxes of this spacecraft, in an associated array, by texture types.

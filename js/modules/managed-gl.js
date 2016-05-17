@@ -163,11 +163,11 @@ define([
         }
     }
     /**
-     * Returns whether a shader variable of the passed type takes a texture unit.
+     * Returns whether a shader variable of the passed type is a texture sampler.
      * @param {String} shaderVariableType (enum ShaderVariableType)
      * @returns {Boolean}
      */
-    function isTextureType(shaderVariableType) {
+    function isSamplerType(shaderVariableType) {
         return (shaderVariableType === ShaderVariableType.SAMPLER2D) ||
                 (shaderVariableType === ShaderVariableType.SAMPLER_CUBE);
     }
@@ -463,8 +463,11 @@ define([
      * types are supported. @see ShaderUniform#VariableTypes
      * @param {Number} arraySize If 0 or undefined, the uniform is not an array. If 
      * one or more, then gives the size of the uniform array.
+     * @param {Boolean} unpacked If true, the uniform will be taken as an unpacked array when assigning a value to it - 
+     * instead of assigning the passed array, each of its elements will be assigned to a uniform with the name suffixed
+     * with the index of the value. Can only be used with arrays of samplers.
      */
-    function ShaderUniform(name, type, arraySize) {
+    function ShaderUniform(name, type, arraySize, unpacked) {
         // properties for file resource management
         /**
          * The name of the shader uniform, same as how declared in the shader source
@@ -478,11 +481,20 @@ define([
          */
         this._type = types.getEnumValue(ShaderVariableType, type, {name: "uniform " + this._name + ".type", defaultValue: ShaderVariableType.NONE});
         /**
-         * The length of the array in case this uniform is declared as an array in
-         * GLSL. Only float and struct arrays are supported so far.
+         * The length of the array in case this uniform is declared as an array in GLSL.
          * @type Number
          */
         this._arraySize = arraySize || 0;
+        /**
+         * If true, array values are assigned individually to uniforms with names suffixed by the indices of
+         * the elements. Only valid for arrays of samplers.
+         * @type Boolean
+         */
+        this._unpacked = unpacked;
+        if (this._unpacked && (!isSamplerType(this._type) || (this._arraySize < 1))) {
+            application.showError("Uniform '" + this._name + "' cannot be declared as an unpacked array!");
+            this._unpacked = false;
+        }
         /**
          * If the uniform is of struct type, other ShaderUniform instances represent
          * its members (and setting it will set the members instead). The members
@@ -532,13 +544,15 @@ define([
      * @param {String} contextName
      * @param {WebGLRenderingContext} gl 
      * @param {ManagedShader} shader The shader which this uniform belongs to.
-     * @param {String} [locationPrefix] Same as for the setValue() method
+     * @param {String} [uniformName] The exact uniform name to use (including prefixes and suffixes) when querying the
+     * position
      */
-    ShaderUniform.prototype.saveLocation = function (contextName, gl, shader, locationPrefix) {
+    ShaderUniform.prototype.saveLocation = function (contextName, gl, shader, uniformName) {
+        uniformName = uniformName || this._name;
         if (!this._locations[contextName]) {
             this._locations[contextName] = {};
         }
-        this._locations[contextName][(locationPrefix || "self")] = gl.getUniformLocation(shader.getIDForContext(contextName), (locationPrefix || "") + this._name);
+        this._locations[contextName][uniformName] = gl.getUniformLocation(shader.getIDForContext(contextName), uniformName);
     };
     /**
      * Deletes the cached uniform locations associated with the passed context name. If the uniform has members, their cached locations are 
@@ -566,13 +580,15 @@ define([
      * @param {WebGLRenderingContext} gl
      * @param {ManagedShader} shader The shader which this uniform belongs to.
      * @param {String} [locationPrefix] Same as for the setValue() method
+     * @param {String} [locationSuffix] For unpacked arrays, the suffix identifying the element (index)
      * @returns {WebGLUniformLocation}
      */
-    ShaderUniform.prototype.getLocation = function (contextName, gl, shader, locationPrefix) {
-        if (locationPrefix && (!this._locations[contextName] || (this._locations[contextName][locationPrefix] === undefined))) {
-            this.saveLocation(contextName, gl, shader, locationPrefix);
+    ShaderUniform.prototype.getLocation = function (contextName, gl, shader, locationPrefix, locationSuffix) {
+        var uniformName = (locationPrefix || "") + this._name + (locationSuffix || "");
+        if ((locationPrefix || locationSuffix) && (!this._locations[contextName] || (this._locations[contextName][uniformName] === undefined))) {
+            this.saveLocation(contextName, gl, shader, uniformName);
         }
-        return this._locations[contextName][(locationPrefix || "self")];
+        return this._locations[contextName][uniformName];
     };
     /**
      * If this uniform is an array, returns the length of the array, otherwise returns 0.
@@ -697,7 +713,9 @@ define([
     ShaderUniform.prototype.setConstantValue = function (contextName, gl, shader, value, locationPrefix) {
         var location, i, j, memberName, numericValue;
         // get the location
-        location = this.getLocation(contextName, gl, shader, locationPrefix);
+        if (!this._unpacked) {
+            location = this.getLocation(contextName, gl, shader, locationPrefix);
+        }
         switch (this._type) {
             case ShaderVariableType.FLOAT:
                 if (this._arraySize > 0) {
@@ -731,7 +749,15 @@ define([
             case ShaderVariableType.SAMPLER_CUBE:
             case ShaderVariableType.INT:
                 if (this._arraySize > 0) {
-                    gl.uniform1iv(location, value);
+                    // values in unpacked arrays are assigned individually
+                    if (this._unpacked) {
+                        for (i = 0; i < value.length; i++) {
+                            gl.uniform1i(this.getLocation(contextName, gl, shader, locationPrefix, i.toString()), value[i]);
+                        }
+                    } else {
+                        // non-unpacked arrays are assigned normally
+                        gl.uniform1iv(location, value);
+                    }
                 } else {
                     if (locationPrefix || (this._numericValues[contextName] !== value)) {
                         gl.uniform1i(location, value);
@@ -817,6 +843,13 @@ define([
             return result;
         }
         return getVectorCount(this._type) * (this._arraySize || 1);
+    };
+    /**
+     * Returns whether the uniform has a texture sampler type (or an array of such)
+     * @returns {Boolean}
+     */
+    ShaderUniform.prototype.isSamplerType = function () {
+        return isSamplerType(this._type);
     };
     // ############################################################################################
     /**
@@ -1191,8 +1224,10 @@ define([
      * @param {Object.<String, String>} vertexAttributeRoles
      * @param {Object.<String, String>} instanceAttributeRoles
      * @param {Object.<String, String} replacedDefines 
+     * @param {Boolean} unpackSamplerArrays If true, arrays of sampler uniforms will be unpacked - that is, substituted 
+     * with individual sampler variables for each index in the shader source
      */
-    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendMode, vertexAttributeRoles, instanceAttributeRoles, replacedDefines) {
+    function ManagedShader(name, vertexShaderSource, fragmentShaderSource, blendMode, vertexAttributeRoles, instanceAttributeRoles, replacedDefines, unpackSamplerArrays) {
         // properties for file resource management
         /**
          * The name of the shader program it can be referred to with later. Has to
@@ -1276,7 +1311,7 @@ define([
          * @type Number
          */
         this._numFragmentUniformVectors = 0;
-        this._parseShaderSources(vertexAttributeRoles, replacedDefines);
+        this._parseShaderSources(vertexAttributeRoles, replacedDefines, unpackSamplerArrays);
     }
     /**
      * @param {String} name
@@ -1310,15 +1345,17 @@ define([
      * (which determines what kind of data will be bound to the respective attribute array). Format: {attributeName: attributeRole, ...}
      * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
      * provided in this object (e.g. #define CONST 3 will be changed to #define CONST 5 if {CONST: 5} is passed.
+     * @param {Boolean} unpackSamplerArrays If true, arrays of sampler uniforms will be unpacked - that is, substituted 
+     * with individual sampler variables for each index in the shader source
      */
-    ManagedShader.prototype._parseShaderSources = function (attributeRoles, replacedDefines) {
+    ManagedShader.prototype._parseShaderSources = function (attributeRoles, replacedDefines, unpackSamplerArrays) {
         var
                 VERTEX_SHADER_INDEX = 0,
                 FRAGMENT_SHADER_INDEX = 1,
-                i, k, shaderType,
+                i, k, l, shaderType,
                 sourceLines, words, delimiters, index,
                 attributeName, attributeSize, attributeRole,
-                uniform, uniformName, variableType, variableArraySize, arraySizeString,
+                uniform, uniformName, variableType, variableArraySize, arraySizeString, unpacked,
                 defines = {}, sourceChanged, localVariableNames, localVariableSizes = {},
                 isNotEmptyString = function (s) {
                     return s !== "";
@@ -1402,11 +1439,25 @@ define([
                         variableType = words[index - 1];
                         if (this._hasUniform(uniformName) === false) {
                             if (delimiters[index] === "[") {
+                                unpacked = false;
                                 arraySizeString = words[index + 1];
                                 if (defines[arraySizeString]) {
                                     arraySizeString = defines[arraySizeString];
                                 }
                                 variableArraySize = parseInt(arraySizeString, 10);
+                                // unpacking sampler array declarations to declarations of individual samplers
+                                if (isSamplerType(variableType) && unpackSamplerArrays) {
+                                    sourceLines[i] = "";
+                                    for (k = 0; k < variableArraySize; k++) {
+                                        for (l = 0; l < index; l++) {
+                                            sourceLines[i] += words[l];
+                                            sourceLines[i] += delimiters[l];
+                                        }
+                                        sourceLines[i] += uniformName + k.toString() + ";\n";
+                                    }
+                                    sourceChanged = true;
+                                    unpacked = true;
+                                }
                             } else {
                                 variableArraySize = 0;
                             }
@@ -1415,7 +1466,7 @@ define([
                                 addStructMembers(uniform, variableType);
                                 this._uniforms.push(uniform);
                             } else {
-                                this._uniforms.push(new ShaderUniform(uniformName, variableType, variableArraySize));
+                                this._uniforms.push(new ShaderUniform(uniformName, variableType, variableArraySize, unpacked));
                             }
                         }
                         switch (shaderType) {
@@ -1424,7 +1475,7 @@ define([
                                 break;
                             case FRAGMENT_SHADER_INDEX:
                                 this._numFragmentUniformVectors += this._getUniform(uniformName).getVectorCount();
-                                if (isTextureType(variableType)) {
+                                if (isSamplerType(variableType)) {
                                     this._numTextureUnits += this._getUniform(uniformName).getVectorCount();
                                 }
                                 break;
@@ -1473,6 +1524,25 @@ define([
                                     if ((this._uniforms[k].getArraySize() > 0) && (delimiters[index] === "[")) {
                                         if ((parseInt(words[index + 1], 10).toString() === words[index + 1]) && (parseInt(words[index + 1], 10) >= this._uniforms[k].getArraySize())) {
                                             sourceLines[i] = "";
+                                            sourceChanged = true;
+                                            break;
+                                        }
+                                        // removing [] operators from unpacked array references
+                                        if (this._uniforms[k].isSamplerType() && unpackSamplerArrays) {
+                                            sourceLines[i] = "";
+                                            // adding the content of the line before the uniform name reference
+                                            for (l = 0; l < index; l++) {
+                                                sourceLines[i] += words[l];
+                                                sourceLines[i] += delimiters[l];
+                                            }
+                                            // adding the uniform name reference suffixed with the index directly
+                                            sourceLines[i] += words[index] + words[index + 1];
+                                            // adding the content of the line after the uniform index closing bracket
+                                            for (l = index + 2; l < delimiters.length; l++) {
+                                                sourceLines[i] += words[l];
+                                                sourceLines[i] += delimiters[l];
+                                            }
+                                            sourceLines[i] += words[words.length - 1];
                                             sourceChanged = true;
                                             break;
                                         }

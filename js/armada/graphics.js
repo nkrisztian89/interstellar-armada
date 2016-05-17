@@ -1981,7 +1981,7 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DEPTH_TEXTURES_DEFINE_NAME)] = managedGL.areDepthTexturesAvailable() ? "1" : "0";
-        result = this.getShader(shaderName).getManagedShader(replacedDefines);
+        result = this.getShader(shaderName).getManagedShader(replacedDefines, true);
         if (!result.isAllowedByRequirements(this._getShaderRequirements())) {
             application.showError("Shader '" + shaderName + "' has too high requirements!");
         }

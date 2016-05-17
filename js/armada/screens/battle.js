@@ -1712,6 +1712,7 @@ define([
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
                     graphics.getLODContext(),
+                    graphics.getMaxDirLights(),
                     graphics.getMaxPointLights(),
                     graphics.getMaxSpotLights(),
                     {
@@ -1730,6 +1731,7 @@ define([
                     false, [true, true, true, true],
                     [0, 0, 0, 0], true,
                     graphics.getLODContext(),
+                    0,
                     0,
                     0,
                     {

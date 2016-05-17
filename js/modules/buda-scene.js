@@ -159,7 +159,6 @@ define([
             UNIFORM_VIEW_ASPECT_NAME = "aspect",
             UNIFORM_VIEWPORT_SIZE_NAME = "viewportSize",
             UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
-            UNIFORM_SHADOW_MAPPING_ENABLED_NAME = "shadows",
             UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
             UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME = "shadowMapRanges",
             UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME = "shadowMapDepthRatio",
@@ -6516,11 +6515,12 @@ define([
      * @param {Boolean} clearDepthOnRender Whether to clear the depth buffer every time at the beginning of rendering the scene.
      * @param {LODContext} lodContext The LOD threshold and configuration to be used
      * for rendering object with the appropriate level of detail.
+     * @param {Number} maxRenderedDirectionalLights The maximum number of directional lights that should be considered when rendering this scene.
      * @param {Number} maxRenderedPointLights The maximum number of point lights that should be considered when rendering this scene.
      * @param {Number} maxRenderedSpotLights The maximum number of spot lights that should be considered when rendering this scene.
      * @param {Scene~CameraSettings} cameraSettings The properties based on which the camera for this scene will be set up.
      */
-    function Scene(left, bottom, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings) {
+    function Scene(left, bottom, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedDirectionalLights, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings) {
         /**
          * The relative X coordinate of the bottom left corner of the viewport on the canvas in 0-1 range.
          * @type Number
@@ -6586,6 +6586,11 @@ define([
          * @type BudaScene~DirectionalLightUniformData[]
          */
         this._directionalLightUniformData = [];
+        /**
+         * The maximum number of directional light sources that should be considered when rendering this scene.
+         * @type Number
+         */
+        this._maxRenderedDirectionalLights = maxRenderedDirectionalLights || 0;
         /**
          * The lists of point light sources that are available to all objects in the scene, ordered by the priorities of the light sources.
          * The first list contains the light sources with the highest priority. If the amount of light sources that can be rendered is 
@@ -6799,9 +6804,6 @@ define([
         this.setUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
             return new Float32Array(this._camera.getCameraPositionVector());
         });
-        this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_ENABLED_NAME, function () {
-            return this._shadowMappingEnabled;
-        });
     };
     /**
      * Sets the uniform value functions for the scene that can be used to set all the uniforms referring to data that is uniform for all
@@ -6849,7 +6851,7 @@ define([
         if (contextIndex !== undefined) {
             this.setContextUniformValueFunction(contextIndex, UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME, function () {
                 var j, k, shadowMaps = [];
-                for (j = 0; j < this._directionalLights.length; j++) {
+                for (j = 0; (j < this._directionalLights.length) && (j < this._maxRenderedDirectionalLights); j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
                         shadowMaps.push(this._contexts[contextIndex].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getLastTextureBindLocation(this._contexts[contextIndex].getName()));
                     }
@@ -6871,7 +6873,7 @@ define([
         var i;
         // for directional lights, simply collect all the up-to-date data from all the lights
         this._directionalLightUniformData = [];
-        for (i = 0; i < this._directionalLights.length; i++) {
+        for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
             this._directionalLightUniformData.push(this._directionalLights[i].getUniformData());
         }
     };
@@ -6943,7 +6945,7 @@ define([
                 this._contexts[contextIndex].addShader(this._shadowMappingShader);
                 this._setShadowMappedShaderUniformValueFunctions(contextIndex);
             }
-            for (i = 0; i < this._directionalLights.length; i++) {
+            for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
                 this._directionalLights[i].addToContext(this._contexts[contextIndex], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
             }
             // if no specific index is given, set up all associated contexts
@@ -7485,7 +7487,7 @@ define([
             context.setCurrentShader(this._shadowMappingShader);
             this.assignUniforms(context, this._shadowMappingShader);
             // rendering for each light source and shadow map range
-            for (i = 0; i < this._directionalLights.length; i++) {
+            for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
                 this._directionalLights[i].reset();
                 this._shadowQueue = [];
                 this._shadowQueue = this._shadowQueue.concat(this._rootNode.getSubnodes());
@@ -7496,7 +7498,7 @@ define([
                 }
             }
             // binding the created textures to be used by the subsequent rendering calls
-            for (i = 0; i < this._directionalLights.length; i++) {
+            for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
                 for (j = 0; j < this._shadowMapRanges.length; j++) {
                     context.bindTexture(context.getFrameBuffer(this._directionalLights[i].getShadowMapBufferName(j)), undefined, true);
                 }

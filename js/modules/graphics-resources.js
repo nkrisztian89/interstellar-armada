@@ -768,9 +768,11 @@ define([
     /**
      * @param {Object.<String, String>} [replacedDefines] Values defined in the shader source using #define will be replaced by the values
      * provided in this object (e.g. #define CONST 3 will be changed to #define CONST 5 if {CONST: 5} is passed.
+     * @param {Boolean} unpackSamplerArrays If true, arrays of sampler uniforms will be unpacked - that is, substituted 
+     * with individual sampler variables for each index in the shader source
      * @returns {ManagedShader}
      */
-    ShaderResource.prototype.getManagedShader = function (replacedDefines) {
+    ShaderResource.prototype.getManagedShader = function (replacedDefines, unpackSamplerArrays) {
         var i;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot get managed GL shader for '" + this.getName() + "', as it has not been loaded from file yet!");
@@ -783,7 +785,7 @@ define([
             }
         }
         this._managedShaderBindings.push({
-            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendMode, this._vertexAttributeRoles, this._instanceAttributeRoles, replacedDefines),
+            managedShader: new managedGL.ManagedShader(this.getName(), this._vertexShaderSource, this._fragmentShaderSource, this._blendMode, this._vertexAttributeRoles, this._instanceAttributeRoles, replacedDefines, unpackSamplerArrays),
             replacedDefines: replacedDefines
         });
         return this._managedShaderBindings[this._managedShaderBindings.length - 1].managedShader;

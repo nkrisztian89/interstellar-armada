@@ -588,6 +588,7 @@ define([
                 true, [true, true, true, true],
                 _getSetting(SETTINGS.BACKGROUND_COLOR), true,
                 graphics.getLODContext(),
+                graphics.getMaxDirLights(),
                 graphics.getMaxPointLights(),
                 graphics.getMaxSpotLights(),
                 {
