@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:286 (2016.06.13.)",
+    "version": "0.3.0:287 (2016.06.13.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -184,7 +184,7 @@
                     "requiredTextureUnitsPer": {
                         "shadowMap": 1
                     },
-                    "requiredFragmentUniformVectors": 4,
+                    "requiredFragmentUniformVectors": 3,
                     "requiredFragmentUniformVectorsPer": {
                         "dirLight": 5,
                         "shadowMap": 1,
@@ -214,11 +214,11 @@
                     "luminosityTextures": false,
                     "reveal": false,
                     "requirements": {
-                        "requiredVertexUniformVectors": 11,
+                        "requiredVertexUniformVectors": 12,
                         "requiredAttributeVectors": 5,
                         "requiredVaryingVectors": 4,
                         "requiredTextureUnits": 1,
-                        "requiredFragmentUniformVectors": 2,
+                        "requiredFragmentUniformVectors": 3,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }
