@@ -27,7 +27,8 @@ define([
             // constants
             BACK_BUTTON_ID = "backButton",
             VERSION_PARAGRAPH_ID = "versionParagraph",
-            ABOUT_AUTHOR_LICENSE_PARAGRAPH_ID = "aboutAuthorLicenseParagraph";
+            ABOUT_AUTHOR_LICENSE_PARAGRAPH_ID = "aboutAuthorLicenseParagraph",
+            ABOUT_USED_SOFTWARE_PARAGRAPH_ID = "aboutUsedSoftwareParagraph";
     // ##############################################################################
     /**
      * @class A class to represent the "About" screen in the game. Describes the dynamic behaviour on that screen.
@@ -53,6 +54,10 @@ define([
          * @type SimpleComponent
          */
         this._aboutAuthorLicenseParagraph = this.registerSimpleComponent(ABOUT_AUTHOR_LICENSE_PARAGRAPH_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._aboutUsedSoftwareParagraph = this.registerSimpleComponent(ABOUT_USED_SOFTWARE_PARAGRAPH_ID);
 
     }
     AboutScreen.prototype = new screens.HTMLScreen();
@@ -79,6 +84,16 @@ define([
             sansation: '<a target="_blank" href="http://www.dafont.com/sansation.font">Sansation</a>',
             requireJS: '<a target="_blank" href="http://requirejs.org/">RequireJS</a>',
             requireJSLicense: '<a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSES) + '</a>'
+        });
+        this._aboutUsedSoftwareParagraph.customizeContent({
+            inkscape: '<a target="_blank" href="https://inkscape.org">Inkscape</a>',
+            blender: '<a target="_blank" href="https://www.blender.org/">Blender</a>',
+            gimp: '<a target="_blank" href="https://www.gimp.org">GIMP</a>',
+            netbeans: '<a target="_blank" href="https://netbeans.org/">Netbeans</a>',
+            lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
+            chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',
+            firefox: '<a target="_blank" href="https://www.mozilla.org/firefox">Firefox</a>',
+            ubuntu: '<a target="_blank" href="http://www.ubuntu.com/desktop">Ubuntu</a>'
         });
     };
     // -------------------------------------------------------------------------

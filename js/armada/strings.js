@@ -102,7 +102,9 @@ define([
         ABOUT_GAME_PARAGRAPH: {name: "about.aboutGameParagraph"},
         ABOUT_AUTHOR_LICENSE_HEADER: {name: "about.aboutAuthorLicenseHeader"},
         ABOUT_AUTHOR_LICENSE_PARAGRAPH: {name: "about.aboutAuthorLicenseParagraph"},
-        REQUIRE_JS_LICENSES: {name: "about.theNewBSDOrMITLicenses"}
+        REQUIRE_JS_LICENSES: {name: "about.theNewBSDOrMITLicenses"},
+        ABOUT_USED_SOFTWARE_HEADER: {name: "about.aboutUsedSoftwareHeader"},
+        ABOUT_USED_SOFTWARE_PARAGRAPH: {name: "about.aboutUsedSoftwareParagraph"}
     };
     strings.SETTING = {
         PREFIX: {name: "setting.", optional: true},
