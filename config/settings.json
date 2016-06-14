@@ -20,12 +20,6 @@
             "autoLimitByScreenSize": true,
             "limits": [
                 {
-                    "screenSizeLessThan": 640,
-                    "level": "veryLow"
-                }, {
-                    "screenSizeLessThan": 800,
-                    "level": "low"
-                }, {
                     "screenSizeLessThan": 960,
                     "level": "medium"
                 }, {
