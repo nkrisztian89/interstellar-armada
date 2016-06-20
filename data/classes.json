@@ -1467,6 +1467,7 @@
             "shader": "ship",
             "model": "trainingGun",
             "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
             "cooldown": 1000,
             "barrels": [
@@ -1483,6 +1484,7 @@
             "shader": "ship",
             "model": "plasma",
             "texture": "falcon",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
             "cooldown": 250,
             "barrels": [
@@ -1499,6 +1501,7 @@
             "shader": "ship",
             "model": "turret",
             "texture": "falcon",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
             "cooldown": 250,
             "barrels": [
@@ -1530,6 +1533,7 @@
             "shader": "ship",
             "model": "cannon",
             "texture": "falcon",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
             "cooldown": 1500,
             "barrels": [
@@ -1546,6 +1550,7 @@
             "shader": "ship",
             "model": "ion_cannon",
             "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
             "cooldown": 3000,
             "barrels": [

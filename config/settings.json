@@ -134,7 +134,7 @@
             "defaultEquipmentProfileName": "default",
             "hitboxColor": [0.0, 0.5, 0.5, 0.5],
             "hitboxTexture": "white",
-            "hitboxShader": "lambert-with-luminosity",
+            "hitboxShader": "oneColor",
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
             "targetChangeTransitionStyle": "smooth",

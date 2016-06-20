@@ -2057,6 +2057,7 @@ define([
         getShaderComplexity: _context.getShaderComplexity.bind(_context),
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
         getShaderComplexities: _context.getShaderComplexities.bind(_context),
+        getMaxLuminosityFactors: _context.getShaderConfig.bind(_context, SHADER_CONFIG.MAX_LUMINOSITY_FACTORS),
         getShadowMappingShaderName: _context.getShadowMappingShaderName.bind(_context),
         isShadowMappingEnabled: _context.isShadowMappingEnabled.bind(_context),
         setShadowMapping: _context.setShadowMapping.bind(_context),

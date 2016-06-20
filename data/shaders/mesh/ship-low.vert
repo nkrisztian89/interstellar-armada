@@ -8,13 +8,11 @@ precision mediump int;
 #include "mesh/variables/camera.glsl"
 #include "mesh/variables/model-base-vert.glsl"
 #include "mesh/variables/model-diff-vert.glsl"
-#include "mesh/variables/model-lum-vert.glsl"
 #include "mesh/variables/model-spec-vert.glsl"
 
 void main() {
 #include "mesh/vert/model-position.glsl"
 #include "mesh/vert/model-diff.glsl"
-#include "mesh/vert/model-lum.glsl"
 #include "mesh/vert/model-spec.glsl"
 #include "mesh/vert/camera.glsl"
 }

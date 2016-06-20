@@ -8,6 +8,7 @@
     "model": "falcon",
     "shader": "ship",
     "texture": "falcon",
+    "defaultLuminosityFactors": [[0, 0], [16, 1]],
     "mass": 10000,
     "bodies": [
         {

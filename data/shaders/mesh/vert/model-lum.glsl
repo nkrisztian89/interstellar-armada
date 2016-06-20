@@ -1,1 +1,0 @@
-v_luminosity = a_luminosity;

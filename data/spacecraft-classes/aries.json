@@ -8,7 +8,7 @@
     "model": "aries",
     "shader": "ship",
     "texture": "aries",
-    "groupZeroLuminosity": 1.0,
+    "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
     "mass": 9000000,
     "bodies": [
         {

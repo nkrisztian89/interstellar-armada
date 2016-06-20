@@ -444,9 +444,7 @@ define([
      * @param {Number} size Size of the shader attribute: how many elements does
      * it have (e.g. float -> 1, vec3 -> 3)
      * @param {String} role Role of the shader attribute, based on which the
-     * appropriate buffer will be assigned to it to supply the values. Currently
-     * supported roles are: position, texCoord, normal, color, luminosity, 
-     * shininess, groupIndex.
+     * appropriate buffer will be assigned to it to supply the values.
      */
     function ShaderAttribute(name, size, role) {
         this.name = name;

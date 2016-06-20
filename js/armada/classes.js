@@ -500,6 +500,7 @@ define([
      * @param {Object} [dataJSON] If not given, properties will not be overriden / will be initialized to null
      */
     TexturedModelClass.prototype._overrideData = function (otherTexturedModelClass, dataJSON) {
+        var i, j, n;
         ShadedModelClass.prototype._overrideData.call(this, otherTexturedModelClass, dataJSON);
         /**
          * @type String
@@ -511,6 +512,27 @@ define([
          * @type TextureResource
          */
         this._texture = null;
+        /**
+         * What should the luminosity of vertices belonging to different groups be set to after creating a visual model for an instance of 
+         * this class. (convert from format in the JSON given in assignment pairs e.g. to set luminosity of group 3 to 0.5 and group 12 
+         * to 0.9: [[3, 0.5], [12, 0.9]], to a simple array storing the default luminosities for all groups)
+         * @type Number[]
+         */
+        this._defaultLuminosityFactors = [];
+        for (i = 0, n = graphics.getMaxLuminosityFactors(); i < n; i++) {
+            this._defaultLuminosityFactors.push(0.0);
+        }
+        for (i = 0; i < (dataJSON.defaultLuminosityFactors || []).length; i++) {
+            j = dataJSON.defaultLuminosityFactors[i][0];
+            if (j < graphics.getMaxLuminosityFactors()) {
+                this._defaultLuminosityFactors[j] = dataJSON.defaultLuminosityFactors[i][1];
+            } else {
+                application.showError("Attempting to set luminosity of group with index " + j + ", while there are only " +
+                        graphics.getMaxLuminosityFactors() + " luminosity groups available. (and indices start with 0)",
+                        application.ErrorSeverity.MINOR,
+                        "Happened while creating textured model class '" + this.getName() + "'.");
+            }
+        }
     };
     /**
      * @override
@@ -559,6 +581,13 @@ define([
      */
     TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
         return this.getTexturesOfTypes(this._texture.getTypes(), qualityPreferenceList);
+    };
+    /**
+     * @param {Number} groupIndex
+     * @returns {Number}
+     */
+    TexturedModelClass.prototype.getDefaultGroupLuminosity = function (groupIndex) {
+        return this._defaultLuminosityFactors[groupIndex];
     };
     // ##############################################################################
     /**
@@ -2391,11 +2420,6 @@ define([
             _showMissingPropertyError(this, "bodies");
         }
         /**
-         * What should the luminosity of group zero vertices be set to after creating a visual model for an instance of this ship class.
-         * @type Number
-         */
-        this._groupZeroLuminosity = dataJSON.groupZeroLuminosity || 0;
-        /**
          * The slots where weapons can be equipped on the ship.
          * @type WeaponSlot[]
          */
@@ -2605,12 +2629,6 @@ define([
      */
     SpacecraftClass.prototype.getBodies = function () {
         return this._bodies;
-    };
-    /**
-     * @returns {Number}
-     */
-    SpacecraftClass.prototype.getGroupZeroLuminosity = function () {
-        return this._groupZeroLuminosity;
     };
     /**
      * @returns {WeaponSlot[]}

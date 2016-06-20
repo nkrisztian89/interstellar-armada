@@ -1,1 +1,0 @@
-gl_FragColor.rgb = v_luminosity * diffuseColor.rgb;

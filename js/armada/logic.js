@@ -133,6 +133,11 @@ define([
              */
             _compensatedReverseSpeedFactor,
             /**
+             * Cached value of the configuration setting for hit zone visualization color.
+             * @type Number[4]
+             */
+            _hitZoneColor,
+            /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
@@ -1085,6 +1090,7 @@ define([
      * @param {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName) {
+        var i, n;
         this.acquireResources({omitShader: !!shaderName});
         if (shaderName) {
             graphics.getShader(shaderName);
@@ -1093,7 +1099,7 @@ define([
             var visualModel, scale;
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
-            visualModel = new budaScene.ShadedLODMesh(
+            visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader(),
                     this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -1101,8 +1107,17 @@ define([
                     this._slot.orientationMatrix,
                     mat.scaling4(scale),
                     (wireframe === true),
-                    lod);
+                    lod,
+                    graphics.areLuminosityTexturesAvailable() ? [_luminosityFactorsArrayName] : []);
             parentNode.addSubnode(new budaScene.RenderableNode(visualModel));
+            if (graphics.areLuminosityTexturesAvailable()) {
+                for (i = 0, n = graphics.getMaxLuminosityFactors(); i < n; i++) {
+                    visualModel.setParameter(
+                            _luminosityFactorsArrayName,
+                            i,
+                            this._class.getDefaultGroupLuminosity(i));
+                }
+            }
             if (!this._visualModel) {
                 this._visualModel = visualModel;
             }
@@ -2824,7 +2839,7 @@ define([
                                 this._class.getBodies()[index].getWidth(),
                                 this._class.getBodies()[index].getHeight(),
                                 this._class.getBodies()[index].getDepth(),
-                                config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR))),
+                                _hitZoneColor)),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
                         resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
@@ -2833,6 +2848,9 @@ define([
                         this._class.getBodies()[index].getOrientationMatrix(),
                         mat.identity4(),
                         false);
+        hitZoneMesh.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
+            return _hitZoneColor;
+        });
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
     /**
@@ -2920,7 +2938,7 @@ define([
             }
         }
         resources.executeWhenReady(function () {
-            var node, explosion, lightSources;
+            var j, n, node, explosion, lightSources;
             application.log("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
             visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
@@ -2939,10 +2957,12 @@ define([
                 visualModel.setName(this._name);
             }
             if (graphics.areLuminosityTexturesAvailable()) {
-                visualModel.setParameter(
-                        _luminosityFactorsArrayName,
-                        0,
-                        this._class.getGroupZeroLuminosity());
+                for (j = 0, n = graphics.getMaxLuminosityFactors(); j < n; j++) {
+                    visualModel.setParameter(
+                            _luminosityFactorsArrayName,
+                            j,
+                            this._class.getDefaultGroupLuminosity(j));
+                }
             }
             node = scene.addObject(visualModel);
             // visualize physical model (hitboxes)
@@ -3968,6 +3988,7 @@ define([
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
         _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
         _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
+        _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

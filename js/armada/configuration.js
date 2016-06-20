@@ -685,7 +685,7 @@ define([
         HITBOX_SHADER_NAME: {
             name: "hitboxShader",
             type: "string",
-            defaultValue: "lambert-with-luminosity"
+            defaultValue: "oneColor"
         },
         /**
          * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 

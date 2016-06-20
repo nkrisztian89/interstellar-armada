@@ -8,7 +8,7 @@
     "model": "taurus",
     "shader": "ship",
     "texture": "taurus",
-    "groupZeroLuminosity": 1.0,
+    "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
     "mass": 20000000,
     "bodies": [
         {

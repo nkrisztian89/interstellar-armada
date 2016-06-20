@@ -8,6 +8,7 @@
     "model": "viper",
     "shader": "ship",
     "texture": "viper",
+    "defaultLuminosityFactors": [[0, 0], [18, 1]],
     "mass": 35000,
     "bodies": [
         {

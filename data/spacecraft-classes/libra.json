@@ -8,7 +8,7 @@
     "model": "libra",
     "shader": "ship",
     "texture": "libra",
-    "groupZeroLuminosity": 1.0,
+    "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
     "mass": 250000000,
     "bodies": [
         {

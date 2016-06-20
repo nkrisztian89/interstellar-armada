@@ -128,13 +128,13 @@
         },
         {
             "name": "viper",
-            "basepath": "",
+            "basepath": "viper",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
-                "diffuse": "viper",
-                "specular": "falcon_specular",
-                "emissive": "falcon_luminosity"
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
             },
             "qualitySuffixes": {
                 "low": "_256",
@@ -368,19 +368,6 @@
             }
         },
         {
-            "name": "lambert-with-luminosity",
-            "vertexShaderSource": "mesh/lambert-with-luminosity.vert",
-            "fragmentShaderSource": "mesh/lambert-with-luminosity.frag",
-            "blendMode": "mix",
-            "vertexAttributeRoles": {
-                "a_position": "position",
-                "a_texCoord": "texCoord",
-                "a_normal": "normal",
-                "a_color": "color",
-                "a_luminosity": "luminosity"
-            }
-        },
-        {
             "name": "oneColorReveal",
             "variants": {
                 "veryLow": "oneColor",
@@ -396,7 +383,7 @@
         {
             "name": "ship",
             "variants": {
-                "veryLow": "lambert-with-luminosity",
+                "veryLow": "lambert",
                 "low": "ship-low",
                 "veryHigh": "ship-veryHigh",
                 "withoutDynamicLights": "ship-no-dynamic-lights",
@@ -410,7 +397,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -426,7 +412,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -446,7 +431,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -465,7 +449,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -484,7 +467,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -500,7 +482,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -519,7 +500,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -528,7 +508,7 @@
         {
             "name": "reveal",
             "variants": {
-                "veryLow": "lambert-with-luminosity",
+                "veryLow": "lambert",
                 "low": "ship-low",
                 "withoutDynamicLights": "reveal-no-dynamic-lights",
                 "withoutShadows": "reveal-no-shadows"
@@ -541,7 +521,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -560,7 +539,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -579,7 +557,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
@@ -595,7 +572,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_luminosity": "luminosity",
                 "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"

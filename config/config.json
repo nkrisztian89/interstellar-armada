@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:289 (2016.06.14.)",
+    "version": "0.3.0:290 (2016.06.21.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -216,7 +216,7 @@
                     "requirements": {
                         "requiredVertexUniformVectors": 12,
                         "requiredAttributeVectors": 5,
-                        "requiredVaryingVectors": 4,
+                        "requiredVaryingVectors": 3,
                         "requiredTextureUnits": 1,
                         "requiredFragmentUniformVectors": 3,
                         "requiredFragmentUniformVectorsPer": {
@@ -235,8 +235,8 @@
                         "requiredVertexUniformVectorsPer": {
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
-                        "requiredVaryingVectors": 6,
+                        "requiredAttributeVectors": 5,
+                        "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 2,
                         "requiredFragmentUniformVectors": 3,
                         "requiredFragmentUniformVectorsPer": {
@@ -258,8 +258,8 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 7,
-                        "requiredVaryingVectors": 7,
+                        "requiredAttributeVectors": 6,
+                        "requiredVaryingVectors": 6,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {
@@ -281,8 +281,8 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 7,
-                        "requiredVaryingVectors": 7,
+                        "requiredAttributeVectors": 6,
+                        "requiredVaryingVectors": 6,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {
@@ -304,8 +304,8 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 7,
-                        "requiredVaryingVectors": 7,
+                        "requiredAttributeVectors": 6,
+                        "requiredVaryingVectors": 6,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {

@@ -100,10 +100,9 @@ define([
      * @param {Number} a The index of the starting vertex of the line.
      * @param {Number} b The index of the end vertex of the line.
      * @param {Number[3]} color The color of the line. ([red, green, blue])
-     * @param {Number} luminosity The luminosity of the line. (0.0-1.0)
      * @param {Number[3]} normal The normal vector associated with the line.
      */
-    function Line(a, b, color, luminosity, normal) {
+    function Line(a, b, color, normal) {
         /**
          * The index (in the model) of the starting vertex of the line.
          * @type Number
@@ -120,11 +119,6 @@ define([
          */
         this.color = color;
         /**
-         * The luminosity of the line for rendering. (0.0-1.0)
-         * @type Number
-         */
-        this.luminosity = luminosity;
-        /**
          * The normal vector associated with the line for shading.
          * @type Number[3]
          */
@@ -138,7 +132,6 @@ define([
      * @param {Number} b The index of the second vertex.
      * @param {Number} c The index of the third vertex.
      * @param {Number[4]} color The color of the triangle. ([red, green, blue, alpha])
-     * @param {Number} luminosity The luminosity of the triangle. (0.0-1.0)
      * @param {Number} shininess The shininess (exponent) of the triangle.
      * @param {Number[3][2]} texCoords The texture coordinates of the triangle's 
      * vertices. Format: [[a.u,a.v],[b.u,b.v],[c.u,c.v]]
@@ -147,7 +140,7 @@ define([
      * one element.
      * @param {Number} [groupIndex] The index of the group this triangle belongs to.
      */
-    function Triangle(model, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex) {
+    function Triangle(model, a, b, c, color, shininess, texCoords, normals, groupIndex) {
         /**
          * The model to which this triangle is added.
          * @type Mesh
@@ -173,11 +166,6 @@ define([
          * @type Number[4]
          */
         this.color = color;
-        /**
-         * The luminosity of the triangle. (0.0-1.0)
-         * @type Number
-         */
-        this.luminosity = luminosity;
         /**
          * The shininess (exponent) of the triangle for phong shading.
          * @type Number
@@ -320,11 +308,6 @@ define([
          */
         this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
         /**
-         * The default luminosity value for newly added lines and triangles.
-         * @type Number
-         */
-        this._luminosity = 0;
-        /**
          * The default shininess value for newly added lines and triangles.
          * @type Number
          */
@@ -374,13 +357,10 @@ define([
 
     /**
      * Sets the default properties for newly added lines and triangles.
-     * @param {Number} luminosity The default luminosity value (0.0-1.0) to use
-     * from now on.
      * @param {Number} shininess The default shininess exponent value to use from
      * now on.
      */
-    Mesh.prototype.setDefaultProperties = function (luminosity, shininess) {
-        this._luminosity = luminosity;
+    Mesh.prototype.setDefaultProperties = function (shininess) {
         this._shininess = shininess;
     };
 
@@ -524,9 +504,9 @@ define([
         this._triangles.push(triangle);
         // the default setting is to also add the corresponding border lines of the triangle
         if (!withoutLines) {
-            this._lines.push(new Line(triangle.a, triangle.b, triangle.color, triangle.luminosity, triangle.getNormal(0)));
-            this._lines.push(new Line(triangle.b, triangle.c, triangle.color, triangle.luminosity, triangle.getNormal(0)));
-            this._lines.push(new Line(triangle.c, triangle.a, triangle.color, triangle.luminosity, triangle.getNormal(0)));
+            this._lines.push(new Line(triangle.a, triangle.b, triangle.color, triangle.getNormal(0)));
+            this._lines.push(new Line(triangle.b, triangle.c, triangle.color, triangle.getNormal(0)));
+            this._lines.push(new Line(triangle.c, triangle.a, triangle.color, triangle.getNormal(0)));
         }
         // important to update the appropriate count
         if (triangle.color[3] < 1.0) {
@@ -535,36 +515,32 @@ define([
             this._nOpaqueTriangles++;
         }
     };
-
+    /**
+     * @typedef {Object} Mesh~TriangleParams
+     * @property {Number[4]} color 
+     * @property {Number} shininess
+     * @property {Boolean} useVertexTexCoords Whether to take the texture coordinates from the vertices of the model (if not, the default 
+     * ones set for the model or the custom ones given will be used)
+     * @property {Number[3][2]} texCoords The texture coordinates of the vertices of the triangle
+     * @property {Number[][3]} normals The normal vector(s) for the triangle. If one vector is given, it will be used for all three 
+     * vertices, if 3 are given, they will be used separately. If none are given, the normal of th surface of the triangles will be 
+     * generated and used.
+     * @property {Number} groupIndex The index of the group to which to add the triangle.
+     */
     /**
      * Creates a triangle using the supplied and the default editing parameters
      * and adds it to the mesh.
      * @param {Number} a The index of the first vertex of the triangle.
      * @param {Number} b The index of the second vertex of the triangle.
      * @param {Number} c The index of the third vertex of the triangle.
-     * @param {Object} params The parameters of the triangle. Can have the following
-     * properties:<br/>
-     * color (Number[4]): The color of the triangle<br/>
-     * luminosity (Number): The luminosity of the triangle<br/>
-     * shininess (Number): The shininess of the triangl
-     * useVertexTexCoords (Boolean): Whether to take the texture coordinates from the
-     * vertices of the model (if not, the default ones set for the model or the
-     * custom ones given here will be used)<br/>
-     * texCoords (Number[3][2]): The texture coordinates of the vertices of the 
-     * triangle<br/>
-     * normals (Number[][3]): The normal vector(s) for the triangle. If one vector
-     * is given, it will be used for all three vertices, if 3 are given, they will
-     * be used separately. If none are given, the normal of th surface of the 
-     * triangles will be generated and used.<br/>
-     * groupIndex (Number): The index of the groups to which to add the triangle.
+     * @param {Mesh~TriangleParams} params The parameters of the triangle. 
      * @returns {Triangle} The added triangle
      */
     Mesh.prototype.addTriangleWithParams = function (a, b, c, params) {
-        var color, luminosity, shininess, texCoords, normals, groupIndex, triangle;
+        var color, shininess, texCoords, normals, groupIndex, triangle;
         // the default color is opaque white
         color = params.color || [1.0, 1.0, 1.0, 1.0];
-        // if not specified, use the model's default luminosity/shininess
-        luminosity = params.luminosity || this._luminosity;
+        // if not specified, use the model's default shininess
         shininess = params.shininess || this._shininess;
         // texture coordinates may be taken from the vertices, from the parameters
         // passed to this function or from the default coordinates set for the model
@@ -576,7 +552,7 @@ define([
         // if not specified, use the model's default group index
         groupIndex = params.groupIndex || this._currentGroupIndex;
         // create and add the new triangle
-        triangle = new Triangle(this, a, b, c, color, luminosity, shininess, texCoords, normals, groupIndex);
+        triangle = new Triangle(this, a, b, c, color, shininess, texCoords, normals, groupIndex);
         this.addTriangle(triangle, params.withoutLines);
         return triangle;
     };
@@ -587,12 +563,11 @@ define([
      * @param {Number} b The index of the second vertex of the quad.
      * @param {Number} c The index of the third vertex of the quad.
      * @param {Number} d The index of the fourth vertex of the quad.
-     * @param {Object} params The parameters of the quad in the same format as with
+     * @param {Mesh~TriangleParams} params The parameters of the quad in the same format as with
      * single triangles.
-     * @see Mesh#addTriangle
      */
     Mesh.prototype.addQuad = function (a, b, c, d, params) {
-        var triangle1Params, triangle2Params, color, luminosity, normals;
+        var triangle1Params, triangle2Params, color, normals;
         params = params || {};
         // adding the first triangle
         // first, create the approrpiate parameters for the triangle based on the
@@ -629,12 +604,11 @@ define([
         // adding the 4 lines around the quad
         if (!params.withoutLines) {
             color = params.color || [1.0, 1.0, 1.0, 1.0];
-            luminosity = params.luminosity || this._luminosity;
             normals = params.normals ? params.normals[0] : null;
-            this._lines.push(new Line(a, b, color, luminosity, normals));
-            this._lines.push(new Line(b, c, color, luminosity, normals));
-            this._lines.push(new Line(c, d, color, luminosity, normals));
-            this._lines.push(new Line(d, a, color, luminosity, normals));
+            this._lines.push(new Line(a, b, color, normals));
+            this._lines.push(new Line(b, c, color, normals));
+            this._lines.push(new Line(c, d, color, normals));
+            this._lines.push(new Line(d, a, color, normals));
         }
     };
 
@@ -734,12 +708,12 @@ define([
      * @returns {Object} An associative array, with all the buffer data for this
      * model. (Float32Arrays)
      * The names of the properties correspond to the roles of each of the arrays:
-     * position, texCoord, normal, color, luminosity, shininess, groupIndex.
+     * position, texCoord, normal, color, shininess, groupIndex.
      * The dataSize property contains the number of vertices.
      */
     Mesh.prototype.getBufferData = function (wireframe, startIndex) {
         var i, j, nLines, nTriangles, ix, index,
-                vertexData, texCoordData, normalData, colorData, luminosityData,
+                vertexData, texCoordData, normalData, colorData,
                 shininessData, groupIndexData, triangleIndexData;
         startIndex = startIndex || 0;
         if (wireframe === true) {
@@ -779,11 +753,6 @@ define([
                 colorData[i * 8 + 5] = this._lines[i].color[1];
                 colorData[i * 8 + 6] = this._lines[i].color[2];
                 colorData[i * 8 + 7] = 1.0;
-            }
-            luminosityData = new Float32Array(nLines * 2);
-            for (i = 0; i < nLines; i++) {
-                luminosityData[i * 2] = this._lines[i].luminosity;
-                luminosityData[i * 2 + 1] = this._lines[i].luminosity;
             }
             shininessData = new Float32Array(nLines * 2);
             for (i = 0; i < nLines; i++) {
@@ -861,12 +830,6 @@ define([
                 colorData[i * 12 + 10] = this._triangles[i].color[2];
                 colorData[i * 12 + 11] = this._triangles[i].color[3];
             }
-            luminosityData = new Float32Array(nTriangles * 3);
-            for (i = 0; i < nTriangles; i++) {
-                luminosityData[i * 3] = this._triangles[i].luminosity;
-                luminosityData[i * 3 + 1] = this._triangles[i].luminosity;
-                luminosityData[i * 3 + 2] = this._triangles[i].luminosity;
-            }
             shininessData = new Float32Array(nTriangles * 3);
             for (i = 0; i < nTriangles; i++) {
                 shininessData[i * 3] = this._triangles[i].shininess;
@@ -907,7 +870,6 @@ define([
             "texCoord": texCoordData,
             "normal": normalData,
             "color": colorData,
-            "luminosity": luminosityData,
             "shininess": shininessData,
             "groupIndex": groupIndexData,
             "triangleIndex": triangleIndexData,
@@ -1031,15 +993,13 @@ define([
      * @param {Number} depth The depth (Z dimension) of the cuboid.
      * @param {Number[4]} color The color of the faces of the cuboid 
      * ([red,green,blue,alpha])
-     * @param {Number} luminosity The luminosity factor of the cuboid faces of 
-     * the cuboid (0.0-1.0)
      * @param {Number[4][2]} textureCoordinates The texture coordinates for the 
      * faces of the cuboid (the two coordinates for each of the 4 vertices of one
      * face.
      * @param {Boolean} cullFace Whether the faces facing the inside of the cuboid
      * should be culled (omitted)
      */
-    Mesh.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
+    Mesh.prototype.addCuboid = function (x, y, z, width, height, depth, color, textureCoordinates, cullFace) {
         var i, i0, normals, params;
         i0 = +this._vertices.length;
 
@@ -1077,7 +1037,6 @@ define([
         normals = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]];
         params = {
             color: color,
-            luminosity: luminosity,
             texCoords: textureCoordinates
         };
 
@@ -1118,18 +1077,13 @@ define([
      * @param {Number} y The Y coordinate of the center.
      * @param {Number} z The Z coordinate of the center.
      * @param {Number} radius The radius of the sphere.
-     * @param {Number} angles The number of angles one circle should have within 
-     * the sphere.
-     * @param {Number[4]} color The RGBA components of the desired color of the 
-     * triangles.
-     * @param {Number} luminosity The luminosity of the triangles.
+     * @param {Number} angles The number of angles one circle should have within the sphere.
+     * @param {Number[4]} color The RGBA components of the desired color of the triangles.
      * @param {Number} shininess The shininess exponent of the triangles.
-     * @param {Number[4][2]} textureCoordinates The coordinate pairs of the 
-     * texture to map to the sphere: from bottom left counter-clockwise
-     * @param {Boolean} cullFace Whether to omit the triangles from the inside 
-     * of the sphere.
+     * @param {Number[4][2]} textureCoordinates The coordinate pairs of the texture to map to the sphere: from bottom left counter-clockwise
+     * @param {Boolean} cullFace Whether to omit the triangles from the inside of the sphere.
      */
-    Mesh.prototype.addSphere = function (x, y, z, radius, angles, color, luminosity, shininess, textureCoordinates, cullFace) {
+    Mesh.prototype.addSphere = function (x, y, z, radius, angles, color, shininess, textureCoordinates, cullFace) {
         var i, i0, j, v, uv1, uv2, uv3, n1, n2, n3;
         // circles with vertices indexed starting from the top, starting from XY and spinned around axis Y
         for (i = 0; i < angles; i++) {
@@ -1157,11 +1111,11 @@ define([
             n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
             n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
             n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, shininess: shininess,
                 texCoords: [uv1, uv2, uv3],
                 normals: [n1, n2, n3]});
             if (cullFace !== true) {
-                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, shininess: shininess,
                     texCoords: [uv1, uv3, uv2],
                     normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
             }
@@ -1177,11 +1131,11 @@ define([
             n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
             n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
             n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, shininess: shininess,
                 texCoords: [uv1, uv2, uv3],
                 normals: [n1, n2, n3]});
             if (cullFace !== true) {
-                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, shininess: shininess,
                     texCoords: [uv1, uv3, uv2],
                     normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
             }
@@ -1194,11 +1148,11 @@ define([
                 n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
                 n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
                 n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, shininess: shininess,
                     texCoords: [uv1, uv2, uv3],
                     normals: [n1, n2, n3]});
                 if (cullFace !== true) {
-                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, shininess: shininess,
                         texCoords: [uv1, uv3, uv2],
                         normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
                 }
@@ -1209,11 +1163,11 @@ define([
                 n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
                 n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
                 n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, luminosity: luminosity, shininess: shininess,
+                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, shininess: shininess,
                     texCoords: [uv1, uv2, uv3],
                     normals: [n1, n2, n3]});
                 if (cullFace !== true) {
-                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, luminosity: luminosity, shininess: shininess,
+                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, shininess: shininess,
                         texCoords: [uv1, uv3, uv2],
                         normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
                 }
@@ -1343,15 +1297,12 @@ define([
 
     /**
      * Sets the default properties for newly added lines and triangles.
-     * @param {Number} luminosity The default luminosity value (0.0-1.0) to use
-     * from now on.
-     * @param {Number} shininess The default shininess exponent value to use from
-     * now on.
+     * @param {Number} shininess The default shininess exponent value to use from now on.
      */
-    Model.prototype.setDefaultProperties = function (luminosity, shininess) {
+    Model.prototype.setDefaultProperties = function (shininess) {
         var i;
         for (i = 0; i < this._meshes.length; i++) {
-            this._meshes[i].setDefaultProperties(luminosity, shininess);
+            this._meshes[i].setDefaultProperties(shininess);
         }
     };
 
@@ -1621,10 +1572,6 @@ define([
                                 parseInt(lineTags[i].getAttribute("green"), 10) / 255,
                                 parseInt(lineTags[i].getAttribute("blue"), 10) / 255]),
                     (parseFloat(version) >= 2.1 ?
-                            (lineTags[i].hasAttribute("lum") ? parseFloat(lineTags[i].getAttribute("lum")) : 0)
-                            // version 2.0
-                            : parseInt(lineTags[i].getAttribute("luminosity"), 10) / 255),
-                    (parseFloat(version) >= 2.1 ?
                             lineTags[i].getAttribute("n").split(",").map(parseFloat)
                             // version 2.0
                             : [
@@ -1658,10 +1605,6 @@ define([
                         parseInt(triangleTags[i].getAttribute("green"), 10) / 255,
                         parseInt(triangleTags[i].getAttribute("blue"), 10) / 255,
                         (255 - parseInt(triangleTags[i].getAttribute("alpha"), 10)) / 255];
-            params.luminosity = parseFloat(version) >= 2.1 ?
-                    (triangleTags[i].hasAttribute("lum") ? parseFloat(triangleTags[i].getAttribute("lum")) : 0)
-                    // version 2.0
-                    : parseInt(triangleTags[i].getAttribute("luminosity"), 10) / 255;
             params.shininess = parseFloat(version) >= 2.1 ?
                     (triangleTags[i].hasAttribute("shi") ? parseInt(triangleTags[i].getAttribute("shi"), 10) : defaultShininess)
                     // version 2.0
@@ -1843,7 +1786,6 @@ define([
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             params.color = colorPalette ? colorPalette[dataJSON.triangles[i].color] : dataJSON.triangles[i].color;
-            params.luminosity = dataJSON.triangles[i].lum || 0;
             params.shininess = dataJSON.triangles[i].shi || defaultShininess;
             params.texCoords = dataJSON.triangles[i].t;
             params.normals = dataJSON.triangles[i].n;
@@ -2310,21 +2252,19 @@ define([
      * @param {Number} depth The depth (Z dimension) of the cuboid.
      * @param {Number[4]} color The color of the faces of the cuboid 
      * ([red,green,blue,alpha])
-     * @param {Number} luminosity The luminosity factor of the cuboid faces of 
-     * the cuboid (0.0-1.0)
      * @param {Number[4][2]} textureCoordinates The texture coordinates for the 
      * faces of the cuboid (the two coordinates for each of the 4 vertices of one
      * face.
      * @param {Boolean} cullFace Whether the faces facing the inside of the cuboid
      * should be culled (omitted)
      */
-    Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace) {
+    Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, textureCoordinates, cullFace) {
         var i;
         if (this._editedMesh) {
-            this._editedMesh.addCuboid(x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace);
+            this._editedMesh.addCuboid(x, y, z, width, height, depth, color, textureCoordinates, cullFace);
         } else {
             for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
-                this.getMeshWithLOD(i).addCuboid(x, y, z, width, height, depth, color, luminosity, textureCoordinates, cullFace);
+                this.getMeshWithLOD(i).addCuboid(x, y, z, width, height, depth, color, textureCoordinates, cullFace);
             }
         }
     };
@@ -2433,7 +2373,7 @@ define([
             if (name) {
                 result.setName(name);
             }
-            result.addCuboid(0, 0, 0, width, height, depth, color, 128, [[0, 1], [1, 1], [1, 0], [0, 0]], false);
+            result.addCuboid(0, 0, 0, width, height, depth, color, [[0, 1], [1, 1], [1, 0], [0, 0]], false);
             return result;
         },
         /**
@@ -2453,7 +2393,7 @@ define([
             }
             result.appendVertex([0.0, 0.0, 0.0]);
             result.appendVertex(vector);
-            result.addLine(new Line(0, 1, color, 1, vector));
+            result.addLine(new Line(0, 1, color, vector));
             return result;
         }
     };
