@@ -1,5 +1,5 @@
-uniform sampler2D u_specularTexture;
+#define MAX_SHININESS 512.0
 
-varying lowp float v_shininess;
+uniform sampler2D u_specularTexture;
 
 varying vec3 v_viewDir;

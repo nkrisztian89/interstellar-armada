@@ -397,7 +397,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -412,7 +411,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -431,7 +429,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -449,7 +446,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -467,7 +463,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -482,7 +477,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -500,7 +494,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -521,7 +514,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -539,7 +531,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -557,7 +548,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }
@@ -572,7 +562,6 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_shininess": "shininess",
                 "a_groupIndex": "groupIndex",
                 "a_index": "triangleIndex"
             }

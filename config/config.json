@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:292 (2016.06.21.)",
+    "version": "0.3.0:293 (2016.06.21.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -259,8 +259,8 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
-                        "requiredVaryingVectors": 6,
+                        "requiredAttributeVectors": 5,
+                        "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {
@@ -282,8 +282,8 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
-                        "requiredVaryingVectors": 6,
+                        "requiredAttributeVectors": 5,
+                        "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {
@@ -305,8 +305,8 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
-                        "requiredVaryingVectors": 6,
+                        "requiredAttributeVectors": 5,
+                        "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {
@@ -326,7 +326,9 @@
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
             "maxLuminosityFactors": 20,
             "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS",
-            "depthTexturesDefineName": "DEPTH_TEXTURES"
+            "depthTexturesDefineName": "DEPTH_TEXTURES",
+            "maxShininess": "512.0",
+            "maxShininessDefineName": "MAX_SHININESS"
         },
         "levelOfDetailSettings": {
             "lodLevels": [

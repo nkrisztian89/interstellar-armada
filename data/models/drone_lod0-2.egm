@@ -6,7 +6,6 @@
     "author": "Krisztian Nagy",
     "scale": 1.000,
     "defaultLOD": [0,2],
-    "defaultShininess": 40,
     "colorPalette": [[0.251,0.251,0.251,1.000],[0.878,0.878,0.878,1.000],[0.627,0.627,0.627,1.000]]
   },
   "vertices": [

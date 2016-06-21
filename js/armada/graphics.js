@@ -472,6 +472,21 @@ define([
                 DEPTH_TEXTURES_DEFINE_NAME: {
                     name: "depthTexturesDefineName",
                     type: "string"
+                },
+                /**
+                 * The shininess (specular exponent) of fragments is determined by the value of the alpha component of the specular texture.
+                 * Since that is a value in the range 0-1, it is multiplied by this number to get a useful exponent.
+                 */
+                MAX_SHININESS: {
+                    name: "maxShininess",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that detemines tha maximum shininess
+                 */
+                MAX_SHININESS_DEFINE_NAME: {
+                    name: "maxShininessDefineName",
+                    type: "string"
                 }
             },
     /**
@@ -1981,6 +1996,7 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DEPTH_TEXTURES_DEFINE_NAME)] = managedGL.areDepthTexturesAvailable() ? "1" : "0";
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS);
         result = this.getShader(shaderName).getManagedShader(replacedDefines, true);
         if (!result.isAllowedByRequirements(this._getShaderRequirements())) {
             application.showError("Shader '" + shaderName + "' has too high requirements!");
