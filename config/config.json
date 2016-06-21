@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:291 (2016.06.21.)",
+    "version": "0.3.0:292 (2016.06.21.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -228,15 +228,16 @@
                     "shadows": false,
                     "dynamicLights": false,
                     "maxDirLights": 2,
-                    "luminosityTextures": false,
+                    "luminosityTextures": true,
                     "reveal": false,
                     "requirements": {
-                        "requiredVertexUniformVectors": 13,
+                        "requiredVertexUniformVectors": 12,
                         "requiredVertexUniformVectorsPer": {
+                            "luminosityFactor": 1,
                             "dirLight": 2
                         },
                         "requiredAttributeVectors": 5,
-                        "requiredVaryingVectors": 5,
+                        "requiredVaryingVectors": 4,
                         "requiredTextureUnits": 2,
                         "requiredFragmentUniformVectors": 3,
                         "requiredFragmentUniformVectorsPer": {
