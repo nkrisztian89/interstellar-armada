@@ -1711,8 +1711,9 @@ define([
     ManagedShader.prototype.bindVertexBuffers = function (context) {
         var i;
         for (i = 0; i < this._vertexAttributes.length; i++) {
-            context.getVertexBuffer(this._vertexAttributes[i].name).bind(context, this);
+            context.getVertexBuffer(this._vertexAttributes[i].name).bind(context, this);            
         }
+        context.disableUnusedVertexBuffers(this._vertexAttributes.length);
     };
     /**
      * If the shader has a uniform array variable with the given name, this will return the length
@@ -1963,6 +1964,11 @@ define([
          * @type VertexBuffer[]
          */
         this._boundVertexBuffers = [];
+        /**
+         * The number of currently bound vertex buffers (active, enabled vertex attributes).
+         * @type Number
+         */
+        this._boundVertexBufferCount = 0;
         /**
          * The associative array of frame buffer objects, stored by their names 
          * (which equal the names of their corresponding attributes) as the keys.
@@ -2353,6 +2359,21 @@ define([
      */
     ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation, vertexBuffer) {
         this._boundVertexBuffers[attributeLocation] = vertexBuffer;
+        if (vertexBuffer && (attributeLocation >= this._boundVertexBufferCount)) {
+            this._boundVertexBufferCount = attributeLocation + 1;
+        }
+    };
+    /**
+     * Disables the bound vertex attribute buffers that belong to vertex attributes above the passed count.
+     * @param {Number} attributeCount
+     */
+    ManagedGLContext.prototype.disableUnusedVertexBuffers = function (attributeCount) {
+        var i;
+        for (i = attributeCount; i < this._boundVertexBufferCount; i++) {
+            this.gl.disableVertexAttribArray(i);
+            this._boundVertexBuffers[i] = null;
+        }
+        this._boundVertexBufferCount = attributeCount;
     };
     /**
      * Passes the data to the stored vertex buffer objects.
@@ -2512,6 +2533,7 @@ define([
         for (i = 0; i < this._boundVertexBuffers.length; i++) {
             this.gl.disableVertexAttribArray(i);
         }
+        this._boundVertexBufferCount = 0;
         this._boundVertexBuffers = [];
     };
     /**
