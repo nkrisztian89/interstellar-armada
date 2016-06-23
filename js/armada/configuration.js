@@ -64,36 +64,6 @@ define([
              * @type ConfigurationContext
              */
             _context;
-    _customTypes.VECTOR2 = {
-        baseType: "array",
-        length: 2,
-        elementType: "number"
-    };
-    _customTypes.VECTOR3 = {
-        baseType: "array",
-        length: 3,
-        elementType: "number"
-    };
-    _customTypes.COLOR3 = {
-        baseType: "array",
-        length: 3,
-        elementType: "number",
-        elementTypeParams: {
-            range: [0, 1]
-        }
-    };
-    _customTypes.COLOR4 = {
-        baseType: "array",
-        length: 4,
-        elementType: "number",
-        elementTypeParams: {
-            range: [0, 1]
-        }
-    };
-    _customTypes.DURATION = {
-        baseType: "number",
-        range: [0, undefined]
-    };
     _customTypes.FILE_DESCRIPTOR = {
         baseType: "object",
         properties: {
@@ -107,20 +77,16 @@ define([
             }
         }
     };
-    _customTypes.ANGLE_DEGREES = {
-        baseType: "number",
-        range: [-360, 360]
-    };
     _customTypes.LIGHT_SOURCE = {
         baseType: "object",
         properties: {
             COLOR: {
                 name: "color",
-                type: _customTypes.COLOR3
+                type: types.COLOR3
             },
             DIRECTION: {
                 name: "direction",
-                type: _customTypes.VECTOR3
+                type: types.VECTOR3
             }
         }
     };
@@ -240,6 +206,15 @@ define([
             defaultValue: "luminosityFactors"
         },
         /**
+         * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the group transform
+         * values of the various triangle groups.
+         */
+        UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME: {
+            name: "groupTransformsArrayName",
+            type: "string",
+            defaultValue: "groupTransforms"
+        },
+        /**
          * Whether to interpret given field of view, span and other camera property values as vertical or horizontal.
          */
         USE_VERTICAL_CAMERA_VALUES: {
@@ -270,7 +245,7 @@ define([
          */
         BACKGROUND_COLOR: {
             name: "backgroundColor",
-            type: _customTypes.COLOR4,
+            type: types.COLOR4,
             defaultValue: [0, 0, 0, 0]
         },
         /**
@@ -318,7 +293,7 @@ define([
          */
         WIREFRAME_COLOR: {
             name: "wireframeColor",
-            type: _customTypes.COLOR4,
+            type: types.COLOR4,
             defaultValue: [1, 0, 0, 1]
         },
         /**
@@ -408,7 +383,7 @@ define([
          */
         ROTATION_REVEAL_START_ANGLE: {
             name: "rotationRevealStartAngle",
-            type: _customTypes.ANGLE_DEGREES,
+            type: types.ANGLE_DEGREES,
             defaultValue: 90
         },
         /**
@@ -416,7 +391,7 @@ define([
          */
         ROTATION_START_ANGLE: {
             name: "rotationStartAngle",
-            type: _customTypes.ANGLE_DEGREES,
+            type: types.ANGLE_DEGREES,
             defaultValue: 180
         },
         /**
@@ -424,7 +399,7 @@ define([
          */
         ROTATION_VIEW_ANGLE: {
             name: "rotationViewAngle",
-            type: _customTypes.ANGLE_DEGREES,
+            type: types.ANGLE_DEGREES,
             defaultValue: 60
         },
         /**
@@ -456,7 +431,7 @@ define([
          */
         REVEAL_COLOR: {
             name: "revealColor",
-            type: _customTypes.COLOR4,
+            type: types.COLOR4,
             defaultValue: [1.0, 1.0, 1.0, 1.0]
         },
         /**
@@ -472,7 +447,7 @@ define([
          */
         REVEAL_DURATION: {
             name: "revealDuration",
-            type: _customTypes.DURATION,
+            type: types.DURATION,
             defaultValue: 2000
         },
         /**
@@ -480,7 +455,7 @@ define([
          */
         REVEAL_SOLID_DELAY_DURATION: {
             name: "revealSolidDelayDuration",
-            type: _customTypes.DURATION,
+            type: types.DURATION,
             defaultValue: 2000
         },
         /**
@@ -596,7 +571,7 @@ define([
          */
         MOMENT_DURATION: {
             name: "momentDuration",
-            type: _customTypes.DURATION,
+            type: types.DURATION,
             defaultValue: 1
         },
         /**
@@ -613,7 +588,7 @@ define([
          */
         TURN_ACCELERATION_DURATION_S: {
             name: "turnAccelerationDurationInSeconds",
-            type: _customTypes.DURATION
+            type: types.DURATION
         },
         /**
          * When moving forward in compensated flight modes, the controlled spacecraft will accelerate to maximum a speed 
@@ -644,7 +619,7 @@ define([
          */
         DEFAULT_MUZZLE_FLASH_DURATION: {
             name: "defaultMuzzleFlashDuration",
-            type: _customTypes.DURATION,
+            type: types.DURATION,
             defaultValue: 500
         },
         /**
@@ -668,7 +643,7 @@ define([
          */
         HITBOX_COLOR: {
             name: "hitboxColor",
-            type: _customTypes.COLOR4,
+            type: types.COLOR4,
             defaultValue: [0.0, 0.5, 0.5, 0.5]
         },
         /**
@@ -701,7 +676,7 @@ define([
          */
         TARGET_CHANGE_TRANSITION_DURATION: {
             name: "targetChangeTransitonDuration",
-            type: _customTypes.DURATION,
+            type: types.DURATION,
             defaultValue: 300
         },
         /**
@@ -726,7 +701,7 @@ define([
         },
         HUD_CENTER_CROSSHAIR_SIZE: {
             name: "hudCenterCrosshairSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_CENTER_CROSSHAIR_SCALE_MODE: {
             name: "hudCenterCrosshairScaleMode",
@@ -735,7 +710,7 @@ define([
         },
         HUD_CENTER_CROSSHAIR_COLOR: {
             name: "hudCenterCrosshairColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_CURSOR_STILL_TEXTURE: {
             name: "hudCursorStillTexture",
@@ -747,7 +722,7 @@ define([
         },
         HUD_CURSOR_SIZE: {
             name: "hudCursorSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_CURSOR_SCALE_MODE: {
             name: "hudCursorScaleMode",
@@ -756,7 +731,7 @@ define([
         },
         HUD_CURSOR_COLOR: {
             name: "hudCursorColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_ARROW_TEXTURE: {
             name: "hudTargetArrowTexture",
@@ -768,7 +743,7 @@ define([
         },
         HUD_TARGET_ARROW_SIZE: {
             name: "hudTargetArrowSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_TARGET_ARROW_SCALE_MODE: {
             name: "hudTargetArrowScaleMode",
@@ -777,11 +752,11 @@ define([
         },
         HUD_TARGET_ARROW_HOSTILE_COLOR: {
             name: "hudTargetArrowHostileColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_ARROW_FRIENDLY_COLOR: {
             name: "hudTargetArrowFriendlyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_INDICATOR_TEXTURE: {
             name: "hudTargetIndicatorTexture",
@@ -789,7 +764,7 @@ define([
         },
         HUD_TARGET_INDICATOR_SIZE: {
             name: "hudTargetIndicatorSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_TARGET_INDICATOR_SCALE_MODE: {
             name: "hudTargetIndicatorScaleMode",
@@ -798,11 +773,11 @@ define([
         },
         HUD_TARGET_INDICATOR_HOSTILE_COLOR: {
             name: "hudTargetIndicatorHostileColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_INDICATOR_FRIENDLY_COLOR: {
             name: "hudTargetIndicatorFriendlyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_AIM_ASSIST_INDICATOR_TEXTURE: {
             name: "hudAimAssistIndicatorTexture",
@@ -810,7 +785,7 @@ define([
         },
         HUD_AIM_ASSIST_INDICATOR_SIZE: {
             name: "hudAimAssistIndicatorSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_AIM_ASSIST_INDICATOR_SCALE_MODE: {
             name: "hudAimAssistIndicatorScaleMode",
@@ -819,11 +794,11 @@ define([
         },
         HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR: {
             name: "hudAimAssistIndicatorHostileColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_AIM_ASSIST_INDICATOR_FRIENDLY_COLOR: {
             name: "hudAimAssistIndicatorFriendlyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_WEAPON_IMPACT_INDICATOR_TEXTURE: {
             name: "hudWeaponImpactIndicatorTexture",
@@ -831,7 +806,7 @@ define([
         },
         HUD_WEAPON_IMPACT_INDICATOR_SIZE: {
             name: "hudWeaponImpactIndicatorSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_WEAPON_IMPACT_INDICATOR_SCALE_MODE: {
             name: "hudWeaponImpactIndicatorScaleMode",
@@ -840,11 +815,11 @@ define([
         },
         HUD_WEAPON_IMPACT_INDICATOR_COLOR: {
             name: "hudWeaponImpactIndicatorColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR: {
             name: "hudWeaponImpactIndicatorOutOfRangeColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_VIEW_LAYOUT: {
             name: "hudTargetViewLayout",
@@ -864,15 +839,15 @@ define([
         },
         HUD_TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR: {
             name: "hudTargetViewTargetItemFullIntegrityColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR: {
             name: "hudTargetViewTargetItemHalfIntegrityColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR: {
             name: "hudTargetViewTargetItemZeroIntegrityColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_INFO_BACKGROUND_TEXTURE: {
             name: "hudTargetInfoBackgroundTexture",
@@ -884,7 +859,7 @@ define([
         },
         HUD_TARGET_INFO_BACKGROUND_COLOR: {
             name: "hudTargetInfoBackgroundColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE: {
             name: "hudTargetHullIntegrityBarTexture",
@@ -896,11 +871,11 @@ define([
         },
         HUD_TARGET_HULL_INTEGRITY_BAR_FILLED_COLOR: {
             name: "hudTargetHullIntegrityBarFilledColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR: {
             name: "hudTargetHullIntegrityBarEmptyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_INFO_TEXT_LAYER_LAYOUT: {
             name: "hudTargetInfoTextLayerLayout",
@@ -908,11 +883,11 @@ define([
         },
         HUD_TARGET_INFO_TEXT_HOSTILE_COLOR: {
             name: "hudTargetInfoTextHostileColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR: {
             name: "hudTargetInfoTextFriendlyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_INFO_TEXT_FONT_SIZE: {
             name: "hudTargetInfoTextFontSize",
@@ -924,23 +899,23 @@ define([
         },
         HUD_TARGET_INFO_NAME_TEXT_POSITION: {
             name: "hudTargetInfoNameTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_TARGET_INFO_CLASS_TEXT_POSITION: {
             name: "hudTargetInfoClassTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_TARGET_INFO_TEAM_TEXT_POSITION: {
             name: "hudTargetInfoTeamTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_TARGET_INFO_DISTANCE_TEXT_POSITION: {
             name: "hudTargetInfoDistanceTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_TARGET_INFO_VELOCITY_TEXT_POSITION: {
             name: "hudTargetInfoVelocityTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_SPEED_BAR_TEXTURE: {
             name: "hudSpeedBarTexture",
@@ -952,19 +927,19 @@ define([
         },
         HUD_SPEED_BAR_FILLED_COLOR: {
             name: "hudSpeedBarFilledColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_SPEED_BAR_EMPTY_COLOR: {
             name: "hudSpeedBarEmptyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_REVERSE_SPEED_BAR_FILLED_COLOR: {
             name: "hudReverseSpeedBarFilledColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_REVERSE_SPEED_BAR_EMPTY_COLOR: {
             name: "hudReverseSpeedBarEmptyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_SPEED_BAR_BASE_MAX_SPEED_FACTOR: {
             name: "hudSpeedBarBaseMaxSpeedFactor",
@@ -984,11 +959,11 @@ define([
         },
         HUD_SPEED_TEXT_COLOR: {
             name: "hudSpeedTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_REVERSE_SPEED_TEXT_COLOR: {
             name: "hudReverseSpeedTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_SPEED_TEXT_FONT_SIZE: {
             name: "hudSpeedTextFontSize",
@@ -1000,11 +975,11 @@ define([
         },
         HUD_MAX_SPEED_TEXT_POSITION: {
             name: "hudMaxSpeedTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_MAX_REVERSE_SPEED_TEXT_POSITION: {
             name: "hudMaxReverseSpeedTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_SPEED_TARGET_INDICATOR_TEXTURE: {
             name: "hudSpeedTargetIndicatorTexture",
@@ -1012,11 +987,11 @@ define([
         },
         HUD_SPEED_TARGET_INDICATOR_COLOR: {
             name: "hudSpeedTargetIndicatorColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_SPEED_TARGET_INDICATOR_SIZE: {
             name: "hudSpeedTargetIndicatorSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_HULL_INTEGRITY_BAR_BACKGROUND_TEXTURE: {
             name: "hudHullIntegrityBarBackgroundTexture",
@@ -1028,7 +1003,7 @@ define([
         },
         HUD_HULL_INTEGRITY_BAR_BACKGROUND_COLOR: {
             name: "hudHullIntegrityBarBackgroundColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_HULL_INTEGRITY_BAR_TEXTURE: {
             name: "hudHullIntegrityBarTexture",
@@ -1040,11 +1015,11 @@ define([
         },
         HUD_HULL_INTEGRITY_BAR_FILLED_COLOR: {
             name: "hudHullIntegrityBarFilledColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR: {
             name: "hudHullIntegrityBarEmptyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE: {
             name: "hudFlightModeIndicatorBackgroundTexture",
@@ -1056,11 +1031,11 @@ define([
         },
         HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR: {
             name: "hudFlightModeIndicatorBackgroundColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_FLIGHT_MODE_HEADER_TEXT_COLOR: {
             name: "hudFlightModeHeaderTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_FLIGHT_MODE_HEADER_TEXT_FONT_SIZE: {
             name: "hudFlightModeHeaderTextFontSize",
@@ -1072,19 +1047,19 @@ define([
         },
         HUD_FLIGHT_MODE_HEADER_TEXT_POSITION: {
             name: "hudFlightModeHeaderTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_FREE_FLIGHT_MODE_TEXT_COLOR: {
             name: "hudFreeFlightModeTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR: {
             name: "hudCompensatedFlightModeTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_RESTRICTED_FLIGHT_MODE_TEXT_COLOR: {
             name: "hudRestrictedFlightModeTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_FLIGHT_MODE_TEXT_FONT_SIZE: {
             name: "hudFlightModeTextFontSize",
@@ -1096,7 +1071,7 @@ define([
         },
         HUD_FLIGHT_MODE_TEXT_POSITION: {
             name: "hudFlightModeTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_DRIFT_ARROW_TEXTURE: {
             name: "hudDriftArrowTexture",
@@ -1108,7 +1083,7 @@ define([
         },
         HUD_DRIFT_ARROW_SIZE: {
             name: "hudDriftArrowSize",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_DRIFT_ARROW_SCALE_MODE: {
             name: "hudDriftArrowScaleMode",
@@ -1117,11 +1092,11 @@ define([
         },
         HUD_DRIFT_ARROW_MIN_SPEED_COLOR: {
             name: "hudDriftArrowMinSpeedColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_DRIFT_ARROW_MAX_SPEED_COLOR: {
             name: "hudDriftArrowMaxSpeedColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_DRIFT_ARROW_MIN_SPEED: {
             name: "hudDriftArrowMinSpeed",
@@ -1141,19 +1116,19 @@ define([
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR: {
             name: "hudTargetHullIntegrityQuickViewBarHostileFilledColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_EMPTY_COLOR: {
             name: "hudTargetHullIntegrityQuickViewBarHostileEmptyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_FILLED_COLOR: {
             name: "hudTargetHullIntegrityQuickViewBarFriendlyFilledColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_EMPTY_COLOR: {
             name: "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_HEADER_TEXT_LAYER_LAYOUT: {
             name: "hudHeaderTextLayerLayout",
@@ -1161,7 +1136,7 @@ define([
         },
         HUD_SMALL_HEADER_TEXT_COLOR: {
             name: "hudSmallHeaderTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_SMALL_HEADER_TEXT_FONT_SIZE: {
             name: "hudSmallHeaderTextFontSize",
@@ -1173,11 +1148,11 @@ define([
         },
         HUD_SMALL_HEADER_TEXT_POSITION: {
             name: "hudSmallHeaderTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_BIG_HEADER_TEXT_COLOR: {
             name: "hudBigHeaderTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_BIG_HEADER_TEXT_FONT_SIZE: {
             name: "hudBigHeaderTextFontSize",
@@ -1189,11 +1164,11 @@ define([
         },
         HUD_BIG_HEADER_TEXT_POSITION: {
             name: "hudBigHeaderTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         HUD_SUBHEADER_TEXT_COLOR: {
             name: "hudSubheaderTextColor",
-            type: _customTypes.COLOR4
+            type: types.COLOR4
         },
         HUD_SUBHEADER_TEXT_FONT_SIZE: {
             name: "hudSubheaderTextFontSize",
@@ -1205,7 +1180,7 @@ define([
         },
         HUD_SUBHEADER_TEXT_POSITION: {
             name: "hudSubheaderTextPosition",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         DEMO_FIGHTER_AI_TYPE: {
             name: "demoFighterAI",
@@ -1227,7 +1202,7 @@ define([
         },
         DEFAULT_FOV_RANGE: {
             name: "defaultFOVRange",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         DEFAULT_SPAN: {
             name: "defaultSpan",
@@ -1235,7 +1210,7 @@ define([
         },
         DEFAULT_SPAN_RANGE: {
             name: "defaultSpanRange",
-            type: _customTypes.VECTOR2
+            type: types.VECTOR2
         },
         DEFAULT_BASE_ORIENTATION: {
             name: "defaultBaseOrientation",

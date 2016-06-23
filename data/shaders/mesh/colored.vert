@@ -4,6 +4,8 @@ precision mediump float;
 
 #include "mesh/variables/camera.glsl"
 #include "mesh/variables/model-base-vert.glsl"
+#include "mesh/variables/model-group-vert.glsl"
+#include "mesh/variables/model-group-transform-vert.glsl"
 
 attribute lowp vec4 a_color;
 

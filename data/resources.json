@@ -331,7 +331,8 @@
             "fragmentShaderSource": "mesh/oneColor.frag",
             "blendMode": "mix",
             "vertexAttributeRoles": {
-                "a_position": "position"
+                "a_position": "position",
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -341,7 +342,8 @@
             "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
-                "a_color": "color"
+                "a_color": "color",
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -352,7 +354,8 @@
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord",
-                "a_color": "color"
+                "a_color": "color",
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -364,7 +367,8 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
-                "a_color": "color"
+                "a_color": "color",
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -377,7 +381,8 @@
             "fragmentShaderSource": "mesh/reveal-oneColor.frag",
             "blendMode": "mix",
             "vertexAttributeRoles": {
-                "a_position": "position"
+                "a_position": "position",
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -397,8 +402,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -411,8 +415,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -429,8 +432,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -446,8 +448,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -463,8 +464,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -477,8 +477,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -494,8 +493,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -514,8 +512,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -531,8 +528,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -548,8 +544,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -562,8 +557,7 @@
                 "a_texCoord": "texCoord",
                 "a_normal": "normal",
                 "a_color": "color",
-                "a_groupIndex": "groupIndex",
-                "a_index": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {
@@ -664,7 +658,7 @@
             "blendMode": "mix",
             "vertexAttributeRoles": {
                 "a_position": "position",
-                "a_triangleIndex": "triangleIndex"
+                "a_groupIndices": "groupIndices"
             }
         },
         {

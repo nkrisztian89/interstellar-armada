@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:293 (2016.06.21.)",
+    "version": "0.3.0:294 (2016.06.23.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -58,6 +58,7 @@
                     "3v3.json",
                     "bombers.json",
                     "mixed.json",
+                    "corvette.json",
                     "level.json",
                     "staticAvoidance.json",
                     "dynamicAvoidance.json"
@@ -215,6 +216,9 @@
                     "reveal": false,
                     "requirements": {
                         "requiredVertexUniformVectors": 12,
+                        "requiredVertexUniformVectorsPer": {
+                            "groupTransform": 4
+                        },
                         "requiredAttributeVectors": 5,
                         "requiredVaryingVectors": 3,
                         "requiredTextureUnits": 1,
@@ -233,6 +237,7 @@
                     "requirements": {
                         "requiredVertexUniformVectors": 12,
                         "requiredVertexUniformVectorsPer": {
+                            "groupTransform": 4,
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
@@ -256,6 +261,7 @@
                     "requirements": {
                         "requiredVertexUniformVectors": 13,
                         "requiredVertexUniformVectorsPer": {
+                            "groupTransform": 4,
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
@@ -279,6 +285,7 @@
                     "requirements": {
                         "requiredVertexUniformVectors": 13,
                         "requiredVertexUniformVectorsPer": {
+                            "groupTransform": 4,
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
@@ -302,6 +309,7 @@
                     "requirements": {
                         "requiredVertexUniformVectors": 13,
                         "requiredVertexUniformVectorsPer": {
+                            "groupTransform": 4,
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
@@ -326,6 +334,8 @@
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
             "maxLuminosityFactors": 20,
             "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS",
+            "maxGroupTransforms": 3,
+            "maxGroupTransformsDefineName": "MAX_GROUP_TRANSFORMS",
             "depthTexturesDefineName": "DEPTH_TEXTURES",
             "maxShininess": "512.0",
             "maxShininessDefineName": "MAX_SHININESS"
@@ -401,6 +411,7 @@
             },
             {
                 "type": "fighter",
+                "weaponAimThreshold": 0.001,
                 "actions": [
                     {
                         "name": "changeFlightMode"

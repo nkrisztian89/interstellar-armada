@@ -85,6 +85,14 @@ define([
                         defaultValue: 0
                     },
                     /**
+                     * Number of required vectors to be added for each available group transform index.
+                     */
+                    GROUP_TRANSFORM: {
+                        name: "groupTransform",
+                        type: "number",
+                        defaultValue: 0
+                    },
+                    /**
                      * Number of required vectors to be added for each available directional light source.
                      */
                     DIR_LIGHT: {
@@ -440,6 +448,20 @@ define([
                  */
                 MAX_LUMINOSITY_FACTORS_DEFINE_NAME: {
                     name: "maxLuminosityFactorsDefineName",
+                    type: "string"
+                },
+                /**
+                 * The maximum amount of group transforms (length of the respective uniform variable) available to shaders.
+                 */
+                MAX_GROUP_TRANSFORMS: {
+                    name: "maxGroupTransforms",
+                    type: "number"
+                },
+                /**
+                 * The name of the #define that determines the maximum amount of group transforms available to shaders.
+                 */
+                MAX_GROUP_TRANSFORMS_DEFINE_NAME: {
+                    name: "maxGroupTransformsDefineName",
                     type: "string"
                 },
                 /**
@@ -1091,6 +1113,7 @@ define([
         gameParams[DEPENDENT_SHADER_REQUIREMENT_PROPERTIES.SHADOW_MAP_RANGE.name] = numShadowMapRanges;
         gameParams[DEPENDENT_SHADER_REQUIREMENT_PROPERTIES.SHADOW_MAP_SAMPLE.name] = numShadowMapSamples;
         gameParams[DEPENDENT_SHADER_REQUIREMENT_PROPERTIES.LUMINOSITY_FACTOR.name] = this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS);
+        gameParams[DEPENDENT_SHADER_REQUIREMENT_PROPERTIES.GROUP_TRANSFORM.name] = this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS);
         result = _getShaderRequirementsFromDescriptor(complexityDescriptor[SHADER_COMPLEXITY_PROPERTIES.REQUIREMENTS.name], gameParams);
         if (complexityDescriptor[SHADER_COMPLEXITY_PROPERTIES.SHADOW_MAPPING_AVAILABLE.name] && (numShadowMapRanges > 0)) {
             result = _getCombinedRequirements(result, _getShaderRequirementsFromDescriptor(
@@ -1995,6 +2018,7 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME)] = this.getNumShadowMapSamples();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DEPTH_TEXTURES_DEFINE_NAME)] = managedGL.areDepthTexturesAvailable() ? "1" : "0";
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS);
         result = this.getShader(shaderName).getManagedShader(replacedDefines, true);
@@ -2074,6 +2098,7 @@ define([
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
         getShaderComplexities: _context.getShaderComplexities.bind(_context),
         getMaxLuminosityFactors: _context.getShaderConfig.bind(_context, SHADER_CONFIG.MAX_LUMINOSITY_FACTORS),
+        getMaxGroupTransforms: _context.getShaderConfig.bind(_context, SHADER_CONFIG.MAX_GROUP_TRANSFORMS),
         getShadowMappingShaderName: _context.getShadowMappingShaderName.bind(_context),
         isShadowMappingEnabled: _context.isShadowMappingEnabled.bind(_context),
         setShadowMapping: _context.setShadowMapping.bind(_context),

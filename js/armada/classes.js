@@ -12,6 +12,7 @@
 
 /**
  * @param utils Required for managing enums
+ * @param types Used for type checking
  * @param vec Required for calculating vectors when initializing certain classes
  * @param mat Required for parsing matrices and determining rotation angles
  * @param application Required for error displaying and file loading functionality
@@ -25,6 +26,7 @@
  */
 define([
     "utils/utils",
+    "utils/types",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -35,7 +37,7 @@ define([
     "modules/buda-scene",
     "armada/graphics",
     "armada/strings"
-], function (utils, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics, strings) {
+], function (utils, types, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -53,6 +55,22 @@ define([
     SceneViewLookAtMode = {
         NONE: "none",
         ALL: "all"
+    },
+    /**
+     * @enum {String}
+     * Determines how to translate a direction to rotation angles for a weapon.
+     * @type Object
+     */
+    WeaponRotationStyle = {
+        /**
+         * The weapon cannot be rotated, it is pointing in a fix direction: the positive Y.
+         */
+        NONE: "none",
+        /**
+         * The weapon has two rotators. The first one rotates around axis Z starting from the positive Y direction, clockwise.
+         * The second one further rotates the direction around the rotated X axis, clockwise.
+         */
+        ALPHA_BETA: "alphaBeta"
     },
     // ------------------------------------------------------------------------------
     // constants
@@ -1179,10 +1197,14 @@ define([
          */
         this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || _showMissingPropertyError(this, "projectileVelocity")) : 0;
         /**
-         * The coordinates of the barrel's position relative to the weapon itself.
-         * @type Number[3]
+         * The coordinates of the barrel's position relative to the weapon itself. Reading a 3 element vector and complementing it with a 
+         * 1.0 to make it 4 element, as it is used in multiplication with 4x4 matrices.
+         * @type Number[4]
          */
         this._positionVector = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        if (this._positionVector) {
+            this._positionVector.push(1);
+        }
     }
     /**
      * @returns {ProjectileClass}
@@ -1205,7 +1227,7 @@ define([
         return this._projectileVelocity * this._projectileClass.getMass() / (duration / 1000);
     };
     /**
-     * @returns {Number[3]}
+     * @returns {Number[4]}
      */
     Barrel.prototype.getPositionVector = function () {
         return this._positionVector;
@@ -1216,6 +1238,55 @@ define([
     Barrel.prototype.acquireResources = function () {
         this._projectileClass.acquireResources();
     };
+    // ##############################################################################
+    /**
+     * @struct
+     * Describes a rotator joint of a weapon, based on which the weapon (and part of its visual model) can be rotated around a given axis
+     * to aim it towards a specific direction.
+     * @param {Object} dataJSON The object defining the properties of the rotator
+     */
+    function WeaponRotator(dataJSON) {
+        /**
+         * The direction of the axis around which to rotate the weapon.
+         * @type Number[3]
+         */
+        this.axis = types.getValueOfType("WeaponRotator.axis", types.VECTOR3, dataJSON.axis);
+        /**
+         * A point of the axis around which to rotate the weapon, in object-space coordinates.
+         * @type Number[3]
+         */
+        this.center = types.getValueOfType("WeaponRotator.center", types.VECTOR3, dataJSON.center);
+        /**
+         * If given, the angle of the weapon corresponding to this rotator is restricted to lie within this range ([min, max], radians)
+         * @type Number[2]
+         */
+        this.range = types.getValueOfType("WeaponRotator.range", types.VECTOR2, dataJSON.range, null, true);
+        if (this.range) {
+            this.range[0] = Math.radians(this.range[0]);
+            this.range[1] = Math.radians(this.range[1]);
+        }
+        /**
+         * The weapon should rotate to this angle by default (when not aiming), in radians.
+         * @type Number
+         */
+        this.defaultAngle = Math.radians(types.getValueOfType("WeaponRotator.defaultAngle", types.NUMBER, dataJSON.defaultAngle));
+        /**
+         * A shortcut flag indicating whether the angle of rotation is restricted to a specific range for this rotator (if false, the weapon 
+         * can rotate freely around in 360 degrees)
+         * @type Boolean
+         */
+        this.restricted = !!this.range;
+        /**
+         * The weapon can rotate at this rate (speed), in radians / second.
+         * @type Number
+         */
+        this.rotationRate = Math.radians(types.getValueOfType("WeaponRotator.rotationRate", types.NUMBER, dataJSON.rotationRate));
+        /**
+         * When rotating using this rotator, the vertices belonging to the transform group with this index should be rotated.
+         * @type Number
+         */
+        this.transformGroupIndex = types.getValueOfType("WeaponRotator.transformGroupIndex", types.NUMBER, dataJSON.transformGroupIndex);
+    }
     // ##############################################################################
     /**
      * @class Each spacecraft can have weapons, all of which belong to a certain
@@ -1264,6 +1335,41 @@ define([
          * @type Number[3]
          */
         this._attachmentPoint = dataJSON ? (dataJSON.attachmentPoint || _showMissingPropertyError(this, "attachmentPoint")) : null;
+        /**
+         * Indicates the number and role of rotators of the weapon, based on which a direction to point the weapon towards can be translated
+         * to rotation angles corresponding to its rotators.
+         * @type String
+         */
+        this._rotationStyle = dataJSON ? utils.getSafeEnumValue(WeaponRotationStyle, dataJSON.rotationStyle, WeaponRotationStyle.NONE) : null;
+        /**
+         * A shortcut flag indicating whether the weapon is pointing in a fix direction (true) or can be rotated in some way (false).
+         * @type Boolean
+         */
+        this._fixed = this._rotationStyle === WeaponRotationStyle.NONE;
+        /**
+         * The position of the point which should be taken into account as a basis when aiming the weapon: rotation angles need to be 
+         * determined based on the vectors pointing from this point towards the target. In object-space coordinates. It is transformed
+         * considering all the rotators. In 4D, with a 1.0 appended to make it easier to multiply it with 4x4 matrices.
+         * @type Number[4]
+         */
+        this._basePoint = (dataJSON && !this._fixed) ? (dataJSON.basePoint || _showMissingPropertyError(this, "basePoint")) : null;
+        if (this._basePoint) {
+            this._basePoint.push(1);
+        }
+        /**
+         * The list of rotators, containing the detailed information about each.
+         * @type WeaponRotator[]
+         */
+        this._rotators = [];
+        if (dataJSON && !this._fixed) {
+            if (dataJSON.rotators) {
+                for (i = 0; i < dataJSON.rotators.length; i++) {
+                    this._rotators.push(new WeaponRotator(dataJSON.rotators[i]));
+                }
+            } else {
+                _showMissingPropertyError(this, "rotators");
+            }
+        }
     };
     /**
      * @override
@@ -1302,11 +1408,34 @@ define([
         return this._barrels;
     };
     /**
-     * 
      * @returns {Number[3]}
      */
     WeaponClass.prototype.getAttachmentPoint = function () {
         return this._attachmentPoint;
+    };
+    /**
+     * @returns {String}
+     */
+    WeaponClass.prototype.getRotationStyle = function () {
+        return this._rotationStyle;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    WeaponClass.prototype.isFixed = function () {
+        return this._fixed;
+    };
+    /**
+     * @returns {Number[4]}
+     */
+    WeaponClass.prototype.getBasePoint = function () {
+        return this._basePoint;
+    };
+    /**
+     * @returns {WeaponRotator[]}
+     */
+    WeaponClass.prototype.getRotators = function () {
+        return this._rotators;
     };
     /**
      * Returns the class of projectiles the first barrel of this weapon class fires.
@@ -2747,6 +2876,7 @@ define([
     // The public interface of the module
     return {
         ParticleEmitterType: ParticleEmitterType,
+        WeaponRotationStyle: WeaponRotationStyle,
         TexturedModelClass: TexturedModelClass,
         getSkyboxClass: getSkyboxClass,
         getBackgroundObjectClass: getBackgroundObjectClass,

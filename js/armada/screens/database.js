@@ -352,7 +352,7 @@ define([
     function handleMouseUp(event) {
         document.body.onmousemove = null;
         document.body.onmouseup = null;
-        if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
+        if (_currentItem && _getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
             _startRotationLoop(_getSetting(SETTINGS.ROTATION_START_ANGLE));
         }
         event.preventDefault();

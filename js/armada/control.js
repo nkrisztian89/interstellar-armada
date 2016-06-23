@@ -174,6 +174,11 @@ define([
          * @type Boolean
          */
         this._autoTargeting = true;
+        /**
+         * The angle threshold which should be exceeded to trigger the rotation of non-fixed weapons for auto-aiming, in radians
+         * @type Number
+         */
+        this._weaponAimThreshold = dataJSON.weaponAimThreshold;
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created
         // fire the primary weapons of the fighter
@@ -279,9 +284,10 @@ define([
     /**
      * Same as the method of the parent class, but with a check if there if there is
      * a controlled spacecraft present.
-     * @param {Object[]} triggeredActions See {@link Controller#executeActions}
+     * @param {Object[]} triggeredActions See Controller.executeActions
+     * @param {Number} dt The elapsed time since the last control step, in milliseconds
      */
-    FighterController.prototype.executeActions = function (triggeredActions) {
+    FighterController.prototype.executeActions = function (triggeredActions, dt) {
         if (this._controlledSpacecraft) {
             if (!this._controlledSpacecraft.canBeReused()) {
                 // executing user-triggered actions
@@ -290,6 +296,7 @@ define([
                 if (this._autoTargeting && !this._controlledSpacecraft.getTarget()) {
                     this._controlledSpacecraft.targetNextHostile();
                 }
+                this._controlledSpacecraft.aimWeapons(this._weaponAimThreshold, dt);
             } else {
                 this._controlledSpacecraft = null;
             }

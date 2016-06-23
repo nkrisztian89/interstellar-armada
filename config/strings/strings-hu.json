@@ -71,7 +71,9 @@
         "delta": "Delta",
         "omega": "Omega",
         "wraith": "Lidérc",
-        "phantom": "Fantom"
+        "phantom": "Fantom",
+        "serpent": "Kígyó",
+        "reaper": "Kaszás"
     },
     "level": {
         "targetPracticeBoxes": "Kezdő lőgyakorlat",
@@ -81,6 +83,7 @@
         "3v3": "Három három ellen",
         "bombers": "Bombázók",
         "mixed": "Vegyes",
+        "corvette": "Korvett",
         "level": "Teszt",
         "staticAvoidance": "Statikus akadály teszt",
         "dynamicAvoidance": "Dinamikus akadály teszt"

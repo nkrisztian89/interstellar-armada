@@ -2,6 +2,8 @@
 
 #include "mesh/variables/camera.glsl"
 #include "mesh/variables/model-base.glsl"
+#include "mesh/variables/model-group-vert.glsl"
+#include "mesh/variables/model-group-transform-vert.glsl"
 
 attribute vec2 a_texCoord;
 attribute vec4 a_color;

@@ -137,9 +137,9 @@ define([
      * @param {Number[][3]} [normals] The normal vectors of the triangle's vertices.
      * If the three vertives are the same, it is enough to pass an array with only
      * one element.
-     * @param {Number} [groupIndex] The index of the group this triangle belongs to.
+     * @param {Number} [groupIndices] The indices of the groups this triangle belongs to.
      */
-    function Triangle(model, a, b, c, color, texCoords, normals, groupIndex) {
+    function Triangle(model, a, b, c, color, texCoords, normals, groupIndices) {
         /**
          * The model to which this triangle is added.
          * @type Mesh
@@ -179,11 +179,11 @@ define([
          */
         this._normals = normals || vec.normal3(vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
         /**
-         * The index of the group this triangle belongs to. (for setting different
-         * uniform values for certain triangle groups of the model while rendering)
-         * @type Number
+         * The indices of the groups (of various types) this triangle belongs to. Currently two groups types are used: the first index
+         * indicates the transform group and the second one the luminosity group.
+         * @type Number[2]
          */
-        this.groupIndex = groupIndex || 0;
+        this.groupIndices = groupIndices || [0, 0];
     }
 
     /**
@@ -302,10 +302,10 @@ define([
          */
         this._texCoords = [[0, 1], [1, 1], [1, 0], [0, 0]];
         /**
-         * The default group index for newly added triangles and lines.
+         * The default group indices for newly added triangles and lines.
          * @type Number
          */
-        this._currentGroupIndex = 0;
+        this._currentGroupIndices = [0, 0];
         /**
          * A property for convenience and optimization, all filler null vectors
          * point to this object instead of creating a separate vertex object
@@ -498,7 +498,7 @@ define([
      * @property {Number[][3]} normals The normal vector(s) for the triangle. If one vector is given, it will be used for all three 
      * vertices, if 3 are given, they will be used separately. If none are given, the normal of th surface of the triangles will be 
      * generated and used.
-     * @property {Number} groupIndex The index of the group to which to add the triangle.
+     * @property {Number[2]} groupIndices The indices of the groups to which to add the triangle.
      */
     /**
      * Creates a triangle using the supplied and the default editing parameters
@@ -510,7 +510,7 @@ define([
      * @returns {Triangle} The added triangle
      */
     Mesh.prototype.addTriangleWithParams = function (a, b, c, params) {
-        var color, texCoords, normals, groupIndex, triangle;
+        var color, texCoords, normals, groupIndices, triangle;
         // the default color is opaque white
         color = params.color || [1.0, 1.0, 1.0, 1.0];
         // texture coordinates may be taken from the vertices, from the parameters
@@ -521,9 +521,9 @@ define([
         // normals are taken from the parameters - can be 1 or 3 element long
         normals = params.normals;
         // if not specified, use the model's default group index
-        groupIndex = params.groupIndex || this._currentGroupIndex;
+        groupIndices = params.groupIndices || this._currentGroupIndices;
         // create and add the new triangle
-        triangle = new Triangle(this, a, b, c, color, texCoords, normals, groupIndex);
+        triangle = new Triangle(this, a, b, c, color, texCoords, normals, groupIndices);
         this.addTriangle(triangle, params.withoutLines);
         return triangle;
     };
@@ -679,7 +679,7 @@ define([
      * @returns {Object} An associative array, with all the buffer data for this
      * model. (Float32Arrays)
      * The names of the properties correspond to the roles of each of the arrays:
-     * position, texCoord, normal, color, groupIndex.
+     * position, texCoord, normal, color, groupIndices.
      * The dataSize property contains the number of vertices.
      */
     Mesh.prototype.getBufferData = function (wireframe, startIndex) {
@@ -725,10 +725,12 @@ define([
                 colorData[i * 8 + 6] = this._lines[i].color[2];
                 colorData[i * 8 + 7] = 1.0;
             }
-            groupIndexData = new Float32Array(nLines * 2);
+            groupIndexData = new Float32Array(nLines * 4);
             for (i = 0; i < nLines; i++) {
-                groupIndexData[i * 2] = 0;
-                groupIndexData[i * 2 + 1] = 0;
+                groupIndexData[i * 4] = 0;
+                groupIndexData[i * 4 + 1] = 0;
+                groupIndexData[i * 4 + 2] = 0;
+                groupIndexData[i * 4 + 3] = 0;
             }
             nTriangles = this._triangles.length;
             triangleIndexData = new Float32Array(nTriangles * 3);
@@ -796,11 +798,14 @@ define([
                 colorData[i * 12 + 10] = this._triangles[i].color[2];
                 colorData[i * 12 + 11] = this._triangles[i].color[3];
             }
-            groupIndexData = new Float32Array(nTriangles * 3);
+            groupIndexData = new Float32Array(nTriangles * 6);
             for (i = 0; i < nTriangles; i++) {
-                groupIndexData[i * 3] = this._triangles[i].groupIndex;
-                groupIndexData[i * 3 + 1] = this._triangles[i].groupIndex;
-                groupIndexData[i * 3 + 2] = this._triangles[i].groupIndex;
+                groupIndexData[i * 6] = this._triangles[i].groupIndices[0];
+                groupIndexData[i * 6 + 1] = this._triangles[i].groupIndices[1];
+                groupIndexData[i * 6 + 2] = this._triangles[i].groupIndices[0];
+                groupIndexData[i * 6 + 3] = this._triangles[i].groupIndices[1];
+                groupIndexData[i * 6 + 4] = this._triangles[i].groupIndices[0];
+                groupIndexData[i * 6 + 5] = this._triangles[i].groupIndices[1];
             }
             triangleIndexData = new Float32Array(nTriangles * 12);
             for (i = 0; i < nTriangles; i++) {
@@ -830,7 +835,7 @@ define([
             "texCoord": texCoordData,
             "normal": normalData,
             "color": colorData,
-            "groupIndex": groupIndexData,
+            "groupIndices": groupIndexData,
             "triangleIndex": triangleIndexData,
             "dataSize": (wireframe ? this._lines.length * 2 : this._triangles.length * 3)
         };
@@ -1089,11 +1094,11 @@ define([
             n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
             n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
             n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-            this.addTriangleWithParams(v[0], v[1], v[2], {color: color, 
+            this.addTriangleWithParams(v[0], v[1], v[2], {color: color,
                 texCoords: [uv1, uv2, uv3],
                 normals: [n1, n2, n3]});
             if (cullFace !== true) {
-                this.addTriangleWithParams(v[0], v[2], v[1], {color: color, 
+                this.addTriangleWithParams(v[0], v[2], v[1], {color: color,
                     texCoords: [uv1, uv3, uv2],
                     normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
             }
@@ -1106,11 +1111,11 @@ define([
                 n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
                 n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
                 n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, 
+                this.addTriangleWithParams(v[0], v[1], v[2], {color: color,
                     texCoords: [uv1, uv2, uv3],
                     normals: [n1, n2, n3]});
                 if (cullFace !== true) {
-                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, 
+                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color,
                         texCoords: [uv1, uv3, uv2],
                         normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
                 }
@@ -1121,11 +1126,11 @@ define([
                 n1 = [(this._vertices[v[0]].x - x) / radius, (this._vertices[v[0]].y - y) / radius, (this._vertices[v[0]].z - z) / radius];
                 n2 = [(this._vertices[v[1]].x - x) / radius, (this._vertices[v[1]].y - y) / radius, (this._vertices[v[1]].z - z) / radius];
                 n3 = [(this._vertices[v[2]].x - x) / radius, (this._vertices[v[2]].y - y) / radius, (this._vertices[v[2]].z - z) / radius];
-                this.addTriangleWithParams(v[0], v[1], v[2], {color: color, 
+                this.addTriangleWithParams(v[0], v[1], v[2], {color: color,
                     texCoords: [uv1, uv2, uv3],
                     normals: [n1, n2, n3]});
                 if (cullFace !== true) {
-                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color, 
+                    this.addTriangleWithParams(v[0], v[2], v[1], {color: color,
                         texCoords: [uv1, uv3, uv2],
                         normals: [vec.scaled3(n1, -1), vec.scaled3(n3, -1), vec.scaled3(n2, -1)]});
                 }
@@ -1583,7 +1588,7 @@ define([
                             parseFloat(triangleTags[i].getAttribute("ncx")) / 10000,
                             -parseFloat(triangleTags[i].getAttribute("ncy")) / 10000,
                             -parseFloat(triangleTags[i].getAttribute("ncz")) / 10000]];
-            params.groupIndex = (triangleTags[i].hasAttribute("group") ? triangleTags[i].getAttribute("group") : null);
+            params.groupIndices = (triangleTags[i].hasAttribute("groups") ? triangleTags[i].getAttribute("groups") : null);
             params.withoutLines = true;
             triangle = null;
             for (j = minLOD; j <= maxLOD; j++) {
@@ -1722,7 +1727,7 @@ define([
             params.color = colorPalette ? colorPalette[dataJSON.triangles[i].color] : dataJSON.triangles[i].color;
             params.texCoords = dataJSON.triangles[i].t;
             params.normals = dataJSON.triangles[i].n;
-            params.groupIndex = (dataJSON.triangles[i].group !== undefined) ? dataJSON.triangles[i].group : null;
+            params.groupIndices = (dataJSON.triangles[i].groups !== undefined) ? dataJSON.triangles[i].groups : null;
             params.withoutLines = true;
             triangle = null;
             for (j = minLOD; j <= maxLOD; j++) {

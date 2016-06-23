@@ -1526,7 +1526,26 @@
                     "position": [-2, 25, 14]
                 }
             ],
-            "attachmentPoint": [0, 0, 0]
+            "attachmentPoint": [0, 0, 0],
+            "rotationStyle": "alphaBeta",
+            "basePoint": [0, -5, 12],
+            "rotators": [
+                {
+                    "axis": [0, 0, 1],
+                    "center": [0, 0, 0],
+                    "defaultAngle": 0,
+                    "rotationRate": 90,
+                    "transformGroupIndex": 0
+                },
+                {
+                    "axis": [1, 0, 0],
+                    "center": [0, -5, 12],
+                    "range": [-90, 3],
+                    "defaultAngle": -10,
+                    "rotationRate": 45,
+                    "transformGroupIndex": 1
+                }
+            ]
         },
         {
             "name": "smallProtonCannon",

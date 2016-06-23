@@ -1260,11 +1260,11 @@ define([
                 /** @type Number[2] */
                 position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition,
                 /** @type Number[3] */
-                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, relativeVelocity,
+                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity,
                 /** @type Number[4] */
                 direction, targetInfoTextColor,
                 /** @type Float32Array */
-                m,
+                m, scaledOriMatrix,
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
@@ -1456,18 +1456,26 @@ define([
                     futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
                     m = craft.getPhysicalModel().getOrientationMatrix();
                     scale = craft.getVisualModel().getScalingMatrix()[0];
+                    scaledOriMatrix = craft.getScaledOriMatrix();
                     targetInRange = false;
                     for (i = 0; i < weapons.length; i++) {
                         if (_weaponImpactIndicators.length <= i) {
                             _weaponImpactIndicators.push(_getWeaponImpactIndicator());
                             _weaponImpactIndicators[i].addToScene(_battleScene);
                         }
-                        slotPosition = weapons[i].getOrigoPositionMatrix();
-                        _weaponImpactIndicators[i].setPosition(vec.sumArray3([
-                            position,
-                            vec.scaled3(mat.getRowB43(m), futureDistance),
-                            vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
-                            vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
+                        if (weapons[i].isFixed()) {
+                            slotPosition = weapons[i].getOrigoPositionMatrix();
+                            _weaponImpactIndicators[i].setPosition(vec.sumArray3([
+                                position,
+                                vec.scaled3(mat.getRowB43(m), futureDistance),
+                                vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
+                                vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
+                        } else {
+                            basePointPosition = weapons[i].getBasePointPosVector(scaledOriMatrix);
+                            _weaponImpactIndicators[i].setPosition(vec.sum3(
+                                    basePointPosition,
+                                    vec.scaled3(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), futureDistance)));
+                        }
                         if (futureDistance <= weapons[i].getRange(speed)) {
                             _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
                             targetInRange = true;

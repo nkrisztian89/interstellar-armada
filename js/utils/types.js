@@ -165,6 +165,46 @@ define([
     function _logEnumValueError(name, value, enumObject, defaultValue, verbosityLevel) {
         application.log(_getEnumValueError(name, value, enumObject, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
     }
+    // ----------------------------------------------------------------------
+    // constants
+    // generic type descriptors
+    exports.NUMBER = "number";
+    exports.VECTOR2 = {
+        baseType: "array",
+        length: 2,
+        elementType: "number"
+    };
+    exports.VECTOR3 = {
+        baseType: "array",
+        length: 3,
+        elementType: "number"
+    };
+    exports.COLOR3 = {
+        baseType: "array",
+        length: 3,
+        elementType: "number",
+        elementTypeParams: {
+            range: [0, 1]
+        }
+    };
+    exports.COLOR4 = {
+        baseType: "array",
+        length: 4,
+        elementType: "number",
+        elementTypeParams: {
+            range: [0, 1]
+        }
+    };
+    exports.DURATION = {
+        baseType: "number",
+        range: [0, undefined]
+    };
+    exports.ANGLE_DEGREES = {
+        baseType: "number",
+        range: [-360, 360]
+    };
+    // ----------------------------------------------------------------------
+    // public functions
     /**
      * @typedef {Function} Types~BooleanCallback
      * @param {Boolean} safeValue

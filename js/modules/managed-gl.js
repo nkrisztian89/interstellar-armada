@@ -2762,6 +2762,7 @@ define([
     // The public interface of the module
     return {
         TextureFiltering: TextureFiltering,
+        ShaderVariableType: ShaderVariableType,
         ShaderBlendMode: ShaderBlendMode,
         getUniformName: ShaderUniform.prototype.getUniformName,
         getTextureUniformRawName: ShaderUniform.prototype.getTextureUniformRawName,

@@ -1,0 +1,1 @@
+vec3 normal = mat3(groupTransform) * a_normal;

@@ -41,6 +41,7 @@
         "3v3": "Three versus three",
         "bombers": "Bombers",
         "mixed": "Mixed",
+        "corvette": "Corvette",
         "level": "Test level",
         "staticAvoidance": "Static avoidance test",
         "dynamicAvoidance": "Dynamic avoidance test"
@@ -58,7 +59,9 @@
         "delta": "Delta",
         "omega": "Omega",
         "wraith": "Wraith",
-        "phantom": "Phantom"
+        "phantom": "Phantom",
+        "serpent": "Serpent",
+        "reaper": "Reaper"
     },
     "battle": {
         "developmentVersionNotice": "running an early test of Interstellar Armada, version: {version}",

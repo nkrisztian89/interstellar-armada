@@ -257,6 +257,22 @@ define([
         ]);
     };
     /**
+     * Returns a new 4x4 transformation matrix describing a rotation around an arbitrary axis that goes through a given point.
+     * @param {Number[3]} p The axis of rotation passes through this point.
+     * @param {Number[]} axis A 3D unit vector describing the direction of the axis.
+     * @param {Number} angle The angle of rotation in radians
+     * @returns {Float32Array}
+     */
+    mat.rotationAroundPoint4 = function (p, axis, angle) {
+        var
+                m = mat.rotation4(axis, angle),
+                p2 = vec.mulVec3Mat4(p, m);
+        m[12] = p[0] - p2[0];
+        m[13] = p[1] - p2[1];
+        m[14] = p[2] - p2[2];
+        return m;
+    };
+    /**
      * Returns a 4x4 transformation matrix describing a rotation, using only the top left 3x3 submatrix
      * of a 4x4 matrix.
      * @param {Float32Array} m A generic 4x4 transformation matrix.
@@ -828,6 +844,19 @@ define([
         ]);
     };
     /**
+     * Returns the transposed of the top left 3x3 submatrix of the passed 4x4 matrix m.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Float32Array}
+     */
+    mat.transposed43 = function (m) {
+        _matrixCount++;
+        return new Float32Array([
+            m[0], m[4], m[8],
+            m[1], m[5], m[9],
+            m[2], m[6], m[10]
+        ]);
+    };
+    /**
      * Returns the transposed of the passed 4x4 matrix m.
      * @param {Float32Array} m A 4x4 matrix.
      * @returns {Float32Array} The transposed of m.
@@ -1296,6 +1325,28 @@ define([
     // -----------------------------------------------------------------------------
     // Functions that modify existing matrices
     /**
+     * Sets the passed 4x4 matrix m to a 4x4 identity matrix.
+     * @param {Float32Array} m
+     */
+    mat.setIdentity4 = function (m) {
+        m[0] = 1;
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = 1;
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+        m[9] = 0;
+        m[10] = 1;
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = 1;
+    };
+    /**
      * Sets the value of a 3x3 matrix to that of another 3x3 matrix, without creating a new
      * matrix or modifying the reference itself. (copies the value over instead)
      * @param {Float32Array} left The leftvalue, a 3x3 matrix
@@ -1347,6 +1398,23 @@ define([
         m[15] = 1.0;
     };
     /**
+     * Modifies the matrix m in-place, setting it to a 4x4 transformation matrix describing a rotation around an arbitrary axis that goes 
+     * through a given point.
+     * @param {Float32Array} m
+     * @param {Number[3]} p The axis of rotation passes through this point.
+     * @param {Number[]} axis A 3D unit vector describing the direction of the axis.
+     * @param {Number} angle The angle of rotation in radians
+     * @returns {Float32Array}
+     */
+    mat.setRotationAroundPoint4 = function (m, p, axis, angle) {
+        var p2;
+        mat.setRotation4(m, axis, angle);
+        p2 = vec.mulVec3Mat4(p, m);
+        m[12] = p[0] - p2[0];
+        m[13] = p[1] - p2[1];
+        m[14] = p[2] - p2[2];
+    };
+    /**
      * Applies a translation to the passed 4x4 transformation matrix described by the passed
      * 3D vector.
      * @param {Float32Array} m A 4x4 matrix
@@ -1380,6 +1448,23 @@ define([
                 index = _getFreeTempMatrixIndex(),
                 rot = _getTempMatrix(index);
         mat.setRotation4(rot, axis, angle);
+        mat.mul4(m, rot);
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Modifies the passed 4x4 transformation matrix m in-place to be rotated by the given angle around the given axis that goes through the 
+     * given point.
+     * @param {Float32Array} m
+     * @param {Number[3]} p The axis of rotation passes through this point.
+     * @param {Number[]} axis A 3D unit vector describing the direction of the axis.
+     * @param {Number} angle The angle of rotation in radians
+     * @returns {Float32Array}
+     */
+    mat.rotateAroundPoint4 = function (m, p, axis, angle) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                rot = _getTempMatrix(index);
+        mat.setRotationAroundPoint4(rot, p, axis, angle);
         mat.mul4(m, rot);
         _releaseTempMatrix(index);
     };

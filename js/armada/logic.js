@@ -16,6 +16,7 @@
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
  * @param asyncResource LogicContext is a subclass of AsyncResource
+ * @param managedGL Used for accessing shader variable types
  * @param egomModel Used for generating 3D models for hitboxes
  * @param physics Physics simulation is done using this module
  * @param resources Used to access the loaded graphics resources
@@ -32,6 +33,7 @@ define([
     "utils/matrices",
     "modules/application",
     "modules/async-resource",
+    "modules/managed-gl",
     "modules/egom-model",
     "modules/physics",
     "modules/graphics-resources",
@@ -42,7 +44,7 @@ define([
     "armada/strings",
     "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, asyncResource, egomModel, physics, resources, budaScene, graphics, classes, config, strings, ai) {
+], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, physics, resources, budaScene, graphics, classes, config, strings, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -113,10 +115,15 @@ define([
              */
             _momentDuration = 0,
             /**
-             * Cached value of the configuration setting of the name of the uniform array storing the luminosity factors for a spacecraft.
+             * Cached value of the configuration setting of the name of the uniform array storing the luminosity factors for models.
              * @type String
              */
             _luminosityFactorsArrayName = null,
+            /**
+             * Cached value of the configuration setting of the name of the uniform array storing the group transforms for models.
+             * @type String
+             */
+            _groupTransformsArrayName = null,
             /**
              * Cached value of the configuration setting of minimum number of muzzle flash particles that should trigger their instanced rendering.
              * @type Number
@@ -1010,6 +1017,31 @@ define([
          * @type Float32Array
          */
         this._scaledOriMatrix = null;
+        /**
+         * The current angles at which the weapon is positioned (if it is turnable), in radians. The first number belong to the first 
+         * rotator and the second one to the second rotator.
+         * @type Number[2]
+         */
+        this._rotationAngles = [0, 0];
+        /**
+         * A flag indicating whether the rotation angles of the weapon have changed in this simulation step (triggering a recalculation of
+         * the respective matrices).
+         * @type Boolean
+         */
+        this._rotationChanged = false;
+        /**
+         * A 4x4 matrix describing the transformation (translation and rotation) corresponding to the current position (determined by 
+         * rotation angles) of the weapon, considering all the rotators. Used to transform the base point (for aiming) or the barrel
+         * positions (for firing). Interim matrices (considering only some, but not all rotators) are not stored, but directly feeded to the
+         * visual model as parameters when calculated.
+         * @type Float32Array
+         */
+        this._transformMatrix = mat.identity4();
+        /**
+         * A shortcut flag indicating whether this weapon can rotate or is fixed in pointing to one direction.
+         * @type Boolean
+         */
+        this._fixed = this._class.isFixed();
     }
     /**
      * Returns the weapon slot this weapon is equipped to.
@@ -1071,6 +1103,40 @@ define([
         return this._scaledOriMatrix;
     };
     /**
+     * Returns whether this weapon is fixed i.e. is pointing in one fix direction and does not have any rotators.
+     * @returns {Boolean}
+     */
+    Weapon.prototype.isFixed = function () {
+        return this._fixed;
+    };
+    /**
+     * Returns a 3D vector indicating the position of the base point of this weapon in world space.
+     * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft that has this weapon.
+     * it is more effective to calculate this separately once and pass it to all functions that need it.
+     * @returns {Number[3]}
+     */
+    Weapon.prototype.getBasePointPosVector = function (shipScaledOriMatrix) {
+        var
+                basePointPosVector = this._class.getBasePoint(),
+                weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
+        vec.add3(weaponSlotPosVector, this._spacecraft.getPhysicalPositionVector());
+        basePointPosVector = vec.mulVec4Mat4(basePointPosVector, this._transformMatrix);
+        basePointPosVector = vec.mulVec3Mat4(basePointPosVector, mat.prod3x3SubOf4(this.getScaledOriMatrix(), shipScaledOriMatrix));
+        vec.add3(basePointPosVector, weaponSlotPosVector);
+        return basePointPosVector;
+    };
+    /**
+     * Returns a 4x4 rotation matrix describing the orientation of projectiles fired by this weapon in world space.
+     * @returns {Float32Array}
+     */
+    Weapon.prototype.getProjectileOrientationMatrix = function () {
+        var m = mat.prod3x3SubOf4(this._slot.orientationMatrix, this._spacecraft.getPhysicalOrientationMatrix());
+        if (!this._fixed) {
+            m = mat.prod3x3SubOf4(this._transformMatrix, m);
+        }
+        return m;
+    };
+    /**
      * Marks the resources necessary to render this weapon for loading.
      * @param {Object} params
      */
@@ -1096,9 +1162,14 @@ define([
             graphics.getShader(shaderName);
         }
         resources.executeWhenReady(function () {
-            var visualModel, scale;
+            var visualModel, scale, parameterArrays = {};
             application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
+            // setting up parameter array declarations (name: type)
+            parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+            if (graphics.areLuminosityTexturesAvailable()) {
+                parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
+            }
             visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader(),
@@ -1108,11 +1179,20 @@ define([
                     mat.scaling4(scale),
                     (wireframe === true),
                     lod,
-                    graphics.areLuminosityTexturesAvailable() ? [_luminosityFactorsArrayName] : []);
+                    parameterArrays);
             parentNode.addSubnode(new budaScene.RenderableNode(visualModel));
+            // setting the starting values of the parameter arrays
+            // setting an identity transformation for all transform groups
+            for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
+                visualModel.setMat4Parameter(
+                        _groupTransformsArrayName,
+                        i,
+                        mat.identity4());
+            }
+            // setting the default luminosity for all luminosity groups
             if (graphics.areLuminosityTexturesAvailable()) {
                 for (i = 0, n = graphics.getMaxLuminosityFactors(); i < n; i++) {
-                    visualModel.setParameter(
+                    visualModel.setFloatParameter(
                             _luminosityFactorsArrayName,
                             i,
                             this._class.getDefaultGroupLuminosity(i));
@@ -1127,12 +1207,14 @@ define([
      * Returns the renderable object representing the muzzle flash that is visible
      * when the barrel having the passed index is firing a projectile.
      * @param {Number} barrelIndex
+     * @param {Number[3] relativeBarrelPosVector The position of the barrel (muzzle) in object-space (where the object is the spacecraft
+     * having this weapon)
      * @returns {Particle}
      */
-    Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex) {
+    Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex, relativeBarrelPosVector) {
         var
                 projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
-                muzzleFlashPosMatrix = mat.translation4v(this._class.getBarrel(barrelIndex).getPositionVector());
+                muzzleFlashPosMatrix = mat.translation4v(relativeBarrelPosVector);
         return budaScene.dynamicParticle(
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
@@ -1145,7 +1227,7 @@ define([
     };
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
-            scene.addResourcesOfObject(this._getMuzzleFlashForBarrel(barrelIndex));
+            scene.addResourcesOfObject(this._getMuzzleFlashForBarrel(barrelIndex, [0, 0, 0]));
         }.bind(this);
     };
     /**
@@ -1168,16 +1250,36 @@ define([
      * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
      */
     Weapon.prototype.simulate = function (dt) {
+        var i, rotators;
         this._cooldown = Math.min(this._cooldown + dt, this._class.getCooldown());
+        // updating the group transform matrices of the visual model if needed as well as recalculating the final transform matrix
+        if (this._rotationChanged) {
+            mat.setIdentity4(this._transformMatrix);
+            rotators = this._class.getRotators();
+            for (i = 0; i < rotators.length; i++) {
+                mat.rotateAroundPoint4(
+                        this._transformMatrix,
+                        vec.mulVec3Mat4(rotators[i].center, this._transformMatrix),
+                        vec.mulVec3Mat4(rotators[i].axis, this._transformMatrix),
+                        this._rotationAngles[i]);
+                this._visualModel.setMat4Parameter(
+                        _groupTransformsArrayName,
+                        rotators[i].transformGroupIndex,
+                        this._transformMatrix);
+            }
+            this._rotationChanged = false;
+        }
     };
     /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed
      * array.
      * @param {Projectile[]} projectiles
+     * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
+     * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
      */
-    Weapon.prototype.fire = function (projectiles) {
+    Weapon.prototype.fire = function (projectiles, shipScaledOriMatrix) {
         var i, p,
-                orientationMatrix, scaledOriMatrix, weaponSlotPosVector, weaponSlotPosMatrix,
+                weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
                 scene = this._visualModel.getNode().getScene();
@@ -1185,21 +1287,23 @@ define([
         if (this._cooldown >= this._class.getCooldown()) {
             this._cooldown = 0;
             // cache the matrices valid for the whole weapon
-            orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
-            scaledOriMatrix = mat.prod3x3SubOf4(this._spacecraft.getPhysicalScalingMatrix(), orientationMatrix);
-            weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), scaledOriMatrix);
+            weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
             weaponSlotPosMatrix = mat.translatedByVector(this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
-            projectileOriMatrix = mat.prod3x3SubOf4(this._slot.orientationMatrix, orientationMatrix);
+            projectileOriMatrix = this.getProjectileOrientationMatrix();
             barrels = this._class.getBarrels();
             projectileLights = {};
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
                 projectileClass = barrels[i].getProjectileClass();
-                barrelPosVector = vec.mulVec3Mat3(barrels[i].getPositionVector(), mat.prod3x3SubOf43(this.getScaledOriMatrix(), scaledOriMatrix));
-                projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
+                barrelPosVector = barrels[i].getPositionVector();
+                if (!this._fixed) {
+                    barrelPosVector = vec.mulVec4Mat4(barrelPosVector, this._transformMatrix);
+                }
                 // add the muzzle flash of this barrel
-                muzzleFlash = this._getMuzzleFlashForBarrel(i);
+                muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
+                barrelPosVector = vec.mulVec3Mat4(barrelPosVector, mat.prod3x3SubOf4(this.getScaledOriMatrix(), shipScaledOriMatrix));
+                projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
                 this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
                 p = new Projectile(
@@ -1232,6 +1336,122 @@ define([
                     scene.addPointLightSource(projectileLights[projClassName], PROJECTILE_LIGHT_PRIORITY);
                 }
             }
+        }
+    };
+    /**
+     * Sets new rotation angles (instantly) for this weapon (if it can be rotated)
+     * @param {Number} angleOne The angle to be set for the first rotator, in degrees
+     * @param {Number} angleTwo The angle to be set for the second rotator, in degrees
+     */
+    Weapon.prototype.setRotation = function (angleOne, angleTwo) {
+        if (!this._fixed) {
+            this._rotationAngles[0] = Math.radians(angleOne);
+            this._rotationAngles[1] = Math.radians(angleTwo);
+            this._rotationChanged = true;
+        }
+    };
+    /**
+     * Rotates the weapon towards a desired angle according to its rotation speed and the passed elapsed time.
+     * @param {Number} angleOne The angle towards which to rotate the first rotator, in radians
+     * @param {Number} angleTwo The angle towards which to rotate the second rotator, in radians
+     * @param {Number} threshold The weapon will not be rotated if it is closer to the desired angle than this value (in radians)
+     * @param {Number} dt The elapsed time, in milliseconds
+     */
+    Weapon.prototype.rotateTo = function (angleOne, angleTwo, threshold, dt) {
+        var angleDifference, rotators, i;
+        if (!this._fixed) {
+            rotators = this._class.getRotators();
+            for (i = 0; i < rotators.length; i++) {
+                switch (i) {
+                    case 0:
+                        angleDifference = angleOne - this._rotationAngles[0];
+                        break;
+                    case 1:
+                        angleDifference = angleTwo - this._rotationAngles[1];
+                        break;
+                    default:
+                        application.crash();
+                }
+                // if the weapon can freely turn around in 360 degrees, it is faster to turn in the other direction in case the angle 
+                // difference is larger than 180 degrees
+                if (!rotators[i].restricted) {
+                    if (angleDifference > Math.PI) {
+                        angleDifference -= 2 * Math.PI;
+                    } else if (angleDifference < -Math.PI) {
+                        angleDifference += 2 * Math.PI;
+                    }
+                }
+                // perform the actual turn, if needed
+                if (Math.abs(angleDifference) > threshold) {
+                    if (angleDifference > 0) {
+                        this._rotationAngles[i] += Math.min(rotators[i].rotationRate * dt / 1000, angleDifference);
+                    } else {
+                        this._rotationAngles[i] -= Math.min(rotators[i].rotationRate * dt / 1000, -angleDifference);
+                    }
+                    this._rotationChanged = true;
+                }
+                if (!rotators[i].restricted) {
+                    // if the weapon can turn around in 360 degrees, make sure its angle stays in the -360,360 range
+                    if (this._rotationAngles[i] > 2 * Math.PI) {
+                        this._rotationAngles[i] -= 2 * Math.PI;
+                    }
+                    if (this._rotationAngles[i] < -2 * Math.PI) {
+                        this._rotationAngles[i] += 2 * Math.PI;
+                    }
+                } else {
+                    // if the weapon is restricted in turning around, apply the restriction
+                    if (this._rotationAngles[i] > rotators[i].range[1]) {
+                        this._rotationAngles[i] = rotators[i].range[1];
+                    }
+                    if (this._rotationAngles[i] < rotators[i].range[0]) {
+                        this._rotationAngles[i] = rotators[i].range[0];
+                    }
+                }
+            }
+        }
+    };
+    /**
+     * Rotates the weapon towards the angles necessary to make it point towards the passed position. (based on the weapon's rotation speed
+     * and the elapsed time)
+     * @param {Number[3]} targetPositionVector The position towards which the weapon should aim, in world-space coordinates.
+     * @param {Number} threshold The weapon will rotate if the angle between its current direction and the one pointing towards the given
+     * target is larger than this value, in radians.
+     * @param {Float32Array} shipScaledOriMatrix A 4x4 transformation matrix describing the scalin and rotation of the spacecraft that has
+     * this weapon.
+     * @param {Number} dt The elapsed time, in milliseconds.
+     */
+    Weapon.prototype.aimTowards = function (targetPositionVector, threshold, shipScaledOriMatrix, dt) {
+        var basePointPosVector, vectorToTarget, yawAndPitch;
+        if (!this._fixed) {
+            // as a basis for calculating the direction pointing towards the target, the base point of the weapon is considered (in world 
+            // space, transformed according to the current rotation angles of the weapon)
+            basePointPosVector = this.getBasePointPosVector(shipScaledOriMatrix);
+            // calculate the vector pointing towards the target in world coordinates
+            vectorToTarget = vec.diff3(targetPositionVector, basePointPosVector);
+            // transform to object space - relative to the weapon
+            vectorToTarget = vec.mulMat4Vec3(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
+            vectorToTarget = vec.mulMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
+            vec.normalize3(vectorToTarget);
+            switch (this._class.getRotationStyle()) {
+                case classes.WeaponRotationStyle.ALPHA_BETA:
+                    yawAndPitch = vec.getYawAndPitch(vectorToTarget);
+                    this.rotateTo(-yawAndPitch.yaw, -yawAndPitch.pitch, threshold, dt);
+                    break;
+                default:
+                    application.crash();
+            }
+        }
+    };
+    /**
+     * Rotates the weapon towards its default rotation angles according to its rotation speed and the passed elapsed time.
+     * @param {Number} threshold The weapon will not be rotated if it is closer to the desired angle than this value (in radians)
+     * @param {Number} dt The elapsed time, in milliseconds
+     */
+    Weapon.prototype.rotateToDefaultPosition = function (threshold, dt) {
+        var rotators;
+        if (!this._fixed) {
+            rotators = this._class.getRotators();
+            this.rotateTo(rotators[0].defaultAngle, rotators[1].defaultAngle, threshold, dt);
         }
     };
     /**
@@ -1317,7 +1537,7 @@ define([
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
         if (graphics.areLuminosityTexturesAvailable()) {
-            this._shipModel.setParameter(
+            this._shipModel.setFloatParameter(
                     _luminosityFactorsArrayName,
                     this._slot.group,
                     Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
@@ -2490,6 +2710,13 @@ define([
         return this._physicalModel.getScalingMatrix();
     };
     /**
+     * Returns a 4x4 matrix describing the current scaling and rotation of this spacecraft.
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getScaledOriMatrix = function () {
+        return mat.prod3x3SubOf4(this.getPhysicalScalingMatrix(), this.getPhysicalOrientationMatrix());
+    };
+    /**
      * Returns the 4x4 translation matrix describing the current velocity of this spacecraft in world space.
      * @returns {Float32Array}
      */
@@ -2938,8 +3165,13 @@ define([
             }
         }
         resources.executeWhenReady(function () {
-            var j, n, node, explosion, lightSources;
+            var j, n, node, explosion, lightSources, parameterArrays = {};
             application.log("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
+            // setting up parameter array declarations (name: type)
+            parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+            if (graphics.areLuminosityTexturesAvailable()) {
+                parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
+            }
             visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
                     params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
@@ -2949,16 +3181,25 @@ define([
                     mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
-                    graphics.areLuminosityTexturesAvailable() ? [_luminosityFactorsArrayName] : []);
+                    parameterArrays);
             if (!this._visualModel) {
                 this._visualModel = visualModel;
             }
             if (this._name) {
                 visualModel.setName(this._name);
             }
+            // setting the starting values of the parameter arrays
+            // setting an identity transformation for all transform groups
+            for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
+                visualModel.setMat4Parameter(
+                        _groupTransformsArrayName,
+                        i,
+                        mat.identity4());
+            }
+            // setting the default luminosity for all luminosity groups
             if (graphics.areLuminosityTexturesAvailable()) {
                 for (j = 0, n = graphics.getMaxLuminosityFactors(); j < n; j++) {
-                    visualModel.setParameter(
+                    visualModel.setFloatParameter(
                             _luminosityFactorsArrayName,
                             j,
                             this._class.getDefaultGroupLuminosity(j));
@@ -3143,9 +3384,10 @@ define([
      * Fires all of the ship's weapons.
      */
     Spacecraft.prototype.fire = function () {
-        var i;
+        var i, scaledOriMatrix;
+        scaledOriMatrix = this.getScaledOriMatrix();
         for (i = 0; i < this._weapons.length; i++) {
-            this._weapons[i].fire(this._projectileArray);
+            this._weapons[i].fire(this._projectileArray, scaledOriMatrix);
         }
         // executing callbacks
         for (i = 0; i < this._targetedBy.length; i++) {
@@ -3353,6 +3595,25 @@ define([
             hitBy.handleTargetHit();
         }
         hitBy.handleAnySpacecraftHit(this);
+    };
+    /**
+     * Rotates all the non-fixed weapons of the spacecraft to aim towards the calculated hitting position of the current target.
+     * @param {Number} threshold weapons will only be rotated if the angle between their current and the target direction is greater than
+     * this value, in radians.
+     * @param {Number} dt the elapsed time since the last simulation step, based on which the amount of rotation will be calculated.
+     */
+    Spacecraft.prototype.aimWeapons = function (threshold, dt) {
+        var futureTargetPosition, i;
+        if (this._target && (this._weapons.length > 0)) {
+            futureTargetPosition = this.getTargetHitPosition();
+        }
+        for (i = 0; i < this._weapons.length; i++) {
+            if (this._target) {
+                this._weapons[i].aimTowards(futureTargetPosition, threshold, this.getScaledOriMatrix(), dt);
+            } else {
+                this._weapons[i].rotateToDefaultPosition(threshold, dt);
+            }
+        }
     };
     /**
      * Performs all the phyics and logic simulation of this spacecraft.
@@ -3985,6 +4246,7 @@ define([
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
+        _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
         _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
         _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
