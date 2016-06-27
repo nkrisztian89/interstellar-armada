@@ -1365,6 +1365,13 @@ define([
                 switch (i) {
                     case 0:
                         angleDifference = angleOne - this._rotationAngles[0];
+                        // roll-yaw type weapons can yaw in the opposite direction if that results in less rolling
+                        if (this._class.getRotationStyle() === classes.WeaponRotationStyle.ROLL_YAW) {
+                            if (Math.abs(angleDifference - Math.sign(angleDifference) * Math.PI) < Math.abs(angleDifference)) {
+                                angleDifference -= Math.sign(angleDifference) * Math.PI;
+                                angleTwo = -angleTwo;
+                            }
+                        }
                         break;
                     case 1:
                         angleDifference = angleTwo - this._rotationAngles[1];
@@ -1391,11 +1398,11 @@ define([
                     this._rotationChanged = true;
                 }
                 if (!rotators[i].restricted) {
-                    // if the weapon can turn around in 360 degrees, make sure its angle stays in the -360,360 range
-                    if (this._rotationAngles[i] > 2 * Math.PI) {
+                    // if the weapon can turn around in 360 degrees, make sure its angle stays in the -180,180 range
+                    if (this._rotationAngles[i] > Math.PI) {
                         this._rotationAngles[i] -= 2 * Math.PI;
                     }
-                    if (this._rotationAngles[i] < -2 * Math.PI) {
+                    if (this._rotationAngles[i] < -Math.PI) {
                         this._rotationAngles[i] += 2 * Math.PI;
                     }
                 } else {
@@ -1421,7 +1428,7 @@ define([
      * @param {Number} dt The elapsed time, in milliseconds.
      */
     Weapon.prototype.aimTowards = function (targetPositionVector, threshold, shipScaledOriMatrix, dt) {
-        var basePointPosVector, vectorToTarget, yawAndPitch;
+        var basePointPosVector, vectorToTarget, yawAndPitch, rollAndYaw;
         if (!this._fixed) {
             // as a basis for calculating the direction pointing towards the target, the base point of the weapon is considered (in world 
             // space, transformed according to the current rotation angles of the weapon)
@@ -1433,9 +1440,13 @@ define([
             vectorToTarget = vec.mulMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
             vec.normalize3(vectorToTarget);
             switch (this._class.getRotationStyle()) {
-                case classes.WeaponRotationStyle.ALPHA_BETA:
+                case classes.WeaponRotationStyle.YAW_PITCH:
                     yawAndPitch = vec.getYawAndPitch(vectorToTarget);
                     this.rotateTo(-yawAndPitch.yaw, -yawAndPitch.pitch, threshold, dt);
+                    break;
+                case classes.WeaponRotationStyle.ROLL_YAW:
+                    rollAndYaw = vec.getRollAndYaw(vectorToTarget);
+                    this.rotateTo(rollAndYaw.roll, rollAndYaw.yaw, threshold, dt);
                     break;
                 default:
                     application.crash();

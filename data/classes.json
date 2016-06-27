@@ -1527,7 +1527,7 @@
                 }
             ],
             "attachmentPoint": [0, 0, 0],
-            "rotationStyle": "alphaBeta",
+            "rotationStyle": "yawPitch",
             "basePoint": [0, -5, 12],
             "rotators": [
                 {
@@ -1563,7 +1563,7 @@
                 }
             ],
             "attachmentPoint": [0, 0, 0],
-            "rotationStyle": "alphaBeta",
+            "rotationStyle": "yawPitch",
             "basePoint": [0, 5, 0],
             "rotators": [
                 {
@@ -1599,7 +1599,26 @@
                     "position": [0, 320, 0]
                 }
             ],
-            "attachmentPoint": [0, 0, 0]
+            "attachmentPoint": [0, 0, 0],
+            "rotationStyle": "rollYaw",
+            "basePoint": [0, 90, 0],
+            "rotators": [
+                {
+                    "axis": [0, 1, 0],
+                    "center": [0, 0, 0],
+                    "defaultAngle": 0,
+                    "rotationRate": 20,
+                    "transformGroupIndex": 0
+                },
+                {
+                    "axis": [0, 0, 1],
+                    "center": [0, 90, 0],
+                    "range": [-100, 100],
+                    "defaultAngle": 0,
+                    "rotationRate": 10,
+                    "transformGroupIndex": 1
+                }
+            ]
         }
     ],
     "propulsionClasses": [

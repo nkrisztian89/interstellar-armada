@@ -70,7 +70,12 @@ define([
          * The weapon has two rotators. The first one rotates around axis Z starting from the positive Y direction, clockwise.
          * The second one further rotates the direction around the rotated X axis, clockwise.
          */
-        ALPHA_BETA: "alphaBeta"
+        YAW_PITCH: "yawPitch",
+        /**
+         * The weapon has two rotators. The first one rotates around axis Y starting from the positive X direction, counter-clockwise.
+         * The second one further rotates the direction around the rotated Z axis, counter-clockwise.
+         */
+        ROLL_YAW: "rollYaw"
     },
     // ------------------------------------------------------------------------------
     // constants

@@ -130,6 +130,37 @@ define(function () {
         }
         return result;
     };
+    /**
+     * @typedef {Object} YawAndRoll
+     * @property {Number} yaw The yaw angle in radians
+     * @property {Number} roll The roll angle in radians
+     */
+    /**
+     * Returns a pair of angles: (yaw;roll) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * direction, a positive yaw corresponding to a counter-clockwise rotation angle around the Z axis in radians and the roll 
+     * corresponding to a counter-clockwise rotation around the Y axis in radians.
+     * @param {Number[3]} v
+     * @returns {YawAndRoll}
+     */
+    vec.getRollAndYaw = function (v) {
+        var result = {}, rollRotated;
+        if (Math.abs(v[1]) > CLOSE_TO_ONE) {
+            result.roll = 0;
+            result.yaw = (v[1] > 0) ? 0 : Math.PI;
+        } else {
+            result.roll = vec.angle2uCapped([1, 0], vec.normal2([v[0], v[2]]));
+            if (v[2] < 0) {
+                result.roll = -result.roll;
+            }
+            rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
+            result.yaw = vec.angle2uCapped([0, 1], vec.normal2([rollRotated[0], v[1]]));
+            if (Math.abs(result.roll) > Math.PI / 2) {
+                result.yaw = -result.yaw;
+                result.roll -= Math.PI * Math.sign(result.roll);
+            }
+        }
+        return result;
+    };
     // -----------------------------------------------------------------------------
     // Functions that transform a vector and return a new, transformed vector
 

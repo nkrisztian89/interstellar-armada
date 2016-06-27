@@ -503,6 +503,9 @@ define([
                 // turning towards target
                 this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // aiming turnable weapons towards target
+                this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, dt);
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // handling if another spacecraft blocks the attack path
                 if (this._isBlockedBy) {
                     stillBlocked = false;
