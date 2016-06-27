@@ -1474,7 +1474,8 @@ define([
                             basePointPosition = weapons[i].getBasePointPosVector(scaledOriMatrix);
                             _weaponImpactIndicators[i].setPosition(vec.sum3(
                                     basePointPosition,
-                                    vec.scaled3(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), futureDistance)));
+                                    vec.scaled3(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), vec.length3(
+                                            vec.diff3(futureTargetPosition, basePointPosition)))));
                         }
                         if (futureDistance <= weapons[i].getRange(speed)) {
                             _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
