@@ -67,6 +67,35 @@ define([
                  */
                 RESTRICTED: "restricted"
             },
+    /**
+     * @enum {Number}
+     * When aiming (rotating), weapons determine in which of these states they are within the aiming process. It is used when 
+     * deciding whether to fire or not.
+     * @type Object
+     */
+    WeaponAimStatus = {
+        /**
+         * The weapon cannot be rotated and thus cannot be aimed at targets.
+         */
+        FIXED: 0,
+        /**
+         * The weapon can be rotated, but it currently does not have a target to aim for (and is rotating back to the default position)
+         */
+        NO_TARGET: 1,
+        /**
+         * The weapon is currently trying to aim at a target, but the target lies out of the region accessible based on the restrictions
+         * of the weapon's rotators.
+         */
+        AIMING_OUT_OF_REACH: 2,
+        /**
+         * The weapon is in the process of aiming at a target (rotating).
+         */
+        AIMING: 3,
+        /**
+         * The weapon is currently aimed at a target (ready to fire).
+         */
+        AIMED: 4
+    },
     // ------------------------------------------------------------------------------
     // constants
     /**
@@ -1042,6 +1071,11 @@ define([
          * @type Boolean
          */
         this._fixed = this._class.isFixed();
+        /**
+         * The saved value of the current aiming state of the weapon refreshed every time the weapon is rotated.
+         * @type Number
+         */
+        this._lastAimStatus = this._fixed ? WeaponAimStatus.FIXED : WeaponAimStatus.NO_TARGET;
     }
     /**
      * Returns the weapon slot this weapon is equipped to.
@@ -1276,13 +1310,18 @@ define([
      * @param {Projectile[]} projectiles
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
      * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
+     * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
+     * (based on the last aiming status of the weapon)
      */
-    Weapon.prototype.fire = function (projectiles, shipScaledOriMatrix) {
+    Weapon.prototype.fire = function (projectiles, shipScaledOriMatrix, onlyIfAimedOrFixed) {
         var i, p,
                 weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
                 scene = this._visualModel.getNode().getScene();
+        if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED)) {
+            return;
+        }
         // check cooldown
         if (this._cooldown >= this._class.getCooldown()) {
             this._cooldown = 0;
@@ -1358,8 +1397,9 @@ define([
      * @param {Number} dt The elapsed time, in milliseconds
      */
     Weapon.prototype.rotateTo = function (angleOne, angleTwo, threshold, dt) {
-        var angleDifference, rotators, i;
+        var angleDifference, rotators, i, rotationAmount;
         if (!this._fixed) {
+            this._lastAimStatus = WeaponAimStatus.AIMED;
             rotators = this._class.getRotators();
             for (i = 0; i < rotators.length; i++) {
                 switch (i) {
@@ -1390,12 +1430,16 @@ define([
                 }
                 // perform the actual turn, if needed
                 if (Math.abs(angleDifference) > threshold) {
+                    rotationAmount = rotators[i].rotationRate * dt / 1000;
                     if (angleDifference > 0) {
-                        this._rotationAngles[i] += Math.min(rotators[i].rotationRate * dt / 1000, angleDifference);
+                        this._rotationAngles[i] += Math.min(rotationAmount, angleDifference);
                     } else {
-                        this._rotationAngles[i] -= Math.min(rotators[i].rotationRate * dt / 1000, -angleDifference);
+                        this._rotationAngles[i] -= Math.min(rotationAmount, -angleDifference);
                     }
                     this._rotationChanged = true;
+                    if (rotationAmount < Math.abs(angleDifference)) {
+                        this._lastAimStatus = WeaponAimStatus.AIMING;
+                    }
                 }
                 if (!rotators[i].restricted) {
                     // if the weapon can turn around in 360 degrees, make sure its angle stays in the -180,180 range
@@ -1409,9 +1453,11 @@ define([
                     // if the weapon is restricted in turning around, apply the restriction
                     if (this._rotationAngles[i] > rotators[i].range[1]) {
                         this._rotationAngles[i] = rotators[i].range[1];
+                        this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
                     }
                     if (this._rotationAngles[i] < rotators[i].range[0]) {
                         this._rotationAngles[i] = rotators[i].range[0];
+                        this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
                     }
                 }
             }
@@ -1463,6 +1509,7 @@ define([
         if (!this._fixed) {
             rotators = this._class.getRotators();
             this.rotateTo(rotators[0].defaultAngle, rotators[1].defaultAngle, threshold, dt);
+            this._lastAimStatus = WeaponAimStatus.NO_TARGET;
         }
     };
     /**
@@ -3393,12 +3440,14 @@ define([
     };
     /**
      * Fires all of the ship's weapons.
+     * @param {Boolean} onlyIfAimedOrFixed Only those weapons are fired which are fixed (cannot be rotated) and those that can be rotated
+     * and are currently aimed at their target.
      */
-    Spacecraft.prototype.fire = function () {
+    Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
         var i, scaledOriMatrix;
         scaledOriMatrix = this.getScaledOriMatrix();
         for (i = 0; i < this._weapons.length; i++) {
-            this._weapons[i].fire(this._projectileArray, scaledOriMatrix);
+            this._weapons[i].fire(this._projectileArray, scaledOriMatrix, onlyIfAimedOrFixed);
         }
         // executing callbacks
         for (i = 0; i < this._targetedBy.length; i++) {
@@ -3985,6 +4034,9 @@ define([
         application.log("Loading level from JSON file...", 2);
         if (dataJSON.environment.createFrom) {
             this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
+            if (!this._environment) {
+                application.showError("Cannot load environment '" + dataJSON.environment.createFrom + "' for level: no such environment exists!");
+            }
             this._ownsEnvironment = false;
         } else {
             this._environment = new Environment(dataJSON.environment);
@@ -4015,6 +4067,8 @@ define([
             if (!aiType && demoMode) {
                 if (spacecraft.isFighter()) {
                     aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE);
+                } else {
+                    aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE);
                 }
             }
             if (aiType) {
@@ -4073,6 +4127,8 @@ define([
                     if (demoMode) {
                         if (spacecraft.isFighter()) {
                             ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), spacecraft);
+                        } else {
+                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE), spacecraft);
                         }
                         team = new Team({
                             name: GENERIC_TEAM_NAME,
@@ -4132,7 +4188,9 @@ define([
      */
     Level.prototype.addToScene = function (battleScene, targetScene) {
         var i;
-        this._environment.addToScene(battleScene);
+        if (this._environment) {
+            this._environment.addToScene(battleScene);
+        }
         this._hitObjects = [];
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].addToScene(battleScene, undefined, false, {
@@ -4181,7 +4239,9 @@ define([
      */
     Level.prototype.tick = function (dt, mainScene) {
         var i, v;
-        this._environment.simulate();
+        if (this._environment) {
+            this._environment.simulate();
+        }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {

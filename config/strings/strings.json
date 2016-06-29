@@ -43,6 +43,7 @@
         "mixed": "Mixed",
         "corvette": "Corvette",
         "level": "Test level",
+        "libraTest": "Libra test",
         "staticAvoidance": "Static avoidance test",
         "dynamicAvoidance": "Dynamic avoidance test"
     },

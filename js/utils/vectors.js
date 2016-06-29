@@ -140,9 +140,11 @@ define(function () {
      * direction, a positive yaw corresponding to a counter-clockwise rotation angle around the Z axis in radians and the roll 
      * corresponding to a counter-clockwise rotation around the Y axis in radians.
      * @param {Number[3]} v
+     * @param {Boolean} [positiveYawOnly=false] When true, larger than 90 degrees roll angles will be returned with positive yaw angles
+     * instead of flipping the roll angle 180 degrees and inverting the yaw angle.
      * @returns {YawAndRoll}
      */
-    vec.getRollAndYaw = function (v) {
+    vec.getRollAndYaw = function (v, positiveYawOnly) {
         var result = {}, rollRotated;
         if (Math.abs(v[1]) > CLOSE_TO_ONE) {
             result.roll = 0;
@@ -154,8 +156,41 @@ define(function () {
             }
             rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
             result.yaw = vec.angle2uCapped([0, 1], vec.normal2([rollRotated[0], v[1]]));
-            if (Math.abs(result.roll) > Math.PI / 2) {
+            if (!positiveYawOnly && (Math.abs(result.roll) > Math.PI / 2)) {
                 result.yaw = -result.yaw;
+                result.roll -= Math.PI * Math.sign(result.roll);
+            }
+        }
+        return result;
+    };
+    /**
+     * @typedef {Object} PitchAndRoll
+     * @property {Number} pitch The pitch angle in radians
+     * @property {Number} roll The roll angle in radians
+     */
+    /**
+     * Returns a pair of angles: (pitch;roll) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * direction, a positive pitch corresponding to a counter-clockwise rotation angle around the X axis in radians and the roll 
+     * corresponding to a counter-clockwise rotation around the Y axis in radians.
+     * @param {Number[3]} v
+     * @param {Boolean} [positivePitchOnly=false] When true, larger than 90 degrees roll angles will be returned with positive pitch angles
+     * instead of flipping the roll angle 180 degrees and inverting the pitch angle.
+     * @returns {PitchAndRoll}
+     */
+    vec.getRollAndPitch = function (v, positivePitchOnly) {
+        var result = {}, rollRotated;
+        if (Math.abs(v[1]) > CLOSE_TO_ONE) {
+            result.roll = 0;
+            result.pitch = (v[1] > 0) ? 0 : Math.PI;
+        } else {
+            result.roll = vec.angle2uCapped([0, 1], vec.normal2([v[0], v[2]]));
+            if (v[0] > 0) {
+                result.roll = -result.roll;
+            }
+            rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
+            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([v[1], rollRotated[1]]));
+            if (!positivePitchOnly && (Math.abs(result.roll) > Math.PI / 2)) {
+                result.pitch = -result.pitch;
                 result.roll -= Math.PI * Math.sign(result.roll);
             }
         }

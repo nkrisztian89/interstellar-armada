@@ -85,6 +85,7 @@
         "mixed": "Vegyes",
         "corvette": "Korvett",
         "level": "Teszt",
+        "libraTest": "Libra teszt",
         "staticAvoidance": "Statikus akadály teszt",
         "dynamicAvoidance": "Dinamikus akadály teszt"
     },

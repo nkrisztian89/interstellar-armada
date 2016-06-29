@@ -344,6 +344,7 @@
             "hudSubheaderTextFontName": "gameFont",
             "hudSubheaderTextPosition": [0, -0.85],
             "demoFighterAI": "fighter",
+            "demoShipAI": "ship",
             "demoViewSwitchInterval": 6000,
             "demoDoubleViewSwitchChance": 0.5
         },

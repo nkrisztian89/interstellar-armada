@@ -15,13 +15,15 @@
  * @param mat Used for matrix operations the AIs need to calculate their actions.
  * @param physics Used for accessing the constant of how long rotation does a rotation matrix represent.
  * @param config Used for accessing game configuration/settings.
+ * @param classes used for accessing spacecraft turn style enum type
  */
 define([
     "utils/vectors",
     "utils/matrices",
     "modules/physics",
-    "armada/configuration"
-], function (vec, mat, physics, config) {
+    "armada/configuration",
+    "armada/classes"
+], function (vec, mat, physics, config, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -51,6 +53,11 @@ define([
      * @type String
      */
     FIGHTER_AI_NAME = "fighter",
+            /**
+             * The type identifier to be used when creating ship AIs.
+             * @type String
+             */
+            SHIP_AI_NAME = "ship",
             /**
              * Spacecrafts will stop turning towards the specified direction when reaching this angle (in radians).
              * @type Number
@@ -162,6 +169,12 @@ define([
              * @type Number
              */
             EVASIVE_MANEUVER_DURATION = 1000,
+            /**
+             * When attacking an enemy, ships will approach their targets to at least the distance that is their weapon range
+             * multiplied by this factor.
+             * @type Number
+             */
+            SHIP_MAX_DISTANCE_FACTOR = 0.9,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -209,20 +222,80 @@ define([
     SpacecraftAI.prototype.turn = function (yaw, pitch, dt) {
         var turningMatrix, angularVelocity, angularAcceleration, turnStopAngle, turnIntensityFactor;
         turningMatrix = this._spacecraft.getTurningMatrix();
-        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
-        // calculating how much will the spacecraft turn at the current angular velocity if it starts decelerating right now
-        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         // a turn intensity of 1 means to accelerate the angular velocity to TURN_ACCELERATION_DURATION_S * acceleration (in rad / sec) and
         // lower values represent a linear portion of this intended angular velocity
         // the base intensity factor converts dt to seconds and counts in TURN_ACCELERATION_DURATION_S
         // based on angle = angular velocity * time, we choose an angular velocity that will not overshoot the intended angle in the next dt
         // milliseconds (which will mean about the next simulation step with relatively stable framerates)
         turnIntensityFactor = _turnIntensityBaseFactor / (angularAcceleration * dt);
+        // calculating how much will the spacecraft turn at the current angular velocity if it starts decelerating right now
+        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (yaw > turnStopAngle) {
             this._spacecraft.yawLeft(Math.min(Math.max(0, turnIntensityFactor * (yaw - turnStopAngle)), 1));
         } else if (yaw < -turnStopAngle) {
             this._spacecraft.yawRight(Math.min(Math.max(0, turnIntensityFactor * (-yaw - turnStopAngle)), 1));
+        }
+        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
+        if (pitch > turnStopAngle) {
+            this._spacecraft.pitchUp(Math.min(Math.max(0, turnIntensityFactor * (pitch - turnStopAngle)), 1));
+        } else if (pitch < -turnStopAngle) {
+            this._spacecraft.pitchDown(Math.min(Math.max(0, turnIntensityFactor * (-pitch - turnStopAngle)), 1));
+        }
+    };
+    /**
+     * Controls the spacecraft to turn (roll and yaw) in the desired direction specified by two angles.
+     * @param {Number} roll The roll angle of the direction to turn towards
+     * @param {Number} yaw The yaw angle of the direction to turn towards
+     * @param {Number} dt The time passed since the last turn command in milliseconds - for an estimation of the time the set yaw and pitch 
+     * angular velocity will be in effect, so that they can be limited to avoid overshooting the desired angles
+     */
+    SpacecraftAI.prototype.rollAndYaw = function (roll, yaw, dt) {
+        var turningMatrix, angularVelocity, angularAcceleration, turnStopAngle, turnIntensityFactor;
+        turningMatrix = this._spacecraft.getTurningMatrix();
+        angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
+        // a turn intensity of 1 means to accelerate the angular velocity to TURN_ACCELERATION_DURATION_S * acceleration (in rad / sec) and
+        // lower values represent a linear portion of this intended angular velocity
+        // the base intensity factor converts dt to seconds and counts in TURN_ACCELERATION_DURATION_S
+        // based on angle = angular velocity * time, we choose an angular velocity that will not overshoot the intended angle in the next dt
+        // milliseconds (which will mean about the next simulation step with relatively stable framerates)
+        turnIntensityFactor = _turnIntensityBaseFactor / (angularAcceleration * dt);
+        // calculating how much will the spacecraft turn at the current angular velocity if it starts decelerating right now
+        angularVelocity = Math.sign(turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
+        if (roll > turnStopAngle) {
+            this._spacecraft.rollLeft(Math.min(Math.max(0, turnIntensityFactor * (roll - turnStopAngle)), 1));
+        } else if (roll < -turnStopAngle) {
+            this._spacecraft.rollRight(Math.min(Math.max(0, turnIntensityFactor * (-roll - turnStopAngle)), 1));
+        }
+        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
+        if (yaw > turnStopAngle) {
+            this._spacecraft.yawLeft(Math.min(Math.max(0, turnIntensityFactor * (yaw - turnStopAngle)), 1));
+        } else if (yaw < -turnStopAngle) {
+            this._spacecraft.yawRight(Math.min(Math.max(0, turnIntensityFactor * (-yaw - turnStopAngle)), 1));
+        }
+    };
+    /**
+     * Controls the spacecraft to turn (roll and pitch) in the desired direction specified by two angles.
+     * @param {Number} roll The roll angle of the direction to turn towards
+     * @param {Number} pitch The pitch angle of the direction to turn towards
+     * @param {Number} dt The time passed since the last turn command in milliseconds - for an estimation of the time the set yaw and pitch 
+     * angular velocity will be in effect, so that they can be limited to avoid overshooting the desired angles
+     */
+    SpacecraftAI.prototype.rollAndPitch = function (roll, pitch, dt) {
+        var turningMatrix, angularVelocity, angularAcceleration, turnStopAngle, turnIntensityFactor;
+        turningMatrix = this._spacecraft.getTurningMatrix();
+        angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
+        turnIntensityFactor = _turnIntensityBaseFactor / (angularAcceleration * dt);
+        angularVelocity = Math.sign(turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
+        if (roll > turnStopAngle) {
+            this._spacecraft.rollLeft(Math.min(Math.max(0, turnIntensityFactor * (roll - turnStopAngle)), 1));
+        } else if (roll < -turnStopAngle) {
+            this._spacecraft.rollRight(Math.min(Math.max(0, turnIntensityFactor * (-roll - turnStopAngle)), 1));
         }
         angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
@@ -692,6 +765,150 @@ define([
     // ##############################################################################
     /**
      * @class
+     * @extends SpacecraftAI
+     * An AI that is suitable to control a ship - that is a spacecraft with the assumptions that it is larger, its weapons are rotatable,
+     * it has an attack vector and threshold angle defined which determine the direction of the ship while attacking and it has a turning
+     * style defined which governs how to orient itself to the proper direction.
+     * @param {Spacecraft} ship the ship to control
+     */
+    function ShipAI(ship) {
+        SpacecraftAI.call(this, ship);
+    }
+    ShipAI.prototype = new SpacecraftAI();
+    ShipAI.prototype.constructor = ShipAI;
+    /**
+     * Updates the AI state for the case when the battle scene with all objects has been moved by a vector, updating stored world-space
+     * positions.
+     */
+    ShipAI.prototype.handleSceneMoved = function () {
+        return;
+    };
+    /**
+     * Performs all spacecraft controlling actions (turning, orienting, targeting, firing, setting speed etc) based on the current
+     * state of the AI and updates the state accordingly. Should be called once in every battle simulation step.
+     * @param {Number} dt The time elapsed since the last control step, in milliseconds.
+     */
+    ShipAI.prototype.control = function (dt) {
+        var
+                /** @type Spacecraft */
+                target,
+                /** @type Number[3] */
+                positionVector, targetPositionVector, vectorToTarget,
+                relativeTargetDirection,
+                /** @type Number[2] */
+                angles, angleDifference,
+                /** @type Number */
+                targetDistance,
+                ownSize, targetSize,
+                acceleration, maxDistance, baseDistance,
+                weaponRange,
+                thresholdAngle,
+                /** @type Object */
+                targetYawAndPitch, targetAngles,
+                /** @type Boolean */
+                facingTarget,
+                /** @type Array */
+                weapons,
+                /** @type Float32Array */
+                inverseOrientationMatrix;
+        // only perform anything if the controlled spacecraft still exists
+        if (this._spacecraft) {
+            // if the controlled spacecraft has been destroyed, remove the reference
+            if (this._spacecraft.canBeReused()) {
+                this._spacecraft = null;
+                return;
+            }
+            // .................................................................................................
+            // targeting
+            if (!this._spacecraft.getTarget()) {
+                this._spacecraft.targetNextHostile();
+            }
+            // .................................................................................................
+            // caching / referencing commonly needed variables
+            acceleration = this._spacecraft.getMaxAcceleration();
+            ownSize = this._spacecraft.getVisualModel().getScaledSize();
+            // caching / referencing needed variables
+            positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
+            inverseOrientationMatrix = mat.inverseOfRotation4(this._spacecraft.getPhysicalOrientationMatrix());
+            target = this._spacecraft.getTarget();
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // aiming turnable weapons towards target / default position
+            this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, dt);
+            if (target) {
+                targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
+                vectorToTarget = vec.diff3(targetPositionVector, positionVector);
+                relativeTargetDirection = vec.mulVec3Mat4(
+                        vectorToTarget,
+                        inverseOrientationMatrix);
+                targetDistance = vec.length3(relativeTargetDirection);
+                vec.normalize3(relativeTargetDirection);
+                targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // actions based on weapons
+                weapons = this._spacecraft.getWeapons();
+                if (weapons && weapons.length > 0) {
+                    targetSize = target.getVisualModel().getScaledSize();
+                    weaponRange = weapons[0].getRange();
+                    baseDistance = 0.5 * (ownSize + targetSize);
+                    maxDistance = baseDistance + SHIP_MAX_DISTANCE_FACTOR * weaponRange;
+                    if (!facingTarget) {
+                        this._spacecraft.resetSpeed();
+                    } else {
+                        this.approach(targetDistance, maxDistance, 0, acceleration * APPROACH_SPEED_FACTOR);
+                    }
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // turning towards target
+                    if (targetDistance > maxDistance) {
+                        this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                    } else {
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // orienting into attack position
+                        angles = this._spacecraft.getClass().getAttackVectorAngles();
+                        thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
+                        switch (this._spacecraft.getClass().getTurnStyle()) {
+                            case classes.SpacecraftTurnStyle.YAW_PITCH:
+                                if ((Math.abs(targetYawAndPitch.yaw - angles[0]) > thresholdAngle) || (Math.abs(targetYawAndPitch.pitch - angles[1]) > thresholdAngle)) {
+                                    this.turn(targetYawAndPitch.yaw - angles[0], targetYawAndPitch.pitch - angles[1], dt);
+                                }
+                                break;
+                            case classes.SpacecraftTurnStyle.ROLL_YAW:
+                                targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
+                                angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
+                                if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
+                                    if (Math.abs(angleDifference[1]) > Math.PI / 2) {
+                                        angleDifference[0] = 0;
+                                    } else if (Math.abs(angleDifference[0]) > Math.PI / 2) {
+                                        angleDifference[1] = 0;
+                                    }
+                                    this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
+                                }
+                                break;
+                            case classes.SpacecraftTurnStyle.ROLL_PITCH:
+                                targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
+                                angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
+                                if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
+                                    if (Math.abs(angleDifference[1]) > Math.PI / 2) {
+                                        angleDifference[0] = 0;
+                                    } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
+                                        angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;
+                                        targetAngles.pitch = -targetAngles.pitch;
+                                    }
+                                    this.rollAndPitch(angleDifference[0], targetAngles.pitch - angles[1], dt);
+                                }
+                                break;
+                        }
+                    }
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // firing
+                    this._spacecraft.fire(true);
+                }
+            }
+        }
+    };
+    // ##############################################################################
+    /**
+     * @class
      * Stores and manages a list of AIs that belong to the same battle simulation.
      */
     function AIContext() {
@@ -739,6 +956,7 @@ define([
     // setting up the associative array of AI constructors
     _aiConstructors = {};
     _aiConstructors[FIGHTER_AI_NAME] = FighterAI;
+    _aiConstructors[SHIP_AI_NAME] = ShipAI;
     // creating the default context
     _context = new AIContext(_aiConstructors);
     // caching frequently used configuration values
@@ -750,6 +968,7 @@ define([
     // The public interface of the module
     return {
         FIGHTER_AI_NAME: FIGHTER_AI_NAME,
+        SHIP_AI_NAME: SHIP_AI_NAME,
         clearAIs: _context.clearAIs.bind(_context),
         addAI: _context.addAI.bind(_context),
         control: _context.control.bind(_context),

@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:296 (2016.06.28.)",
+    "version": "0.3.0:297 (2016.06.29.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -60,6 +60,7 @@
                     "mixed.json",
                     "corvette.json",
                     "level.json",
+                    "libraTest.json",
                     "staticAvoidance.json",
                     "dynamicAvoidance.json"
                 ]

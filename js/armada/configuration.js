@@ -1186,6 +1186,10 @@ define([
             name: "demoFighterAI",
             type: "string"
         },
+        DEMO_SHIP_AI_TYPE: {
+            name: "demoShipAI",
+            type: "string"
+        },
         DEMO_VIEW_SWITCH_INTERVAL: {
             name: "demoViewSwitchInterval",
             type: "number"

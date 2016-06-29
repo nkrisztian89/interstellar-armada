@@ -1,0 +1,114 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+    },
+    "teams": [
+        "empire",
+        "rebels"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, -850, 300],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -60
+                }
+            ]
+        }, {
+            "name": "fps",
+            "fps": true,
+            "movable": true,
+            "turnable": true,
+            "position": [-400, 200, -350],
+            "rotations": [
+                {
+                    "axis": "Z",
+                    "degrees": 90
+                }
+            ]
+        }, {
+            "name": "overview",
+            "turnAroundAll": true,
+            "movable": true,
+            "turnable": true,
+            "position": [0, -2000, 0],
+            "distanceRange": [1000, 3000],
+            "rotations": [
+                {
+                    "axis": "X",
+                    "degrees": -90
+                }
+            ]
+        }, {
+            "name": "lookAtAll",
+            "lookAt": "all",
+            "movable": false,
+            "turnable": false,
+            "position": [1000, -2000, 300]
+        }, {
+            "name": "lookAtAll-free-resetting",
+            "lookAt": "all",
+            "movable": true,
+            "turnable": false,
+            "startsWithRelativePosition": true,
+            "position": [1000, -2000, 300],
+            "distanceRange": [500, 5000],
+            "resetsWhenLeavingConfines": true
+        }
+    ],
+    "spacecrafts": [
+        {
+            "class": "falcon",
+            "team": "empire",
+            "piloted": true,
+            "position": [0, 0, -60],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "libra",
+            "ai": "ship",
+            "team": "empire",
+            "position": [-100, 500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        },
+        {
+            "class": "taurus",
+            "team": "rebels",
+            "position": [500, 1500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "taurus",
+            "team": "rebels",
+            "position": [500, -500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        }
+    ]
+}

@@ -77,6 +77,25 @@ define([
          */
         ROLL_YAW: "rollYaw"
     },
+    /**
+     * @enum {String}
+     * Spacecrafts controlled by the AI can use one of these styles when orienting themselves.
+     * @type Object
+     */
+    SpacecraftTurnStyle = {
+        /**
+         * The spacecraft is turning by changing its yaw and pitch (that is, turning its positive Y vector left/right/up/down)
+         */
+        YAW_PITCH: "yawPitch",
+        /**
+         * The spacecraft is turning by changing its roll and yaw (that is, rolling around its positive Y vector and turning it left/right)
+         */
+        ROLL_YAW: "rollYaw",
+        /**
+         * The spacecraft is turning by changing its roll and pitch (that is, rolling around its positive Y vector and turning it up/down)
+         */
+        ROLL_PITCH: "rollPitch"
+    },
     // ------------------------------------------------------------------------------
     // constants
     /**
@@ -2494,7 +2513,7 @@ define([
      * @param {Object} dataJSON 
      */
     SpacecraftClass.prototype._overrideData = function (otherSpacecraftClass, dataJSON) {
-        var i, j, startPosition, translationVector, rotations, maxGrade, count, groupIndex, uses, size, jsonObject;
+        var i, j, startPosition, translationVector, rotations, maxGrade, count, groupIndex, uses, size, jsonObject, angles;
         TexturedModelClass.prototype._overrideData.call(this, otherSpacecraftClass, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
@@ -2531,6 +2550,53 @@ define([
         this._hitpoints = otherSpacecraftClass ?
                 (dataJSON.hitpoints || otherSpacecraftClass._hitpoints) :
                 (dataJSON.hitpoints || _showMissingPropertyError(this, "hitpoints") || 0);
+        /**
+         * When controlled by the AI, the spacecraft should orient itself into specific position using this turning style.
+         * (enum SpacecraftTurnStyle)
+         * @type String
+         */
+        this._turnStyle = dataJSON.turnStyle ? utils.getSafeEnumValue(SpacecraftTurnStyle, dataJSON.turnStyle, SpacecraftTurnStyle.YAW_PITCH) :
+                (otherSpacecraftClass ?
+                        otherSpacecraftClass._turnStyle : SpacecraftTurnStyle.YAW_PITCH);
+        /**
+         * When controlled by the AI and attacking another spacecraft, the ship should orient itself so that this vector (relative to the 
+         * ship) points roughly towards the enemy craft (the angle between this vector and the vector pointing towards the enemy has a 
+         * specified maximum, see below)
+         * @type Number[3]
+         */
+        this._attackVector = dataJSON.attackVector ? vec.normal3(dataJSON.attackVector) : (otherSpacecraftClass ? otherSpacecraftClass._attackVector : [0, 1, 0]);
+        /**
+         * Precalculated values of the angles corresponding to the attack vector of the spacecraft, according to its turning style.
+         * In radians, relative to positive Y.
+         * @type Number[2]
+         */
+        this._attackVectorAngles = [0, 0];
+        switch (this._turnStyle) {
+            case SpacecraftTurnStyle.YAW_PITCH:
+                angles = vec.getYawAndPitch(this._attackVector);
+                this._attackVectorAngles[0] = angles.yaw;
+                this._attackVectorAngles[1] = angles.pitch;
+                break;
+            case SpacecraftTurnStyle.ROLL_YAW:
+                angles = vec.getRollAndYaw(this._attackVector);
+                this._attackVectorAngles[0] = angles.roll;
+                this._attackVectorAngles[1] = angles.yaw;
+                break;
+            case SpacecraftTurnStyle.ROLL_PITCH:
+                angles = vec.getRollAndPitch(this._attackVector);
+                this._attackVectorAngles[0] = angles.roll;
+                this._attackVectorAngles[1] = angles.pitch;
+                break;
+            default:
+                application.crash();
+        }
+        /**
+         * When controlled by the AI and attacking another spacecraft, the angles between the attack vector of this ship and the vector
+         * pointing towards the enemy craft should be within these limit. The turning style of the craft determines how to calculate the
+         * angles. In radians.
+         * @type Number
+         */
+        this._attackThresholdAngle = Math.radians(dataJSON.attackThresholdAngle) || (otherSpacecraftClass ? otherSpacecraftClass._attackThresholdAngle : 0);
         /**
          * The mass of the spacecraft in kilograms.
          * @type Number
@@ -2753,6 +2819,30 @@ define([
         return this._hitpoints;
     };
     /**
+     * @returns {String}
+     */
+    SpacecraftClass.prototype.getTurnStyle = function () {
+        return this._turnStyle;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    SpacecraftClass.prototype.getAttackVector = function () {
+        return this._attackVector;
+    };
+    /**
+     * @returns {Number[2]}
+     */
+    SpacecraftClass.prototype.getAttackVectorAngles = function () {
+        return this._attackVectorAngles;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getAttackThresholdAngle = function () {
+        return this._attackThresholdAngle;
+    };
+    /**
      * @returns {Number}
      */
     SpacecraftClass.prototype.getMass = function () {
@@ -2882,6 +2972,7 @@ define([
     return {
         ParticleEmitterType: ParticleEmitterType,
         WeaponRotationStyle: WeaponRotationStyle,
+        SpacecraftTurnStyle: SpacecraftTurnStyle,
         TexturedModelClass: TexturedModelClass,
         getSkyboxClass: getSkyboxClass,
         getBackgroundObjectClass: getBackgroundObjectClass,
