@@ -2557,6 +2557,11 @@ define([
          * @type Number
          */
         this._indexInSquad = 0;
+        /**
+         * Cached value of the estimated future target position where the spacecraft should fire to hit it.
+         * @type Number[3]
+         */
+        this._targetHitPosition = null;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
@@ -3481,6 +3486,7 @@ define([
                 this._target._setBeingUntargeted(this);
             }
             this._target = target;
+            this._targetHitPosition = null;
             if (this._visualModel) {
                 // set the target following views to follow the new target
                 camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(config.getSetting(config.BATTLE_SETTINGS.TARGET_VIEW_NAME));
@@ -3567,26 +3573,32 @@ define([
      */
     Spacecraft.prototype.getTargetHitPosition = function () {
         var
-                position = this.getPhysicalPositionVector(),
-                targetPosition = this._target.getPhysicalPositionVector(),
-                relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this.getVelocityMatrix())),
-                projectileSpeed = this._weapons[0].getProjectileVelocity(),
+                position, targetPosition,
+                relativeTargetVelocity,
+                projectileSpeed,
                 a, b, c, i, hitTime;
-        a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
-        b = 0;
-        for (i = 0; i < 3; i++) {
-            b += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
+        if (!this._targetHitPosition) {
+            position = this.getPhysicalPositionVector();
+            targetPosition = this._target.getPhysicalPositionVector();
+            relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this.getVelocityMatrix()));
+            projectileSpeed = this._weapons[0].getProjectileVelocity();
+            a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
+            b = 0;
+            for (i = 0; i < 3; i++) {
+                b += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
+            }
+            c = 0;
+            for (i = 0; i < 3; i++) {
+                c += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
+            }
+            hitTime = utils.getGreaterSolutionOfQuadraticEquation(a, b, c);
+            this._targetHitPosition = [
+                targetPosition[0] + hitTime * relativeTargetVelocity[0],
+                targetPosition[1] + hitTime * relativeTargetVelocity[1],
+                targetPosition[2] + hitTime * relativeTargetVelocity[2]
+            ];
         }
-        c = 0;
-        for (i = 0; i < 3; i++) {
-            c += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
-        }
-        hitTime = utils.getGreaterSolutionOfQuadraticEquation(a, b, c);
-        return [
-            targetPosition[0] + hitTime * relativeTargetVelocity[0],
-            targetPosition[1] + hitTime * relativeTargetVelocity[1],
-            targetPosition[2] + hitTime * relativeTargetVelocity[2]
-        ];
+        return this._targetHitPosition;
     };
     /**
      * Resets all the thruster burn levels of the spacecraft to zero.
@@ -3722,6 +3734,7 @@ define([
             }
         }
         this._physicalModel.simulate(dt);
+        this._targetHitPosition = null;
         this._relativeVelocityMatrix = null;
         this._turningMatrix = null;
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
@@ -3836,6 +3849,7 @@ define([
         this._projectileArray = null;
         this._spacecraftArray = null;
         this._target = null;
+        this._targetHitPosition = null;
         if (this._hitbox) {
             this._hitbox.markAsReusable();
         }

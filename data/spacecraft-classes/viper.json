@@ -424,6 +424,31 @@
             "propulsion": {
                 "class": "imperialBomberMk1"
             }
+        },
+        {
+            "name": "half",
+            "weapons": [
+                {
+                    "class": "plasmaGun"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialBomberMk1"
+            }
+        },
+        {
+            "name": "training",
+            "weapons": [
+                {
+                    "class": "trainingGun"
+                },
+                {
+                    "class": "trainingGun"
+                }
+            ],
+            "propulsion": {
+                "class": "imperialBomberMk1"
+            }
         }
     ],
     "explosion": "bomberExplosion",

@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:298 (2016.06.29.)",
+    "version": "0.3.0:299 (2016.06.30.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -58,7 +58,11 @@
                     "3v3.json",
                     "bombers.json",
                     "mixed.json",
+                    "defendCorvette.json",
+                    "1v6.json",
                     "corvette.json",
+                    "defendFrigate.json",
+                    "patrolVsPatrol.json",
                     "level.json",
                     "libraTest.json",
                     "staticAvoidance.json",

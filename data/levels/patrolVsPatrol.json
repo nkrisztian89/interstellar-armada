@@ -1,0 +1,108 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceBlueNebula"
+    },
+    "teams": [
+        "empire",
+        "rebels"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [60, 200, 45],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -80
+                },
+                {
+                    "axis": "z",
+                    "degrees": 215
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "alpha",
+                "index": 1
+            },
+            "position": [-100, -10, 10]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "squad": {
+                "name": "alpha",
+                "index": 2
+            },
+            "position": [-65, -50, 20]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "alpha",
+                "index": 3
+            },
+            "position": [-135, -50, 20]
+        },
+        {
+            "team": "empire",
+            "class": "aries",
+            "name": "Ohio",
+            "ai": "ship",
+            "position": [0, 50, 0],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "serpent",
+                "index": 1
+            },
+            "position": [-100, 5010, 10]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "serpent",
+                "index": 2
+            },
+            "position": [-65, 5050, 20]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "serpent",
+                "index": 3
+            },
+            "position": [-135, 5050, 20]
+        },
+        {
+            "team": "rebels",
+            "class": "aries",
+            "ai": "ship",
+            "position": [0, 4950, 0],
+            "equipment": {
+                "profile": "full"
+            }
+        }
+    ]
+}

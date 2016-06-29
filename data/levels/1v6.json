@@ -1,0 +1,131 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceTwoStars"
+    },
+    "teams": [
+        "empire",
+        "rebels"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 100, -40],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -65
+                },
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "squad": {
+                "name": "alpha",
+                "index": 1
+            },
+            "position": [0, 3200, 0],
+            "equipment": {
+                "profile": "full"
+            },
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [0, 0, -100]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [-35, -35, -100]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [35, -35, -100]
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "phantom",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [0, -50, -150],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "phantom",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [-35, -85, -150],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ],
+                "propulsion": {
+                    "class": "imperialBomberMk1"
+                }
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "phantom",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [35, -85, -150],
+            "equipment": {
+                "weapons": [
+                    {
+                        "class": "plasmaGun"
+                    }
+                ],
+                "propulsion": {
+                    "class": "imperialBomberMk1"
+                }
+            }
+        }
+    ]
+}

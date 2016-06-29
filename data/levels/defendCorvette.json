@@ -1,0 +1,281 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+    },
+    "teams": [
+        "empire",
+        "rebels"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [60, 200, 45],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -80
+                },
+                {
+                    "axis": "z",
+                    "degrees": 215
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "aries",
+            "name": "Ohio",
+            "ai": "ship",
+            "position": [0, 50, 0],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "squad": {
+                "name": "alpha",
+                "index": 1
+            },
+            "position": [-100, -10, 10]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "squad": {
+                "name": "alpha",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [-65, -50, 20]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [-3000, 3200, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "trainingFull"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [-3035, 3235, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "trainingFull"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "wraith",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [-2965, 3235, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "phantom",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [6000, 6250, -150],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "half"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "phantom",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [5965, 6285, -150],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "half"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "phantom",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [6035, 6285, -150],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ],
+            "equipment": {
+                "profile": "training"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "serpent",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [9000, -9000, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "serpent",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [9035, -9035, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "trainingFull"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": {
+                "name": "serpent",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [9035, -8965, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "trainingFull"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "reaper",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [-12200, 12000, -150],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "half"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "reaper",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [-12250, 12050, -150],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "reaper",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [-12250, 11950, -150],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "training"
+            }
+        }
+    ]
+}

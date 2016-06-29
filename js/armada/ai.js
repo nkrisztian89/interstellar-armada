@@ -632,7 +632,9 @@ define([
                         this._timeSinceLastTargetHit = 0;
                         this._hitCountByNonTarget = 0;
                     }
-                    if ((targetDistance <= weapons[0].getRange(speed)) && (Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) && (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) && (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
+                    if ((vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) &&
+                            (Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) && (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
+                            (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
                         this._spacecraft.fire();
                         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
@@ -773,9 +775,29 @@ define([
      */
     function ShipAI(ship) {
         SpacecraftAI.call(this, ship);
+        /**
+         * Cached value of the result of the last calculation of whether the current target is in range.
+         * @type Boolean
+         */
+        this._targetInRange = false;
+        // attaching handlers to the various spacecraft events
+        this._spacecraft.setOnBeingHit(this._handleBeingHit.bind(this));
     }
     ShipAI.prototype = new SpacecraftAI();
     ShipAI.prototype.constructor = ShipAI;
+    /**
+     * Updates the AI state for when the ship has been hit.
+     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile which hit the controlled ship.
+     */
+    ShipAI.prototype._handleBeingHit = function (spacecraft) {
+        // if being hit by a (still alive) hostile ship while having different target
+        if (this._spacecraft && !this._spacecraft.canBeReused() && !spacecraft.canBeReused() && spacecraft.isHostile(this._spacecraft) && this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
+            // switch target in case the current target is not targeting us anyway or is out of range
+            if ((this._spacecraft.getTarget().getTarget() !== this._spacecraft) || !this._targetInRange) {
+                this._spacecraft.setTarget(spacecraft);
+            }
+        }
+    };
     /**
      * Updates the AI state for the case when the battle scene with all objects has been moved by a vector, updating stored world-space
      * positions.
@@ -834,6 +856,7 @@ define([
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // aiming turnable weapons towards target / default position
             this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, dt);
+            this._targetInRange = false;
             if (target) {
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
                 vectorToTarget = vec.diff3(targetPositionVector, positionVector);
@@ -901,7 +924,11 @@ define([
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // firing
-                    this._spacecraft.fire(true);
+                    if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <=
+                            weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13])) {
+                        this._spacecraft.fire(true);
+                        this._targetInRange = true;
+                    }
                 }
             }
         }
