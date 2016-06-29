@@ -472,8 +472,10 @@ define([
      * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix 
      * describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
+     * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
+     * related calculations are not performed (for optimization)
      */
-    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies) {
+    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation) {
         /**
          * The mass in kilograms.
          * @type Number
@@ -542,6 +544,12 @@ define([
          */
         this._bodySize = -1;
         this._calculateBodySize();
+        /**
+         * When true, the orientation of the object cannot change during simulation steps as the 
+         * related calculations are not performed (for optimization)
+         * @type Boolean
+         */
+        this._fixedOrientation = !!fixedOrientation;
     }
     // direct getters and setters
     /**
@@ -833,38 +841,42 @@ define([
                 // update velocity matrix
                 mat.translateByMatrix(this._velocityMatrix, accelerationMatrix);
             }
-            // the same process with rotation and torques
-            // the angular velocity matrix represents the rotation that happens
-            // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
-            // interpolated easily, for that quaternions should be used)
-            for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION / 2) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
-                mat.mul4(this._orientationMatrix, this._angularVelocityMatrix);
-            }
-            this.setOrientationMatrix();
-            // calculate the rotation that happened as a result of the angular
-            // acceleration the affecting torques caused since the previous step
-            if (this._torques.length > 0) {
-                angularAccMatrix = mat.identity4();
-                for (i = 0; i < this._torques.length; i++) {
-                    t = this._torques[i].exert(dt) / 1000; // t is in seconds
-                    if (t > 0) {
-                        mat.mul4(
-                                this._orientationMatrix,
-                                this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t));
-                        // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
-                        mat.mul4(
-                                angularAccMatrix,
-                                this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t / 1000));
-                    }
-                }
-                // update angular velocity matrix
-                mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
-            }
             // correct matrix inaccuracies and close to zero values resulting from
             // floating point operations
             mat.straighten(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
-            mat.straighten(this._angularVelocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
-            this._correctMatrices();
+            if (!this._fixedOrientation) {
+                // the same process with rotation and torques
+                // the angular velocity matrix represents the rotation that happens
+                // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
+                // interpolated easily, for that quaternions should be used)
+                for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION / 2) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
+                    mat.mul4(this._orientationMatrix, this._angularVelocityMatrix);
+                }
+                this.setOrientationMatrix();
+                // calculate the rotation that happened as a result of the angular
+                // acceleration the affecting torques caused since the previous step
+                if (this._torques.length > 0) {
+                    angularAccMatrix = mat.identity4();
+                    for (i = 0; i < this._torques.length; i++) {
+                        t = this._torques[i].exert(dt) / 1000; // t is in seconds
+                        if (t > 0) {
+                            mat.mul4(
+                                    this._orientationMatrix,
+                                    this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t));
+                            // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
+                            mat.mul4(
+                                    angularAccMatrix,
+                                    this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t / 1000));
+                        }
+                    }
+                    // update angular velocity matrix
+                    mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
+                }
+                // correct matrix inaccuracies and close to zero values resulting from
+                // floating point operations
+                mat.straighten(this._angularVelocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+                this._correctMatrices();
+            }
         }
     };
     // -------------------------------------------------------------------------

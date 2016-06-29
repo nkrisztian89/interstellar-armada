@@ -860,7 +860,8 @@ define([
                 orientationMatrix || mat.identity4(),
                 mat.scaling4(projectileClass.getSize()),
                 spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
-                []);
+                [],
+                true);
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
          * @type Number
