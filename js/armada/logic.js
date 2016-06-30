@@ -8,7 +8,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, this */
+/*global define, Element, this, Float32Array */
 
 /**
  * @param utils Used for format strings and solving quadratic equations
@@ -153,6 +153,12 @@ define([
              * @type String
              */
             _groupTransformsArrayName = null,
+            /**
+             * Precalculated value of an array containing as many identity matrices (flattened into a single one dimensional array) as the
+             * number of available transform groups.
+             * @type Float32Array
+             */
+            _groupTransformIdentityArray = null,
             /**
              * Cached value of the configuration setting of minimum number of muzzle flash particles that should trigger their instanced rendering.
              * @type Number
@@ -3142,6 +3148,9 @@ define([
         hitZoneMesh.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
             return _hitZoneColor;
         });
+        hitZoneMesh.setUniformValueFunction(_groupTransformsArrayName, function () {
+            return _groupTransformIdentityArray;
+        });
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
     };
     /**
@@ -4329,10 +4338,15 @@ define([
     _context = new LogicContext();
     // caching configuration settings
     config.executeWhenReady(function () {
+        var i;
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
+        _groupTransformIdentityArray = new Float32Array(graphics.getMaxGroupTransforms() * 16);
+        for (i = 0; i < _groupTransformIdentityArray.length; i++) {
+            _groupTransformIdentityArray[i] = mat.IDENTITY4[i % 16];
+        }
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
         _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
         _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
