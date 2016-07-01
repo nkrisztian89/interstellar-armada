@@ -180,6 +180,11 @@ define([
              */
             _hitZoneColor,
             /**
+             * Cached value of the configuration setting for toggling hitbox visibility based on for which objects are hitchecks calculated.
+             * @type Boolean
+             */
+            _showHitboxesForHitchecks,
+            /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
@@ -951,11 +956,11 @@ define([
     /**
      * Simulates the movement of the projectile and checks if it hit any objects.
      * @param {Number} dt The passed time since the last simulation in milliseconds.
-     * @param {Spacecraft[]} hitObjects The list of objects that is possible for
-     * the projectile to hit.
+     * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this projectile can
+     * hit.
      */
-    Projectile.prototype.simulate = function (dt, hitObjects) {
-        var i, positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace, relativeVelocityVectorInWorldSpace, relativeVelocity, relativeVelocityDirectionInWorldSpace, explosion, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hitCheckDT;
+    Projectile.prototype.simulate = function (dt, hitObjectOctree) {
+        var i, positionVectorInWorldSpace, hitObjects, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace, relativeVelocityVectorInWorldSpace, relativeVelocity, relativeVelocityDirectionInWorldSpace, explosion, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hitCheckDT;
         // avoid hit checking right after the projectile is fired, as it could hit the firing ship
         hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
         this._timeLeft -= dt;
@@ -966,11 +971,21 @@ define([
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             positionVectorInWorldSpace = mat.translationVector3(this._physicalModel.getPositionMatrix());
+            velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
+            hitObjects = hitObjectOctree.getObjects(
+                    Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * dt / 1000),
+                    Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * dt / 1000),
+                    Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * dt / 1000),
+                    Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * dt / 1000),
+                    Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * dt / 1000),
+                    Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * dt / 1000));
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
+                if (_showHitboxesForHitchecks) {
+                    hitObjects[i].showHitbox();
+                }
                 physicalHitObject = hitObjects[i].getPhysicalModel();
                 if (physicalHitObject && (_isSelfFireEnabled || (hitObjects[i] !== this._origin))) {
-                    velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
                     hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT);
                     if (hitPositionVectorInObjectSpace) {
                         relativeVelocityVectorInWorldSpace = vec.diff3(velocityVectorInWorldSpace, mat.translationVector3(physicalHitObject.getVelocityMatrix()));
@@ -3625,6 +3640,18 @@ define([
         this._propulsion.addThrusterBurn(use, value);
     };
     /**
+     * Show the models representing the hitboxes of this spacecraft.
+     */
+    Spacecraft.prototype.showHitbox = function () {
+        this._hitbox.show();
+    };
+    /**
+     * Hide the models representing the hitboxes of this spacecraft.
+     */
+    Spacecraft.prototype.hideHitbox = function () {
+        this._hitbox.hide();
+    };
+    /**
      * Toggles the visibility of the models representing the hitboxes of this
      * spacecraft.
      */
@@ -3876,6 +3903,184 @@ define([
             this._activeDamageIndicators = null;
         }
         this._alive = false;
+    };
+    // #########################################################################
+    /**
+     * @class
+     * An octree node that is used to partition spacecrafts. Recursively divides the given list of spacecrafts among its subnodes and can
+     * retrieve a subset of this list belonging to an area in space by choosing the appropriate subnodes.
+     * @param {Spacecraft[]} objects The list of spacecrafts belonging to this node. (to be divided among its subnodes)
+     * @param {Number} maximumDepth The maximum number of levels below this node that should be created when dividing the objects.
+     * @param {Number} maximumObjectCount If the node has this much or fewer objects, it will not divide them further (become a leaf node)
+     */
+    function Octree(objects, maximumDepth, maximumObjectCount) {
+        /**
+         * The list of spacecrafts belonging to this node.
+         * @type Spacecraft[]
+         */
+        this._objects = objects;
+        /**
+         * The world coordinates of the point in space which divides the region beloning to this node to 8 subregions (2x2x2), which belong
+         * to its subnodes. Null in the case of leaf nodes.
+         * @type Number[3]
+         */
+        this._center = this._objects.length > 0 ? this._calculateCenter() : null;
+        /**
+         * The subnodes of this node, or null in case of leaf nodes.
+         * @type Octree[8]
+         */
+        this._subnodes = (maximumDepth > 0) && (this._objects.length > maximumObjectCount) ? this._generateSubnodes(maximumDepth - 1, maximumObjectCount) : null;
+    }
+    /**
+     * Calculates and returns the center point for this node based on the associated spacecrafts. (their average position)
+     * @returns {Number[3]}
+     */
+    Octree.prototype._calculateCenter = function () {
+        var i, n, x = 0, y = 0, z = 0, p;
+        for (i = 0, n = this._objects.length; i < n; i++) {
+            p = this._objects[i].getPhysicalModel().getPositionMatrix();
+            x += p[12];
+            y += p[13];
+            z += p[14];
+        }
+        x /= n;
+        y /= n;
+        z /= n;
+        return [x, y, z];
+    };
+    /**
+     * Creates and returns the list of subnodes for this node by dividing its objects among them based on its center point and the given 
+     * parameters.
+     * @param {Number} maximumDepth The subnodes will generate further subnodes up to this many times.
+     * @param {Number} maximumObjectCount Nodes containing this much or fewer spacecrafts will become leaf nodes and not divide them 
+     * further.
+     * @returns {Octree[8]}
+     */
+    Octree.prototype._generateSubnodes = function (maximumDepth, maximumObjectCount) {
+        var
+                /** @type Number */
+                i, n, size,
+                /** @type Object */
+                o,
+                /** @type Float32Array */
+                p,
+                /** [l]ow/[h]igh[x]/[y]/[z] 
+                 * @type Array */
+                lxlylz, lxlyhz, lxhylz, lxhyhz, hxlylz, hxlyhz, hxhylz, hxhyhz, result;
+        for (i = 0, n = this._objects.length; i < n; i++) {
+            o = this._objects[i];
+            p = o.getPhysicalModel().getPositionMatrix();
+            size = o.getPhysicalModel().getSize();
+            if ((p[12] - size) < this._center[0]) {
+                if ((p[13] - size) < this._center[1]) {
+                    if ((p[14] - size) < this._center[2]) {
+                        lxlylz = lxlylz || [];
+                        lxlylz.push(o);
+                    }
+                    if ((p[14] + size) >= this._center[2]) {
+                        lxlyhz = lxlyhz || [];
+                        lxlyhz.push(o);
+                    }
+                }
+                if ((p[13] + size) >= this._center[1]) {
+                    if ((p[14] - size) < this._center[2]) {
+                        lxhylz = lxhylz || [];
+                        lxhylz.push(o);
+                    }
+                    if ((p[14] + size) >= this._center[2]) {
+                        lxhyhz = lxhyhz || [];
+                        lxhyhz.push(o);
+                    }
+                }
+            }
+            if ((p[12] + size) >= this._center[0]) {
+                if ((p[13] - size) < this._center[1]) {
+                    if ((p[14] - size) < this._center[2]) {
+                        hxlylz = hxlylz || [];
+                        hxlylz.push(o);
+                    }
+                    if ((p[14] + size) >= this._center[2]) {
+                        hxlyhz = hxlyhz || [];
+                        hxlyhz.push(o);
+                    }
+                }
+                if ((p[13] + size) >= this._center[1]) {
+                    if ((p[14] - size) < this._center[2]) {
+                        hxhylz = hxhylz || [];
+                        hxhylz.push(o);
+                    }
+                    if ((p[14] + size) >= this._center[2]) {
+                        hxhyhz = hxhyhz || [];
+                        hxhyhz.push(o);
+                    }
+                }
+            }
+        }
+        result = new Array(8);
+        result[0] = new Octree(lxlylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[1] = new Octree(lxlyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[2] = new Octree(lxhylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[3] = new Octree(lxhyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[4] = new Octree(hxlylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[5] = new Octree(hxlyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[6] = new Octree(hxhylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[7] = new Octree(hxhyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        return result;
+    };
+    /**
+     * Returns the list of spacecrafts inside the region specified by the given boundaries using the spatial partitions represented by this
+     * node and its subnodes.
+     * @param {Number} minX
+     * @param {Number} maxX
+     * @param {Number} minY
+     * @param {Number} maxY
+     * @param {Number} minZ
+     * @param {Number} maxZ
+     * @returns {Spacecraft[]}
+     */
+    Octree.prototype.getObjects = function (minX, maxX, minY, maxY, minZ, maxZ) {
+        var result;
+        if (!this._subnodes) {
+            return this._objects;
+        }
+        result = [];
+        if (minX < this._center[0]) {
+            if (minY < this._center[1]) {
+                if (minZ < this._center[2]) {
+                    result = result.concat(this._subnodes[0].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+                if (maxZ >= this._center[2]) {
+                    result = result.concat(this._subnodes[1].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+            }
+            if (maxY >= this._center[1]) {
+                if (minZ < this._center[2]) {
+                    result = result.concat(this._subnodes[2].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+                if (maxZ >= this._center[2]) {
+                    result = result.concat(this._subnodes[3].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+            }
+        }
+        if (maxX >= this._center[0]) {
+            if (minY < this._center[1]) {
+                if (minZ < this._center[2]) {
+                    result = result.concat(this._subnodes[4].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+                if (maxZ >= this._center[2]) {
+                    result = result.concat(this._subnodes[5].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+            }
+            if (maxY >= this._center[1]) {
+                if (minZ < this._center[2]) {
+                    result = result.concat(this._subnodes[6].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+                if (maxZ >= this._center[2]) {
+                    result = result.concat(this._subnodes[7].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                }
+            }
+        }
+        return result;
     };
     // #########################################################################
     /**
@@ -4262,7 +4467,7 @@ define([
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
      */
     Level.prototype.tick = function (dt, mainScene) {
-        var i, v;
+        var i, v, octree;
         if (this._environment) {
             this._environment.simulate();
         }
@@ -4275,16 +4480,21 @@ define([
                 this._hitObjects[i] = null;
                 this._hitObjects.splice(i, 1);
                 i--;
+            } else if (_showHitboxesForHitchecks) {
+                this._spacecrafts[i].hideHitbox();
             }
         }
-        for (i = 0; i < this._projectiles.length; i++) {
-            this._projectiles[i].simulate(dt, this._hitObjects);
-            if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
-                this._projectiles[i].destroy();
-                this._projectiles[i] = null;
-                this._projectiles.splice(i, 1);
-                i--;
-                application.log("Projectile removed.", 2);
+        if (this._projectiles.length > 0) {
+            octree = new Octree(this._hitObjects, 2, 1);
+            for (i = 0; i < this._projectiles.length; i++) {
+                this._projectiles[i].simulate(dt, octree);
+                if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
+                    this._projectiles[i].destroy();
+                    this._projectiles[i] = null;
+                    this._projectiles.splice(i, 1);
+                    i--;
+                    application.log("Projectile removed.", 2);
+                }
             }
         }
         // moving the scene back to the origo if the camera is too far away to avoid floating point errors becoming visible
@@ -4351,6 +4561,7 @@ define([
         _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
         _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
+        _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

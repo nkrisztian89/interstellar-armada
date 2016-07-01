@@ -538,8 +538,7 @@ define([
          */
         this._bodies = bodies || [];
         /**
-         * The cached size of the whole srtucture (the distance between the
-         * center of the object and the farthest point of its bodies)
+         * The cached size of the whole structure (the distance between the center of the object and the farthest point of its bodies)
          * @type Number
          */
         this._bodySize = -1;
@@ -580,6 +579,21 @@ define([
      */
     PhysicalObject.prototype.getScalingMatrix = function () {
         return this._scalingMatrix;
+    };
+    /**
+     * Returns the distance between the center of the object and the farthest point of its bodies (in object-space)
+     * @returns {Number}
+     */
+    PhysicalObject.prototype.getBodySize = function () {
+        return this._bodySize;
+    };
+    /**
+     * Returns the distance between the center of the object and the farthest point of its bodies in world coordinates, baded on the
+     * scaling of the object along axis X.
+     * @returns {Number}
+     */
+    PhysicalObject.prototype.getSize = function () {
+        return this._bodySize * this._scalingMatrix[0];
     };
     /**
      * Returns the 4x4 translation matrix describing the velocity of the object.

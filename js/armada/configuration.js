@@ -663,6 +663,14 @@ define([
             defaultValue: "oneColor"
         },
         /**
+         * When true, those hitboxes are visible, for which actual hitchecks are calculated (and manual toggling of hitbox visibility
+         * is disabled)
+         */
+        SHOW_HITBOXES_FOR_HITCHECKS: {
+            name: "showHitboxesForHitchecks",
+            type: "boolean"
+        },
+        /**
          * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
          * spacecraft)
          */

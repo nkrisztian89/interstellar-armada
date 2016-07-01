@@ -43,7 +43,8 @@ define(function () {
             },
     // ------------------------------------------------------------------------------
     // constants
-    NUMBER_THOUSANDS_DELIMITER = " ",
+    EMPTY_ARRAY = [],
+            NUMBER_THOUSANDS_DELIMITER = " ",
             // ------------------------------------------------------------------------------
             // private variables
             _keyCodeTable = {
@@ -82,7 +83,14 @@ define(function () {
     // ------------------------------------------------------------------------------
     // interface
     exports = {};
+    // ------------------------------------------------------------------------------
+    // public constants
+    exports.EMPTY_ARRAY = EMPTY_ARRAY;
+    // ------------------------------------------------------------------------------
+    // public enums
     exports.ScaleMode = ScaleMode;
+    // ------------------------------------------------------------------------------
+    // public functions
     /**
      * Returns whether generic coordinates or sizes (in cases where there is no separate X and Y and thus no aspect scaling possible, such
      * as for font sizes) should scale with the width of the viewport according to the passed scaling mode, if the viewport has the passed

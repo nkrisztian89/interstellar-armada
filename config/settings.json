@@ -135,6 +135,7 @@
             "hitboxColor": [0.0, 0.5, 0.5, 0.5],
             "hitboxTexture": "white",
             "hitboxShader": "oneColor",
+            "showHitboxesForHitchecks": false,
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
             "targetChangeTransitionStyle": "smooth",
