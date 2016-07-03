@@ -2581,9 +2581,8 @@ define([
      * @extends RenderableObject3D
      * @param {Model} model The model to store the simple billboard data.
      * @param {ManagedShader} shader The shader that should be active while rendering this object.
-     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
-     * should be bound while rendering this object in an associative array, with 
-     * the roles as keys.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {ParticleState[]} states The list of states this particle will go through during its lifespan.
      * If only one state is given, the particle will stay forever in that state
@@ -2593,10 +2592,8 @@ define([
      * first particle state.
      */
     function Particle(model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
-        var i;
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
+        RenderableObject3D.call(this);
         this.setSmallestSizeWhenDrawn(0.1);
-        this.setTextures(textures);
         /**
          * The model to store the simple billboard data.
          * @type Model
@@ -2608,25 +2605,20 @@ define([
          * specified in the states of the particle.
          * @type Number[4]
          */
-        this._color = [];
-        if (states) {
-            for (i = 0; i < states[0].color.length; i++) {
-                this._color.push(states[0].color[i]);
-            }
-        }
+        this._color = null;
         /**
          * The billboard will be scaled using this number when rendering.
          * Do not set directly! It changes automatically and linearly with time using the colors 
          * specified in the states of the particle.
          * @type Number
          */
-        this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
+        this._size = 0;
         /**
          * The billboard will be scaled using this number when rendering.
          * Can be set from outside to influence the visible size of the particle.
          * @type Number
          */
-        this._relativeSize = 1;
+        this._relativeSize = 0;
         /**
          * The list of states this particle goes through during its lifespan. If only one state is stored,
          * the particle statically stays in that state. If multiple states are stored, the _looping
@@ -2634,7 +2626,7 @@ define([
          * last state has been reached.
          * @type ParticleState[]
          */
-        this._states = states || [];
+        this._states = null;
         /**
          * The index of the current state the particle is in, that is, the last state it fully reached
          * (the actual attributes might be already transitioning towards the next state)
@@ -2645,7 +2637,7 @@ define([
          * Whether to start over from the first state once the last one is reached (or to delete the particle)
          * @type Boolean
          */
-        this._looping = (looping === true);
+        this._looping = false;
         /**
          * Time passed since the current state has been reached, in milliseconds
          * @type Number
@@ -2662,6 +2654,47 @@ define([
          * @type Boolean
          */
         this._shouldAnimate = false;
+        if (model) {
+            this.init(model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize);
+        }
+    }
+    Particle.prototype = new RenderableObject3D();
+    Particle.prototype.constructor = Particle;
+    /**
+     * Initializes the fields of the particle.
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {ParticleState[]} states The list of states this particle will go through during its lifespan.
+     * If only one state is given, the particle will stay forever in that state
+     * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
+     * @param {ManagedShader} [instancedShader]
+     * @param {Number} [initialSize] If given, the particle's size will initially be set to this value rather than the starting size of the
+     * first particle state.
+     */
+    Particle.prototype.init = function (model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
+        var i;
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
+        this.setTextures(textures);
+        this._model = model;
+        this._color = [];
+        if (states) {
+            for (i = 0; i < states[0].color.length; i++) {
+                this._color.push(states[0].color[i]);
+            }
+        }
+        this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
+        this._relativeSize = 1;
+        this._states = states || [];
+        this._currentStateIndex = 0;
+        this._looping = (looping === true);
+        this._timeSinceLastTransition = 0;
+        this._velocityVector[0] = 0;
+        this._velocityVector[1] = 0;
+        this._velocityVector[2] = 0;
+        this._shouldAnimate = false;
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
             return mat.translationVector3(this.getModelMatrix());
         });
@@ -2672,9 +2705,7 @@ define([
             return this._color;
         });
         this._updateShouldAnimate();
-    }
-    Particle.prototype = new RenderableObject3D();
-    Particle.prototype.constructor = Particle;
+    };
     /**
      * @override
      * @returns {Number}
@@ -2867,12 +2898,27 @@ define([
     };
     // #########################################################################
     /**
+     * Initializes the properties of the given particle so that it dynamically shrinks to zero size during it's lifespan. Used for flashes.
+     * @param {Particle} particle The particle object to initialize.
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
+     * @param {Number[4]} color The RGBA components of the color to modulate the billboard texture with.
+     * @param {Number} size The size of the billboard
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {Number} duration The lifespan of the particle in milliseconds.
+     * @param {ManagedShader} [instancedShader]
+     */
+    function initDynamicParticle(particle, model, shader, textures, color, size, positionMatrix, duration, instancedShader) {
+        particle.init(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false, instancedShader);
+    }
+    /**
      * Creates and returns a particle that dynamically shrinks to zero size during it's lifespan. Used for flashes.
      * @param {Model} model The model to store the simple billboard data.
      * @param {ManagedShader} shader The shader that should be active while rendering this object.
-     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
-     * should be bound while rendering this object in an associative array, with 
-     * the roles as keys.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
      * @param {Number[4]} color The RGBA components of the color to modulate the billboard texture with.
      * @param {Number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
@@ -2880,7 +2926,9 @@ define([
      * @param {ManagedShader} [instancedShader]
      */
     function dynamicParticle(model, shader, textures, color, size, positionMatrix, duration, instancedShader) {
-        return new Particle(model, shader, textures, positionMatrix, [new ParticleState(color, size, 0), new ParticleState(color, 0, duration)], false, instancedShader);
+        var result = new Particle();
+        initDynamicParticle(result, model, shader, textures, color, size, positionMatrix, duration, instancedShader);
+        return result;
     }
     // #########################################################################
     /**
@@ -7775,6 +7823,7 @@ define([
         ParticleState: ParticleState,
         Particle: Particle,
         staticParticle: staticParticle,
+        initDynamicParticle: initDynamicParticle,
         dynamicParticle: dynamicParticle,
         BackgroundBillboard: BackgroundBillboard,
         ParticleEmitter: ParticleEmitter,

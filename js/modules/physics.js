@@ -480,17 +480,17 @@ define([
          * The 4x4 translation matrix describing the position of the object. (meters, world space)
          * @type Float32Array
          */
-        this._positionMatrix = null;
+        this._positionMatrix = mat.identity4();
         /**
          * The 4x4 rotation matrix describing the orientation of the object.
          * @type Float32Array
          */
-        this._orientationMatrix = null;
+        this._orientationMatrix = mat.identity4();
         /**
          * The 4x4 scaling matrix describing the scale of the object.
          * @type Float32Array
          */
-        this._scalingMatrix = null;
+        this._scalingMatrix = mat.identity4();
         /**
          * The cached inverse of the orientation matrix.
          * @type Float32Array
@@ -505,13 +505,13 @@ define([
          * The 4x4 translation matrix describing the velocity of the object. (m/s)
          * @type Float32Array
          */
-        this._velocityMatrix = null;
+        this._velocityMatrix = mat.identity4();
         /**
          * The 4x4 rotation matrix describing the rotation the current angular velocity of the object causes over 
          * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation is performed in steps as matrix rotation cannot be interpolated)
          * @type Float32Array
          */
-        this._angularVelocityMatrix = null;
+        this._angularVelocityMatrix = mat.identity4();
         /**
          * The list of forces affecting this object.
          * @type Force[]
@@ -554,13 +554,13 @@ define([
      */
     PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation) {
         this._mass = mass;
-        this._positionMatrix = mat.matrix4(positionMatrix);
-        this._orientationMatrix = mat.matrix4(orientationMatrix);
-        this._scalingMatrix = mat.matrix4(scalingMatrix);
+        mat.setMatrix4(this._positionMatrix, positionMatrix);
+        mat.setMatrix4(this._orientationMatrix, orientationMatrix);
+        mat.setMatrix4(this._scalingMatrix, scalingMatrix);
         this._rotationMatrixInverse = null;
         this._modelMatrixInverse = null;
-        this._velocityMatrix = mat.matrix4(initialVelocityMatrix);
-        this._angularVelocityMatrix = mat.identity4();
+        mat.setMatrix4(this._velocityMatrix, initialVelocityMatrix);
+        mat.setIdentity4(this._angularVelocityMatrix);
         this._forces = [];
         this._torques = [];
         this._bodies = bodies || [];

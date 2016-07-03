@@ -59,6 +59,7 @@
     "spacecrafts": [
         {
             "class": "falcon",
+            "piloted": true,
             "position": [0, 0, -60],
             "equipment": {
                 "profile": "full"
@@ -144,7 +145,6 @@
         },
         {
             "class": "libra",
-            "piloted": true,
             "position": [-100, 500, -400],
             "rotations": [
                 {

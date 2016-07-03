@@ -185,6 +185,12 @@ define([
              */
             _showHitboxesForHitchecks,
             /**
+             * A pool containing dynamic particles (such as particles for muzzle flashes and explosions) for reuse, so that creation of
+             * new particle objects can be decreased for optimization.
+             * @type Pool
+             */
+            _particlePool,
+            /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
@@ -715,13 +721,19 @@ define([
     Explosion.prototype.getEmitterParticleConstructor = function (index) {
         var emitterDescriptor = this._class.getParticleEmitterDescriptors()[index];
         return function () {
-            return new budaScene.Particle(emitterDescriptor.getModel(),
+            var particle = _particlePool.getFreeObject();
+            if (!particle) {
+                particle = new budaScene.Particle();
+                _particlePool.addObject(particle);
+            }
+            particle.init(emitterDescriptor.getModel(),
                     emitterDescriptor.getShader(),
                     emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     mat.identity4(),
                     emitterDescriptor.getParticleStates(),
                     false,
                     emitterDescriptor.getInstancedShader());
+            return particle;
         };
     };
     /**
@@ -1307,8 +1319,14 @@ define([
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex, relativeBarrelPosVector) {
         var
                 projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
-                muzzleFlashPosMatrix = mat.translation4v(relativeBarrelPosVector);
-        return budaScene.dynamicParticle(
+                muzzleFlashPosMatrix = mat.translation4v(relativeBarrelPosVector),
+                particle = _particlePool.getFreeObject();
+        if (!particle) {
+            particle = new budaScene.Particle();
+            _particlePool.addObject(particle);
+        }
+        budaScene.initDynamicParticle(
+                particle,
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
                 projectileClass.getMuzzleFlash().getTexturesOfTypes(projectileClass.getMuzzleFlash().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -1317,10 +1335,19 @@ define([
                 muzzleFlashPosMatrix,
                 projectileClass.getMuzzleFlash().getDuration() || config.getSetting(config.BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION),
                 projectileClass.getMuzzleFlash().getInstancedShader());
+        return particle;
     };
+    /**
+     * 
+     * @param {Scene} scene
+     * @param {Number} barrelIndex
+     * @returns {Function}
+     */
     Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
         return function () {
-            scene.addResourcesOfObject(this._getMuzzleFlashForBarrel(barrelIndex, [0, 0, 0]));
+            var particle = this._getMuzzleFlashForBarrel(barrelIndex, [0, 0, 0]);
+            scene.addResourcesOfObject(particle);
+            particle.markAsReusable();
         }.bind(this);
     };
     /**
@@ -4211,6 +4238,17 @@ define([
     Pool.prototype.getObjects = function () {
         return this._objects;
     };
+    /**
+     * Removes the references to all the stored objects and resets the state of the pool.
+     * @returns {undefined}
+     */
+    Pool.prototype.clear = function () {
+        this._objects = [];
+        this._objectsFree = [];
+        this._freeIndices = [];
+        this._firstFreeIndex = 0;
+        this._firstLockedIndex = 0;
+    };
     // #########################################################################
     /**
      * @class Represents a battle scene with an environment, spacecrafts, 
@@ -4596,7 +4634,7 @@ define([
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
      */
     Level.prototype.tick = function (dt, mainScene) {
-        var i, v, octree, projectiles;
+        var i, v, octree, projectiles, particles;
         if (this._environment) {
             this._environment.simulate();
         }
@@ -4623,12 +4661,23 @@ define([
                 }
             }
         }
+        particles = _particlePool.getObjects();
+        for (i = 0; i < particles.length; i++) {
+            if (particles[i].canBeReused()) {
+                _particlePool.markAsFree(i);
+            }
+        }
         // moving the scene back to the origo if the camera is too far away to avoid floating point errors becoming visible
         if (mainScene) {
             v = mainScene.moveCameraToOrigoIfNeeded(config.getSetting(config.BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE));
             if (v) {
                 ai.handleSceneMoved(v);
             }
+        }
+        if (application.isDebugVersion()) {
+            _debugInfo =
+                    "Part: " + _particlePool._objects.length + "<br/>" +
+                    "Proj: " + this._projectilePool._objects.length;
         }
     };
     /**
@@ -4670,7 +4719,9 @@ define([
         }
         this._pilotedCraft = null;
         this._hitObjects = null;
+        _particlePool.clear();
     };
+    _particlePool = new Pool();
     // creating the default context
     _context = new LogicContext();
     // caching configuration settings
