@@ -724,20 +724,26 @@ define([
      * emitter created based on the particle emitter descriptor of the given index.
      */
     Explosion.prototype.getEmitterParticleConstructor = function (index) {
-        var emitterDescriptor = this._class.getParticleEmitterDescriptors()[index];
+        var emitterDescriptor = this._class.getParticleEmitterDescriptors()[index],
+                model = emitterDescriptor.getModel(),
+                shader = emitterDescriptor.getShader(),
+                textures = emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                states = emitterDescriptor.getParticleStates(),
+                instancedShader = emitterDescriptor.getInstancedShader();
         return function () {
             var particle = _particlePool.getFreeObject();
             if (!particle) {
                 particle = new budaScene.Particle();
                 _particlePool.addObject(particle);
             }
-            particle.init(emitterDescriptor.getModel(),
-                    emitterDescriptor.getShader(),
-                    emitterDescriptor.getTexturesOfTypes(emitterDescriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+            particle.init(
+                    model,
+                    shader,
+                    textures,
                     mat.identity4(),
-                    emitterDescriptor.getParticleStates(),
+                    states,
                     false,
-                    emitterDescriptor.getInstancedShader());
+                    instancedShader);
             return particle;
         };
     };
@@ -820,7 +826,6 @@ define([
      */
     Explosion.prototype.addToScene = function (scene, parentNode) {
         var lightStates;
-        this._class.acquireResources();
         resources.executeWhenReady(function () {
             this._createVisualModel();
             if (parentNode) {
@@ -981,7 +986,6 @@ define([
      * @param {budaScene} scene The scene to which to add the renderable object presenting the projectile.
      */
     Projectile.prototype.addToScene = function (scene) {
-        this._class.acquireResources();
         resources.executeWhenReady(function () {
             this._createVisualModel();
             scene.addObject(this._visualModel, _minimumProjectileCountForInstancing);

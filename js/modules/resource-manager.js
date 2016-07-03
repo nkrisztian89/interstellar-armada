@@ -454,6 +454,20 @@ define([
         return this._resourceHolders[resourceType].getResourceNames();
     };
 
+    /**
+     * Executes the given callback function for all the stored resources (of all types), passing each resource to it as its only parameter.
+     * @param {Function} callback
+     */
+    ResourceManager.prototype.executeForAllResources = function (callback) {
+        var resourceTypes = Object.keys(this._resourceHolders), i, j, resourceNames;
+        for (i = 0; i < resourceTypes.length; i++) {
+            resourceNames = this._resourceHolders[resourceTypes[i]].getResourceNames();
+            for (j = 0; j < resourceNames.length; j++) {
+                callback(this._resourceHolders[resourceTypes[i]].getResource(resourceNames[j]));
+            }
+        }
+    };
+
     return {
         GenericResource: GenericResource,
         ResourceManager: ResourceManager

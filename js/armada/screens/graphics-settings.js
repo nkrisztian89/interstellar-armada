@@ -19,6 +19,7 @@
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing the graphics settings and setting options.
+ * @param classes Used to notify classes about graphics settings change
  */
 define([
     "utils/utils",
@@ -30,8 +31,9 @@ define([
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
+    "armada/classes",
     "utils/polyfill"
-], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics) {
+], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -311,6 +313,7 @@ define([
             graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
             graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
             graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
+            classes.handleGraphicsSettingsChanged();
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
             return false;
         }.bind(this);

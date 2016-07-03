@@ -340,6 +340,12 @@ define([
     GenericClass.prototype.showResourceAccessError = function (resourceType, resourceName) {
         application.showError("Attempting to access " + resourceType + " ('" + resourceName + "') of class '" + this._name + "' before it has been loaded!");
     };
+    /**
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    GenericClass.prototype.handleGraphicsSettingsChanged = function () {
+        return;
+    };
     // ##############################################################################
     /**
      * @class
@@ -369,8 +375,22 @@ define([
          * @type ShaderResource
          */
         this._shader = null;
+        /**
+         * @type String
+         */
         this._instancedShaderName = null;
+        /**
+         * @type ShaderResource
+         */
         this._instancedShader = null;
+        /**
+         * @type ManagedShader
+         */
+        this._managedShader = null;
+        /**
+         * @type ManagedShader
+         */
+        this._managedInstancedShader = null;
     };
     /**
      * @override
@@ -401,7 +421,10 @@ define([
             this.showResourceAccessError("shader", this._shaderName);
             return null;
         }
-        return graphics.getManagedShader(this._shaderName);
+        if (!this._managedShader) {
+            this._managedShader = graphics.getManagedShader(this._shaderName);
+        }
+        return this._managedShader;
     };
     /**
      * 
@@ -412,7 +435,17 @@ define([
             application.showError("Attempting to access the instanced shader of '" + this._name + "', which does not exist (or is not loaded)!");
             return null;
         }
-        return graphics.getManagedShader(this._instancedShaderName);
+        if (!this._managedInstancedShader) {
+            this._managedInstancedShader = graphics.getManagedShader(this._instancedShaderName);
+        }
+        return this._managedInstancedShader;
+    };
+    /**
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    ShadedClass.prototype.handleGraphicsSettingsChanged = function () {
+        this._managedShader = null;
+        this._managedInstancedShader = null;
     };
     // ##############################################################################
     /**
@@ -2966,6 +2999,16 @@ define([
                 });
         _classFolder = classSourceFileDescriptor.folder;
     }
+    /**
+     * Updates all classes for the case when the graphics settings have been changed (i.e. clears cached values depending on graphics 
+     * settings)
+     * @returns {undefined}
+     */
+    function handleGraphicsSettingsChanged() {
+        _classManager.executeForAllResources(function (resource) {
+            resource.handleGraphicsSettingsChanged();
+        });
+    }
     _classManager = new resourceManager.ResourceManager();
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -2986,6 +3029,7 @@ define([
         getSpacecraftClassesInArray: getSpacecraftClassesInArray,
         EquipmentProfile: EquipmentProfile,
         SceneView: SceneView,
-        requestLoad: requestLoad
+        requestLoad: requestLoad,
+        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged
     };
 });
