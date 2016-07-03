@@ -2475,27 +2475,42 @@ define([
      * @constructor
      * @param {Model} model The model to store the simple billboard data.
      * @param {ManagedShader} shader The shader that should be active while rendering this object.
-     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
-     * should be bound while rendering this object in an associative array, with 
-     * the roles as keys.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
      * @param {number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
      */
     function Billboard(model, shader, textures, size, positionMatrix, orientationMatrix) {
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
-        this.setTextures(textures);
+        RenderableObject3D.call(this);
         /**
          * The model to store the simple billboard data.
          * @type Model
          */
+        this._model = null;
+        if (model) {
+            this.init(model, shader, textures, size, positionMatrix, orientationMatrix);
+        }
+    }
+    Billboard.prototype = new RenderableObject3D();
+    Billboard.prototype.constructor = Billboard;
+    /**
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
+     * @param {number} size The size of the billboard
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
+     */
+    Billboard.prototype.init = function (model, shader, textures, size, positionMatrix, orientationMatrix) {
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
+        this.setTextures(textures);
         this._model = model;
         this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
-    }
-    Billboard.prototype = new RenderableObject3D();
-    Billboard.prototype.constructor = Billboard;
+    };
     /**
      * @override
      * @param {ManagedGLContext} context

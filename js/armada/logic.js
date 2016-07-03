@@ -188,8 +188,23 @@ define([
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type LogicContext
              */
-            _context;
+            _context,
+            /**
+             * This string is available to other modules through a public function so that an arbitrary piece of information from this 
+             * module can be exposed for debug purposes.
+             * @type String
+             */
+            _debugInfo = "";
     Object.freeze(FlightMode);
+    // -------------------------------------------------------------------------
+    // Public functions
+    /**
+     * Queries a module-level string for debug purposes.
+     * @returns {String}
+     */
+    function getDebugInfo() {
+        return _debugInfo;
+    }
     // ##############################################################################
     /**
      * @class Represents a skybox that can be added to a scene to render the
@@ -839,22 +854,18 @@ define([
     // ##############################################################################
     /**
      * @class Represents a projectile fired from a weapon.
-     * @param {ProjectileClass} projectileClass The class of the projectile
-     * defining its general properties.
-     * @param {Float32Array} [positionMatrix] The transformation matrix describing
-     * the initial position of the projectile.
-     * @param {Float32Array} [orientationMatrix] The transformation matrix describing
-     * the initial oriantation of the projectile.
+     * @param {ProjectileClass} projectileClass The class of the projectile defining its general properties.
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
      * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
-     * @param {Force} [startingForce] A force that will be applied to the (physical
-     * model of) projectile to kick off its movement.
+     * @param {Force} [startingForce] A force that will be applied to the (physical model of) projectile to kick off its movement.
      */
     function Projectile(projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce) {
         /**
          * The class storing the general characteristics of this projectile.
          * @type ProjectileClass
          */
-        this._class = projectileClass;
+        this._class = null;
         /**
          * The renderable node that represents this projectile in a scene.
          * @type RenderableObject
@@ -865,7 +876,36 @@ define([
          * this projectile.
          * @type PhysicalObject
          */
-        this._physicalModel = new physics.PhysicalObject(
+        this._physicalModel = null;
+        /**
+         * The amount of time this projectile has left to "live", in milliseconds.
+         * @type Number
+         */
+        this._timeLeft = 0;
+        /**
+         * The spacecraft that originally fired this projectile. It will be 
+         * excluded from hit check so that a projectile cannot hit the same craft
+         * it was fired from.
+         * @type Spacecraft
+         */
+        this._origin = null;
+        if (projectileClass) {
+            this.init(projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce);
+        }
+    }
+    /**
+     * @param {ProjectileClass} projectileClass The class of the projectile defining its general properties.
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
+     * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
+     * @param {Force} [startingForce] A force that will be applied to the (physical model of) projectile to kick off its movement.
+     */
+    Projectile.prototype.init = function (projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce) {
+        this._class = projectileClass;
+        if (!this._physicalModel) {
+            this._physicalModel = new physics.PhysicalObject();
+        }
+        this._physicalModel.init(
                 projectileClass.getMass(),
                 positionMatrix || mat.identity4(),
                 orientationMatrix || mat.identity4(),
@@ -873,23 +913,13 @@ define([
                 spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
                 [],
                 true);
-        /**
-         * The amount of time this projectile has left to "live", in milliseconds.
-         * @type Number
-         */
         this._timeLeft = projectileClass.getDuration();
-        /**
-         * The spacecraft that originally fired this projectile. It will be 
-         * excluded from hit check so that a projectile cannot hit the same craft
-         * it was fired from.
-         * @type Spacecraft
-         */
         this._origin = spacecraft;
         // kick off the movement of the projectile with the supplied force
         if (startingForce) {
             this._physicalModel.addForce(startingForce);
         }
-    }
+    };
     /**
      * Returns whether this projectile object can be reused to represent a new
      * projectile.
@@ -903,7 +933,10 @@ define([
      * in a visual scene, if it has not been created yet.
      */
     Projectile.prototype._createVisualModel = function () {
-        this._visualModel = this._visualModel || new budaScene.Billboard(
+        if (!this._visualModel) {
+            this._visualModel = new budaScene.Billboard();
+        }
+        this._visualModel.init(
                 this._class.getModel(),
                 this._class.getShader(),
                 this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -961,12 +994,13 @@ define([
      */
     Projectile.prototype.simulate = function (dt, hitObjectOctree) {
         var i, positionVectorInWorldSpace, hitObjects, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace, relativeVelocityVectorInWorldSpace, relativeVelocity, relativeVelocityDirectionInWorldSpace, explosion, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hitCheckDT;
+        if (this.canBeReused()) {
+            return;
+        }
         // avoid hit checking right after the projectile is fired, as it could hit the firing ship
         hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
         this._timeLeft -= dt;
-        if (this._timeLeft <= 0) {
-            this.destroy();
-        } else {
+        if (this._timeLeft > 0) {
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
@@ -998,11 +1032,14 @@ define([
                         explosion = new Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true);
                         explosion.addToScene(this._visualModel.getNode().getScene());
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
-                        this.destroy();
+                        this._timeLeft = 0;
+                        this._visualModel.markAsReusable();
                         return;
                     }
                 }
             }
+        } else {
+            this._visualModel.markAsReusable();
         }
     };
     /**
@@ -1327,15 +1364,14 @@ define([
         }
     };
     /**
-     * Fires the weapon and adds the projectiles it fires (if any) to the passed
-     * array.
-     * @param {Projectile[]} projectiles
+     * Fires the weapon and adds the projectiles it fires (if any) to the passed pool.
+     * @param {Pool} projectilePool
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
      * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
      * (based on the last aiming status of the weapon)
      */
-    Weapon.prototype.fire = function (projectiles, shipScaledOriMatrix, onlyIfAimedOrFixed) {
+    Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed) {
         var i, p,
                 weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
@@ -1367,14 +1403,18 @@ define([
                 projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
                 this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
-                p = new Projectile(
+                p = projectilePool.getFreeObject();
+                if (!p) {
+                    p = new Projectile();
+                    projectilePool.addObject(p);
+                }
+                p.init(
                         projectileClass,
                         projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
                         new physics.Force("", barrels[i].getForceForDuration(_momentDuration), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _momentDuration));
                 p.addToScene(scene);
-                projectiles.push(p);
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                 // been created, so that projectiles from the same weapon and of the same class only use one light source object
                 if (!projectileLights[projectileClass.getName()]) {
@@ -2428,8 +2468,7 @@ define([
      * the initial position of the spacecraft.
      * @param {Float32Array} [orientationMatrix] The rotation matrix describing
      * the initial orientation of the spacecraft.
-     * @param {Projectile[]} [projectileArray=null] The array to which the
-     * spacecraft will add its fired projectiles.
+     * @param {Pool} [projectilePool=null] The pool to which the spacecraft will add its fired projectiles.
      * @param {String} [equipmentProfileName] The name of the equipment profile
      * to use to equip the spacecraft. If not given, the spacecraft will not be
      * equipped.
@@ -2437,7 +2476,7 @@ define([
      * in the same battle simulation as this one.
      * @returns {Spacecraft}
      */
-    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
+    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, projectilePool, equipmentProfileName, spacecraftArray) {
         /**
          * The class of this spacecraft that describes its general properties.
          * @type SpacecraftClass
@@ -2490,10 +2529,10 @@ define([
          */
         this._hitbox = null;
         /**
-         * The array to which the spacecraft will add its fired projectiles.
-         * @type Projectile[]
+         * The pool to which the spacecraft will add its fired projectiles.
+         * @type Pool
          */
-        this._projectileArray = null;
+        this._projectilePool = null;
         /**
          * Set to false when the spacecraft object is destroyed and cannot be used anymore. At this
          * point, references from it have also been removed.
@@ -2585,7 +2624,7 @@ define([
         this._targetHitPosition = null;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
-            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray);
+            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectilePool, equipmentProfileName, spacecraftArray);
         }
     }
     // initializer
@@ -2596,12 +2635,12 @@ define([
      * @param {String} [name]
      * @param {Float32Array} [positionMatrix]
      * @param {Float32Array} [orientationMatrix]
-     * @param {Projectile[]} [projectileArray]
+     * @param {Projectile[]} [projectilePool]
      * @param {String} [equipmentProfileName]
      * @param {Spacecraft[]} [spacecraftArray]
      * @see Spacecraft
      */
-    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, projectileArray, equipmentProfileName, spacecraftArray) {
+    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, projectilePool, equipmentProfileName, spacecraftArray) {
         this._class = spacecraftClass;
         this._name = name || "";
         this._hitpoints = this._class.getHitpoints();
@@ -2618,7 +2657,7 @@ define([
         }.bind(this));
         this._weapons = [];
         this._maneuveringComputer = new ManeuveringComputer(this);
-        this._projectileArray = projectileArray || null;
+        this._projectilePool = projectilePool || null;
         // equipping the craft if a profile name was given
         if (equipmentProfileName) {
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
@@ -2912,19 +2951,18 @@ define([
      * Initializes the properties of this spacecraft based on the data stored
      * in the passed JSON object.
      * @param {Object} dataJSON
-     * @param {Projectile[]} [projectileArray=null] The array to which the
-     * spacecraft will add its fired projectiles.
+     * @param {Pool} [projectilePool=null] The pool to which the spacecraft will add its fired projectiles.
      * @param {Spacecraft[]} [spacecraftArray=null] The array of spacecrafts
      * participating in the same battle.
      */
-    Spacecraft.prototype.loadFromJSON = function (dataJSON, projectileArray, spacecraftArray) {
+    Spacecraft.prototype.loadFromJSON = function (dataJSON, projectilePool, spacecraftArray) {
         var equipmentProfile;
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
                 dataJSON.name,
                 mat.translation4v(dataJSON.position),
                 mat.rotation4FromJSON(dataJSON.rotations),
-                projectileArray,
+                projectilePool,
                 undefined,
                 spacecraftArray);
         if (dataJSON.squad) {
@@ -3477,7 +3515,7 @@ define([
         var i, scaledOriMatrix;
         scaledOriMatrix = this.getScaledOriMatrix();
         for (i = 0; i < this._weapons.length; i++) {
-            this._weapons[i].fire(this._projectileArray, scaledOriMatrix, onlyIfAimedOrFixed);
+            this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed);
         }
         // executing callbacks
         for (i = 0; i < this._targetedBy.length; i++) {
@@ -3882,7 +3920,7 @@ define([
             this._maneuveringComputer.destroy();
             this._maneuveringComputer = null;
         }
-        this._projectileArray = null;
+        this._projectilePool = null;
         this._spacecraftArray = null;
         this._target = null;
         this._targetHitPosition = null;
@@ -4084,6 +4122,97 @@ define([
     };
     // #########################################################################
     /**
+     * @class
+     * Stores an array of reusable objects and provides quick mechanisms to mark objects free for reuse and obtain references to objects 
+     * marked free. Used to decrease the number of new objects created, as object creation can be an expensive operation.
+     */
+    function Pool() {
+        /**
+         * The array of reusable objects that are stored in this pool.
+         * @type Object[]
+         */
+        this._objects = [];
+        /**
+         * An array of flags storing whether the reusable objects with the same indices are currently free for reuse.
+         * @type Boolean[]
+         */
+        this._objectsFree = [];
+        /**
+         * An array storing the indices of the objects that were marked free. Filled in a rotating fashion, with the first and last valid
+         * indices being stored.
+         * @type Number[2]
+         */
+        this._freeIndices = [];
+        /**
+         * The index of the first valid entry in the array storing the free object indices.
+         * @type Number
+         */
+        this._firstFreeIndex = 0;
+        /**
+         * The index of the first invalid entry (one referring to a currently locked object) in the array storing the free object indices.
+         * @type Number
+         */
+        this._firstLockedIndex = 0;
+    }
+    /**
+     * Marks the object stored at the passed index as free for reuse.
+     * @param {Number} index
+     */
+    Pool.prototype.markAsFree = function (index) {
+        if (!this._objectsFree[index]) {
+            this._freeIndices[this._firstLockedIndex] = index;
+            this._objectsFree[index] = true;
+            this._firstLockedIndex++;
+            if (this._firstLockedIndex >= this._freeIndices.length) {
+                this._firstLockedIndex = 0;
+            }
+        }
+    };
+    /**
+     * Returns a reference to a stored reusable object that is currently marked as free for reuse. Returns null if no objects are currently
+     * free.
+     * @returns {Object}
+     */
+    Pool.prototype.getFreeObject = function () {
+        var result;
+        if (!this._objectsFree[this._freeIndices[this._firstFreeIndex]]) {
+            return null;
+        }
+        this._objectsFree[this._freeIndices[this._firstFreeIndex]] = false;
+        result = this._objects[this._freeIndices[this._firstFreeIndex]];
+        this._firstFreeIndex++;
+        if (this._firstFreeIndex >= this._freeIndices.length) {
+            this._firstFreeIndex = 0;
+        }
+        return result;
+    };
+    /**
+     * Adds the passed object to the pool (in locked state)
+     * @param {Object} newObject
+     */
+    Pool.prototype.addObject = function (newObject) {
+        this._objects.push(newObject);
+        this._objectsFree.push(false);
+        if ((this._firstFreeIndex < this._firstLockedIndex) ||
+                ((this._firstFreeIndex === this._firstLockedIndex) && !this._objectsFree[this._freeIndices[this._firstFreeIndex]])) {
+            this._freeIndices.push(-1);
+        } else {
+            this._freeIndices.splice(this._firstLockedIndex, 0, -1);
+            this._firstFreeIndex++;
+            if (this._firstFreeIndex >= this._freeIndices.length) {
+                this._firstFreeIndex = 0;
+            }
+        }
+    };
+    /**
+     * Returns the array of stored objects.
+     * @returns {Object[]}
+     */
+    Pool.prototype.getObjects = function () {
+        return this._objects;
+    };
+    // #########################################################################
+    /**
      * @class Represents a battle scene with an environment, spacecrafts, 
      * projectiles. Can create scenes for visual representation using the held
      * references as well as perform the game logic and physics simulation
@@ -4120,10 +4249,10 @@ define([
          */
         this._spacecrafts = null;
         /**
-         * An array to store the projectiles fired by the spacecrafts.
-         * @type Projectile[]
+         * A pool to store the projectiles fired by the spacecrafts.
+         * @type Pool
          */
-        this._projectiles = null;
+        this._projectilePool = null;
         /**
          * A reference to the spacecraft piloted by the player.
          * @type Spacecraft
@@ -4283,12 +4412,12 @@ define([
                 this._views.push(new classes.SceneView(dataJSON.views[i]));
             }
         }
-        this._projectiles = [];
+        this._projectilePool = new Pool();
         this._spacecrafts = [];
         ai.clearAIs();
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
             spacecraft = new Spacecraft();
-            spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectiles, this._spacecrafts);
+            spacecraft.loadFromJSON(dataJSON.spacecrafts[i], this._projectilePool, this._spacecrafts);
             if (!demoMode && dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraft = spacecraft;
             }
@@ -4350,7 +4479,7 @@ define([
                             "",
                             mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
                             orientation,
-                            this._projectiles,
+                            this._projectilePool,
                             this._randomShipsEquipmentProfileName,
                             this._spacecrafts);
                     if (demoMode) {
@@ -4467,7 +4596,7 @@ define([
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
      */
     Level.prototype.tick = function (dt, mainScene) {
-        var i, v, octree;
+        var i, v, octree, projectiles;
         if (this._environment) {
             this._environment.simulate();
         }
@@ -4484,16 +4613,13 @@ define([
                 this._spacecrafts[i].hideHitbox();
             }
         }
-        if (this._projectiles.length > 0) {
+        projectiles = this._projectilePool.getObjects();
+        if (projectiles.length > 0) {
             octree = new Octree(this._hitObjects, 2, 1);
-            for (i = 0; i < this._projectiles.length; i++) {
-                this._projectiles[i].simulate(dt, octree);
-                if ((this._projectiles[i] === undefined) || (this._projectiles[i].canBeReused())) {
-                    this._projectiles[i].destroy();
-                    this._projectiles[i] = null;
-                    this._projectiles.splice(i, 1);
-                    i--;
-                    application.log("Projectile removed.", 2);
+            for (i = 0; i < projectiles.length; i++) {
+                projectiles[i].simulate(dt, octree);
+                if (projectiles[i].canBeReused()) {
+                    this._projectilePool.markAsFree(i);
                 }
             }
         }
@@ -4509,7 +4635,7 @@ define([
      * Removes all references to other objects for proper cleanup of memory.
      */
     Level.prototype.destroy = function () {
-        var i;
+        var i, projectiles;
         if (this._environment && this._ownsEnvironment) {
             this._environment.destroy();
         }
@@ -4532,14 +4658,15 @@ define([
             }
             this._spacecrafts = null;
         }
-        if (this._projectiles) {
-            for (i = 0; i < this._projectiles.length; i++) {
-                if (this._projectiles[i]) {
-                    this._projectiles[i].destroy();
-                    this._projectiles[i] = null;
+        if (this._projectilePool) {
+            projectiles = this._projectilePool.getObjects();
+            for (i = 0; i < projectiles.length; i++) {
+                if (projectiles[i]) {
+                    projectiles[i].destroy();
+                    projectiles[i] = null;
                 }
             }
-            this._projectiles = null;
+            this._projectilePool = null;
         }
         this._pilotedCraft = null;
         this._hitObjects = null;
@@ -4569,6 +4696,7 @@ define([
         FlightMode: FlightMode,
         requestEnvironmentsLoad: _context.requestEnvironmentsLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
+        getDebugInfo: getDebugInfo,
         Spacecraft: Spacecraft,
         Level: Level
     };

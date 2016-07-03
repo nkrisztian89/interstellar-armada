@@ -460,17 +460,12 @@ define([
     };
     // #########################################################################
     /**
-     * @class The basic entity for all physical simulations. Can have physical
-     * properties and interact with other objects.
+     * @class The basic entity for all physical simulations. Can have physical properties and interact with other objects.
      * @param {Number} mass The mass of the physical object in kg.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing
-     * the initial position of the object. (in meters)
-     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing
-     * the initial orientation of the object.
-     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the
-     * initial scaling of the object.
-     * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix 
-     * describing the initial velocity of the object. (in m/s)
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the initial position of the object. (in meters)
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the initial orientation of the object.
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the initial scaling of the object.
+     * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix  describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
      * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
      * related calculations are not performed (for optimization)
@@ -480,76 +475,99 @@ define([
          * The mass in kilograms.
          * @type Number
          */
-        this._mass = mass;
+        this._mass = 0;
         /**
-         * The 4x4 translation matrix describing the position of the object.
-         * (meters, world space)
+         * The 4x4 translation matrix describing the position of the object. (meters, world space)
          * @type Float32Array
          */
-        this._positionMatrix = mat.matrix4(positionMatrix);
+        this._positionMatrix = null;
         /**
          * The 4x4 rotation matrix describing the orientation of the object.
          * @type Float32Array
          */
-        this._orientationMatrix = mat.matrix4(orientationMatrix);
+        this._orientationMatrix = null;
         /**
          * The 4x4 scaling matrix describing the scale of the object.
          * @type Float32Array
          */
-        this._scalingMatrix = mat.matrix4(scalingMatrix);
+        this._scalingMatrix = null;
         /**
          * The cached inverse of the orientation matrix.
          * @type Float32Array
          */
         this._rotationMatrixInverse = null;
         /**
-         * The cached inverse of the model (position + orientation + scaling) 
-         * matrix.
+         * The cached inverse of the model (position + orientation + scaling) matrix.
          * @type Float32Array
          */
         this._modelMatrixInverse = null;
         /**
-         * The 4x4 translation matrix describing the velocity of the object.
-         * (m/s)
+         * The 4x4 translation matrix describing the velocity of the object. (m/s)
          * @type Float32Array
          */
-        this._velocityMatrix = mat.matrix4(initialVelocityMatrix);
+        this._velocityMatrix = null;
         /**
-         * The 4x4 rotation matrix describing the rotation the current angular
-         * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation
-         * is performed in steps as matrix rotation cannot be interpolated)
+         * The 4x4 rotation matrix describing the rotation the current angular velocity of the object causes over 
+         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation is performed in steps as matrix rotation cannot be interpolated)
          * @type Float32Array
          */
-        this._angularVelocityMatrix = mat.identity4();
+        this._angularVelocityMatrix = null;
         /**
          * The list of forces affecting this object.
          * @type Force[]
          */
-        this._forces = [];
+        this._forces = null;
         /**
          * The list of torques affecting this object.
          * @type Torque[]
          */
-        this._torques = [];
+        this._torques = null;
         /**
-         * The list of bodies the structure of this object is comprised of. (for
-         * hit/collision check)
+         * The list of bodies the structure of this object is comprised of. (for hit/collision check)
          * @type Body[]
          */
-        this._bodies = bodies || [];
+        this._bodies = null;
         /**
          * The cached size of the whole structure (the distance between the center of the object and the farthest point of its bodies)
          * @type Number
          */
         this._bodySize = -1;
-        this._calculateBodySize();
         /**
-         * When true, the orientation of the object cannot change during simulation steps as the 
-         * related calculations are not performed (for optimization)
+         * When true, the orientation of the object cannot change during simulation steps as the related calculations are not performed 
+         * (for optimization)
          * @type Boolean
          */
-        this._fixedOrientation = !!fixedOrientation;
+        this._fixedOrientation = false;
+        if (positionMatrix) {
+            this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation);
+        }
     }
+    /**
+     * @param {Number} mass The mass of the physical object in kg.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the initial position of the object. (in meters)
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the initial orientation of the object.
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the initial scaling of the object.
+     * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix  describing the initial velocity of the object. (in m/s)
+     * @param {Body[]} [bodies] The array of bodies this object is comprised of.
+     * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
+     * related calculations are not performed (for optimization)
+     */
+    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation) {
+        this._mass = mass;
+        this._positionMatrix = mat.matrix4(positionMatrix);
+        this._orientationMatrix = mat.matrix4(orientationMatrix);
+        this._scalingMatrix = mat.matrix4(scalingMatrix);
+        this._rotationMatrixInverse = null;
+        this._modelMatrixInverse = null;
+        this._velocityMatrix = mat.matrix4(initialVelocityMatrix);
+        this._angularVelocityMatrix = mat.identity4();
+        this._forces = [];
+        this._torques = [];
+        this._bodies = bodies || [];
+        this._bodySize = -1;
+        this._calculateBodySize();
+        this._fixedOrientation = !!fixedOrientation;
+    };
     // direct getters and setters
     /**
      * The mass of the physical object in kilograms.
