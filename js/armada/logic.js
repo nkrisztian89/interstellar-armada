@@ -165,6 +165,11 @@ define([
              */
             _minimumMuzzleFlashParticleCountForInstancing = 0,
             /**
+             * Cached value of the configuration setting of minimum number of projectiles that should trigger their instanced rendering.
+             * @type Number
+             */
+            _minimumProjectileCountForInstancing = 0,
+            /**
              * Cached value of the configuration setting for compensated forward speed factor.
              * @type Number
              */
@@ -954,7 +959,8 @@ define([
                 this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._class.getSize(),
                 this._physicalModel.getPositionMatrix(),
-                this._physicalModel.getOrientationMatrix());
+                this._physicalModel.getOrientationMatrix(),
+                this._class.getInstancedShader());
     };
     /**
      * Returns the visual model of the projectile.
@@ -972,14 +978,13 @@ define([
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
-     * @param {budaScene} scene The scene to which to add the renderable object
-     * presenting the projectile.
+     * @param {budaScene} scene The scene to which to add the renderable object presenting the projectile.
      */
     Projectile.prototype.addToScene = function (scene) {
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             this._createVisualModel();
-            scene.addObject(this._visualModel);
+            scene.addObject(this._visualModel, _minimumProjectileCountForInstancing);
         }.bind(this));
     };
     /**
@@ -4736,6 +4741,7 @@ define([
             _groupTransformIdentityArray[i] = mat.IDENTITY4[i % 16];
         }
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
+        _minimumProjectileCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING);
         _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
         _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);

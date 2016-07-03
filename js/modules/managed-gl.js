@@ -1711,7 +1711,7 @@ define([
     ManagedShader.prototype.bindVertexBuffers = function (context) {
         var i;
         for (i = 0; i < this._vertexAttributes.length; i++) {
-            context.getVertexBuffer(this._vertexAttributes[i].name).bind(context, this);            
+            context.getVertexBuffer(this._vertexAttributes[i].name).bind(context, this);
         }
         context.disableUnusedVertexBuffers(this._vertexAttributes.length);
     };

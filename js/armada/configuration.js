@@ -507,6 +507,11 @@ define([
             type: "number",
             defaultValue: 1
         },
+        MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING: {
+            name: "minimumProjectileCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
         MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING: {
             name: "minimumThrusterParticleCountForInstancing",
             type: "number",

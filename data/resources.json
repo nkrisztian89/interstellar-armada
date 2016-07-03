@@ -570,7 +570,25 @@
             }
         },
         {
+            "name": "billboard-instanced",
+            "vertexShaderSource": "billboard/billboard-instanced.vert",
+            "fragmentShaderSource": "billboard/billboard.frag",
+            "blendMode": "add",
+            "instanceAttributeRoles": {
+                "i_position": "u_position",
+                "i_direction": "u_direction",
+                "i_size": "u_size"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        },
+        {
             "name": "billboard",
+            "variants": {
+                "instanced": "billboard-instanced"
+            },
             "vertexShaderSource": "billboard/billboard.vert",
             "fragmentShaderSource": "billboard/billboard.frag",
             "blendMode": "add",

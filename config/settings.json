@@ -115,6 +115,7 @@
             "minimumDustParticleCountForInstancing": 1,
             "minimumExplosionParticleCountForInstancing": 1,
             "minimumMuzzleFlashParticleCountForInstancing": 1,
+            "minimumProjectileCountForInstancing": 1,
             "minimumThrusterParticleCountForInstancing": 1,
             "minimumBlinkerParticleCountForInstancing": 1,
             "viewDistance": 5000,

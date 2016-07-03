@@ -105,6 +105,7 @@ define([
             UNIFORM_POINT_CLOUD_LENGTH_NAME = "length",
             UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME = "farthestZ",
             UNIFORM_POSITION_NAME = "position",
+            UNIFORM_DIRECTION_NAME = "direction",
             UNIFORM_SIZE_NAME = "size",
             UNIFORM_SCALE_MODE_NAME = "scaleMode",
             UNIFORM_ROTATION_MATRIX_NAME = "rotationMatrix",
@@ -2480,8 +2481,9 @@ define([
      * @param {number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
+     * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
-    function Billboard(model, shader, textures, size, positionMatrix, orientationMatrix) {
+    function Billboard(model, shader, textures, size, positionMatrix, orientationMatrix, instancedShader) {
         RenderableObject3D.call(this);
         /**
          * The model to store the simple billboard data.
@@ -2489,7 +2491,7 @@ define([
          */
         this._model = null;
         if (model) {
-            this.init(model, shader, textures, size, positionMatrix, orientationMatrix);
+            this.init(model, shader, textures, size, positionMatrix, orientationMatrix, instancedShader);
         }
     }
     Billboard.prototype = new RenderableObject3D();
@@ -2499,16 +2501,27 @@ define([
      * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
      * array, with the roles as keys.
-     * @param {number} size The size of the billboard
+     * @param {Number} size The size of the billboard
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
+     * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
-    Billboard.prototype.init = function (model, shader, textures, size, positionMatrix, orientationMatrix) {
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size));
+    Billboard.prototype.init = function (model, shader, textures, size, positionMatrix, orientationMatrix, instancedShader) {
+        var sizeVector = [size];
+        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size), instancedShader);
         this.setTextures(textures);
         this._model = model;
         this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
+        });
+        this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
+            return this.getPositionVector();
+        });
+        this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
+            return mat.getRowB43(this.getOrientationMatrix());
+        });
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
+            return instanced ? sizeVector : size;
         });
     };
     /**
@@ -2537,6 +2550,14 @@ define([
     };
     /**
      * @override
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceCount
+     */
+    Billboard.prototype._peformRenderInstances = function (context, instanceCount) {
+        this._model.renderInstances(context, false, undefined, undefined, instanceCount);
+    };
+    /**
+     * @override
      * @returns {Boolean}
      */
     Billboard.prototype.shouldBeRenderedToShadowMap = function () {
@@ -2549,6 +2570,16 @@ define([
      */
     Billboard.prototype.getNumberOfDrawnTriangles = function (transparent) {
         return (transparent !== false) ? this._model.getNumTriangles() : 0;
+    };
+    /**
+     * @override
+     * @param {Billboard} otherRenderableObject
+     * @returns {Boolean}
+     */
+    Billboard.prototype.shouldGoInSameRenderQueueInstanced = function (otherRenderableObject) {
+        return (RenderableObject3D.prototype.shouldGoInSameRenderQueueInstanced.call(this, otherRenderableObject)) &&
+                (this._textures === otherRenderableObject._textures) &&
+                (this._model === otherRenderableObject._model);
     };
     // #########################################################################
     /**
@@ -7196,10 +7227,12 @@ define([
     /**
      * Adds a new node containing the passed renderable object to be rendered among the main scene objects of this scene. 
      * @param {RenderableObject} newObject The object to add.
+     * @param {Number} [minimumCountForInstancing=0] When given, the object will be rendered using instancing if this many or more
+     * instances of it are added to the scene.
      * @returns {RenderableNode} The node that was created to contain the passed object.
      */
-    Scene.prototype.addObject = function (newObject) {
-        var node = new RenderableNode(newObject);
+    Scene.prototype.addObject = function (newObject, minimumCountForInstancing) {
+        var node = new RenderableNode(newObject, false, minimumCountForInstancing);
         this._rootNode.addSubnode(node);
         return node;
     };
