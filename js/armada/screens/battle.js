@@ -979,6 +979,7 @@ define([
                 },
                 function () {
                     resumeBattle();
+                    resumeTime();
                     if (!_demoMode) {
                         if (_level.getPilotedSpacecraft()) {
                             control.switchToPilotMode(_level.getPilotedSpacecraft());
@@ -1783,7 +1784,6 @@ define([
                     this._loadingBox.hide();
                     showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
-                    resumeTime();
                 }.bind(this));
             }.bind(this));
             resources.requestResourceLoad();

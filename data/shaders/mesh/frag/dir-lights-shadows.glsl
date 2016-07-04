@@ -2,7 +2,7 @@
     float specularFactor;
 
     float lighted;
-    bool covered;
+    float notCovered;
     vec3 shadowMapPosition;
 
     // the factor for how much the fragment needs to be shaded by the shadows
@@ -32,7 +32,7 @@
                 float maxDepthBelow = 1.0;
                 // whether the projection of this fragment to the shadow map planes has already
                 // fallen into the covered area
-                covered = false;
+                notCovered = 1.0;
                 float range = 0.0;
                 // going through each shadow map (start and end indices need to be constant)
                 for (int j = 0; j < MAX_SHADOW_MAP_RANGES; j++) {
@@ -54,15 +54,11 @@
                         float depth = shMapDepthCoord * 0.5 + 0.5;
                         // only check the texture if we have valid coordinates for it
                         if (shMapTexCoords == clamp(shMapTexCoords, 0.0, 1.0)) {
-                            if ((j == u_numRanges - 1) && (distFromEye > range)) {
-                                shade = 1.0 - clamp(
+                            shade = 1.0 - ifEqualInt(j, u_numRanges - 1) * ifGreater(distFromEye, range) * clamp(
                                         max((abs(shadowMapPosition.x) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0) +
                                         max((abs(shadowMapPosition.y) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0) +
                                         clamp((abs(shMapDepthCoord) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0, 1.0),
                                     0.0, 1.0);
-                            } else {
-                                shade = 1.0;
-                            }
                             vec4 shadowMapTexel[NUM_SHADOW_MAP_SAMPLES];
                             // read the value of the texel from the shadow map
                             // indexing samplers with loop variables is not supported by specification
@@ -125,13 +121,15 @@
                                 float absErrorTolerance = 1.0 / 255.0 * depthRange;
                                 // check if there is depth content on the texel, which is in a range not checked before
                                 // (by depth or by coordinates)
-                                if ((texelDepth > 0.0) && ((absDepth >= minDepthAbove - absErrorTolerance) || (absDepth <= maxDepthBelow + absErrorTolerance) || !covered)) {
-                                    if(texelDepth > (depth + DEPTH_ERROR_TOLERANCE)) {
-                                        lighted = max(0.0, lighted - shade / float(NUM_SHADOW_MAP_SAMPLES));
-                                        if (lighted == 0.0) {
-                                            break;
-                                        }
-                                    }
+                                lighted = max(0.0, lighted - 
+                                    min(1.0, ifGreater(texelDepth, max(depth + DEPTH_ERROR_TOLERANCE, 0.0)) * 
+                                        (
+                                            ifGreaterEqual(absDepth, minDepthAbove - absErrorTolerance) + 
+                                            ifGreaterEqual(maxDepthBelow + absErrorTolerance, absDepth) + 
+                                            notCovered)) * 
+                                    shade / float(NUM_SHADOW_MAP_SAMPLES));
+                                if (lighted == 0.0) {
+                                    break;
                                 }
                             }
                             if (lighted == 0.0) {
@@ -139,7 +137,7 @@
                             }
                             // save the state that the XY position of this fragment has already been inside the
                             // area covered by a shadow map - but only after the previous state has been checked
-                            covered = true;
+                            notCovered = 0.0;
                         }
                         // set the variables to exclude the already checked depth region in the next step
                         minDepthAbove = -shadowMapPosition.z + depthRange;
@@ -147,25 +145,23 @@
                     }
                 }
 
-                if (lighted > 0.0) {
-                    specularFactor = shininess > 0.0 ? pow(max(dot(normal, normalize(u_dirLights[i].direction - viewDir)), 0.0), shininess) : 0.0;
+                specularFactor = ifGreater(min(shininess, lighted), 0.0) * pow(max(dot(normal, normalize(u_dirLights[i].direction - viewDir)), 0.0), shininess);
 
-                    gl_FragColor.rgb += lighted *
-                        vec3(
-                            // the RGB components
-                                clamp(
-                                // diffuse light reflected for different light sources
-                                u_dirLights[i].color * diffuseFactor
-                                // clamp each component
-                                , 0.0, 1.0)
-                                // modulate with the colors from the vertices and the texture
-                                // the above components cannot make the surface lighter then
-                                // the modulated diffuse texture
-                                * diffuseColor.rgb
-                                // add specular lighting, this can make the surface "overlighted"
-                                + specularFactor * u_dirLights[i].color * texSpec.rgb
-                        );
-                }
+                gl_FragColor.rgb += lighted *
+                    vec3(
+                        // the RGB components
+                            clamp(
+                            // diffuse light reflected for different light sources
+                            u_dirLights[i].color * diffuseFactor
+                            // clamp each component
+                            , 0.0, 1.0)
+                            // modulate with the colors from the vertices and the texture
+                            // the above components cannot make the surface lighter then
+                            // the modulated diffuse texture
+                            * diffuseColor.rgb
+                            // add specular lighting, this can make the surface "overlighted"
+                            + specularFactor * u_dirLights[i].color * texSpec.rgb
+                    );
             }
         }
     }
