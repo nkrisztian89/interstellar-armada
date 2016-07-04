@@ -1500,7 +1500,7 @@ define([
                     }
                 }
                 // target arrow, if the target is not visible on the screen
-                direction = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], mat.prod34(target.getPhysicalPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
+                direction = mat.getRowD4(mat.prod34(target.getPhysicalPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
                 behind = direction[3] < 0;
                 vec.normalize4D(direction);
                 if (behind || (direction[0] < -1) || (direction[0] > 1) || (direction[1] < -1) || (direction[1] > 1)) {

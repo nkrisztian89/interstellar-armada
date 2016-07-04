@@ -351,10 +351,10 @@ define([
          */
         this._scalingMatrix = scalingMatrix || mat.identity4();
         /**
-         * The cached calculated value of the cascaded scaling matrix (with the scaling of the parent nodes applied) for the current frame.
+         * The cached calculated value of the cascaded scaling matrix (with the scaling of the parent nodes applied).
          * @type Float32Array
          */
-        this._cascadeScalingMatrixForFrame = null;
+        this._cascadeScalingMatrix = null;
         /**
          * Cache variable to store the calculated value of the combined model matrix.
          * @type Float32Array
@@ -415,7 +415,6 @@ define([
          */
         function resetCachedValues() {
             this._positionMatrixInCameraSpace = null;
-            this._cascadeScalingMatrixForFrame = null;
             this._modelMatrixForFrame = null;
             this._modelMatrixInverseForFrame = null;
         }
@@ -584,6 +583,7 @@ define([
             this._scalingMatrix = value;
             this._modelMatrix = null;
             this._modelMatrixInverse = null;
+            this._cascadeScalingMatrix = null;
         }
         /**
          * Returns a scaling matrix corresponding to the stacked scaling applied
@@ -591,12 +591,12 @@ define([
          * @returns {Float32Array}
          */
         function getCascadeScalingMatrix() {
-            if (!this._cascadeScalingMatrixForFrame) {
-                this._cascadeScalingMatrixForFrame = this._parent ?
+            if (!this._cascadeScalingMatrix) {
+                this._cascadeScalingMatrix = this._parent ?
                         mat.prod3x3SubOf4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
                         this._scalingMatrix;
             }
-            return this._cascadeScalingMatrixForFrame;
+            return this._cascadeScalingMatrix;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -679,7 +679,7 @@ define([
          * @returns {Object} 
          */
         function getSizeInsideViewFrustum(camera, checkNearAndFarPlanes) {
-            var size, scalingMatrix, baseMatrix, fullMatrix, position, xOffsetPosition, yOffsetPosition, xOffset, yOffset;
+            var size, scalingMatrix, baseMatrix, fullMatrix, position, xOffsetPosition, yOffsetPosition, xOffset, yOffset, factor;
             // scaling and orientation is lost here, since we create a new translation matrix based on the original transformation
             baseMatrix = this.getPositionMatrixInCameraSpace(camera);
             scalingMatrix = this.getCascadeScalingMatrix();
@@ -697,10 +697,11 @@ define([
             // along the axes of the camera space
             fullMatrix = mat.prod34(scalingMatrix, baseMatrix, camera.getProjectionMatrix());
             size = this.getSize();
-            position = vec.mulVec4Mat4([0.0, 0.0, 0.0, 1.0], fullMatrix);
-            position[0] = (position[0] === 0.0) ? 0.0 : position[0] / position[3];
-            position[1] = (position[1] === 0.0) ? 0.0 : position[1] / position[3];
-            position[2] = (position[2] === 0.0) ? 0.0 : position[2] / position[3];
+            factor = 1 / fullMatrix[15];
+            position = [
+                (fullMatrix[12] === 0.0) ? 0.0 : fullMatrix[12] * factor,
+                (fullMatrix[13] === 0.0) ? 0.0 : fullMatrix[13] * factor,
+                (fullMatrix[14] === 0.0) ? 0.0 : fullMatrix[14] * factor];
             // frustum culling: sides
             xOffsetPosition = vec.mulVec4Mat4([size, 0.0, 0.0, 1.0], fullMatrix);
             yOffsetPosition = vec.mulVec4Mat4([0.0, size, 0.0, 1.0], fullMatrix);
