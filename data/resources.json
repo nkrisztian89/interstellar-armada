@@ -63,7 +63,7 @@
             "name": "trainingProjectile",
             "basepath": "trainingProjectile",
             "format": "png",
-            "useMipmap": false,
+            "useMipmap": true,
             "typeSuffixes": {
                 "emissive": ""
             },
@@ -76,7 +76,7 @@
             "name": "plasma",
             "basepath": "plasma_full",
             "format": "png",
-            "useMipmap": false,
+            "useMipmap": true,
             "typeSuffixes": {
                 "emissive": ""
             },
@@ -89,7 +89,7 @@
             "name": "proton",
             "basepath": "proton_full",
             "format": "png",
-            "useMipmap": false,
+            "useMipmap": true,
             "typeSuffixes": {
                 "emissive": ""
             },
@@ -102,7 +102,7 @@
             "name": "ion",
             "basepath": "ion_full",
             "format": "png",
-            "useMipmap": false,
+            "useMipmap": true,
             "typeSuffixes": {
                 "emissive": ""
             },

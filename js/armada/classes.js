@@ -1139,6 +1139,12 @@ define([
          */
         this._intersectionPositions = dataJSON ? (dataJSON.intersectionPositions || []) : null;
         /**
+         * The projectile model will be created based on this width, by "trimming" it along the X and Z axes, both in terms of vertex and
+         * texture coordinates. Should be between 0 and 1.
+         * @type Number
+         */
+        this._width = dataJSON ? (dataJSON.width || 1) : 0;
+        /**
          * Mass of the projectile in kilograms. Determines how fast will it fly when 
          * shot from weapons.
          * @type Number
@@ -1184,7 +1190,7 @@ define([
      * @override
      */
     ProjectileClass.prototype.acquireResources = function () {
-        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel(PROJECTILE_MODEL_NAME_PREFIX + this.getName(), this._intersectionPositions)});
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel(PROJECTILE_MODEL_NAME_PREFIX + this.getName(), this._intersectionPositions, this._width)});
         this._muzzleFlash.acquireResources();
         this._explosionClass.acquireResources();
     };

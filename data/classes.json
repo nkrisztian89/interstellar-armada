@@ -1389,6 +1389,7 @@
             "mass": 1,
             "duration": 4000,
             "intersectionPositions": [0],
+            "width": 0.35,
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",
@@ -1409,6 +1410,7 @@
             "mass": 2,
             "duration": 4000,
             "intersectionPositions": [0],
+            "width": 0.3,
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",
@@ -1429,6 +1431,7 @@
             "mass": 10,
             "duration": 4000,
             "intersectionPositions": [0.35],
+            "width": 0.65,
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",
@@ -1449,6 +1452,7 @@
             "mass": 16,
             "duration": 4000,
             "intersectionPositions": [0],
+            "width": 0.2,
             "muzzleFlash": {
                 "shader": "particle",
                 "texture": "flare",

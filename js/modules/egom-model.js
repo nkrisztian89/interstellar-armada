@@ -2254,42 +2254,50 @@ define([
             return result;
         },
         /**
-         * Sets up and returns a simple model that is suitable for rendering
-         * billboards that turn around one axis to face the camera. The model
-         * contains one square to serve as the turning side view (with texture
-         * coordinates corresponding to the upper half of the texture) and a set 
-         * of intersecting squares that are perpendicular to the first one
-         * (with texture coordinates corresponding to the lower half of the 
-         * texture), to serve as the front/back view(s) so that the billboard 
-         * does not look flat at sharp angles.
+         * Sets up and returns a simple model that is suitable for rendering billboards that turn around one axis to face the camera. The 
+         * model contains one square to serve as the turning side view (with texture coordinates corresponding to the upper half of the 
+         * texture) and a set of intersecting squares that are perpendicular to the first one (with texture coordinates corresponding to the 
+         * lower half of the texture), to serve as the front/back view(s) so that the billboard does not look flat at sharp angles.
          * @param {String} [name] The name of the model to be created.
-         * @param {Number[]} [intersections] A set of numbers between -1 and 1
-         * representing the points where the squares serving as the front view 
-         * should be created along the side view square.
+         * @param {Number[]} [intersections] A set of numbers between -1 and 1 representing the points where the squares serving as the 
+         * front view should be created along the side view square.
+         * @param {Number} width On X and Z axes, the model will be "trimmed" using this ratio (should be between 0 and 1), by multiplying 
+         * both its vertex and texture coordinates.
          * @returns {Model}
          */
-        turningBillboardModel: function (name, intersections) {
-            var i, result = new Model();
+        turningBillboardModel: function (name, intersections, width) {
+            var i,
+                    tLeft = 0.5 - 0.5 * width, tRight = 0.5 + 0.5 * width,
+                    tTop = 0.75 - 0.25 * width, tBottom = 0.75 + 0.25 * width,
+                    result = new Model();
             if (name) {
                 result.setName(name);
             }
 
-            result.appendVertex([-1, -1, 0]);
-            result.appendVertex([1, -1, 0]);
-            result.appendVertex([1, 1, 0]);
-            result.appendVertex([-1, 1, 0]);
+            result.appendVertex([-width, -1, 0]);
+            result.appendVertex([width, -1, 0]);
+            result.appendVertex([width, 1, 0]);
+            result.appendVertex([-width, 1, 0]);
 
-            result.addQuad(0, 1, 2, 3, {texCoords: [[0.0, 0.5], [1.0, 0.5], [1.0, 0.0], [0.0, 0.0]]});
+            result.addQuad(0, 1, 2, 3, {texCoords: [[tLeft, 0.5], [tRight, 0.5], [tRight, 0.0], [tLeft, 0.0]]});
 
             if (intersections) {
                 for (i = 0; i < intersections.length; i++) {
-                    result.appendVertex([1, intersections[i], -1]);
-                    result.appendVertex([-1, intersections[i], -1]);
-                    result.appendVertex([-1, intersections[i], 1]);
-                    result.appendVertex([1, intersections[i], 1]);
+                    result.appendVertex([width, intersections[i], -width]);
+                    result.appendVertex([-width, intersections[i], -width]);
+                    result.appendVertex([-width, intersections[i], width]);
+                    result.appendVertex([width, intersections[i], width]);
 
-                    result.addQuad(((i + 1) * 4), ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3, {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
-                    result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4), {texCoords: [[0.0, 1.0], [1.0, 1.0], [1.0, 0.5], [0.0, 0.5]]});
+                    result.addQuad(((i + 1) * 4), ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3,
+                            {
+                                texCoords:
+                                        [[tLeft, tBottom], [tRight, tBottom], [tRight, tTop], [tLeft, tTop]]
+                            });
+                    result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4),
+                            {
+                                texCoords:
+                                        [[tLeft, tBottom], [tRight, tBottom], [tRight, tTop], [tLeft, tTop]]
+                            });
                 }
             }
 
