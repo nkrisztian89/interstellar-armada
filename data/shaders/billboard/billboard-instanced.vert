@@ -6,14 +6,14 @@ uniform vec3 u_eyePos;
 
 // vertex attributes
 attribute vec3 a_position;
-attribute vec2 a_texCoord;
+attribute mediump vec2 a_texCoord;
 
 // instance attributes
 attribute vec3 i_position;
 attribute vec3 i_direction;
 attribute float i_size;
 	
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
 	vec3 eyeToModel = i_position - u_eyePos;

@@ -4,9 +4,9 @@ precision mediump float;
 uniform sampler2D u_emissiveTexture;
 
 // instance uniforms
-uniform vec4 u_color;
+uniform lowp vec4 u_color;
 	
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 	
 void main() {
 	gl_FragColor = 

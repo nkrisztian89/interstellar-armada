@@ -6,13 +6,13 @@ uniform mat4 u_projMatrix;
 
 // vertex attributes
 attribute vec3 a_position;
-attribute vec2 a_texCoord;
+attribute mediump vec2 a_texCoord;
 
 // instance uniforms
 uniform vec3 u_position;
 uniform float u_billboardSize;
 	
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
 	gl_Position = u_cameraMatrix * vec4(u_position, 1.0);

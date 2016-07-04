@@ -1365,7 +1365,7 @@ define([
                     return utils.getSafeEnumValue(ShaderVariableType, s, ShaderVariableType.NONE) !== ShaderVariableType.NONE;
                 },
                 addStructMembers = function (uniform, uniformType) {
-                    var structFound, innerWords, j;
+                    var structFound, innerWords, j, typeIndex;
                     structFound = false;
                     for (j = 0; j < sourceLines.length; j++) {
                         innerWords = sourceLines[j].split(" ");
@@ -1379,7 +1379,8 @@ define([
                                 break;
                             }
                             if (innerWords.length >= 2) {
-                                uniform.addMember(new ShaderUniform(innerWords[1].split(";")[0], innerWords[0], 0));
+                                typeIndex = isPrecisionQualifier(innerWords[0]) ? 1 : 0;
+                                uniform.addMember(new ShaderUniform(innerWords[typeIndex + 1].split(";")[0], innerWords[typeIndex], 0));
                             }
                         }
                     }

@@ -9,9 +9,9 @@ uniform float u_size;
 uniform vec3 u_eyePos;
 
 attribute vec3 a_position;
-attribute vec2 a_texCoord;
+attribute mediump vec2 a_texCoord;
 	
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
 	vec3 eyeToModel = u_position - u_eyePos;

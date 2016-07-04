@@ -1,4 +1,4 @@
-uniform vec4 u_revealColor;
+uniform lowp vec4 u_revealColor;
 
 // the Y coordinate in model space from where the fragments are revealed
 uniform float u_revealStart;

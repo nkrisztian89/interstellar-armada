@@ -5,12 +5,12 @@ uniform mat4 u_projMatrix;
 
 uniform mat4 u_modelMatrix;
 
-uniform float u_billboardSize;
+uniform mediump float u_billboardSize;
 
 attribute vec3 a_position;
-attribute vec2 a_texCoord;
+attribute mediump vec2 a_texCoord;
 	
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
 	gl_Position = u_cameraOrientationMatrix * u_modelMatrix * vec4(a_position * u_billboardSize, 1.0);

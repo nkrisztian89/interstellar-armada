@@ -10,9 +10,9 @@ uniform mat4 u_projMatrix;
 uniform vec3 u_position;
 
 attribute vec3 a_position;
-attribute vec2 a_texCoord;
+attribute mediump vec2 a_texCoord;
 
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
     v_texCoord = a_texCoord;

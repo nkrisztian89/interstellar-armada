@@ -3,15 +3,15 @@
 uniform mat4 u_cameraOrientationMatrix;
 uniform mat4 u_projMatrix;
 
-uniform float u_billboardSize;
-uniform float u_relAge;
+uniform mediump float u_billboardSize;
+uniform mediump float u_relAge;
 
 attribute vec3 a_position;
-attribute vec2 a_texCoord;
+attribute mediump vec2 a_texCoord;
 
 uniform vec3 u_position;
 	
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
 	gl_Position = u_cameraOrientationMatrix * vec4(u_position, 1.0);

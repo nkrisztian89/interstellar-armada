@@ -3,13 +3,13 @@
 
 struct PointLight
     {
-        vec4 color; // RGB color and intensity
+        lowp vec4 color; // RGB color and intensity
         vec3 position; // position
     };
 
 struct SpotLight
     {
-        vec4 color; // RGB color and intensity
+        lowp vec4 color; // RGB color and intensity
         vec4 spot; // spot direction XYZ and cutoff angle cosine
         vec4 position; // position and full intensity angle cosine
     };

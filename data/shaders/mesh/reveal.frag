@@ -13,7 +13,7 @@ void main() {
 #include "mesh/frag/shadow-mapping-full.glsl"
 #include "mesh/frag/point-spot-lights-diff.glsl"
 
-        vec4 color = gl_FragColor;
+        lowp vec4 color = gl_FragColor;
 
 #include "mesh/frag/reveal-transition.glsl"
 }

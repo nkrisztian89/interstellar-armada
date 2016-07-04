@@ -4,7 +4,7 @@ precision mediump float;
 uniform sampler2D u_emissiveTexture;
 	
 // the texCoords passed in from the vertex shader.
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 	
 void main() {
 	gl_FragColor = 

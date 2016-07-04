@@ -2,7 +2,7 @@
 
 struct DirLight
     {
-        vec3 color;
+        lowp vec3 color;
         vec3 direction;
         mat4 matrix;
         vec3 translationVector;

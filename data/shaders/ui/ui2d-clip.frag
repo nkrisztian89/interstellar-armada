@@ -7,7 +7,7 @@ uniform sampler2D u_colorTexture;
 uniform vec4 u_clipCoords;
 uniform vec4 u_clipColor;
 
-varying vec2 v_texCoord;
+varying mediump vec2 v_texCoord;
 
 void main() {
     if ((v_texCoord.x < u_clipCoords.x) || (v_texCoord.x > u_clipCoords.y) || 
