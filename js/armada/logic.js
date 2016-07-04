@@ -1028,12 +1028,12 @@ define([
             positionVectorInWorldSpace = mat.translationVector3(this._physicalModel.getPositionMatrix());
             velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
             hitObjects = hitObjectOctree.getObjects(
-                    Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * dt / 1000),
-                    Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * dt / 1000),
-                    Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * dt / 1000),
-                    Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * dt / 1000),
-                    Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * dt / 1000),
-                    Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * dt / 1000));
+                    Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT / 1000),
+                    Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT / 1000),
+                    Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT / 1000),
+                    Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT / 1000),
+                    Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT / 1000),
+                    Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT / 1000));
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 if (_showHitboxesForHitchecks) {
@@ -3986,8 +3986,11 @@ define([
      * @param {Spacecraft[]} objects The list of spacecrafts belonging to this node. (to be divided among its subnodes)
      * @param {Number} maximumDepth The maximum number of levels below this node that should be created when dividing the objects.
      * @param {Number} maximumObjectCount If the node has this much or fewer objects, it will not divide them further (become a leaf node)
+     * @param {Boolean} [isRootNode=false] If true, the node will calculate boundaries based on the contained spacecrafts and whenever
+     * asked for spacecrafts in a region outside these boundaries, it will return an emptry list instead of recursively checking its
+     * subnodes.
      */
-    function Octree(objects, maximumDepth, maximumObjectCount) {
+    function Octree(objects, maximumDepth, maximumObjectCount, isRootNode) {
         /**
          * The list of spacecrafts belonging to this node.
          * @type Spacecraft[]
@@ -3998,7 +4001,15 @@ define([
          * to its subnodes. Null in the case of leaf nodes.
          * @type Number[3]
          */
-        this._center = this._objects.length > 0 ? this._calculateCenter() : null;
+        this._center = null;
+        /*
+         * The minimum and maximum coordinates for the 3 axes where any part of any of the contained spacecrafts reside.
+         * @type Number[2][3]
+         */
+        this._boundaries = null;
+        if (this._objects.length > 0) {
+            this._calculateCenter(isRootNode);
+        }
         /**
          * The subnodes of this node, or null in case of leaf nodes.
          * @type Octree[8]
@@ -4006,21 +4017,47 @@ define([
         this._subnodes = (maximumDepth > 0) && (this._objects.length > maximumObjectCount) ? this._generateSubnodes(maximumDepth - 1, maximumObjectCount) : null;
     }
     /**
-     * Calculates and returns the center point for this node based on the associated spacecrafts. (their average position)
-     * @returns {Number[3]}
+     * Calculates and saves the center point for this node based on the associated spacecrafts. (their average position)
+     * @param {Boolean} [isRootNode=false] If true, also calculates and saves boundaries.
      */
-    Octree.prototype._calculateCenter = function () {
-        var i, n, x = 0, y = 0, z = 0, p;
+    Octree.prototype._calculateCenter = function (isRootNode) {
+        var i, n, x = 0, y = 0, z = 0, p, s;
+        if (isRootNode) {
+            p = this._objects[0].getPhysicalModel().getPositionMatrix();
+            s = this._objects[0].getPhysicalModel().getSize();
+            this._boundaries = [[p[0] - s, p[0] + s], [p[1] - s, p[1] + s], [p[2] - s, p[2] + s]];
+        }
         for (i = 0, n = this._objects.length; i < n; i++) {
             p = this._objects[i].getPhysicalModel().getPositionMatrix();
             x += p[12];
             y += p[13];
             z += p[14];
+            if (isRootNode) {
+                s = this._objects[i].getPhysicalModel().getSize();
+                if ((p[12] - s) < this._boundaries[0][0]) {
+                    this._boundaries[0][0] = p[12] - s;
+                }
+                if ((p[12] + s) > this._boundaries[0][1]) {
+                    this._boundaries[0][1] = p[12] + s;
+                }
+                if ((p[13] - s) < this._boundaries[1][0]) {
+                    this._boundaries[1][0] = p[13] - s;
+                }
+                if ((p[13] + s) > this._boundaries[1][1]) {
+                    this._boundaries[1][1] = p[13] + s;
+                }
+                if ((p[14] - s) < this._boundaries[2][0]) {
+                    this._boundaries[2][0] = p[14] - s;
+                }
+                if ((p[14] + s) > this._boundaries[2][1]) {
+                    this._boundaries[2][1] = p[14] + s;
+                }
+            }
         }
         x /= n;
         y /= n;
         z /= n;
-        return [x, y, z];
+        this._center = [x, y, z];
     };
     /**
      * Creates and returns the list of subnodes for this node by dividing its objects among them based on its center point and the given 
@@ -4091,14 +4128,14 @@ define([
             }
         }
         result = new Array(8);
-        result[0] = new Octree(lxlylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[1] = new Octree(lxlyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[2] = new Octree(lxhylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[3] = new Octree(lxhyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[4] = new Octree(hxlylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[5] = new Octree(hxlyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[6] = new Octree(hxhylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
-        result[7] = new Octree(hxhyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount);
+        result[0] = new Octree(lxlylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[1] = new Octree(lxlyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[2] = new Octree(lxhylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[3] = new Octree(lxhyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[4] = new Octree(hxlylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[5] = new Octree(hxlyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[6] = new Octree(hxhylz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
+        result[7] = new Octree(hxhyhz || utils.EMPTY_ARRAY, maximumDepth, maximumObjectCount, false);
         return result;
     };
     /**
@@ -4116,6 +4153,13 @@ define([
         var result;
         if (!this._subnodes) {
             return this._objects;
+        }
+        if (this._boundaries) {
+            if ((maxX < this._boundaries[0][0]) || (minX > this._boundaries[0][1]) ||
+                    (maxY < this._boundaries[1][0]) || (minY > this._boundaries[1][1]) ||
+                    (maxZ < this._boundaries[2][0]) || (minZ > this._boundaries[2][1])) {
+                return utils.EMPTY_ARRAY;
+            }
         }
         result = [];
         if (minX < this._center[0]) {
@@ -4662,7 +4706,7 @@ define([
         }
         projectiles = this._projectilePool.getObjects();
         if (projectiles.length > 0) {
-            octree = new Octree(this._hitObjects, 2, 1);
+            octree = new Octree(this._hitObjects, 2, 1, true);
             for (i = 0; i < projectiles.length; i++) {
                 projectiles[i].simulate(dt, octree);
                 if (projectiles[i].canBeReused()) {
