@@ -1262,6 +1262,10 @@ define([
         this._class.acquireResources(params);
     };
     /**
+     * @typedef {Function} logic~addToSceneCallback
+     * @param {ParameterizedMesh} model
+     */
+    /**
      * Adds a renderable node representing this weapon to the scene under the
      * passed parent node.
      * @param {ParameterizedMesh} parentNode The parent node to which to attach this
@@ -1272,8 +1276,9 @@ define([
      * @param {Boolean} wireframe Whether to add the model in wireframe rendering
      * mode.
      * @param {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
+     * @param {logic~addToSceneCallback} [callback]
      */
-    Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName) {
+    Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName, callback) {
         var i, n;
         this.acquireResources({omitShader: !!shaderName});
         if (shaderName) {
@@ -1318,6 +1323,9 @@ define([
             }
             if (!this._visualModel) {
                 this._visualModel = visualModel;
+            }
+            if (callback) {
+                callback(visualModel);
             }
         }.bind(this));
     };
@@ -1410,6 +1418,7 @@ define([
      * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
      * and it is in range (based on the last aiming status of the weapon)
+     * @returns {Boolean} Whether the weapon has actually fired.
      */
     Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed) {
         var i, p,
@@ -1418,7 +1427,7 @@ define([
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
                 scene = this._visualModel.getNode().getScene();
         if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
-            return;
+            return false;
         }
         // check cooldown
         if (this._cooldown >= this._class.getCooldown()) {
@@ -1477,7 +1486,9 @@ define([
                     scene.addPointLightSource(projectileLights[projClassName], PROJECTILE_LIGHT_PRIORITY);
                 }
             }
+            return true;
         }
+        return false;
     };
     /**
      * Sets new rotation angles (instantly) for this weapon (if it can be rotated)
@@ -3293,10 +3304,6 @@ define([
      * @property {Float32Array} [orientationMatrix]
      */
     /**
-     * @typedef {Function} Spacecraft~addToSceneCallback
-     * @param {ParameterizedMesh} model
-     */
-    /**
      * @function
      * Creates and adds the renderable objects to represent this spacecraft to
      * the passed scene.
@@ -3311,9 +3318,10 @@ define([
      * possible supplement, marking if that particular supplement should be 
      * added.
      * @param {Spacecraft~AddToSceneParams} [params]
-     * @param {Spacecraft~addToSceneCallback} callback
+     * @param {logic~addToSceneCallback} [callback]
+     * @param {logic~addToSceneCallback} [weaponCallback]
      */
-    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback) {
+    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback) {
         var i, blinkers, visualModel;
         addSupplements = addSupplements || {};
         params = params || {};
@@ -3402,7 +3410,7 @@ define([
             // add the weapons
             if (addSupplements.weapons === true) {
                 for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].addToScene(node, lod, wireframe, params.shaderName);
+                    this._weapons[i].addToScene(node, lod, wireframe, params.shaderName, weaponCallback);
                 }
             }
             // add the thruster particles
@@ -3565,14 +3573,16 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix;
+        var i, scaledOriMatrix, fired = false;
         scaledOriMatrix = this.getScaledOriMatrix();
         for (i = 0; i < this._weapons.length; i++) {
-            this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed);
+            fired = this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed) || fired;
         }
         // executing callbacks
-        for (i = 0; i < this._targetedBy.length; i++) {
-            this._targetedBy[i].handleTargetFired();
+        if (fired) {
+            for (i = 0; i < this._targetedBy.length; i++) {
+                this._targetedBy[i].handleTargetFired();
+            }
         }
     };
     /**
@@ -3769,7 +3779,7 @@ define([
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
         var i, damageIndicator, hitpointThreshold, explosion;
         // logic simulation: modify hitpoints
-        this._hitpoints -= damage;
+        this._hitpoints -= Math.max(0, damage - this._class.getArmor());
         if (this._hitpoints < 0) {
             this._hitpoints = 0;
         } else {

@@ -40,7 +40,10 @@
                     "axis": "z",
                     "degrees": 180
                 }
-            ]
+            ],
+            "equipment": {
+                "profile": "unarmed"
+            }
         },
         {
             "team": "practiceTargets",
@@ -54,7 +57,7 @@
                 }
             ],
             "equipment": {
-                "profile": "full"
+                "profile": "default"
             }
         },
         {
@@ -69,7 +72,7 @@
                 }
             ],
             "equipment": {
-                "profile": "full"
+                "profile": "default"
             }
         },
         {
@@ -84,7 +87,7 @@
                 }
             ],
             "equipment": {
-                "profile": "full"
+                "profile": "default"
             }
         }
     ]

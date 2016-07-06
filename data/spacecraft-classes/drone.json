@@ -5,6 +5,7 @@
     "description": "These drones are used for target practice exercises during the training of imperial fighter pilots. Cheap and easy to construct, they are assembled in a way to ensure they quickly fall to pieces when hit by the low-energy charges of training guns. These pieces are then collected and used for building new drones, thus providing a way of practicing that is both economical and closer to real life situations than a simulator.",
     "showInDatabase": true,
     "hitpoints": 10,
+    "armor": 0,
     "model": "drone",
     "shader": "ship",
     "texture": "libra",
@@ -281,18 +282,16 @@
         {
             "name": "default",
             "weapons": [
+                {
+                    "class": "trainingGun"
+                }
             ],
             "propulsion": {
                 "class": "imperialDrone"
             }
         },
         {
-            "name": "full",
-            "weapons": [
-                {
-                    "class": "trainingGun"
-                }
-            ],
+            "name": "unarmed",
             "propulsion": {
                 "class": "imperialDrone"
             }

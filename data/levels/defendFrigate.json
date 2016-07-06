@@ -30,6 +30,7 @@
             "class": "taurus",
             "name": "Danube",
             "ai": "ship",
+            "initialTarget": "Don",
             "position": [0, 50, 0],
             "equipment": {
                 "profile": "full"
@@ -43,7 +44,10 @@
                 "name": "alpha",
                 "index": 1
             },
-            "position": [-100, -10, 10]
+            "position": [-100, -30, 10],
+            "equipment": {
+                "profile": "full"
+            }
         },
         {
             "team": "empire",
@@ -53,7 +57,17 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-65, -50, 20]
+            "position": [-65, -70, 20]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "squad": {
+                "name": "alpha",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [-135, -70, 20]
         },
         {
             "team": "rebels",
@@ -63,7 +77,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [-3000, 3200, -100],
+            "position": [-4000, 4200, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -82,7 +96,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-3035, 3235, -100],
+            "position": [-4035, 4235, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -101,7 +115,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [-2965, 3235, -100],
+            "position": [-3965, 4235, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -125,7 +139,7 @@
                 }
             ],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -174,7 +188,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [9000, -9000, -100],
+            "position": [14000, -14000, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -190,7 +204,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [9035, -9035, -100],
+            "position": [14035, -14035, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -209,7 +223,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [9035, -8965, -100],
+            "position": [14035, -13965, -100],
             "rotations": [
                 {
                     "axis": "z",
@@ -236,7 +250,7 @@
                 }
             ],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -280,6 +294,7 @@
         {
             "team": "rebels",
             "class": "aries",
+            "name": "Don",
             "ai": "ship",
             "position": [-15000, 0, -150],
             "rotations": [

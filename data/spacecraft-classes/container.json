@@ -5,6 +5,7 @@
     "description": "-",
     "showInDatabase": false,
     "hitpoints": 5,
+    "armor": 0,
     "model": "box",
     "shader": "ship",
     "texture": "libra",

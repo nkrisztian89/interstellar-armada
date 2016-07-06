@@ -31,7 +31,7 @@
             },
             "position": [0, 0, 0],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -44,14 +44,7 @@
             "ai": "fighter",
             "position": [35, -35, 0],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -64,14 +57,7 @@
             "ai": "fighter",
             "position": [-35, -35, 0],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -109,14 +95,7 @@
                 }
             ],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -135,14 +114,7 @@
                 }
             ],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         }
     ]

@@ -103,6 +103,12 @@ define([
              */
             MIN_DISTANCE_FACTOR = 0.06,
             /**
+             * Fighters will start evasive maneuvers if their current target fires at them from a distance farther than their range 
+             * multiplied by this number.
+             * @type Number
+             */
+            MIN_EVADE_DISTANCE_FACTOR = 0.5,
+            /**
              * During normal (not charge) attacks, fighters will approach / back off with a maximum speed equal to their acceleration
              * multiplied by this factor.
              * @type Number
@@ -211,6 +217,11 @@ define([
          * @type Spacecraft
          */
         this._spacecraft = spacecraft;
+        /**
+         * Cached value of the range of the first weapon of the controlled spacecraft (at still position).
+         * @type Number
+         */
+        this._weaponRange = (this._spacecraft && (this._spacecraft.getWeapons().length > 0)) ? this._spacecraft.getWeapons()[0].getRange() : 0;
     }
     /**
      * Controls the spacecraft to turn (yaw and pitch) in the desired direction specified by two angles.
@@ -404,10 +415,21 @@ define([
          * @type Spacecraft|null
          */
         this._isBlockedBy = null;
+        /**
+         * Cached value of whether the controlled spacecraft is currently facing its target.
+         * @type Boolean
+         */
+        this._facingTarget = false;
+        /**
+         * Cached value of the distance to the current target of the controled spacecraft.
+         * @type Boolean
+         */
+        this._targetDistance = 0;
         // attaching handlers to the various spacecraft events
         this._spacecraft.setOnBeingHit(this._handleBeingHit.bind(this));
         this._spacecraft.setOnTargetHit(this._handleTargetHit.bind(this));
         this._spacecraft.setOnAnySpacecraftHit(this._handleAnySpacecraftHit.bind(this));
+        this._spacecraft.setOnTargetFired(this._handleTargetFired.bind(this));
     }
     FighterAI.prototype = new SpacecraftAI();
     FighterAI.prototype.constructor = FighterAI;
@@ -481,6 +503,22 @@ define([
         }
     };
     /**
+     * Updates the AI state for when the current target of the controlled spacecraft fires.
+     */
+    FighterAI.prototype._handleTargetFired = function () {
+        var angle;
+        // if we see the current target firing at us, start a random evasive maneuver
+        if (!this._isBlockedBy && (this._evasiveManeuverTime < 0) &&
+                this._facingTarget && this._spacecraft && this._spacecraft.getTarget() && (this._spacecraft.getTarget().getTarget() === this._spacecraft) &&
+                (this._targetDistance > this._weaponRange * MIN_EVADE_DISTANCE_FACTOR)) {
+            this._evasiveManeuverTime = 0;
+            angle = Math.random() * 2 * Math.PI;
+            this._evasiveVelocityVector[0] = 1;
+            this._evasiveVelocityVector[1] = 0;
+            vec.rotate2(this._evasiveVelocityVector, angle);
+        }
+    };
+    /**
      * Updates the AI state for the case when the battle scene with all objects has been moved by a vector, updating stored world-space
      * positions.
      * @param {Number[3]} vector
@@ -501,11 +539,11 @@ define([
                 positionVector, targetPositionVector, vectorToTarget,
                 directionToTarget, relativeTargetDirection, relativeBlockerPosition,
                 /** @type Number */
-                targetDistance, targetHitTime,
+                targetHitTime,
                 ownSize, targetSize,
                 fireThresholdAngle,
                 acceleration, minDistance, maxDistance, speed, blockAvoidanceSpeed, baseDistance,
-                weaponCooldown, weaponRange,
+                weaponCooldown,
                 rollDuration, rollWaitTime,
                 angularAcceleration, maxAngularVelocity,
                 worldProjectileVelocity,
@@ -513,7 +551,7 @@ define([
                 /** @type Object */
                 targetYawAndPitch,
                 /** @type Boolean */
-                facingTarget, stillBlocked, strafingHandled,
+                stillBlocked, strafingHandled,
                 /** @type Array */
                 weapons,
                 /** @type Float32Array */
@@ -550,12 +588,12 @@ define([
                 relativeTargetDirection = vec.mulVec3Mat4(
                         vectorToTarget,
                         inverseOrientationMatrix);
-                targetDistance = vec.length3(relativeTargetDirection);
+                this._targetDistance = vec.length3(relativeTargetDirection);
                 vec.normalize3(relativeTargetDirection);
                 targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
                 this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
                 this._spacecraft.setSpeedTarget(acceleration * CHARGE_SPEED_FACTOR);
-                if ((targetDistance <= EXACT_PLACE_RANGE) || (relativeTargetDirection[1] < 0) || (speed < 0)) {
+                if ((this._targetDistance <= EXACT_PLACE_RANGE) || (relativeTargetDirection[1] < 0) || (speed < 0)) {
                     this._startNewAttackRun();
                 }
                 // .................................................................................................
@@ -568,10 +606,10 @@ define([
                 relativeTargetDirection = vec.mulVec3Mat4(
                         vectorToTarget,
                         inverseOrientationMatrix);
-                targetDistance = vec.length3(relativeTargetDirection);
+                this._targetDistance = vec.length3(relativeTargetDirection);
                 vec.normalize3(relativeTargetDirection);
                 targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                this._facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // turning towards target
                 this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
@@ -579,7 +617,7 @@ define([
                 // handling if another spacecraft blocks the attack path
                 if (this._isBlockedBy) {
                     stillBlocked = false;
-                    if (!this._isBlockedBy.canBeReused() && facingTarget) {
+                    if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
                         // checking if the blocking spacecraft is still in the way
                         if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, vectorToTarget, 1000, ownSize / 2)) {
                             relativeBlockerPosition = vec.mulVec3Mat4(
@@ -620,14 +658,14 @@ define([
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // firing
                     targetSize = target.getVisualModel().getScaledSize();
-                    fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / targetDistance);
+                    fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / this._targetDistance);
                     worldProjectileVelocity = weapons[0].getProjectileVelocity() + speed;
-                    targetHitTime = targetDistance / worldProjectileVelocity * 1000;
+                    targetHitTime = this._targetDistance / worldProjectileVelocity * 1000;
                     weaponCooldown = weapons[0].getCooldown();
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // aiming turnable weapons towards target
                     this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
-                    if (!facingTarget) {
+                    if (!this._facingTarget) {
                         this._timeSinceLastClosingIn = 0;
                         this._timeSinceLastTargetHit = 0;
                         this._hitCountByNonTarget = 0;
@@ -674,8 +712,7 @@ define([
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // managing distance from target based on weapons range
-                    weaponRange = weapons[0].getRange();
-                    // noirmal (non-charging behaviour)
+                    // normal (non-charging behaviour)
                     if (this._chargePhase === ChargePhase.NONE) {
                         // closing in the distance if we are unable to hit the target at the current range
                         closeInTriggerTime = targetHitTime + CLOSE_IN_TRIGGER_MISS_COUNT * weaponCooldown;
@@ -684,24 +721,24 @@ define([
                             this._timeSinceLastClosingIn = 0;
                         }
                         baseDistance = 0.5 * (ownSize + targetSize);
-                        maxDistance = baseDistance + this._maxDistanceFactor * weaponRange;
-                        minDistance = baseDistance + MIN_DISTANCE_FACTOR * weaponRange;
-                        if (!facingTarget) {
+                        maxDistance = baseDistance + this._maxDistanceFactor * this._weaponRange;
+                        minDistance = baseDistance + MIN_DISTANCE_FACTOR * this._weaponRange;
+                        if (!this._facingTarget) {
                             this._spacecraft.resetSpeed();
                         } else {
-                            this.approach(targetDistance, maxDistance, minDistance, acceleration * APPROACH_SPEED_FACTOR);
+                            this.approach(this._targetDistance, maxDistance, minDistance, acceleration * APPROACH_SPEED_FACTOR);
                         }
                         // charge attack behaviour (closing in at higher speed, without slowing)
                     } else if (this._chargePhase === ChargePhase.APPROACH_ATTACK) {
                         // calculating the distance at which the spacecraft will be able to avoid collision at charge speed
                         maxDistance = Math.sqrt((targetSize + ownSize * 0.5) * 2 / acceleration) * acceleration * CHARGE_SPEED_FACTOR;
-                        if (!facingTarget) {
+                        if (!this._facingTarget) {
                             this._spacecraft.resetSpeed();
                             this._chargePhase = ChargePhase.NONE;
                         } else {
                             this._spacecraft.setSpeedTarget(acceleration * CHARGE_SPEED_FACTOR);
                             // when the critical distance is reached, mark a destination beyond the target to head towards it
-                            if (targetDistance <= maxDistance) {
+                            if (this._targetDistance <= maxDistance) {
                                 this._chargePhase = ChargePhase.EVADE;
                                 directionToTarget = vec.normal3(vectorToTarget);
                                 this._chargeDestination = vec.sum3(
@@ -720,6 +757,8 @@ define([
                     this._spacecraft.resetSpeed();
                 }
             } else {
+                this._facingTarget = false;
+                this._targetDistance = 0;
                 this._spacecraft.resetSpeed();
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // aiming turnable weapons towards default position
@@ -826,7 +865,6 @@ define([
                 targetDistance,
                 ownSize, targetSize, fireThresholdAngle,
                 acceleration, maxDistance, baseDistance,
-                weaponRange,
                 thresholdAngle,
                 /** @type Object */
                 targetYawAndPitch, targetAngles,
@@ -872,9 +910,8 @@ define([
                 weapons = this._spacecraft.getWeapons();
                 if (weapons && weapons.length > 0) {
                     targetSize = target.getVisualModel().getScaledSize();
-                    weaponRange = weapons[0].getRange();
                     baseDistance = 0.25 * ownSize;
-                    maxDistance = baseDistance + SHIP_MAX_DISTANCE_FACTOR * weaponRange;
+                    maxDistance = baseDistance + SHIP_MAX_DISTANCE_FACTOR * this._weaponRange;
                     fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / targetDistance);
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // aiming turnable weapons towards target
@@ -935,6 +972,8 @@ define([
                     }
                 }
             } else {
+                // if there is no target...
+                this._spacecraft.resetSpeed();
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // aiming turnable weapons towards default position
                 this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);

@@ -5,6 +5,7 @@
     "description": "A light bomber class that has good self-defence and precision strike capabilities thanks to the large amount of smaller missiles it can carry and its relatively heavy armor and shielding.",
     "showInDatabase": true,
     "hitpoints": 45,
+    "armor": 0,
     "model": "viper",
     "shader": "ship",
     "texture": "viper",
@@ -407,6 +408,14 @@
     "equipmentProfiles": [
         {
             "name": "default",
+            "weapons": [
+                {
+                    "class": "heavyPlasmaGun"
+                },
+                {
+                    "class": "heavyPlasmaGun"
+                }
+            ],
             "propulsion": {
                 "class": "imperialBomberMk1"
             }

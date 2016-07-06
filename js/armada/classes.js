@@ -2590,6 +2590,12 @@ define([
                 (dataJSON.hitpoints || otherSpacecraftClass._hitpoints) :
                 (dataJSON.hitpoints || _showMissingPropertyError(this, "hitpoints") || 0);
         /**
+         * The thickness of the armor of this spacecraft, which is subtracted from the damage every time the spacecraft is hit.
+         * @type Number
+         */
+        this._armor = ((typeof dataJSON.armor) === "number") ? dataJSON.armor :
+                (otherSpacecraftClass ? otherSpacecraftClass._armor : (_showMissingPropertyError(this, "armor") || 0));
+        /**
          * When controlled by the AI, the spacecraft should orient itself into specific position using this turning style.
          * (enum SpacecraftTurnStyle)
          * @type String
@@ -2856,6 +2862,13 @@ define([
      */
     SpacecraftClass.prototype.getHitpoints = function () {
         return this._hitpoints;
+    };
+    /**
+     * 
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getArmor = function () {
+        return this._armor;
     };
     /**
      * @returns {String}

@@ -11,7 +11,7 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [7600, 750, 0],
+            "position": [9600, 750, 0],
             "rotations": [
                 {
                     "axis": "x",
@@ -27,11 +27,28 @@
     "spacecrafts": [
         {
             "class": "taurus",
+            "name": "St. Petersburg",
+            "team": "empire",
+            "ai": "ship",
+            "initialTarget": "Mississippi",
+            "position": [8500, 750, -800],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "taurus",
             "name": "Oslo",
             "team": "empire",
             "ai": "ship",
             "initialTarget": "Mississippi",
-            "position": [6500, 1500, -400],
+            "position": [8500, 1500, -400],
             "rotations": [
                 {
                     "axis": "z",
@@ -48,7 +65,7 @@
             "team": "empire",
             "ai": "ship",
             "initialTarget": "Mississippi",
-            "position": [6500, 1000, -400],
+            "position": [8500, 1000, -400],
             "rotations": [
                 {
                     "axis": "z",
@@ -65,7 +82,7 @@
             "team": "empire",
             "ai": "ship",
             "initialTarget": "Mississippi",
-            "position": [6500, 500, -400],
+            "position": [8500, 500, -400],
             "rotations": [
                 {
                     "axis": "z",
@@ -82,7 +99,7 @@
             "team": "empire",
             "ai": "ship",
             "initialTarget": "Mississippi",
-            "position": [6500, 0, -400],
+            "position": [8500, 0, -400],
             "rotations": [
                 {
                     "axis": "z",
@@ -101,7 +118,7 @@
                 "index": 1
             },
             "piloted": true,
-            "position": [7000, 0, -60],
+            "position": [9000, 0, -60],
             "rotations": [
                 {
                     "axis": "z",
@@ -120,7 +137,7 @@
             },
             "team": "empire",
             "ai": "fighter",
-            "position": [7100, 100, -60],
+            "position": [9100, 100, -60],
             "rotations": [
                 {
                     "axis": "z",
@@ -234,7 +251,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [-1500, 0, -200],
+            "position": [-3500, 0, -200],
             "rotations": [
                 {
                     "axis": "z",
@@ -253,7 +270,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-1500, 50, -200],
+            "position": [-3500, 50, -200],
             "rotations": [
                 {
                     "axis": "z",
@@ -272,7 +289,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [-1500, -50, -200],
+            "position": [-3500, -50, -200],
             "rotations": [
                 {
                     "axis": "z",
@@ -291,7 +308,7 @@
                 "index": 4
             },
             "ai": "fighter",
-            "position": [-1500, -100, -200],
+            "position": [-3500, -100, -200],
             "rotations": [
                 {
                     "axis": "z",
@@ -310,7 +327,7 @@
                 "index": 5
             },
             "ai": "fighter",
-            "position": [-1500, 100, -200],
+            "position": [-3500, 100, -200],
             "rotations": [
                 {
                     "axis": "z",
@@ -326,7 +343,7 @@
             "name": "Mississippi",
             "ai": "ship",
             "team": "rebels",
-            "position": [-2100, 500, -400],
+            "position": [-4100, 500, -400],
             "rotations": [
                 {
                     "axis": "z",

@@ -123,20 +123,10 @@ define([
              */
             _currentItemOriginalScale = 0,
             /**
-             * The size of the currently loaded models on the Y axis in model coorinates
-             * @type Number
-             */
-            _currentItemLength = 0,
-            /**
              * The size of the currently loaded models on the Y axis in meters
              * @type Number
              */
             _currentItemLengthInMeters = 0,
-            /**
-             * The Y coordinate of the frontmost point of the 3D model of the currently shown item
-             * @type Number
-             */
-            _currentItemFront = 0,
             /**
              * Whether we are in the first load cycle (no items have been loaded yet)
              * @type Boolean
@@ -257,6 +247,52 @@ define([
         }
     }
     /**
+     * Sets the uniform value functions related to the wireframe reveal state for the passed model.
+     * @param {ParameterizedMesh} model
+     */
+    function _setWireframeRevealUniformFunctions(model) {
+        var front = model.getMaxY(), length = model.getHeight();
+        model.setUniformValueFunction(UNIFORM_WIREFRAME_COLOR_NAME, function () {
+            return _getSetting(SETTINGS.WIREFRAME_COLOR);
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
+            // while revealing the solid model, the wireframe model will disappear starting from the other side
+            return (_revealState <= REVEAL_WIREFRAME_END_STATE);
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
+            return front - (
+                    (_revealState > REVEAL_WIREFRAME_END_STATE ?
+                            (_revealState - REVEAL_WIREFRAME_END_STATE) :
+                            _revealState)
+                    * length * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
+            return (_revealState <= REVEAL_WIREFRAME_END_STATE) ? length * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
+            return _getSetting(SETTINGS.REVEAL_COLOR);
+        });
+    }
+    /**
+     * Sets the uniform value functions related to the solid reveal state for the passed model.
+     * @param {ParameterizedMesh} model
+     */
+    function _setSolidRevealUniformFunctions(model) {
+        var front = model.getMaxY(), length = model.getHeight();
+        model.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
+            return true;
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
+            return front - ((_revealState - REVEAL_SOLID_START_STATE) * length * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
+            return (_revealState < REVEAL_SOLID_END_STATE) ? length * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
+        });
+        model.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
+            return _getSetting(SETTINGS.REVEAL_COLOR);
+        });
+    }
+    /**
      * Creates the game-logic item corresponding to the currently selected spacecraft class and marks all resources that need to be loaded
      * to display the its models for loading as well as sets the callbacks to set up the models after the resources have been loaded.
      */
@@ -280,19 +316,10 @@ define([
             }, function (model) {
                 _solidModel = model;
                 // set the necessary uniform functions for the reveal shader
-                _solidModel.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
-                    return true;
-                });
-                _solidModel.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
-                    return _currentItemFront - ((_revealState - REVEAL_SOLID_START_STATE) * _currentItemLength * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
-                }, this);
-                _solidModel.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
-                    return (_revealState < REVEAL_SOLID_END_STATE) ? _currentItemLength * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
-                }, this);
-                _solidModel.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
-                    return _getSetting(SETTINGS.REVEAL_COLOR);
-                });
-            }.bind(this));
+                _setSolidRevealUniformFunctions(_solidModel);
+            }, function (model) {
+                _setSolidRevealUniformFunctions(model);
+            });
         } else {
             _solidModel = null;
         }
@@ -304,27 +331,10 @@ define([
             }, function (model) {
                 _wireframeModel = model;
                 // set the necessary uniform functions for the one colored reveal shader
-                _wireframeModel.setUniformValueFunction(UNIFORM_WIREFRAME_COLOR_NAME, function () {
-                    return _getSetting(SETTINGS.WIREFRAME_COLOR);
-                });
-                _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
-                    // while revealing the solid model, the wireframe model will disappear starting from the other side
-                    return (_revealState <= REVEAL_WIREFRAME_END_STATE);
-                }, this);
-                _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
-                    return _currentItemFront - (
-                            (_revealState > REVEAL_WIREFRAME_END_STATE ?
-                                    (_revealState - REVEAL_WIREFRAME_END_STATE) :
-                                    _revealState)
-                            * _currentItemLength * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
-                }, this);
-                _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
-                    return (_revealState <= REVEAL_WIREFRAME_END_STATE) ? _currentItemLength * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
-                }, this);
-                _wireframeModel.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
-                    return _getSetting(SETTINGS.REVEAL_COLOR);
-                });
-            }.bind(this));
+                _setWireframeRevealUniformFunctions(_wireframeModel);
+            }, function (model) {
+                _setWireframeRevealUniformFunctions(model);
+            });
         } else {
             _wireframeModel = null;
         }
@@ -509,7 +519,6 @@ define([
      */
     DatabaseScreen.prototype._updateItemInfo = function () {
         var shipClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex];
-        _currentItemLength = _currentItem ? _currentItem.getVisualModel().getHeight() : 0;
         _currentItemLengthInMeters = _currentItem ? _currentItem.getVisualModel().getHeightInMeters() : 0;
         // full names can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise the stock value is displayed
@@ -711,8 +720,6 @@ define([
                 // applying original scale
                 _currentItemOriginalScale = _currentItem.getVisualModel().getScalingMatrix()[0];
                 _scaleModels(_currentItemOriginalScale * _getSetting(SETTINGS.START_SIZE_FACTOR));
-                // setting the front that will be used by reveal shaders
-                _currentItemFront = _currentItem.getVisualModel().getMaxY();
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 this._sceneCanvasBindings[0].canvas.getManagedContext().setup();
                 if (_shouldReveal()) {

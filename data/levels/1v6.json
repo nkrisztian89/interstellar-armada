@@ -84,7 +84,7 @@
             "ai": "fighter",
             "position": [0, -50, -150],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -97,14 +97,7 @@
             "ai": "fighter",
             "position": [-35, -85, -150],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -117,14 +110,7 @@
             "ai": "fighter",
             "position": [35, -85, -150],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         }
     ]
