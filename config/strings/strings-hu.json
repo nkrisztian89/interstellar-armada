@@ -56,7 +56,8 @@
         "ready": "kész!"
     },
     "spacecraftStats": {
-        "armor": "Páncélzat"
+        "armor": "Páncélzat",
+        "armorRating": "szint: {rating}"
     },
     "team": {
         "team": "{id}. csapat",

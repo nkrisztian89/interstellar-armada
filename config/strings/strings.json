@@ -31,7 +31,8 @@
         "ready": "ready!"
     },
     "spacecraftStats": {
-        "armor": "Armor"
+        "armor": "Armor",
+        "armorRating": "rating: {rating}"
     },
     "level": {
         "targetPracticeBoxes": "Basic target practice",

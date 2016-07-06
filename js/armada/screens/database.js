@@ -418,7 +418,8 @@ define([
     function getStatsFormatString() {
         return strings.get(strings.DATABASE.LENGTH) + ": {length}<br/>" +
                 strings.get(strings.DATABASE.MASS) + ": {mass}<br/>" +
-                strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor}<br/>" +
+                strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor} (" +
+                strings.get(strings.SPACECRAFT_STATS.ARMOR_RATING) + ")<br/>" +
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
                 strings.get(strings.DATABASE.THRUSTERS) + ": {thrusters}";
     }
@@ -528,6 +529,7 @@ define([
             length: (_currentItemLengthInMeters && utils.getLengthString(_currentItemLengthInMeters)) || "-",
             mass: utils.getMassString(shipClass.getMass()) || "-",
             armor: shipClass.getHitpoints() || "-",
+            rating: shipClass.getArmor() || "0",
             weaponSlots: shipClass.getWeaponSlots().length || "-",
             thrusters: shipClass.getThrusterSlots().length || "-"
         });

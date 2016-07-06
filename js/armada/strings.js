@@ -51,7 +51,8 @@ define([
         READY: {name: "loading.ready"}
     };
     strings.SPACECRAFT_STATS = {
-        ARMOR: {name: "spacecraftStats.armor"}
+        ARMOR: {name: "spacecraftStats.armor"},
+        ARMOR_RATING: {name: "spacecraftStats.armorRating"}
     };
     strings.LEVEL = {
         PREFIX: {name: "level.", optional: true}
