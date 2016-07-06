@@ -576,9 +576,6 @@ define([
                 // turning towards target
                 this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // aiming turnable weapons towards target
-                this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, dt);
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // handling if another spacecraft blocks the attack path
                 if (this._isBlockedBy) {
                     stillBlocked = false;
@@ -627,6 +624,9 @@ define([
                     worldProjectileVelocity = weapons[0].getProjectileVelocity() + speed;
                     targetHitTime = targetDistance / worldProjectileVelocity * 1000;
                     weaponCooldown = weapons[0].getCooldown();
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // aiming turnable weapons towards target
+                    this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
                     if (!facingTarget) {
                         this._timeSinceLastClosingIn = 0;
                         this._timeSinceLastTargetHit = 0;
@@ -721,6 +721,9 @@ define([
                 }
             } else {
                 this._spacecraft.resetSpeed();
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // aiming turnable weapons towards default position
+                this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);
             }
             if (!strafingHandled) {
                 // .................................................................................................
@@ -821,7 +824,7 @@ define([
                 angles, angleDifference,
                 /** @type Number */
                 targetDistance,
-                ownSize, targetSize,
+                ownSize, targetSize, fireThresholdAngle,
                 acceleration, maxDistance, baseDistance,
                 weaponRange,
                 thresholdAngle,
@@ -853,9 +856,6 @@ define([
             positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
             inverseOrientationMatrix = mat.inverseOfRotation4(this._spacecraft.getPhysicalOrientationMatrix());
             target = this._spacecraft.getTarget();
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            // aiming turnable weapons towards target / default position
-            this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, dt);
             this._targetInRange = false;
             if (target) {
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
@@ -873,8 +873,12 @@ define([
                 if (weapons && weapons.length > 0) {
                     targetSize = target.getVisualModel().getScaledSize();
                     weaponRange = weapons[0].getRange();
-                    baseDistance = 0.5 * (ownSize + targetSize);
+                    baseDistance = 0.25 * ownSize;
                     maxDistance = baseDistance + SHIP_MAX_DISTANCE_FACTOR * weaponRange;
+                    fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / targetDistance);
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // aiming turnable weapons towards target
+                    this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
                     if (!facingTarget) {
                         this._spacecraft.resetSpeed();
                     } else {
@@ -924,12 +928,16 @@ define([
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // firing
-                    if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <=
+                    if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <=
                             weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13])) {
                         this._spacecraft.fire(true);
                         this._targetInRange = true;
                     }
                 }
+            } else {
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // aiming turnable weapons towards default position
+                this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);
             }
         }
     };

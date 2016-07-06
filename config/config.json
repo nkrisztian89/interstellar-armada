@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:310 (2016.07.04.)",
+    "version": "0.3.0:311 (2016.07.06.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -63,6 +63,7 @@
                     "corvette.json",
                     "defendFrigate.json",
                     "patrolVsPatrol.json",
+                    "defendFrigates.json",
                     "level.json",
                     "libraTest.json",
                     "staticAvoidance.json",

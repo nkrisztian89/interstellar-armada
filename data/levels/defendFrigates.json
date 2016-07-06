@@ -1,0 +1,338 @@
+{
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+    },
+    "teams": [
+        "empire",
+        "rebels"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [7600, 750, 0],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                },
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "class": "taurus",
+            "name": "Oslo",
+            "team": "empire",
+            "ai": "ship",
+            "initialTarget": "Mississippi",
+            "position": [6500, 1500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "taurus",
+            "name": "Stockholm",
+            "team": "empire",
+            "ai": "ship",
+            "initialTarget": "Mississippi",
+            "position": [6500, 1000, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "taurus",
+            "name": "Tallinn",
+            "team": "empire",
+            "ai": "ship",
+            "initialTarget": "Mississippi",
+            "position": [6500, 500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "taurus",
+            "name": "Riga",
+            "team": "empire",
+            "ai": "ship",
+            "initialTarget": "Mississippi",
+            "position": [6500, 0, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "falcon",
+            "team": "empire",
+            "squad": {
+                "name": "alpha",
+                "index": 1
+            },
+            "piloted": true,
+            "position": [7000, 0, -60],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "falcon",
+            "squad": {
+                "name": "alpha",
+                "index": 2
+            },
+            "team": "empire",
+            "ai": "fighter",
+            "position": [7100, 100, -60],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "phantom",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [500, 1000, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "phantom",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [500, 1050, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "phantom",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [500, 950, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "phantom",
+                "index": 4
+            },
+            "ai": "fighter",
+            "position": [500, 900, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "phantom",
+                "index": 5
+            },
+            "ai": "fighter",
+            "position": [500, 1100, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "reaper",
+                "index": 1
+            },
+            "ai": "fighter",
+            "position": [-1500, 0, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "reaper",
+                "index": 2
+            },
+            "ai": "fighter",
+            "position": [-1500, 50, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "reaper",
+                "index": 3
+            },
+            "ai": "fighter",
+            "position": [-1500, -50, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "reaper",
+                "index": 4
+            },
+            "ai": "fighter",
+            "position": [-1500, -100, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "viper",
+            "team": "rebels",
+            "squad": {
+                "name": "reaper",
+                "index": 5
+            },
+            "ai": "fighter",
+            "position": [-1500, 100, -200],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ],
+            "equipment": {
+                "profile": "heavy"
+            }
+        },
+        {
+            "class": "libra",
+            "name": "Mississippi",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [-2100, 500, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 90
+                }
+            ]
+        }
+    ]
+}

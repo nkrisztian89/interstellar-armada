@@ -296,7 +296,7 @@ define([
                 if (this._autoTargeting && !this._controlledSpacecraft.getTarget()) {
                     this._controlledSpacecraft.targetNextHostile();
                 }
-                this._controlledSpacecraft.aimWeapons(this._weaponAimThreshold, dt);
+                this._controlledSpacecraft.aimWeapons(this._weaponAimThreshold, 0, dt);
             } else {
                 this._controlledSpacecraft = null;
             }

@@ -92,9 +92,13 @@ define([
          */
         AIMING: 3,
         /**
-         * The weapon is currently aimed at a target (ready to fire).
+         * The weapon is currently aimed at the direction towards the target, but the target is out of its range.
          */
-        AIMED: 4
+        AIMED_OUT_OF_RANGE: 4,
+        /**
+         * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
+         */
+        AIMED_IN_RANGE: 5
     },
     // ------------------------------------------------------------------------------
     // constants
@@ -1405,7 +1409,7 @@ define([
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
      * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
-     * (based on the last aiming status of the weapon)
+     * and it is in range (based on the last aiming status of the weapon)
      */
     Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed) {
         var i, p,
@@ -1413,7 +1417,7 @@ define([
                 projectilePosMatrix, projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
                 scene = this._visualModel.getNode().getScene();
-        if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED)) {
+        if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
             return;
         }
         // check cooldown
@@ -1491,13 +1495,15 @@ define([
      * Rotates the weapon towards a desired angle according to its rotation speed and the passed elapsed time.
      * @param {Number} angleOne The angle towards which to rotate the first rotator, in radians
      * @param {Number} angleTwo The angle towards which to rotate the second rotator, in radians
-     * @param {Number} threshold The weapon will not be rotated if it is closer to the desired angle than this value (in radians)
+     * @param {Number} turnThreshold The weapon will not be rotated if it is closer to the desired angle than this value (in radians)
+     * @param {Number} fireThreshold The weapon will only set an aimed status if it is closer to the desired angle than this value (in 
+     * radians)
      * @param {Number} dt The elapsed time, in milliseconds
      */
-    Weapon.prototype.rotateTo = function (angleOne, angleTwo, threshold, dt) {
+    Weapon.prototype.rotateTo = function (angleOne, angleTwo, turnThreshold, fireThreshold, dt) {
         var angleDifference, rotators, i, rotationAmount;
         if (!this._fixed) {
-            this._lastAimStatus = WeaponAimStatus.AIMED;
+            this._lastAimStatus = WeaponAimStatus.AIMED_IN_RANGE;
             rotators = this._class.getRotators();
             for (i = 0; i < rotators.length; i++) {
                 switch (i) {
@@ -1527,7 +1533,8 @@ define([
                     }
                 }
                 // perform the actual turn, if needed
-                if (Math.abs(angleDifference) > threshold) {
+                rotationAmount = 0;
+                if (Math.abs(angleDifference) > turnThreshold) {
                     rotationAmount = rotators[i].rotationRate * dt / 1000;
                     if (angleDifference > 0) {
                         this._rotationAngles[i] += Math.min(rotationAmount, angleDifference);
@@ -1535,7 +1542,7 @@ define([
                         this._rotationAngles[i] -= Math.min(rotationAmount, -angleDifference);
                     }
                     this._rotationChanged = true;
-                    if (rotationAmount < Math.abs(angleDifference)) {
+                    if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
                         this._lastAimStatus = WeaponAimStatus.AIMING;
                     }
                 }
@@ -1551,11 +1558,15 @@ define([
                     // if the weapon is restricted in turning around, apply the restriction
                     if (this._rotationAngles[i] > rotators[i].range[1]) {
                         this._rotationAngles[i] = rotators[i].range[1];
-                        this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
+                        if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
+                            this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
+                        }
                     }
                     if (this._rotationAngles[i] < rotators[i].range[0]) {
                         this._rotationAngles[i] = rotators[i].range[0];
-                        this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
+                        if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
+                            this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
+                        }
                     }
                 }
             }
@@ -1565,14 +1576,16 @@ define([
      * Rotates the weapon towards the angles necessary to make it point towards the passed position. (based on the weapon's rotation speed
      * and the elapsed time)
      * @param {Number[3]} targetPositionVector The position towards which the weapon should aim, in world-space coordinates.
-     * @param {Number} threshold The weapon will rotate if the angle between its current direction and the one pointing towards the given
-     * target is larger than this value, in radians.
+     * @param {Number} turnThreshold The weapon will rotate if the angle between its current direction and the one pointing towards the given
+     * target is greater than this value, in radians.
+     * @param {Number} fireThreshold The weapon will set an aimed status if the angle between its current direction and the one pointing 
+     * towards the given target is less than this value, in radians.
      * @param {Float32Array} shipScaledOriMatrix A 4x4 transformation matrix describing the scalin and rotation of the spacecraft that has
      * this weapon.
      * @param {Number} dt The elapsed time, in milliseconds.
      */
-    Weapon.prototype.aimTowards = function (targetPositionVector, threshold, shipScaledOriMatrix, dt) {
-        var basePointPosVector, vectorToTarget, yawAndPitch, rollAndYaw;
+    Weapon.prototype.aimTowards = function (targetPositionVector, turnThreshold, fireThreshold, shipScaledOriMatrix, dt) {
+        var basePointPosVector, vectorToTarget, yawAndPitch, rollAndYaw, inRange;
         if (!this._fixed) {
             // as a basis for calculating the direction pointing towards the target, the base point of the weapon is considered (in world 
             // space, transformed according to the current rotation angles of the weapon)
@@ -1582,18 +1595,22 @@ define([
             // transform to object space - relative to the weapon
             vectorToTarget = vec.mulMat4Vec3(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
             vectorToTarget = vec.mulMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
+            inRange = vec.length3(vectorToTarget) <= this.getRange();
             vec.normalize3(vectorToTarget);
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
                     yawAndPitch = vec.getYawAndPitch(vectorToTarget);
-                    this.rotateTo(-yawAndPitch.yaw, -yawAndPitch.pitch, threshold, dt);
+                    this.rotateTo(-yawAndPitch.yaw, -yawAndPitch.pitch, turnThreshold, fireThreshold, dt);
                     break;
                 case classes.WeaponRotationStyle.ROLL_YAW:
                     rollAndYaw = vec.getRollAndYaw(vectorToTarget);
-                    this.rotateTo(rollAndYaw.roll, rollAndYaw.yaw, threshold, dt);
+                    this.rotateTo(rollAndYaw.roll, rollAndYaw.yaw, turnThreshold, fireThreshold, dt);
                     break;
                 default:
                     application.crash();
+            }
+            if (!inRange && this._lastAimStatus === WeaponAimStatus.AIMED_IN_RANGE) {
+                this._lastAimStatus = WeaponAimStatus.AIMED_OUT_OF_RANGE;
             }
         }
     };
@@ -1606,7 +1623,7 @@ define([
         var rotators;
         if (!this._fixed) {
             rotators = this._class.getRotators();
-            this.rotateTo(rotators[0].defaultAngle, rotators[1].defaultAngle, threshold, dt);
+            this.rotateTo(rotators[0].defaultAngle, rotators[1].defaultAngle, threshold, 0, dt);
             this._lastAimStatus = WeaponAimStatus.NO_TARGET;
         }
     };
@@ -3781,20 +3798,22 @@ define([
     };
     /**
      * Rotates all the non-fixed weapons of the spacecraft to aim towards the calculated hitting position of the current target.
-     * @param {Number} threshold weapons will only be rotated if the angle between their current and the target direction is greater than
-     * this value, in radians.
+     * @param {Number} turnThreshold Weapons will only be rotated if the angle between their current and the target direction is greater 
+     * than this value, in radians.
+     * @param {Number} fireThreshold Weapons will only report an aimed status if the angle between their current and the target direction is 
+     * less than this value, in radians.
      * @param {Number} dt the elapsed time since the last simulation step, based on which the amount of rotation will be calculated.
      */
-    Spacecraft.prototype.aimWeapons = function (threshold, dt) {
+    Spacecraft.prototype.aimWeapons = function (turnThreshold, fireThreshold, dt) {
         var futureTargetPosition, i;
         if (this._target && (this._weapons.length > 0)) {
             futureTargetPosition = this.getTargetHitPosition();
         }
         for (i = 0; i < this._weapons.length; i++) {
             if (this._target) {
-                this._weapons[i].aimTowards(futureTargetPosition, threshold, this.getScaledOriMatrix(), dt);
+                this._weapons[i].aimTowards(futureTargetPosition, turnThreshold, fireThreshold, this.getScaledOriMatrix(), dt);
             } else {
-                this._weapons[i].rotateToDefaultPosition(threshold, dt);
+                this._weapons[i].rotateToDefaultPosition(turnThreshold, dt);
             }
         }
     };
@@ -4395,6 +4414,20 @@ define([
         return null;
     };
     /**
+     * Returns the spacecraft added to this level that is identified by the given name. Returns null if such spacecraft does not exist.
+     * @param {String} name
+     * @returns {Spacecraft}
+     */
+    Level.prototype.getSpacecraft = function (name) {
+        var i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].getName() === name) {
+                return this._spacecrafts[i];
+            }
+        }
+        return null;
+    };
+    /**
      * Returns whether according to the current state of the level, the controlled spacecraft has won.
      * @returns {Boolean}
      */
@@ -4540,6 +4573,12 @@ define([
                 spacecraft.setTeam(team);
             }
             this._spacecrafts.push(spacecraft);
+        }
+        // loading predefined initial targets
+        for (i = 0; i < dataJSON.spacecrafts.length; i++) {
+            if (dataJSON.spacecrafts[i].initialTarget) {
+                this._spacecrafts[i].setTarget(this.getSpacecraft(dataJSON.spacecrafts[i].initialTarget));
+            }
         }
         this._randomShips = dataJSON.randomShips || {};
         this._randomShipsMapSize = dataJSON.randomShipsMapSize;

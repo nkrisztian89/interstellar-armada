@@ -1423,6 +1423,27 @@
             "explosion": "smallHitExplosion"
         },
         {
+            "name": "heavyPlasma",
+            "damage": 6,
+            "shader": "billboard",
+            "texture": "heavyPlasma",
+            "size": 4.0,
+            "mass": 3,
+            "duration": 4000,
+            "intersectionPositions": [0.2],
+            "width": 0.22,
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1.0, 0.0, 1.0, 1.0],
+                "size": 3.0,
+                "duration": 250
+            },
+            "lightColor": [1, 0, 1],
+            "lightIntensity": 100,
+            "explosion": "smallHitExplosion"
+        },
+        {
             "name": "proton",
             "damage": 35,
             "shader": "billboard",
@@ -1499,6 +1520,23 @@
                 }
             ],
             "attachmentPoint": [0, -4, 1.2]
+        },
+        {
+            "name": "heavyPlasmaGun",
+            "shader": "ship",
+            "model": "heavyPlasmaGun",
+            "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "grade": 1,
+            "cooldown": 500,
+            "barrels": [
+                {
+                    "projectile": "heavyPlasma",
+                    "projectileVelocity": 550,
+                    "position": [0, 415, -20]
+                }
+            ],
+            "attachmentPoint": [0, 0, 25]
         },
         {
             "name": "smallPlasmaTurret",
