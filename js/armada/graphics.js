@@ -898,6 +898,12 @@ define([
         return false;
     };
     /**
+     * Selects the first option (having the lowest value) in the list.
+     */
+    OrderedNamedNumericOptions.prototype.setLowest = function () {
+        this._currentIndex = 0;
+    };
+    /**
      * Returns the numeric value of the first (lowest) option in the stored list.
      * @returns {Number}
      */
@@ -1164,9 +1170,14 @@ define([
     /**
      * If needed, decreases the currently set shader complexity level to one at which the requirements (with the current feature settings)
      * are satisfied by the graphics driver.
+     * @param {Boolean} disableFeatures If true, disables all shader features if the current settings are not satisfied, and only starts to
+     * lower the complexity if the requirements are still not met.
      */
-    GraphicsContext.prototype._setFallbackShaderComplexity = function () {
+    GraphicsContext.prototype._setFallbackShaderComplexity = function (disableFeatures) {
         var i;
+        if (disableFeatures && !this._shaderRequirementsAreSatisfied()) {
+            this._disableShaderFeatures();
+        }
         i = this.getShaderComplexities().indexOf(this.getShaderComplexity());
         while ((i > 0) && !this._shaderRequirementsAreSatisfied({complexityLevelIndex: i})) {
             i--;
@@ -1316,9 +1327,9 @@ define([
                 this._dustParticleAmount.decrease();
             }
         }
-        // now that all default settings are loaded, descrease the shader complexity until it is at a level where the requirements with
-        // these defaults are satisfied
-        this._setFallbackShaderComplexity();
+        // now that all default settings are loaded, disable the features and descrease the shader complexity until the requirements are 
+        // satisfied
+        this._setFallbackShaderComplexity(true);
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
@@ -1590,6 +1601,15 @@ define([
         if (this.getMaxPointLights() !== originalMaxPointLights) {
             application.log("Changed number of maximum point lights from " + originalMaxPointLights + " to " + this.getMaxPointLights() + " to satisfy requirements of current shader complexity.", 1);
         }
+    };
+    /**
+     * Disables all shader features, resulting in a minimal setup for the current shader complexity level.
+     */
+    GraphicsContext.prototype._disableShaderFeatures = function () {
+        if (this.isShadowMappingEnabled()) {
+            this.setShadowMapping(false, false, true);
+        }
+        this._pointLightAmount.setLowest();
     };
     /**
      * Sets a new shader complexity level. Automatically lowers enabled shader features if needed to ensure that the shader requirements
