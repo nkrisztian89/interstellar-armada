@@ -788,6 +788,17 @@ define([
     BackgroundObjectClass.prototype.getLayers = function () {
         return this._layers;
     };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    BackgroundObjectClass.prototype.handleGraphicsSettingsChanged = function () {
+        var i;
+        GenericClass.prototype.handleGraphicsSettingsChanged.call(this);
+        for (i = 0; i < this._layers.length; i++) {
+            this._layers[i].handleGraphicsSettingsChanged();
+        }
+    };
     // ##############################################################################
     /**
      * @class Dust clouds represent a big group of tiny dust particles that are
@@ -1102,6 +1113,17 @@ define([
         }
         return false;
     };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    ExplosionClass.prototype.handleGraphicsSettingsChanged = function () {
+        var i;
+        GenericClass.prototype.handleGraphicsSettingsChanged.call(this);
+        for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
+            this._particleEmitterDescriptors[i].handleGraphicsSettingsChanged();
+        }
+    };
     // ##############################################################################
     /**
      * @class Projectiles such as bullets or plasma bursts can belong to different
@@ -1241,6 +1263,14 @@ define([
      */
     ProjectileClass.prototype.getExplosionClass = function () {
         return this._explosionClass;
+    };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    ProjectileClass.prototype.handleGraphicsSettingsChanged = function () {
+        TexturedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
+        this._muzzleFlash.handleGraphicsSettingsChanged();
     };
     // ##############################################################################
     /**
@@ -1612,6 +1642,14 @@ define([
      */
     PropulsionClass.prototype.getMaxTurnBurnLevel = function () {
         return this._maxTurnBurnLevel;
+    };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    PropulsionClass.prototype.handleGraphicsSettingsChanged = function () {
+        GenericClass.prototype.handleGraphicsSettingsChanged.call(this);
+        this._thrusterBurnParticle.handleGraphicsSettingsChanged();
     };
     // ##############################################################################
     /**
@@ -2532,6 +2570,13 @@ define([
         }
         return result;
     };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    BlinkerDescriptor.prototype.handleGraphicsSettingsChanged = function () {
+        this._particle.handleGraphicsSettingsChanged();
+    };
     // ##############################################################################
     /**
      * @class A spacecraft, such as a shuttle, fighter, bomber, destroyer, a trade 
@@ -3001,6 +3046,17 @@ define([
         }
         for (i = 0; i < this._blinkers.length; i++) {
             this._blinkers[i].acquireResources();
+        }
+    };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    SpacecraftClass.prototype.handleGraphicsSettingsChanged = function () {
+        var i;
+        TexturedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
+        for (i = 0; i < this._blinkers.length; i++) {
+            this._blinkers[i].handleGraphicsSettingsChanged();
         }
     };
     /**
