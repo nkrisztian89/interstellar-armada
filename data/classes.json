@@ -90,6 +90,42 @@
             ]
         },
         {
+            "name": "whiteStar",
+            "lightColor": [1.0, 1.0, 1.0],
+            "layers": [
+                {
+                    "size": 350,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                },
+                {
+                    "size": 150,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "bigBlueStar",
+            "lightColor": [0.5, 0.8, 1.0],
+            "layers": [
+                {
+                    "size": 250,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [0.1, 0.6, 1.0, 1.0]
+                },
+                {
+                    "size": 100,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
             "name": "brownPlanet",
             "lightColor": [0.0, 0.0, 0.0],
             "layers": [
@@ -97,6 +133,18 @@
                     "size": 500,
                     "shader": "backgroundFixBillboard",
                     "texture": "brownPlanet",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "bluePlanet",
+            "lightColor": [0.0, 0.0, 0.0],
+            "layers": [
+                {
+                    "size": 575,
+                    "shader": "backgroundFixBillboard",
+                    "texture": "bluePlanet",
                     "color": [1.0, 1.0, 1.0, 1.0]
                 }
             ]

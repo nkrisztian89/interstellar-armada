@@ -152,6 +152,43 @@
                     "class": "standard"
                 }
             ]
+        },
+        {
+            "name": "deepSpaceBluePlanet",
+            "skyboxes": [
+                {
+                    "class": "deepspace"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "whiteStar",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": 80
+                    }
+                },
+                {
+                    "class": "bigBlueStar",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": -20
+                    }
+                },
+                {
+                    "class": "bluePlanet",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": -35,
+                        "angleGamma": 90
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
         }
     ]
 }

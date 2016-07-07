@@ -47,6 +47,21 @@
             }
         },
         {
+            "name": "bluePlanet",
+            "basepath": "bluePlanet",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        },
+        {
             "name": "explosion",
             "basepath": "explosion",
             "format": "png",
