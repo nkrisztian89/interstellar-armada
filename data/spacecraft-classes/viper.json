@@ -9,6 +9,7 @@
     "model": "viper",
     "shader": "ship",
     "texture": "viper",
+    "factionColor": [0.8, 0.2, 0.2, 1.0],
     "defaultLuminosityFactors": [[0, 0], [18, 1]],
     "mass": 35000,
     "bodies": [

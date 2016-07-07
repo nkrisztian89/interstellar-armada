@@ -1,3 +1,2 @@
-v_texCoord = a_texCoord;
+#include "mesh/vert/model-tex.glsl"
 v_normal = u_normalMatrix * normal;
-v_color = a_color;

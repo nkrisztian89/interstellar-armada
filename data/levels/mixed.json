@@ -4,7 +4,10 @@
     },
     "teams": [
         "empire",
-        "rebels"
+        {
+            "name": "rebels",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
     ],
     "views": [
         {
@@ -64,7 +67,7 @@
             "ai": "fighter",
             "position": [0, -50, -50],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -77,14 +80,7 @@
             "ai": "fighter",
             "position": [35, -85, -50],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -97,14 +93,7 @@
             "ai": "fighter",
             "position": [-35, -85, -50],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -171,7 +160,7 @@
                 }
             ],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -190,14 +179,7 @@
                 }
             ],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         },
         {
@@ -216,14 +198,7 @@
                 }
             ],
             "equipment": {
-                "weapons": [
-                    {
-                        "class": "plasmaGun"
-                    }
-                ],
-                "propulsion": {
-                    "class": "imperialBomberMk1"
-                }
+                "profile": "half"
             }
         }
     ]

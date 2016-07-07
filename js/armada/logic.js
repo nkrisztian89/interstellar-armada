@@ -134,6 +134,18 @@ define([
              * @type String
              */
             GENERIC_TEAM_NAME = "team",
+            /**
+             * The name (without prefixes and suffixes) of the uniform variable that stores the original faction color (the color included
+             * in the model file) of spacecraft models.
+             * @type String
+             */
+            UNIFORM_ORIGINAL_FACTION_COLOR_NAME = "originalFactionColor",
+            /**
+             * The name (without prefixes and suffixes) of the uniform variable that stores the faction color of the team of the spacecraft
+             * that should replace the original faction color when rendering the spacecraft model.
+             * @type String
+             */
+            UNIFORM_REPLACEMENT_FACTION_COLOR_NAME = "replacementFactionColor",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -2482,12 +2494,18 @@ define([
          * @type String
          */
         this._name = null;
+        /**
+         * The color to use when replacing original faction colors of spacecrafts belonging to this team.
+         * @tpye Number[4]
+         */
+        this._color = null;
         if (typeof idOrParams === "string") {
             this._id = idOrParams;
             this._name = idOrParams;
         } else if (typeof idOrParams === "object") {
-            this._id = idOrParams.id;
-            this._name = idOrParams.name;
+            this._id = idOrParams.id || idOrParams.name || application.showError("Team defined without a name or id!");
+            this._name = idOrParams.name || idOrParams.id;
+            this._color = idOrParams.color || null;
         } else {
             application.showError("Invalid parameter specified for Team constructor!");
         }
@@ -2507,6 +2525,13 @@ define([
         return utils.formatString(strings.get(strings.TEAM.PREFIX, this._name), {
             id: this._id
         });
+    };
+    /**
+     * Returns the color to use when replacing original faction colors of spacecrafts belonging to this team.
+     * @returns {Number[4]}
+     */
+    Team.prototype.getColor = function () {
+        return this._color;
     };
     // #########################################################################
     /**
@@ -3352,7 +3377,7 @@ define([
             }
         }
         resources.executeWhenReady(function () {
-            var j, n, node, explosion, lightSources, parameterArrays = {};
+            var j, n, node, explosion, lightSources, parameterArrays = {}, originalFactionColor, replacementFactionColor;
             application.log("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
             // setting up parameter array declarations (name: type)
             parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
@@ -3375,6 +3400,14 @@ define([
             if (this._name) {
                 visualModel.setName(this._name);
             }
+            originalFactionColor = this._class.getFactionColor();
+            replacementFactionColor = (this._team && this._team.getColor()) || originalFactionColor;
+            visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
+                return originalFactionColor;
+            });
+            visualModel.setUniformValueFunction(UNIFORM_REPLACEMENT_FACTION_COLOR_NAME, function () {
+                return replacementFactionColor;
+            });
             // setting the starting values of the parameter arrays
             // setting an identity transformation for all transform groups
             for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {

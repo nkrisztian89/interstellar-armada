@@ -2596,6 +2596,14 @@ define([
         this._armor = ((typeof dataJSON.armor) === "number") ? dataJSON.armor :
                 (otherSpacecraftClass ? otherSpacecraftClass._armor : (_showMissingPropertyError(this, "armor") || 0));
         /**
+         * The color stored in the spacecraft model that corresponds to the faction color (and is to be replaced by the actual faction color
+         * of the teams spacecrafts of this class belong to)
+         * @type Number[4]
+         */
+        this._factionColor = otherSpacecraftClass ?
+                (dataJSON.factionColor || otherSpacecraftClass._factionColor) :
+                (dataJSON.factionColor || _showMissingPropertyError(this, "factionColor") || [0, 0, 0, 0]);
+        /**
          * When controlled by the AI, the spacecraft should orient itself into specific position using this turning style.
          * (enum SpacecraftTurnStyle)
          * @type String
@@ -2869,6 +2877,13 @@ define([
      */
     SpacecraftClass.prototype.getArmor = function () {
         return this._armor;
+    };
+    /**
+     * 
+     * @returns {Number[4]}
+     */
+    SpacecraftClass.prototype.getFactionColor = function () {
+        return this._factionColor;
     };
     /**
      * @returns {String}

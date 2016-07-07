@@ -1,5 +1,5 @@
 {
-    "version": "0.3.0:313 (2016.07.06.)",
+    "version": "0.3.0:314 (2016.07.07.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -221,7 +221,7 @@
                     "luminosityTextures": false,
                     "reveal": false,
                     "requirements": {
-                        "requiredVertexUniformVectors": 12,
+                        "requiredVertexUniformVectors": 13,
                         "requiredVertexUniformVectorsPer": {
                             "groupTransform": 4
                         },
@@ -241,7 +241,7 @@
                     "luminosityTextures": true,
                     "reveal": false,
                     "requirements": {
-                        "requiredVertexUniformVectors": 12,
+                        "requiredVertexUniformVectors": 14,
                         "requiredVertexUniformVectorsPer": {
                             "groupTransform": 4,
                             "luminosityFactor": 1,
@@ -265,7 +265,7 @@
                     "luminosityTextures": true,
                     "reveal": true,
                     "requirements": {
-                        "requiredVertexUniformVectors": 13,
+                        "requiredVertexUniformVectors": 15,
                         "requiredVertexUniformVectorsPer": {
                             "groupTransform": 4,
                             "luminosityFactor": 1,
@@ -289,7 +289,7 @@
                     "luminosityTextures": true,
                     "reveal": true,
                     "requirements": {
-                        "requiredVertexUniformVectors": 13,
+                        "requiredVertexUniformVectors": 15,
                         "requiredVertexUniformVectorsPer": {
                             "groupTransform": 4,
                             "luminosityFactor": 1,
@@ -313,7 +313,7 @@
                     "luminosityTextures": true,
                     "reveal": true,
                     "requirements": {
-                        "requiredVertexUniformVectors": 13,
+                        "requiredVertexUniformVectors": 15,
                         "requiredVertexUniformVectorsPer": {
                             "groupTransform": 4,
                             "luminosityFactor": 1,

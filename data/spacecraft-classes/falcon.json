@@ -9,6 +9,7 @@
     "model": "falcon",
     "shader": "ship",
     "texture": "falcon",
+    "factionColor": [0.8, 0.2, 0.2, 1.0],
     "defaultLuminosityFactors": [[0, 0], [16, 1]],
     "mass": 10000,
     "bodies": [
