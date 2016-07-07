@@ -2637,7 +2637,7 @@ define([
          * specified in the states of the particle.
          * @type Number[4]
          */
-        this._color = null;
+        this._color = [0, 0, 0, 0];
         /**
          * The billboard will be scaled using this number when rendering.
          * Do not set directly! It changes automatically and linearly with time using the colors 
@@ -2651,6 +2651,16 @@ define([
          * @type Number
          */
         this._relativeSize = 0;
+        /**
+         * Cached value of the calculated size (considering both size animation and the deliberately set relative size).
+         * @type Number
+         */
+        this._calculatedSize = [0];
+        /**
+         * An array storing the calculated world position vector to be passed to the shader uniform.
+         * @type Number
+         */
+        this._positionVector = [0, 0, 0];
         /**
          * The list of states this particle goes through during its lifespan. If only one state is stored,
          * the particle statically stays in that state. If multiple states are stored, the _looping
@@ -2707,18 +2717,18 @@ define([
      * first particle state.
      */
     Particle.prototype.init = function (model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
-        var i;
+        var i, modelMatrix;
         RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
         this.setTextures(textures);
         this._model = model;
-        this._color = [];
         if (states) {
             for (i = 0; i < states[0].color.length; i++) {
-                this._color.push(states[0].color[i]);
+                this._color[i] = states[0].color[i];
             }
         }
         this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
         this._relativeSize = 1;
+        this._calculateSize();
         this._states = states || [];
         this._currentStateIndex = 0;
         this._looping = (looping === true);
@@ -2728,10 +2738,14 @@ define([
         this._velocityVector[2] = 0;
         this._shouldAnimate = false;
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
-            return mat.translationVector3(this.getModelMatrix());
+            modelMatrix = this.getModelMatrix();
+            this._positionVector[0] = modelMatrix[12];
+            this._positionVector[1] = modelMatrix[13];
+            this._positionVector[2] = modelMatrix[14];
+            return this._positionVector;
         });
         this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function (instanced) {
-            return instanced ? [this._size * this._relativeSize] : this._size * this._relativeSize;
+            return instanced ? this._calculatedSize : this._calculatedSize[0];
         });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
@@ -2739,11 +2753,19 @@ define([
         this._updateShouldAnimate();
     };
     /**
+     * Updates the cached value of the calculated size (considering both size animation and the deliberately set relative size). Updates
+     * visibility based on the size as well.
+     */
+    Particle.prototype._calculateSize = function () {
+        this._calculatedSize[0] = this._size * this._relativeSize;
+        this._visible = this._calculatedSize[0] >= PARTICLE_MINIMUM_VISIBLE_SIZE;
+    };
+    /**
      * @override
      * @returns {Number}
      */
     Particle.prototype.getSize = function () {
-        return this._size * this._relativeSize;
+        return this._calculatedSize[0];
     };
     /**
      * Returns whether the particle has a non-zero velocity set.
@@ -2765,18 +2787,12 @@ define([
         return this._relativeSize;
     };
     /**
-     * Updates the visibility of the particle based on its current size factor.
-     */
-    Particle.prototype._updateVisible = function () {
-        this._visible = (this._size * this._relativeSize) >= PARTICLE_MINIMUM_VISIBLE_SIZE;
-    };
-    /**
      * Updates the visibility as well based on the new size.
      * @param {number} value The new value of the relative size.
      */
     Particle.prototype.setRelativeSize = function (value) {
         this._relativeSize = value;
-        this._updateVisible();
+        this._calculateSize();
     };
     /**
      * Get the current velocity of the particle (m/s)
@@ -2903,7 +2919,7 @@ define([
                 this._color[i] = (this._states[this._currentStateIndex].color[i] * (1.0 - stateProgress)) + (this._states[nextStateIndex].color[i] * stateProgress);
             }
             this._size = this._states[this._currentStateIndex].size * (1.0 - stateProgress) + this._states[nextStateIndex].size * stateProgress;
-            this._visible = (this._size * this._relativeSize) > 0.01;
+            this._calculateSize();
         }
         // only move if there is a non-zero velocity set
         if (this._hasVelocity()) {
@@ -3226,9 +3242,9 @@ define([
     OmnidirectionalParticleEmitter.prototype._createParticle = function () {
         var velocity, velocityMatrix, particle = ParticleEmitter.prototype._createParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        velocityMatrix = mat.translation4v([0, velocity, 0]);
-        mat.rotate4(velocityMatrix, [1, 0, 0], Math.random() * 2 * Math.PI);
-        mat.rotate4(velocityMatrix, [0, 0, 1], Math.random() * 2 * Math.PI);
+        velocityMatrix = mat.translation4(0, velocity, 0);
+        mat.rotate4(velocityMatrix, vec.UNIT3_X, Math.random() * 2 * Math.PI);
+        mat.rotate4(velocityMatrix, vec.UNIT3_Z, Math.random() * 2 * Math.PI);
         particle.setVelocityVector(mat.translationVector3(velocityMatrix));
         return particle;
     };

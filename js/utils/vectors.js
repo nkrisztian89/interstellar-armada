@@ -30,6 +30,24 @@ define(function () {
      */
     vec.NULL4 = [0, 0, 0, 0];
     Object.freeze(vec.NULL4);
+    /**
+     * A constant 3D unit vector point to the positive X direction.
+     * @type Number[3]
+     */
+    vec.UNIT3_X = [1, 0, 0];
+    Object.freeze(vec.UNIT3_X);
+    /**
+     * A constant 3D unit vector point to the positive Y direction.
+     * @type Number[3]
+     */
+    vec.UNIT3_Y = [0, 1, 0];
+    Object.freeze(vec.UNIT3_Y);
+    /**
+     * A constant 3D unit vector point to the positive Z direction.
+     * @type Number[3]
+     */
+    vec.UNIT3_Z = [0, 0, 1];
+    Object.freeze(vec.UNIT3_Z);
     // -----------------------------------------------------------------------------
     // Functions that create a vector
     /**
