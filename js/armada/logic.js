@@ -2572,10 +2572,20 @@ define([
          */
         this._class = null;
         /**
+         * A unique string ID that can identify this spacecraft within a level.
+         * @type String
+         */
+        this._id = null;
+        /**
          * An optional name by which this spacecraft can be identified.
          * @type String
          */
         this._name = null;
+        /**
+         * A cached value of the translated designation of this spacecraft that can be displayed to the user.
+         * @type String
+         */
+        this._displayName = null;
         /**
          * The number of hitpoints indicate the amount of damage the ship can take. Successful hits by
          * projectiles on the ship reduce the amount of hitpoints based on the damage value of the 
@@ -2753,6 +2763,18 @@ define([
         }
         this._spacecraftArray = spacecraftArray || null;
         this._team = null;
+        this._updateIDAndName();
+    };
+    /**
+     * Updates the cached values for the spacecraft ID and display name based on the designation (name / squad) of the spacecraft.
+     */
+    Spacecraft.prototype._updateIDAndName = function () {
+        this._id = (this._name || !this._squad) ?
+                this._name :
+                this._squad + " " + this._indexInSquad.toString();
+        this._displayName = (this._name || !this._squad) ?
+                this._name :
+                (strings.get(strings.SQUAD.PREFIX, this._squad)) + " " + this._indexInSquad.toString();
     };
     // direct getters and setters
     /**
@@ -2777,6 +2799,7 @@ define([
     Spacecraft.prototype.setSquad = function (squadName, indexInSquad) {
         this._squad = squadName;
         this._indexInSquad = indexInSquad;
+        this._updateIDAndName();
     };
     /**
      * Returns whether the passed spacecraft is friendly to this one.
@@ -2809,13 +2832,18 @@ define([
         return this._class.isFighterClass();
     };
     /**
-     * Returns the name of this spacecraft that can be used to identify a specific spacecraft / display to the user.
+     * Returns the id of this spacecraft that can be used to identify it within a level.
      * @returns {String}
      */
-    Spacecraft.prototype.getName = function () {
-        return (this._name || !this._squad) ?
-                this._name :
-                (strings.get(strings.SQUAD.PREFIX, this._squad)) + " " + this._indexInSquad.toString();
+    Spacecraft.prototype.getID = function () {
+        return this._id;
+    };
+    /**
+     * Returns the name of this spacecraft that can be displayed to the user.
+     * @returns {String}
+     */
+    Spacecraft.prototype.getDisplayName = function () {
+        return this._displayName;
     };
     /**
      * Returns the current amount of hit points this spacecraft has left.
@@ -4457,14 +4485,14 @@ define([
         return null;
     };
     /**
-     * Returns the spacecraft added to this level that is identified by the given name. Returns null if such spacecraft does not exist.
-     * @param {String} name
+     * Returns the spacecraft added to this level that is identified by the given id. Returns null if such spacecraft does not exist.
+     * @param {String} id
      * @returns {Spacecraft}
      */
-    Level.prototype.getSpacecraft = function (name) {
+    Level.prototype.getSpacecraft = function (id) {
         var i;
         for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i].getName() === name) {
+            if (this._spacecrafts[i].getID() === id) {
                 return this._spacecrafts[i];
             }
         }

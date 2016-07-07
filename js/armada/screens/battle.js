@@ -1280,7 +1280,7 @@ define([
             if (control.isInPilotMode()) {
                 _subheaderText.hide();
             } else {
-                _subheaderText.setText(craft.getName() || craft.getClass().getDisplayName());
+                _subheaderText.setText(craft.getDisplayName() || craft.getClass().getDisplayName());
                 _subheaderText.show();
             }
             // .....................................................................................................
@@ -1563,7 +1563,7 @@ define([
                         config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_HOSTILE_COLOR) :
                         config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR);
                 _targetInfoNameText.setColor(targetInfoTextColor);
-                _targetInfoNameText.setText(target.getName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                _targetInfoNameText.setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
                 _targetInfoTeamText.setColor(targetInfoTextColor);
                 _targetInfoTeamText.setText(target.getTeam() ? target.getTeam().getDisplayName() : strings.get(strings.BATTLE.HUD_TEAM_UNKNOWN));
                 _targetInfoClassText.setColor(targetInfoTextColor);
