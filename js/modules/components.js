@@ -750,13 +750,17 @@ define([
     // #########################################################################
     /**
      * @typedef {ExternalComponent~Style} MenuComponent~Style
-     * @property {String} menuClassName
-     * @property {String} buttonClassName
-     * @property {String} buttonContainerClassName
+     * @property {String} [menuClassName]
+     * @property {String} [buttonClassName]
+     * @property {String} [buttonContainerClassName]
+     * @property {String} selectedButtonClassName
      */
     /**
      * @typedef {Components~LabelDescriptor} MenuComponent~MenuOption
-     * @property {Function} action The function to execute 
+     * @property {String} [id] The key for translation
+     * @property {String} [caption] Static caption (non-translated)
+     * @property {Function} action The function to execute
+     * @property {Element} [element] Set when the element is created
      */
     /**
      * @class A component that consists of a container and a list of menu options
@@ -775,9 +779,42 @@ define([
          * @type MenuComponent~MenuOption[]
          */
         this._menuOptions = menuOptions;
+        /**
+         * The index of the currently selected menu option. -1 if no option is selected.
+         * @type Number
+         */
+        this._selectedIndex = -1;
+        // validate the style object as a missings selected style can lead to obscure bugs
+        this._validateStyle(style);
     }
     MenuComponent.prototype = new ExternalComponent();
     MenuComponent.prototype.constructor = MenuComponent;
+    /**
+     * Shows an error message if the given style object is not valid.
+     * @param {MenuComponent~Style} style
+     */
+    MenuComponent.prototype._validateStyle = function (style) {
+        if (typeof style !== "object") {
+            application.showError("Invalid menu style specified: not an object!");
+            return;
+        }
+        if (!style.selectedButtonClassName) {
+            application.showError("Attempting to specify a menu style without specifying a class for selected menu buttons!");
+        }
+    };
+    /**
+     * Selects the option with the passed index (distinguishes the selected option with the set CSS class)
+     * @param {Number} index
+     */
+    MenuComponent.prototype._selectIndex = function (index) {
+        if (this._selectedIndex >= 0) {
+            this._menuOptions[this._selectedIndex].element.classList.remove(this._style.selectedButtonClassName);
+        }
+        this._selectedIndex = index;
+        if (this._selectedIndex >= 0) {
+            this._menuOptions[this._selectedIndex].element.classList.add(this._style.selectedButtonClassName);
+        }
+    };
     /**
      * The return value of the click handler on a link decides whether the link path 
      * should be followed or not. By making sure it is false, the links serving as 
@@ -788,10 +825,22 @@ define([
      * @param {Number} index
      * @returns {Function}
      */
-    MenuComponent.prototype.getMenuClickHandler = function (index) {
+    MenuComponent.prototype._getMenuClickHandler = function (index) {
         return function () {
+            this._selectIndex(index);
             this._menuOptions[index].action();
             return false;
+        }.bind(this);
+    };
+    /**
+     * Returns an event listener that can be used for the element corresponding to the menu option with the
+     * passed index to handle the mouse move events on it - selecting the option.
+     * @param {Number} index
+     * @returns {Function}
+     */
+    MenuComponent.prototype._getMenuMouseMoveHandler = function (index) {
+        return function () {
+            this._selectIndex(index);
         }.bind(this);
     };
     /**
@@ -812,12 +861,45 @@ define([
                 // we need to generate an appropriate handler function here for each
                 // menu element (cannot directly create it here as they would all use
                 // the same index as i would be a closure)
-                aElement.onclick = this.getMenuClickHandler(i);
+                aElement.onclick = this._getMenuClickHandler(i);
+                aElement.onmousemove = this._getMenuMouseMoveHandler(i);
+                this._menuOptions[i].element = aElement;
                 liElement = document.createElement("li");
                 liElement.className = (this._style.buttonContainerClassName || "");
                 liElement.appendChild(aElement);
                 this._rootElement.appendChild(liElement);
             }
+            this._rootElement.onmouseout = this.unselect.bind(this);
+        }
+    };
+    /**
+     * Cancels the selection of the currently selected menu item (if any)
+     */
+    MenuComponent.prototype.unselect = function () {
+        this._selectIndex(-1);
+    };
+    /**
+     * Selects the menu item coming after the currently selected one, or the first one if none are selected.
+     */
+    MenuComponent.prototype.selectNext = function () {
+        this._selectIndex((this._selectedIndex + 1) % this._menuOptions.length);
+    };
+    /**
+     * Selects the menu item coming before the currently selected one, or the last one if none are selected.
+     */
+    MenuComponent.prototype.selectPrevious = function () {
+        if (this._selectedIndex > 0) {
+            this._selectIndex(this._selectedIndex - 1);
+        } else {
+            this._selectIndex(this._menuOptions.length - 1);
+        }
+    };
+    /**
+     * Executes the action associated with the currently selected menu option (if any).
+     */
+    MenuComponent.prototype.activateSelected = function () {
+        if (this._selectedIndex >= 0) {
+            this._menuOptions[this._selectedIndex].element.onclick();
         }
     };
     // #########################################################################

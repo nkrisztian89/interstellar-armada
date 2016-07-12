@@ -235,6 +235,17 @@ define([
         return this._name;
     };
     /**
+     * Specifies whether this screen is currently active. (e.g. should listen to input)
+     * @param {Boolean} active
+     */
+    HTMLScreen.prototype.setActive = function (active) {
+        if (active) {
+            this._addEventListeners();
+        } else {
+            this._removeEventListeners();
+        }
+    };
+    /**
      * Replaces the current HTML page's body with the sctructure of the screen.
      * @param {Function} callback
      */
@@ -244,7 +255,7 @@ define([
             if (callback) {
                 callback();
             }
-            this._addEventListeners();
+            this.setActive(true);
         });
     };
     /**
@@ -291,7 +302,6 @@ define([
     HTMLScreen.prototype.show = function () {
         if (this._container) {
             this._container.style.display = "block";
-            this._addEventListeners();
         } else {
             application.showError("Attempting to show screen '" + this._name + "' before adding it to the page!");
         }
@@ -325,7 +335,7 @@ define([
         if (this._container && this._background) {
             this._container.style.display = "none";
             this._background.style.display = "none";
-            this._removeEventListeners();
+            this.setActive(false);
         } else {
             application.showError("Attempting to hide screen '" + this._name + "' before adding it to the page!");
         }
@@ -351,9 +361,9 @@ define([
             for (i = 0; i < this._externalComponentBindings.length; i++) {
                 this._externalComponentBindings[i].component.resetComponent();
             }
+            this.setActive(false);
             this._background.remove();
             this._container.remove();
-            this._removeEventListeners();
             this._background = null;
             this._container = null;
         } else {
@@ -1638,7 +1648,7 @@ define([
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
     function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID, keyCommands) {
-        HTMLScreen.call(this, name, htmlFilename, style, keyCommands);
+        HTMLScreen.call(this, name, htmlFilename, style, this._getKeyCommands(keyCommands));
         /**
          * The menuOptions for creating the menu component.
          * @type MenuComponent~MenuOption[]
@@ -1664,6 +1674,33 @@ define([
     }
     MenuScreen.prototype = new HTMLScreen();
     MenuScreen.prototype.constructor = MenuScreen;
+    /**
+     * Adds the default menu key commands (up-down-enter) to the given key commands object and returns the
+     * result.
+     * @param {Object.<String, Function>} [keyCommands] If not given, an object with just the default commands
+     * will be returned.
+     */
+    MenuScreen.prototype._getKeyCommands = function (keyCommands) {
+        keyCommands = keyCommands || {};
+        keyCommands.up = keyCommands.up || function () {
+            this._menuComponent.selectPrevious();
+        }.bind(this);
+        keyCommands.down = keyCommands.down || function () {
+            this._menuComponent.selectNext();
+        }.bind(this);
+        keyCommands.enter = keyCommands.enter || function () {
+            this._menuComponent.activateSelected();
+        }.bind(this);
+        return keyCommands;
+    };
+    /**
+     * @override
+     * @param {Boolean} active
+     */
+    MenuScreen.prototype.setActive = function (active) {
+        HTMLScreen.prototype.setActive.call(this, active);
+        this._menuComponent.unselect();
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

@@ -51,6 +51,9 @@ define([
                 {
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                {
+                    "escape": this._applyAndClose.bind(this)
                 });
         /**
          * @type SimpleComponent
@@ -69,6 +72,17 @@ define([
     }
     GeneralSettingsScreen.prototype = new screens.HTMLScreen();
     GeneralSettingsScreen.prototype.constructor = GeneralSettingsScreen;
+    /**
+     * Applies the currently selected language setting and closes the screen.
+     */
+    GeneralSettingsScreen.prototype._applyAndClose = function () {
+        document.body.style.cursor = "wait";
+        game.requestLanguageChange(this._languageSelector.getSelectedValue(), strings, function () {
+            document.body.style.cursor = "default";
+            localStorage.setItem(constants.LANGUAGE_LOCAL_STORAGE_ID, game.getLanguage());
+            game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
+        });
+    };
     /**
      * @param {String} name
      * @param {String} propertyLabelID
@@ -91,12 +105,7 @@ define([
     GeneralSettingsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         this._backButton.getElement().onclick = function () {
-            document.body.style.cursor = "wait";
-            game.requestLanguageChange(this._languageSelector.getSelectedValue(), strings, function () {
-                document.body.style.cursor = "default";
-                localStorage.setItem(constants.LANGUAGE_LOCAL_STORAGE_ID, game.getLanguage());
-                game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
-            });
+            this._applyAndClose();
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {

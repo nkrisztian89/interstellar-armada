@@ -237,14 +237,14 @@ a.button {
     box-shadow: 0em 0em 0.5em #000000;
 }
 
-a:hover:not(.disabled) {
+a:hover:not(.disabled):not(.menu), a.menu.button.selected {
     color: #FFFFFF;
     text-shadow:
         #00FF00 0 0 0.2em,
         #00FF00 0 0 0.2em;
 }
 
-a.button:hover:not(.disabled) {
+a.button:hover:not(.disabled):not(.menu), a.menu.button.selected {
     background-color: #333333;
 }
 

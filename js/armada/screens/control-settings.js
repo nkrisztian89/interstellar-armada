@@ -159,6 +159,13 @@ define([
             };
         }
     }
+    /**
+     * Stops the setting of the current key (if any) and closes the screen.
+     */
+    function _closeScreen() {
+        _stopKeySetting();
+        game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
+    }
     // ##############################################################################
     /**
      * @class Represents the controls screen, where the user can set up the game
@@ -172,6 +179,9 @@ define([
                 {
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                {
+                    "escape": _closeScreen
                 });
         /**
          * @type SimpleComponent
@@ -194,8 +204,7 @@ define([
     ControlsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         this._backButton.getElement().onclick = function () {
-            _stopKeySetting();
-            game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
+            _closeScreen();
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {

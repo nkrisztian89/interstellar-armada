@@ -29,6 +29,19 @@ define([
 ], function (utils, screens, game, armadaScreens, config, strings, battle) {
     "use strict";
     // -------------------------------------------------------------------------
+    // Constants
+    var
+            /**
+             * Stores the styling parameters used for the  menus.
+             * @type MenuComponent~Style
+             */
+            COMMON_MENU_STYLE = {
+                menuClassName: armadaScreens.MENU_CLASS_NAME,
+                buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
+                buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME,
+                selectedButtonClassName: armadaScreens.MENU_BUTTON_SELECTED_CLASS_NAME
+            };
+    // -------------------------------------------------------------------------
     // Private functions
     /**
      * Creates and returns the menu options for the level selection screen.
@@ -67,11 +80,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                {
-                    menuClassName: armadaScreens.MENU_CLASS_NAME,
-                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
-                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
-                },
+                COMMON_MENU_STYLE,
                 [{
                         id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
@@ -106,11 +115,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                {
-                    menuClassName: armadaScreens.MENU_CLASS_NAME,
-                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
-                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
-                },
+                COMMON_MENU_STYLE,
                 _getLevelOptions(false),
                 armadaScreens.LEVEL_MENU_CONTAINER_ID,
                 {
@@ -126,11 +131,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                {
-                    menuClassName: armadaScreens.MENU_CLASS_NAME,
-                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
-                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
-                },
+                COMMON_MENU_STYLE,
                 _getLevelOptions(true),
                 armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID,
                 {
@@ -146,11 +147,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                {
-                    menuClassName: armadaScreens.MENU_CLASS_NAME,
-                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
-                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
-                },
+                COMMON_MENU_STYLE,
                 [{
                         id: strings.SETTINGS.GENERAL.name,
                         action: function () {
@@ -187,11 +184,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                {
-                    menuClassName: armadaScreens.MENU_CLASS_NAME,
-                    buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
-                    buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
-                },
+                COMMON_MENU_STYLE,
                 [{
                         id: strings.INGAME_MENU.RESUME.name,
                         action: function () {

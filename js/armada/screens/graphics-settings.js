@@ -182,6 +182,9 @@ define([
                 {
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                {
+                    "escape": this._applyAndClose.bind(this)
                 });
         /**
          * @type SimpleComponent
@@ -301,20 +304,26 @@ define([
                 OPTION_PARENT_ID);
     };
     /**
+     * Applies the currently selected settings and closes the screen.
+     */
+    GraphicsScreen.prototype._applyAndClose = function () {
+        graphics.setAntialiasing((this._antialiasingSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        graphics.setFiltering(_getFilteringSettingValues()[this._filteringSelector.getSelectedIndex()][1]);
+        graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
+        graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
+        graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
+        graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
+        graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
+        classes.handleGraphicsSettingsChanged();
+        game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
+    };
+    /**
      * @override
      */
     GraphicsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         this._backButton.getElement().onclick = function () {
-            graphics.setAntialiasing((this._antialiasingSelector.getSelectedIndex() === SETTING_ON_INDEX));
-            graphics.setFiltering(_getFilteringSettingValues()[this._filteringSelector.getSelectedIndex()][1]);
-            graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
-            graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
-            graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
-            graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
-            graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
-            classes.handleGraphicsSettingsChanged();
-            game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
+            this._applyAndClose();
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {

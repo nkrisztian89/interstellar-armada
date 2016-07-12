@@ -107,7 +107,10 @@ define([
         } else {
             screen.addScreenToPage(onScreenReadyFunction, keepModelAfterAdding);
         }
-
+        if (!this._currentScreen) {
+            this._currentScreen = screen;
+            this._currentScreen.setActive(true);
+        }
     };
     /**
      * Sets the current game screen to the one with the specified name (from the
@@ -129,11 +132,13 @@ define([
         screen = this.getScreen(screenName);
         if (superimpose === true) {
             this._coveredScreens.push(this._currentScreen);
+            this._currentScreen.setActive(false);
             screen.superimposeOnPage(backgroundColor);
         } else {
             screen.show();
         }
         this._currentScreen = screen;
+        this._currentScreen.setActive(true);
     };
     /**
      * Closes the topmost superimposed screen, revealing the one below.
@@ -141,6 +146,7 @@ define([
     ScreenManager.prototype.closeSuperimposedScreen = function () {
         this._currentScreen.hide();
         this._currentScreen = this._coveredScreens.pop();
+        this._currentScreen.setActive(true);
     };
     /**
      * If the current screen was superimposed, closes it, otherwise simply navigates to
