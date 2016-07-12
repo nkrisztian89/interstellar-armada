@@ -1881,13 +1881,15 @@ define([
      * @param {Boolean} [antialiasing=false] Whether antialising should be turned on for
      * this context. If the WebGL implementation does not support antialiasing, this
      * will have no effect.
+     * @param {Boolean} [alpha=true] Whether alpha channel support (blending with the HTML element behind the
+     * canvas) should be turned on for this context.
      * @param {String} filtering What kind of texture filtering should be used for
      * 2D textures. Supported values are: bilinear, trilinear, anisotropic (which
      * will be 4:1)
      * @param {Boolean} [supressAntialiasingError=false] If true, no error will be shown if antialiasing is requested but not supported.
      * @returns {ManagedGLContext}
      */
-    function ManagedGLContext(name, canvas, antialiasing, filtering, supressAntialiasingError) {
+    function ManagedGLContext(name, canvas, antialiasing, alpha, filtering, supressAntialiasingError) {
         asyncResource.AsyncResource.call(this);
         /**
          * The name of the context by which it can be referred to.
@@ -1909,6 +1911,12 @@ define([
          * @type Boolean
          */
         this._antialiasing = (antialiasing === true);
+        /**
+         * Whether alpha channel support (blending with the HTML element behind the
+         * canvas) is turned on for this context.
+         * @type Boolean
+         */
+        this._alpha = (alpha === undefined) || alpha;
         /**
          * What filtering is used for 2D textures. Supported values are: bilinear,
          * trilinear and anisotropic. Attempting to create the context with anisotropic
@@ -2082,7 +2090,7 @@ define([
         application.log("Initializing WebGL context...", 1);
         // -------------------------------------------------------------------------------------------------------
         // creating the WebGLRenderingContext
-        contextParameters = {alpha: true, antialias: this._antialiasing};
+        contextParameters = {alpha: this._alpha, antialias: this._antialiasing};
         // some implementations throw an exception, others don't, but all return null
         // if the creation fails, so handle that case
         try {
@@ -2760,7 +2768,7 @@ define([
     };
     // -------------------------------------------------------------------------
     // Initizalization
-    _genericContext = new ManagedGLContext("", document.createElement("canvas"), true, TextureFiltering.BILINEAR, true);
+    _genericContext = new ManagedGLContext("", document.createElement("canvas"), true, true, TextureFiltering.BILINEAR, true);
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

@@ -1207,9 +1207,11 @@ define([
      * that can create and hold a reference to a managed WebGL context for the canvas.
      * @param {HTMLCanvasElement} canvas The canvas around which this object should be created.
      * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL context of this canvas
+     * @param {Boolean} alpha Whether alpha channel support (blending with the HTML element behind the canvas) 
+     * should be turned on for this canvas.
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
      */
-    function ScreenCanvas(canvas, antialiasing, filtering) {
+    function ScreenCanvas(canvas, antialiasing, alpha, filtering) {
         /**
          * A reference to the wrapped HTML5 canvas.
          * @type HTMLCanvasElement
@@ -1225,6 +1227,12 @@ define([
          * @type Boolean
          */
         this._antialiasing = antialiasing;
+        /**
+         * Whether alpha channel support (blending with the HTML element behind the canvas) 
+         * is turned on for (the GL context of) this canvas.
+         * @type Boolean
+         */
+        this._alpha = alpha;
         /**
          * (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
          * @type String
@@ -1264,7 +1272,7 @@ define([
      */
     ScreenCanvas.prototype.getManagedContext = function () {
         if (!this._context) {
-            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, this._antialiasing, this._filtering);
+            this._context = new managedGL.ManagedGLContext(this._canvas.getAttribute("id"), this._canvas, this._antialiasing, this._alpha, this._filtering);
         }
         return this._context;
     };
@@ -1348,19 +1356,29 @@ define([
      * @param {String} htmlFilename See HTMLScreen.
      * @param {HTMLScreen~Style} [style] See HTMLScreen.
      * @param {Boolean} antialiasing Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
+     * @param {Boolean|Object.<String, Boolean>} alpha Whether alpha channel support should be turned on for the GL contexts of the 
+     * canvases of this screen. It can be specified altogether (Boolean) or on a per-canvas basis (Object storing Booleans for the
+     * IDs of the canvases)
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
      * @param {Boolean} [useRequestAnimFrame=false] Whether to use the requestAnimationFrame API for the render loop
      * (as opposed to setInterval)
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
-    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, filtering, useRequestAnimFrame, keyCommands) {
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, useRequestAnimFrame, keyCommands) {
         HTMLScreen.call(this, name, htmlFilename, style, keyCommands);
         /**
          * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
          * @type Boolean
          */
         this._antialiasing = antialiasing;
+        /**
+         * Whether alpha channel support should be turned on for the GL contexts of the 
+         * canvases of this screen. It can be specified altogether (Boolean) or on a per-canvas basis (Object storing Booleans for the
+         * IDs of the canvases)
+         * @type Boolean|Object.<String, Boolean>
+         */
+        this._alpha = alpha;
         /**
          * (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
          * @type String
@@ -1446,6 +1464,22 @@ define([
         this.stopRenderLoop();
     };
     /**
+     * Returns whether the alpha channel should be turned on for the canvas with the given name on this screen.
+     * @param {String} canvasName The name of the canvas (the id of the canvas element without the page specific
+     * prefixes)
+     * @returns {Boolean}
+     */
+    HTMLScreenWithCanvases.prototype._getAlphaForCanvas = function (canvasName) {
+        if (typeof this._alpha === "boolean") {
+            return this._alpha;
+        }
+        if (typeof this._alpha[canvasName] === "boolean") {
+            return this._alpha[canvasName];
+        }
+        application.showError("No alpha channel support is defined for canvas '" + canvasName + "' of screen '" + this._name + "'!");
+        return false;
+    };
+    /**
      * @override
      * Initializes the components of the parent class, then the additional ones for
      * this class (the canvases).
@@ -1453,9 +1487,13 @@ define([
     HTMLScreenWithCanvases.prototype._initializeComponents = function () {
         var canvasElements, i;
         HTMLScreen.prototype._initializeComponents.call(this);
-        canvasElements = document.getElementsByTagName("canvas");
+        canvasElements = this._container.getElementsByTagName("canvas");
         for (i = 0; i < canvasElements.length; i++) {
-            this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(canvasElements[i], this._antialiasing, this._filtering);
+            this._canvases[canvasElements[i].getAttribute("id")] = new ScreenCanvas(
+                    canvasElements[i],
+                    this._antialiasing,
+                    this._getAlphaForCanvas(this._getOriginalElementID(canvasElements[i])),
+                    this._filtering);
         }
         // save a specific reference so we can remove it later
         this._resizeEventListener = this.handleResize.bind(this);
