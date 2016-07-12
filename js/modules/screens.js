@@ -1410,7 +1410,7 @@ define([
          * Stores the timestamps of the last renders so that the FPS can be calculated.
          * @type DOMHighResTimeStamp[]
          */
-        this._renderTimes = null;
+        this._renderTimes = [];
         /**
          * A reference to the function that is set to handle the resize event for this screen so
          * that it can be removed if the screen is no longer active.
@@ -1431,6 +1431,9 @@ define([
      */
     HTMLScreenWithCanvases.prototype.handleResize = function () {
         this.resizeCanvases();
+        if (this._renderLoop === LOOP_CANCELED) {
+            this.render();
+        }
     };
     /**
      * Removes all stored binding between scenes and canvases. 
@@ -1625,28 +1628,32 @@ define([
      */
     HTMLScreenWithCanvases.prototype.startRenderLoop = function (interval) {
         var i;
-        for (i = 0; i < this._sceneCanvasBindings.length; i++) {
-            this._sceneCanvasBindings[i].canvas.getManagedContext().setup();
-        }
-        this._renderTimes = [performance.now()];
-        if (this._useRequestAnimFrame) {
-            this._renderLoop = LOOP_REQUESTANIMFRAME;
-            window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
-        } else {
-            this._renderLoop = setInterval(function () {
-                this.render();
-            }.bind(this), interval);
+        if (this._renderLoop === LOOP_CANCELED) {
+            for (i = 0; i < this._sceneCanvasBindings.length; i++) {
+                this._sceneCanvasBindings[i].canvas.getManagedContext().setup();
+            }
+            this._renderTimes = [performance.now()];
+            if (this._useRequestAnimFrame) {
+                this._renderLoop = LOOP_REQUESTANIMFRAME;
+                window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
+            } else {
+                this._renderLoop = setInterval(function () {
+                    this.render();
+                }.bind(this), interval);
+            }
         }
     };
     /**
      * Stops the render loop.
      */
     HTMLScreenWithCanvases.prototype.stopRenderLoop = function () {
-        if (!this._useRequestAnimFrame) {
-            clearInterval(this._renderLoop);
+        if (this._renderLoop !== LOOP_CANCELED) {
+            if (!this._useRequestAnimFrame) {
+                clearInterval(this._renderLoop);
+            }
+            this._renderLoop = LOOP_CANCELED;
+            this._renderTimes = [];
         }
-        this._renderLoop = LOOP_CANCELED;
-        this._renderTimes = null;
     };
     /**
      * Returns the Frames Per Second count for this screen's render loop.

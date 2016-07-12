@@ -503,48 +503,6 @@ define([
         }
     }
     /**
-     * Pauses the battle by canceling all control and simulation (e.g. for when a menu is displayed)
-     */
-    function pauseBattle() {
-        control.stopListening();
-        _battleCursor = document.body.style.cursor;
-        document.body.style.cursor = 'default';
-        if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
-            clearInterval(_simulationLoop);
-        }
-        _simulationLoop = LOOP_CANCELED;
-        if (_battleScene) {
-            _battleScene.setShouldAnimate(false);
-            _battleScene.setShouldUpdateCamera(false);
-        }
-    }
-    /**
-     * Resumes the simulation and control of the battle
-     */
-    function resumeBattle() {
-        document.body.style.cursor = _battleCursor || 'default';
-        if (_simulationLoop === LOOP_CANCELED) {
-            _prevDate = performance.now();
-            if (_battleScene) {
-                if (!_isTimeStopped) {
-                    _battleScene.setShouldAnimate(true);
-                }
-                _battleScene.setShouldUpdateCamera(true);
-            }
-            if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
-                _simulationLoop = LOOP_REQUESTANIMFRAME;
-            } else {
-                _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
-            }
-            control.startListening();
-        } else {
-            application.showError(
-                    "Trying to resume simulation while it is already going on!",
-                    application.ErrorSeverity.MINOR,
-                    "No action was taken, to avoid double-running the simulation.");
-        }
-    }
-    /**
      * Hides all elements of the HUD. (rendering the battle screen after this will not show the HUD)
      */
     function hideHUD() {
@@ -976,10 +934,10 @@ define([
                 armadaScreens.INFO_BOX_SOURCE,
                 {cssFilename: armadaScreens.INFO_BOX_CSS},
                 function () {
-                    pauseBattle();
-                },
+                    this.pauseBattle();
+                }.bind(this),
                 function () {
-                    resumeBattle();
+                    this.resumeBattle();
                     resumeTime();
                     if (!_demoMode) {
                         if (_level.getPilotedSpacecraft()) {
@@ -1001,7 +959,7 @@ define([
      */
     BattleScreen.prototype.hide = function () {
         screens.HTMLScreenWithCanvases.prototype.hide.call(this);
-        pauseBattle();
+        this.pauseBattle();
         _clearData();
     };
     /**
@@ -1029,6 +987,51 @@ define([
     BattleScreen.prototype.removeFromPage = function () {
         screens.HTMLScreenWithCanvases.prototype.removeFromPage.call(this);
         window.removeEventListener("resize", _handleResize);
+    };
+    /**
+     * Pauses the battle by canceling all control, simulation and the render loop (e.g. for when a menu is 
+     * displayed)
+     */
+    BattleScreen.prototype.pauseBattle = function () {
+        control.stopListening();
+        _battleCursor = document.body.style.cursor;
+        document.body.style.cursor = 'default';
+        if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
+            clearInterval(_simulationLoop);
+        }
+        _simulationLoop = LOOP_CANCELED;
+        if (_battleScene) {
+            _battleScene.setShouldAnimate(false);
+            _battleScene.setShouldUpdateCamera(false);
+        }
+        this.stopRenderLoop();
+    };
+    /**
+     * Resumes the simulation and control of the battle and the render loop
+     */
+    BattleScreen.prototype.resumeBattle = function () {
+        document.body.style.cursor = _battleCursor || 'default';
+        if (_simulationLoop === LOOP_CANCELED) {
+            _prevDate = performance.now();
+            if (_battleScene) {
+                if (!_isTimeStopped) {
+                    _battleScene.setShouldAnimate(true);
+                }
+                _battleScene.setShouldUpdateCamera(true);
+            }
+            if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
+                _simulationLoop = LOOP_REQUESTANIMFRAME;
+            } else {
+                _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+            }
+            control.startListening();
+            this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+        } else {
+            application.showError(
+                    "Trying to resume simulation while it is already going on!",
+                    application.ErrorSeverity.MINOR,
+                    "No action was taken, to avoid double-running the simulation.");
+        }
     };
     /**
      * Uses the loading box to show the status to the user.
@@ -1689,8 +1692,7 @@ define([
         _gameStateChanged = false;
         _gameStateShown = false;
         if (params.restart) {
-            this.stopRenderLoop();
-            pauseBattle();
+            this.pauseBattle();
         }
         if (params.levelSourceFilename !== undefined) {
             _levelSourceFilename = params.levelSourceFilename;
@@ -1812,8 +1814,8 @@ define([
     _battle.stopTime = stopTime;
     _battle.resumeTime = resumeTime;
     _battle.toggleTime = toggleTime;
-    _battle.pauseBattle = pauseBattle;
-    _battle.resumeBattle = resumeBattle;
+    _battle.pauseBattle = _battle.battleScreen.pauseBattle.bind(_battle.battleScreen);
+    _battle.resumeBattle = _battle.battleScreen.resumeBattle.bind(_battle.battleScreen);
     _battle.showHUD = showHUD;
     _battle.hideHUD = hideHUD;
     _battle.toggleHUDVisibility = toggleHUDVisibility;
