@@ -1130,6 +1130,7 @@ define([
      * @param {ManagedGLContext} context
      */
     FrameBuffer.prototype.setup = function (context) {
+        var status;
         // calling setup on a frame buffer that has already been set up has no effect
         if (this._id) {
             return;
@@ -1153,7 +1154,8 @@ define([
             context.gl.framebufferTexture2D(context.gl.FRAMEBUFFER, context.gl.COLOR_ATTACHMENT0, context.gl.TEXTURE_2D, this._textureID, 0);
             context.gl.framebufferRenderbuffer(context.gl.FRAMEBUFFER, context.gl.DEPTH_ATTACHMENT, context.gl.RENDERBUFFER, this._renderBufferID);
         }
-        switch (context.gl.checkFramebufferStatus(context.gl.FRAMEBUFFER)) {
+        status = context.gl.checkFramebufferStatus(context.gl.FRAMEBUFFER);
+        switch (status) {
             case context.gl.FRAMEBUFFER_COMPLETE:
                 application.log("Framebuffer '" + this._name + "' successfully created.", 2);
                 break;
@@ -1170,7 +1172,7 @@ define([
                 application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': The format of the attachment is not supported or depth and stencil attachments are not the same renderbuffer.");
                 break;
             default:
-                application.showGraphicsError("Unknown framebuffer status for '" + this._name + "'!");
+                application.showGraphicsError("Unknown framebuffer status for '" + this._name + "' (" + status + ")!");
         }
     };
     /**
@@ -2752,7 +2754,7 @@ define([
      * with possible explanations or tips how to correct this error.
      */
     application.showGraphicsError = function (message, severity, details) {
-        application.showError(message, severity, details + "\n\nThis is a graphics related error.\n" +
+        application.showError(message, severity, (details ? (details + "\n\n") : "") + "This is a graphics related error.\n" +
                 "Information about your graphics support:\n" +
                 _genericContext.getInfoString());
     };
