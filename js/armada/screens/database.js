@@ -423,6 +423,14 @@ define([
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
                 strings.get(strings.DATABASE.THRUSTERS) + ": {thrusters}";
     }
+    /**
+     * Stops the ongoing loops and closes the database screen.
+     */
+    function _closeScreen() {
+        _stopRevealLoop();
+        _stopRotationLoop();
+        game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+    }
     // ##############################################################################
     /**
      * @class Represents the database screen.
@@ -439,7 +447,12 @@ define([
                 },
                 graphics.getAntialiasing(),
                 graphics.getFiltering(),
-                _getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
+                _getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
+                {
+                    "escape": _closeScreen,
+                    "left": this.selectPreviousShip.bind(this),
+                    "right": this.selectNextShip.bind(this)
+                });
         /**
          * @type SimpleComponent
          */
@@ -503,11 +516,7 @@ define([
      */
     DatabaseScreen.prototype._initializeComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);
-        this._backButton.getElement().onclick = function () {
-            _stopRevealLoop();
-            _stopRotationLoop();
-            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
-        };
+        this._backButton.getElement().onclick = _closeScreen;
         this._prevButton.getElement().onclick = function () {
             this.selectPreviousShip();
         }.bind(this);

@@ -41,6 +41,11 @@ define([
                 {
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                },
+                {
+                    "escape": function () {
+                        game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                    }
                 });
         /**
          * @type SimpleComponent

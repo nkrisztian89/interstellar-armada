@@ -112,7 +112,12 @@ define([
                     buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
                 },
                 _getLevelOptions(false),
-                armadaScreens.LEVEL_MENU_CONTAINER_ID),
+                armadaScreens.LEVEL_MENU_CONTAINER_ID,
+                {
+                    "escape": function () {
+                        game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                    }
+                }),
         demoLevelSelectionMenuScreen: new screens.MenuScreen(
                 armadaScreens.DEMO_LEVEL_MENU_SCREEN_NAME,
                 armadaScreens.DEMO_LEVEL_MENU_SCREEN_SOURCE,
@@ -127,7 +132,12 @@ define([
                     buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME
                 },
                 _getLevelOptions(true),
-                armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID),
+                armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID,
+                {
+                    "escape": function () {
+                        game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                    }
+                }),
         settingsMenuScreen: new screens.MenuScreen(
                 armadaScreens.SETTINGS_SCREEN_NAME,
                 armadaScreens.SETTINGS_SCREEN_SOURCE,
@@ -161,7 +171,13 @@ define([
                         action: function () {
                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                         }
-                    }], armadaScreens.SETTINGS_MENU_CONTAINER_ID),
+                    }],
+                armadaScreens.SETTINGS_MENU_CONTAINER_ID,
+                {
+                    "escape": function () {
+                        game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                    }
+                }),
         ingameMenuScreen: new screens.MenuScreen(
                 armadaScreens.INGAME_MENU_SCREEN_NAME,
                 armadaScreens.INGAME_MENU_SCREEN_SOURCE,
@@ -200,6 +216,13 @@ define([
                         action: function () {
                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                         }
-                    }], armadaScreens.INGAME_MENU_CONTAINER_ID)
+                    }],
+                armadaScreens.INGAME_MENU_CONTAINER_ID,
+                {
+                    "escape": function () {
+                        game.closeSuperimposedScreen();
+                        battle.resumeBattle();
+                    }
+                })
     };
 });

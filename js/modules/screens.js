@@ -82,8 +82,10 @@ define([
      * screen is defined.
      * @param {HTMLScreen~Style} [style] The object storing the styling information for this
      * screen.
+     * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
+     * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
-    function HTMLScreen(name, htmlFilename, style) {
+    function HTMLScreen(name, htmlFilename, style, keyCommands) {
         asyncResource.AsyncResource.call(this);
         /**
          * An ID of this screen. The IDs of HTML elements on this screen are prefixed by this name.
@@ -144,6 +146,12 @@ define([
          * @type Number
          */
         this._externalComponentsToLoad = 0;
+        /**
+         * A reference to the event listener function listening to the keydown event to handle the key commands
+         * valid on this screen.
+         * @type Function
+         */
+        this._keyDownHandler = keyCommands ? this._getKeyDownHandler(keyCommands) : null;
         // will be undefined when setting the prototypes for inheritance
         if (htmlFilename) {
             this.requestModelLoad();
@@ -157,6 +165,41 @@ define([
      */
     HTMLScreen.prototype._isLoaded = function () {
         return this._model && this._cssLoaded && (this._externalComponentsLoaded === this._externalComponentsToLoad);
+    };
+    /**
+     * Generates and returns an event listener function that can be added to the DOM to listen for "keydown"
+     * events and perform the actions defined in the keyCommands parameter that is in the same format as for
+     * the constructor.
+     * @param {Object.<String, Function>} keyCommands
+     * @returns {Function}
+     */
+    HTMLScreen.prototype._getKeyDownHandler = function (keyCommands) {
+        var keyCommandsByCode = {}, keys, i;
+        keys = Object.keys(keyCommands);
+        for (i = 0; i < keys.length; i++) {
+            keyCommandsByCode[utils.getKeyCodeOf(keys[i])] = keyCommands[keys[i]];
+        }
+        return function (event) {
+            if (keyCommandsByCode[event.keyCode]) {
+                keyCommandsByCode[event.keyCode].call(this);
+            }
+        }.bind(this);
+    };
+    /**
+     * Adds the appropriate event listeners for this screen to the DOM.
+     */
+    HTMLScreen.prototype._addEventListeners = function () {
+        if (this._keyDownHandler) {
+            document.addEventListener("keydown", this._keyDownHandler);
+        }
+    };
+    /**
+     * Removes the previously added (if any) event listeners for this screen from the DOM.
+     */
+    HTMLScreen.prototype._removeEventListeners = function () {
+        if (this._keyDownHandler) {
+            document.removeEventListener("keydown", this._keyDownHandler);
+        }
     };
     /**
      * Initiates the asynchronous loading of the screen's structure and style from the
@@ -197,7 +240,12 @@ define([
      */
     HTMLScreen.prototype.replacePageWithScreen = function (callback) {
         document.body.innerHTML = "";
-        this.addScreenToPage(callback);
+        this.addScreenToPage(function () {
+            if (callback) {
+                callback();
+            }
+            this._addEventListeners();
+        });
     };
     /**
      * Appends the content of the screen to the page in an invisible (display: none) div.
@@ -243,6 +291,7 @@ define([
     HTMLScreen.prototype.show = function () {
         if (this._container) {
             this._container.style.display = "block";
+            this._addEventListeners();
         } else {
             application.showError("Attempting to show screen '" + this._name + "' before adding it to the page!");
         }
@@ -276,6 +325,7 @@ define([
         if (this._container && this._background) {
             this._container.style.display = "none";
             this._background.style.display = "none";
+            this._removeEventListeners();
         } else {
             application.showError("Attempting to hide screen '" + this._name + "' before adding it to the page!");
         }
@@ -303,6 +353,7 @@ define([
             }
             this._background.remove();
             this._container.remove();
+            this._removeEventListeners();
             this._background = null;
             this._container = null;
         } else {
@@ -1290,9 +1341,11 @@ define([
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
      * @param {Boolean} [useRequestAnimFrame=false] Whether to use the requestAnimationFrame API for the render loop
      * (as opposed to setInterval)
+     * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
+     * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
-    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, filtering, useRequestAnimFrame) {
-        HTMLScreen.call(this, name, htmlFilename, style);
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, filtering, useRequestAnimFrame, keyCommands) {
+        HTMLScreen.call(this, name, htmlFilename, style, keyCommands);
         /**
          * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
          * @type Boolean
@@ -1581,9 +1634,11 @@ define([
      * @param {MenuComponent~MenuOption[]} menuOptions The menuOptions for creating the menu component.
      * @param {String} [menuContainerID] The ID of the HTML element inside of which
      * the menu should be added (if omitted, it will be appended to body)
+     * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
+     * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
-    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID) {
-        HTMLScreen.call(this, name, htmlFilename, style);
+    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID, keyCommands) {
+        HTMLScreen.call(this, name, htmlFilename, style, keyCommands);
         /**
          * The menuOptions for creating the menu component.
          * @type MenuComponent~MenuOption[]
