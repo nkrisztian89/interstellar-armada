@@ -4,7 +4,7 @@
             "antialiasing": true,
             "filtering": "trilinear",
             "textureQuality": "normal",
-            "cubemapQuality": "normal",
+            "cubemapQuality": "high",
             "shadowMapping": true,
             "shadows": {
                 "quality": "low",

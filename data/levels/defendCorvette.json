@@ -1,6 +1,6 @@
 {
     "environment": {
-        "createFrom": "deepSpaceWhiteRedStarsFromSides"
+        "createFrom": "crescent_blueGasGiant"
     },
     "teams": [
         "empire",

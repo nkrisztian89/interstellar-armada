@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0:325 (2016.07.12.)",
+    "version": "0.4.0:326 (2016.07.17.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -87,8 +87,11 @@
                     "name": "low",
                     "maximumResolution": 512
                 }, {
-                    "name": "normal",
+                    "name": "medium",
                     "maximumResolution": 1024
+                }, {
+                    "name": "high",
+                    "maximumResolution": 2048
                 }],
             "shadows": {
                 "qualities": [

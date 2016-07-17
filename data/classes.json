@@ -1,19 +1,49 @@
 {
     "skyboxClasses": [
         {
-            "name": "deepspace",
+            "name": "stars_sparse",
             "shader": "skybox",
-            "cubemap": "deepspace"
+            "cubemap": "stars_sparse"
         },
         {
-            "name": "deepspaceBlueNebula",
+            "name": "stars_medium",
             "shader": "skybox",
-            "cubemap": "deepspaceBlueNebula"
+            "cubemap": "stars_medium"
         },
         {
-            "name": "deepspaceRedNebula",
+            "name": "stars_dense",
             "shader": "skybox",
-            "cubemap": "deepspaceRedNebula"
+            "cubemap": "stars_dense"
+        },
+        {
+            "name": "stars_veryDense",
+            "shader": "skybox",
+            "cubemap": "stars_veryDense"
+        },
+        {
+            "name": "blueNebula_sparse",
+            "shader": "skybox",
+            "cubemap": "blueNebula_sparse"
+        },
+        {
+            "name": "blueNebula_medium",
+            "shader": "skybox",
+            "cubemap": "blueNebula_medium"
+        },
+        {
+            "name": "redNebula_medium",
+            "shader": "skybox",
+            "cubemap": "redNebula_medium"
+        },
+        {
+            "name": "redNebula_dense",
+            "shader": "skybox",
+            "cubemap": "redNebula_dense"
+        },
+        {
+            "name": "crescentNebula_veryDense",
+            "shader": "skybox",
+            "cubemap": "crescentNebula_veryDense"
         }
     ],
     "backgroundObjectClasses": [
@@ -145,6 +175,42 @@
                     "size": 575,
                     "shader": "backgroundFixBillboard",
                     "texture": "bluePlanet",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "grayPlanet",
+            "lightColor": [0.0, 0.0, 0.0],
+            "layers": [
+                {
+                    "size": 600,
+                    "shader": "backgroundFixBillboard",
+                    "texture": "grayPlanet",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "blueGasGiant",
+            "lightColor": [0.0, 0.0, 0.0],
+            "layers": [
+                {
+                    "size": 625,
+                    "shader": "backgroundFixBillboard",
+                    "texture": "blueGasGiant",
+                    "color": [1.0, 1.0, 1.0, 1.0]
+                }
+            ]
+        },
+        {
+            "name": "blueGasGiant_backLight",
+            "lightColor": [0.0, 0.0, 0.0],
+            "layers": [
+                {
+                    "size": 525,
+                    "shader": "backgroundFixBillboard",
+                    "texture": "blueGasGiant_backLight",
                     "color": [1.0, 1.0, 1.0, 1.0]
                 }
             ]

@@ -344,7 +344,7 @@ define([
         var resource;
         resource = this._resourceHolders[resourceType] ? this._resourceHolders[resourceType].getResource(resourceName, params) : null;
         if (!resource) {
-            if (params.allowNullResult !== true) {
+            if (!params || (params.allowNullResult !== true)) {
                 application.showError("Requested a resource named '" + resourceName + "' of type '" + resourceType + "', which does not exist.");
             }
             return null;

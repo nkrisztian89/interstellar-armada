@@ -4,7 +4,7 @@
             "name": "deepSpaceTwoStars",
             "skyboxes": [
                 {
-                    "class": "deepspace"
+                    "class": "stars_medium"
                 }
             ],
             "backgroundObjects": [
@@ -33,7 +33,7 @@
             "name": "deepSpaceWhiteRedStars",
             "skyboxes": [
                 {
-                    "class": "deepspace"
+                    "class": "stars_sparse"
                 }
             ],
             "backgroundObjects": [
@@ -62,7 +62,7 @@
             "name": "deepSpaceWhiteRedStarsFromSides",
             "skyboxes": [
                 {
-                    "class": "deepspaceRedNebula"
+                    "class": "redNebula_medium"
                 }
             ],
             "backgroundObjects": [
@@ -91,7 +91,7 @@
             "name": "deepSpaceBlueNebula",
             "skyboxes": [
                 {
-                    "class": "deepspaceBlueNebula"
+                    "class": "blueNebula_sparse"
                 }
             ],
             "backgroundObjects": [
@@ -120,7 +120,7 @@
             "name": "deepSpaceBrownPlanet",
             "skyboxes": [
                 {
-                    "class": "deepspace"
+                    "class": "stars_dense"
                 }
             ],
             "backgroundObjects": [
@@ -157,7 +157,7 @@
             "name": "deepSpaceBluePlanet",
             "skyboxes": [
                 {
-                    "class": "deepspace"
+                    "class": "stars_veryDense"
                 }
             ],
             "backgroundObjects": [
@@ -181,6 +181,80 @@
                         "angleAlpha": 90,
                         "angleBeta": -35,
                         "angleGamma": 90
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
+        },
+        {
+            "name": "deepSpaceGrayPlanet",
+            "skyboxes": [
+                {
+                    "class": "stars_medium"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "whiteStar",
+                    "position": {
+                        "angleAlpha": -10,
+                        "angleBeta": 10
+                    }
+                },
+                {
+                    "class": "smallBlueStar",
+                    "position": {
+                        "angleAlpha": 130,
+                        "angleBeta": -20
+                    }
+                },
+                {
+                    "class": "grayPlanet",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": 6,
+                        "angleGamma": 21
+                    }
+                }
+            ],
+            "dustClouds": [
+                {
+                    "class": "standard"
+                }
+            ]
+        },
+        {
+            "name": "crescent_blueGasGiant",
+            "skyboxes": [
+                {
+                    "class": "crescentNebula_veryDense"
+                }
+            ],
+            "backgroundObjects": [
+                {
+                    "class": "whiteStar",
+                    "position": {
+                        "angleAlpha": -90,
+                        "angleBeta": 85
+                    }
+                },
+                {
+                    "class": "bigBlueStar",
+                    "position": {
+                        "angleAlpha": -90,
+                        "angleBeta": -30
+                    }
+                },
+                {
+                    "class": "blueGasGiant",
+                    "position": {
+                        "angleAlpha": -80,
+                        "angleBeta": -35,
+                        "angleGamma": 65
                     }
                 }
             ],
