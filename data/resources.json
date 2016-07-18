@@ -18,7 +18,7 @@
         },
         {
             "name": "flare",
-            "basepath": "flare",
+            "basepath": "effect/flare",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -108,7 +108,7 @@
         },
         {
             "name": "explosion",
-            "basepath": "explosion",
+            "basepath": "effect/explosion",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -121,7 +121,7 @@
         },
         {
             "name": "trainingProjectile",
-            "basepath": "trainingProjectile",
+            "basepath": "projectile/trainingProjectile",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -134,7 +134,7 @@
         },
         {
             "name": "plasma",
-            "basepath": "plasma_full",
+            "basepath": "projectile/plasma_full",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -147,7 +147,7 @@
         },
         {
             "name": "heavyPlasma",
-            "basepath": "heavyPlasma_full",
+            "basepath": "projectile/heavyPlasma_full",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -160,7 +160,7 @@
         },
         {
             "name": "proton",
-            "basepath": "proton_full",
+            "basepath": "projectile/proton_full",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -173,7 +173,7 @@
         },
         {
             "name": "ion",
-            "basepath": "ion_full",
+            "basepath": "projectile/ion_full",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -186,7 +186,7 @@
         },
         {
             "name": "falcon",
-            "basepath": "falcon",
+            "basepath": "spacecraft/falcon",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -201,7 +201,7 @@
         },
         {
             "name": "viper",
-            "basepath": "viper",
+            "basepath": "spacecraft/viper",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -216,7 +216,7 @@
         },
         {
             "name": "aries",
-            "basepath": "aries",
+            "basepath": "spacecraft/aries",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -231,7 +231,7 @@
         },
         {
             "name": "taurus",
-            "basepath": "taurus",
+            "basepath": "spacecraft/taurus",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -246,7 +246,7 @@
         },
         {
             "name": "libra",
-            "basepath": "libra",
+            "basepath": "spacecraft/libra",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -347,7 +347,7 @@
     "cubemaps": [
         {
             "name": "stars_sparse",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_2000",
@@ -365,7 +365,7 @@
         },
         {
             "name": "stars_medium",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_4000",
@@ -383,7 +383,7 @@
         },
         {
             "name": "stars_dense",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_6000",
@@ -401,7 +401,7 @@
         },
         {
             "name": "stars_veryDense",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_8000",
@@ -419,7 +419,7 @@
         },
         {
             "name": "blueNebula_sparse",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "blueNebula_2000",
@@ -437,7 +437,7 @@
         },
         {
             "name": "blueNebula_medium",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "blueNebula_4000",
@@ -455,7 +455,7 @@
         },
         {
             "name": "redNebula_medium",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_4000",
@@ -473,7 +473,7 @@
         },
         {
             "name": "redNebula_dense",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_6000",
@@ -491,7 +491,7 @@
         },
         {
             "name": "crescentNebula_veryDense",
-            "basepath": "cube/",
+            "basepath": "background/",
             "format": "jpg",
             "imageNames": {
                 "posX": "stars_8000",

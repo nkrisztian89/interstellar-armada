@@ -193,6 +193,13 @@ define([
         }.bind(this);
     };
     /**
+     * Displays an error message for the case when the source file for this texture with the passed name could not be loaded.
+     * @param {String} filename
+     */
+    TextureResource.prototype._handleError = function (filename) {
+        application.showError("Could not load texture '" + this._name + "': downloading file '" + filename + "' failed!");
+    };
+    /**
      * @override
      * @param {Object} params
      * @returns {Boolean}
@@ -239,6 +246,7 @@ define([
                             this._imagesToLoad++;
                             this._images[type][quality] = new Image();
                             this._images[type][quality].onload = this._getOnLoadImageFunction(type, quality).bind(this);
+                            this._images[type][quality].onerror = this._handleError.bind(this, this._getPath(type, quality));
                         }
                     }
                 }
@@ -421,6 +429,13 @@ define([
         }.bind(this);
     };
     /**
+     * Displays an error message for the case when the source file for this cubemap with the passed name could not be loaded.
+     * @param {String} filename
+     */
+    CubemapResource.prototype._handleError = function (filename) {
+        application.showError("Could not load cube mapped texture '" + this._name + "': downloading file '" + filename + "' failed!");
+    };
+    /**
      * @override
      * @param {Object} params 
      * @returns {Boolean}
@@ -465,6 +480,7 @@ define([
                             this._imagesToLoad++;
                             this._images[face][quality] = new Image();
                             this._images[face][quality].onload = this._getOnLoadImageFunction(face, quality).bind(this);
+                            this._images[face][quality].onerror = this._handleError.bind(this, this._getPath(face, quality));
                         }
                     }
                 }
