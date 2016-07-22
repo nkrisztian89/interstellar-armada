@@ -18,6 +18,7 @@
  * @param screens The battle screen is a HTMLScreenWithCanvases.
  * @param budaScene Used for creating the battle scene and the nodes for the HUD elements.
  * @param resources Used for accessing the resources for the HUD and for requesting the loading of reasourcing and setting callback for when they are ready.
+ * @param audio Used for controlling volume (muting when opening the menu)
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing graphics settings.
@@ -35,7 +36,8 @@ define([
     "modules/components",
     "modules/screens",
     "modules/buda-scene",
-    "modules/graphics-resources",
+    "modules/media-resources",
+    "modules/audio",
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
@@ -45,7 +47,7 @@ define([
     "armada/control",
     "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, classes, config, logic, control, ai) {
+], function (utils, vec, mat, application, components, screens, budaScene, resources, audio, strings, armadaScreens, graphics, classes, config, logic, control, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -888,6 +890,9 @@ define([
                 config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SCALE_MODE),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_COLOR));
         _hudTurnCursor.addToScene(_battleScene);
+        // mark HUD sound effects for loading
+        resources.getSoundEffect(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).name);
+        resources.getSoundEffect(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).name);
     }
     /**
      * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
@@ -1005,6 +1010,7 @@ define([
             _battleScene.setShouldUpdateCamera(false);
         }
         this.stopRenderLoop();
+        audio.setEffectVolume(0);
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
@@ -1032,6 +1038,7 @@ define([
                     application.ErrorSeverity.MINOR,
                     "No action was taken, to avoid double-running the simulation.");
         }
+        audio.setEffectVolume(1);
     };
     /**
      * Uses the loading box to show the status to the user.

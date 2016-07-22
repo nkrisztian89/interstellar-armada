@@ -1234,5 +1234,39 @@
                 }
             ]
         }
+    ],
+    "soundEffects": [
+        {
+            "name": "spacecraftHum",
+            "samples": ["hum.ogg"]
+        },
+        {
+            "name": "weaponshot1",
+            "samples": ["weaponshot1.ogg", "weaponshot1b.ogg"]
+        },
+        {
+            "name": "weaponshot2",
+            "samples": ["weaponshot2.ogg"]
+        },
+        {
+            "name": "hit",
+            "samples": ["hit.ogg"]
+        },
+        {
+            "name": "containerExplosion",
+            "samples": ["containerExplosion.ogg"]
+        },
+        {
+            "name": "fighterExplosion",
+            "samples": ["fighterExplosion.ogg"]
+        },
+        {
+            "name": "beep1",
+            "samples": ["beep1.wav"]
+        },
+        {
+            "name": "beep3",
+            "samples": ["beep3.wav"]
+        }
     ]
 }

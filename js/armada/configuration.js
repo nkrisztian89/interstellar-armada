@@ -1195,6 +1195,18 @@ define([
             name: "hudSubheaderTextPosition",
             type: types.VECTOR2
         },
+        HUD_TARGET_SWITCH_SOUND: {
+            name: "hudTargetSwitchSound",
+            type: classes.SOUND_EFFECT_2D
+        },
+        HUD_TARGET_SWITCH_DENIED_SOUND: {
+            name: "hudTargetSwitchDeniedSound",
+            type: classes.SOUND_EFFECT_2D
+        },
+        WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {
+            name: "weaponFireSoundStackMinimumDistance",
+            type: "number"
+        },
         DEMO_FIGHTER_AI_TYPE: {
             name: "demoFighterAI",
             type: "string"

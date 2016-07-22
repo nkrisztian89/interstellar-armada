@@ -117,10 +117,11 @@
         "versionParagraph": "Game version: {version}",
         "aboutGameParagraph": "This application is a learning project in the early development phase. The current version is only intended for testing the initial, already implemented features of what one day might become a functional game. Even the core features are yet under development. The game might contain numerous bugs.",
         "aboutAuthorLicenseHeader": "About the author and license",
-        "aboutAuthorLicenseParagraph": "This project is developed by Krisztián Nagy, a BSc computer engineering graduate from Budapest University of Technology and Economics. The project is released under {license}, you can obtain the source code and the license from the project's {github} page.<br/> The application features the {sansation} font family created by Bernd Montag, which is freeware.<br/> The application uses the {requireJS} library for module management, which is available under {requireJSLicense}.",
+        "aboutAuthorLicenseParagraph": "This project is developed by Krisztián Nagy, a BSc computer engineering graduate from Budapest University of Technology and Economics. The project is released under {license}, you can obtain the source code and the license from the project's {github} page.<br/> The application features the {sansation} font family created by Bernd Montag, which is freeware.<br/> The application uses the {requireJS} library for module management, which is available under {requireJSLicense}.<br/>Some sound effects in the game were created using freely available sound samples, the sources of which can be found {soundSources}.",
         "theNewBSDOrMITLicenses": "the new BSD or MIT licenses",
+        "here": "here",
         "aboutUsedSoftwareHeader": "About the used software",
-        "aboutUsedSoftwareParagraph": "This game is created using freely available and/or open source software and open standards. For creating the in-game assets, {inkscape}, {blender}, {gimp} and specialized tools developed (in {netbeans} and {lazarus}) by the author of the game are used, and the game itself is being developed using {netbeans}, {chrome} and {firefox}, all of these running on {ubuntu}."
+        "aboutUsedSoftwareParagraph": "This game is created using freely available and/or open source software and open standards. For creating the in-game assets, {inkscape}, {blender}, {gimp}, {audacity}, {bfxr} and specialized tools developed (in {netbeans} and {lazarus}) by the author of the game are used, and the game itself is being developed using {netbeans}, {chrome} and {firefox}, all of these running on {ubuntu}."
     },
     "setting": {
         "on": "on",

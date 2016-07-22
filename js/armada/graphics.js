@@ -24,7 +24,7 @@ define([
     "modules/application",
     "modules/async-resource",
     "modules/managed-gl",
-    "modules/graphics-resources",
+    "modules/media-resources",
     "modules/buda-scene",
     "armada/constants",
     "utils/polyfill"

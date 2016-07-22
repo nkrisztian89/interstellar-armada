@@ -1513,7 +1513,12 @@
             },
             "lightColor": [1, 1, 1],
             "lightIntensity": 30,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "hitSound": {
+                "name": "hit",
+                "volume": 0.75,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "plasma",
@@ -1534,7 +1539,12 @@
             },
             "lightColor": [0, 1, 0],
             "lightIntensity": 36,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "hitSound": {
+                "name": "hit",
+                "volume": 0.75,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "heavyPlasma",
@@ -1555,7 +1565,12 @@
             },
             "lightColor": [1, 0, 1],
             "lightIntensity": 100,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "hitSound": {
+                "name": "hit",
+                "volume": 0.75,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "proton",
@@ -1576,7 +1591,12 @@
             },
             "lightColor": [1, 1, 0],
             "lightIntensity": 400,
-            "explosion": "mediumHitExplosion"
+            "explosion": "mediumHitExplosion",
+            "hitSound": {
+                "name": "hit",
+                "volume": 1.0,
+                "rolloff": 0.0075
+            }
         },
         {
             "name": "ion",
@@ -1597,7 +1617,12 @@
             },
             "lightColor": [0, 0.6, 1],
             "lightIntensity": 1296,
-            "explosion": "largeHitExplosion"
+            "explosion": "largeHitExplosion",
+            "hitSound": {
+                "name": "hit",
+                "volume": 1.5,
+                "rolloff": 0.005
+            }
         }
     ],
     "weaponClasses": [
@@ -1608,7 +1633,7 @@
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
-            "cooldown": 1000,
+            "cooldown": 750,
             "barrels": [
                 {
                     "projectile": "training",
@@ -1616,7 +1641,12 @@
                     "position": [0, 210, 0]
                 }
             ],
-            "attachmentPoint": [0, -20, 39.6]
+            "attachmentPoint": [0, -20, 39.6],
+            "fireSound": {
+                "name": "weaponshot1",
+                "volume": 0.75,
+                "rolloff": 0.02
+            }
         },
         {
             "name": "plasmaGun",
@@ -1633,7 +1663,12 @@
                     "position": [0, 10, 0]
                 }
             ],
-            "attachmentPoint": [0, -4, 1.2]
+            "attachmentPoint": [0, -4, 1.2],
+            "fireSound": {
+                "name": "weaponshot1",
+                "volume": 0.75,
+                "rolloff": 0.02
+            }
         },
         {
             "name": "heavyPlasmaGun",
@@ -1650,7 +1685,12 @@
                     "position": [0, 415, -20]
                 }
             ],
-            "attachmentPoint": [0, 0, 25]
+            "attachmentPoint": [0, 0, 25],
+            "fireSound": {
+                "name": "weaponshot2",
+                "volume": 0.75,
+                "rolloff": 0.02
+            }
         },
         {
             "name": "smallPlasmaTurret",
@@ -1701,7 +1741,12 @@
                     "rotationRate": 45,
                     "transformGroupIndex": 1
                 }
-            ]
+            ],
+            "fireSound": {
+                "name": "weaponshot1",
+                "volume": 1.0,
+                "rolloff": 0.015
+            }
         },
         {
             "name": "smallProtonCannon",
@@ -1738,7 +1783,12 @@
                     "rotationRate": 2,
                     "transformGroupIndex": 2
                 }
-            ]
+            ],
+            "fireSound": {
+                "name": "weaponshot1",
+                "volume": 1.0,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "largeIonCannon",
@@ -1774,7 +1824,12 @@
                     "rotationRate": 10,
                     "transformGroupIndex": 1
                 }
-            ]
+            ],
+            "fireSound": {
+                "name": "weaponshot2",
+                "volume": 1.5,
+                "rolloff": 0.01
+            }
         }
     ],
     "propulsionClasses": [

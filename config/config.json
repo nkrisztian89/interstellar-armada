@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0:327 (2016.07.18.)",
+    "version": "0.4.0:328 (2016.07.22.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -12,6 +12,7 @@
         "model": "{{data}}/models/",
         "shader": "{{data}}/shaders/",
         "texture": "{{data}}/textures/",
+        "soundEffect": "{{data}}/sfx/",
         "level": "{{data}}/levels/",
         "environment": "{{data}}/levels/environments/"
     },
@@ -33,7 +34,7 @@
         }
     },
     "dataFiles": {
-        "graphics": {
+        "media": {
             "resources": {
                 "filename": "resources.json",
                 "folder": "data"

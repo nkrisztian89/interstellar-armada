@@ -88,12 +88,15 @@ define([
             github: '<a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada" >github</a>',
             sansation: '<a target="_blank" href="http://www.dafont.com/sansation.font">Sansation</a>',
             requireJS: '<a target="_blank" href="http://requirejs.org/">RequireJS</a>',
-            requireJSLicense: '<a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSES) + '</a>'
+            requireJSLicense: '<a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSES) + '</a>',
+            soundSources: '<a target="_blank" href="sound_sources.txt">' + strings.get(strings.ABOUT.HERE) + '</a>'
         });
         this._aboutUsedSoftwareParagraph.customizeContent({
             inkscape: '<a target="_blank" href="https://inkscape.org">Inkscape</a>',
             blender: '<a target="_blank" href="https://www.blender.org/">Blender</a>',
             gimp: '<a target="_blank" href="https://www.gimp.org">GIMP</a>',
+            audacity: '<a target="_blank" href="http://www.audacityteam.org">Audacity</a>',
+            bfxr: '<a target="_blank" href="http://www.bfxr.net">Bfxr</a>',
             netbeans: '<a target="_blank" href="https://netbeans.org/">Netbeans</a>',
             lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
             chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',

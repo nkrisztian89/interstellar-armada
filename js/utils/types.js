@@ -486,6 +486,10 @@ define([
             return undefined;
         }
         if (typeof type === "object") {
+            // accept direct definition objects for describing properties
+            if (!type.baseType) {
+                return exports.getVerifiedObject(name, value, type);
+            }
             return exports.getValueOfType(name, type.baseType, value, defaultValue, optional, type, checkFunction, checkFailMessage, parentObject);
         }
         switch (type) {

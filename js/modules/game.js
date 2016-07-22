@@ -133,10 +133,10 @@ define([
                     _defaultLanguage = configJSON.defaultLanguage;
                     _stringsFileDescriptors = configJSON.configFiles.strings;
                     require([
-                        "modules/graphics-resources"
-                    ], function (graphicsResources) {
+                        "modules/media-resources"
+                    ], function (resources) {
                         application._loadGameConfigurationAndExecuteCallback(configJSON, function () {
-                            graphicsResources.requestConfigLoad(configJSON.dataFiles.graphics.resources, function () {
+                            resources.requestConfigLoad(configJSON.dataFiles.media.resources, function () {
                                 application.log("Game configuration loaded.");
                                 _configInitComplete = true;
                             });

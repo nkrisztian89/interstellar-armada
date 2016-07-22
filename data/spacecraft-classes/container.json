@@ -41,6 +41,11 @@
         }
     ],
     "explosion": "containerExplosion",
+    "explosionSound": {
+        "name": "containerExplosion",
+        "volume": 2.0,
+        "rolloff": 0.01
+    },
     "showTimeRatioDuringExplosion": 0.25,
     "damageIndicators": [],
     "lights": [],

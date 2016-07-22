@@ -692,7 +692,17 @@
             }
         }
     ],
+    "humSound": {
+        "name": "spacecraftHum",
+        "volume": 1.0,
+        "rolloff": 0.005
+    },
     "explosion": "largeShipExplosion",
+    "explosionSound": {
+        "name": "fighterExplosion",
+        "volume": 8.0,
+        "rolloff": 0.0025
+    },
     "showTimeRatioDuringExplosion": 0.25,
     "damageIndicators": [
         {

@@ -1,8 +1,8 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various graphics resources,
+ * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various media resources,
  * for which the respective classes are also provided. These classes are based on the classes of ManagedGL and EgomModel.
- * The provided resource manager is ready to use, can load graphics resource descriptions from a specified JSON file, then mark the 
+ * The provided resource manager is ready to use, can load media resource descriptions from a specified JSON file, then mark the 
  * specific resources for loading (e.g. getTexture(params)) and load them when requested.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -19,6 +19,7 @@
  * @param resourceManager This module builds on the functionality of the general resource manager module
  * @param managedGL Provides resource classes that can load and create for ManagedTextures, ManagedCubeMaps and ManagedShaders
  * @param egomModel Provides resource classes that can load and create Egom Models
+ * @param audio Used for easy access to the Web Audio API for playing back sound resources
  */
 define([
     "utils/utils",
@@ -26,8 +27,9 @@ define([
     "modules/application",
     "modules/resource-manager",
     "modules/managed-gl",
-    "modules/egom-model"
-], function (utils, types, application, resourceManager, managedGL, egomModel) {
+    "modules/egom-model",
+    "modules/audio"
+], function (utils, types, application, resourceManager, managedGL, egomModel, audio) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -83,6 +85,16 @@ define([
              */
             MODEL_FOLDER = "model",
             /**
+             * In the resource description file, sound effect resources will be initialized from the array with this name
+             * @type String
+             */
+            SOUND_EFFECT_ARRAY_NAME = "soundEffects",
+            /**
+             * When asked to be loaded from files, sound effect resources will look for the files in the folder with this ID (not URL)
+             * @type String
+             */
+            SOUND_EFFECT_FOLDER = "soundEffect",
+            /**
              * Lines in shader sources starting with this string are treated as include statements referencing another shader source file
              * to be inserted into the source in the place of the line, with the name (path) of the file to be inserted starting after this
              * prefix.
@@ -109,8 +121,8 @@ define([
              */
             _shaderIncludeCache = {},
             /**
-             * This graphics resource manager will be used to load and access the graphics resources.
-             * @type GraphicsResourceManager
+             * This media resource manager will be used to load and access the media resources.
+             * @type MediaResourceManager
              */
             _resourceManager;
     // freezing enum objects
@@ -972,32 +984,139 @@ define([
     // ############################################################################################
     /**
      * @class
+     * @augments GenericResource
+     * @param {Object} dataJSON
+     */
+    function SoundEffectResource(dataJSON) {
+        resourceManager.GenericResource.call(this, dataJSON.name);
+        /**
+         * The filenames (paths withing the sound effect folder) of the samples that correspond to this sound effect - when playing back
+         * the effect, one of these samples is chosen randomly
+         * @type String[]
+         */
+        this._samples = dataJSON.samples;
+        /**
+         * @type Number
+         */
+        this._loadedSamples = 0;
+        /**
+         * @type Number
+         */
+        this._samplesToLoad = 0;
+    }
+    SoundEffectResource.prototype = new resourceManager.GenericResource();
+    SoundEffectResource.prototype.constructor = SoundEffectResource;
+    /**
+     * @param {Number} index
+     * @returns {Function}
+     */
+    SoundEffectResource.prototype._getOnLoadSampleFunction = function (index) {
+        return function () {
+            this._loadedSamples++;
+            this._onFilesLoad(this._loadedSamples === this._samplesToLoad, {path: this._samples[index]});
+        }.bind(this);
+    };
+    /**
+     * Displays an error message for the case when the source file for this texture with the passed name could not be loaded.
+     * @param {String} filename
+     */
+    SoundEffectResource.prototype._handleError = function (filename) {
+        application.showError("Could not load sound effect '" + this._name + "': downloading file '" + filename + "' failed!");
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    SoundEffectResource.prototype.requiresReload = function () {
+        return !this.isReadyToUse() && !this.isRequested();
+    };
+    /**
+     * @param {Number} index
+     */
+    SoundEffectResource.prototype._requestFile = function (index) {
+        this._samplesToLoad++;
+        application.requestFile(SOUND_EFFECT_FOLDER, this._samples[index], function (request) {
+            audio.loadSample(this._samples[index], request, function () {
+                this._loadedSamples++;
+                this._onFilesLoad(this._samplesToLoad === this._loadedSamples, {path: this._samples[index]});
+            }.bind(this));
+        }.bind(this), undefined, "arraybuffer");
+    };
+    /**
+     * @override
+     */
+    SoundEffectResource.prototype._requestFiles = function () {
+        var i;
+        for (i = 0; i < this._samples.length; i++) {
+            this._requestFile(i);
+        }
+    };
+    /**
+     * @override
+     * @param {Object} params
+     */
+    SoundEffectResource.prototype._loadData = function (params) {
+        application.log("Sound effect sample from file: " + params.path + " has been loaded.", 2);
+    };
+    /**
+     * Plays back one of the samples (randomly chosen) corresponding to this effect, without saving a reference to it. The samples must be
+     * loaded.
+     * @param {Number} [volume=1]
+     * @param {Number[3]} [position]
+     * @param {Number} [rolloff=1]
+     */
+    SoundEffectResource.prototype.play = function (volume, position, rolloff) {
+        if (this.isReadyToUse() === false) {
+            application.showError("Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
+            return;
+        }
+        audio.playSound(this._samples[Math.floor(Math.random() * this._samples.length)], volume, position, rolloff);
+    };
+    /**
+     * Creates a sound source for a randomly chosen sample corresponding to this effect and returns the reference to it. The samples must be
+     * loaded.
+     * @param {Number} [volume=1]
+     * @param {Boolean} [loop=false]
+     * @param {Number[3]} [position]
+     * @param {Number} [rolloff=1]
+     * @returns {SoundSource}
+     */
+    SoundEffectResource.prototype.createSoundSource = function (volume, loop, position, rolloff) {
+        if (this.isReadyToUse() === false) {
+            application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
+            return null;
+        }
+        return new audio.SoundSource(this._samples[Math.floor(Math.random() * this._samples.length)], volume, loop, position, rolloff);
+    };
+    // ############################################################################################
+    /**
+     * @class
      * @augments ResourceManager
      */
-    function GraphicsResourceManager() {
+    function MediaResourceManager() {
         resourceManager.ResourceManager.call(this);
     }
-    GraphicsResourceManager.prototype = new resourceManager.ResourceManager();
-    GraphicsResourceManager.prototype.constructor = GraphicsResourceManager;
+    MediaResourceManager.prototype = new resourceManager.ResourceManager();
+    MediaResourceManager.prototype.constructor = MediaResourceManager;
     /**
      * @param {String} name
      * @returns {TextureResource}
      */
-    GraphicsResourceManager.prototype.getTexture = function (name) {
+    MediaResourceManager.prototype.getTexture = function (name) {
         return this.getResource(TEXTURE_ARRAY_NAME, name);
     };
     /**
      * @param {String} name
      * @returns {CubemapResource}
      */
-    GraphicsResourceManager.prototype.getCubemap = function (name) {
+    MediaResourceManager.prototype.getCubemap = function (name) {
         return this.getResource(CUBEMAP_ARRAY_NAME, name);
     };
     /**
      * @param {String} name
      * @returns {ShaderResource}
      */
-    GraphicsResourceManager.prototype.getShader = function (name) {
+    MediaResourceManager.prototype.getShader = function (name) {
         return this.getResource(SHADER_ARRAY_NAME, name);
     };
     /**
@@ -1007,7 +1126,7 @@ define([
      * @param {String} variantName
      * @returns {ShaderResource}
      */
-    GraphicsResourceManager.prototype.getVariantShader = function (name, variantName) {
+    MediaResourceManager.prototype.getVariantShader = function (name, variantName) {
         return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getVariantShaderName(variantName), {allowNullResult: true}) || this.getShader(name);
     };
     /**
@@ -1015,14 +1134,14 @@ define([
      * @param {Object} params
      * @returns {ModelResource}
      */
-    GraphicsResourceManager.prototype.getModel = function (name, params) {
+    MediaResourceManager.prototype.getModel = function (name, params) {
         return this.getResource(MODEL_ARRAY_NAME, name, params);
     };
     /**
      * @param {Model} model
      * @returns {ModelResource}
      */
-    GraphicsResourceManager.prototype.getOrAddModel = function (model) {
+    MediaResourceManager.prototype.getOrAddModel = function (model) {
         var result = this.getResource(MODEL_ARRAY_NAME, model.getName(), {allowNullResult: true});
         if (!result) {
             result = this.addResource(MODEL_ARRAY_NAME, new ModelResource({
@@ -1032,25 +1151,33 @@ define([
         }
         return result;
     };
+    /**
+     * @param {String} name
+     * @returns {SoundEffectResource}
+     */
+    MediaResourceManager.prototype.getSoundEffect = function (name) {
+        return this.getResource(SOUND_EFFECT_ARRAY_NAME, name);
+    };
     // ------------------------------------------------------------------------------
     // Public functions
     /**
-     * Sends an asynchronous request to grab the file containing the graphics
+     * Sends an asynchronous request to grab the file containing the media
      * resource descriptions and sets a callback to load those descriptions as 
      * well as run a custom callback if given, as well, after the loading has 
      * been completed.
-     * @param {{folder: String, filename: String}} graphicsResourceFileDescriptor
+     * @param {{folder: String, filename: String}} mediaResourceFileDescriptor
      * @param {Function} callback
      */
-    function requestConfigLoad(graphicsResourceFileDescriptor, callback) {
+    function requestConfigLoad(mediaResourceFileDescriptor, callback) {
         var resourceClassAssignment = {};
         resourceClassAssignment[TEXTURE_ARRAY_NAME] = TextureResource;
         resourceClassAssignment[CUBEMAP_ARRAY_NAME] = CubemapResource;
         resourceClassAssignment[SHADER_ARRAY_NAME] = ShaderResource;
         resourceClassAssignment[MODEL_ARRAY_NAME] = ModelResource;
-        _resourceManager.requestConfigLoad(graphicsResourceFileDescriptor.filename, graphicsResourceFileDescriptor.folder, resourceClassAssignment, callback);
+        resourceClassAssignment[SOUND_EFFECT_ARRAY_NAME] = SoundEffectResource;
+        _resourceManager.requestConfigLoad(mediaResourceFileDescriptor.filename, mediaResourceFileDescriptor.folder, resourceClassAssignment, callback);
     }
-    _resourceManager = new GraphicsResourceManager();
+    _resourceManager = new MediaResourceManager();
     return {
         requestConfigLoad: requestConfigLoad,
         requestResourceLoad: _resourceManager.requestResourceLoad.bind(_resourceManager),
@@ -1060,6 +1187,7 @@ define([
         getVariantShader: _resourceManager.getVariantShader.bind(_resourceManager),
         getModel: _resourceManager.getModel.bind(_resourceManager),
         getOrAddModel: _resourceManager.getOrAddModel.bind(_resourceManager),
+        getSoundEffect: _resourceManager.getSoundEffect.bind(_resourceManager),
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
         executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager)
     };

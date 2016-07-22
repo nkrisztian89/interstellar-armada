@@ -13,6 +13,7 @@
  * @param control This module builds its game-specific functionality on the general control module
  * @param cameraController This module uses the CameraController class made for BudaScene
  * @param game To access screen-changing functionality
+ * @param resources Used to access the sound effects triggered by controls
  * @param armadaScreens Used for navigation
  * @param strings Used for translation support
  * @param config Used to access settings
@@ -21,10 +22,11 @@ define([
     "modules/control",
     "modules/camera-controller",
     "modules/game",
+    "modules/media-resources",
     "armada/screens/shared",
     "armada/strings",
     "armada/configuration"
-], function (control, cameraController, game, armadaScreens, strings, config) {
+], function (control, cameraController, game, resources, armadaScreens, strings, config) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -43,6 +45,16 @@ define([
              * @type Number
              */
             _strafeSpeedFactor,
+            /**
+             * Cached value of the configuration setting for target switch sound.
+             * @type SoundSource
+             */
+            _targetSwitchSound,
+            /**
+             * Cached value of the configuration setting for target switch denied sound.
+             * @type SoundSource
+             */
+            _targetSwitchDeniedSound,
             /**
              * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
              * @type ArmadaControlContext
@@ -191,11 +203,19 @@ define([
         }.bind(this));
         // switch to next hostile target
         this.setActionFunction("nextHostileTarget", true, function () {
-            this._controlledSpacecraft.targetNextHostile();
+            if (this._controlledSpacecraft.targetNextHostile()) {
+                _targetSwitchSound.play();
+            } else {
+                _targetSwitchDeniedSound.play();
+            }
         }.bind(this));
         // switch to next target (any)
         this.setActionFunction("nextNonHostileTarget", true, function () {
-            this._controlledSpacecraft.targetNextNonHostile();
+            if (this._controlledSpacecraft.targetNextNonHostile()) {
+                _targetSwitchSound.play();
+            } else {
+                _targetSwitchDeniedSound.play();
+            }
         }.bind(this));
         // toggle auto targeting
         this.setActionFunction("toggleAutoTargeting", true, function () {
@@ -294,7 +314,9 @@ define([
                 control.Controller.prototype.executeActions.call(this, triggeredActions);
                 // executing automatic actions
                 if (this._autoTargeting && !this._controlledSpacecraft.getTarget()) {
-                    this._controlledSpacecraft.targetNextHostile();
+                    if (this._controlledSpacecraft.targetNextHostile()) {
+                        _targetSwitchSound.play();
+                    }
                 }
                 this._controlledSpacecraft.aimWeapons(this._weaponAimThreshold, 0, dt);
             } else {
@@ -341,6 +363,12 @@ define([
             return;
         }
         this._pilotingMode = true;
+        _targetSwitchSound = resources.getSoundEffect(
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).name).createSoundSource(
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).volume);
+        _targetSwitchDeniedSound = resources.getSoundEffect(
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).name).createSoundSource(
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).volume);
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
                 pilotedSpacecraft.getVisualModel(),

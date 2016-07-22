@@ -318,8 +318,10 @@ define(function () {
          * @param {String} [customMimeType] If this is specified, the MIME type
          * will be overriden by the string given here. The standard type is XML,
          * this needs to be specified if other files are to be loaded.
+         * @param {XMLHTTPRequestResponseType} [responseType] If given, the responseType
+         * property of the request will be set to this value
          */
-        requestFile: function (filetype, filename, onload, customMimeType) {
+        requestFile: function (filetype, filename, onload, customMimeType, responseType) {
             this.log("Requesting file: '" + filename + "' from " + (this.getFolder(filetype) !== ""
                     ?
                     "folder: '" + this.getFolder(filetype) :
@@ -338,6 +340,9 @@ define(function () {
             }.bind(this);
             if (customMimeType) {
                 request.overrideMimeType(customMimeType);
+            }
+            if (responseType) {
+                request.responseType = responseType;
             }
             request.open("GET", this.getFileURL(filetype, filename), true);
             request.send(null);

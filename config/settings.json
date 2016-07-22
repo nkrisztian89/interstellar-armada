@@ -345,6 +345,15 @@
             "hudSubheaderTextFontSize": 0.025,
             "hudSubheaderTextFontName": "gameFont",
             "hudSubheaderTextPosition": [0, -0.85],
+            "hudTargetSwitchSound": {
+                "name": "beep1",
+                "volume": 0.75
+            },
+            "hudTargetSwitchDeniedSound": {
+                "name": "beep3",
+                "volume": 0.75
+            },
+            "weaponFireSoundStackMinimumDistance": 100,
             "demoFighterAI": "fighter",
             "demoShipAI": "ship",
             "demoViewSwitchInterval": 6000,

@@ -19,7 +19,7 @@
  * @param resourceManager All the loadable classes are subclassed from GenericResource, and the module manages the loaded classes with a ResourceManager
  * @param egomModel Required for default basic (e.g. particle) models
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
- * @param resources This module accesses graphics resources to assign them to classes when they are initialized
+ * @param resources This module accesses media resources to assign them to classes when they are initialized
  * @param budaScene Required for parsing camera related enums
  * @param graphics Required to access resources according to current graphics settings
  * @param strings Used for translation support
@@ -33,7 +33,7 @@ define([
     "modules/resource-manager",
     "modules/egom-model",
     "modules/physics",
-    "modules/graphics-resources",
+    "modules/media-resources",
     "modules/buda-scene",
     "armada/graphics",
     "armada/strings"
@@ -164,13 +164,60 @@ define([
              * @type String
              */
             PROJECTILE_MODEL_NAME_PREFIX = "projectileModel-",
-            // ------------------------------------------------------------------------------
-            // module variables
             /**
-             * This resource manager will be used to load and access class definitions.
-             * @type ResourceManager
+             * When a sound effect is added by stacking (increasing the volume of another instance of the same effect instead of adding a new
+             * one), the volume of that other instance will be increased by the base volume of the new effect multiplied by this factor
+             * @type Number
              */
-            _classManager,
+            VOLUME_FACTOR_FOR_STACKED_SOUNDS = 0.5,
+            /**
+             * A definition object with the structure of 2D sound effect descriptors used for type verification.
+             * @type Object
+             */
+            SOUND_EFFECT_2D = {
+                NAME: {
+                    name: "name",
+                    type: "string"
+                },
+                VOLUME: {
+                    name: "volume",
+                    type: "number",
+                    range: [0, 10],
+                    defaultValue: 1
+                }
+            },
+    /**
+     * A definition object with the structure of 3D sound effect descriptors used for type verification.
+     * @type Object
+     */
+    SOUND_EFFECT_3D = {
+        NAME: {
+            name: "name",
+            type: "string"
+        },
+        VOLUME: {
+            name: "volume",
+            type: "number",
+            range: [0, 10],
+            defaultValue: 1
+        },
+        ROLLOFF: {
+            name: "rolloff",
+            type: "number"
+        },
+        RESOURCE: {
+            name: "resource",
+            type: "object",
+            optional: true
+        }
+    },
+    // ------------------------------------------------------------------------------
+    // module variables
+    /**
+     * This resource manager will be used to load and access class definitions.
+     * @type ResourceManager
+     */
+    _classManager,
             /**
              * Holds the folder ID (not the URL) where the class definition file(s) reside
              * @type String
@@ -287,6 +334,56 @@ define([
                 "The property was either not specified, or it was specified with a wrong type or an invalid value." +
                 (((typeof classInstance._name) === "string") ?
                         "The error happened while initializing '" + classInstance._name + "'" : ""));
+    }
+    /**
+     * Marks the sound effect resource corresponding to the passed descriptor for loading and saves a reference to it within the descriptor
+     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
+     */
+    function _loadSoundEffect(soundEffectDescriptor) {
+        soundEffectDescriptor.resource = resources.getSoundEffect(soundEffectDescriptor.name);
+    }
+    /**
+     * Plays one of the sound samples corresponding to the sound effect described by the passed descriptor (needs to be loaded), without 
+     * creating a reference to it
+     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
+     * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
+     */
+    function _playSoundEffect(soundEffectDescriptor, position) {
+        soundEffectDescriptor.resource.play(soundEffectDescriptor.volume, position, soundEffectDescriptor.rolloff);
+    }
+    /**
+     * Creates a sound source for a (randomly chosen) sound sample corresponding to the sound effect described by the passed descriptor 
+     * (needs to be loaded), and returns the reference to it.
+     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
+     * @param {Boolean} [loop=false] Whether to create a looping sound source
+     * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
+     * @returns {SoundSource}
+     */
+    function _createSoundSource(soundEffectDescriptor, loop, position) {
+        return soundEffectDescriptor.resource.createSoundSource(soundEffectDescriptor.volume, loop, position, soundEffectDescriptor.rolloff);
+    }
+    /**
+     * Similar to _playSoundEffect, but also uses stacking if appropriate: if a currently playing instance of the same sound effect is found
+     * in the passed object, its volume is increased instead of creating a new sound source.
+     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
+     * @param {Boolean} [loop=false] Whether to create a looping sound source
+     * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
+     * @param {Object.<String, SoundSource>} soundSources An associative array of other sound effects with which this one can be stacked, 
+     * stored by the names of the effects
+     * @param {Boolean} [overwrite=false] If true, a new sound source is created in any case, overwriting any previous source stored in the
+     * stacking object under the same name
+     * @returns {SoundSource}
+     */
+    function _stackSoundSource(soundEffectDescriptor, loop, position, soundSources, overwrite) {
+        var result;
+        if (overwrite || !soundSources[soundEffectDescriptor.name] || !soundSources[soundEffectDescriptor.name].isPlaying()) {
+            result = _createSoundSource(soundEffectDescriptor, loop, position);
+            soundSources[soundEffectDescriptor.name] = result;
+            result.play();
+            return result;
+        }
+        soundSources[soundEffectDescriptor.name].increaseVolume(soundEffectDescriptor.volume * VOLUME_FACTOR_FOR_STACKED_SOUNDS);
+        return soundSources[soundEffectDescriptor.name];
     }
     // ##############################################################################
     /**
@@ -1207,6 +1304,11 @@ define([
          * @type ExplosionClass
          */
         this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        /**
+         * The descriptor of the sound effect to be played when this projectile hits a spacecraft.
+         * @type Object
+         */
+        this._hitSound = dataJSON ? (types.getVerifiedObject("projectileClasses['" + this._name + "'].hitSound", dataJSON.hitSound, SOUND_EFFECT_3D)) : null;
     };
     /**
      * @override
@@ -1215,6 +1317,7 @@ define([
         TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel(PROJECTILE_MODEL_NAME_PREFIX + this.getName(), this._intersectionPositions, this._width)});
         this._muzzleFlash.acquireResources();
         this._explosionClass.acquireResources();
+        _loadSoundEffect(this._hitSound);
     };
     /**
      * @returns {Number}
@@ -1263,6 +1366,16 @@ define([
      */
     ProjectileClass.prototype.getExplosionClass = function () {
         return this._explosionClass;
+    };
+    /**
+     * Plays the hit sound effect for this projectile, possibly stacking it
+     * @param {Number[3]} position
+     * @param {Object.<String, SoundSource>} hitSounds The other hit sound to stack with
+     * @param {Boolean} [overwrite=false]
+     * @returns {SoundSource}
+     */
+    ProjectileClass.prototype.stackHitSound = function (position, hitSounds, overwrite) {
+        return _stackSoundSource(this._hitSound, false, position, hitSounds, overwrite);
     };
     /**
      * @override
@@ -1463,6 +1576,11 @@ define([
                 _showMissingPropertyError(this, "rotators");
             }
         }
+        /**
+         * The descriptor of the sound effect to be played when this weapon fires.
+         * @type Object
+         */
+        this._fireSound = dataJSON ? (types.getVerifiedObject("weaponClasses['" + this._name + "'].fireSound", dataJSON.fireSound, SOUND_EFFECT_3D)) : null;
     };
     /**
      * @override
@@ -1474,6 +1592,7 @@ define([
         for (i = 0; i < this._barrels.length; i++) {
             this._barrels[i].acquireResources();
         }
+        _loadSoundEffect(this._fireSound);
     };
     /**
      * @returns {Number}
@@ -1543,6 +1662,21 @@ define([
      */
     WeaponClass.prototype.getProjectileVelocity = function () {
         return this._barrels[0].getProjectileVelocity();
+    };
+    /**
+     * Plays the sound effect corresponding to a weapon of this class firing, at the given world position
+     * @param {Number[3]} position
+     */
+    WeaponClass.prototype.playFireSound = function (position) {
+        _playSoundEffect(this._fireSound, position);
+    };
+    /**
+     * Plays the sound effect corresponding to a weapon of this class firing, possibly stacking it, at the given world position
+     * @param {Number[3]} position
+     * @param {Object.<String, SoundSource>} fireSounds
+     */
+    WeaponClass.prototype.stackFireSound = function (position, fireSounds) {
+        _stackSoundSource(this._fireSound, false, position, fireSounds);
     };
     // ##############################################################################
     /**
@@ -2807,12 +2941,26 @@ define([
             }
         }
         /**
+         * The descriptor of the sound effect to be played continuously at the position of this spacecraft.
+         * @type Object
+         */
+        this._humSound = dataJSON.humSound ?
+                types.getVerifiedObject("spacecraftClasses['" + this._name + "'].humSound", dataJSON.humSound, SOUND_EFFECT_3D) :
+                (otherSpacecraftClass ? otherSpacecraftClass._humSound : null);
+        /**
          * The class of the explosion this spacecraft creates when it is destroyed and explodes.
          * @type ExplosionClass
          */
         this._explosionClass = otherSpacecraftClass ?
                 (dataJSON.explosion ? getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
                 getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion"));
+        /**
+         * The descriptor of the sound effect to be played when this spacecraft explodes.
+         * @type Object
+         */
+        this._explosionSound = dataJSON.explosionSound ?
+                types.getVerifiedObject("spacecraftClasses['" + this._name + "'].explosionSound", dataJSON.explosionSound, SOUND_EFFECT_3D) :
+                (otherSpacecraftClass ? otherSpacecraftClass._explosionSound : _showMissingPropertyError(this, "explosionSound"));
         /**
          * How long should spacecraft be displayed during its explosion (as a ratio compared to the explosion duration)
          * @type Number
@@ -3047,6 +3195,10 @@ define([
         for (i = 0; i < this._blinkers.length; i++) {
             this._blinkers[i].acquireResources();
         }
+        if (this._humSound) {
+            _loadSoundEffect(this._humSound);
+        }
+        _loadSoundEffect(this._explosionSound);
     };
     /**
      * @override
@@ -3058,6 +3210,32 @@ define([
         for (i = 0; i < this._blinkers.length; i++) {
             this._blinkers[i].handleGraphicsSettingsChanged();
         }
+    };
+    /**
+     * Returns whether a humming sound effect (to be played continuously at the position of the spacecraft) is associated with this 
+     * spacecraft class.
+     * @returns {Boolean}
+     */
+    SpacecraftClass.prototype.hasHumSound = function () {
+        return !!this._humSound;
+    };
+    /**
+     * Creates a sound source playing the humming sound effect for this spacecraft in looping mode, and saves the reference to it.
+     * @param {Number[3]} position The initial camera-space position of the sound source
+     * @returns {SoundSource}
+     */
+    SpacecraftClass.prototype.createHumSource = function (position) {
+        if (this._humSound) {
+            return _createSoundSource(this._humSound, true, position);
+        }
+        return null;
+    };
+    /**
+     * Plays the sound effect associated with this spacecraft exploding
+     * @param {Number[3]} position The camera-space position of the sound source
+     */
+    SpacecraftClass.prototype.playExplosionSound = function (position) {
+        _playSoundEffect(this._explosionSound, position);
     };
     /**
      * Sends an asynchronous request to grab the file containing the in-game
@@ -3103,6 +3281,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        SOUND_EFFECT_2D: SOUND_EFFECT_2D,
         ParticleEmitterType: ParticleEmitterType,
         WeaponRotationStyle: WeaponRotationStyle,
         SpacecraftTurnStyle: SpacecraftTurnStyle,

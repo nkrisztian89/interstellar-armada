@@ -31,7 +31,7 @@ define([
     "modules/screens",
     "modules/buda-scene",
     "modules/game",
-    "modules/graphics-resources",
+    "modules/media-resources",
     "armada/screens/shared",
     "armada/strings",
     "armada/graphics",
@@ -780,7 +780,7 @@ define([
             }
         }.bind(this),
                 // force an asynchronous execution, so that the wait cursor will be applied before running the setup even if the logic and
-                // graphics resources are all loaded already (as the setup itself can take some time)
+                // media resources are all loaded already (as the setup itself can take some time)
                 true);
     };
     // -------------------------------------------------------------------------

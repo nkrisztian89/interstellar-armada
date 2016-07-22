@@ -8,7 +8,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, this, Float32Array */
+/*global define, Element, this, Float32Array, performance */
 
 /**
  * @param utils Used for format strings and solving quadratic equations
@@ -19,7 +19,7 @@
  * @param managedGL Used for accessing shader variable types
  * @param egomModel Used for generating 3D models for hitboxes
  * @param physics Physics simulation is done using this module
- * @param resources Used to access the loaded graphics resources
+ * @param resources Used to access the loaded media (graphics and sound) resources
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
  * @param config Used to access game settings/configuration
@@ -36,7 +36,7 @@ define([
     "modules/managed-gl",
     "modules/egom-model",
     "modules/physics",
-    "modules/graphics-resources",
+    "modules/media-resources",
     "modules/buda-scene",
     "armada/graphics",
     "armada/classes",
@@ -205,6 +205,11 @@ define([
              * @type Boolean
              */
             _showHitboxesForHitchecks,
+            /**
+             * Cached value of the configuration setting for the minimum distance at which fire sounds of a spacecraft should be stacked.
+             * @type Number
+             */
+            _weaponFireSoundStackMinimumDistance,
             /**
              * A pool containing dynamic particles (such as particles for muzzle flashes and explosions) for reuse, so that creation of
              * new particle objects can be decreased for optimization.
@@ -1071,6 +1076,7 @@ define([
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;
                         this._visualModel.markAsReusable();
+                        hitObjects[i].addHitSound(this._class, mat.translationVector3(this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera())));
                         return;
                     }
                 }
@@ -1430,9 +1436,11 @@ define([
      * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
      * and it is in range (based on the last aiming status of the weapon)
+     * @param {Object.<String, SoundSource>} fireSounds an object containing the stacked fire sounds for the spacecraft of this weapon
+     * @param {Number[3]} shipPosInCameraSpace
      * @returns {Boolean} Whether the weapon has actually fired.
      */
-    Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed) {
+    Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed, fireSounds, shipPosInCameraSpace) {
         var i, p,
                 weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
@@ -1497,6 +1505,11 @@ define([
                 if (projectileLights.hasOwnProperty(projClassName)) {
                     scene.addPointLightSource(projectileLights[projClassName], PROJECTILE_LIGHT_PRIORITY);
                 }
+            }
+            if (shipPosInCameraSpace) {
+                this._class.stackFireSound(shipPosInCameraSpace, fireSounds);
+            } else {
+                this._class.playFireSound(mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera())));
             }
             return true;
         }
@@ -2721,6 +2734,17 @@ define([
          * @type Number[3]
          */
         this._targetHitPosition = null;
+        /**
+         * Contains the sound sources used for playing the hit sounds for projectiles hitting this spacecraft, so that multiple hit sounds of
+         * the same effect can be stacked
+         * @type Object.<String, SoundSource>
+         */
+        this._hitSounds = null;
+        /**
+         * The timestamp for when the last hit sound started playing for a projectile hitting this spacecraft
+         * @type DOMHighResTimeStamp
+         */
+        this._hitSoundTimestamp = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectilePool, equipmentProfileName, spacecraftArray);
@@ -2763,6 +2787,8 @@ define([
         }
         this._spacecraftArray = spacecraftArray || null;
         this._team = null;
+        this._hitSounds = {};
+        this._hitSoundTimestamp = 0;
         this._updateIDAndName();
     };
     /**
@@ -2956,6 +2982,13 @@ define([
      */
     Spacecraft.prototype.getScaledOriMatrix = function () {
         return mat.prod3x3SubOf4(this.getPhysicalScalingMatrix(), this.getPhysicalOrientationMatrix());
+    };
+    /**
+     * A shortcut method
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getPositionMatrixInCameraSpace = function () {
+        return this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera()));
     };
     /**
      * Returns the 4x4 translation matrix describing the current velocity of this spacecraft in world space.
@@ -3634,10 +3667,18 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false;
+        var i, scaledOriMatrix, fired = false, posInCameraSpace, fireSounds;
         scaledOriMatrix = this.getScaledOriMatrix();
+        posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
+        if ((Math.abs(posInCameraSpace[0]) > _weaponFireSoundStackMinimumDistance) ||
+                (Math.abs(posInCameraSpace[1]) > _weaponFireSoundStackMinimumDistance) ||
+                (Math.abs(posInCameraSpace[2]) > _weaponFireSoundStackMinimumDistance)) {
+            fireSounds = {};
+        } else {
+            posInCameraSpace = null;
+        }
         for (i = 0; i < this._weapons.length; i++) {
-            fired = this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed) || fired;
+            fired = this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed, fireSounds, posInCameraSpace) || fired;
         }
         // executing callbacks
         if (fired) {
@@ -3708,6 +3749,7 @@ define([
     };
     /**
      * Targets the next hostile spacecraft in the lists of spacecrafts and marks it as a manual target.
+     * @returns {Boolean} Whether a hostile spacecraft has been targeted
      */
     Spacecraft.prototype.targetNextHostile = function () {
         var index, count;
@@ -3717,15 +3759,17 @@ define([
             while (count < this._spacecraftArray.length) {
                 if ((this._spacecraftArray[index] !== this) && (this._spacecraftArray[index].isHostile(this))) {
                     this.setTarget(this._spacecraftArray[index]);
-                    return;
+                    return true;
                 }
                 index = (index + 1) % this._spacecraftArray.length;
                 count++;
             }
         }
+        return false;
     };
     /**
      * Targets the next non-hostile (friendly or neutral) spacecraft in the lists of spacecrafts and marks it as a manual target.
+     * @returns {Boolean} Whether a non-hostile spacecraft has been targeted
      */
     Spacecraft.prototype.targetNextNonHostile = function () {
         var index, count;
@@ -3735,12 +3779,13 @@ define([
             while (count < this._spacecraftArray.length) {
                 if ((this._spacecraftArray[index] !== this) && (!this._spacecraftArray[index].isHostile(this))) {
                     this.setTarget(this._spacecraftArray[index]);
-                    return;
+                    return true;
                 }
                 index = (index + 1) % this._spacecraftArray.length;
                 count++;
             }
         }
+        return false;
     };
     /**
      * Returns the currently targeted spacecraft.
@@ -3868,6 +3913,23 @@ define([
         hitBy.handleAnySpacecraftHit(this);
     };
     /**
+     * Adds a hit sound corresponding to a projectile with the given class hitting this spacecraft - uses stacking of sounds if appropriate
+     * to decrease the overall number of separate sound sources
+     * @param {ProjectileClass} projectileClass
+     * @param {Number[3]} position The camera-space position vector of the hit.
+     */
+    Spacecraft.prototype.addHitSound = function (projectileClass, position) {
+        var n = performance.now();
+        if (this._timeElapsedSinceDestruction < 0) {
+            if ((n - this._hitSoundTimestamp) > 100) {
+                projectileClass.stackHitSound(position, this._hitSounds, true);
+                this._hitSoundTimestamp = n;
+            } else {
+                projectileClass.stackHitSound(position, this._hitSounds);
+            }
+        }
+    };
+    /**
      * Rotates all the non-fixed weapons of the spacecraft to aim towards the calculated hitting position of the current target.
      * @param {Number} turnThreshold Weapons will only be rotated if the angle between their current and the target direction is greater 
      * than this value, in radians.
@@ -3894,7 +3956,7 @@ define([
      * milliseconds.
      */
     Spacecraft.prototype.simulate = function (dt) {
-        var i, explosion;
+        var i, explosion, p;
         if (!this._alive) {
             return;
         }
@@ -3916,6 +3978,7 @@ define([
                 for (i = 0; i < this._activeDamageIndicators; i++) {
                     this._activeDamageIndicators[i].finish();
                 }
+                this._class.playExplosionSound(mat.translationVector3(this.getPositionMatrixInCameraSpace()));
             } else {
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
@@ -3941,6 +4004,15 @@ define([
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {
             this._maneuveringComputer.updateSpeedIncrement(dt);
+        }
+        if (this._class.hasHumSound()) {
+            p = this.getPositionMatrixInCameraSpace();
+            if (!this._humSource) {
+                this._humSource = this._class.createHumSource([Math.round(p[12]), Math.round(p[13]), Math.round(p[14])]);
+                this._humSource.play();
+            } else {
+                this._humSource.setPosition(Math.round(p[12]), Math.round(p[13]), Math.round(p[14]));
+            }
         }
     };
     /**
@@ -4067,6 +4139,10 @@ define([
             this._activeDamageIndicators = null;
         }
         this._alive = false;
+        if (this._humSource) {
+            this._humSource.stopPlaying();
+            this._humSource = null;
+        }
     };
     // #########################################################################
     /**
@@ -4859,7 +4935,7 @@ define([
                     this._views[i] = null;
                 }
             }
-            this._spacecrafts = null;
+            this._views = null;
         }
         if (this._spacecrafts) {
             for (i = 0; i < this._spacecrafts.length; i++) {
@@ -4904,6 +4980,7 @@ define([
         _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
+        _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
