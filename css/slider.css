@@ -1,0 +1,29 @@
+div.slider {
+    display: table;
+    width: 90%;
+    background-color: #111111;
+    border: 2px solid #333333;
+    padding-left: 3%;
+    padding-right: 3%;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
+div.sliderValueContainer {
+    display: inline-block;
+    width: 120px;
+    margin: 0;
+    padding-right: 0.5em;
+}
+
+div.sliderPropertyContainer {
+    font-size: 11pt;
+    display: table-cell;
+    text-align: left;
+    vertical-align: middle;
+    width: 250px;
+    margin: 0;
+    padding: 0;
+}

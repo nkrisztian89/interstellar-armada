@@ -10,6 +10,7 @@
     "settings": {
         "general": "General settings",
         "graphics": "Graphics settings",
+        "audio": "Audio settings",
         "controls": "Control settings",
         "defaults": "Reset to defaults"
     },
@@ -164,6 +165,13 @@
         "maxDynamicLights": "Dynamic lights:",
         "particleAmount": "Explosion details:",
         "dustParticleAmount": "Space dust density:"
+    },
+    "audio": {
+        "backButton": "Back to menu",
+        "title": "Audio settings",
+        "masterVolume": "Master volume:",
+        "musicVolume": "Music volume:",
+        "sfxVolume": "Sound effect volume:"
     },
     "controller": {
         "general": "General",

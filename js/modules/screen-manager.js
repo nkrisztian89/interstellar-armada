@@ -11,10 +11,12 @@
 
 /**
  * @param asyncResource ScreenManager is an AsyncResource as it tracks the loading state of the screens it manages
+ * @param application Used to display error messages
  */
 define([
-    "modules/async-resource"
-], function (asyncResource) {
+    "modules/async-resource",
+    "modules/application"
+], function (asyncResource, application) {
     "use strict";
     /**
      * The screen manager instance used to store and access screens
@@ -122,14 +124,17 @@ define([
      * screen is set superimposed. @see HTMLScreen#superimposeOnPage
      */
     ScreenManager.prototype.setCurrentScreen = function (screenName, superimpose, backgroundColor) {
-        var i, screen;
+        var i, screen = this.getScreen(screenName);
+        if (!screen) {
+            application.showError("Cannot switch to screen '" + screenName + "', because it does not exist!");
+            return;
+        }
         if ((superimpose !== true) && (this._currentScreen !== null)) {
             this._currentScreen.hide();
             for (i = 0; i < this._coveredScreens.length; i++) {
                 this._coveredScreens[i].hide();
             }
         }
-        screen = this.getScreen(screenName);
         if (superimpose === true) {
             this._coveredScreens.push(this._currentScreen);
             this._currentScreen.setActive(false);

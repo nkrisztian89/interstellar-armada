@@ -30,6 +30,7 @@ define([
     strings.SETTINGS = {
         GENERAL: {name: "settings.general"},
         GRAPHICS: {name: "settings.graphics"},
+        AUDIO: {name: "settings.audio"},
         CONTROLS: {name: "settings.controls"},
         DEFAULTS: {name: "settings.defaults"}
     };
@@ -147,6 +148,14 @@ define([
         MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"},
         PARTICLE_AMOUNT: {name: "graphics.particleAmount"},
         DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"}
+    };
+    strings.AUDIO = {
+        PREFIX: {name: "audio.", optional: true},
+        BACK: {name: "audio.backButton"},
+        TITLE: {name: "audio.title"},
+        MASTER_VOLUME: {name: "audio.masterVolume"},
+        MUSIC_VOLUME: {name: "audio.musicVolume"},
+        SFX_VOLUME: {name: "audio.sfxVolume"}
     };
     strings.CONTOLLER = {
         PREFIX: {name: "controller.", optional: true},

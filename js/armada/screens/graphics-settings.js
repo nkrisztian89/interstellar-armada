@@ -454,10 +454,14 @@ define([
     };
     /**
      * @override
+     * @returns {Boolean}
      */
     GraphicsScreen.prototype.show = function () {
-        screens.HTMLScreen.prototype.show.call(this);
-        this._updateValues();
+        if (screens.HTMLScreen.prototype.show.call(this)) {
+            this._updateValues();
+            return true;
+        }
+        return false;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

@@ -147,6 +147,11 @@ define([
          */
         this._externalComponentsToLoad = 0;
         /**
+         * Whether the screen is currently visible (its container and background are added to the DOM and their display style is not set to "none")
+         * @type Boolean
+         */
+        this._visible = false;
+        /**
          * Optional callback to be executed whenever this screen is shown. (show() is called)
          * @type Function
          */
@@ -297,6 +302,7 @@ define([
             }
             parentNode.appendChild(this._background);
             parentNode.appendChild(this._container);
+            this._visible = false;
             this._initializeComponents();
             if (callback) {
                 callback();
@@ -308,16 +314,21 @@ define([
     };
     /**
      * Displays the screen (makes it visible)
+     * @returns {Boolean} Whether the screen was made visible (false if it was already visible, and this method didn't do anything
      */
     HTMLScreen.prototype.show = function () {
-        if (this._container) {
-            this._container.style.display = "block";
-            if (this._onShow) {
-                this._onShow();
+        if (!this._visible) {
+            if (this._container) {
+                this._container.style.display = "block";
+                this._visible = true;
+                if (this._onShow) {
+                    this._onShow();
+                }
+                return true;
             }
-        } else {
             application.showError("Attempting to show screen '" + this._name + "' before adding it to the page!");
         }
+        return false;
     };
     /**
      * Superimposes the screen on the current page, by appending a full screen
@@ -343,18 +354,23 @@ define([
     };
     /**
      * Hides the screen (makes it invisible and not take any screen space)
+     * @returns {Boolean} Whether the screen was hidden (false if it was already hidden, and this method didn't do anything
      */
     HTMLScreen.prototype.hide = function () {
-        if (this._container && this._background) {
-            this._container.style.display = "none";
-            this._background.style.display = "none";
-            this.setActive(false);
-            if (this._onHide) {
-                this._onHide();
+        if (this._visible) {
+            if (this._container && this._background) {
+                this._container.style.display = "none";
+                this._background.style.display = "none";
+                this._visible = false;
+                this.setActive(false);
+                if (this._onHide) {
+                    this._onHide();
+                }
+                return true;
             }
-        } else {
             application.showError("Attempting to hide screen '" + this._name + "' before adding it to the page!");
         }
+        return false;
     };
     /**
      * Tells whether the screen is superimposed on top of another one.
@@ -382,6 +398,7 @@ define([
             this._container.remove();
             this._background = null;
             this._container = null;
+            this._visible = false;
         } else {
             application.showError("Attempting to remove screen '" + this._name + "' before adding it to the page!");
         }
@@ -1479,10 +1496,14 @@ define([
     /**
      * @override
      * Stops the render loops next to hiding the page.
+     * @returns {Boolean}
      */
     HTMLScreenWithCanvases.prototype.hide = function () {
-        HTMLScreen.prototype.hide.call(this);
-        this.stopRenderLoop();
+        if (HTMLScreen.prototype.hide.call(this)) {
+            this.stopRenderLoop();
+            return true;
+        }
+        return false;
     };
     /**
      * Returns whether the alpha channel should be turned on for the canvas with the given name on this screen.

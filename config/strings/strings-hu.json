@@ -35,6 +35,7 @@
     "settings": {
         "general": "Általános beállítások",
         "graphics": "Grafikai beállítások",
+        "audio": "Hang beállítások",
         "controls": "Irányítás beállításai",
         "defaults": "Alapértelmezések visszaállítása"
     },
@@ -189,6 +190,13 @@
         "maxDynamicLights": "Dinamikus fények:",
         "particleAmount": "Robbanások részletessége:",
         "dustParticleAmount": "Porrészecskék száma:"
+    },
+    "audio": {
+        "backButton": "Vissza a menübe",
+        "title": "Hang beállítások",
+        "masterVolume": "Fő hangerő:",
+        "musicVolume": "Zene hangereje:",
+        "sfxVolume": "Effektek hangereje:"
     },
     "controller": {
         "general": "Általános",

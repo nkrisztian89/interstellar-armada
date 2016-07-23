@@ -62,6 +62,9 @@ define([
             INFO_BOX_HEADER_ID = "header",
             SELECTOR_PROPERTY_LABEL_ID = "property",
             SELECTOR_VALUE_BUTTON_ID = "value",
+            SLIDER_PROPERTY_LABEL_ID = "property",
+            SLIDER_ID = "slider",
+            SLIDER_VALUE_LABEL_ID = "valueLabel",
             ENTER_CODE = 13,
             DISABLED_CLASS_NAME = "disabled",
             // ------------------------------------------------------------------------------
@@ -237,6 +240,22 @@ define([
      */
     SimpleComponent.prototype.customizeContent = function (replacements) {
         this._element.innerHTML = utils.formatString(this._element.innerHTML, replacements);
+    };
+    /**
+     * Returns the current value of an attribute of the wrapped HTML element
+     * @param {String} name The name of the attribute to be checked
+     * @returns {}
+     */
+    SimpleComponent.prototype.getAttribute = function (name) {
+        return this._element[name];
+    };
+    /**
+     * Sets a new value for an attribute of the wrapped HTML element
+     * @param {String} name
+     * @param {} value
+     */
+    SimpleComponent.prototype.setAttribute = function (name, value) {
+        this._element[name] = value;
     };
     /**
      * Grabs the element and the display style from the current HTML document. Needs
@@ -1054,6 +1073,195 @@ define([
             this._valueSelector.enable();
         }
     };
+    // #########################################################################
+    /**
+     * @typedef {Object} Slider~Params
+     * @property {Number} min
+     * @property {Number} max
+     * @property {Number} default
+     * @property {Number} [step]
+     * @property {String[]} [valueList] If given, the slider will have as many possible values as the number of these options, and a label
+     * will be displayed next to the slider, showing the currently selected item from this list
+     */
+    /**
+     * @class A component that consists of a label describing a property, and a slider that can be used to select from a range of possible 
+     * numeric values for that property.
+     * @extends ExternalComponent
+     * @param {String} name See ExternalComponent.
+     * @param {String} htmlFilename See ExternalComponent.
+     * @param {ExternalComponent~Style} [style] See ExternalComponent.
+     * @param {Components~LabelDescriptor} propertyLabelDescriptor The caption and id of the property label element that is displayed on this
+     * selector, indicating what property can be set with it
+     * @param {Slider~Params} params
+     * @param {Function} [onChange]
+     */
+    function Slider(name, htmlFilename, style, propertyLabelDescriptor, params, onChange) {
+        ExternalComponent.call(this, name, htmlFilename, style);
+        /**
+         * The name of the property that can be set using this selector.
+         * @type Components~LabelDescriptor
+         */
+        this._propertyLabelDescriptor = propertyLabelDescriptor;
+        params = params || {};
+        /**
+         * The minimum value on the slider
+         * @type Number
+         */
+        this._min = params.valueList ? 0 : params.min;
+        /**
+         * The maximum value on the slider
+         * @type Number
+         */
+        this._max = params.valueList ? (params.valueList.length - 1) : params.max;
+        /**
+         * The starting value on the slider
+         * @type Number
+         */
+        this._default = params.default;
+        /**
+         * The difference between two adjacent possible values of the slider
+         * @type Number
+         */
+        this._step = params.valueList ? 1 : ((params.step !== undefined) ? params.step : 1);
+        /**
+         * The list of possible values, in case the slider is used to select from them
+         * @type String[]
+         */
+        this._valueList = params.valueList || null;
+        /**
+         * A wrapper for the HTML element containing the label caption for the property
+         * this selector sets.
+         * @type SimpleComponent
+         */
+        this._propertyLabel = this.registerSimpleComponent(SLIDER_PROPERTY_LABEL_ID);
+        /**
+         * A wrapper for the HTML element corresponding to the slider itself (an "input" of type "range")
+         * @type SimpleComponent
+         */
+        this._slider = this.registerSimpleComponent(SLIDER_ID);
+        /**
+         * A wrapper for the HTML element which serves as the label of the currently selected value (in case a value list is given)
+         * @type SimpleComponent
+         */
+        this._valueLabel = this.registerSimpleComponent(SLIDER_VALUE_LABEL_ID);
+        /**
+         * A function to execute when the selected value has been changed.
+         * @type Function
+         */
+        this.onChange = onChange || null;
+    }
+    Slider.prototype = new ExternalComponent();
+    Slider.prototype.constructor = Slider;
+    /**
+     * Initializes the components, sets their text and sets the handler for the click on the selector.
+     */
+    Slider.prototype._initializeComponents = function () {
+        var changeHandler = function () {
+            this._updateValueLabel();
+            if (this.onChange) {
+                this.onChange(this.getValue());
+            }
+        }.bind(this);
+        ExternalComponent.prototype._initializeComponents.call(this);
+        if (this._rootElement) {
+            if (this._propertyLabelDescriptor.id) {
+                this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
+            }
+            this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
+
+            if (this._valueList) {
+                this.setValueList(this._valueList);
+                this._valueLabel.show();
+            } else {
+                this._valueLabel.hide();
+                this._updateSlider();
+            }
+
+            this.setNumericValue(this._default);
+
+            this._slider.getElement().onchange = changeHandler;
+            this._slider.getElement().oninput = changeHandler;
+        }
+    };
+    /**
+     * Updated the attributes of the slider HTML element based on the properties of this object
+     */
+    Slider.prototype._updateSlider = function () {
+        this._slider.setAttribute("min", this._min);
+        this._slider.setAttribute("max", this._max);
+        this._slider.setAttribute("step", this._step);
+    };
+    /**
+     * Updates the content of the value label to show the currently selected value (if a value list is given)
+     */
+    Slider.prototype._updateValueLabel = function () {
+        if (this._valueList) {
+            this._valueLabel.setContent(this._valueList[this.getNumericValue()]);
+        }
+    };
+    /**
+     * Directly sets a new numeric value for the slider
+     * @param {Number} value
+     */
+    Slider.prototype.setNumericValue = function (value) {
+        this._slider.setAttribute("value", value);
+        this._updateValueLabel();
+    };
+    /**
+     * Sets a new value for the slider based on the given string, which should be one of the values given as a value list
+     * @param {String} value
+     */
+    Slider.prototype.setListedValue = function (value) {
+        var index;
+        if (this._valueList) {
+            index = this._valueIndex.indexOf(value);
+            if (index >= 0) {
+                this.setNumericValue(index);
+            } else {
+                application.showError("Cannot set listed value '" + value + "' for slider '" + this.getName() + "', because it is not in the value list!");
+            }
+        } else {
+            application.showError("Cannot set listed value '" + value + "' for slider '" + this.getName() + "', because it has no value list!");
+        }
+    };
+    /**
+     * Returns the value currently selected on the slider
+     * @returns {Number} 
+     */
+    Slider.prototype.getNumericValue = function () {
+        return parseFloat(this._slider.getAttribute("value"));
+    };
+    /**
+     * Returns the value from the value list given (which needs to be initialized!) based on the current value of the slider
+     * @returns {String} 
+     */
+    Slider.prototype.getListedValue = function () {
+        return this._valueList[this.getNumericValue()];
+    };
+    /**
+     * Returns either the numeric (if there is no value list) or the listed (if there is one) value of the slider component
+     * @returns {Number|String}
+     */
+    Slider.prototype.getValue = function () {
+        return this._valueList ? this.getListedValue() : this.getNumericValue();
+    };
+    /**
+     * Sets a new value list to be used for this component - that is, the possible slider values will represent the items of this list in 
+     * order, and the current item will be displayed on the component
+     * @param {String[]} valueList
+     */
+    Slider.prototype.setValueList = function (valueList) {
+        var value = this.getNumericValue();
+        this._valueList = valueList;
+        this._min = 0;
+        this._max = valueList.length - 1;
+        this._step = 1;
+        if (value > this._max) {
+            value = 0;
+        }
+        this._updateSlider();
+        this.setNumericValue(value);
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -1063,6 +1271,7 @@ define([
         LoadingBox: LoadingBox,
         InfoBox: InfoBox,
         MenuComponent: MenuComponent,
-        Selector: Selector
+        Selector: Selector,
+        Slider: Slider
     };
 });

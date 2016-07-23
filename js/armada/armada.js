@@ -15,6 +15,7 @@
  * @param components Used to clear the cached DOM models of all loaded components after the game has been initialized
  * @param constants Used to access the language setting location in the local storage
  * @param graphics Used to load the graphics settings
+ * @param audio Used to load the audio settings
  * @param config Used to load general game configuration and settings
  * @param logic Used to load the environments
  * @param control Used to load the control configuration and setings of the game and access main functionality
@@ -25,11 +26,12 @@ define([
     "modules/components",
     "armada/constants",
     "armada/graphics",
+    "armada/audio",
     "armada/configuration",
     "armada/logic",
     "armada/control",
     "armada/strings"
-], function (game, components, constants, graphics, config, logic, control, strings) {
+], function (game, components, constants, graphics, audio, config, logic, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -49,6 +51,8 @@ define([
         // load defaults from the JSON files and then overwrite with local preferences (of which only differences from defaults are stored)
         graphics.loadSettingsFromJSON(settingsJSON.graphics);
         graphics.loadSettingsFromLocalStorage();
+        audio.loadSettingsFromJSON(settingsJSON.audio);
+        audio.loadSettingsFromLocalStorage();
         config.loadSettingsFromJSON(settingsJSON.logic);
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
@@ -74,9 +78,10 @@ define([
             "armada/screens/database",
             "armada/screens/general-settings",
             "armada/screens/graphics-settings",
+            "armada/screens/audio-settings",
             "armada/screens/control-settings",
             "armada/screens/about"
-        ], function (menus, battle, database, generalSettings, graphicsScreen, controlsScreen, aboutScreen) {
+        ], function (menus, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(menus.levelSelectionMenuScreen);
             game.addScreen(menus.demoLevelSelectionMenuScreen);
@@ -85,6 +90,7 @@ define([
             game.addScreen(menus.settingsMenuScreen);
             game.addScreen(generalSettings.generalSettingsScreen);
             game.addScreen(graphicsScreen.graphicsScreen);
+            game.addScreen(audioScreen.audioScreen);
             game.addScreen(controlsScreen.controlsScreen);
             game.addScreen(aboutScreen.aboutScreen);
             game.addScreen(menus.ingameMenuScreen);

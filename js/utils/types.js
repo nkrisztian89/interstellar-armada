@@ -264,6 +264,17 @@ define([
      * @returns {Boolean}
      */
     /**
+     * @typedef {Object} Types~NumberValueParams
+     * @property {String} [name] The name of the variable you are trying to acquire a value for (to show in error messages)
+     * @property {Number} [defaultValue] If the original value is invalid, this value will be returned instead.
+     * @property {Types~NumberCallback} [checkFunction] If the type of the value is correct and this function is given, it will be called with the 
+     * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
+     * valid.
+     * @property {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @property {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
+     * @property {Boolean} [silentFallback=false]
+     */
+    /**
      * Returns a type-safe number value. If the given original value is invalid, will show an error message and return the given default 
      * value.
      * @param {String} name The name of the variable you are trying to acquire a value for (to show in error messages)
@@ -274,9 +285,10 @@ define([
      * valid.
      * @param {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
      * @param {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
+     * @param {Boolean} [silentFallback=false]
      * @returns {Number|null}
      */
-    exports.getNumberValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject) {
+    exports.getNumberValue = function (name, value, defaultValue, checkFunction, checkFailMessage, parentObject, silentFallback) {
         if (typeof value === "number") {
             if (checkFunction) {
                 if (!checkFunction(value, parentObject)) {
@@ -286,7 +298,9 @@ define([
             }
             return value;
         }
-        _showTypeError("a number", name, value, defaultValue);
+        if ((typeof defaultValue !== "number") || !silentFallback) {
+            _showTypeError("a number", name, value, defaultValue);
+        }
         return (defaultValue !== null) ? exports.getNumberValue(name, defaultValue, null, checkFunction, checkFailMessage, parentObject) : null;
     };
     /**
@@ -685,6 +699,21 @@ define([
         return exports.getBooleanValue(value, params);
     };
     /**
+     * Reads, type verifies and returns a number value (or a supplied default) from local storage according to the specified parameters.
+     * @param {String} storageLocation The key locating the value in local storage.
+     * @param {Types~NumberValueParams} params
+     * @returns {null|Number}
+     */
+    exports.getNumberValueFromLocalStorage = function (storageLocation, params) {
+        var value = parseFloat(localStorage[storageLocation]);
+        if (isNaN(value)) {
+            value = localStorage[storageLocation];
+        }
+        params = params || {};
+        params.name = params.name || "localStorage." + storageLocation;
+        return exports.getNumberValue(params.name, value, params.defaultValue, params.checkFunction, params.checkFailMessage, params.parentObject, params.silentFallback);
+    };
+    /**
      * Reads, type verifies and returns an enum value (or a supplied default) from local storage according to the specified parameters.
      * @param {Object} enumObject The object describing the possible values for the enum.
      * @param {String} storageLocation The key locating the value in local storage.
@@ -712,6 +741,8 @@ define([
         switch (type) {
             case "boolean":
                 return exports.getBooleanValueFromLocalStorage(storageLocation, params);
+            case "number":
+                return exports.getNumberValueFromLocalStorage(storageLocation, params);
             case "enum":
                 return exports.getEnumValueFromLocalStorage(params.values, storageLocation, params);
             default:

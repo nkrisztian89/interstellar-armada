@@ -15,6 +15,8 @@ define(function () {
         // components
         SELECTOR_SOURCE: "selector.html",
         SELECTOR_CSS: "selector.css",
+        SLIDER_SOURCE: "slider.html",
+        SLIDER_CSS: "slider.css",
         LOADING_BOX_SOURCE: "loadingbox.html",
         LOADING_BOX_CSS: "loadingbox.css",
         INFO_BOX_SOURCE: "infobox.html",
@@ -51,6 +53,8 @@ define(function () {
         GENERAL_SETTINGS_SCREEN_SOURCE: "general-settings.html",
         GRAPHICS_SCREEN_NAME: "graphics",
         GRAPHICS_SCREEN_SOURCE: "graphics.html",
+        AUDIO_SCREEN_NAME: "audio",
+        AUDIO_SCREEN_SOURCE: "audio.html",
         CONTROLS_SCREEN_NAME: "controls",
         CONTROLS_SCREEN_SOURCE: "controls.html",
         ABOUT_SCREEN_NAME: "about",

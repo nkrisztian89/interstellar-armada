@@ -17,6 +17,7 @@
  * @param armadaScreens Used for common screen constants.
  * @param config Used for choosing the level description file to load when a new battle is started from the main menu.
  * @param strings Used for translation support.
+ * @param audio Used for volume control
  * @param battle Used for starting / resuming the battle.
  */
 define([
@@ -27,8 +28,9 @@ define([
     "armada/screens/shared",
     "armada/configuration",
     "armada/strings",
+    "armada/audio",
     "armada/screens/battle"
-], function (utils, screens, game, resources, armadaScreens, config, strings, battle) {
+], function (utils, screens, game, resources, armadaScreens, config, strings, audio, battle) {
     "use strict";
     // -------------------------------------------------------------------------
     // Constants
@@ -122,6 +124,8 @@ define([
                 {
                     show: function () {
                         var m;
+                        audio.resetMasterVolume();
+                        audio.resetMusicVolume();
                         if (!_menuMusic) {
                             m = resources.getMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC));
                             if (m) {
@@ -147,6 +151,7 @@ define([
                 COMMON_MENU_STYLE,
                 _getLevelOptions(false),
                 armadaScreens.LEVEL_MENU_CONTAINER_ID,
+                undefined,
                 {
                     "escape": function () {
                         game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -163,6 +168,7 @@ define([
                 COMMON_MENU_STYLE,
                 _getLevelOptions(true),
                 armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID,
+                undefined,
                 {
                     "escape": function () {
                         game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -188,6 +194,11 @@ define([
                             game.setScreen(armadaScreens.GRAPHICS_SCREEN_NAME);
                         }
                     }, {
+                        id: strings.SETTINGS.AUDIO.name,
+                        action: function () {
+                            game.setScreen(armadaScreens.AUDIO_SCREEN_NAME);
+                        }
+                    }, {
                         id: strings.SETTINGS.CONTROLS.name,
                         action: function () {
                             game.setScreen(armadaScreens.CONTROLS_SCREEN_NAME);
@@ -199,6 +210,7 @@ define([
                         }
                     }],
                 armadaScreens.SETTINGS_MENU_CONTAINER_ID,
+                undefined,
                 {
                     "escape": function () {
                         game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -226,6 +238,11 @@ define([
                             game.setScreen(armadaScreens.CONTROLS_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
                         }
                     }, {
+                        id: strings.SETTINGS.AUDIO.name,
+                        action: function () {
+                            game.setScreen(armadaScreens.AUDIO_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
+                        }
+                    }, {
                         id: strings.INGAME_MENU.RESTART.name,
                         action: function () {
                             game.closeSuperimposedScreen();
@@ -240,6 +257,7 @@ define([
                         }
                     }],
                 armadaScreens.INGAME_MENU_CONTAINER_ID,
+                undefined,
                 {
                     "escape": function () {
                         game.closeSuperimposedScreen();

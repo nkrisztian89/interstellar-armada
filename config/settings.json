@@ -60,6 +60,11 @@
             "autoDecreaseIfInstancingNotAvailable": true
         }
     },
+    "audio": {
+        "masterVolume": 1,
+        "musicVolume": 1,
+        "sfxVolume": 1
+    },
     "logic": {
         "general": {
             "useRequestAnimFrame": true,
@@ -348,11 +353,11 @@
             "hudSubheaderTextPosition": [0, -0.85],
             "hudTargetSwitchSound": {
                 "name": "beep1",
-                "volume": 0.75
+                "volume": 0.2
             },
             "hudTargetSwitchDeniedSound": {
                 "name": "beep3",
-                "volume": 0.75
+                "volume": 0.2
             },
             "weaponFireSoundStackMinimumDistance": 100,
             "demoFighterAI": "fighter",

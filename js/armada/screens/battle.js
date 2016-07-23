@@ -18,10 +18,10 @@
  * @param screens The battle screen is a HTMLScreenWithCanvases.
  * @param budaScene Used for creating the battle scene and the nodes for the HUD elements.
  * @param resources Used for accessing the resources for the HUD and for requesting the loading of reasourcing and setting callback for when they are ready.
- * @param audio Used for controlling volume (muting when opening the menu)
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing graphics settings.
+ * @param audio Used for controlling volume (muting when opening the menu)
  * @param classes Used for HUD elements for convenient acquiry of their resources.
  * @param config Used to access game setting / configuration.
  * @param logic Used for creating the Level object, accessing enums.
@@ -37,17 +37,17 @@ define([
     "modules/screens",
     "modules/buda-scene",
     "modules/media-resources",
-    "modules/audio",
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
+    "armada/audio",
     "armada/classes",
     "armada/configuration",
     "armada/logic",
     "armada/control",
     "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, components, screens, budaScene, resources, audio, strings, armadaScreens, graphics, classes, config, logic, control, ai) {
+], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, audio, classes, config, logic, control, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -977,11 +977,15 @@ define([
     BattleScreen.prototype.constructor = BattleScreen;
     /**
      * @override
+     * @returns {Boolean}
      */
     BattleScreen.prototype.hide = function () {
-        screens.HTMLScreenWithCanvases.prototype.hide.call(this);
-        this.pauseBattle();
-        _clearData();
+        if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
+            this.pauseBattle();
+            _clearData();
+            return true;
+        }
+        return false;
     };
     /**
      * @override
@@ -1026,8 +1030,8 @@ define([
             _battleScene.setShouldUpdateCamera(false);
         }
         this.stopRenderLoop();
-        audio.setEffectVolume(0);
-        audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS));
+        audio.setSFXVolume(0, false);
+        audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS) * audio.getMusicVolume(), false);
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
@@ -1055,8 +1059,8 @@ define([
                     application.ErrorSeverity.MINOR,
                     "No action was taken, to avoid double-running the simulation.");
         }
-        audio.setEffectVolume(1);
-        audio.setMusicVolume(1);
+        audio.resetSFXVolume();
+        audio.resetMusicVolume();
     };
     /**
      * Uses the loading box to show the status to the user.

@@ -648,23 +648,31 @@ define([
     };
     /**
      * @override
+     * @returns {Boolean}
      */
     DatabaseScreen.prototype.show = function () {
-        screens.HTMLScreenWithCanvases.prototype.show.call(this);
-        this.executeWhenReady(function () {
-            this._initializeCanvas();
-        });
+        if (screens.HTMLScreenWithCanvases.prototype.show.call(this)) {
+            this.executeWhenReady(function () {
+                this._initializeCanvas();
+            });
+            return true;
+        }
+        return false;
     };
     /**
      * @override
+     * @returns {Boolean}
      */
     DatabaseScreen.prototype.hide = function () {
-        screens.HTMLScreenWithCanvases.prototype.hide.call(this);
-        this.executeWhenReady(function () {
-            _itemViewScene.clearNodes();
-            _itemViewScene.clearPointLights();
-            this.render();
-        });
+        if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
+            this.executeWhenReady(function () {
+                _itemViewScene.clearNodes();
+                _itemViewScene.clearPointLights();
+                this.render();
+            });
+            return true;
+        }
+        return false;
     };
     /**
      * Selects and displays the previous spacecraft class from the list on the database screen. Loops around.

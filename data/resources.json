@@ -1275,6 +1275,10 @@
             "sample": "menu.ogg"
         },
         {
+            "name": "anticipation",
+            "sample": "anticipation.ogg"
+        },
+        {
             "name": "battle",
             "sample": "battle.ogg"
         },
