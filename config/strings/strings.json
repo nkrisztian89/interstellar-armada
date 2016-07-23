@@ -121,7 +121,7 @@
         "theNewBSDOrMITLicenses": "the new BSD or MIT licenses",
         "here": "here",
         "aboutUsedSoftwareHeader": "About the used software",
-        "aboutUsedSoftwareParagraph": "This game is created using freely available and/or open source software and open standards. For creating the in-game assets, {inkscape}, {blender}, {gimp}, {audacity}, {bfxr} and specialized tools developed (in {netbeans} and {lazarus}) by the author of the game are used, and the game itself is being developed using {netbeans}, {chrome} and {firefox}, all of these running on {ubuntu}."
+        "aboutUsedSoftwareParagraph": "This game is created using freely available and/or open source software and open standards. For creating the in-game assets, {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms} and specialized tools developed (in {netbeans} and {lazarus}) by the author of the game are used, and the game itself is being developed using {netbeans}, {chrome} and {firefox}, all of these running on {ubuntu}."
     },
     "setting": {
         "on": "on",

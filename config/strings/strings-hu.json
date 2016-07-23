@@ -146,7 +146,7 @@
         "theNewBSDOrMITLicenses": "az új BSD vagy az MIT licenszek",
         "here": "itt",
         "aboutUsedSoftwareHeader": "A felhasznált szoftverekről",
-        "aboutUsedSoftwareParagraph": "Ez a játék kizárólag szabadon elérhető és/vagy nyílt forráskódú szoftverek és technológiák használatával készül. A játékban található tartalmakat {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, valamint ({netbeans} és {lazarus} fejlesztőkörnyezetben) kifejezetten erre a célra készített eszközök segítségével állítom elő, a játék fejlesztéséhez pedig a {netbeans}, a {chrome} és a {firefox} van segítségemre, melyek mind {ubuntu} operációs rendszeren futnak."
+        "aboutUsedSoftwareParagraph": "Ez a játék kizárólag szabadon elérhető és/vagy nyílt forráskódú szoftverek és technológiák használatával készül. A játékban található tartalmakat {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms}, valamint ({netbeans} és {lazarus} fejlesztőkörnyezetben) kifejezetten erre a célra készített eszközök segítségével állítom elő, a játék fejlesztéséhez pedig a {netbeans}, a {chrome} és a {firefox} van segítségemre, melyek mind {ubuntu} operációs rendszeren futnak."
     },
     "setting": {
         "on": "be",

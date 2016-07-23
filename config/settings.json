@@ -65,7 +65,8 @@
             "useRequestAnimFrame": true,
             "defaultRandomSeed": 4718,
             "luminosityFactorsArrayName": "luminosityFactors",
-            "useVerticalCameraValues": true
+            "useVerticalCameraValues": true,
+            "menuMusic": "menu"
         },
         "database": {
             "showLoadingBoxFirstTime": true,
@@ -357,7 +358,10 @@
             "demoFighterAI": "fighter",
             "demoShipAI": "ship",
             "demoViewSwitchInterval": 6000,
-            "demoDoubleViewSwitchChance": 0.5
+            "demoDoubleViewSwitchChance": 0.5,
+            "musicVolumeInMenus": 0.5,
+            "battleMusic": "battle",
+            "victoryMusic": "victory"
         },
         "camera": {
             "defaultFOV": 40,

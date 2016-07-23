@@ -1268,5 +1268,19 @@
             "name": "beep3",
             "samples": ["beep3.wav"]
         }
+    ],
+    "music": [
+        {
+            "name": "menu",
+            "sample": "menu.ogg"
+        },
+        {
+            "name": "battle",
+            "sample": "battle.ogg"
+        },
+        {
+            "name": "victory",
+            "sample": "victory.ogg"
+        }
     ]
 }

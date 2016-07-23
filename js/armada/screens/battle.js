@@ -148,6 +148,16 @@ define([
              * @type Number
              */
             _timeSinceGameStateChanged,
+            /**
+             * A reference to the sound source managing the battle music (the song to play during the battle)
+             * @type SoundSource
+             */
+            _battleMusic,
+            /**
+             * A reference to the sound source managing the victory music (the song to play when the battle is won)
+             * @type SoundSource
+             */
+            _victoryMusic,
             // ................................................................................................
             // elements of the HUD and their stored state
             /**
@@ -473,6 +483,12 @@ define([
             _battleScene.clearPointLights();
         }
         _battleScene = null;
+        if (_battleMusic) {
+            _battleMusic.stopPlaying();
+        }
+        if (_victoryMusic) {
+            _victoryMusic.stopPlaying();
+        }
     }
     // ------------------------------------------------------------------------------
     // public functions
@@ -1011,6 +1027,7 @@ define([
         }
         this.stopRenderLoop();
         audio.setEffectVolume(0);
+        audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS));
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
@@ -1039,6 +1056,7 @@ define([
                     "No action was taken, to avoid double-running the simulation.");
         }
         audio.setEffectVolume(1);
+        audio.setMusicVolume(1);
     };
     /**
      * Uses the loading box to show the status to the user.
@@ -1676,6 +1694,12 @@ define([
                         menuKey: _getMenuKeyHTMLString()
                     }));
                     _gameStateShown = true;
+                    if (_battleMusic) {
+                        _battleMusic.stopPlaying();
+                    }
+                    if (_victoryMusic) {
+                        _victoryMusic.play();
+                    }
                 }
             }
         }
@@ -1766,6 +1790,8 @@ define([
             _level.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
             this._addUITexts();
+            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.BATTLE_MUSIC));
+            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC));
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
@@ -1775,6 +1801,7 @@ define([
                 _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {
+                    var m;
                     this.setAntialiasing(graphics.getAntialiasing());
                     this.setFiltering(graphics.getFiltering());
                     this.clearSceneCanvasBindings();
@@ -1794,6 +1821,15 @@ define([
                     this._loadingBox.hide();
                     showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+                    m = resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.BATTLE_MUSIC));
+                    if (m) {
+                        _battleMusic = m.createSoundSource(1, true);
+                        _battleMusic.play();
+                    }
+                    m = resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC));
+                    if (m) {
+                        _victoryMusic = m.createSoundSource(1, false);
+                    }
                 }.bind(this));
             }.bind(this));
             resources.requestResourceLoad();

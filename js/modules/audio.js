@@ -94,18 +94,53 @@ define([
     "use strict";
     var
             // ----------------------------------------------------------------------
-            // Private variables
+            // Enums
             /**
-             * Stores a reference to all the loaded buffers, organized by the names of the sound files they were loaded from - so that one
-             * sound files is only loaded once.
+             * @enum {Number}
+             * When sound sources are created, they need to be put in one of these categories. Each category has a gain node at the end of 
+             * the audio graph through which the volume of that category can be set individually. 
+             * For simplicity there are only two static categories now, but in fact this could be generalized by allowing arbitrary string
+             * IDs for categories and creating and connecting gain nodes for new categories on-the-fly.
              * @type Object
              */
-            _buffers = {},
+            SoundCategory = {
+                /**
+                 * Attempting to play a sound in this category will result in an error - this is to prevent playing sounds with undefined
+                 * category
+                 */
+                NOME: 0,
+                /**
+                 * A category for sound effects - typically short, possibly spatialized
+                 */
+                SOUND_EFFECT: 1,
+                /**
+                 * A category for songs to play - typically longer, not spatialized
+                 */
+                MUSIC: 2
+            },
+    // ----------------------------------------------------------------------
+    // Private variables
+    /**
+     * Stores a reference to all the loaded buffers, organized by the names of the sound files they were loaded from - so that one
+     * sound files is only loaded once.
+     * @type Object
+     */
+    _buffers = {},
             /**
              * Used for setting the master volume for sound effects - all effect nodes are going through this.
              * @type GainNode
              */
             _effectGain,
+            /**
+             * Used for setting the master volume for music - all music nodes are going through this.
+             * @type GainNode
+             */
+            _musicGain,
+            /**
+             * Used for setting the master volume for all sounds - all sound nodes are going through this.
+             * @type GainNode
+             */
+            _masterGain,
             /**
              * Used for dynamic compression at the end of the audio graph.
              * @type DynamicsCompressorNode
@@ -128,6 +163,7 @@ define([
      * A wrapper class that represents a persistent 2D or 3D sound source and is capable of playing its associated sound sample file from
      * a buffer and modify a few parameters of the playback by encapsulating a part of the audio graph for which it can create the nodes as
      * necessary.
+     * @param {Number} soundCategory (enum SoundCategory) The category this sound belongs to
      * @param {String} sampleName The name of the sounds sample. Must be loaded for playback (loading is not  handled by this class), cannot
      * be changed later.
      * @param {Number} [volume=1] The volume at which to play the sound sample (in case of 3D sounds, at the reference distance: 1). Can be
@@ -138,7 +174,12 @@ define([
      * @param {Number} [rolloffFactor=1] In case of 3D spatialized sounds, the factor to determine how loud the sound should be at a 
      * specific distance. The formula used: 1 / (1 + rolloffFactor * (d - 1)), where d is the distance (reverse mode with refDistance=1)
      */
-    function SoundSource(sampleName, volume, loop, position, rolloffFactor) {
+    function SoundSource(soundCategory, sampleName, volume, loop, position, rolloffFactor) {
+        /**
+         * The category of this sound, allowing the user to set a separate master volume per category
+         * @type Number
+         */
+        this._soundCategory = soundCategory;
         /**
          * The name of the sounds sample
          * @type String
@@ -234,8 +275,10 @@ define([
      * dropped and the parameters of this class will control the new playback. If a looping playback is in progress, this method does 
      * nothing.
      * @param {Boolean} [restart=false] If true, the previous (last) playback from this sound will be stopped in case it is still playing
+     * @param {Function} [onFinish] If given, this function will be executed when the sample finished its playback (for looping sounds, this
+     * means when stop is called)
      */
-    SoundSource.prototype.play = function (restart) {
+    SoundSource.prototype.play = function (restart, onFinish) {
         var currentNode;
         if (_buffers[this._sampleName]) {
             if (this._playing) {
@@ -250,6 +293,9 @@ define([
             this._sourceNode.buffer = _buffers[this._sampleName];
             this._sourceNode.onended = function () {
                 this._playing = false;
+                if (onFinish) {
+                    onFinish();
+                }
             }.bind(this);
             currentNode = this._sourceNode;
             if (this._volume !== undefined) {
@@ -269,7 +315,16 @@ define([
                 this._pannerNode.rolloffFactor = this._rolloffFactor || 1;
                 this._pannerNode.setPosition(this._position[0], this._position[1], this._position[2]);
             }
-            currentNode.connect(_effectGain);
+            switch (this._soundCategory) {
+                case SoundCategory.SOUND_EFFECT:
+                    currentNode.connect(_effectGain);
+                    break;
+                case SoundCategory.MUSIC:
+                    currentNode.connect(_musicGain);
+                    break;
+                default:
+                    application.showError("Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
+            }
             this._playing = true;
             this._sourceNode.start(0);
         } else if (this._sampleName) {
@@ -280,7 +335,9 @@ define([
      * Stops the playback of the sound (useful mostly for looping sounds)
      */
     SoundSource.prototype.stopPlaying = function () {
-        this._sourceNode.stop();
+        if (this._sourceNode) {
+            this._sourceNode.stop();
+        }
     };
     /**
      * Returns whether the sound sample is currently being played.
@@ -321,7 +378,7 @@ define([
      * calculated based on it
      */
     function playSound(sampleName, volume, position, rolloffFactor) {
-        SoundSource.call(_source, sampleName, volume, false, position, rolloffFactor);
+        SoundSource.call(_source, SoundCategory.SOUND_EFFECT, sampleName, volume, false, position, rolloffFactor);
         _source.play();
     }
     /**
@@ -331,21 +388,42 @@ define([
     function setEffectVolume(value) {
         _effectGain.gain.value = value;
     }
+    /**
+     * Sets a master volume applied to music.
+     * @param {Number} value
+     */
+    function setMusicVolume(value) {
+        _musicGain.gain.value = value;
+    }
+    /**
+     * Sets a master volume applied to all sounds.
+     * @param {Number} value
+     */
+    function setMasterVolume(value) {
+        _masterGain.gain.value = value;
+    }
     // -------------------------------------------------------------------------
     // Initizalization
     _context = new AudioContext();
     _compressor = _context.createDynamicsCompressor();
     _compressor.connect(_context.destination);
+    _masterGain = _context.createGain();
+    _masterGain.connect(_compressor);
     _effectGain = _context.createGain();
-    _effectGain.connect(_compressor);
+    _effectGain.connect(_masterGain);
+    _musicGain = _context.createGain();
+    _musicGain.connect(_masterGain);
     _source = new SoundSource();
     // -------------------------------------------------------------------------
     // Public interface
     return {
+        SoundCategory: SoundCategory,
         SoundSource: SoundSource,
         loadSample: loadSample,
         playSound: playSound,
-        setEffectVolume: setEffectVolume
+        setEffectVolume: setEffectVolume,
+        setMusicVolume: setMusicVolume,
+        setMasterVolume: setMasterVolume
     };
 });
 

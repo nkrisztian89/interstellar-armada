@@ -1644,7 +1644,7 @@
             "attachmentPoint": [0, -20, 39.6],
             "fireSound": {
                 "name": "weaponshot1",
-                "volume": 0.75,
+                "volume": 0.4,
                 "rolloff": 0.02
             }
         },
@@ -1666,7 +1666,7 @@
             "attachmentPoint": [0, -4, 1.2],
             "fireSound": {
                 "name": "weaponshot1",
-                "volume": 0.75,
+                "volume": 0.5,
                 "rolloff": 0.02
             }
         },

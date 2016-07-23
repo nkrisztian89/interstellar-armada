@@ -449,6 +449,7 @@ define([
                 true,
                 graphics.getFiltering(),
                 _getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
+                undefined,
                 {
                     "escape": _closeScreen,
                     "left": this.selectPreviousShip.bind(this),

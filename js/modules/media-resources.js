@@ -95,6 +95,16 @@ define([
              */
             SOUND_EFFECT_FOLDER = "soundEffect",
             /**
+             * In the resource description file, music resources will be initialized from the array with this name
+             * @type String
+             */
+            MUSIC_ARRAY_NAME = "music",
+            /**
+             * When asked to be loaded from files, music resources will look for the files in the folder with this ID (not URL)
+             * @type String
+             */
+            MUSIC_FOLDER = "music",
+            /**
              * Lines in shader sources starting with this string are treated as include statements referencing another shader source file
              * to be inserted into the source in the place of the line, with the name (path) of the file to be inserted starting after this
              * prefix.
@@ -1007,23 +1017,6 @@ define([
     SoundEffectResource.prototype = new resourceManager.GenericResource();
     SoundEffectResource.prototype.constructor = SoundEffectResource;
     /**
-     * @param {Number} index
-     * @returns {Function}
-     */
-    SoundEffectResource.prototype._getOnLoadSampleFunction = function (index) {
-        return function () {
-            this._loadedSamples++;
-            this._onFilesLoad(this._loadedSamples === this._samplesToLoad, {path: this._samples[index]});
-        }.bind(this);
-    };
-    /**
-     * Displays an error message for the case when the source file for this texture with the passed name could not be loaded.
-     * @param {String} filename
-     */
-    SoundEffectResource.prototype._handleError = function (filename) {
-        application.showError("Could not load sound effect '" + this._name + "': downloading file '" + filename + "' failed!");
-    };
-    /**
      * @override
      * @returns {Boolean}
      */
@@ -1086,7 +1079,60 @@ define([
             application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
-        return new audio.SoundSource(this._samples[Math.floor(Math.random() * this._samples.length)], volume, loop, position, rolloff);
+        return new audio.SoundSource(audio.SoundCategory.SOUND_EFFECT, this._samples[Math.floor(Math.random() * this._samples.length)], volume, loop, position, rolloff);
+    };
+    // ############################################################################################
+    /**
+     * @class
+     * @augments GenericResource
+     * @param {Object} dataJSON
+     */
+    function MusicResource(dataJSON) {
+        resourceManager.GenericResource.call(this, dataJSON.name);
+        /**
+         * The filename (path withing the music folder) of the sample that correspond to this song
+         * @type String
+         */
+        this._sample = dataJSON.sample;
+    }
+    MusicResource.prototype = new resourceManager.GenericResource();
+    MusicResource.prototype.constructor = MusicResource;
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    MusicResource.prototype.requiresReload = function () {
+        return !this.isReadyToUse() && !this.isRequested();
+    };
+    /**
+     * @override
+     */
+    MusicResource.prototype._requestFiles = function () {
+        application.requestFile(MUSIC_FOLDER, this._sample, function (request) {
+            audio.loadSample(this._sample, request, function () {
+                this._onFilesLoad(true, {path: this._sample});
+            }.bind(this));
+        }.bind(this), undefined, "arraybuffer");
+    };
+    /**
+     * @override
+     * @param {Object} params
+     */
+    MusicResource.prototype._loadData = function (params) {
+        application.log("Music song from file: " + params.path + " has been loaded.", 2);
+    };
+    /**
+     * Creates a sound source for the sample corresponding to this music and returns the reference to it. The sample must be loaded.
+     * @param {Number} [volume=1]
+     * @param {Boolean} [loop=false]
+     * @returns {SoundSource}
+     */
+    MusicResource.prototype.createSoundSource = function (volume, loop) {
+        if (this.isReadyToUse() === false) {
+            application.showError("Cannot create sound source for music '" + this.getName() + "', as it has not been loaded from file yet!");
+            return null;
+        }
+        return new audio.SoundSource(audio.SoundCategory.MUSIC, this._sample, volume, loop);
     };
     // ############################################################################################
     /**
@@ -1158,6 +1204,13 @@ define([
     MediaResourceManager.prototype.getSoundEffect = function (name) {
         return this.getResource(SOUND_EFFECT_ARRAY_NAME, name);
     };
+    /**
+     * @param {String} name
+     * @returns {MusicResource}
+     */
+    MediaResourceManager.prototype.getMusic = function (name) {
+        return this.getResource(MUSIC_ARRAY_NAME, name);
+    };
     // ------------------------------------------------------------------------------
     // Public functions
     /**
@@ -1175,6 +1228,7 @@ define([
         resourceClassAssignment[SHADER_ARRAY_NAME] = ShaderResource;
         resourceClassAssignment[MODEL_ARRAY_NAME] = ModelResource;
         resourceClassAssignment[SOUND_EFFECT_ARRAY_NAME] = SoundEffectResource;
+        resourceClassAssignment[MUSIC_ARRAY_NAME] = MusicResource;
         _resourceManager.requestConfigLoad(mediaResourceFileDescriptor.filename, mediaResourceFileDescriptor.folder, resourceClassAssignment, callback);
     }
     _resourceManager = new MediaResourceManager();
@@ -1188,6 +1242,7 @@ define([
         getModel: _resourceManager.getModel.bind(_resourceManager),
         getOrAddModel: _resourceManager.getOrAddModel.bind(_resourceManager),
         getSoundEffect: _resourceManager.getSoundEffect.bind(_resourceManager),
+        getMusic: _resourceManager.getMusic.bind(_resourceManager),
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
         executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager)
     };

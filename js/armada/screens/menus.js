@@ -13,6 +13,7 @@
  * @param utils Used for trimming filename extensions.
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
+ * @param resources Used to load and play the menu music.
  * @param armadaScreens Used for common screen constants.
  * @param config Used for choosing the level description file to load when a new battle is started from the main menu.
  * @param strings Used for translation support.
@@ -22,11 +23,12 @@ define([
     "utils/utils",
     "modules/screens",
     "modules/game",
+    "modules/media-resources",
     "armada/screens/shared",
     "armada/configuration",
     "armada/strings",
     "armada/screens/battle"
-], function (utils, screens, game, armadaScreens, config, strings, battle) {
+], function (utils, screens, game, resources, armadaScreens, config, strings, battle) {
     "use strict";
     // -------------------------------------------------------------------------
     // Constants
@@ -40,7 +42,14 @@ define([
                 buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
                 buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME,
                 selectedButtonClassName: armadaScreens.MENU_BUTTON_SELECTED_CLASS_NAME
-            };
+            },
+    // -------------------------------------------------------------------------
+    // Private variables
+    /**
+     * A reference to the sound source managing the menu music.
+     * @type SoundSource
+     */
+    _menuMusic;
     // -------------------------------------------------------------------------
     // Private functions
     /**
@@ -50,6 +59,9 @@ define([
      */
     function _getLevelOptions(demoMode) {
         var result = [], i, actionFunction = function (levelFilename) {
+            if (_menuMusic) {
+                _menuMusic.stopPlaying();
+            }
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
             game.getScreen().startNewBattle({
                 levelSourceFilename: levelFilename,
@@ -106,7 +118,24 @@ define([
                         action: function () {
                             game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                         }
-                    }], armadaScreens.MAIN_MENU_CONTAINER_ID),
+                    }], armadaScreens.MAIN_MENU_CONTAINER_ID,
+                {
+                    show: function () {
+                        var m;
+                        if (!_menuMusic) {
+                            m = resources.getMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC));
+                            if (m) {
+                                resources.requestResourceLoad();
+                                resources.executeWhenReady(function () {
+                                    _menuMusic = m.createSoundSource(1, true);
+                                    _menuMusic.play();
+                                });
+                            }
+                        } else {
+                            _menuMusic.play();
+                        }
+                    }
+                }),
         levelSelectionMenuScreen: new screens.MenuScreen(
                 armadaScreens.LEVEL_MENU_SCREEN_NAME,
                 armadaScreens.LEVEL_MENU_SCREEN_SOURCE,

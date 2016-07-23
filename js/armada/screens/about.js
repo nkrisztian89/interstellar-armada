@@ -42,6 +42,7 @@ define([
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
+                undefined,
                 {
                     "escape": function () {
                         game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -97,6 +98,7 @@ define([
             gimp: '<a target="_blank" href="https://www.gimp.org">GIMP</a>',
             audacity: '<a target="_blank" href="http://www.audacityteam.org">Audacity</a>',
             bfxr: '<a target="_blank" href="http://www.bfxr.net">Bfxr</a>',
+            lmms: '<a target="_blank" href="https://lmms.io">LMMS</a>',
             netbeans: '<a target="_blank" href="https://netbeans.org/">Netbeans</a>',
             lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
             chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',

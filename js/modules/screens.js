@@ -36,6 +36,8 @@ define([
             // constants
             SCREEN_FOLDER = "screen",
             CSS_FOLDER = "css",
+            SHOW_EVENT_NAME = "show",
+            HIDE_EVENT_NAME = "hide",
             /*
              * The content of HTML elements with this class on the page will be automatically translated on every update, using
              * the key <name of the page> " <TRANSLATION_KEY_SEPARATOR> + <id of the element>
@@ -72,20 +74,18 @@ define([
      * @property {String} parentNodeID
      */
     /**
-     * @class Holds the logical model of a screen of the game. The different
-     * screens should be defined as descendants of this class.
+     * @class Holds the logical model of a screen of the game. The different screens should be defined as descendants of this class.
      * @extends AsyncResource
-     * @param {String} name The name by which this screen can be identified. Needs to be
-     * unique within the same application (ScreenManager). The ID of HTML elements belonging
-     * to this screen will be prefixed by this name.
-     * @param {String} htmlFilename The name of the HTML file where the structure of this
-     * screen is defined.
-     * @param {HTMLScreen~Style} [style] The object storing the styling information for this
-     * screen.
-     * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
-     * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
+     * @param {String} name The name by which this screen can be identified. Needs to be unique within the same application (ScreenManager). 
+     * The ID of HTML elements belonging to this screen will be prefixed by this name.
+     * @param {String} htmlFilename The name of the HTML file where the structure of this screen is defined.
+     * @param {HTMLScreen~Style} [style] The object storing the styling information for this screen.
+     * @param {Object.<String, Function>} [eventHandlers] Event handler functions to be executed when something happens to this page, by the
+     * names of the events as keys
+     * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed while this screen is active, by the names of 
+     * the keys (as in utils.getKeyCodeOf())
      */
-    function HTMLScreen(name, htmlFilename, style, keyCommands) {
+    function HTMLScreen(name, htmlFilename, style, eventHandlers, keyCommands) {
         asyncResource.AsyncResource.call(this);
         /**
          * An ID of this screen. The IDs of HTML elements on this screen are prefixed by this name.
@@ -146,6 +146,16 @@ define([
          * @type Number
          */
         this._externalComponentsToLoad = 0;
+        /**
+         * Optional callback to be executed whenever this screen is shown. (show() is called)
+         * @type Function
+         */
+        this._onShow = eventHandlers ? eventHandlers[SHOW_EVENT_NAME] : null;
+        /**
+         * Optional callback to be executed whenever this screen is hidden. (hide() is called)
+         * @type Function
+         */
+        this._onHide = eventHandlers ? eventHandlers[HIDE_EVENT_NAME] : null;
         /**
          * A reference to the event listener function listening to the keydown event to handle the key commands
          * valid on this screen.
@@ -302,6 +312,9 @@ define([
     HTMLScreen.prototype.show = function () {
         if (this._container) {
             this._container.style.display = "block";
+            if (this._onShow) {
+                this._onShow();
+            }
         } else {
             application.showError("Attempting to show screen '" + this._name + "' before adding it to the page!");
         }
@@ -336,6 +349,9 @@ define([
             this._container.style.display = "none";
             this._background.style.display = "none";
             this.setActive(false);
+            if (this._onHide) {
+                this._onHide();
+            }
         } else {
             application.showError("Attempting to hide screen '" + this._name + "' before adding it to the page!");
         }
@@ -1362,11 +1378,13 @@ define([
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
      * @param {Boolean} [useRequestAnimFrame=false] Whether to use the requestAnimationFrame API for the render loop
      * (as opposed to setInterval)
+     * @param {Object.<String, Function>} [eventHandlers] Event handler functions to be executed when something happens to this page, by the
+     * names of the events as keys
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
-    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, useRequestAnimFrame, keyCommands) {
-        HTMLScreen.call(this, name, htmlFilename, style, keyCommands);
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, useRequestAnimFrame, eventHandlers, keyCommands) {
+        HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, keyCommands);
         /**
          * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
          * @type Boolean
@@ -1689,11 +1707,13 @@ define([
      * @param {MenuComponent~MenuOption[]} menuOptions The menuOptions for creating the menu component.
      * @param {String} [menuContainerID] The ID of the HTML element inside of which
      * the menu should be added (if omitted, it will be appended to body)
+     * @param {Object.<String, Function>} [eventHandlers] Event handler functions to be executed when something happens to this page, by the
+     * names of the events as keys
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      */
-    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID, keyCommands) {
-        HTMLScreen.call(this, name, htmlFilename, style, this._getKeyCommands(keyCommands));
+    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID, eventHandlers, keyCommands) {
+        HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, this._getKeyCommands(keyCommands));
         /**
          * The menuOptions for creating the menu component.
          * @type MenuComponent~MenuOption[]

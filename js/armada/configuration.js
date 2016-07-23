@@ -221,6 +221,13 @@ define([
             name: "useVerticalCameraValues",
             type: "boolean",
             defaultValue: true
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play when the menus are shown.
+         */
+        MENU_MUSIC: {
+            name: "menuMusic",
+            type: "string"
         }
     };
     DATABASE_SETTINGS = {
@@ -1222,6 +1229,27 @@ define([
         DEMO_DOUBLE_VIEW_SWITCH_CHANCE: {
             name: "demoDoubleViewSwitchChance",
             type: "number"
+        },
+        /**
+         * When the ingame menu is opened (or another screen is opened from within it), the music volume will be changed by this factor
+         */
+        MUSIC_VOLUME_IN_MENUS: {
+            name: "musicVolumeInMenus",
+            type: "number"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play in general during battles.
+         */
+        BATTLE_MUSIC: {
+            name: "battleMusic",
+            type: "string"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play when a battle is won.
+         */
+        VICTORY_MUSIC: {
+            name: "victoryMusic",
+            type: "string"
         }
     };
     CAMERA_SETTINGS = {

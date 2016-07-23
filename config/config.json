@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0:328 (2016.07.22.)",
+    "version": "0.4.0:329 (2016.07.23.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -13,6 +13,7 @@
         "shader": "{{data}}/shaders/",
         "texture": "{{data}}/textures/",
         "soundEffect": "{{data}}/sfx/",
+        "music": "{{data}}/music/",
         "level": "{{data}}/levels/",
         "environment": "{{data}}/levels/environments/"
     },

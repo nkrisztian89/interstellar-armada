@@ -180,6 +180,7 @@ define([
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
+                undefined,
                 {
                     "escape": _closeScreen
                 });
