@@ -954,24 +954,28 @@ define([
                 INFO_BOX_ID,
                 armadaScreens.INFO_BOX_SOURCE,
                 {cssFilename: armadaScreens.INFO_BOX_CSS},
-                function () {
-                    this.pauseBattle();
-                }.bind(this),
-                function () {
-                    this.resumeBattle();
-                    resumeTime();
-                    if (!_demoMode) {
-                        if (_level.getPilotedSpacecraft()) {
-                            control.switchToPilotMode(_level.getPilotedSpacecraft());
-                        }
-                    } else {
-                        control.switchToSpectatorMode(false, true);
-                        _battleScene.getCamera().followNextNode();
-                        _timeInSameView = 0;
-                    }
-                }.bind(this),
                 strings.INFO_BOX.HEADER.name,
-                strings.INFO_BOX.OK_BUTTON.name));
+                strings.INFO_BOX.OK_BUTTON.name,
+                {
+                    show: function () {
+                        this.pauseBattle();
+                    }.bind(this),
+                    hide: function () {
+                        this.resumeBattle();
+                        resumeTime();
+                        if (!_demoMode) {
+                            if (_level.getPilotedSpacecraft()) {
+                                control.switchToPilotMode(_level.getPilotedSpacecraft());
+                            }
+                        } else {
+                            control.switchToSpectatorMode(false, true);
+                            _battleScene.getCamera().followNextNode();
+                            _timeInSameView = 0;
+                        }
+                    }.bind(this),
+                    buttonselect: armadaScreens.playButtonSelectSound,
+                    buttonclick: armadaScreens.playButtonClickSound
+                }));
     }
     BattleScreen.prototype = new screens.HTMLScreenWithCanvases();
     BattleScreen.prototype.constructor = BattleScreen;
@@ -1030,7 +1034,6 @@ define([
             _battleScene.setShouldUpdateCamera(false);
         }
         this.stopRenderLoop();
-        audio.setSFXVolume(0, false);
         audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS) * audio.getMusicVolume(), false);
     };
     /**
@@ -1059,7 +1062,6 @@ define([
                     application.ErrorSeverity.MINOR,
                     "No action was taken, to avoid double-running the simulation.");
         }
-        audio.resetSFXVolume();
         audio.resetMusicVolume();
     };
     /**

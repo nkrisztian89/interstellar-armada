@@ -52,7 +52,8 @@ define([
                 undefined,
                 {
                     "escape": this._saveAndClose.bind(this)
-                });
+                },
+                armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
          * @type SimpleComponent
          */

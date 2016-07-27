@@ -1805,7 +1805,7 @@ define([
      */
     Model.prototype.getSize = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getSize();
+            return mesh ? mesh.getSize() : 0;
         });
     };
 
@@ -1817,7 +1817,7 @@ define([
      */
     Model.prototype.getMaxX = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getMaxX();
+            return mesh ? mesh.getMaxX() : 0;
         });
     };
 
@@ -1829,7 +1829,7 @@ define([
      */
     Model.prototype.getMinX = function (lod) {
         return this._getLowestValueOfMeshes(lod, function (mesh) {
-            return mesh.getMinX();
+            return mesh ? mesh.getMinX() : 0;
         });
     };
 
@@ -1841,7 +1841,7 @@ define([
      */
     Model.prototype.getMaxY = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getMaxY();
+            return mesh ? mesh.getMaxY() : 0;
         });
     };
 
@@ -1853,7 +1853,7 @@ define([
      */
     Model.prototype.getMinY = function (lod) {
         return this._getLowestValueOfMeshes(lod, function (mesh) {
-            return mesh.getMinY();
+            return mesh ? mesh.getMinY() : 0;
         });
     };
 
@@ -1865,7 +1865,7 @@ define([
      */
     Model.prototype.getMaxZ = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getMaxZ();
+            return mesh ? mesh.getMaxZ() : 0;
         });
     };
 
@@ -1877,7 +1877,7 @@ define([
      */
     Model.prototype.getMinZ = function (lod) {
         return this._getLowestValueOfMeshes(lod, function (mesh) {
-            return mesh.getMinZ();
+            return mesh ? mesh.getMinZ() : 0;
         });
     };
 
@@ -1889,7 +1889,7 @@ define([
      */
     Model.prototype.getWidth = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getWidth();
+            return mesh ? mesh.getWidth() : 0;
         });
     };
 
@@ -1901,7 +1901,7 @@ define([
      */
     Model.prototype.getHeight = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getHeight();
+            return mesh ? mesh.getHeight() : 0;
         });
     };
 
@@ -1913,7 +1913,7 @@ define([
      */
     Model.prototype.getDepth = function (lod) {
         return this._getLargestValueOfMeshes(lod, function (mesh) {
-            return mesh.getDepth();
+            return mesh ? mesh.getDepth() : 0;
         });
     };
 

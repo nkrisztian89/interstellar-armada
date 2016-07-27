@@ -42,6 +42,12 @@ define(function () {
          * @default []
          */
         this._onReadyQueue = [];
+        /**
+         * The length of the onReadyQueue that was triggered by the last setToReady() call - additional functions added to the queue after
+         * the call will not be executed until another setToReady by checking this length
+         * @type Number
+         */
+        this._triggeredOnreadyQueueLength = 0;
     }
     /**
      * Adds the given function to the queue to be executed ones the resource 
@@ -78,10 +84,16 @@ define(function () {
      */
     AsyncResource.prototype.executeOnReadyQueue = function () {
         var i;
-        for (i = 0; i < this._onReadyQueue.length; i++) {
-            this._onReadyQueue[i].call(this);
+        // if a function in the onreadyQueue adds new functions to the onReadyQueue, those should not be executed - if the resource was 
+        // ready for them, they would not be added to the queue, but executed straight away
+        this._triggeredOnreadyQueueLength = this._onReadyQueue.length;
+        for (i = 0; i < this._triggeredOnreadyQueueLength; i++) {
+            if (this._onReadyQueue[i]) {
+                this._onReadyQueue[i].call(this);
+            }
+            this._onReadyQueue[i] = null;
         }
-        this._onReadyQueue = [];
+        this._onReadyQueue = (this._onReadyQueue.length > this._triggeredOnreadyQueueLength) ? this._onReadyQueue.slice(this._triggeredOnreadyQueueLength) : [];
     };
     /**
      * Sets the ready state of the resource and executes the queued actions that

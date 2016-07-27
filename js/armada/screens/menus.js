@@ -32,26 +32,14 @@ define([
     "armada/screens/battle"
 ], function (utils, screens, game, resources, armadaScreens, config, strings, audio, battle) {
     "use strict";
-    // -------------------------------------------------------------------------
-    // Constants
     var
+            // -------------------------------------------------------------------------
+            // Private variables
             /**
-             * Stores the styling parameters used for the  menus.
-             * @type MenuComponent~Style
+             * A reference to the sound source managing the menu music.
+             * @type SoundSource
              */
-            COMMON_MENU_STYLE = {
-                menuClassName: armadaScreens.MENU_CLASS_NAME,
-                buttonClassName: armadaScreens.MENU_BUTTON_CLASS_NAME,
-                buttonContainerClassName: armadaScreens.MENU_BUTTON_CONTAINER_CLASS_NAME,
-                selectedButtonClassName: armadaScreens.MENU_BUTTON_SELECTED_CLASS_NAME
-            },
-    // -------------------------------------------------------------------------
-    // Private variables
-    /**
-     * A reference to the sound source managing the menu music.
-     * @type SoundSource
-     */
-    _menuMusic;
+            _menuMusic;
     // -------------------------------------------------------------------------
     // Private functions
     /**
@@ -94,7 +82,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                COMMON_MENU_STYLE,
+                armadaScreens.MENU_STYLE,
                 [{
                         id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
@@ -128,17 +116,21 @@ define([
                         audio.resetMusicVolume();
                         if (!_menuMusic) {
                             m = resources.getMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC));
-                            if (m) {
+                            if (m && !m.hasError()) {
                                 resources.requestResourceLoad();
                                 resources.executeWhenReady(function () {
                                     _menuMusic = m.createSoundSource(1, true);
-                                    _menuMusic.play();
+                                    if (_menuMusic) {
+                                        _menuMusic.play();
+                                    }
                                 });
                             }
                         } else {
                             _menuMusic.play();
                         }
-                    }
+                    },
+                    optionselect: armadaScreens.playButtonSelectSound,
+                    optionclick: armadaScreens.playButtonClickSound
                 }),
         levelSelectionMenuScreen: new screens.MenuScreen(
                 armadaScreens.LEVEL_MENU_SCREEN_NAME,
@@ -148,10 +140,10 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                COMMON_MENU_STYLE,
+                armadaScreens.MENU_STYLE,
                 _getLevelOptions(false),
                 armadaScreens.LEVEL_MENU_CONTAINER_ID,
-                undefined,
+                armadaScreens.MENU_EVENT_HANDLERS,
                 {
                     "escape": function () {
                         game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -165,10 +157,10 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                COMMON_MENU_STYLE,
+                armadaScreens.MENU_STYLE,
                 _getLevelOptions(true),
                 armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID,
-                undefined,
+                armadaScreens.MENU_EVENT_HANDLERS,
                 {
                     "escape": function () {
                         game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -182,7 +174,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                COMMON_MENU_STYLE,
+                armadaScreens.MENU_STYLE,
                 [{
                         id: strings.SETTINGS.GENERAL.name,
                         action: function () {
@@ -210,7 +202,7 @@ define([
                         }
                     }],
                 armadaScreens.SETTINGS_MENU_CONTAINER_ID,
-                undefined,
+                armadaScreens.MENU_EVENT_HANDLERS,
                 {
                     "escape": function () {
                         game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -225,7 +217,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
-                COMMON_MENU_STYLE,
+                armadaScreens.MENU_STYLE,
                 [{
                         id: strings.INGAME_MENU.RESUME.name,
                         action: function () {
@@ -257,7 +249,7 @@ define([
                         }
                     }],
                 armadaScreens.INGAME_MENU_CONTAINER_ID,
-                undefined,
+                armadaScreens.MENU_EVENT_HANDLERS,
                 {
                     "escape": function () {
                         game.closeSuperimposedScreen();

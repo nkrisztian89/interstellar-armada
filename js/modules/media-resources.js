@@ -117,6 +117,12 @@ define([
              * @type String
              */
             SHADER_INCLUDE_STATEMENT_SUFFIX = '"',
+            /**
+             * During the loading of shaders, sources that could not be downloaded will be set to this value to mark that their download
+             * has finished (unsuccessfully). They are nulled out at the end of the loading process.
+             * @type String
+             */
+            EMPTY_SHADER_SOURCE = "-",
             // ------------------------------------------------------------------------------
             // module variables
             /**
@@ -220,6 +226,8 @@ define([
      */
     TextureResource.prototype._handleError = function (filename) {
         application.showError("Could not load texture '" + this._name + "': downloading file '" + filename + "' failed!");
+        this._loadedImages++;
+        this._onFilesLoad(this._loadedImages === this._imagesToLoad, {path: filename, error: true});
     };
     /**
      * @override
@@ -291,9 +299,15 @@ define([
     /**
      * @override
      * @param {Object} params
+     * @returns {Boolean}
      */
     TextureResource.prototype._loadData = function (params) {
-        application.log("Texture from file: " + params.path + " has been loaded.", 2);
+        if (!params.error) {
+            application.log("Texture from file: " + params.path + " has been loaded.", 2);
+            return true;
+        }
+        application.log("Texture from file: " + params.path + " could not be loaded.", 2);
+        return false;
     };
     /**
      * @returns {String[]}
@@ -456,6 +470,8 @@ define([
      */
     CubemapResource.prototype._handleError = function (filename) {
         application.showError("Could not load cube mapped texture '" + this._name + "': downloading file '" + filename + "' failed!");
+        this._loadedImages++;
+        this._onFilesLoad(this._loadedImages === this._imagesToLoad, {path: filename, error: true});
     };
     /**
      * @override
@@ -524,9 +540,16 @@ define([
     };
     /**
      * @override
+     * @param {Object} params
+     * @returns {Boolean}
      */
-    CubemapResource.prototype._loadData = function () {
-        application.log("Cubemap named '" + this.getName() + "' has been loaded.", 2);
+    CubemapResource.prototype._loadData = function (params) {
+        if (!params.error) {
+            application.log("Face '" + params.path + "' of cubemap named '" + this.getName() + "' has been loaded.", 2);
+            return true;
+        }
+        application.log("Face '" + params.path + "' of cubemap named '" + this.getName() + "' could not be loaded.", 2);
+        return false;
     };
     /**
      * @returns {String[]}
@@ -653,11 +676,18 @@ define([
     ShaderResource.prototype = new resourceManager.GenericResource();
     ShaderResource.prototype.constructor = ShaderResource;
     /**
-     * Returns whether all source files needed to assemble the final sources of this shader have been loaded and inserted.
-     * @returns {Boolean}
+     * If all source files needed to assemble the final sources of this shader have been loaded and inserted, marks the shader as ready.
      */
-    ShaderResource.prototype._allSourcesLoaded = function () {
-        return (this._vertexShaderSource && this._fragmentShaderSource && (this._shaderIncludesLoaded === this._shaderIncludesToLoad));
+    ShaderResource.prototype._checkAllSourcesLoaded = function () {
+        if (this._vertexShaderSource && this._fragmentShaderSource && (this._shaderIncludesLoaded === this._shaderIncludesToLoad)) {
+            if (this._vertexShaderSource === EMPTY_SHADER_SOURCE) {
+                this._vertexShaderSource = null;
+            }
+            if (this._fragmentShaderSource === EMPTY_SHADER_SOURCE) {
+                this._fragmentShaderSource = null;
+            }
+            this.onFinalLoad();
+        }
     };
     /**
      * To be called when a new shader include (references file) has finished downloading - saves the text of the file to the cache and calls
@@ -720,9 +750,7 @@ define([
             }
         }
         this._shaderIncludesLoaded++;
-        if (this._allSourcesLoaded()) {
-            this.setToReady();
-        }
+        this._checkAllSourcesLoaded();
     };
     /**
      * Parses the passed shader source text for include statements and either replaces them if the referenced file has already been downloaded
@@ -777,23 +805,29 @@ define([
     /**
      * @override
      * @param {Object} params
+     * @returns {Boolean}
      */
     ShaderResource.prototype._loadData = function (params) {
         switch (types.getEnumValue(ShaderType, params.shaderType, {
                 name: "shaderType", defaultValue: null})) {
             case ShaderType.VERTEX:
-                this._vertexShaderSource = params.text;
+                this._vertexShaderSource = params.text || EMPTY_SHADER_SOURCE;
                 break;
             case ShaderType.FRAGMENT:
-                this._fragmentShaderSource = params.text;
+                this._fragmentShaderSource = params.text || EMPTY_SHADER_SOURCE;
                 break;
             default:
                 application.crash();
         }
-        this._resolveSource(params.shaderType, params.text);
-        if (this._allSourcesLoaded()) {
-            this.setToReady();
+        if (params.text) {
+            this._resolveSource(params.shaderType, params.text);
         }
+        this._checkAllSourcesLoaded();
+        if (!params.text) {
+            application.log("ERROR: There was an error loading " + params.shaderType + " shader of shader program '" + this._name + "'!", 1);
+            return false;
+        }
+        return true;
     };
     /**
      * Returns the name of the shader that is stored by the passed variant name for this shader.
@@ -968,10 +1002,15 @@ define([
     /**
      * @override
      * @param {Object} params
+     * @returns {Boolean}
      */
     ModelResource.prototype._loadData = function (params) {
-        application.log("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
         this._model = new egomModel.Model();
+        if (!params.text) {
+            application.showError("Model file of max LOD level " + params.maxLOD + " could not be loaded for model '" + this.getName() + "'!");
+            return false;
+        }
+        application.log("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
         if (params.text[0] === "{") {
             this._model.loadFromJSON(this._getPath(params.maxLOD), JSON.parse(params.text), params.maxLOD);
         } else if (params.text[0] === "<") {
@@ -980,6 +1019,7 @@ define([
             application.showError("Cannot load Egom Mode from file '" + this._getPath(params.maxLOD) + "', as it does no appear to be either an XML or a JSON file!");
         }
         this._maxLoadedLOD = params.maxLOD;
+        return true;
     };
     /**
      * @returns {Model}
@@ -1029,10 +1069,17 @@ define([
     SoundEffectResource.prototype._requestFile = function (index) {
         this._samplesToLoad++;
         application.requestFile(SOUND_EFFECT_FOLDER, this._samples[index], function (request) {
-            audio.loadSample(this._samples[index], request, function () {
+            if (request) {
+                audio.loadSample(this._samples[index], request, function () {
+                    this._loadedSamples++;
+                    this._onFilesLoad(this._samplesToLoad === this._loadedSamples, {path: this._samples[index]});
+                }.bind(this));
+            } else {
+                application.showError("Could not load sound sample '" + this.getName() + "'!");
+                this._samples[index] = null;
                 this._loadedSamples++;
-                this._onFilesLoad(this._samplesToLoad === this._loadedSamples, {path: this._samples[index]});
-            }.bind(this));
+                this._onFilesLoad(this._samplesToLoad === this._loadedSamples, {path: this._samples[index], error: true});
+            }
         }.bind(this), undefined, "arraybuffer");
     };
     /**
@@ -1047,9 +1094,15 @@ define([
     /**
      * @override
      * @param {Object} params
+     * @returns {Boolean}
      */
     SoundEffectResource.prototype._loadData = function (params) {
-        application.log("Sound effect sample from file: " + params.path + " has been loaded.", 2);
+        if (!params.error) {
+            application.log("Sound effect sample from file: " + params.path + " has been loaded.", 2);
+            return true;
+        }
+        application.log("Sound effect sample from file: " + params.path + " could not be loaded.", 2);
+        return false;
     };
     /**
      * Plays back one of the samples (randomly chosen) corresponding to this effect, without saving a reference to it. The samples must be
@@ -1059,11 +1112,17 @@ define([
      * @param {Number} [rolloff=1]
      */
     SoundEffectResource.prototype.play = function (volume, position, rolloff) {
+        var sample;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
             return;
         }
-        audio.playSound(this._samples[Math.floor(Math.random() * this._samples.length)], volume, position, rolloff);
+        sample = this._samples[Math.floor(Math.random() * this._samples.length)];
+        if (sample) {
+            audio.playSound(sample, volume, position, rolloff);
+        } else {
+            application.log("WARNING: cannot play sound sample '" + sample + "', as there was a problem while loading it.", 1);
+        }
     };
     /**
      * Creates a sound source for a randomly chosen sample corresponding to this effect and returns the reference to it. The samples must be
@@ -1075,11 +1134,17 @@ define([
      * @returns {SoundSource}
      */
     SoundEffectResource.prototype.createSoundSource = function (volume, loop, position, rolloff) {
+        var sample;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
-        return new audio.SoundSource(audio.SoundCategory.SOUND_EFFECT, this._samples[Math.floor(Math.random() * this._samples.length)], volume, loop, position, rolloff);
+        sample = this._samples[Math.floor(Math.random() * this._samples.length)];
+        if (sample) {
+            return new audio.SoundSource(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, position, rolloff);
+        }
+        application.log("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
+        return null;
     };
     // ############################################################################################
     /**
@@ -1109,17 +1174,29 @@ define([
      */
     MusicResource.prototype._requestFiles = function () {
         application.requestFile(MUSIC_FOLDER, this._sample, function (request) {
-            audio.loadSample(this._sample, request, function () {
-                this._onFilesLoad(true, {path: this._sample});
-            }.bind(this));
+            if (request) {
+                audio.loadSample(this._sample, request, function () {
+                    this._onFilesLoad(true, {path: this._sample});
+                }.bind(this));
+            } else {
+                application.showError("Could not load music track '" + this.getName() + "'!");
+                this._sample = null;
+                this._onFilesLoad(true, {path: this._sample, error: true});
+            }
         }.bind(this), undefined, "arraybuffer");
     };
     /**
      * @override
      * @param {Object} params
+     * @returns {Boolean}
      */
     MusicResource.prototype._loadData = function (params) {
-        application.log("Music song from file: " + params.path + " has been loaded.", 2);
+        if (!params.error) {
+            application.log("Music song from file: " + params.path + " has been loaded.", 2);
+            return true;
+        }
+        application.log("Music song from file: " + params.path + " cound not be loaded.", 2);
+        return false;
     };
     /**
      * Creates a sound source for the sample corresponding to this music and returns the reference to it. The sample must be loaded.
@@ -1132,7 +1209,11 @@ define([
             application.showError("Cannot create sound source for music '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
-        return new audio.SoundSource(audio.SoundCategory.MUSIC, this._sample, volume, loop);
+        if (this._sample) {
+            return new audio.SoundSource(audio.SoundCategory.MUSIC, this._sample, volume, loop);
+        }
+        application.log("WARNING: cannot create sound source for music track '" + this._sample + "', as there was a problem while loading it.", 1);
+        return null;
     };
     // ############################################################################################
     /**

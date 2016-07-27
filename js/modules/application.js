@@ -304,24 +304,18 @@ define(function () {
             }
         },
         /**
-         * Issues an asynchronous request to get a file and executes a callback
-         * function when the file has been grabbed. Uses HTTP request, thus only
-         * works through servers, cannot be used to access files on the local
-         * filesystem!
-         * @param {String} filetype The type of the file to be accessed, such
-         * as model, texture or config. This will be used to choose the appropriate
-         * folder where to look for the file.
+         * Issues an asynchronous request to get a file and executes a callback function when the file has been grabbed. Uses HTTP request, 
+         * thus only works through servers, cannot be used to access files on the local filesystem!
+         * @param {String} filetype The type of the file to be accessed, such as model, texture or config. This will be used to choose the 
+         * appropriate folder where to look for the file.
          * @param {String} filename The name of the file (not the full URL!)
-         * @param {Function} onload The function to execute when the file has been
-         * loaded. It gets the XMLHTTPRequest object as parameter which holds the
-         * file contents in its response.
-         * @param {String} [customMimeType] If this is specified, the MIME type
-         * will be overriden by the string given here. The standard type is XML,
-         * this needs to be specified if other files are to be loaded.
-         * @param {XMLHTTPRequestResponseType} [responseType] If given, the responseType
-         * property of the request will be set to this value
+         * @param {Function} onfinish The function to execute when the file has been loaded. It gets the XMLHTTPRequest object as parameter 
+         * which holds the file contents in its response. If the loading fails, this function is still called, but without a parameter.
+         * @param {String} [customMimeType] If this is specified, the MIME type will be overriden by the string given here. The standard 
+         * type is XML, this needs to be specified if other files are to be loaded.
+         * @param {XMLHTTPRequestResponseType} [responseType] If given, the responseType property of the request will be set to this value
          */
-        requestFile: function (filetype, filename, onload, customMimeType, responseType) {
+        requestFile: function (filetype, filename, onfinish, customMimeType, responseType) {
             this.log("Requesting file: '" + filename + "' from " + (this.getFolder(filetype) !== ""
                     ?
                     "folder: '" + this.getFolder(filetype) :
@@ -330,13 +324,15 @@ define(function () {
             var request = new XMLHttpRequest();
             request.onload = function () {
                 this.log("File: '" + filename + "' successfully loaded.", 2);
-                onload(request);
+                onfinish(request);
             }.bind(this);
             request.onerror = function () {
                 this.showError("An error occured while trying to load file: '" + filename + "'.", ErrorSeverity.SEVERE, "The status of the request was: '" + request.statusText + "' when the error happened.");
+                onfinish();
             }.bind(this);
             request.ontimeout = function () {
                 this.showError("Request to load the file: '" + filename + "' timed out.", ErrorSeverity.SEVERE);
+                onfinish();
             }.bind(this);
             if (customMimeType) {
                 request.overrideMimeType(customMimeType);
@@ -348,43 +344,37 @@ define(function () {
             request.send(null);
         },
         /**
-         * Issues an asynchronous request to get a text file and executes a callback
-         * function when the file has been grabbed. Uses HTTP request, thus only
-         * works through servers, cannot be used to access files on the local
-         * filesystem!
-         * @param {String} filetype The type of the file to be accessed, such
-         * as model, texture or config. This will be used to choose the appropriate
-         * folder where to look for the file.
+         * Issues an asynchronous request to get a text file and executes a callback function when the file has been grabbed. Uses HTTP 
+         * request, thus only works through servers, cannot be used to access files on the local filesystem!
+         * @param {String} filetype The type of the file to be accessed, such as model, texture or config. This will be used to choose the 
+         * appropriate folder where to look for the file.
          * @param {String} filename The name of the file (not the full URL!)
-         * @param {Function} onload The function to execute when the file has been
-         * loaded. It gets the text contents (a String) of the file as parameter.
-         * @param {String} [mimeType=DEFAULT_TEXT_MIME_TYPE] A string containing 
-         * the MIME type of the file and the optionally the charset to use
+         * @param {Function} onfinish See requestFile()
+         * @param {String} [mimeType=DEFAULT_TEXT_MIME_TYPE] A string containing the MIME type of the file and the optionally the charset to 
+         * use
          */
-        requestTextFile: function (filetype, filename, onload, mimeType) {
+        requestTextFile: function (filetype, filename, onfinish, mimeType) {
             this.requestFile(filetype, filename, function (request) {
-                onload(request.responseText);
+                onfinish(request ? request.responseText : null);
             }, mimeType || DEFAULT_TEXT_MIME_TYPE);
         },
         /**
-         * Issues an asynchronous request to get a XML file and executes a callback
-         * function when the file has been grabbed. Uses HTTP request, thus only
-         * works through servers, cannot be used to access files on the local
-         * filesystem!
-         * @param {String} filetype The type of the file to be accessed, such
-         * as model, texture or config. This will be used to choose the appropriate
-         * folder where to look for the file.
+         * Issues an asynchronous request to get a XML file and executes a callback function when the file has been grabbed. Uses HTTP 
+         * request, thus only works through servers, cannot be used to access files on the local filesystem!
+         * @param {String} filetype The type of the file to be accessed, such as model, texture or config. This will be used to choose the 
+         * appropriate folder where to look for the file.
          * @param {String} filename The name of the file (not the full URL!)
-         * @param {Function} onload The function to execute when the file has been
-         * loaded. It gets the XML contents of the file as parameter.
+         * @param {Function} onfinish See requestFile()
          */
-        requestXMLFile: function (filetype, filename, onload) {
+        requestXMLFile: function (filetype, filename, onfinish) {
             this.requestFile(filetype, filename, function (request) {
-                var responseXML = (request.responseXML === null) ?
-                        new DOMParser().parseFromString(request.responseText, "application/xml") :
-                        request.responseXML;
-                if (responseXML.documentElement.nodeName !== "parsererror") {
-                    onload(responseXML);
+                var responseXML = request ?
+                        ((request.responseXML === null) ?
+                                new DOMParser().parseFromString(request.responseText, "application/xml") :
+                                request.responseXML) :
+                        null;
+                if (responseXML && (responseXML.documentElement.nodeName !== "parsererror")) {
+                    onfinish(responseXML);
                 } else {
                     this.showError("Could not parse XML file: '" + filename + "'.",
                             ErrorSeverity.SEVERE,
@@ -394,6 +384,7 @@ define(function () {
                             (request.responseText.length > 120 ?
                                     request.responseText.slice(0, 120) + "..." :
                                     request.responseText));
+                    onfinish();
                 }
             }.bind(this), "application/xml");
         },
@@ -402,7 +393,7 @@ define(function () {
          * document and executes a callback once it has been loaded.
          * @param {String} filetype The ID of the folder where the CSS files resides.
          * @param {String} filename The name of the file (relative to the referenced folder)
-         * @param {Function} onload The function to execute when the css has been
+         * @param {Function} [onload] The function to execute when the css has been successfully loaded
          */
         requestCSSFile: function (filetype, filename, onload) {
             var cssLink;

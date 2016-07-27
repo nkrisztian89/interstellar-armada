@@ -71,7 +71,15 @@
             "defaultRandomSeed": 4718,
             "luminosityFactorsArrayName": "luminosityFactors",
             "useVerticalCameraValues": true,
-            "menuMusic": "menu"
+            "menuMusic": "menu",
+            "buttonSelectSound": {
+                "name": "blip2",
+                "volume": 0.5
+            },
+            "buttonClickSound": {
+                "name": "blip1h",
+                "volume": 1.0
+            }
         },
         "database": {
             "showLoadingBoxFirstTime": true,

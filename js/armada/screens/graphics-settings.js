@@ -186,7 +186,8 @@ define([
                 undefined,
                 {
                     "escape": this._applyAndClose.bind(this)
-                });
+                },
+                armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
          * @type SimpleComponent
          */

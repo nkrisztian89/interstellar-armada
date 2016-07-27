@@ -183,7 +183,8 @@ define([
                 undefined,
                 {
                     "escape": _closeScreen
-                });
+                },
+                armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
          * @type SimpleComponent
          */

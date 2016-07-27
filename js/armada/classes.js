@@ -426,9 +426,11 @@ define([
     };
     /**
      * @override
+     * @returns {Boolean}
      */
     GenericClass.prototype._loadData = function () {
         this._source = this._source || "";
+        return true;
     };
     /**
      * @param {String} resourceType
@@ -492,9 +494,11 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     ShadedClass.prototype._loadData = function (dataJSON) {
         this._overrideData(null, dataJSON);
+        return true;
     };
     /**
      * @param {Object} params
@@ -577,9 +581,11 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     ShadedModelClass.prototype._loadData = function (dataJSON) {
         this._overrideData(null, dataJSON);
+        return true;
     };
     /**
      * @override
@@ -622,6 +628,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     SkyboxClass.prototype._loadData = function (dataJSON) {
         ShadedModelClass.prototype._loadData.call(this, dataJSON);
@@ -633,6 +640,7 @@ define([
          * @type CubemapResource
          */
         this._cubemap = null;
+        return true;
     };
     /**
      * @override
@@ -709,9 +717,11 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     TexturedModelClass.prototype._loadData = function (dataJSON) {
         this._overrideData(null, dataJSON);
+        return true;
     };
     /**
      * @override
@@ -776,6 +786,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     ParticleDescriptor.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
@@ -795,6 +806,7 @@ define([
          * @type Number
          */
         this._duration = dataJSON ? dataJSON.duration : null;
+        return true;
     };
     /**
      * @override
@@ -835,6 +847,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     BackgroundObjectClass.prototype._loadData = function (dataJSON) {
         var i, descriptorJSON;
@@ -863,6 +876,7 @@ define([
                 _showMissingPropertyError(this, "layers");
             }
         }
+        return true;
     };
     /**
      * 
@@ -914,6 +928,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     DustCloudClass.prototype._loadData = function (dataJSON) {
         ShadedModelClass.prototype._loadData.call(this, dataJSON);
@@ -934,6 +949,7 @@ define([
          * @type Number
          */
         this._range = dataJSON ? (dataJSON.range || _showMissingPropertyError(this, "range")) : 0;
+        return true;
     };
     /**
      * @override
@@ -976,6 +992,7 @@ define([
      * @override
      * Loads and sets all properties of the emitter descriptor based on the passed JSON object.
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     ParticleEmitterDescriptor.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
@@ -1030,6 +1047,7 @@ define([
          * @type ParticleState[]
          */
         this._particleStates = dataJSON ? (dataJSON.particleStates || []) : null;
+        return true;
     };
     /**
      * @override
@@ -1128,6 +1146,7 @@ define([
      * @override
      * Initializes all properties from the passed JSON object
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     ExplosionClass.prototype._loadData = function (dataJSON) {
         var i;
@@ -1151,6 +1170,7 @@ define([
          * @type PointLightSource~LightState[]
          */
         this._lightStates = dataJSON ? dataJSON.lightStates : null;
+        return true;
     };
     /**
      * Sets up the references to all required resource objects and marks them for loading.
@@ -1238,6 +1258,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     ProjectileClass.prototype._loadData = function (dataJSON) {
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
@@ -1309,6 +1330,7 @@ define([
          * @type Object
          */
         this._hitSound = dataJSON ? (types.getVerifiedObject("projectileClasses['" + this._name + "'].hitSound", dataJSON.hitSound, SOUND_EFFECT_3D)) : null;
+        return true;
     };
     /**
      * @override
@@ -1509,6 +1531,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     WeaponClass.prototype._loadData = function (dataJSON) {
         var i;
@@ -1581,6 +1604,7 @@ define([
          * @type Object
          */
         this._fireSound = dataJSON ? (types.getVerifiedObject("weaponClasses['" + this._name + "'].fireSound", dataJSON.fireSound, SOUND_EFFECT_3D)) : null;
+        return true;
     };
     /**
      * @override
@@ -1694,6 +1718,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     PropulsionClass.prototype._loadData = function (dataJSON) {
         var referenceMass;
@@ -1732,6 +1757,7 @@ define([
          * @type Number
          */
         this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || _showMissingPropertyError(this, "maxTurnBurnLevel")) : 0;
+        return true;
     };
     /**
      * 
@@ -1800,6 +1826,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     SpacecraftType.prototype._loadData = function (dataJSON) {
         GenericClass.prototype._loadData.call(this, dataJSON);
@@ -1824,6 +1851,7 @@ define([
          * @type String[]
          */
         this._badAgainstTypeNames = dataJSON ? (dataJSON.badAgainst || []) : null;
+        return true;
     };
     /**
      * @returns {Boolean}
@@ -3008,6 +3036,7 @@ define([
     /**
      * @override
      * @param {Object} dataJSON
+     * @returns {Boolean}
      */
     SpacecraftClass.prototype._loadData = function (dataJSON) {
         var baseClass;
@@ -3019,6 +3048,7 @@ define([
         } else {
             this._overrideData(null, dataJSON);
         }
+        return true;
     };
     /**
      * @returns {SpacecraftType}

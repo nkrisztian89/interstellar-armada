@@ -237,14 +237,14 @@ a.button {
     box-shadow: 0em 0em 0.5em #000000;
 }
 
-a:hover:not(.disabled):not(.menu), a.menu.button.selected {
+a:hover:not(.disabled):not(.menu), a.button.selected {
     color: #FFFFFF;
     text-shadow:
         #00FF00 0 0 0.2em,
         #00FF00 0 0 0.2em;
 }
 
-a.button:hover:not(.disabled):not(.menu), a.menu.button.selected {
+a.button:hover:not(.disabled):not(.menu), a.button.selected {
     background-color: #333333;
 }
 
@@ -377,21 +377,21 @@ input[type=range]:focus {
 
 input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    
+
     height: 24px;
     width: 11px;
     /*cursor: pointer;*/
     margin-top: -9px; /* needed for Chrome, but in Firefox and IE it is automatic 
                        * depends on height */
-    
+
     /* gray appearance similar to buttons - for consistent look */
     background-color: #333333;
     border: 2px solid #555555;
     box-shadow: 0em 0em 0.5em #000000;
     /* glowing green appearance for better contrast */
-/*    background-color: #00cc00;
-    border: 2px solid #008800;
-    box-shadow: 0em 0em 0.5em #00cc00;*/
+    /*    background-color: #00cc00;
+        border: 2px solid #008800;
+        box-shadow: 0em 0em 0.5em #00cc00;*/
 }
 
 input[type=range]:hover::-webkit-slider-thumb {
@@ -399,17 +399,17 @@ input[type=range]:hover::-webkit-slider-thumb {
     background-color: #555555;
     border: 2px solid #777777;
     /* glowing green appearance for better contrast */
-/*    background-color: #44ff44;
-    border: 2px solid #00aa00;
-    box-shadow: 0em 0em 0.5em #44ff44;*/
+    /*    background-color: #44ff44;
+        border: 2px solid #00aa00;
+        box-shadow: 0em 0em 0.5em #44ff44;*/
 }
 
 input[type=range]::-moz-range-thumb {
     height: 22px;
     width: 9px;
-    
+
     border-radius: 0;
-    
+
     background-color: #333333;
     border: 2px solid #555555;
     box-shadow: 0em 0em 0.5em #000000;
@@ -423,9 +423,9 @@ input[type=range]:hover::-moz-range-thumb {
 input[type=range]::-ms-thumb {
     height: 24px;
     width: 11px;
-    
+
     border-radius: 0;
-    
+
     background-color: #333333;
     border: 2px solid #555555;
     box-shadow: 0em 0em 0.5em #000000;

@@ -40,7 +40,7 @@ define([
      */
     var
             // ------------------------------------------------------------------------------
-            // constants
+            // Constants
             /**
              * The id attributes of the HTML elements are separated from the name of their
              * parent components by this string to create their unique ID among the elements
@@ -65,10 +65,26 @@ define([
             SLIDER_PROPERTY_LABEL_ID = "property",
             SLIDER_ID = "slider",
             SLIDER_VALUE_LABEL_ID = "valueLabel",
+            // key codes
             ENTER_CODE = 13,
+            UP_CODE = 38,
+            DOWN_CODE = 40,
+            // CSS class names
             DISABLED_CLASS_NAME = "disabled",
+            SELECTED_CLASS_NAME = "selected",
+            // event names for passing event handlers when components are crated
+            SHOW_EVENT_NAME = "show",
+            HIDE_EVENT_NAME = "hide",
+            ENABLE_EVENT_NAME = "enable",
+            DISABLE_EVENT_NAME = "disable",
+            SELECT_EVENT_NAME = "select",
+            UNSELECT_EVENT_NAME = "unselect",
+            BUTTON_SELECT_EVENT_NAME = "buttonselect",
+            BUTTON_CLICK_EVENT_NAME = "buttonclick",
+            OPTION_SELECT_EVENT_NAME = "optionselect",
+            OPTION_CLICK_EVENT_NAME = "optionclick",
             // ------------------------------------------------------------------------------
-            // constants
+            // Private variables
             /**
              * Stores the loaded DOM models and their associated loading states and queued
              * functions for each HTML file that the components use, by the names of the
@@ -170,8 +186,9 @@ define([
      * @param {String} name The name of the component ot identify it.
      * @param {String} [elementID]  The id attribute of the HTML5 element this component
      * wraps. If omitted, it will have the same value as name.
+     * @param {Object.<String, Function>} [eventHandlers] The functions to execute when various events happen to this component
      */
-    function SimpleComponent(name, elementID) {
+    function SimpleComponent(name, elementID, eventHandlers) {
         /**
          * The name of the component. 
          * @type String
@@ -192,6 +209,36 @@ define([
          * @type String
          */
         this._displayStyle = null;
+        /**
+         * A function that runs whenever the component becomes visible.
+         * @type Function
+         */
+        this._onShow = eventHandlers ? eventHandlers[SHOW_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever the component becomes hidden.
+         * @type Function
+         */
+        this._onHide = eventHandlers ? eventHandlers[HIDE_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever the component becomes enabled.
+         * @type Function
+         */
+        this._onEnable = eventHandlers ? eventHandlers[ENABLE_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever the component becomes disabled.
+         * @type Function
+         */
+        this._onDisable = eventHandlers ? eventHandlers[DISABLE_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever the component becomes selected.
+         * @type Function
+         */
+        this._onSelect = eventHandlers ? eventHandlers[SELECT_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever the component becomes unselected.
+         * @type Function
+         */
+        this._onUnselect = eventHandlers ? eventHandlers[UNSELECT_EVENT_NAME] : null;
     }
     /**
      * Return the name that identifies this component (within its screen / external component)
@@ -292,25 +339,81 @@ define([
      * Hides the wrapped HTML element by setting its display CSS property.
      */
     SimpleComponent.prototype.hide = function () {
-        this._element.style.display = "none";
+        if (this.isVisible()) {
+            this._element.style.display = "none";
+            if (this._onHide) {
+                this._onHide();
+            }
+        }
     };
     /**
      * Shows (reveals) the wrapped HTML element by setting its display CSS property.
      */
     SimpleComponent.prototype.show = function () {
-        this._element.style.display = this._displayStyle;
+        if (!this.isVisible()) {
+            this._element.style.display = this._displayStyle;
+            if (this._onShow) {
+                this._onShow();
+            }
+        }
     };
     /**
-     * Adds the disabled class to the HTML element wrapped by the component.
+     * Returns whether the component is currently in enabled state.
+     * @returns {Boolean}
+     */
+    SimpleComponent.prototype.isEnabled = function () {
+        return !this._element.classList.contains(DISABLED_CLASS_NAME);
+    };
+    /**
+     * Puts the component in disabled state.
      */
     SimpleComponent.prototype.disable = function () {
-        this._element.classList.add(DISABLED_CLASS_NAME);
+        if (this.isEnabled()) {
+            this._element.classList.add(DISABLED_CLASS_NAME);
+            if (this._onDisable) {
+                this._onDisable();
+            }
+        }
     };
     /**
-     * Removes the disabled class from the HTML element wrapped by the component.
+     * Puts the component in enabled state.
      */
     SimpleComponent.prototype.enable = function () {
-        this._element.classList.remove(DISABLED_CLASS_NAME);
+        if (!this.isEnabled()) {
+            this._element.classList.remove(DISABLED_CLASS_NAME);
+            if (this._onEnable) {
+                this._onEnable();
+            }
+        }
+    };
+    /**
+     * Returns whether the component is currently in selected state.
+     * @returns {Boolean}
+     */
+    SimpleComponent.prototype.isSelected = function () {
+        return this._element.classList.contains(SELECTED_CLASS_NAME);
+    };
+    /**
+     * Puts the component in selected state.
+     */
+    SimpleComponent.prototype.select = function () {
+        if (!this.isSelected()) {
+            this._element.classList.add(SELECTED_CLASS_NAME);
+            if (this._onSelect) {
+                this._onSelect();
+            }
+        }
+    };
+    /**
+     * Puts the component in not selected state.
+     */
+    SimpleComponent.prototype.unselect = function () {
+        if (this.isSelected()) {
+            this._element.classList.remove(SELECTED_CLASS_NAME);
+            if (this._onUnselect) {
+                this._onUnselect();
+            }
+        }
     };
     // #########################################################################
     /**
@@ -516,10 +619,11 @@ define([
      * appended to the document), and also returns it.
      * @param {String} simpleComponentName This name will be automatically
      * prefixed with the external component's name when the simple component is created.
+     * @param {Object.<String, Function>} [eventHandlers] Will be passed to the created SimpleComponent
      * @returns {SimpleComponent}
      */
-    ExternalComponent.prototype.registerSimpleComponent = function (simpleComponentName) {
-        var component = new SimpleComponent(simpleComponentName, this._getElementID(simpleComponentName));
+    ExternalComponent.prototype.registerSimpleComponent = function (simpleComponentName, eventHandlers) {
+        var component = new SimpleComponent(simpleComponentName, this._getElementID(simpleComponentName), eventHandlers);
         this._simpleComponents.push(component);
         return component;
     };
@@ -536,24 +640,41 @@ define([
         }
     };
     /**
+     * Returns whether the component is currently set to be visible according to its display style
+     * @returns {Boolean}
+     */
+    ExternalComponent.prototype.isVisible = function () {
+        return !(this._rootElement.style.display === "none");
+    };
+    /**
      * Sets the display CSS property of the root element of the component to show it.
+     * @returns {Boolean} Whether the component became visible as the result of this call
      */
     ExternalComponent.prototype.show = function () {
         if (this._rootElement) {
-            this._rootElement.style.display = this._rootElementDefaultDisplayMode;
+            if (!this.isVisible()) {
+                this._rootElement.style.display = this._rootElementDefaultDisplayMode;
+                return true;
+            }
         } else {
             application.log("WARNING! Attempting to show external component " + this._name + " before appending it to the page!");
         }
+        return false;
     };
     /**
      * Sets the display CSS property of the root element of the component to hide it.
+     * @returns {Boolean} Whether the component became hidden as the result of this call
      */
     ExternalComponent.prototype.hide = function () {
         if (this._rootElement) {
-            this._rootElement.style.display = "none";
+            if (this.isVisible()) {
+                this._rootElement.style.display = "none";
+                return true;
+            }
         } else {
             application.log("WARNING! Attempting to hide external component " + this._name + " before appending it to the page!");
         }
+        return false;
     };
     // #########################################################################
     /**
@@ -650,17 +771,36 @@ define([
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
      * @param {ExternalComponent~Style} [style] See ExternalComponent.
-     * @param {Function} [onShow] The function to execute every time the box is shown.
-     * @param {Function} [onHide] The function to execute every time the box is hidden.
      * @param {String} [headerID] If given, the header element will get this ID
      * (prefixed with the component name), making it possible to auto-translate it
      * using the same string key as this ID
      * @param {String} [okButtonID] If given, the OK button element will get this ID
      * (prefixed with the component name), making it possible to auto-translate it
      * using the same string key as this ID
+     * @param {Object.<String, Function>} [eventHandlers] The functions to execute when various events happen to this component.
+     * Currently supported events: show, hide, buttonselect, buttonclick
      */
-    function InfoBox(name, htmlFilename, style, onShow, onHide, headerID, okButtonID) {
+    function InfoBox(name, htmlFilename, style, headerID, okButtonID, eventHandlers) {
         ExternalComponent.call(this, name, htmlFilename, style);
+        /**
+         * A function that will be run every time the box is shown.
+         * @type Function
+         */
+        this._onShow = eventHandlers ? eventHandlers[SHOW_EVENT_NAME] : null;
+        /**
+         * A function that will be run every time the box is hidden.
+         * @type Function
+         */
+        this._onHide = eventHandlers ? eventHandlers[HIDE_EVENT_NAME] : null;
+        /**
+         * A function that will be run every time the OK button on the box is selected
+         * @type Function
+         */
+        this._onButtonSelect = eventHandlers ? eventHandlers[BUTTON_SELECT_EVENT_NAME] : null;
+        /**
+         * A function that will be run every time the OK button on the box is clicked (/activated)
+         */
+        this._onButtonClick = eventHandlers ? eventHandlers[BUTTON_CLICK_EVENT_NAME] : null;
         /**
          * @type SimpleComponent
          */
@@ -668,7 +808,13 @@ define([
         /**
          * @type SimpleComponent
          */
-        this._okButton = this.registerSimpleComponent(INFO_BOX_OK_BUTTON_ID);
+        this._okButton = this.registerSimpleComponent(
+                INFO_BOX_OK_BUTTON_ID,
+                (this._onButtonSelect) ?
+                {select: function () {
+                        this._onButtonSelect(this._okButton.isEnabled());
+                    }.bind(this)} :
+                null);
         /**
          * @type SimpleComponent
          */
@@ -686,16 +832,6 @@ define([
          */
         this._okButtonID = okButtonID;
         /**
-         * A function that will be run every time box is shown.
-         * @type Function
-         */
-        this._onShow = (onShow !== undefined) ? onShow : null;
-        /**
-         * A function that will be run every time box is hidden.
-         * @type Function
-         */
-        this._onHide = (onHide !== undefined) ? onHide : null;
-        /**
          * A keyboard event handler that can be added to the document when the box is
          * shown to allow closing it by pressing enter, not just clicking on the button.
          * This needs to be a privileged method so that it can always access the 
@@ -705,7 +841,9 @@ define([
          */
         this._handleKeyUp = function (event) {
             if (event.keyCode === ENTER_CODE) {
-                this.hide();
+                this._okButton.getElement().onclick();
+            } else if ((event.keyCode === UP_CODE) || (event.keyCode === DOWN_CODE)) {
+                this._okButton.select();
             }
         }.bind(this);
     }
@@ -724,7 +862,16 @@ define([
             if (this._okButtonID) {
                 this._okButton.setElementID(this._getElementID(this._okButtonID));
             }
+            this._okButton.getElement().onmouseenter = function () {
+                this._okButton.select();
+            }.bind(this);
+            this._okButton.getElement().onmouseleave = function () {
+                this._okButton.unselect();
+            }.bind(this);
             this._okButton.getElement().onclick = function () {
+                if (this._onButtonClick) {
+                    this._onButtonClick(this._okButton.isEnabled());
+                }
                 this.hide();
                 return false;
             }.bind(this);
@@ -734,24 +881,33 @@ define([
         }
     };
     /**
-     * Shows the info box and executes the _onShow function. (if set)
+     * @override
+     * @returns {Boolean}
      */
     InfoBox.prototype.show = function () {
-        ExternalComponent.prototype.show.call(this);
-        document.addEventListener("keyup", this._handleKeyUp);
-        if (this._onShow) {
-            this._onShow();
+        if (ExternalComponent.prototype.show.call(this)) {
+            this._okButton.unselect();
+            document.addEventListener("keyup", this._handleKeyUp);
+            if (this._onShow) {
+                this._onShow();
+            }
+            return true;
         }
+        return false;
     };
     /**
-     * Hides the info box and executes the _onHide function. (if set)
+     * @override
+     * @returns {Boolean}
      */
     InfoBox.prototype.hide = function () {
-        ExternalComponent.prototype.hide.call(this);
-        document.removeEventListener("keyup", this._handleKeyUp);
-        if (this._onHide) {
-            this._onHide();
+        if (ExternalComponent.prototype.hide.call(this)) {
+            document.removeEventListener("keyup", this._handleKeyUp);
+            if (this._onHide) {
+                this._onHide();
+            }
+            return true;
         }
+        return false;
     };
     /**
      * Updates the message shown on the info box.
@@ -772,6 +928,7 @@ define([
      * @property {String} [menuClassName]
      * @property {String} [buttonClassName]
      * @property {String} [buttonContainerClassName]
+     * @property {String} disabledClassName Added to disabled menu options. Disabled menu options cannot be selected
      * @property {String} selectedButtonClassName
      */
     /**
@@ -779,6 +936,7 @@ define([
      * @property {String} [id] The key for translation
      * @property {String} [caption] Static caption (non-translated)
      * @property {Function} action The function to execute
+     * @property {Boolean} [enabled=true] Only enabled options can be selected, and non-enabled options have a the disabled CSS class (defined in MenuComponent~Style)
      * @property {Element} [element] Set when the element is created
      */
     /**
@@ -789,8 +947,11 @@ define([
      * @param {String} htmlFilename See ExternalComponent
      * @param {MenuComponent~Style} [style] See ExternalComponent
      * @param {MenuComponent~MenuOption[]} menuOptions An array of the available menu options
+     * @param {Object.<String, Function>} [eventHandlers] The functions to execute when various events happen to this component.
+     * Currently supported events: optionselect, optionclick
      */
-    function MenuComponent(name, htmlFilename, style, menuOptions) {
+    function MenuComponent(name, htmlFilename, style, menuOptions, eventHandlers) {
+        var i;
         ExternalComponent.call(this, name, htmlFilename, style);
         /**
          * An array of the available menu options, each described by an object with 
@@ -798,11 +959,26 @@ define([
          * @type MenuComponent~MenuOption[]
          */
         this._menuOptions = menuOptions;
+        for (i = 0; i < this._menuOptions.length; i++) {
+            if (this._menuOptions[i].enabled === undefined) {
+                this._menuOptions[i].enabled = true;
+            }
+        }
         /**
          * The index of the currently selected menu option. -1 if no option is selected.
          * @type Number
          */
         this._selectedIndex = -1;
+        /**
+         * A function that runs whenever a menu option is selected.
+         * @type Function
+         */
+        this._onOptionSelect = eventHandlers ? eventHandlers[OPTION_SELECT_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever a menu option is clicked (/activated).
+         * @type Function
+         */
+        this._onOptionClick = eventHandlers ? eventHandlers[OPTION_CLICK_EVENT_NAME] : null;
         // validate the style object as a missings selected style can lead to obscure bugs
         this._validateStyle(style);
     }
@@ -820,18 +996,28 @@ define([
         if (!style.selectedButtonClassName) {
             application.showError("Attempting to specify a menu style without specifying a class for selected menu buttons!");
         }
+        if (!style.disabledClassName) {
+            application.showError("Attempting to specify a menu style without specifying a class for disabled menu buttons!");
+        }
     };
     /**
      * Selects the option with the passed index (distinguishes the selected option with the set CSS class)
      * @param {Number} index
      */
     MenuComponent.prototype._selectIndex = function (index) {
-        if (this._selectedIndex >= 0) {
-            this._menuOptions[this._selectedIndex].element.classList.remove(this._style.selectedButtonClassName);
-        }
-        this._selectedIndex = index;
-        if (this._selectedIndex >= 0) {
-            this._menuOptions[this._selectedIndex].element.classList.add(this._style.selectedButtonClassName);
+        if (index !== this._selectedIndex) {
+            if (this._selectedIndex >= 0) {
+                this._menuOptions[this._selectedIndex].element.classList.remove(this._style.selectedButtonClassName);
+            }
+            this._selectedIndex = index;
+            if (this._selectedIndex >= 0) {
+                if (this._menuOptions[this._selectedIndex].enabled) {
+                    this._menuOptions[this._selectedIndex].element.classList.add(this._style.selectedButtonClassName);
+                    if (this._onOptionSelect) {
+                        this._onOptionSelect(true); // always enabled - disabled menu options cannot be selected
+                    }
+                }
+            }
         }
     };
     /**
@@ -846,8 +1032,13 @@ define([
      */
     MenuComponent.prototype._getMenuClickHandler = function (index) {
         return function () {
-            this._selectIndex(index);
-            this._menuOptions[index].action();
+            if (this._menuOptions[index].enabled) {
+                this._selectIndex(index);
+                this._menuOptions[index].action();
+            }
+            if (this._onOptionClick) {
+                this._onOptionClick(this._menuOptions[index].enabled);
+            }
             return false;
         }.bind(this);
     };
@@ -859,7 +1050,9 @@ define([
      */
     MenuComponent.prototype._getMenuMouseMoveHandler = function (index) {
         return function () {
-            this._selectIndex(index);
+            if (this._menuOptions[index].enabled) {
+                this._selectIndex(index);
+            }
         }.bind(this);
     };
     /**
@@ -875,7 +1068,7 @@ define([
                     aElement.id = this._getElementID(this._menuOptions[i].id);
                 }
                 aElement.href = "#";
-                aElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "");
+                aElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "") + (this._menuOptions[i].enabled ? "" : this._style.disabledClassName);
                 aElement.innerHTML = _getLabelText(this._menuOptions[i]);
                 // we need to generate an appropriate handler function here for each
                 // menu element (cannot directly create it here as they would all use
@@ -898,19 +1091,37 @@ define([
         this._selectIndex(-1);
     };
     /**
-     * Selects the menu item coming after the currently selected one, or the first one if none are selected.
+     * Selects the menu item coming after the currently selected one, or the first one if none are selected. Skips disabled options.
      */
     MenuComponent.prototype.selectNext = function () {
-        this._selectIndex((this._selectedIndex + 1) % this._menuOptions.length);
+        var start = this._selectedIndex;
+        if (start === -1) {
+            start = this._menuOptions.length - 1;
+        }
+        do {
+            this._selectIndex((this._selectedIndex + 1) % this._menuOptions.length);
+        } while (this._selectedIndex !== start && !this._menuOptions[this._selectedIndex].enabled);
+        if (!this._menuOptions[this._selectedIndex].enabled) {
+            this._selectIndex(-1);
+        }
     };
     /**
-     * Selects the menu item coming before the currently selected one, or the last one if none are selected.
+     * Selects the menu item coming before the currently selected one, or the last one if none are selected. Skips disabled options.
      */
     MenuComponent.prototype.selectPrevious = function () {
-        if (this._selectedIndex > 0) {
-            this._selectIndex(this._selectedIndex - 1);
-        } else {
-            this._selectIndex(this._menuOptions.length - 1);
+        var start = this._selectedIndex;
+        if (start === -1) {
+            start = 0;
+        }
+        do {
+            if (this._selectedIndex > 0) {
+                this._selectIndex(this._selectedIndex - 1);
+            } else {
+                this._selectIndex(this._menuOptions.length - 1);
+            }
+        } while (this._selectedIndex !== start && !this._menuOptions[this._selectedIndex].enabled);
+        if (!this._menuOptions[this._selectedIndex].enabled) {
+            this._selectIndex(-1);
         }
     };
     /**
@@ -1266,7 +1477,19 @@ define([
     // The public interface of the module
     return {
         ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
+        // class names
+        DISABLED_CLASS_NAME: DISABLED_CLASS_NAME,
+        SELECTED_CLASS_NAME: SELECTED_CLASS_NAME,
+        // event names
+        SHOW_EVENT_NAME: SHOW_EVENT_NAME,
+        HIDE_EVENT_NAME: HIDE_EVENT_NAME,
+        BUTTON_SELECT_EVENT_NAME: BUTTON_SELECT_EVENT_NAME,
+        BUTTON_CLICK_EVENT_NAME: BUTTON_CLICK_EVENT_NAME,
+        OPTION_SELECT_EVENT_NAME: OPTION_SELECT_EVENT_NAME,
+        OPTION_CLICK_EVENT_NAME: OPTION_CLICK_EVENT_NAME,
+        // functions
         clearStoredDOMModels: clearStoredDOMModels,
+        // classes
         SimpleComponent: SimpleComponent,
         LoadingBox: LoadingBox,
         InfoBox: InfoBox,

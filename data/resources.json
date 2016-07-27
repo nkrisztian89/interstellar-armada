@@ -1267,6 +1267,14 @@
         {
             "name": "beep3",
             "samples": ["beep3.wav"]
+        },
+        {
+            "name": "blip2",
+            "samples": ["blip2.wav"]
+        },
+        {
+            "name": "blip1h",
+            "samples": ["blip1h.ogg"]
         }
     ],
     "music": [

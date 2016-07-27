@@ -1311,7 +1311,13 @@ define([
          * @type Number
          */
         this._numFragmentUniformVectors = 0;
-        this._parseShaderSources(vertexAttributeRoles, replacedDefines, unpackSamplerArrays);
+        if (!this._vertexShaderSource) {
+            application.showError("Cannot initialize shader '" + this._name + "': no vertex shader source specified!");
+        } else if (!this._fragmentShaderSource) {
+            application.showError("Cannot initialize shader '" + this._name + "': no fragment shader source specified!");
+        } else {
+            this._parseShaderSources(vertexAttributeRoles, replacedDefines, unpackSamplerArrays);
+        }
     }
     /**
      * @param {String} name
@@ -1639,6 +1645,11 @@ define([
      */
     ManagedShader.prototype.setupGLProgram = function (contextName, gl) {
         var vertexShader, infoLog, fragmentShader, prog, i;
+        if (!this._vertexShaderSource || !this._fragmentShaderSource) {
+            application.log("ERROR: Cannot set up GL shader program for '" + this._name + "', because the vertex or fragment shader source is missing!", 1);
+            this._ids[contextName] = null;
+            return;
+        }
         // create and compile vertex shader
         vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, this._vertexShaderSource);
@@ -2586,32 +2597,37 @@ define([
      * @returns {Boolean} Whether the current shader has been changed as a result of this call
      */
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
-        var newBlendMode;
+        var newBlendMode, prog;
         if (this._currentShader !== shader) {
             application.log("Switching to shader: " + shader.getName(), 3);
-            this.gl.useProgram(shader.getIDForContext(this._name));
-            newBlendMode = shader.getBlendMode();
-            switch (newBlendMode) {
-                case ShaderBlendMode.MIX:
-                    if (this._currentBlendMode !== newBlendMode) {
-                        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
-                        this._currentBlendMode = newBlendMode;
-                    }
-                    break;
-                case ShaderBlendMode.ADD:
-                    if (this._currentBlendMode !== newBlendMode) {
-                        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
-                        this._currentBlendMode = newBlendMode;
-                    }
-                    break;
-                case ShaderBlendMode.NONE:
-                    break;
-                default:
-                    application.crash();
+            prog = shader.getIDForContext(this._name);
+            if (prog) {
+                this.gl.useProgram(prog);
+                newBlendMode = shader.getBlendMode();
+                switch (newBlendMode) {
+                    case ShaderBlendMode.MIX:
+                        if (this._currentBlendMode !== newBlendMode) {
+                            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+                            this._currentBlendMode = newBlendMode;
+                        }
+                        break;
+                    case ShaderBlendMode.ADD:
+                        if (this._currentBlendMode !== newBlendMode) {
+                            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
+                            this._currentBlendMode = newBlendMode;
+                        }
+                        break;
+                    case ShaderBlendMode.NONE:
+                        break;
+                    default:
+                        application.crash();
+                }
+                shader.bindVertexBuffers(this);
+                this._currentShader = shader;
+                return true;
             }
-            shader.bindVertexBuffers(this);
-            this._currentShader = shader;
-            return true;
+            application.log("ERROR: trying to switch to non-initialized shader: '" + shader.getName() + "'!", 3);
+            this._currentShader = null;
         }
         return false;
     };

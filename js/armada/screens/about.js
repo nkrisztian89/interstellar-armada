@@ -47,7 +47,8 @@ define([
                     "escape": function () {
                         game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
                     }
-                });
+                },
+                armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
          * @type SimpleComponent
          */

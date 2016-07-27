@@ -36,8 +36,9 @@ define([
             // constants
             SCREEN_FOLDER = "screen",
             CSS_FOLDER = "css",
-            SHOW_EVENT_NAME = "show",
-            HIDE_EVENT_NAME = "hide",
+            // keys for the eventHandlers parameters passed to screen constructors
+            SHOW_EVENT_NAME = components.SHOW_EVENT_NAME,
+            HIDE_EVENT_NAME = components.HIDE_EVENT_NAME,
             /*
              * The content of HTML elements with this class on the page will be automatically translated on every update, using
              * the key <name of the page> " <TRANSLATION_KEY_SEPARATOR> + <id of the element>
@@ -84,8 +85,11 @@ define([
      * names of the events as keys
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed while this screen is active, by the names of 
      * the keys (as in utils.getKeyCodeOf())
+     * @param {Object.<String, Object.<String, Function>>} [elementEventHandlers] Objects storing the event handlers for HTML elements on
+     * this page: the keys are the query selectors to choose the elements, the values are event handler objects just like the eventHandlers
+     * parameter.
      */
-    function HTMLScreen(name, htmlFilename, style, eventHandlers, keyCommands) {
+    function HTMLScreen(name, htmlFilename, style, eventHandlers, keyCommands, elementEventHandlers) {
         asyncResource.AsyncResource.call(this);
         /**
          * An ID of this screen. The IDs of HTML elements on this screen are prefixed by this name.
@@ -167,6 +171,12 @@ define([
          * @type Function
          */
         this._keyDownHandler = keyCommands ? this._getKeyDownHandler(keyCommands) : null;
+        /**
+         * The event handlers for HTML elements on this page: the keys are the query selectors to choose the elements, the values are event 
+         * handler objects storing the handler functions by the names of the events.
+         * @type Object.<String, Object.<String, Function>>
+         */
+        this._elementEventHandlers = elementEventHandlers || null;
         // will be undefined when setting the prototypes for inheritance
         if (htmlFilename) {
             this.requestModelLoad();
@@ -274,6 +284,27 @@ define([
         });
     };
     /**
+     * Adds the event listeners defined in this class (in the _elementEventHandlers property) to the appropriate HTML elements on this 
+     * screen
+     * @param {Element} [parent] If given, only those elements will be considered, which are below this element in the DOM
+     */
+    HTMLScreen.prototype._addElementEventListeners = function (parent) {
+        var elements, i, j, k, querySelectors, events;
+        if (this._elementEventHandlers) {
+            parent = parent || this._container;
+            querySelectors = Object.keys(this._elementEventHandlers);
+            for (i = 0; i < querySelectors.length; i++) {
+                elements = parent.querySelectorAll(querySelectors[i]);
+                events = Object.keys(this._elementEventHandlers[querySelectors[i]]);
+                for (j = 0; j < elements.length; j++) {
+                    for (k = 0; k < events.length; k++) {
+                        elements[j].addEventListener(events[k], this._elementEventHandlers[querySelectors[i]][events[k]]);
+                    }
+                }
+            }
+        }
+    };
+    /**
      * Appends the content of the screen to the page in an invisible (display: none) div.
      * If some source files for the screen have not been loaded yet, than sets a callback to append the 
      * screen once all necessary files have been loaded.
@@ -286,7 +317,7 @@ define([
     HTMLScreen.prototype.addScreenToPage = function (callback, keepModelAfterAdding, parentNode) {
         parentNode = parentNode || document.body;
         this.executeWhenReady(function () {
-            var namedElements, i;
+            var elements, i;
             this._background = document.createElement("div");
             this._background.setAttribute("id", this._getElementID(SCREEN_BACKGROUND_ID));
             this._background.className = this._style.backgroundClassName || DEFAULT_SCREEN_BACKGROUND_CLASS_NAME;
@@ -296,14 +327,15 @@ define([
             this._container.className = this._style.containerClassName || DEFAULT_SCREEN_CONTAINER_CLASS_NAME;
             this._container.style.display = "none";
             this._container.innerHTML = this._model.body.innerHTML;
-            namedElements = this._container.querySelectorAll("[id]");
-            for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].setAttribute("id", this._getElementID(namedElements[i].getAttribute("id")));
+            elements = this._container.querySelectorAll("[id]");
+            for (i = 0; i < elements.length; i++) {
+                elements[i].setAttribute("id", this._getElementID(elements[i].getAttribute("id")));
             }
             parentNode.appendChild(this._background);
             parentNode.appendChild(this._container);
             this._visible = false;
             this._initializeComponents();
+            this._addElementEventListeners();
             if (callback) {
                 callback();
             }
@@ -1399,9 +1431,10 @@ define([
      * names of the events as keys
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
+     * @param {Object.<String, Object.<String, Function>>} [elementEventHandlers] See HTMLScreen
      */
-    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, useRequestAnimFrame, eventHandlers, keyCommands) {
-        HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, keyCommands);
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, useRequestAnimFrame, eventHandlers, keyCommands, elementEventHandlers) {
+        HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, keyCommands, elementEventHandlers);
         /**
          * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
          * @type Boolean
@@ -1728,13 +1761,13 @@ define([
      * @param {MenuComponent~MenuOption[]} menuOptions The menuOptions for creating the menu component.
      * @param {String} [menuContainerID] The ID of the HTML element inside of which
      * the menu should be added (if omitted, it will be appended to body)
-     * @param {Object.<String, Function>} [eventHandlers] Event handler functions to be executed when something happens to this page, by the
-     * names of the events as keys
+     * @param {Object.<String, Function>} [eventHandlers] Event handler functions for BOTH the screen AND THE MenuComponent ON THE SCREEN!
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
+     * @param {Object.<String, Object.<String, Function>>} [elementEventHandlers] See HTMLScreen
      */
-    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID, eventHandlers, keyCommands) {
-        HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, this._getKeyCommands(keyCommands));
+    function MenuScreen(name, htmlFilename, style, menuHTMLFilename, menuStyle, menuOptions, menuContainerID, eventHandlers, keyCommands, elementEventHandlers) {
+        HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, this._getKeyCommands(keyCommands), elementEventHandlers);
         /**
          * The menuOptions for creating the menu component.
          * @type MenuComponent~MenuOption[]
@@ -1755,7 +1788,8 @@ define([
                         MENU_COMPONENT_NAME,
                         menuHTMLFilename,
                         menuStyle,
-                        this._menuOptions),
+                        this._menuOptions,
+                        eventHandlers),
                 this._menuContainerID);
     }
     MenuScreen.prototype = new HTMLScreen();

@@ -228,6 +228,21 @@ define([
         MENU_MUSIC: {
             name: "menuMusic",
             type: "string"
+        },
+        /**
+         * The descriptor for the sound effect that should play when the player selects a button on a screen (hover over / navigates to it
+         * with the keyboard)
+         */
+        BUTTON_SELECT_SOUND: {
+            name: "buttonSelectSound",
+            type: classes.SOUND_EFFECT_2D
+        },
+        /**
+         * The descriptor for the sound effect that should play when the player clicks / activates a button on a screen 
+         */
+        BUTTON_CLICK_SOUND: {
+            name: "buttonClickSound",
+            type: classes.SOUND_EFFECT_2D
         }
     };
     DATABASE_SETTINGS = {

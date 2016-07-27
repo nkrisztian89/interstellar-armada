@@ -1720,9 +1720,11 @@ define([
         if (context.setCurrentShader(this._instancedShader)) {
             scene.assignUniforms(context, this._instancedShader);
         }
-        this.bindTextures(context);
-        this._instancedShader.assignUniforms(context, this._uniformValueFunctions);
-        this._instancedShader.createInstanceBuffers(instanceQueueIndex, instanceCount);
+        if (context.getCurrentShader() === this._instancedShader) {
+            this.bindTextures(context);
+            this._instancedShader.assignUniforms(context, this._uniformValueFunctions);
+            this._instancedShader.createInstanceBuffers(instanceQueueIndex, instanceCount);
+        }
     };
     /**
      * Called before every render to check whether to proceed with the rendering
@@ -1744,14 +1746,16 @@ define([
      * @param {RenderParameters} renderParameters
      */
     RenderableObject.prototype.prepareForRender = function (renderParameters) {
-        if (renderParameters.useInstancing) {
+        if (renderParameters.useInstancing && (renderParameters.context.getCurrentShader() === this._instancedShader)) {
             this._instancedShader.addDataToInstanceBuffers(renderParameters.instanceQueueIndex, this._uniformValueFunctions);
         } else {
             if (renderParameters.context.setCurrentShader(this._shader)) {
                 renderParameters.scene.assignUniforms(renderParameters.context, this._shader);
             }
-            this.bindTextures(renderParameters.context);
-            this._shader.assignUniforms(renderParameters.context, this._uniformValueFunctions);
+            if (renderParameters.context.getCurrentShader() === this._shader) {
+                this.bindTextures(renderParameters.context);
+                this._shader.assignUniforms(renderParameters.context, this._uniformValueFunctions);
+            }
         }
     };
     /**

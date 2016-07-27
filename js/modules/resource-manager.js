@@ -20,13 +20,15 @@
 /*global define, Image */
 
 /**
+ * @param utils Used for comparing objects
  * @param application Required for error displaying and file loading functionality
  * @param asyncResource Uses AsyncResource as superclass for GenericResource, ResourceHolder and ResourceManager classes
  */
 define([
+    "utils/utils",
     "modules/application",
     "modules/async-resource"
-], function (application, asyncResource) {
+], function (utils, application, asyncResource) {
     "use strict";
     /**
      * @class
@@ -41,10 +43,22 @@ define([
          */
         this._name = name;
         /**
+         * Whether this resource has been requested for download (and did not finish loading yet)
          * @type Boolean
          */
         this._requested = false;
         /**
+         * The resource is currently being loaded (the request has been sent, but the answer has not been recieved)
+         * @type Boolean
+         */
+        this._loading = false;
+        /**
+         * Has true value if there was an error during the last loading of data for this resource
+         * @type Boolean
+         */
+        this._hasError = false;
+        /**
+         * Stores the parameters with which the resource has been requested last time
          * @type Object
          */
         this._requestParams = {};
@@ -88,8 +102,12 @@ define([
      * @param {Object} params
      */
     GenericResource.prototype.request = function (params) {
-        this._requested = true;
-        this._requestParams = params;
+        if ((this._loading) && (!utils.objectsEqual(this._requestParams || null, params || null))) {
+            application.showError("Attempting to request resource '" + this._name + "' with different parameters while it is being loaded!");
+        } else {
+            this._requested = true;
+            this._requestParams = params;
+        }
     };
     /**
      * 
@@ -104,33 +122,50 @@ define([
         return this.isReadyToUse();
     };
     /**
+     * Returns true if there was an error during the last loading of this resource (if the loading process finished, the resource is still
+     * marked ready to use, but check this flag to whether using it would wield the expected results)
+     * @returns {Boolean}
+     */
+    GenericResource.prototype.hasError = function () {
+        return this._hasError;
+    };
+    /**
      * 
      */
     GenericResource.prototype._requestFiles = function () {
         application.showError("Attempting to request files for a resource type that has no file request function implemented!");
     };
     /**
-     * 
+     * @returns {Boolean} Whether the loading was successful (no errors)
      */
     GenericResource.prototype._loadData = function () {
         application.showError("Attempting to load data for a resource type that has no data loading function implemented!");
+        return false;
+    };
+    /**
+     * 
+     */
+    GenericResource.prototype.onFinalLoad = function () {
+        this._requested = false;
+        this._loading = false;
+        this.setToReady();
     };
     /**
      * @param {Boolean} final
      * @param {Object} params
      */
     GenericResource.prototype._onFilesLoad = function (final, params) {
-        this._loadData(params);
+        this._hasError = this._hasError || !this._loadData(params);
         if (final === true) {
-            this.setToReady();
-            this._requested = false;
+            this.onFinalLoad();
         }
     };
     /**
      * 
      */
     GenericResource.prototype.requestLoadFromFile = function () {
-        if ((this.isReadyToUse() === false) && (this._requested === true)) {
+        if ((this.isReadyToUse() === false) && (this._requested === true) && (this._loading === false)) {
+            this._loading = true;
             this._requestFiles(this._requestParams);
         }
     };
@@ -269,12 +304,12 @@ define([
      * @override
      */
     ResourceManager.prototype.setToReady = function () {
-        asyncResource.AsyncResource.prototype.setToReady.call(this);
         this._onResourceTypeLoadFunctionQueues = {};
         this._onAnyResourceTypeLoadFunctionQueue = [];
         this._onResourceLoadFunctionQueue = [];
         this._numRequestedResources = 0;
         this._numLoadedResources = 0;
+        asyncResource.AsyncResource.prototype.setToReady.call(this);
     };
     /**
      * @param {String} resourceType

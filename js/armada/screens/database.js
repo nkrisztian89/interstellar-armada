@@ -454,7 +454,8 @@ define([
                     "escape": _closeScreen,
                     "left": this.selectPreviousShip.bind(this),
                     "right": this.selectNextShip.bind(this)
-                });
+                },
+                armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
          * @type SimpleComponent
          */

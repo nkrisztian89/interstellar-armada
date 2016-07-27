@@ -73,6 +73,7 @@ define([
     };
     game._buildScreensAndExecuteCallback = function (callback) {
         require([
+            "armada/screens/shared",
             "armada/screens/menus",
             "armada/screens/battle",
             "armada/screens/database",
@@ -81,7 +82,7 @@ define([
             "armada/screens/audio-settings",
             "armada/screens/control-settings",
             "armada/screens/about"
-        ], function (menus, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
+        ], function (armadaScreens, menus, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(menus.levelSelectionMenuScreen);
             game.addScreen(menus.demoLevelSelectionMenuScreen);
@@ -101,7 +102,7 @@ define([
                     _progressBar.value = 5;
                     components.clearStoredDOMModels();
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
-                    callback();
+                    armadaScreens.initSounds(callback);
                 });
             });
         });
