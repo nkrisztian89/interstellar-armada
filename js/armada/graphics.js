@@ -13,7 +13,7 @@
 /**
  * @param types Used for type checking JSON settings and set values
  * @param application Using the application module for error displaying functionality
- * @param asyncResource GraphicsContext is an AsynchResource subclass
+ * @param asyncResource GraphicsSettingsContext is an AsynchResource subclass
  * @param managedGL Used for checking valid texture filtering values
  * @param resources Used to provide resource accessor functions that access resources through this module but add parameters based on current graphics context settings
  * @param budaScene The graphics context creates and stores a default LODContext
@@ -646,7 +646,7 @@ define([
             SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME = "withoutDynamicLights",
             /**
              * Stores a default context the methods of which are exposed in the interface of this module.
-             * @type GraphicsContext
+             * @type GraphicsSettingsContext
              */
             _context;
     // --------------------------------------------------------------------------------------------
@@ -978,11 +978,10 @@ define([
     };
     // ############################################################################################
     /**
-     * @class Can load, store, save, and modify a set of graphics settings and provide their current values
-     * for other game modules.
+     * @class Can load, store, save, and modify a set of graphics settings and provide their current values for other game modules.
      * @extends AsyncResource
      */
-    function GraphicsContext() {
+    function GraphicsSettingsContext() {
         asyncResource.AsyncResource.call(this);
         /**
          * The JSON object storing the default graphics settings.
@@ -1083,23 +1082,23 @@ define([
          */
         this._luminosityTextureAreAvailable = false;
     }
-    GraphicsContext.prototype = new asyncResource.AsyncResource();
-    GraphicsContext.prototype.constructor = GraphicsContext;
+    GraphicsSettingsContext.prototype = new asyncResource.AsyncResource();
+    GraphicsSettingsContext.prototype.constructor = GraphicsSettingsContext;
     /**
-     * @typedef {Object} GraphicsContext~CustomShaderRequirementsParams
+     * @typedef {Object} GraphicsSettingsContext~CustomShaderRequirementsParams
      * @property {Number} [numPointLights]
      * @property {Number} [numShadowRanges]
      * @property {Number} [complexityLevelIndex]
      */
     /**
      * Returns the set of shader requirements valid for the current graphics settings stored in this context.
-     * @param {GraphicsContext~CustomShaderRequirementsParams} [params] Certain game variable values to be taken into account when 
+     * @param {GraphicsSettingsContext~CustomShaderRequirementsParams} [params] Certain game variable values to be taken into account when 
      * calculating the requirements dependent upon them can be overridden by the values provided in this parameter. An index for a 
      * different shader complexity than the currently selected one can also be provided here so that it will be taken as the base for
      * the requirements.
      * @returns {ManagedShader~ShaderRequirements}
      */
-    GraphicsContext.prototype._getShaderRequirements = function (params) {
+    GraphicsSettingsContext.prototype._getShaderRequirements = function (params) {
         params = params || {};
         var
                 complexityDescriptor = this._getShaderComplexityDescriptor(params.complexityLevelIndex),
@@ -1141,18 +1140,18 @@ define([
     /**
      * Returns whether the shader requirements valid for the current settings stored in this graphics context are satisfied by the graphics
      * driver.
-     * @param {GraphicsContext~CustomShaderRequirementsParams} [params] Provide game variable values or a shader complexity level index in
+     * @param {GraphicsSettingsContext~CustomShaderRequirementsParams} [params] Provide game variable values or a shader complexity level index in
      * this object to override the respective current settings when calculating the requirements.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype._shaderRequirementsAreSatisfied = function (params) {
+    GraphicsSettingsContext.prototype._shaderRequirementsAreSatisfied = function (params) {
         return managedGL.requirementsAreSatisfied(this._getShaderRequirements(params));
     };
     /**
      * Removes all stored shader complexity levels for which even the basic requirements (with all features turned off) are not satisfiable
      * by the graphics driver.
      */
-    GraphicsContext.prototype._limitShaderComplexities = function () {
+    GraphicsSettingsContext.prototype._limitShaderComplexities = function () {
         var complexities = [], originalComplexities = this.getShaderConfig(SHADER_CONFIG.COMPLEXITIES), i;
         for (i = 0; i < originalComplexities.length; i++) {
             if (this._shaderRequirementsAreSatisfied({
@@ -1173,7 +1172,7 @@ define([
      * @param {Boolean} disableFeatures If true, disables all shader features if the current settings are not satisfied, and only starts to
      * lower the complexity if the requirements are still not met.
      */
-    GraphicsContext.prototype._setFallbackShaderComplexity = function (disableFeatures) {
+    GraphicsSettingsContext.prototype._setFallbackShaderComplexity = function (disableFeatures) {
         var i;
         if (disableFeatures && !this._shaderRequirementsAreSatisfied()) {
             this._disableShaderFeatures();
@@ -1189,7 +1188,7 @@ define([
      * settings and other meta and non-changeable data. Needs to be called only once, before the settings themselves are to be loaded.
      * @param {Object} dataJSON
      */
-    GraphicsContext.prototype.loadConfigurationFromJSON = function (dataJSON) {
+    GraphicsSettingsContext.prototype.loadConfigurationFromJSON = function (dataJSON) {
         var i, n, limit, lodDisplayLimits;
         this._shaderConfig = types.getVerifiedObject("config.graphics.shaders", dataJSON.shaders, SHADER_CONFIG);
         this._limitShaderComplexities();
@@ -1248,7 +1247,7 @@ define([
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
      * settings should be restored or completely new settings should be initialized.
      */
-    GraphicsContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
+    GraphicsSettingsContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
         var screenSize, i, n, limit;
         onlyRestoreSettings = onlyRestoreSettings || false;
         if (!onlyRestoreSettings) {
@@ -1334,7 +1333,7 @@ define([
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
      */
-    GraphicsContext.prototype.loadFromLocalStorage = function () {
+    GraphicsSettingsContext.prototype.loadFromLocalStorage = function () {
         var value, params, loadSetting = function (location, type, defaultValue, setterFunction) {
             if (localStorage[location] !== undefined) {
                 // settings might be saved in different formats in different game versions, so do not show errors for invalid type if the version
@@ -1371,7 +1370,7 @@ define([
     /**
      * Restores the default settings that were loaded from file, and erases the custom changes that are stored in HTML5 local storage.
      */
-    GraphicsContext.prototype.restoreDefaults = function () {
+    GraphicsSettingsContext.prototype.restoreDefaults = function () {
         this.loadSettingsFromJSON(this._dataJSON, true);
         localStorage.removeItem(ANTIALIASING_LOCAL_STORAGE_ID);
         localStorage.removeItem(FILTERING_LOCAL_STORAGE_ID);
@@ -1388,7 +1387,7 @@ define([
      * Returns the current antialiasing setting.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.getAntialiasing = function () {
+    GraphicsSettingsContext.prototype.getAntialiasing = function () {
         return this._antialiasing;
     };
     /**
@@ -1397,7 +1396,7 @@ define([
      * @param {Boolean} [saveToLocalStorage=true]
      * @returns {Boolean} Whether the setting was successfully set to the passed value.
      */
-    GraphicsContext.prototype.setAntialiasing = function (value, saveToLocalStorage) {
+    GraphicsSettingsContext.prototype.setAntialiasing = function (value, saveToLocalStorage) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1419,7 +1418,7 @@ define([
      * Returns the current texture filtering setting.
      * @returns {String} enum managedGL.TextureFiltering
      */
-    GraphicsContext.prototype.getFiltering = function () {
+    GraphicsSettingsContext.prototype.getFiltering = function () {
         return this._filtering;
     };
     /**
@@ -1428,7 +1427,7 @@ define([
      * @param {Boolean} [saveToLocalStorage=true]
      * @returns {Boolean} Whether the setting was successfully set to the passed value.
      */
-    GraphicsContext.prototype.setFiltering = function (value, saveToLocalStorage) {
+    GraphicsSettingsContext.prototype.setFiltering = function (value, saveToLocalStorage) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1447,21 +1446,21 @@ define([
      * Returns the list of strings identifying the available texture quality levels, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getTextureQualities = function () {
+    GraphicsSettingsContext.prototype.getTextureQualities = function () {
         return this._textureQuality.getNameList();
     };
     /**
      * Returns the list of strings identifying the available texture quality levels, in order of preference.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getTextureQualityPreferenceList = function () {
+    GraphicsSettingsContext.prototype.getTextureQualityPreferenceList = function () {
         return this._textureQuality.getPreferenceNameList();
     };
     /**
      * Returns the string identifying the current texture quality level setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getTextureQuality = function () {
+    GraphicsSettingsContext.prototype.getTextureQuality = function () {
         return this._textureQuality.getCurrentName();
     };
     /**
@@ -1472,7 +1471,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setTextureQuality = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setTextureQuality = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1486,21 +1485,21 @@ define([
      * Returns the list of strings identifying the available cubemap quality levels, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getCubemapQualities = function () {
+    GraphicsSettingsContext.prototype.getCubemapQualities = function () {
         return this._cubemapQuality.getNameList();
     };
     /**
      * Returns the list of strings identifying the available cubemap quality levels, in order of preference.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getCubemapQualityPreferenceList = function () {
+    GraphicsSettingsContext.prototype.getCubemapQualityPreferenceList = function () {
         return this._cubemapQuality.getPreferenceNameList();
     };
     /**
      * Returns the string identifying the current cubemap quality level setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getCubemapQuality = function () {
+    GraphicsSettingsContext.prototype.getCubemapQuality = function () {
         return this._cubemapQuality.getCurrentName();
     };
     /**
@@ -1511,7 +1510,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setCubemapQuality = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setCubemapQuality = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1525,21 +1524,21 @@ define([
      * Returns the numeric value marking the maximum detail level in which model files are to be loaded.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getMaxLoadedLOD = function () {
+    GraphicsSettingsContext.prototype.getMaxLoadedLOD = function () {
         return this._maxLoadedLOD;
     };
     /**
      * Returns the list of strings identifying the available model LOD levels, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getLODLevels = function () {
+    GraphicsSettingsContext.prototype.getLODLevels = function () {
         return this._lodLevel.getNameList();
     };
     /**
      * Returns the string identifying the current model LOD level setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getLODLevel = function () {
+    GraphicsSettingsContext.prototype.getLODLevel = function () {
         return this._lodLevel.getCurrentName();
     };
     /**
@@ -1547,7 +1546,7 @@ define([
      * @param {String} value The string ID identifying the desired option.
      * @param {Boolean} [saveToLocalStorage=true]
      */
-    GraphicsContext.prototype.setLODLevel = function (value, saveToLocalStorage) {
+    GraphicsSettingsContext.prototype.setLODLevel = function (value, saveToLocalStorage) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1563,21 +1562,21 @@ define([
      * Returns the LOD context object storing the currently active LOD settings in the format defined by BudaScene.
      * @returns {LODContext}
      */
-    GraphicsContext.prototype.getLODContext = function () {
+    GraphicsSettingsContext.prototype.getLODContext = function () {
         return this._lodContext;
     };
     /**
      * Returns the string identifying the current shader complexity level setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getShaderComplexity = function () {
+    GraphicsSettingsContext.prototype.getShaderComplexity = function () {
         return this._shaderComplexity;
     };
     /**
      * Decreases the level of enabled shader features or disables them completely if required until a level can be reached where the 
      * graphics driver supports the resulting shader requirements.
      */
-    GraphicsContext.prototype._limitShaderFeatures = function () {
+    GraphicsSettingsContext.prototype._limitShaderFeatures = function () {
         var
                 originalShadowMapping = this.isShadowMappingEnabled(),
                 originalNumShadowMapRanges = this.getNumShadowMapRanges(),
@@ -1605,7 +1604,7 @@ define([
     /**
      * Disables all shader features, resulting in a minimal setup for the current shader complexity level.
      */
-    GraphicsContext.prototype._disableShaderFeatures = function () {
+    GraphicsSettingsContext.prototype._disableShaderFeatures = function () {
         if (this.isShadowMappingEnabled()) {
             this.setShadowMapping(false, false, true);
         }
@@ -1620,7 +1619,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set. The requirements are not checked if the complexity level is set through fallback!
      */
-    GraphicsContext.prototype.setShaderComplexity = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setShaderComplexity = function (value, saveToLocalStorage, fallbackToHighest) {
         var complexities = this.getShaderComplexities();
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
@@ -1651,7 +1650,7 @@ define([
      * Return a list containing the names of all available shader complexity levels that can be set.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getShaderComplexities = function () {
+    GraphicsSettingsContext.prototype.getShaderComplexities = function () {
         return this.getShaderConfig(SHADER_CONFIG.COMPLEXITIES).map(function (complexityDescriptor) {
             return complexityDescriptor[SHADER_COMPLEXITY_PROPERTIES.NAME.name];
         });
@@ -1660,14 +1659,14 @@ define([
      * Returns the name of the shader that is to be used for rendering shadow maps
      * @returns {String|null}
      */
-    GraphicsContext.prototype.getShadowMappingShaderName = function () {
+    GraphicsSettingsContext.prototype.getShadowMappingShaderName = function () {
         return this.getShaderConfig(SHADER_CONFIG.SHADOW_MAPPING_SHADER_NAME);
     };
     /**
      * Returns whether shadow mapping is enabled.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.isShadowMappingEnabled = function () {
+    GraphicsSettingsContext.prototype.isShadowMappingEnabled = function () {
         return this._shadowMappingEnabled;
     };
     /**
@@ -1680,7 +1679,7 @@ define([
      * value in any case.
      * @returns {Boolean} Whether shadow mapping has been successfully set to the passed value.
      */
-    GraphicsContext.prototype.setShadowMapping = function (value, saveToLocalStorage, ignoreRequirements) {
+    GraphicsSettingsContext.prototype.setShadowMapping = function (value, saveToLocalStorage, ignoreRequirements) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1706,21 +1705,21 @@ define([
      * Returns the list of strings identifying the available shadow map quality levels, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getShadowMapQualities = function () {
+    GraphicsSettingsContext.prototype.getShadowMapQualities = function () {
         return this._shadowMapQuality.getNameList();
     };
     /**
      * Returns the string identifying the current shadow map quality level.
      * @returns {String}
      */
-    GraphicsContext.prototype.getShadowMapQuality = function () {
+    GraphicsSettingsContext.prototype.getShadowMapQuality = function () {
         return this._shadowMapQuality.getCurrentName();
     };
     /**
      * Returns the size (in texels, both width and height) of shadow map texture used at the currentl set quality level.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getShadowMapTextureSize = function () {
+    GraphicsSettingsContext.prototype.getShadowMapTextureSize = function () {
         return this._shadowMapQuality.getCurrentValue();
     };
     /**
@@ -1731,7 +1730,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setShadowMapQuality = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setShadowMapQuality = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1746,7 +1745,7 @@ define([
      * active number of shadow maps.
      * @returns {Number[]}
      */
-    GraphicsContext.prototype.getShadowRanges = function () {
+    GraphicsSettingsContext.prototype.getShadowRanges = function () {
         var i, result = [], numRanges = this.getNumShadowMapRanges();
         for (i = 0; i < numRanges; i++) {
             result.push(this._shadowRanges[i]);
@@ -1757,7 +1756,7 @@ define([
      * Returns the list of strings identifying the available shadow distance levels, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getShadowDistances = function () {
+    GraphicsSettingsContext.prototype.getShadowDistances = function () {
         return this._shadowDistances.getFilteredNameList(function (value) {
             return this._shaderRequirementsAreSatisfied({numShadowRanges: value});
         }.bind(this));
@@ -1766,14 +1765,14 @@ define([
      * Returns the string identifying the current shadow distance level.
      * @returns {String}
      */
-    GraphicsContext.prototype.getShadowDistance = function () {
+    GraphicsSettingsContext.prototype.getShadowDistance = function () {
         return this._shadowDistances.getCurrentName();
     };
     /**
      * Returns the number of shadow map ranges actively used at the current settings.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getNumShadowMapRanges = function () {
+    GraphicsSettingsContext.prototype.getNumShadowMapRanges = function () {
         return this._shadowMappingEnabled ? this._shadowDistances.getCurrentValue() : 0;
     };
     /**
@@ -1784,7 +1783,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setShadowDistance = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setShadowDistance = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1799,7 +1798,7 @@ define([
      * to the size covered in width and height.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getShadowDepthRatio = function () {
+    GraphicsSettingsContext.prototype.getShadowDepthRatio = function () {
         return this._shadowDepthRatio;
     };
     /**
@@ -1808,7 +1807,7 @@ define([
      * one belonging to the current complexity.
      * @returns {Object}
      */
-    GraphicsContext.prototype._getShaderComplexityDescriptor = function (index) {
+    GraphicsSettingsContext.prototype._getShaderComplexityDescriptor = function (index) {
         return (index === undefined) ?
                 this.getShaderConfig(SHADER_CONFIG.COMPLEXITIES).find(function (complexityDescriptor) {
             return complexityDescriptor[SHADER_COMPLEXITY_PROPERTIES.NAME.name] === this.getShaderComplexity();
@@ -1819,14 +1818,14 @@ define([
      * Returns the maximum number of directional lights that can be used in shaders.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getMaxDirLights = function () {
+    GraphicsSettingsContext.prototype.getMaxDirLights = function () {
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.MAX_DIR_LIGHTS.name];
     };
     /**
      * Returns the list of strings identifying the available maximum point light amount settings, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getPointLightAmounts = function () {
+    GraphicsSettingsContext.prototype.getPointLightAmounts = function () {
         return this._pointLightAmount.getFilteredNameList(function (value) {
             return this._shaderRequirementsAreSatisfied({numPointLights: value});
         }.bind(this));
@@ -1835,14 +1834,14 @@ define([
      * Returns the string identifying the current maximum point light amount setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getPointLightAmount = function () {
+    GraphicsSettingsContext.prototype.getPointLightAmount = function () {
         return this._pointLightAmount.getCurrentName();
     };
     /**
      * Returns the maximum number of point lights that can be used in shaders.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getMaxPointLights = function () {
+    GraphicsSettingsContext.prototype.getMaxPointLights = function () {
         return this._pointLightAmount.getCurrentValue();
     };
     /**
@@ -1853,7 +1852,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setPointLightAmount = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setPointLightAmount = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1867,28 +1866,28 @@ define([
      * Returns the maximum number of spot lights that can be used in shaders.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getMaxSpotLights = function () {
+    GraphicsSettingsContext.prototype.getMaxSpotLights = function () {
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.MAX_SPOT_LIGHTS.name];
     };
     /**
      * Returns the list of strings identifying the available particle amount settings, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getParticleAmounts = function () {
+    GraphicsSettingsContext.prototype.getParticleAmounts = function () {
         return this._particleAmount.getNameList();
     };
     /**
      * Returns the string identifying the current particle amount setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getParticleAmount = function () {
+    GraphicsSettingsContext.prototype.getParticleAmount = function () {
         return this._particleAmount.getCurrentName();
     };
     /**
      * Returns the factor by which the particle count should be multiplied according to current settings.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getParticleCountFactor = function () {
+    GraphicsSettingsContext.prototype.getParticleCountFactor = function () {
         return this._particleAmount.getCurrentValue();
     };
     /**
@@ -1899,7 +1898,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setParticleAmount = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setParticleAmount = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1913,21 +1912,21 @@ define([
      * Returns the list of strings identifying the available dust particle amount settings, in ascending order.
      * @returns {String[]}
      */
-    GraphicsContext.prototype.getDustParticleAmounts = function () {
+    GraphicsSettingsContext.prototype.getDustParticleAmounts = function () {
         return this._dustParticleAmount.getNameList();
     };
     /**
      * Returns the string identifying the current dust particle amount setting.
      * @returns {String}
      */
-    GraphicsContext.prototype.getDustParticleAmount = function () {
+    GraphicsSettingsContext.prototype.getDustParticleAmount = function () {
         return this._dustParticleAmount.getCurrentName();
     };
     /**
      * Returns the factor by which the dust particle count should be multiplied according to current settings.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getDustParticleCountFactor = function () {
+    GraphicsSettingsContext.prototype.getDustParticleCountFactor = function () {
         return this._dustParticleAmount.getCurrentValue();
     };
     /**
@@ -1938,7 +1937,7 @@ define([
      * because it is higher than the maximum supported by the graphics driver), then instead of showing an error, the highest available
      * option is set.
      */
-    GraphicsContext.prototype.setDustParticleAmount = function (value, saveToLocalStorage, fallbackToHighest) {
+    GraphicsSettingsContext.prototype.setDustParticleAmount = function (value, saveToLocalStorage, fallbackToHighest) {
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -1953,7 +1952,7 @@ define([
      * @param {Object} propertyDefinition A property definition object from SHADER_CONFIG
      * @returns {}
      */
-    GraphicsContext.prototype.getShaderConfig = function (propertyDefinition) {
+    GraphicsSettingsContext.prototype.getShaderConfig = function (propertyDefinition) {
         return this._shaderConfig[propertyDefinition.name];
     };
     /**
@@ -1961,14 +1960,14 @@ define([
      * @param {Object} propertyDefinition A property definition object from SHADER_CONFIG
      * @param {} value
      */
-    GraphicsContext.prototype.setShaderConfig = function (propertyDefinition, value) {
+    GraphicsSettingsContext.prototype.setShaderConfig = function (propertyDefinition, value) {
         this._shaderConfig[propertyDefinition.name] = value;
     };
     /**
      * Returns how many samples should shaders take (and average) of the shadow maps to determine how much a point is in shadow.
      * @returns {Number}
      */
-    GraphicsContext.prototype.getNumShadowMapSamples = function () {
+    GraphicsSettingsContext.prototype.getNumShadowMapSamples = function () {
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.NUM_SHADOW_MAP_SAMPLES.name];
     };
     /**
@@ -1976,28 +1975,28 @@ define([
      * driver support the corresponding shader requirements!
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.isShadowMappingAvailable = function () {
+    GraphicsSettingsContext.prototype.isShadowMappingAvailable = function () {
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.SHADOW_MAPPING_AVAILABLE.name];
     };
     /**
      * Returns whether luminosity textures are available according to the currently set shader complexity level.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.areLuminosityTexturesAvailable = function () {
+    GraphicsSettingsContext.prototype.areLuminosityTexturesAvailable = function () {
         return this._luminosityTextureAreAvailable;
     };
     /**
      * Returns whether the reveal effect is available according to the currently set shader complexity level.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.isRevealAvailable = function () {
+    GraphicsSettingsContext.prototype.isRevealAvailable = function () {
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.REVEAL_AVAILABLE.name];
     };
     /**
      * Returns whether dynamic (point and spot) lights are available according to the currently set shader complexity level.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.areDynamicLightsAvailable = function () {
+    GraphicsSettingsContext.prototype.areDynamicLightsAvailable = function () {
         return this._getShaderComplexityDescriptor()[SHADER_COMPLEXITY_PROPERTIES.DYNAMIC_LIGHTS_AVAILABLE.name];
     };
     /**
@@ -2005,7 +2004,7 @@ define([
      * with the graphics driver still satisfying the resulting shader requirements.
      * @returns {Boolean}
      */
-    GraphicsContext.prototype.canEnableShadowMapping = function () {
+    GraphicsSettingsContext.prototype.canEnableShadowMapping = function () {
         return this.isShadowMappingAvailable() && this._shaderRequirementsAreSatisfied({numShadowRanges: this._shadowDistances.getFirstValue()});
     };
     /**
@@ -2013,7 +2012,7 @@ define([
      * @param {String} shaderName
      * @returns {ShaderResource}
      */
-    GraphicsContext.prototype.getShader = function (shaderName) {
+    GraphicsSettingsContext.prototype.getShader = function (shaderName) {
         shaderName = resources.getVariantShader(shaderName, this.getShaderComplexity()).getName();
         if (!this._shadowMappingEnabled) {
             shaderName = resources.getVariantShader(shaderName, SHADER_VARIANT_WITHOUT_SHADOWS_NAME).getName();
@@ -2028,7 +2027,7 @@ define([
      * @param {String} shaderName
      * @returns {ManagedShader}
      */
-    GraphicsContext.prototype.getManagedShader = function (shaderName) {
+    GraphicsSettingsContext.prototype.getManagedShader = function (shaderName) {
         var replacedDefines = {}, result;
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_DIR_LIGHTS_DEFINE_NAME)] = this.getMaxDirLights();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_POINT_LIGHTS_DEFINE_NAME)] = this.getMaxPointLights();
@@ -2052,7 +2051,7 @@ define([
      * @param {String} modelName
      * @returns {ModelResource}
      */
-    GraphicsContext.prototype.getModel = function (modelName) {
+    GraphicsSettingsContext.prototype.getModel = function (modelName) {
         return resources.getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
     // -------------------------------------------------------------------------
@@ -2089,7 +2088,7 @@ define([
                 } :
                 null;
     }
-    _context = new GraphicsContext();
+    _context = new GraphicsSettingsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

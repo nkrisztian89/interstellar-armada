@@ -13,7 +13,7 @@
 /**
  * @param types Used for type checking JSON settings and set values
  * @param application Using the application module for error displaying functionality
- * @param asyncResource GraphicsContext is an AsynchResource subclass
+ * @param asyncResource AudioSettingsContext is an AsynchResource subclass
  * @param audio Used for actually setting the volumes
  * @param constants Used to access common game constants
  */
