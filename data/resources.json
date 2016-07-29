@@ -1283,16 +1283,24 @@
             "sample": "menu.ogg"
         },
         {
+            "name": "ambient",
+            "sample": "ambient.ogg"
+        },
+        {
             "name": "anticipation",
             "sample": "anticipation.ogg"
         },
         {
-            "name": "battle",
-            "sample": "battle.ogg"
+            "name": "combat",
+            "sample": "combat.ogg"
         },
         {
             "name": "victory",
             "sample": "victory.ogg"
+        },
+        {
+            "name": "defeat",
+            "sample": "defeat.ogg"
         }
     ]
 }

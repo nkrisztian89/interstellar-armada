@@ -76,6 +76,12 @@ define([
             UI_3D_SHADER_NAME = "ui3d",
             UI_2D_MIX_VIEWPORT_SHADER_NAME = "ui2d-mix-viewport",
             UI_2D_CLIP_VIEWPORT_SHADER_NAME = "ui2d-clip-viewport",
+            // identifiers for music tracks
+            AMBIENT_THEME = "ambient",
+            ANTICIPATION_THEME = "anticipation",
+            COMBAT_THEME = "combat",
+            VICTORY_THEME = "victory",
+            DEFEAT_THEME = "defeat",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -144,20 +150,42 @@ define([
              */
             _gameStateShown,
             /**
-             * The elapsed simulation time since the game's end state changed to victory or defeat.
+             * The elapsed simulation time since the game's end state changed to victory or defeat. In milliseconds
              * @type Number
              */
             _timeSinceGameStateChanged,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // music related
             /**
-             * A reference to the sound source managing the battle music (the song to play during the battle)
-             * @type SoundSource
+             * The elapsed simulation time since a spacecraft last fired at a hostile target. (for deciding whether there is combat going
+             * on to choose the right music track) In milliseconds
+             * @type Number
              */
-            _battleMusic,
+            _timeSinceLastFire,
             /**
-             * A reference to the sound source managing the victory music (the song to play when the battle is won)
-             * @type SoundSource
+             * The name of the currently playing music theme
+             * @type String
              */
-            _victoryMusic,
+            _currentTheme,
+            /**
+             * An associative array storing the sound sources used to play the various tracks during battle. The keys are the theme names.
+             * @type Object.<String, SoundSource>
+             */
+            _music = {},
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // cached configuration settings
+            /**
+             * Cached setting of the duration of the crossfade between different music themes during battle (e.g. anticipation -> combat), 
+             * in seconds
+             * @type Number
+             */
+            _themeCrossfadeDuration,
+            /**
+             * Cached setting of theduration while the combat theme is kept playing during battle after a spacecraft fires at a hostile 
+             * target, in milliseconds
+             * @type Number
+             */
+            _combatThemeDurationAfterFire,
             // ................................................................................................
             // elements of the HUD and their stored state
             /**
@@ -433,6 +461,59 @@ define([
     // ------------------------------------------------------------------------------
     // private functions
     /**
+     * Stops all (any) theme music tracks that are playing.
+     */
+    function _stopMusic() {
+        var themes = Object.keys(_music), i;
+        for (i = 0; i < themes.length; i++) {
+            if (_music[themes[i]]) {
+                _music[themes[i]].stopPlaying();
+            }
+        }
+    }
+    /**
+     * Starts to play a music theme and stops the current one (if any), possibly with a crossfade.
+     * @param {String} theme The name of the theme to start playing
+     * @param {Number} [fadeDuration=0] If greater than zero, the a linear crossfade will happen from the current theme to the new one, 
+     * lasting the given duration. In seconds!
+     * @param {String} [followupTheme] If a non-looping theme is chosen (e.g. victory / defeat), this theme will be played after it finishes
+     * (with the same crossfade applied)
+     */
+    function _playMusic(theme, fadeDuration, followupTheme) {
+        fadeDuration = fadeDuration || 0;
+        if (theme !== _currentTheme) {
+            if (_currentTheme) {
+                if (fadeDuration > 0) {
+                    _music[_currentTheme].rampVolume(0, fadeDuration);
+                } else {
+                    _music[_currentTheme].stopPlaying();
+                }
+            }
+            _music[theme].play(true, followupTheme ? function () {
+                _playMusic(followupTheme, fadeDuration);
+            } : null);
+            if (fadeDuration > 0) {
+                _music[theme].setVolume(0);
+                _music[theme].rampVolume(1, fadeDuration);
+            } else {
+                _music[theme].setVolume(1);
+            }
+            _currentTheme = theme;
+        }
+    }
+    /**
+     * Updates the state / mood based music theme for the case a spacecraft just fired.
+     * @param {Spacecraft} spacecraft The spacecraft that fired
+     * @param {Spacecraft} target The target of the spacecraft that fired (the player shooting at friends / into emptyness will not change
+     * the mood)
+     */
+    function _handleSpacecraftFired(spacecraft, target) {
+        if (target && target.isHostile(spacecraft) && !_gameStateShown) {
+            _timeSinceLastFire = 0;
+            _playMusic(COMBAT_THEME, _themeCrossfadeDuration);
+        }
+    }
+    /**
      * Executes one simulation (and control) step for the battle.
      */
     function _simulationLoopFunction() {
@@ -445,6 +526,12 @@ define([
             followedCraft = _level.getFollowedSpacecraftForScene(_battleScene);
             if (!_isTimeStopped) {
                 _level.tick(dt, _battleScene);
+                if (!_gameStateShown) {
+                    _timeSinceLastFire += dt;
+                    if (_timeSinceLastFire > _combatThemeDurationAfterFire) {
+                        _playMusic(ANTICIPATION_THEME, _themeCrossfadeDuration);
+                    }
+                }
             }
             if (followedCraft) {
                 // handling the loss of the spacecraft that is followed by the camera
@@ -483,12 +570,7 @@ define([
             _battleScene.clearPointLights();
         }
         _battleScene = null;
-        if (_battleMusic) {
-            _battleMusic.stopPlaying();
-        }
-        if (_victoryMusic) {
-            _victoryMusic.stopPlaying();
-        }
+        _stopMusic();
     }
     // ------------------------------------------------------------------------------
     // public functions
@@ -1662,6 +1744,7 @@ define([
      * @param {Number} dt
      */
     BattleScreen.prototype._render = function (dt) {
+        var victory;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -1696,16 +1779,15 @@ define([
             } else if (!_gameStateShown) {
                 _timeSinceGameStateChanged += dt;
                 if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
-                    this.showMessage(utils.formatString(strings.get(_level.isLost() ? strings.BATTLE.MESSAGE_DEFEAT : strings.BATTLE.MESSAGE_VICTORY), {
+                    victory = !_level.isLost();
+                    this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_DEFEAT), {
                         menuKey: _getMenuKeyHTMLString()
                     }));
                     _gameStateShown = true;
-                    if (_battleMusic) {
-                        _battleMusic.stopPlaying();
-                    }
-                    if (_victoryMusic) {
-                        _victoryMusic.play();
-                    }
+                    _playMusic(
+                            (victory ? VICTORY_THEME : DEFEAT_THEME),
+                            config.getSetting(config.BATTLE_SETTINGS.END_THEME_CROSSFADE_DURATION),
+                            (victory ? AMBIENT_THEME : null));
                 }
             }
         }
@@ -1796,8 +1878,11 @@ define([
             _level.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
             this._addUITexts();
-            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.BATTLE_MUSIC));
+            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC));
+            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC));
+            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC));
             resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC));
+            resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC));
             control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
@@ -1807,7 +1892,12 @@ define([
                 _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {
-                    var m;
+                    var m, initMusic = function (settingName, theme, loop) {
+                        m = resources.getMusic(config.getSetting(settingName));
+                        if (m) {
+                            _music[theme] = m.createSoundSource(1, loop);
+                        }
+                    };
                     this.setAntialiasing(graphics.getAntialiasing());
                     this.setFiltering(graphics.getFiltering());
                     this.clearSceneCanvasBindings();
@@ -1824,18 +1914,20 @@ define([
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()
                     }));
+                    _level.applyToSpacecrafts(function (spacecraft) {
+                        spacecraft.setOnFired(_handleSpacecraftFired);
+                    });
                     this._loadingBox.hide();
                     showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
-                    m = resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.BATTLE_MUSIC));
-                    if (m) {
-                        _battleMusic = m.createSoundSource(1, true);
-                        _battleMusic.play();
-                    }
-                    m = resources.getMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC));
-                    if (m) {
-                        _victoryMusic = m.createSoundSource(1, false);
-                    }
+                    initMusic(config.BATTLE_SETTINGS.AMBIENT_MUSIC, AMBIENT_THEME, true);
+                    initMusic(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC, ANTICIPATION_THEME, true);
+                    initMusic(config.BATTLE_SETTINGS.COMBAT_MUSIC, COMBAT_THEME, true);
+                    initMusic(config.BATTLE_SETTINGS.VICTORY_MUSIC, VICTORY_THEME, false);
+                    initMusic(config.BATTLE_SETTINGS.DEFEAT_MUSIC, DEFEAT_THEME, false);
+                    _currentTheme = null;
+                    _timeSinceLastFire = 0;
+                    _playMusic(_gameStateShown ? AMBIENT_THEME : ANTICIPATION_THEME);
                 }.bind(this));
             }.bind(this));
             resources.requestResourceLoad();
@@ -1844,6 +1936,7 @@ define([
     // -------------------------------------------------------------------------
     // Caching frequently needed setting values
     config.executeWhenReady(function () {
+        // hud
         _centerCrosshairScaleMode = config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SCALE_MODE);
         _speedTargetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_SIZE);
         _targetViewLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_LAYOUT));
@@ -1856,6 +1949,9 @@ define([
         _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
         _driftArrowMaxSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT));
+        // music
+        _themeCrossfadeDuration = config.getSetting(config.BATTLE_SETTINGS.THEME_CROSSFADE_DURATION);
+        _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

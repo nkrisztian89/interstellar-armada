@@ -2715,6 +2715,11 @@ define([
          */
         this._onTargetFired = null;
         /**
+         * A callback to execute when this spacecraft fires.
+         * @type Function
+         */
+        this._onFired = null;
+        /**
          * A reference to the team this spacecraft belongs to (governing who is friend or foe).
          * @type Team
          */
@@ -3685,6 +3690,7 @@ define([
             for (i = 0; i < this._targetedBy.length; i++) {
                 this._targetedBy[i].handleTargetFired();
             }
+            this.handleFired();
         }
     };
     /**
@@ -4093,6 +4099,21 @@ define([
     Spacecraft.prototype.handleTargetFired = function () {
         if (this._onTargetFired) {
             this._onTargetFired();
+        }
+    };
+    /**
+     * Sets a function that will be executed every time this spacecraft fires.
+     * @param {Function} value
+     */
+    Spacecraft.prototype.setOnFired = function (value) {
+        this._onFired = value;
+    };
+    /**
+     * Executes the callback for the spacecraft firing, if it is set.
+     */
+    Spacecraft.prototype.handleFired = function () {
+        if (this._onFired) {
+            this._onFired(this, this._target);
         }
     };
     /**
@@ -4573,6 +4594,16 @@ define([
             }
         }
         return null;
+    };
+    /**
+     * Calls the passed function for every spacecraft this level has, passing each of the spacecrafts as its single argument
+     * @param {Function} method
+     */
+    Level.prototype.applyToSpacecrafts = function (method) {
+        var i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            method(this._spacecrafts[i]);
+        }
     };
     /**
      * Returns whether according to the current state of the level, the controlled spacecraft has won.

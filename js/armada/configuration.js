@@ -1253,10 +1253,25 @@ define([
             type: "number"
         },
         /**
-         * The ID (resource name) of the song (MusicResource) that should play in general during battles.
+         * The ID (resource name) of the song (MusicResource) that should play during battles while there are no hostile spacecrafts.
          */
-        BATTLE_MUSIC: {
-            name: "battleMusic",
+        AMBIENT_MUSIC: {
+            name: "ambientMusic",
+            type: "string"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play during battles while there are hostiles, but there is no
+         * fighting.
+         */
+        ANTICIPATION_MUSIC: {
+            name: "anticipationMusic",
+            type: "string"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play during battles while fighting is going on.
+         */
+        COMBAT_MUSIC: {
+            name: "combatMusic",
             type: "string"
         },
         /**
@@ -1265,6 +1280,34 @@ define([
         VICTORY_MUSIC: {
             name: "victoryMusic",
             type: "string"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play when a battle is lost.
+         */
+        DEFEAT_MUSIC: {
+            name: "defeatMusic",
+            type: "string"
+        },
+        /**
+         * The duration of the crossfade between different music themes during battle (e.g. anticipation -> combat), in seconds
+         */
+        THEME_CROSSFADE_DURATION: {
+            name: "themeCrossfadeDuration",
+            type: "number"
+        },
+        /**
+         * The duration while the combat theme is kept playing during battle after a spacecraft fires at a hostile target, in seconds
+         */
+        COMBAT_THEME_DURATION_AFTER_FIRE: {
+            name: "combatThemeDurationAfterFire",
+            type: "number"
+        },
+        /**
+         * The duration of the crossfade to the ending music themes (victory / defeat) during battle, in seconds
+         */
+        END_THEME_CROSSFADE_DURATION: {
+            name: "endThemeCrossfadeDuration",
+            type: "number"
         }
     };
     CAMERA_SETTINGS = {

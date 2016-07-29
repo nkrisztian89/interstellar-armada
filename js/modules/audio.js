@@ -247,6 +247,18 @@ define([
         }
     };
     /**
+     * Changes the volume of the sound source via a linear ramp
+     * @param {Number} volume The target value to change to
+     * @param {Number} duration The duration of the ramp, in seconds
+     */
+    SoundSource.prototype.rampVolume = function (volume, duration) {
+        if (this._gainNode) {
+            this._gainNode.gain.setValueAtTime(this._volume, _context.currentTime);
+            this._gainNode.gain.linearRampToValueAtTime(volume, _context.currentTime + duration);
+        }
+        this._volume = volume;
+    };
+    /**
      * Sets a new position for the sound source. Can be used only if an initial position was specified
      * @param {Number} x
      * @param {Number} y

@@ -1688,7 +1688,7 @@
             "attachmentPoint": [0, 0, 25],
             "fireSound": {
                 "name": "weaponshot2",
-                "volume": 0.75,
+                "volume": 0.3,
                 "rolloff": 0.02
             }
         },
