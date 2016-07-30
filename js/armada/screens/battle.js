@@ -470,6 +470,7 @@ define([
                 _music[themes[i]].stopPlaying();
             }
         }
+        _currentTheme = null;
     }
     /**
      * Starts to play a music theme and stops the current one (if any), possibly with a crossfade.
@@ -490,7 +491,9 @@ define([
                 }
             }
             _music[theme].play(true, followupTheme ? function () {
-                _playMusic(followupTheme, fadeDuration);
+                if (_currentTheme === theme) {
+                    _playMusic(followupTheme, fadeDuration);
+                }
             } : null);
             if (fadeDuration > 0) {
                 _music[theme].setVolume(0);
