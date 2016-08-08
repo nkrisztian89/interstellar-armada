@@ -1,21 +1,21 @@
 Several sound effects in the game are based on the works of 3rd parties.
 The original sources, authors and licencing information about these files can be found at the following pages:
 
-weaponshot1.ogg, weaponshot1b.ogg: (edited)
-http://www.get-sounds.com/download.php?f=sAXHKs4cDRuxjuOl5OQjyKKrbMP8WoOBJO2Z4VEwb6o%3D
-Author/copyright: Branden Schneider
-
-containerExplosion.ogg, fighterExplosion.ogg: (unchanged)
+containerExplosion.ogg, fighterExplosion.ogg (unchanged), weaponshot_proton.ogg (cut):
 http://creativesounddesign.com/the-recordist-free-sound-effects/
 Author/copyright: The Recordist/Creative Sound Design, LLC
+
+hit.ogg: (edited)
+http://freesound.org/people/unfa/sounds/259300/
+Author/copyright: freesound user unfa
 
 hum.ogg: (edited)
 http://freesound.org/people/juskiddink/sounds/117128/
 Author/copyright: freesound user juskinnink
 
-hit.ogg: (edited)
-http://freesound.org/people/unfa/sounds/259300/
-Author/copyright: freesound user unfa
+thruster.ogg: (edited)
+http://freesound.org/people/qubodup/sounds/146770/
+Author/copyright: freesound user qubodup
 
 The copyright belongs to respective the authors.
 

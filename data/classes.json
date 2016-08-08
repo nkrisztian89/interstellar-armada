@@ -1516,8 +1516,8 @@
             "explosion": "smallHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.75,
-                "rolloff": 0.01
+                "volume": 0.5,
+                "rolloff": 0.025
             }
         },
         {
@@ -1542,8 +1542,8 @@
             "explosion": "smallHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.75,
-                "rolloff": 0.01
+                "volume": 0.6,
+                "rolloff": 0.025
             }
         },
         {
@@ -1568,8 +1568,8 @@
             "explosion": "smallHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.75,
-                "rolloff": 0.01
+                "volume": 0.65,
+                "rolloff": 0.025
             }
         },
         {
@@ -1594,8 +1594,8 @@
             "explosion": "mediumHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 1.0,
-                "rolloff": 0.0075
+                "volume": 0.8,
+                "rolloff": 0.02
             }
         },
         {
@@ -1620,8 +1620,8 @@
             "explosion": "largeHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 1.5,
-                "rolloff": 0.005
+                "volume": 1.0,
+                "rolloff": 0.015
             }
         }
     ],
@@ -1643,8 +1643,8 @@
             ],
             "attachmentPoint": [0, -20, 39.6],
             "fireSound": {
-                "name": "weaponshot1",
-                "volume": 0.4,
+                "name": "trainingShot",
+                "volume": 0.5,
                 "rolloff": 0.02
             }
         },
@@ -1665,9 +1665,9 @@
             ],
             "attachmentPoint": [0, -4, 1.2],
             "fireSound": {
-                "name": "weaponshot1",
-                "volume": 0.5,
-                "rolloff": 0.02
+                "name": "plasmaShot",
+                "volume": 0.4,
+                "rolloff": 0.01
             }
         },
         {
@@ -1687,9 +1687,9 @@
             ],
             "attachmentPoint": [0, 0, 25],
             "fireSound": {
-                "name": "weaponshot2",
-                "volume": 0.3,
-                "rolloff": 0.02
+                "name": "heavyPlasmaShot",
+                "volume": 1.0,
+                "rolloff": 0.01
             }
         },
         {
@@ -1743,9 +1743,9 @@
                 }
             ],
             "fireSound": {
-                "name": "weaponshot1",
+                "name": "plasmaShot",
                 "volume": 1.0,
-                "rolloff": 0.015
+                "rolloff": 0.01
             }
         },
         {
@@ -1785,7 +1785,7 @@
                 }
             ],
             "fireSound": {
-                "name": "weaponshot1",
+                "name": "protonShot",
                 "volume": 1.0,
                 "rolloff": 0.01
             }
@@ -1826,9 +1826,9 @@
                 }
             ],
             "fireSound": {
-                "name": "weaponshot2",
-                "volume": 1.5,
-                "rolloff": 0.01
+                "name": "ionShot",
+                "volume": 2.0,
+                "rolloff": 0.005
             }
         }
     ],
@@ -1843,7 +1843,12 @@
             "thrust": 20,
             "angularThrust": 150,
             "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 0.8,
+                "rolloff": 0.02
+            }
         },
         {
             "name": "imperialFighterMk1",
@@ -1855,7 +1860,12 @@
             "thrust": 50,
             "angularThrust": 270,
             "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.2,
+                "rolloff": 0.015
+            }
         },
         {
             "name": "imperialBomberMk1",
@@ -1867,7 +1877,12 @@
             "thrust": 30,
             "angularThrust": 225,
             "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.4,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "imperialCorvetteMk1",
@@ -1879,7 +1894,12 @@
             "thrust": 15,
             "angularThrust": 120,
             "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.75,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "imperialFrigateMk1",
@@ -1891,7 +1911,12 @@
             "thrust": 10,
             "angularThrust": 90,
             "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 2.0,
+                "rolloff": 0.01
+            }
         },
         {
             "name": "imperialCruiserMk1",
@@ -1903,7 +1928,12 @@
             "thrust": 8,
             "angularThrust": 24,
             "maxMoveBurnLevel": 0.5,
-            "maxTurnBurnLevel": 0.35
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 2.5,
+                "rolloff": 0.005
+            }
         }
     ],
     "spacecraftTypes": [

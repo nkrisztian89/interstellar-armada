@@ -1757,6 +1757,11 @@ define([
          * @type Number
          */
         this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || _showMissingPropertyError(this, "maxTurnBurnLevel")) : 0;
+        /**
+         * The descriptor of the sound effect to be played when the thrusters of this propulsion fire.
+         * @type Object
+         */
+        this._thrusterSound = dataJSON ? types.getVerifiedObject("propulsionClasses['" + this._name + "'].thrusterSound", dataJSON.thrusterSound, SOUND_EFFECT_3D) : null;
         return true;
     };
     /**
@@ -1764,6 +1769,7 @@ define([
      */
     PropulsionClass.prototype.acquireResources = function () {
         this._thrusterBurnParticle.acquireResources();
+        _loadSoundEffect(this._thrusterSound);
     };
     /**
      * @returns {ParticleDescriptor}
@@ -1810,6 +1816,14 @@ define([
     PropulsionClass.prototype.handleGraphicsSettingsChanged = function () {
         GenericClass.prototype.handleGraphicsSettingsChanged.call(this);
         this._thrusterBurnParticle.handleGraphicsSettingsChanged();
+    };
+    /**
+     * Creates a sound source playing the thruster sound effect for this propulsion in looping mode, and saves the reference to it.
+     * @param {Number[3]} position The initial camera-space position of the sound source
+     * @returns {SoundSource}
+     */
+    PropulsionClass.prototype.createThrusterSoundSource = function (position) {
+        return _createSoundSource(this._thrusterSound, true, position);
     };
     // ##############################################################################
     /**

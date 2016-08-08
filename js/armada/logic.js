@@ -146,6 +146,18 @@ define([
              * @type String
              */
             UNIFORM_REPLACEMENT_FACTION_COLOR_NAME = "replacementFactionColor",
+            /**
+             * The number of discrete volume levels to which the thruster sounds can be set according to the rate at which the thrusters
+             * are firing (so that the sound source is not ramping the volume all the time as the thruster fire rate changes)
+             * @type Number
+             */
+            THRUSTER_SOUND_VOLUME_GRADES = 4,
+            /**
+             * The duration while the thruster sound effects ramp to a new volume if needed as the firing rate of the thrusters change.
+             * In seconds.
+             * @type Number
+             */
+            THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.2,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1815,6 +1827,11 @@ define([
             "rollLeft": {burn: 0, thrusters: []},
             "rollRight": {burn: 0, thrusters: []}
         };
+        /**
+         * Sounds source used for playing the thruster sound effect for this propulsion.
+         * @type SoundSource
+         */
+        this._thrusterSoundSource = null;
     }
     /**
      * 
@@ -1918,10 +1935,31 @@ define([
         }
     };
     /**
+     * Returns the (relative) volume at which the thruster sound effect should be played for this propulsion accoding to its current
+     * state (how much its thrusters are firing)
+     * @returns {Number}
+     */
+    Propulsion.prototype._getSoundVolume = function () {
+        var move, turn, max;
+        max = this._class.getMaxMoveBurnLevel();
+        move = max ? Math.max(
+                this._thrusterUses.forward.burn, this._thrusterUses.reverse.burn,
+                this._thrusterUses.strafeRight.burn, this._thrusterUses.strafeLeft.burn,
+                this._thrusterUses.raise.burn, this._thrusterUses.lower.burn) / max : 0;
+        max = this._class.getMaxTurnBurnLevel();
+        turn = max ? Math.max(
+                this._thrusterUses.yawRight.burn, this._thrusterUses.yawLeft.burn,
+                this._thrusterUses.pitchUp.burn, this._thrusterUses.pitchDown.burn,
+                this._thrusterUses.rollRight.burn, this._thrusterUses.rollLeft.burn) / max : 0;
+        max = Math.round((move + turn) * THRUSTER_SOUND_VOLUME_GRADES) / THRUSTER_SOUND_VOLUME_GRADES;
+        return max;
+    };
+    /**
      * Applies the forces and torques that are created by this propulsion system
      * to the physical object it drives.
+     * @param {Number[3]} camSpacePosition The current position of the spacecraft using this propulsion in camera space (for sound effects)
      */
-    Propulsion.prototype.simulate = function () {
+    Propulsion.prototype.simulate = function (camSpacePosition) {
         var
                 directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix()),
                 yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
@@ -1962,6 +2000,13 @@ define([
         if (this._thrusterUses.rollLeft.burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", this._class.getAngularThrust() * this._thrusterUses.rollLeft.burn / this._class.getMaxTurnBurnLevel(), directionVector);
         }
+        if (!this._thrusterSoundSource) {
+            this._thrusterSoundSource = this._class.createThrusterSoundSource(camSpacePosition);
+            this._thrusterSoundSource.play();
+        } else {
+            this._thrusterSoundSource.setPosition(camSpacePosition[0], camSpacePosition[1], camSpacePosition[2]);
+        }
+        this._thrusterSoundSource.rampVolume(this._getSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true);
     };
     /**
      * Removes all references stored by this object
@@ -1970,6 +2015,10 @@ define([
         this._class = null;
         this._drivenPhysicalObject = null;
         this._thrusterUses = null;
+        if (this._thrusterSoundSource) {
+            this._thrusterSoundSource.stopPlaying();
+            this._thrusterSoundSource = null;
+        }
     };
     // #########################################################################
     /**
@@ -2739,6 +2788,11 @@ define([
          * @type Number[3]
          */
         this._targetHitPosition = null;
+        /**
+         * Sounds source used for playing the "hum" sound effect for this spacecraft.
+         * @type SoundSource
+         */
+        this._humSource = null;
         /**
          * Contains the sound sources used for playing the hit sounds for projectiles hitting this spacecraft, so that multiple hit sounds of
          * the same effect can be stacked
@@ -3997,9 +4051,19 @@ define([
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].simulate(dt);
             }
+            p = this.getPositionMatrixInCameraSpace();
+            p = [Math.round(p[12]), Math.round(p[13]), Math.round(p[14])];
             if (this._propulsion) {
                 this._maneuveringComputer.controlThrusters(dt);
-                this._propulsion.simulate(dt);
+                this._propulsion.simulate(p);
+            }
+            if (this._class.hasHumSound()) {
+                if (!this._humSource) {
+                    this._humSource = this._class.createHumSource(p);
+                    this._humSource.play();
+                } else {
+                    this._humSource.setPosition(p[0], p[1], p[2]);
+                }
             }
         }
         this._physicalModel.simulate(dt);
@@ -4010,15 +4074,6 @@ define([
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {
             this._maneuveringComputer.updateSpeedIncrement(dt);
-        }
-        if (this._class.hasHumSound()) {
-            p = this.getPositionMatrixInCameraSpace();
-            if (!this._humSource) {
-                this._humSource = this._class.createHumSource([Math.round(p[12]), Math.round(p[13]), Math.round(p[14])]);
-                this._humSource.play();
-            } else {
-                this._humSource.setPosition(Math.round(p[12]), Math.round(p[13]), Math.round(p[14]));
-            }
         }
     };
     /**

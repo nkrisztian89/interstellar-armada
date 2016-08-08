@@ -1238,43 +1238,59 @@
     "soundEffects": [
         {
             "name": "spacecraftHum",
-            "samples": ["hum.ogg"]
+            "samples": ["spacecraft/hum.ogg"]
         },
         {
-            "name": "weaponshot1",
-            "samples": ["weaponshot1.ogg", "weaponshot1b.ogg"]
+            "name": "thruster",
+            "samples": ["spacecraft/thruster.ogg"]
         },
         {
-            "name": "weaponshot2",
-            "samples": ["weaponshot2.ogg"]
+            "name": "trainingShot",
+            "samples": ["weapon/weaponshot_training.ogg"]
+        },
+        {
+            "name": "plasmaShot",
+            "samples": ["weapon/weaponshot_plasma.ogg"]
+        },
+        {
+            "name": "heavyPlasmaShot",
+            "samples": ["weapon/weaponshot_heavyPlasma.ogg"]
+        },
+        {
+            "name": "protonShot",
+            "samples": ["weapon/weaponshot_proton.ogg"]
+        },
+        {
+            "name": "ionShot",
+            "samples": ["weapon/weaponshot_ion.ogg"]
         },
         {
             "name": "hit",
-            "samples": ["hit.ogg"]
+            "samples": ["explosion/hit.ogg"]
         },
         {
             "name": "containerExplosion",
-            "samples": ["containerExplosion.ogg"]
+            "samples": ["explosion/containerExplosion.ogg"]
         },
         {
             "name": "fighterExplosion",
-            "samples": ["fighterExplosion.ogg"]
+            "samples": ["explosion/fighterExplosion.ogg"]
         },
         {
             "name": "beep1",
-            "samples": ["beep1.wav"]
+            "samples": ["computer/beep1.wav"]
         },
         {
             "name": "beep3",
-            "samples": ["beep3.wav"]
+            "samples": ["computer/beep3.wav"]
         },
         {
-            "name": "blip2",
-            "samples": ["blip2.wav"]
+            "name": "buttonHover",
+            "samples": ["ui/button_hover.wav"]
         },
         {
-            "name": "blip1h",
-            "samples": ["blip1h.ogg"]
+            "name": "buttonClick",
+            "samples": ["ui/button_click.ogg"]
         }
     ],
     "music": [

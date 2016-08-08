@@ -250,10 +250,13 @@ define([
      * Changes the volume of the sound source via a linear ramp
      * @param {Number} volume The target value to change to
      * @param {Number} duration The duration of the ramp, in seconds
+     * @param {Boolean} [onlyIfDifferent=false] If true, then the ramp will not be applied in case a ramp is already in progress towards the
+     * same value.
      */
-    SoundSource.prototype.rampVolume = function (volume, duration) {
-        if (this._gainNode) {
-            this._gainNode.gain.setValueAtTime(this._volume, _context.currentTime);
+    SoundSource.prototype.rampVolume = function (volume, duration, onlyIfDifferent) {
+        if (this._gainNode && (!onlyIfDifferent || (this._volume !== volume))) {
+            this._gainNode.gain.cancelScheduledValues(_context.currentTime);
+            this._gainNode.gain.setValueAtTime(this._gainNode.gain.value, _context.currentTime);
             this._gainNode.gain.linearRampToValueAtTime(volume, _context.currentTime + duration);
         }
         this._volume = volume;

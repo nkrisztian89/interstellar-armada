@@ -73,11 +73,11 @@
             "useVerticalCameraValues": true,
             "menuMusic": "menu",
             "buttonSelectSound": {
-                "name": "blip2",
+                "name": "buttonHover",
                 "volume": 0.5
             },
             "buttonClickSound": {
-                "name": "blip1h",
+                "name": "buttonClick",
                 "volume": 1.0
             }
         },
