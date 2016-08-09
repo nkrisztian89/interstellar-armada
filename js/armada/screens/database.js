@@ -729,7 +729,7 @@ define([
                 this.bindSceneToCanvas(_itemViewScene, this.getScreenCanvas(DATABASE_CANVAS_NAME));
                 // set the camera position so that the whole ship nicely fits into the picture
                 _itemViewScene.getCamera().moveToPosition([0, 0, _currentItem.getVisualModel().getScaledSize()], 0);
-                // set the shadow mappin ranges manually, adapting to the size of the shown model, needs to be done before binding the scene
+                // set the shadow mappin ranges manually, adapting to the size of the shown model
                 if (graphics.shouldUseShadowMapping()) {
                     _itemViewScene.setShadowMapRanges([
                         0.5 * _currentItem.getVisualModel().getScaledSize(),

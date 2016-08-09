@@ -41,6 +41,17 @@ define(function () {
                  */
                 MAXIMUM: "maximum"
             },
+    /**
+     * A convenience enum storing the numeric mouse button identifiers as they appear in the "which" property of MouseEvent events
+     * by meaningful names
+     * @enum {Number}
+     * @type Object
+     */
+    MouseButton = {
+        LEFT: 1,
+        MIDDLE: 2,
+        RIGHT: 3
+    },
     // ------------------------------------------------------------------------------
     // constants
     EMPTY_ARRAY = [],
@@ -89,6 +100,7 @@ define(function () {
     // ------------------------------------------------------------------------------
     // public enums
     exports.ScaleMode = ScaleMode;
+    exports.MouseButton = MouseButton;
     // ------------------------------------------------------------------------------
     // public functions
     /**

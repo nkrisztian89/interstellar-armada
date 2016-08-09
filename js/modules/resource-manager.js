@@ -81,6 +81,9 @@ define([
             return false;
         }
         if (requestParams) {
+            if (!this._requestParams) {
+                return false;
+            }
             for (requestParamName in requestParams) {
                 if (requestParams.hasOwnProperty(requestParamName)) {
                     if (requestParams[requestParamName] !== this._requestParams[requestParamName]) {
@@ -169,6 +172,13 @@ define([
             this._requestFiles(this._requestParams);
         }
     };
+    /**
+     * 
+     * @returns {Object}
+     */
+    GenericResource.prototype.getData = function () {
+        return null;
+    };
     // ############################################################################################x
     /**
      * @class
@@ -256,13 +266,7 @@ define([
      * @returns {String[]}
      */
     ResourceHolder.prototype.getResourceNames = function () {
-        var result = [], name;
-        for (name in this._resources) {
-            if (this._resources.hasOwnProperty(name)) {
-                result.push(name);
-            }
-        }
-        return result;
+        return Object.keys(this._resources);
     };
     // ############################################################################################x
     /**
@@ -475,7 +479,12 @@ define([
             }
         }
     };
-
+    /**
+     * @returns {String[]}
+     */
+    ResourceManager.prototype.getResourceTypes = function () {
+        return Object.keys(this._resourceHolders);
+    };
     /**
      * 
      * @param {String} resourceType

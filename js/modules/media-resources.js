@@ -1324,6 +1324,9 @@ define([
         getOrAddModel: _resourceManager.getOrAddModel.bind(_resourceManager),
         getSoundEffect: _resourceManager.getSoundEffect.bind(_resourceManager),
         getMusic: _resourceManager.getMusic.bind(_resourceManager),
+        getResourceTypes: _resourceManager.getResourceTypes.bind(_resourceManager),
+        getResourceNames: _resourceManager.getResourceNames.bind(_resourceManager),
+        getResource: _resourceManager.getResource.bind(_resourceManager),
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
         executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager)
     };

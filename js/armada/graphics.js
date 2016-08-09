@@ -1542,6 +1542,14 @@ define([
         return this._lodLevel.getCurrentName();
     };
     /**
+     * Returns the numeric LOD value for the passed LOD level string identifier.
+     * @param {String} level
+     * @returns {Number}
+     */
+    GraphicsSettingsContext.prototype.getLOD = function (level) {
+        return this._lodLevel.getValueForName(level);
+    };
+    /**
      * Sets a new maximum model LOD. (both for displaying and loading models)
      * @param {String} value The string ID identifying the desired option.
      * @param {Boolean} [saveToLocalStorage=true]
@@ -2110,6 +2118,7 @@ define([
         getCubemapQualityPreferenceList: _context.getCubemapQualityPreferenceList.bind(_context),
         getLODLevels: _context.getLODLevels.bind(_context),
         getLODLevel: _context.getLODLevel.bind(_context),
+        getLOD: _context.getLOD.bind(_context),
         setLODLevel: _context.setLODLevel.bind(_context),
         getMaxLoadedLOD: _context.getMaxLoadedLOD.bind(_context),
         getLODContext: _context.getLODContext.bind(_context),

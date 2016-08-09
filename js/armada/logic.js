@@ -667,6 +667,13 @@ define([
     LogicContext.prototype.getEnvironment = function (name) {
         return this._environments[name] || null;
     };
+    /**
+     * Returns the list of names (IDs) of the loaded environments.
+     * @returns {String[]}
+     */
+    LogicContext.prototype.getEnvironmentNames = function () {
+        return Object.keys(this._environments);
+    };
     // methods
     /**
      * Sends an asynchronous request to grab the file containing the reusable
@@ -1682,6 +1689,9 @@ define([
         this._class = null;
         this._spacecraft = null;
         this._slot = null;
+        if (this._visualModel) {
+            this._visualModel.markAsReusable();
+        }
         this._visualModel = null;
     };
     // #########################################################################
@@ -3441,12 +3451,17 @@ define([
      * @property {Boolean} cameraConfigurations
      * @property {Boolean} lightSources
      * @property {Boolean} blinkers
+     * @property {Boolean} [self=true]
      */
     /**
      * @typedef {Object} Spacecraft~AddToSceneParams
      * @property {String} [shaderName]
      * @property {Float32Array} [positionMatrix]
      * @property {Float32Array} [orientationMatrix]
+     * @property {Boolean} [replaceVisualModel] If true, the visual model of the spacecraft will be replaced by the newly created one, if
+     * it exists.
+     * @property {ParameterizedMesh} [visualModel] If a visual model for the spacecraft itself is not created (self from supplements is 
+     * false), a visual model can be specified in this parameter that will be used instead of the existing one (when adding supplements)
      */
     /**
      * @function
@@ -3499,53 +3514,61 @@ define([
         resources.executeWhenReady(function () {
             var j, n, node, explosion, lightSources, parameterArrays = {}, originalFactionColor, replacementFactionColor;
             application.log("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
-            // setting up parameter array declarations (name: type)
-            parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
-            if (graphics.areLuminosityTexturesAvailable()) {
-                parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
-            }
-            visualModel = new budaScene.ParameterizedMesh(
-                    this._class.getModel(),
-                    params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
-                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                    params.positionMatrix || this._physicalModel.getPositionMatrix(),
-                    params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
-                    mat.scaling4(this._class.getModel().getScale()),
-                    (wireframe === true),
-                    lod,
-                    parameterArrays);
-            if (!this._visualModel) {
-                this._visualModel = visualModel;
-            }
-            if (this._name) {
-                visualModel.setName(this._name);
-            }
-            originalFactionColor = this._class.getFactionColor();
-            replacementFactionColor = (this._team && this._team.getColor()) || originalFactionColor;
-            visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
-                return originalFactionColor;
-            });
-            visualModel.setUniformValueFunction(UNIFORM_REPLACEMENT_FACTION_COLOR_NAME, function () {
-                return replacementFactionColor;
-            });
-            // setting the starting values of the parameter arrays
-            // setting an identity transformation for all transform groups
-            for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
-                visualModel.setMat4Parameter(
-                        _groupTransformsArrayName,
-                        i,
-                        mat.identity4());
-            }
-            // setting the default luminosity for all luminosity groups
-            if (graphics.areLuminosityTexturesAvailable()) {
-                for (j = 0, n = graphics.getMaxLuminosityFactors(); j < n; j++) {
-                    visualModel.setFloatParameter(
-                            _luminosityFactorsArrayName,
-                            j,
-                            this._class.getDefaultGroupLuminosity(j));
+            if (addSupplements.self !== false) {
+                // setting up parameter array declarations (name: type)
+                parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+                if (graphics.areLuminosityTexturesAvailable()) {
+                    parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
                 }
+                visualModel = new budaScene.ParameterizedMesh(
+                        this._class.getModel(),
+                        params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
+                        this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                        params.positionMatrix || this._physicalModel.getPositionMatrix(),
+                        params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
+                        mat.scaling4(this._class.getModel().getScale()),
+                        (wireframe === true),
+                        lod,
+                        parameterArrays);
+                if (!this._visualModel || params.replaceVisualModel) {
+                    this._visualModel = visualModel;
+                }
+                if (this._name) {
+                    visualModel.setName(this._name);
+                }
+                originalFactionColor = this._class.getFactionColor();
+                replacementFactionColor = (this._team && this._team.getColor()) || originalFactionColor;
+                visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
+                    return originalFactionColor;
+                });
+                visualModel.setUniformValueFunction(UNIFORM_REPLACEMENT_FACTION_COLOR_NAME, function () {
+                    return replacementFactionColor;
+                });
+                // setting the starting values of the parameter arrays
+                // setting an identity transformation for all transform groups
+                for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
+                    visualModel.setMat4Parameter(
+                            _groupTransformsArrayName,
+                            i,
+                            mat.identity4());
+                }
+                // setting the default luminosity for all luminosity groups
+                if (graphics.areLuminosityTexturesAvailable()) {
+                    for (j = 0, n = graphics.getMaxLuminosityFactors(); j < n; j++) {
+                        visualModel.setFloatParameter(
+                                _luminosityFactorsArrayName,
+                                j,
+                                this._class.getDefaultGroupLuminosity(j));
+                    }
+                }
+                node = scene.addObject(visualModel);
+                if (params.visualModel) {
+                    application.showError("Attempting to specify a visual model for the Spacecraft.addToScene() operation while a new one is also created!", application.ErrorSeverity.MINOR);
+                }
+            } else {
+                visualModel = params.visualModel || this._visualModel;
+                node = visualModel.getNode();
             }
-            node = scene.addObject(visualModel);
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {
                 // add the parent objects for the hitboxes
@@ -3703,6 +3726,19 @@ define([
         this._maneuveringComputer.updateTurningLimit();
     };
     /**
+     * Removes all equipment from the spacecraft.
+     */
+    Spacecraft.prototype.unequip = function () {
+        var i;
+        for (i = 0; i < this._weapons.length; i++) {
+            this._weapons[i].destroy();
+        }
+        this._weapons = [];
+        this._propulsion = null;
+        this._maneuveringComputer.updateForNewPropulsion();
+        this._maneuveringComputer.updateTurningLimit();
+    };
+    /**
      * Equips the spacecraft according to the specifications in the given equipment
      * profile.
      * @param {EquipmentProfile} [equipmentProfile]
@@ -3719,6 +3755,13 @@ define([
         } else {
             application.log("WARNING: equipping empty profile on " + this._class.getName() + "!");
         }
+    };
+    /**
+     * Returns the list of names (IDs) of the available equipment profiles for this spacecraft.
+     * @returns {String[]}
+     */
+    Spacecraft.prototype.getEquipmentProfileNames = function () {
+        return this._class.getEquipmentProfileNames();
     };
     /**
      * Fires all of the ship's weapons.
@@ -5075,6 +5118,8 @@ define([
         requestEnvironmentsLoad: _context.requestEnvironmentsLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         getDebugInfo: getDebugInfo,
+        getEnvironment: _context.getEnvironment.bind(_context),
+        getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
         Spacecraft: Spacecraft,
         Level: Level
     };

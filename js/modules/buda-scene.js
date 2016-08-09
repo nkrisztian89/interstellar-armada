@@ -586,6 +586,13 @@ define([
             this._cascadeScalingMatrix = null;
         }
         /**
+         * A convenience method to set uniform scaling
+         * @param {Number} scale The scaling to apply to all 3 axes
+         */
+        function setScale(scale) {
+            this.setScalingMatrix(mat.scaling4(scale));
+        }
+        /**
          * Returns a scaling matrix corresponding to the stacked scaling applied
          * on this object originating both from its parents' and own scaling.
          * @returns {Float32Array}
@@ -745,6 +752,7 @@ define([
             this.prototype.setOrientationMatrix = setOrientationMatrix;
             this.prototype.getScalingMatrix = getScalingMatrix;
             this.prototype.setScalingMatrix = setScalingMatrix;
+            this.prototype.setScale = setScale;
             this.prototype.getPositionVector = getPositionVector;
             this.prototype.translate = translate;
             this.prototype.translatev = translatev;
@@ -1359,6 +1367,18 @@ define([
             return result;
         }
         return false;
+    };
+    /**
+     * Executes the given callback function passing the held renderable object as a parameter to it and recursively calls for the execution 
+     * for all the subnodes.
+     * @param {Function} callback
+     */
+    RenderableNode.prototype.execute = function (callback) {
+        var i;
+        callback(this._renderableObject);
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].execute(callback);
+        }
     };
     /**
      * Adds and sets up all resources needed to render the held object and all
@@ -2308,6 +2328,16 @@ define([
             return this._lastLOD;
         }
         return DEFAULT_LOD;
+    };
+    /**
+     * Sets a new static LOD (after calling this the model will be rendered using the LOD closest to this static setting, regardless of the
+     * LOD context settings (limits).
+     * @param {Number} value
+     */
+    ShadedLODMesh.prototype.setStaticLOD = function (value) {
+        this._staticLOD = value;
+        this._currentLOD = this.LOD_NOT_SET;
+        this._lastLOD = this.LOD_NOT_SET;
     };
     /**
      * @override
@@ -5464,7 +5494,7 @@ define([
     };
     /**
      * Rotates the current orientation around the given axis by the given angle. This directly manipulates the orientation of the camera
-     * and thus should not be used from outside.
+     * and thus should not be used from outside! Use setAngularVelocityVector() (and update()) instead!
      * @param {Number[3]} axis The 3D vector of the axis.
      * @param {Number} angle Angle in radians.
      */
@@ -7319,8 +7349,13 @@ define([
         this._rootUINode.setScene(this);
     };
     /**
+     * Removes all the previously added directional light sources from the scene.
+     */
+    Scene.prototype.clearDirectionalLights = function () {
+        this._directionalLights = [];
+    };
+    /**
      * Removes all the previously added point light sources from the scene.
-     * @returns {undefined}
      */
     Scene.prototype.clearPointLights = function () {
         var i;
@@ -7328,6 +7363,12 @@ define([
         for (i = 0; i < MAX_POINT_LIGHT_PRIORITIES; i++) {
             this._pointLightPriorityArrays[i] = [];
         }
+    };
+    /**
+     * Removes all the previously added spot light sources from the scene.
+     */
+    Scene.prototype.clearSpotLights = function () {
+        this._spotLights = [];
     };
     /**
      * Returns an array containing all the top level main objects of the scene.

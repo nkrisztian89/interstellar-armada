@@ -319,6 +319,33 @@ define([
         }
         return result;
     }
+    /**
+     * Returns the list of the names of the various categories (types) of classes that are stored (e.g. SPACECRAFT_CLASS_ARRAY_NAME 
+     * ("spacecraftClasses"))
+     * @returns {String[]}
+     */
+    function getClassCategories() {
+        return _classManager.getResourceTypes();
+    }
+    /**
+     * Returns the list of names (IDs) of the stored classes belonging to the given category (type - e.g. SPACECRAFT_CLASS_ARRAY_NAME 
+     * ("spacecraftClasses")).
+     * @param {String} category
+     * @returns {String[]}
+     */
+    function getClassNames(category) {
+        return _classManager.getResourceNames(category);
+    }
+    /**
+     * Returns the stored class belonging to the given category (type - e.g. SPACECRAFT_CLASS_ARRAY_NAME ("spacecraftClasses")) that has
+     * the given name (id).
+     * @param {String} category
+     * @param {String} name
+     * @returns {}
+     */
+    function getClass(category, name) {
+        return _classManager.getResource(category, name);
+    }
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -397,6 +424,11 @@ define([
          * @type String
          */
         this._source = dataJSON ? (dataJSON.source || null) : null;
+        /**
+         * Stores a reference to the object from which this class was initialized.
+         * @type String
+         */
+        this._dataJSON = dataJSON;
         if (dataJSON) {
             if (!this._source) {
                 this._loadData(dataJSON);
@@ -426,11 +458,20 @@ define([
     };
     /**
      * @override
+     * @param {Object} dataJSON
      * @returns {Boolean}
      */
-    GenericClass.prototype._loadData = function () {
+    GenericClass.prototype._loadData = function (dataJSON) {
         this._source = this._source || "";
+        this._dataJSON = dataJSON;
         return true;
+    };
+    /**
+     * Returns the object this class was initialized from.
+     * @returns {Object}
+     */
+    GenericClass.prototype.getData = function () {
+        return this._dataJSON;
     };
     /**
      * @param {String} resourceType
@@ -3177,6 +3218,12 @@ define([
         return this._equipmentProfiles[name];
     };
     /**
+     * @returns {String[]}
+     */
+    SpacecraftClass.prototype.getEquipmentProfileNames = function () {
+        return Object.keys(this._equipmentProfiles);
+    };
+    /**
      * @returns {ObjectView[]}
      */
     SpacecraftClass.prototype.getViews = function () {
@@ -3340,7 +3387,11 @@ define([
         getSpacecraftType: getSpacecraftType,
         getSpacecraftClass: getSpacecraftClass,
         getSpacecraftClassesInArray: getSpacecraftClassesInArray,
+        getClassCategories: getClassCategories,
+        getClassNames: getClassNames,
+        getClass: getClass,
         EquipmentProfile: EquipmentProfile,
+        ObjectView: ObjectView,
         SceneView: SceneView,
         requestLoad: requestLoad,
         handleGraphicsSettingsChanged: handleGraphicsSettingsChanged
