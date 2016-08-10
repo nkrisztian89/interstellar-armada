@@ -27,7 +27,7 @@ define([
     "armada/graphics",
     "armada/classes",
     "armada/logic",
-    "spacecraft-preview"
+    "editor/spacecraft-preview"
 ], function (application, resources, constants, config, graphics, classes, logic, spacecraftPreview) {
     "use strict";
     var

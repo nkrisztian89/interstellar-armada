@@ -319,8 +319,6 @@ define([
         params = params || {};
         environmentChanged = params.environmentName !== _environmentName;
         equipmentProfileChanged = params.equipmentProfileName !== _equipmentProfileName;
-        elements.canvas.width = elements.canvas.clientWidth;
-        elements.canvas.height = elements.canvas.clientHeight;
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }
@@ -361,6 +359,10 @@ define([
                 _scene.clearPointLights();
                 _scene.clearSpotLights();
             }
+        }
+        // clear the previous render
+        if (_context) {
+            _requestRender();
         }
         if ((environmentChanged || !params.preserve) && !params.environmentName) {
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
@@ -451,6 +453,8 @@ define([
         elements.options.appendChild(equipmentSelector);
         elements.options.hidden = false;
         elements.canvas.hidden = false;
+        elements.canvas.width = elements.canvas.clientWidth;
+        elements.canvas.height = elements.canvas.clientHeight;
         resources.executeWhenReady(function () {
             var view, distance;
             _scene.addToContext(_context);
