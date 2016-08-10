@@ -8,7 +8,6 @@ body {
     position: static;
     margin: 0;
     padding: 0;
-    border: 5px transparent;
     overflow: hidden;
 }
 
@@ -64,7 +63,6 @@ div.windowTitle {
 div.windowContent {
     position: relative;
     left: 0;
-    width: calc(100% - 2px);
     height: calc(100% - 24px);
     margin: 0;
     padding: 0;
@@ -81,6 +79,7 @@ div.windowLabel {
 
 .scrollable {
     overflow-y: scroll;
+    width: calc(100% - 2px);
 }
 
 ul {
@@ -98,12 +97,9 @@ ul.elementList {
     padding-top: 0;
     padding-bottom: 0;
     padding-left: 1em;
-    
-    /*background-color: #444444;*/
 }
 
 li.category {
-    /*background-color: #4d4d4d;*/
 }
 
 span.category {
@@ -150,4 +146,59 @@ span.settingLabel {
     font-size: 10px;
     padding-left: 0.5em;
     padding-right: 0.5em;
+}
+
+#propertiesTable {
+    position: relative;
+    width: 100%;
+    border: 0;
+    margin-top: 0;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0;
+    padding: 0;
+}
+
+td {
+    background-color: #4d4d4d;
+}
+
+input[type="text"] {
+    height: 1.2em;
+}
+
+.propertyName {
+    font-size: 12px;
+    padding-left: 0.5em;
+}
+
+span.propertyControl {
+    font-size: 12px;
+}
+
+.propertyControl {
+    position: relative;
+    max-width: calc(100%-4px);
+
+    text-align: left;
+}
+
+div.propertyControl {
+    vertical-align: middle;
+}
+
+.colorComponent {
+    width: 2em;
+    margin-right: 0.3em;
+    margin-top: 0;
+}
+
+.colorPreview {
+    display: inline-block;
+    width: 1.4em;
+    height: 1.4em;
+    margin-bottom: 0;
+    margin-right: 0.5em;
+
+    border: 1px solid #222222;
 }

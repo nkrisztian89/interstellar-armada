@@ -18,6 +18,8 @@
  * @param classes Used to display the class structure in the Classes window and access the selected class for preview and properties
  * @param logic Used to load the environments 
  * @param spacecraftPreview Used to create previews for spacecraft classes
+ * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
+ * @param properties Used to generate the content of the Properties window
  */
 define([
     "modules/application",
@@ -27,8 +29,10 @@ define([
     "armada/graphics",
     "armada/classes",
     "armada/logic",
-    "editor/spacecraft-preview"
-], function (application, resources, constants, config, graphics, classes, logic, spacecraftPreview) {
+    "editor/spacecraft-preview",
+    "editor/descriptors",
+    "editor/properties"
+], function (application, resources, constants, config, graphics, classes, logic, spacecraftPreview, descriptors, properties) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -61,50 +65,15 @@ define([
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
             // ------------------------------------------------------------------------------
+            // Private variables
             /**
-             * The descriptor object for spacecraft classes, describing their properties
+             * The content of the Preview window for an item belonging to a specific category is generated based on the module stored within this
+             * object, at the key that is the same as the category name
              * @type Object
              */
-            SPACECRAFT_CLASS = {
-                NAME: {
-                    name: "name",
-                    type: "string"
-                },
-                TYPE: {
-                    name: "type",
-                    type: "string"
-                },
-                SHOW_IN_DATABASE: {
-                    name: "showInDatabase",
-                    type: "boolean"
-                },
-                HITPOINTS: {
-                    name: "hitpoints",
-                    type: "number"
-                },
-                ARMOR: {
-                    name: "armor",
-                    type: "number"
-                }
+            _previews = {
+                "spacecraftClasses": spacecraftPreview
             },
-    // ------------------------------------------------------------------------------
-    // Private variables
-    /**
-     * The content of the Properties window for an item belonging to a specific category is generated based on the property description
-     * object stored within this object, at the key that is the same as the category name
-     * @type Object
-     */
-    _descriptors = {
-        "spacecraftClasses": SPACECRAFT_CLASS
-    },
-    /**
-     * The content of the Preview window for an item belonging to a specific category is generated based on the module stored within this
-     * object, at the key that is the same as the category name
-     * @type Object
-     */
-    _previews = {
-        "spacecraftClasses": spacecraftPreview
-    },
     /**
      * The HTML element (<span>) that corresponds to the currently selected item
      * @type Element
@@ -183,29 +152,14 @@ define([
      * Loads the content of the Properties window for the currently selected element.
      */
     function _loadProperties() {
-        var
-                propertiesWindowContent = document.getElementById(PROPERTIES_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
-                table, row, nameCell, valueCell, descriptor, properties, i;
-        propertiesWindowContent.innerHTML = "";
+        var windowContent = document.getElementById(PROPERTIES_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS);
+        windowContent.innerHTML = "";
         if (_selectedItem.type === ItemType.NONE) {
-            propertiesWindowContent.appendChild(_createLabel(NO_ITEM_SELECTED_TEXT));
-        } else if (!_descriptors[_selectedItem.category]) {
-            propertiesWindowContent.appendChild(_createLabel(NO_PROPERTIES_TEXT));
+            windowContent.appendChild(_createLabel(NO_ITEM_SELECTED_TEXT));
+        } else if (!descriptors[_selectedItem.category]) {
+            windowContent.appendChild(_createLabel(NO_PROPERTIES_TEXT));
         } else {
-            table = document.createElement("table");
-            descriptor = _descriptors[_selectedItem.category];
-            properties = Object.keys(descriptor);
-            for (i = 0; i < properties.length; i++) {
-                row = document.createElement("tr");
-                nameCell = document.createElement("td");
-                nameCell.innerHTML = descriptor[properties[i]].name;
-                row.appendChild(nameCell);
-                valueCell = document.createElement("td");
-                valueCell.innerHTML = _selectedItem.data[descriptor[properties[i]].name];
-                row.appendChild(valueCell);
-                table.appendChild(row);
-            }
-            propertiesWindowContent.appendChild(table);
+            properties.createProperties(windowContent, _selectedItem);
         }
     }
     /**

@@ -20,6 +20,7 @@
  * @param config Used to access default camera configuration settings.
  * @param classes Used to create an object view for the preview spacecraft.
  * @param logic Used to create the preview spacecraft(s) and access the environments.
+ * @param common Used to create selectors.
  */
 define([
     "utils/utils",
@@ -31,8 +32,9 @@ define([
     "armada/graphics",
     "armada/configuration",
     "armada/classes",
-    "armada/logic"
-], function (utils, vec, mat, managedGL, budaScene, resources, graphics, config, classes, logic) {
+    "armada/logic",
+    "editor/common"
+], function (utils, vec, mat, managedGL, budaScene, resources, graphics, config, classes, logic, common) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -210,27 +212,6 @@ define([
             _requestRender();
         }
         return false;
-    }
-    /**
-     * Creates and returns an HTML <select> element storing the given options (with the same value and text)
-     * @param {String[]} options The options to include in the element
-     * @param {String} selected The initial text of the element (should be one of the options)
-     * @param {Boolean} includeNone If true, an additional, "none" option will be included as the first one
-     * @param {Function} onchange The function to set as the element's onchange handler.
-     * @returns {Element}
-     */
-    function _createSelector(options, selected, includeNone, onchange) {
-        var result = document.createElement("select"), s, i;
-        s = includeNone ? '<option value="none">none</option>' : '';
-        for (i = 0; i < options.length; i++) {
-            s += '<option value="' + options[i] + '">' + options[i] + '</option>';
-        }
-        result.innerHTML = s;
-        if (selected) {
-            result.value = selected;
-        }
-        result.onchange = onchange;
-        return result;
     }
     /**
      * Return whether according to the currently set render mode, the wireframe model should be rendered.
@@ -417,7 +398,7 @@ define([
         elements.options.innerHTML = "";
         // render mode selector
         elements.options.appendChild(_createSettingLabel("Render mode:"));
-        renderModeSelector = _createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
+        renderModeSelector = common.createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
             _renderMode = renderModeSelector.value;
             _updateForRenderMode();
             _requestRender();
@@ -425,7 +406,7 @@ define([
         elements.options.appendChild(renderModeSelector);
         // LOD selector
         elements.options.appendChild(_createSettingLabel("LOD:"));
-        lodSelector = _createSelector(graphics.getLODLevels(), _lod, false, function () {
+        lodSelector = common.createSelector(graphics.getLODLevels(), _lod, false, function () {
             _lod = lodSelector.value;
             _updateForLOD();
             _requestRender();
@@ -433,7 +414,7 @@ define([
         elements.options.appendChild(lodSelector);
         // environment selector
         elements.options.appendChild(_createSettingLabel("Environment:"));
-        environmentSelector = _createSelector(logic.getEnvironmentNames(), _environmentName, true, function () {
+        environmentSelector = common.createSelector(logic.getEnvironmentNames(), _environmentName, true, function () {
             refresh(elements, spacecraftClass, {
                 preserve: true,
                 environmentName: (environmentSelector.value !== "none") ? environmentSelector.value : undefined,
@@ -443,7 +424,7 @@ define([
         elements.options.appendChild(environmentSelector);
         // equipment profile selector
         elements.options.appendChild(_createSettingLabel("Equipment:"));
-        equipmentSelector = _createSelector(spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
+        equipmentSelector = common.createSelector(spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
             refresh(elements, spacecraftClass, {
                 preserve: true,
                 environmentName: _environmentName,
