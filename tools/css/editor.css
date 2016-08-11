@@ -51,6 +51,7 @@ div.window {
 div.windowTitle {
     position: relative;
     background-color: #bbbbbb;
+    padding: 2px;
     border: 2px solid #888888;
     text-align: center;
     color: #222222;
@@ -63,7 +64,7 @@ div.windowTitle {
 div.windowContent {
     position: relative;
     left: 0;
-    height: calc(100% - 24px);
+    height: calc(100% - 28px);
     margin: 0;
     padding: 0;
 
@@ -126,7 +127,7 @@ span.element.selected {
     position: relative;
     top: 0;
     left: 0;
-    width: calc(100% - 2px);
+    width: calc(100% - 10px);
     height: 50px;
     margin: 0;
     padding: 3px;
@@ -136,10 +137,23 @@ span.element.selected {
 
 #previewCanvas {
     position: relative;
-    width: calc(100% - 2px);
-    height: calc(100% - 54px);
+    width: calc(100% - 6px);
+    height: calc(100% - 95px);
 
+    padding: 0;
     border: 0;
+}
+
+#previewInfo {
+    position: relative;
+    bottom: 2px;
+    left: 0;
+    width: calc(100% - 10px);
+    height: 25px;
+    margin: 0;
+    padding: 3px;
+
+    border: 2px solid #666666;
 }
 
 span.settingLabel {
@@ -165,6 +179,12 @@ td {
 
 input[type="text"] {
     height: 1.2em;
+}
+
+.label {
+    font-size: 12px;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
 }
 
 .propertyName {

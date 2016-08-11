@@ -2257,6 +2257,13 @@ define([
         }
     };
     /**
+     * Returns the 3D model object of this shaded mesh.
+     * @returns {Model}
+     */
+    ShadedLODMesh.prototype.getModel = function () {
+        return this._model;
+    };
+    /**
      * Returns the size of the largest model of the mesh.
      * @returns {Number} The size of the largest model of the mesh.
      */

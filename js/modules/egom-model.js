@@ -315,6 +315,13 @@ define([
         this._nullVertex = new Vertex([0.0, 0.0, 0.0]);
     }
     /**
+     * Returns the number of lines this model contains.
+     * @returns {Number}
+     */
+    Mesh.prototype.getNumLines = function () {
+        return this._lines.length;
+    };
+    /**
      * Returns the number of completely opaque triangles this model contains.
      * @returns {Number}
      */
@@ -1945,6 +1952,16 @@ define([
     Model.prototype.getDepthInMeters = function (lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getDepth(lod) * this._scale;
+    };
+
+    /**
+     * Returns the number of lines this model contains.
+     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @returns {Number}
+     */
+    Model.prototype.getNumLines = function (lod) {
+        lod = (lod !== undefined) ? lod : this._minLOD;
+        return this.getMeshWithLOD(lod).getNumLines();
     };
 
     /**

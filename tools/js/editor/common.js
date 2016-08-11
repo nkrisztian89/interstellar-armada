@@ -33,7 +33,7 @@ define([
     var
             // ------------------------------------------------------------------------------
             // Constants
-            COLOR_COMPONENT_CLASS = "colorComponent",
+            LABEL_CLASS = "label", COLOR_COMPONENT_CLASS = "colorComponent",
             COLOR_PREVIEW_CLASS = "colorPreview";
     // ------------------------------------------------------------------------------
     // Public functions
@@ -141,6 +141,7 @@ define([
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
+        LABEL_CLASS: LABEL_CLASS,
         createNumericInput: createNumericInput,
         createSelector: createSelector,
         createColorPicker: createColorPicker,

@@ -61,6 +61,7 @@ define([
             ELEMENT_CLASS = "element",
             PREVIEW_OPTIONS_ID = "previewOptions",
             PREVIEW_CANVAS_ID = "previewCanvas",
+            PREVIEW_INFO_ID = "previewInfo",
             NO_ITEM_SELECTED_TEXT = "no item selected",
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
@@ -135,18 +136,25 @@ define([
         var
                 previewWindowContent = document.getElementById(PREVIEW_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
                 previewOptions = previewWindowContent.querySelector("div#" + PREVIEW_OPTIONS_ID),
-                previewCanvas = document.getElementById(PREVIEW_CANVAS_ID);
+                previewCanvas = document.getElementById(PREVIEW_CANVAS_ID),
+                previewInfo = document.getElementById(PREVIEW_INFO_ID);
         if (_selectedItem.type === ItemType.NONE) {
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
+            previewInfo.hidden = true;
             _setLabel(previewWindowContent, NO_ITEM_SELECTED_TEXT);
         } else if (!_previews[_selectedItem.category]) {
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
+            previewInfo.hidden = true;
             _setLabel(previewWindowContent, NO_PREVIEW_TEXT);
         } else {
             _hideLabel(previewWindowContent);
-            _previews[_selectedItem.category].refresh({options: previewOptions, canvas: previewCanvas}, _selectedItem.reference);
+            _previews[_selectedItem.category].refresh({
+                options: previewOptions,
+                canvas: previewCanvas,
+                info: previewInfo
+            }, _selectedItem.reference);
         }
     }
     /**

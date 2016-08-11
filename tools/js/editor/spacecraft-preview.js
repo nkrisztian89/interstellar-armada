@@ -306,6 +306,19 @@ define([
         return result;
     }
     /**
+     * Creates the content for the preview information panel and adds it to the page.
+     */
+    function _updateInfo() {
+        var infoLabel = document.createElement("span");
+        _elements.info.innerHTML = "";
+        infoLabel.classList.add(common.LABEL_CLASS);
+        infoLabel.innerHTML = "Model: " +
+                "triangles: " + _spacecraft.getVisualModel().getModel().getNumTriangles(graphics.getLOD(_lod)) +
+                ", lines: " + _spacecraft.getVisualModel().getModel().getNumLines(graphics.getLOD(_lod));
+        _elements.info.appendChild(infoLabel);
+        _elements.info.hidden = false;
+    }
+    /**
      * @typedef {Object} refreshParams
      * @property {Boolean} preserve Whether to preserve the existing settings (e.g. spacecraft and camera orientation)
      * @property {Boolean} reload Whether to force-reload the spacecraft (even if the settings are set to be preserved)
@@ -458,6 +471,7 @@ define([
                     _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(orientationMatrix, true);
                 }
             }
+            _updateInfo();
             _elements.canvas.onmousedown = _handleMouseDown;
             _elements.canvas.onwheel = _handleWheel;
             _context.executeWhenReady(function () {
@@ -505,6 +519,7 @@ define([
             _lod = _optionElements.lodSelector.value;
             _updateForLOD();
             _requestRender();
+            _updateInfo();
         });
         _elements.options.appendChild(_optionElements.lodSelector);
         // environment selector
