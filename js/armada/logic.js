@@ -3460,6 +3460,8 @@ define([
      * @property {Float32Array} [orientationMatrix]
      * @property {Boolean} [replaceVisualModel] If true, the visual model of the spacecraft will be replaced by the newly created one, if
      * it exists.
+     * @property {Number[4]} [factionColor] If given, the faction color of the spacecraft will be replaced by this color (otherwise it is
+     * based on the team's faction color)
      * @property {ParameterizedMesh} [visualModel] If a visual model for the spacecraft itself is not created (self from supplements is 
      * false), a visual model can be specified in this parameter that will be used instead of the existing one (when adding supplements)
      */
@@ -3537,7 +3539,7 @@ define([
                     visualModel.setName(this._name);
                 }
                 originalFactionColor = this._class.getFactionColor();
-                replacementFactionColor = (this._team && this._team.getColor()) || originalFactionColor;
+                replacementFactionColor = params.factionColor || (this._team && this._team.getColor()) || originalFactionColor;
                 visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
                     return originalFactionColor;
                 });

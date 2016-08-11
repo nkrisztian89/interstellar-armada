@@ -335,10 +335,11 @@ define(function () {
      * Returns a string converted from the given number, padded by "0"s at the beginning, if it has fewer digits than specified
      * @param {Number} num The number to convert to string
      * @param {Number} digits The minimum amount of digits the resulting string should contain
+     * @param {Number} [radix=10] The base of the numeric system to use (e.g. 16 for hex)
      * @returns {String}
      */
-    exports.getPaddedStringForNumber = function (num, digits) {
-        var i, result = num.toString();
+    exports.getPaddedStringForNumber = function (num, digits, radix) {
+        var i, result = num.toString(radix || 10);
         for (i = result.length; i < digits; i++) {
             result = "0" + result;
         }
@@ -474,6 +475,29 @@ define(function () {
                 Math.round(color[1] * 255) + "," +
                 Math.round(color[2] * 255) + "," +
                 color[3] + ")";
+    };
+    /**
+     * Converts the given, 3 component float color to a hex string (such as "#ff0000")
+     * @param {Number[3]} color
+     * @returns {String}
+     */
+    exports.getHexColor = function (color) {
+        return "#" +
+                exports.getPaddedStringForNumber(Math.round(color[0] * 255), 2, 16) +
+                exports.getPaddedStringForNumber(Math.round(color[1] * 255), 2, 16) +
+                exports.getPaddedStringForNumber(Math.round(color[2] * 255), 2, 16);
+    };
+    /**
+     * Convert the given hex color string (such as "#ff0000") to a 3 component float color
+     * @param {String} hexColor
+     * @returns {Number[3]}
+     */
+    exports.getColor3FromHex = function (hexColor) {
+        var result = [0, 0, 0];
+        result[0] = parseInt(hexColor.substr(1, 2), 16) / 255;
+        result[1] = parseInt(hexColor.substr(3, 2), 16) / 255;
+        result[2] = parseInt(hexColor.substr(5, 2), 16) / 255;
+        return result;
     };
     /**
      * Solves the quadratic equation a * x^2 + b * x + c = 0 for x, and returns the greater of the two solutions. Returns NaN if there is

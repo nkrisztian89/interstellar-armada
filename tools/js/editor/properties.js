@@ -10,19 +10,17 @@
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
- * @param utils Used for creating CSS colors
  * @param resources Used to obtain the list of available resources for resource reference property selectors
  * @param classes Used to obtain the list of available classes for class reference property selectors
  * @param descriptors Used to obtain the appropriate properties description object
  * @param common Used to create selectors
  */
 define([
-    "utils/utils",
     "modules/media-resources",
     "armada/classes",
     "editor/descriptors",
     "editor/common"
-], function (utils, resources, classes, descriptors, common) {
+], function (resources, classes, descriptors, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -31,8 +29,6 @@ define([
             PROPERTIES_ID = "propertiesTable",
             PROPERTY_CLASS = "propertyName",
             CONTROL_CLASS = "propertyControl",
-            COLOR_COMPONENT_CLASS = "colorComponent",
-            COLOR_PREVIEW_CLASS = "colorPreview",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -92,30 +88,27 @@ define([
         return result;
     }
     /**
+     * @callback NumberControl~changeHandler
+     * @param {Element} element The HTML element representing the control the value of which was changed
+     */
+    /**
      * Creates and returns a control that can be used to edit numeric properties.
      * @param {String} name Name of the property to edit
      * @param {Number} data The starting value
      * @param {Boolean} allowFloats If true, float values are allowed (otherwise only integer values)
-     * @param {Function} [changeHandler] The function that should be run on the change event of the control, after checking the value to be
-     * a number
+     * @param {NumberControl~changeHandler} [changeHandler] The function that should be run on the change event of the control, after 
+     * checking the value to be a number
      * @returns {Element}
      */
     function _createNumberControl(name, data, allowFloats, changeHandler) {
-        var result = document.createElement("input");
-        result.type = "text";
-        result.value = data;
-        result.name = name;
-        result.onchange = function () {
-            result.value = allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
-            if (isNaN(result.value)) {
-                result.value = 0;
-            }
+        var result = common.createNumericInput(data, allowFloats, function () {
             if (changeHandler) {
                 changeHandler(result);
             } else {
                 _changeData(name, result.value);
             }
-        };
+        });
+        result.name = name;
         return result;
     }
     /**
@@ -153,24 +146,9 @@ define([
      * @returns {Element}
      */
     function _createColorControl(name, data) {
-        var component, i, preview,
-                result = document.createElement("div"),
-                componentChangeHander = function (index, comp) {
-                    data[index] = comp.value;
-                    preview.style.backgroundColor = utils.getCSSColor(data);
-                    _changeData(name, data);
-                };
-        preview = document.createElement("span");
-        preview.innerHTML = "&nbsp;";
-        preview.classList.add(COLOR_PREVIEW_CLASS);
-        preview.style.backgroundColor = utils.getCSSColor(data);
-        result.appendChild(preview);
-        for (i = 0; i < data.length; i++) {
-            component = _createNumberControl(name + "_component" + i.toString(), data[i], true, componentChangeHander.bind(this, i));
-            component.classList.add(COLOR_COMPONENT_CLASS);
-            result.appendChild(component);
-        }
-        return result;
+        return common.createColorPicker(data, function () {
+            _changeData(name, data);
+        });
     }
     /**
      * Creates and returns an element that can be used to display the value of properties the type of which is not identified.
@@ -233,7 +211,6 @@ define([
         createProperties: function (element, item, preview) {
             var
                     table, row, nameCell, valueCell, descriptor, properties, i;
-
             table = document.createElement("table");
             table.setAttribute("id", PROPERTIES_ID);
             descriptor = descriptors[item.category];

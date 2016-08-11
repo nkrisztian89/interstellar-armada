@@ -78,7 +78,7 @@ define([
              * The names of properties the changing of which should trigger a refresh of the preview
              * @type String[]
              */
-            REFRESH_PROPERTIES = ["model", "shader", "texture", "defaultLuminosityFactors"],
+            REFRESH_PROPERTIES = ["model", "shader", "texture", "factionColor", "defaultLuminosityFactors"],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -117,13 +117,34 @@ define([
              */
             _renderMode,
             /**
-             * @type Number
+             * @type String
              */
             _lod,
             /**
              * @type String
              */
-            _environmentName, _equipmentProfileName;
+            _environmentName, _equipmentProfileName,
+            /**
+             * 
+             * @type Number[4]
+             */
+            _factionColor,
+            /**
+             * 
+             * @type Boolean
+             */
+            _factionColorChanged,
+            /**
+             * 
+             * @type Object
+             */
+            _optionElements = {
+                renderModeSelector: null,
+                lodSelector: null,
+                environmentSelector: null,
+                equipmentSelector: null,
+                factionColorPicker: null
+            };
     // ----------------------------------------------------------------------
     // Private Functions
     /**
@@ -284,13 +305,6 @@ define([
         result.innerHTML = text;
         return result;
     }
-    // ----------------------------------------------------------------------
-    // Public Functions
-    /**
-     * @typedef {Object} refreshElements
-     * @property {HTMLCanvasElement} canvas The canvas that can be used to display a preview image of the selected object
-     * @property {Element} options The div that houses the preview options
-     */
     /**
      * @typedef {Object} refreshParams
      * @property {Boolean} preserve Whether to preserve the existing settings (e.g. spacecraft and camera orientation)
@@ -299,17 +313,11 @@ define([
      * @property {String} equipmentProfileName The name of the equipment profile to be equipped on the previewed spacecraft
      */
     /**
-     * The main function that sets up the preview window for the editor to show the selected spacecraft class.
-     * @param {refreshElements} elements References to the HTML elements that can be used for the preview.
-     * @param {SpacecraftClass} spacecraftClass The spacecraft class to preview
-     * @param {refreshParams} params Additional parameters 
+     * Updates the content of the preview canvas according to the current preview settings
+     * @param {refreshParams} params
      */
-    function refresh(elements, spacecraftClass, params) {
+    function _updateCanvas(params) {
         var shadowMappingSettings,
-                renderModeSelector,
-                lodSelector,
-                environmentSelector,
-                equipmentSelector,
                 environmentChanged,
                 equipmentProfileChanged,
                 shouldReload,
@@ -373,8 +381,8 @@ define([
             }
         }
         if (shouldReload) {
-            _spacecraft = new logic.Spacecraft(spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
-            _wireframeSpacecraft = new logic.Spacecraft(spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
+            _spacecraft = new logic.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
+            _wireframeSpacecraft = new logic.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
         }
         if (equipmentProfileChanged || environmentChanged || shouldReload) {
             if (_equipmentProfileName) {
@@ -383,14 +391,17 @@ define([
                 _equipmentProfileName = null;
             }
             if (params.equipmentProfileName) {
-                _spacecraft.equipProfile(spacecraftClass.getEquipmentProfile(params.equipmentProfileName));
-                _wireframeSpacecraft.equipProfile(spacecraftClass.getEquipmentProfile(params.equipmentProfileName));
+                _spacecraft.equipProfile(_spacecraftClass.getEquipmentProfile(params.equipmentProfileName));
+                _wireframeSpacecraft.equipProfile(_spacecraftClass.getEquipmentProfile(params.equipmentProfileName));
                 _equipmentProfileName = params.equipmentProfileName;
             }
         }
         _spacecraft.addToScene(_scene, undefined, false,
                 (environmentChanged || shouldReload) ? {weapons: true, lightSources: true, blinkers: true} : {self: false, weapons: true},
-                {replaceVisualModel: true});
+                {
+                    replaceVisualModel: true,
+                    factionColor: _factionColor
+                });
         _wireframeSpacecraft.addToScene(_scene, undefined, true,
                 (environmentChanged || shouldReload) ? {weapons: true, lightSources: false, blinkers: false} : {self: false, weapons: true},
                 {
@@ -413,53 +424,10 @@ define([
             logic.getEnvironment(params.environmentName).addToScene(_scene);
         }
         _environmentName = params.environmentName;
-        _context = _context || new managedGL.ManagedGLContext(MANAGED_CONTEXT_NAME, elements.canvas, graphics.getAntialiasing(), true, graphics.getFiltering());
-        _renderMode = _renderMode || RenderMode.SOLID;
-        _lod = (_lod !== undefined) ? _lod : graphics.getLODLevel();
-        // setting up preview options
-        elements.options.innerHTML = "";
-        // render mode selector
-        elements.options.appendChild(_createSettingLabel("Render mode:"));
-        renderModeSelector = common.createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
-            _renderMode = renderModeSelector.value;
-            _updateForRenderMode();
-            _requestRender();
-        });
-        elements.options.appendChild(renderModeSelector);
-        // LOD selector
-        elements.options.appendChild(_createSettingLabel("LOD:"));
-        lodSelector = common.createSelector(graphics.getLODLevels(), _lod, false, function () {
-            _lod = lodSelector.value;
-            _updateForLOD();
-            _requestRender();
-        });
-        elements.options.appendChild(lodSelector);
-        // environment selector
-        elements.options.appendChild(_createSettingLabel("Environment:"));
-        environmentSelector = common.createSelector(logic.getEnvironmentNames(), _environmentName, true, function () {
-            refresh(elements, spacecraftClass, {
-                preserve: true,
-                environmentName: (environmentSelector.value !== "none") ? environmentSelector.value : undefined,
-                equipmentProfileName: _equipmentProfileName
-            });
-        });
-        elements.options.appendChild(environmentSelector);
-        // equipment profile selector
-        elements.options.appendChild(_createSettingLabel("Equipment:"));
-        equipmentSelector = common.createSelector(spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
-            refresh(elements, spacecraftClass, {
-                preserve: true,
-                environmentName: _environmentName,
-                equipmentProfileName: (equipmentSelector.value !== "none") ? equipmentSelector.value : undefined
-            });
-        });
-        elements.options.appendChild(equipmentSelector);
-        elements.options.hidden = false;
-        elements.canvas.hidden = false;
-        elements.canvas.width = elements.canvas.clientWidth;
-        elements.canvas.height = elements.canvas.clientHeight;
-        _elements = elements;
-        _spacecraftClass = spacecraftClass;
+        _context = _context || new managedGL.ManagedGLContext(MANAGED_CONTEXT_NAME, _elements.canvas, graphics.getAntialiasing(), true, graphics.getFiltering());
+        _elements.canvas.hidden = false;
+        _elements.canvas.width = _elements.canvas.clientWidth;
+        _elements.canvas.height = _elements.canvas.clientHeight;
         resources.executeWhenReady(function () {
             var view, distance;
             _scene.addToContext(_context);
@@ -490,8 +458,8 @@ define([
                     _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(orientationMatrix, true);
                 }
             }
-            elements.canvas.onmousedown = _handleMouseDown;
-            elements.canvas.onwheel = _handleWheel;
+            _elements.canvas.onmousedown = _handleMouseDown;
+            _elements.canvas.onwheel = _handleWheel;
             _context.executeWhenReady(function () {
                 utils.executeAsync(function () {
                     _updateForRenderMode();
@@ -503,12 +471,104 @@ define([
         resources.requestResourceLoad();
     }
     /**
+     * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
+     * The settings that persist across different items are not reset.
+     */
+    function _clearSettingsForNewItem() {
+        _renderMode = _renderMode || RenderMode.SOLID;
+        _lod = (_lod !== undefined) ? _lod : graphics.getLODLevel();
+        _environmentName = null;
+        _equipmentProfileName = null;
+        if (!_factionColor) {
+            _factionColorChanged = false;
+        }
+        if (!_factionColorChanged) {
+            _factionColor = _spacecraftClass.getFactionColor().slice();
+        }
+    }
+    /**
+     * Creates the controls that form the content of the preview options and adds them to the page.
+     */
+    function _createOptions() {
+        _elements.options.innerHTML = "";
+        // render mode selector
+        _elements.options.appendChild(_createSettingLabel("Render mode:"));
+        _optionElements.renderModeSelector = common.createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
+            _renderMode = _optionElements.renderModeSelector.value;
+            _updateForRenderMode();
+            _requestRender();
+        });
+        _elements.options.appendChild(_optionElements.renderModeSelector);
+        // LOD selector
+        _elements.options.appendChild(_createSettingLabel("LOD:"));
+        _optionElements.lodSelector = common.createSelector(graphics.getLODLevels(), _lod, false, function () {
+            _lod = _optionElements.lodSelector.value;
+            _updateForLOD();
+            _requestRender();
+        });
+        _elements.options.appendChild(_optionElements.lodSelector);
+        // environment selector
+        _elements.options.appendChild(_createSettingLabel("Environment:"));
+        _optionElements.environmentSelector = common.createSelector(logic.getEnvironmentNames(), _environmentName, true, function () {
+            _updateCanvas({
+                preserve: true,
+                environmentName: (_optionElements.environmentSelector.value !== "none") ? _optionElements.environmentSelector.value : null,
+                equipmentProfileName: _equipmentProfileName
+            });
+        });
+        _elements.options.appendChild(_optionElements.environmentSelector);
+        // equipment profile selector
+        _elements.options.appendChild(_createSettingLabel("Equipment:"));
+        _optionElements.equipmentSelector = common.createSelector(_spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
+            _updateCanvas({
+                preserve: true,
+                environmentName: _environmentName,
+                equipmentProfileName: (_optionElements.equipmentSelector.value !== "none") ? _optionElements.equipmentSelector.value : null
+            });
+        });
+        _elements.options.appendChild(_optionElements.equipmentSelector);
+        // faction color picker
+        _elements.options.appendChild(_createSettingLabel("Faction color:"));
+        _optionElements.factionColorPicker = common.createColorPicker(_factionColor, function () {
+            _factionColorChanged = true;
+            _updateCanvas({
+                preserve: true,
+                reload: true,
+                environmentName: _environmentName,
+                equipmentProfileName: _equipmentProfileName
+            });
+        });
+        _elements.options.appendChild(_optionElements.factionColorPicker);
+        _elements.options.hidden = false;
+    }
+    // ----------------------------------------------------------------------
+    // Public Functions
+    /**
+     * @typedef {Object} refreshElements
+     * @property {HTMLCanvasElement} canvas The canvas that can be used to display a preview image of the selected object
+     * @property {Element} options The div that houses the preview options
+     */
+    /**
+     * The main function that sets up the preview window (both options and the preview canvas) for the editor to show the selected 
+     * spacecraft class.
+     * @param {refreshElements} elements References to the HTML elements that can be used for the preview.
+     * @param {SpacecraftClass} spacecraftClass The spacecraft class to preview
+     * @param {refreshParams} params Additional parameters 
+     */
+    function refresh(elements, spacecraftClass, params) {
+        _elements = elements;
+        _spacecraftClass = spacecraftClass;
+        _clearSettingsForNewItem();
+        _createOptions();
+        _updateCanvas(params);
+    }
+    /**
      * Updates the preview (refreshes if needed) in case the property with the given name changed
      * @param {String} name
      */
     function handleDataChanged(name) {
         if (REFRESH_PROPERTIES.indexOf(name) >= 0) {
-            refresh(_elements, _spacecraftClass, {
+            _updateCanvas({
                 preserve: true,
                 reload: true,
                 environmentName: _environmentName,
