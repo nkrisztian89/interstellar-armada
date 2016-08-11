@@ -12,6 +12,19 @@
 
 define(function () {
     "use strict";
+    /**
+     * @typedef {Object} Editor~Item
+     * @property {String} (enum ItemType) type
+     * @property {String} name
+     * @property {String} category
+     * @property {GenericResource|GenericClass} reference
+     * @property {Object} data
+     */
+    /**
+     * @typedef {Object} Editor~Preview
+     * @property {Function} refresh
+     * @property {Function} handleDataChanged
+     */
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {

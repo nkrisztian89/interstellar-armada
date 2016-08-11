@@ -474,6 +474,13 @@ define([
         return this._dataJSON;
     };
     /**
+     * Reinitializes the class based on the stored data object. (can be used to modify a class by modifying its data object and then calling
+     * this - only to be used by the editor, not by the game!
+     */
+    GenericClass.prototype.reloadData = function () {
+        this._loadData(this._dataJSON);
+    };
+    /**
      * @param {String} resourceType
      * @param {String} resourceName
      */

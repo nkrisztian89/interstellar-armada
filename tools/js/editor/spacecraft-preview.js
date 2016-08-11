@@ -71,9 +71,14 @@ define([
             WIREFRAME_COLOR = [1, 1, 1, 1],
             MANAGED_CONTEXT_NAME = "context",
             DEFAULT_DISTANCE_FACTOR = 1.5,
-            MAX_DISTANCE_FACTOR = 10,
+            MAX_DISTANCE_FACTOR = 100,
             OBJECT_VIEW_NAME = "standard",
             FOV = 45,
+            /**
+             * The names of properties the changing of which should trigger a refresh of the preview
+             * @type String[]
+             */
+            REFRESH_PROPERTIES = ["model", "shader", "texture", "defaultLuminosityFactors"],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -96,6 +101,16 @@ define([
              * @type Boolean
              */
             _turningSpacecraft, _turningCamera,
+            /**
+             * A reference to the object storing the HTML elements to be used for the preview
+             * @type Object
+             */
+            _elements,
+            /**
+             * A reference to the displayed spacecraft class
+             * @type SpacecraftClass
+             */
+            _spacecraftClass,
             /**
              * (enum RenderMode)
              * @type String
@@ -279,6 +294,7 @@ define([
     /**
      * @typedef {Object} refreshParams
      * @property {Boolean} preserve Whether to preserve the existing settings (e.g. spacecraft and camera orientation)
+     * @property {Boolean} reload Whether to force-reload the spacecraft (even if the settings are set to be preserved)
      * @property {String} environmentName The name of the environment to put the previewed spacecraft in
      * @property {String} equipmentProfileName The name of the equipment profile to be equipped on the previewed spacecraft
      */
@@ -296,14 +312,20 @@ define([
                 equipmentSelector,
                 environmentChanged,
                 equipmentProfileChanged,
+                shouldReload,
+                orientationMatrix,
                 i;
         params = params || {};
         environmentChanged = params.environmentName !== _environmentName;
         equipmentProfileChanged = params.equipmentProfileName !== _equipmentProfileName;
+        shouldReload = !params.preserve || params.reload;
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }
-        if (_spacecraft && !params.preserve) {
+        if (_spacecraft && shouldReload) {
+            if (params.preserve) {
+                orientationMatrix = mat.matrix4(_spacecraft.getVisualModel().getOrientationMatrix());
+            }
             _spacecraft.destroy();
             _spacecraft = null;
             _wireframeSpacecraft.destroy();
@@ -334,7 +356,7 @@ define([
                 _scene.setShadowMapping(shadowMappingSettings);
             });
         } else {
-            if (environmentChanged || !params.preserve) {
+            if (environmentChanged || shouldReload) {
                 _scene.clearNodes();
                 _scene.clearDirectionalLights();
                 _scene.clearPointLights();
@@ -342,19 +364,19 @@ define([
             }
         }
         // clear the previous render
-        if (_context) {
+        if (_context && !params.preserve) {
             _requestRender();
         }
-        if ((environmentChanged || !params.preserve) && !params.environmentName) {
+        if ((environmentChanged || shouldReload) && !params.environmentName) {
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
                 _scene.addDirectionalLightSource(new budaScene.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
         }
-        if (!params.preserve) {
-            _spacecraft = new logic.Spacecraft(spacecraftClass);
-            _wireframeSpacecraft = new logic.Spacecraft(spacecraftClass);
+        if (shouldReload) {
+            _spacecraft = new logic.Spacecraft(spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
+            _wireframeSpacecraft = new logic.Spacecraft(spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
         }
-        if (equipmentProfileChanged || environmentChanged || !params.preserve) {
+        if (equipmentProfileChanged || environmentChanged || shouldReload) {
             if (_equipmentProfileName) {
                 _spacecraft.unequip();
                 _wireframeSpacecraft.unequip();
@@ -367,15 +389,15 @@ define([
             }
         }
         _spacecraft.addToScene(_scene, undefined, false,
-                (environmentChanged || !params.preserve) ? {weapons: true, lightSources: true, blinkers: true} : {self: false, weapons: true},
+                (environmentChanged || shouldReload) ? {weapons: true, lightSources: true, blinkers: true} : {self: false, weapons: true},
                 {replaceVisualModel: true});
         _wireframeSpacecraft.addToScene(_scene, undefined, true,
-                (environmentChanged || !params.preserve) ? {weapons: true, lightSources: false, blinkers: false} : {self: false, weapons: true},
+                (environmentChanged || shouldReload) ? {weapons: true, lightSources: false, blinkers: false} : {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
                     shaderName: WIREFRAME_SHADER_NAME
                 },
-        (environmentChanged || !params.preserve) ?
+        (environmentChanged || shouldReload) ?
                 function (model) {
                     model.setUniformValueFunction(WIREFRAME_SHADER_COLOR_UNIFORM_NAME, function () {
                         return WIREFRAME_COLOR;
@@ -387,7 +409,7 @@ define([
                         return WIREFRAME_COLOR;
                     });
                 });
-        if (params.environmentName && (environmentChanged || !params.preserve)) {
+        if (params.environmentName && (environmentChanged || shouldReload)) {
             logic.getEnvironment(params.environmentName).addToScene(_scene);
         }
         _environmentName = params.environmentName;
@@ -436,12 +458,19 @@ define([
         elements.canvas.hidden = false;
         elements.canvas.width = elements.canvas.clientWidth;
         elements.canvas.height = elements.canvas.clientHeight;
+        _elements = elements;
+        _spacecraftClass = spacecraftClass;
         resources.executeWhenReady(function () {
             var view, distance;
             _scene.addToContext(_context);
             _context.setup();
-            if (!params.preserve) {
-                distance = DEFAULT_DISTANCE_FACTOR * _spacecraft.getVisualModel().getScaledSize();
+            if (shouldReload) {
+                if (params.preserve) {
+                    orientationMatrix = _scene.getCamera().getCameraOrientationMatrix();
+                    distance = vec.length3(mat.translationVector3(_scene.getCamera().getCameraPositionMatrix()));
+                } else {
+                    distance = DEFAULT_DISTANCE_FACTOR * _spacecraft.getVisualModel().getScaledSize();
+                }
                 view = new classes.ObjectView({
                     name: OBJECT_VIEW_NAME,
                     isAimingView: false,
@@ -453,10 +482,13 @@ define([
                     movable: true,
                     turnable: true,
                     rotationCenterIsObject: true,
-                    distanceRange: [0, MAX_DISTANCE_FACTOR * distance],
+                    distanceRange: [0, MAX_DISTANCE_FACTOR * _spacecraft.getVisualModel().getScaledSize()],
                     position: [0, -distance, 0]
                 });
                 _scene.getCamera().setConfiguration(_spacecraft.createCameraConfigurationForView(view));
+                if (params.preserve) {
+                    _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(orientationMatrix, true);
+                }
             }
             elements.canvas.onmousedown = _handleMouseDown;
             elements.canvas.onwheel = _handleWheel;
@@ -470,9 +502,24 @@ define([
         });
         resources.requestResourceLoad();
     }
+    /**
+     * Updates the preview (refreshes if needed) in case the property with the given name changed
+     * @param {String} name
+     */
+    function handleDataChanged(name) {
+        if (REFRESH_PROPERTIES.indexOf(name) >= 0) {
+            refresh(_elements, _spacecraftClass, {
+                preserve: true,
+                reload: true,
+                environmentName: _environmentName,
+                equipmentProfileName: _equipmentProfileName
+            });
+        }
+    }
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {
-        refresh: refresh
+        refresh: refresh,
+        handleDataChanged: handleDataChanged
     };
 });

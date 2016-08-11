@@ -81,12 +81,13 @@ define([
     _selectedItemElement,
             /**
              * The data of the currently selected item
-             * @type Object
+             * @type Editor~Item
              */
             _selectedItem = {
                 type: ItemType.NONE,
                 name: "",
                 category: "",
+                reference: null,
                 data: null
             };
     // ------------------------------------------------------------------------------
@@ -145,7 +146,7 @@ define([
             _setLabel(previewWindowContent, NO_PREVIEW_TEXT);
         } else {
             _hideLabel(previewWindowContent);
-            _previews[_selectedItem.category].refresh({options: previewOptions, canvas: previewCanvas}, classes.getClass(_selectedItem.category, _selectedItem.name));
+            _previews[_selectedItem.category].refresh({options: previewOptions, canvas: previewCanvas}, _selectedItem.reference);
         }
     }
     /**
@@ -159,7 +160,7 @@ define([
         } else if (!descriptors[_selectedItem.category]) {
             windowContent.appendChild(_createLabel(NO_PROPERTIES_TEXT));
         } else {
-            properties.createProperties(windowContent, _selectedItem);
+            properties.createProperties(windowContent, _selectedItem, _previews[_selectedItem.category]);
         }
     }
     /**
@@ -168,14 +169,23 @@ define([
      * @param {String} name The name (id) of the selected item
      * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties 
      * windows
-     * @param {Object} data The data associated with the selected item (the JSON object that is used to initialize it)
      */
-    function _selectItem(type, name, category, data) {
+    function _selectItem(type, name, category) {
         if ((_selectedItem.type !== type) || (_selectedItem.name !== name) || (_selectedItem.category !== category)) {
             _selectedItem.type = type;
             _selectedItem.name = name;
             _selectedItem.category = category;
-            _selectedItem.data = data;
+            switch (_selectedItem.type) {
+                case ItemType.RESOURCE:
+                    _selectedItem.reference = resources.getResource(_selectedItem.category, _selectedItem.name);
+                    break;
+                case ItemType.CLASS:
+                    _selectedItem.reference = classes.getClass(_selectedItem.category, _selectedItem.name);
+                    break;
+                default:
+                    application.crash();
+            }
+            _selectedItem.data = _selectedItem.reference.getData();
             _loadProperties();
             _loadPreview();
         }
@@ -228,7 +238,7 @@ define([
                 resourceSpan.classList.add(ELEMENT_CLASS);
                 resourceSpan.innerHTML = resourcesOfType[j];
                 resourceElement.appendChild(resourceSpan);
-                resourceSpan.onclick = _createElementClickHandler(resourceSpan, ItemType.RESOURCE, resourcesOfType[j], resourceTypes[i], resources.getResource(resourceTypes[i], resourcesOfType[j]).getData());
+                resourceSpan.onclick = _createElementClickHandler(resourceSpan, ItemType.RESOURCE, resourcesOfType[j], resourceTypes[i]);
                 resourceList.appendChild(resourceElement);
                 resourceList.hidden = true;
             }
@@ -265,7 +275,7 @@ define([
                 classSpan.classList.add(ELEMENT_CLASS);
                 classSpan.innerHTML = classesOfCategory[j];
                 classElement.appendChild(classSpan);
-                classSpan.onclick = _createElementClickHandler(classSpan, ItemType.CLASS, classesOfCategory[j], classCategories[i], classes.getClass(classCategories[i], classesOfCategory[j]).getData());
+                classSpan.onclick = _createElementClickHandler(classSpan, ItemType.CLASS, classesOfCategory[j], classCategories[i]);
                 classList.appendChild(classElement);
                 classList.hidden = true;
             }

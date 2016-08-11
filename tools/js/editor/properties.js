@@ -32,9 +32,33 @@ define([
             PROPERTY_CLASS = "propertyName",
             CONTROL_CLASS = "propertyControl",
             COLOR_COMPONENT_CLASS = "colorComponent",
-            COLOR_PREVIEW_CLASS = "colorPreview";
+            COLOR_PREVIEW_CLASS = "colorPreview",
+            // ------------------------------------------------------------------------------
+            // Private variables
+            /**
+             * A reference to the selected item the properties of which are displayed
+             * @type Editor~Item
+             */
+            _item,
+            /**
+             * The module providing the Preview for the item the properties of which are displayed
+             * @type Editor~Preview
+             */
+            _preview;
     // ------------------------------------------------------------------------------
     // Private functions
+    /**
+     * Changes the property with the given name (key) in the data object, and notifies the preview module of the change
+     * @param {String} name The name (key) of the property
+     * @param {} value The new value the property is to be changed to
+     */
+    function _changeData(name, value) {
+        _item.data[name] = value;
+        _item.reference.reloadData();
+        if (_preview) {
+            _preview.handleDataChanged(name);
+        }
+    }
     /**
      * Creates and returns a control that can be used to edit boolean properties.
      * @param {String} name Name of the property to edit
@@ -46,6 +70,9 @@ define([
         result.type = "checkbox";
         result.checked = data;
         result.name = name;
+        result.onchange = function () {
+            _changeData(name, result.checked);
+        };
         return result;
     }
     /**
@@ -59,19 +86,36 @@ define([
         result.type = "text";
         result.value = data;
         result.name = name;
+        result.onchange = function () {
+            _changeData(name, result.value);
+        };
         return result;
     }
     /**
      * Creates and returns a control that can be used to edit numeric properties.
      * @param {String} name Name of the property to edit
      * @param {Number} data The starting value
+     * @param {Boolean} allowFloats If true, float values are allowed (otherwise only integer values)
+     * @param {Function} [changeHandler] The function that should be run on the change event of the control, after checking the value to be
+     * a number
      * @returns {Element}
      */
-    function _createNumberControl(name, data) {
+    function _createNumberControl(name, data, allowFloats, changeHandler) {
         var result = document.createElement("input");
         result.type = "text";
         result.value = data;
         result.name = name;
+        result.onchange = function () {
+            result.value = allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
+            if (isNaN(result.value)) {
+                result.value = 0;
+            }
+            if (changeHandler) {
+                changeHandler(result);
+            } else {
+                _changeData(name, result.value);
+            }
+        };
         return result;
     }
     /**
@@ -82,7 +126,9 @@ define([
      * @returns {Element}
      */
     function _createResourceReferenceControl(name, resourceCategory, data) {
-        var result = common.createSelector(resources.getResourceNames(resourceCategory), data, false, null);
+        var result = common.createSelector(resources.getResourceNames(resourceCategory), data, false, function () {
+            _changeData(name, result.value);
+        });
         result.name = name;
         return result;
     }
@@ -94,7 +140,9 @@ define([
      * @returns {Element}
      */
     function _createClassReferenceControl(name, classCategory, data) {
-        var result = common.createSelector(classes.getClassNames(classCategory), data, false, null);
+        var result = common.createSelector(classes.getClassNames(classCategory), data, false, function () {
+            _changeData(name, result.value);
+        });
         result.name = name;
         return result;
     }
@@ -105,17 +153,22 @@ define([
      * @returns {Element}
      */
     function _createColorControl(name, data) {
-        var components, i, preview, result = document.createElement("div");
+        var component, i, preview,
+                result = document.createElement("div"),
+                componentChangeHander = function (index, comp) {
+                    data[index] = comp.value;
+                    preview.style.backgroundColor = utils.getCSSColor(data);
+                    _changeData(name, data);
+                };
         preview = document.createElement("span");
         preview.innerHTML = "&nbsp;";
         preview.classList.add(COLOR_PREVIEW_CLASS);
         preview.style.backgroundColor = utils.getCSSColor(data);
         result.appendChild(preview);
-        components = [];
         for (i = 0; i < data.length; i++) {
-            components.push(_createNumberControl(name + "_component" + i.toString(), data[i]));
-            components[components.length - 1].classList.add(COLOR_COMPONENT_CLASS);
-            result.appendChild(components[components.length - 1]);
+            component = _createNumberControl(name + "_component" + i.toString(), data[i], true, componentChangeHander.bind(this, i));
+            component.classList.add(COLOR_COMPONENT_CLASS);
+            result.appendChild(component);
         }
         return result;
     }
@@ -174,9 +227,10 @@ define([
         /**
          * Creates the content for the Properties window - the list of available properties and controls to edit their values.
          * @param {Element} element The parent HTML element to add the created content to
-         * @param {Object} item The item for which to display the property values
+         * @param {Editor~Item} item The item for which to display the property values
+         * @param {Editor~Preview} preview The module providing the Preview window for the item
          */
-        createProperties: function (element, item) {
+        createProperties: function (element, item, preview) {
             var
                     table, row, nameCell, valueCell, descriptor, properties, i;
 
@@ -196,6 +250,8 @@ define([
                 table.appendChild(row);
             }
             element.appendChild(table);
+            _item = item;
+            _preview = preview;
         }
     };
 });

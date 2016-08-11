@@ -343,15 +343,15 @@ define([
             application.showError("Cannot get managed GL texture for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
-        if (this._images[type]) {
-            this._managedTextures[type] = this._managedTextures[type] || {};
-            this._managedTextures[type][quality] =
-                    this._managedTextures[type][quality] ||
-                    new managedGL.ManagedTexture(this.getName(), this._images[type][quality], this._useMipmap);
-            return this._managedTextures[type][quality];
+        if (!this._images[type]) {
+            application.showError("The requested texture '" + this.getName() + "' has no type '" + type + "' available!");
+            type = Object.keys(this._images)[0];
         }
-        application.showError("The requested texture '" + this.getName() + "' has no type '" + type + "' available!");
-        return null;
+        this._managedTextures[type] = this._managedTextures[type] || {};
+        this._managedTextures[type][quality] =
+                this._managedTextures[type][quality] ||
+                new managedGL.ManagedTexture(this.getName(), this._images[type][quality], this._useMipmap);
+        return this._managedTextures[type][quality];
     };
     /**
      * @param {String[]} types
