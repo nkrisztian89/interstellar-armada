@@ -107,7 +107,7 @@ define([
      * the corresponding hitbox model is created
      * @type String
      */
-    HITBOX_BODY_MODEL_NAME_INFIX = "-body-",
+    HITBOX_BODY_MODEL_NAME = "hitBox",
             /**
              * Static lights anchored to spacecrafts will be added to their scenes with this priority
              * @type Number
@@ -2696,7 +2696,7 @@ define([
         /**
          * The renderable object that is used as the parent for the visual
          * representation of the hitboxes of this craft.
-         * @type RenderableObject
+         * @type RenderableNode
          */
         this._hitbox = null;
         /**
@@ -3141,7 +3141,7 @@ define([
      */
     Spacecraft.prototype.getHitboxTextures = function () {
         var
-                textureTypes = resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader().getTextureTypes(),
+                textureTypes = graphics.getManagedShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getTextureTypes(),
                 textureResource = resources.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         return textureResource.getManagedTexturesOfTypes(textureTypes, graphics.getTextureQualityPreferenceList());
     };
@@ -3404,18 +3404,21 @@ define([
                 phyModel =
                 resources.getOrAddModel(
                         egomModel.cuboidModel(
-                                this._class.getName() + HITBOX_BODY_MODEL_NAME_INFIX + index,
-                                this._class.getBodies()[index].getWidth(),
-                                this._class.getBodies()[index].getHeight(),
-                                this._class.getBodies()[index].getDepth(),
+                                HITBOX_BODY_MODEL_NAME,
+                                1,
+                                1,
+                                1,
                                 _hitZoneColor)),
                 hitZoneMesh = new budaScene.ShadedLODMesh(
                         phyModel.getEgomModel(),
-                        resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getManagedShader(),
+                        graphics.getManagedShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)),
                         this.getHitboxTextures(),
                         mat.translation4m4(this._class.getBodies()[index].getPositionMatrix()),
                         this._class.getBodies()[index].getOrientationMatrix(),
-                        mat.identity4(),
+                        mat.scaling4(
+                                this._class.getBodies()[index].getWidth(),
+                                this._class.getBodies()[index].getHeight(),
+                                this._class.getBodies()[index].getDepth()),
                         false);
         hitZoneMesh.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
             return _hitZoneColor;
@@ -3424,6 +3427,17 @@ define([
             return _groupTransformIdentityArray;
         });
         this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
+    };
+    /**
+     * Returns the renderable node storing the hitbox models for this spacecraft.
+     * @param {Number} [index] If given, the subnode with this index is returned instead
+     * @returns {RenerableNode}
+     */
+    Spacecraft.prototype.getHitbox = function (index) {
+        if (index === undefined) {
+            return this._hitbox;
+        }
+        return this._hitbox.getSubnodes()[index];
     };
     /**
      * 
@@ -3435,7 +3449,7 @@ define([
         application.log("Requesting resources for spacecraft (" + this._class.getName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
-            resources.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
+            graphics.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
             resources.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
         params.omitShader = customShader;

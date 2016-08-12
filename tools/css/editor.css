@@ -9,6 +9,7 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    color: #cccccc;
 }
 
 div#resources {
@@ -69,7 +70,6 @@ div.windowContent {
     padding: 0;
 
     background-color: #444444;
-    color: #cccccc;
 }
 
 div.windowLabel {
@@ -162,7 +162,7 @@ span.settingLabel {
     padding-right: 0.5em;
 }
 
-#propertiesTable {
+.propertiesTable {
     position: relative;
     width: 100%;
     border: 0;
@@ -171,6 +171,8 @@ span.settingLabel {
     margin-right: auto;
     margin-bottom: 0;
     padding: 0;
+    
+    background-color: #444444;
 }
 
 td {
@@ -207,10 +209,26 @@ div.propertyControl {
     vertical-align: middle;
 }
 
-.colorComponent {
-    width: 2em;
+div.propertyEditorHeader {
+    background-color: #545454;
+    border: 2px solid #444444;
+}
+
+.numericInput {
+    width: 4em;
+}
+
+.colorComponent, .vectorComponent {
     margin-right: 0.3em;
     margin-top: 0;
+}
+
+.colorComponent {
+    width: 2em;
+}
+
+.vectorComponent {
+    width: 2.4em;
 }
 
 .colorPreview {
@@ -219,4 +237,13 @@ div.propertyControl {
     height: 1.4em;
     margin-bottom: 0;
     margin-right: 0.5em;
+}
+
+.popup {
+    border: 2px solid #666666;
+    background-color: #444444;
+    box-shadow: 0 0 1em 0 #222222;
+
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
 }

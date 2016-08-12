@@ -86,6 +86,171 @@ define(function () {
             long: true
         }
     },
+    BODY = {
+        baseType: "object",
+        name: "Body",
+        properties: {
+            POSITION: {
+                name: "position",
+                type: "vector3"
+            },
+            SIZE: {
+                name: "size",
+                type: "vector3"
+            }
+        }
+    },
+    WEAPON_SLOT = {
+        baseType: "object",
+        name: "WeaponSlot",
+        properties: {
+            POSITION: {
+                name: "position",
+                type: "vector3"
+            },
+            MAX_GRADE: {
+                name: "maxGrade",
+                type: "number"
+            }
+        }
+    },
+    THRUSTER = {
+        baseType: "object",
+        name: "Thruster",
+        properties: {
+            POSITION: {
+                name: "position",
+                type: "vector3"
+            },
+            SIZE: {
+                name: "size",
+                type: "number"
+            }
+        }
+    },
+    THRUSTER_SLOT = {
+        baseType: "object",
+        name: "ThrusterSlot",
+        properties: {
+            GROUP: {
+                name: "group",
+                type: "number"
+            },
+            USES: {
+                name: "uses",
+                type: "array",
+                elementType: "string"
+            },
+            THRUSTERS: {
+                name: "thrusters",
+                type: "array",
+                elementType: THRUSTER
+            }
+        }
+    },
+    VIEW = {
+        baseType: "object",
+        name: "View",
+        properties: {
+            NAME: {
+                name: "name",
+                type: "string"
+            },
+            IS_AIMING_VIEW: {
+                name: "isAimingView",
+                type: "boolean"
+            },
+            FOV: {
+                name: "fov",
+                type: "number"
+            },
+            FOV_RANGE: {
+                name: "fovRange",
+                type: "range"
+            },
+            FPS: {
+                name: "fps",
+                type: "boolean"
+            },
+            FOLLOWS_POSITION: {
+                name: "followsPosition",
+                type: "boolean"
+            },
+            MOVABLE: {
+                name: "movable",
+                type: "boolean"
+            },
+            TURNABLE: {
+                name: "turnable",
+                type: "boolean"
+            },
+            ALPHA_RANGE: {
+                name: "alphaRange",
+                type: "range"
+            },
+            BETA_RANGE: {
+                name: "betaRange",
+                type: "range"
+            },
+            ROTATION_CENTER_IS_OBJECT: {
+                name: "rotationCenterIsObject",
+                type: "boolean"
+            },
+            DISTANCE_RANGE: {
+                name: "distanceRange",
+                type: "range"
+            },
+            POSITION: {
+                name: "position",
+                type: "vector3"
+            },
+            RESETS_ON_FOCUS_CHANGE: {
+                name: "resetsOnFocusChange",
+                type: "boolean"
+            }
+        }
+    },
+    WEAPON = {
+        baseType: "object",
+        name: "Weapon",
+        properties: {
+            CLASS: {
+                name: "class",
+                type: "string",
+                classReference: "weaponClasses"
+            }
+        }
+    },
+    PROPULSION = {
+        baseType: "object",
+        name: "Propulsion",
+        properties: {
+            CLASS: {
+                name: "class",
+                type: "string",
+                classReference: "propulsionClasses"
+            }
+        }
+    },
+    EQUIPMENT_PROFILE = {
+        baseType: "object",
+        name: "EquipmentProfile",
+        properties: {
+            NAME: {
+                name: "name",
+                type: "string"
+            },
+            WEAPONS: {
+                name: "weapons",
+                type: "array",
+                elementType: WEAPON
+            },
+            PROPULSION: {
+                name: "propulsion",
+                type: PROPULSION
+            }
+        }
+    },
     /**
      * The descriptor object for spacecraft classes, describing their properties
      * @type Object
@@ -142,11 +307,40 @@ define(function () {
         },
         DEFAULT_LUMINOSITY_FACTORS: {
             name: "defaultLuminosityFactors",
-            type: "numericPairs"
+            type: "pairs"
         },
         MASS: {
             name: "mass",
             type: "number"
+        },
+        BODIES: {
+            name: "bodies",
+            type: "array",
+            elementType: BODY
+        },
+        WEAPON_SLOTS: {
+            name: "weaponSlots",
+            type: "array",
+            elementType: WEAPON_SLOT
+        },
+        MAX_PROPULSION_GRADE: {
+            name: "maxPropulsionGrade",
+            type: "number"
+        },
+        THRUSTER_SLOTS: {
+            name: "thrusterSlots",
+            type: "array",
+            elementType: THRUSTER_SLOT
+        },
+        VIEWS: {
+            name: "views",
+            type: "array",
+            elementType: VIEW
+        },
+        EQUIPMENT_PROFILES: {
+            name: "equipmentProfiles",
+            type: "array",
+            elementType: EQUIPMENT_PROFILE
         }
     };
     // ------------------------------------------------------------------------------

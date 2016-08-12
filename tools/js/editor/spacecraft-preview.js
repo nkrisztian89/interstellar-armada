@@ -67,18 +67,18 @@ define([
                 }
             ],
             WIREFRAME_SHADER_NAME = "oneColor",
-            WIREFRAME_SHADER_COLOR_UNIFORM_NAME = "color",
             WIREFRAME_COLOR = [1, 1, 1, 1],
             MANAGED_CONTEXT_NAME = "context",
             DEFAULT_DISTANCE_FACTOR = 1.5,
             MAX_DISTANCE_FACTOR = 100,
             OBJECT_VIEW_NAME = "standard",
             FOV = 45,
+            HITBOX_HIGHLIGHT_COLOR = [0.8, 0.4, 0.3, 0.5],
             /**
              * The names of properties the changing of which should trigger a refresh of the preview
              * @type String[]
              */
-            REFRESH_PROPERTIES = ["model", "shader", "texture", "factionColor", "defaultLuminosityFactors"],
+            REFRESH_PROPERTIES = ["model", "shader", "texture", "factionColor", "defaultLuminosityFactors", "bodies", "weaponSlots", "equipmentProfiles"],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -134,6 +134,16 @@ define([
              * @type Boolean
              */
             _factionColorChanged,
+            /**
+             * 
+             * @type Boolean
+             */
+            _showHitbox,
+            /**
+             * 
+             * @type Number
+             */
+            _highlightedHitboxIndex,
             /**
              * 
              * @type Object
@@ -295,6 +305,36 @@ define([
         _wireframeSpacecraft.getVisualModel().getNode().execute(_updateLOD);
     }
     /**
+     * Returns the regular hitbox color (detemined by game configuration, the same that is shown if hitboxes are turned on in the game)
+     * @returns {Number[4]}
+     */
+    function _hitboxColorFunction() {
+        return config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
+    }
+    /**
+     * Returns the color to be used on the currently edited hitbox
+     * @returns {Number[4]}
+     */
+    function _highlighterHitboxColorFunction() {
+        return HITBOX_HIGHLIGHT_COLOR;
+    }
+    /**
+     * Sets the appropriate hitbox visibility and colors for the current settingsF
+     */
+    function _updateForHitboxState() {
+        var i, n = _spacecraft.getHitbox().getSubnodes().length;
+        if (_showHitbox) {
+            for (i = 0; i < n; i++) {
+                _spacecraft.getHitbox(i).getRenderableObject().setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, (i === _highlightedHitboxIndex) ?
+                        _highlighterHitboxColorFunction :
+                        _hitboxColorFunction);
+            }
+            _spacecraft.showHitbox();
+        } else {
+            _spacecraft.hideHitbox();
+        }
+    }
+    /**
      * Creates and returns a <span> HTML element storing the passed text, having the class associated with setting labels.
      * @param {String} text
      * @returns {Element}
@@ -410,26 +450,26 @@ define([
             }
         }
         _spacecraft.addToScene(_scene, undefined, false,
-                (environmentChanged || shouldReload) ? {weapons: true, lightSources: true, blinkers: true} : {self: false, weapons: true},
+                (environmentChanged || shouldReload) ? {weapons: true, lightSources: true, blinkers: true, hitboxes: true} : {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
                     factionColor: _factionColor
                 });
         _wireframeSpacecraft.addToScene(_scene, undefined, true,
-                (environmentChanged || shouldReload) ? {weapons: true, lightSources: false, blinkers: false} : {self: false, weapons: true},
+                (environmentChanged || shouldReload) ? {weapons: true} : {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
                     shaderName: WIREFRAME_SHADER_NAME
                 },
         (environmentChanged || shouldReload) ?
                 function (model) {
-                    model.setUniformValueFunction(WIREFRAME_SHADER_COLOR_UNIFORM_NAME, function () {
+                    model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
                         return WIREFRAME_COLOR;
                     });
                 } :
                 null,
                 function (model) {
-                    model.setUniformValueFunction(WIREFRAME_SHADER_COLOR_UNIFORM_NAME, function () {
+                    model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
                         return WIREFRAME_COLOR;
                     });
                 });
@@ -478,6 +518,7 @@ define([
                 utils.executeAsync(function () {
                     _updateForRenderMode();
                     _updateForLOD();
+                    _updateForHitboxState();
                     _requestRender();
                 });
             });
@@ -499,6 +540,7 @@ define([
         if (!_factionColorChanged) {
             _factionColor = _spacecraftClass.getFactionColor().slice();
         }
+        _showHitbox = false;
     }
     /**
      * Creates the controls that form the content of the preview options and adds them to the page.
@@ -591,10 +633,36 @@ define([
             });
         }
     }
+    /**
+     * Updates the preview for the case when a property of the previewed item is being edited
+     * @param {String} name The name of the property that is edited (under which the editing is happening)
+     * @param {Number} [index] If the property is an array, this is the index of the element in the array being edited
+     */
+    function handleStartEdit(name, index) {
+        if (name === "bodies") {
+            _showHitbox = true;
+            _highlightedHitboxIndex = index;
+            _updateForHitboxState();
+            _requestRender();
+        }
+    }
+    /**
+     * Updates the preview for the case when a property of the previewed item is no longer being edited
+     * @param {String} name The name of the property that is no longer edited 
+     */
+    function handleStopEdit(name) {
+        if (name === "bodies") {
+            _showHitbox = false;
+            _updateForHitboxState();
+            _requestRender();
+        }
+    }
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {
         refresh: refresh,
-        handleDataChanged: handleDataChanged
+        handleDataChanged: handleDataChanged,
+        handleStartEdit: handleStartEdit,
+        handleStopEdit: handleStopEdit
     };
 });

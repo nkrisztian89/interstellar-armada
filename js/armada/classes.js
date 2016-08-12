@@ -1996,7 +1996,7 @@ define([
          * The coordinates of the position of the slot relative to the ship.
          * @type Number[4]
          */
-        this.positionVector = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        this.positionVector = dataJSON ? (dataJSON.position.slice() || _showMissingPropertyError(this, "position")) : null;
         if (this.positionVector) {
             this.positionVector.push(1.0);
         }

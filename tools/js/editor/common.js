@@ -29,12 +29,18 @@ define([
      * @typedef {Object} Editor~Preview
      * @property {Function} refresh
      * @property {Function} handleDataChanged
+     * @property {Function} handleStartEdit
+     * @property {Function} handleStopEdit
      */
     var
             // ------------------------------------------------------------------------------
             // Constants
-            LABEL_CLASS = "label", COLOR_COMPONENT_CLASS = "colorComponent",
-            COLOR_PREVIEW_CLASS = "colorPreview";
+            LABEL_CLASS = "label",
+            POPUP_CLASS = "popup",
+            NUMERIC_INPUT_CLASS = "numericInput",
+            COLOR_COMPONENT_CLASS = "colorComponent",
+            COLOR_PREVIEW_CLASS = "colorPreview",
+            VECTOR_COMPONENT_CLASS = "vectorComponent";
     // ------------------------------------------------------------------------------
     // Public functions
     /**
@@ -46,6 +52,7 @@ define([
      */
     function createNumericInput(data, allowFloats, changeHandler) {
         var result = document.createElement("input");
+        result.classList.add(NUMERIC_INPUT_CLASS);
         result.type = "text";
         result.value = data;
         result.onchange = function () {
@@ -83,7 +90,7 @@ define([
     /**
      * Creates and returns a control that can be used to edit color properties.
      * @param {Number[4]} data A reference to the color the control should affect
-     * @param {Function} [changeHandler]
+     * @param {Function} [changeHandler] If given, this function will be called every time the color is changed by the picker
      * @returns {Element}
      */
     function createColorPicker(data, changeHandler) {
@@ -138,13 +145,40 @@ define([
             components[i].value = color[i];
         }
     }
+    /**
+     * Creates and returns a control that can be used to edit numeric vectors
+     * @param {Number[]} data A reference to the vector the control should affect
+     * @param {Function} [changeHandler]
+     * @returns {Element}
+     */
+    function createVectorEditor(data, changeHandler) {
+        var component, i, components,
+                result = document.createElement("div"),
+                componentChangeHander = function (index, comp) {
+                    data[index] = comp.value;
+                    if (changeHandler) {
+                        changeHandler();
+                    }
+                };
+        result.style.display = "inline-block";
+        components = [];
+        for (i = 0; i < data.length; i++) {
+            component = createNumericInput(data[i], true, componentChangeHander.bind(this, i));
+            component.classList.add(VECTOR_COMPONENT_CLASS);
+            result.appendChild(component);
+            components.push(component);
+        }
+        return result;
+    }
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
         LABEL_CLASS: LABEL_CLASS,
+        POPUP_CLASS: POPUP_CLASS,
         createNumericInput: createNumericInput,
         createSelector: createSelector,
         createColorPicker: createColorPicker,
-        setColorForPicker: setColorForPicker
+        setColorForPicker: setColorForPicker,
+        createVectorEditor: createVectorEditor
     };
 });
