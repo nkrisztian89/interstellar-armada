@@ -21,11 +21,23 @@ define(function () {
                 STRING: "string",
                 ARRAY: "array",
                 OBJECT: "object",
+                ENUM: "enum",
                 COLOR: "color",
                 VECTOR3: "vector3",
                 RANGE: "range",
-                PAIRS: "pairs"
+                PAIRS: "pairs",
+                ROTATIONS: "rotations"
             },
+            /**
+             * The possible axes for rotations
+             * @enum {String}
+             * @type Object
+             */
+    Axis = {
+        X: "X",
+        Y: "Y",
+        Z: "Z"
+    },
     // ------------------------------------------------------------------------------
     // Constants
     /**
@@ -36,6 +48,9 @@ define(function () {
      * @property {String} [classReference] For BaseType.STRING
      * @property {String} [name] For BaseType.OBJECT
      * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
+     * @property {Object} [values] For BaseType.ENUM
+     * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
+     * @property {Editor~PropertyDescriptor} [second] For BaseType.PAIRS
      */
     /**
      * @typedef {Object} Editor~PropertyDescriptor
@@ -94,6 +109,27 @@ define(function () {
     PROPULSION_CLASS_REFERENCE = {
         baseType: BaseType.STRING,
         classReference: "propulsionClasses"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    LUMINOSITY_FACTOR_PAIRS = {
+        baseType: BaseType.PAIRS,
+        first: {
+            name: "group",
+            type: BaseType.NUMBER
+        },
+        second: {
+            name: "luminosity",
+            type: BaseType.NUMBER
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    AXIS = {
+        baseType: BaseType.ENUM,
+        values: Axis
     },
     /**
      * The descriptor object for propulsion classes, describing their properties
@@ -183,6 +219,10 @@ define(function () {
             POSITION: {
                 name: "position",
                 type: BaseType.VECTOR3
+            },
+            ROTATIONS: {
+                name: "rotations",
+                type: BaseType.ROTATIONS
             },
             SIZE: {
                 name: "size",
@@ -306,6 +346,10 @@ define(function () {
                 name: "position",
                 type: BaseType.VECTOR3
             },
+            ROTATIONS: {
+                name: "rotations",
+                type: BaseType.ROTATIONS
+            },
             RESETS_ON_FOCUS_CHANGE: {
                 name: "resetsOnFocusChange",
                 type: BaseType.BOOLEAN
@@ -411,7 +455,7 @@ define(function () {
         },
         DEFAULT_LUMINOSITY_FACTORS: {
             name: "defaultLuminosityFactors",
-            type: BaseType.PAIRS
+            type: LUMINOSITY_FACTOR_PAIRS
         },
         MASS: {
             name: "mass",
@@ -520,10 +564,18 @@ define(function () {
     Type.prototype.getClassReference = function () {
         return this._descriptor.classReference;
     };
+    /**
+     * For string types, returns whether the type is flagged as long
+     * @returns {Boolean}
+     */
+    Type.prototype.isLong = function () {
+        return this._descriptor.long;
+    };
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
         BaseType: BaseType,
+        AXIS: AXIS,
         /**
          * @type Object.<String, Editor~ItemDescriptor>
          */

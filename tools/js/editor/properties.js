@@ -10,17 +10,19 @@
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
+ * @param utils Used for enum handling
  * @param resources Used to obtain the list of available resources for resource reference property selectors
  * @param classes Used to obtain the list of available classes for class reference property selectors
  * @param descriptors Used to obtain the appropriate properties description object
  * @param common Used to create selectors
  */
 define([
+    "utils/utils",
     "modules/media-resources",
     "armada/classes",
     "editor/descriptors",
     "editor/common"
-], function (resources, classes, descriptors, common) {
+], function (utils, resources, classes, descriptors, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -29,6 +31,9 @@ define([
             PROPERTY_CLASS = "propertyName",
             CONTROL_CLASS = "propertyControl",
             PROPERTY_EDITOR_HEADER_CLASS = "propertyEditorHeader",
+            TEXT_AREA_ROWS = 5,
+            TEXT_AREA_COLS = 100,
+            LONG_TEXT_PREVIEW_LENGTH = 16,
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -106,6 +111,77 @@ define([
         return result;
     }
     /**
+     * Creates and returns a popup preconfigured to notify the preview window about the editing of the top level property it belongs to,
+     * in case it is top level
+     * @param {Element} invoker The invoker of the popup (see Popup)
+     * @param {Popup} [parentPopup] If this popup is to be a child of another one, give the parent here
+     * @param {String} topName The name of the top level property this popup belongs to
+     * @param {Function} [showHandler] A function to be executed next to to notifying the preview whenever the popup is shown
+     * @param {Function} [hideHandler] A function to be executed next to to notifying the preview whenever the popup is hidden
+     * @returns {Popup}
+     */
+    function _createPopup(invoker, parentPopup, topName, showHandler, hideHandler) {
+        return new common.Popup(invoker, parentPopup, {
+            show: function () {
+                if (_preview && !parentPopup) {
+                    _preview.handleStartEdit(topName, 0);
+                }
+                if (showHandler) {
+                    showHandler();
+                }
+            },
+            hide: function () {
+                if (_preview && !parentPopup) {
+                    _preview.handleStopEdit(topName);
+                }
+                if (hideHandler) {
+                    hideHandler();
+                }
+            }
+        });
+    }
+    /**
+     * Returns a short, preview excerpt from a longer text to show
+     * @param {String} string The original (potentially) long text
+     * @returns {String}
+     */
+    function _getStringPreview(string) {
+        return (string.length > 0) ? (string.substr(0, LONG_TEXT_PREVIEW_LENGTH) + ((string.length > LONG_TEXT_PREVIEW_LENGTH) ? "..." : "")) : "...";
+    }
+    /**
+     * Creates and returns a control that can be used to edit long string properties.
+     * @param {String} topName Name of the top property being edited
+     * @param {String} data The starting value
+     * @param {Object} [parent] See _changeData
+     * @param {String} [name] See _changeData
+     * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createLongStringControl(topName, data, parent, name, parentPopup) {
+        var
+                button = document.createElement("button"),
+                textarea = document.createElement("textarea"),
+                popup = _createPopup(button, parentPopup, topName, null, function () {
+                    _changeData(topName, textarea.value, parent, name);
+                    button.innerHTML = _getStringPreview(textarea.value);
+                });
+        button.type = "button";
+        button.innerHTML = _getStringPreview(data);
+        button.onclick = function () {
+            popup.toggle();
+        };
+        textarea.value = data;
+        textarea.cols = TEXT_AREA_COLS;
+        textarea.rows = TEXT_AREA_ROWS;
+        textarea.spellcheck = false;
+        textarea.autocomplete = "off";
+        textarea.autocorrect = "off";
+        textarea.autocapitalize = "off";
+        popup.getElement().appendChild(textarea);
+        popup.addToPage();
+        return button;
+    }
+    /**
      * @callback NumberControl~changeHandler
      * @param {Element} element The HTML element representing the control the value of which was changed
      */
@@ -161,6 +237,21 @@ define([
         return result;
     }
     /**
+     * Creates and returns a control that can be used to edit enum properties.
+     * @param {String} topName Name of the top property being edited
+     * @param {Object} values The object defining the enum values
+     * @param {String} data The starting value
+     * @param {Object} [parent] See _changeData
+     * @param {String} [name] See _changeData
+     * @returns {Element}
+     */
+    function _createEnumControl(topName, values, data, parent, name) {
+        var result = common.createSelector(utils.getEnumValues(values), data, false, function () {
+            _changeData(topName, result.value, parent, name);
+        });
+        return result;
+    }
+    /**
      * Creates and returns a control that can be used to edit color properties.
      * @param {String} name Name of the property to edit
      * @param {Number[4]} data The reference to the property to edit
@@ -206,27 +297,17 @@ define([
     function _createObjectControl(topName, typeDescriptor, data, parentPopup) {
         var
                 button = document.createElement("button"),
-                popup = new common.Popup(button, parentPopup, {
-                    show: function () {
-                        if (_preview) {
-                            _preview.handleStartEdit(topName, 0);
-                        }
-                    },
-                    hide: function () {
-                        if (_preview) {
-                            _preview.handleStopEdit(topName);
-                        }
-                    }
-                }),
+                popup = _createPopup(button, parentPopup, topName),
                 isArray = (data instanceof Array),
                 type = new descriptors.Type(typeDescriptor),
                 hasName = type.hasNameProperty(),
                 header, indices, indexLabel, indexSelector, propertiesTable,
                 indexChangeHandler = function () {
                     var index = indexSelector.selectedIndex;
-                    if (_preview) {
+                    if (_preview && !parentPopup) {
                         _preview.handleStartEdit(topName, index);
                     }
+                    popup.hideChildren();
                     popup.getElement().removeChild(propertiesTable);
                     propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup);
                 };
@@ -273,18 +354,7 @@ define([
     function _createArrayControl(topName, elementTypeDescriptor, data, parentPopup) {
         var
                 button = document.createElement("button"),
-                popup = new common.Popup(button, parentPopup, {
-                    show: function () {
-                        if (_preview) {
-                            _preview.handleStartEdit(topName);
-                        }
-                    },
-                    hide: function () {
-                        if (_preview) {
-                            _preview.handleStopEdit(topName);
-                        }
-                    }
-                }),
+                popup = _createPopup(button, parentPopup, topName),
                 elementDescriptor, table, row, cell, indexLabel, propertyEditor, i;
         table = document.createElement("table");
         for (i = 0; i < data.length; i++) {
@@ -305,6 +375,107 @@ define([
         // create a button using which the popup can be opened
         button.type = "button";
         button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " (" + data.length + ")";
+        button.onclick = function () {
+            popup.toggle();
+        };
+        return button;
+    }
+    /**
+     * Creates and returns a control that can be used to array of pairs type properties. (by opening a popup to edit the pairs in the
+     * array)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the pair array type
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createPairsControl(topName, typeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, row, cell, propertyEditor, i;
+        table = document.createElement("table");
+        row = document.createElement("tr");
+        cell = document.createElement("td");
+        cell.appendChild(common.createLabel(typeDescriptor.first.name));
+        row.appendChild(cell);
+        cell = document.createElement("td");
+        cell.appendChild(common.createLabel(":"));
+        row.appendChild(cell);
+        cell = document.createElement("td");
+        cell.appendChild(common.createLabel(typeDescriptor.second.name));
+        row.appendChild(cell);
+        table.appendChild(row);
+        for (i = 0; i < data.length; i++) {
+            row = document.createElement("tr");
+            propertyEditor = _createControl({name: 0, type: typeDescriptor.first.type}, data[i][0], topName, data[i], parentPopup);
+            cell = document.createElement("td");
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            cell.appendChild(common.createLabel(":"));
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            propertyEditor = _createControl({name: 1, type: typeDescriptor.second.type}, data[i][1], topName, data[i], parentPopup);
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            table.appendChild(row);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        button.type = "button";
+        button.innerHTML = new descriptors.Type(typeDescriptor).getDisplayName() + " (" + data.length + ")";
+        button.onclick = function () {
+            popup.toggle();
+        };
+        return button;
+    }
+    /**
+     * Creates and returns a control that can be used to array of rotations type properties. (by opening a popup to edit the rotations in 
+     * the array)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createRotationsControl(topName, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, row, cell, propertyEditor, i;
+        table = document.createElement("table");
+        row = document.createElement("tr");
+        cell = document.createElement("td");
+        cell.appendChild(common.createLabel("axis"));
+        row.appendChild(cell);
+        cell = document.createElement("td");
+        cell.appendChild(common.createLabel(":"));
+        row.appendChild(cell);
+        cell = document.createElement("td");
+        cell.appendChild(common.createLabel("degrees"));
+        row.appendChild(cell);
+        table.appendChild(row);
+        for (i = 0; i < data.length; i++) {
+            row = document.createElement("tr");
+            propertyEditor = _createControl({name: "axis", type: descriptors.AXIS}, data[i].axis, topName, data[i], parentPopup);
+            cell = document.createElement("td");
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            cell.appendChild(common.createLabel(":"));
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            propertyEditor = _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[i].degrees, topName, data[i], parentPopup);
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            table.appendChild(row);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        button.type = "button";
+        button.innerHTML = "rotations (" + data.length + ")";
         button.onclick = function () {
             popup.toggle();
         };
@@ -343,16 +514,21 @@ define([
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name);
                     break;
                 case descriptors.BaseType.NUMBER:
-                    result = _createNumberControl(topName, data, parent, propertyDescriptor.name);
+                    result = _createNumberControl(topName, data, true, null, parent, propertyDescriptor.name);
                     break;
                 case descriptors.BaseType.STRING:
                     if (type.getResourceReference()) {
                         result = _createResourceReferenceControl(topName, type.getResourceReference(), data, parent, propertyDescriptor.name);
                     } else if (type.getClassReference()) {
                         result = _createClassReferenceControl(topName, type.getClassReference(), data, parent, propertyDescriptor.name);
+                    } else if (type.isLong()) {
+                        result = _createLongStringControl(topName, data, parent, propertyDescriptor.name, parentPopup);
                     } else {
                         result = _createStringControl(topName, data, parent, propertyDescriptor.name);
                     }
+                    break;
+                case descriptors.BaseType.ENUM:
+                    result = _createEnumControl(topName, propertyDescriptor.type.values, data, parent, propertyDescriptor.name);
                     break;
                 case descriptors.BaseType.COLOR:
                     result = _createColorControl(topName, data);
@@ -362,6 +538,12 @@ define([
                     break;
                 case descriptors.BaseType.RANGE:
                     result = _createRangeControl(topName, data);
+                    break;
+                case descriptors.BaseType.PAIRS:
+                    result = _createPairsControl(topName, propertyDescriptor.type, data, parentPopup);
+                    break;
+                case descriptors.BaseType.ROTATIONS:
+                    result = _createRotationsControl(topName, data, parentPopup);
                     break;
                 case descriptors.BaseType.ARRAY:
                     elementType = new descriptors.Type(propertyDescriptor.elementType);

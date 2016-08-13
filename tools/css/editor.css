@@ -19,6 +19,12 @@ input[type="text"] {
     height: 1.2em;
 }
 
+textarea {
+    resize: none;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
 /* -------------------------------------------------------------------- */
 /* general: common */
 
@@ -67,7 +73,7 @@ input[type="text"] {
 
 .popup {
     position: absolute;
-    
+
     border: 2px solid #666666;
     background-color: #444444;
     box-shadow: 0 0 1em 0 #222222;

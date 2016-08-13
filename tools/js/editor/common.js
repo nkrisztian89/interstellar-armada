@@ -367,14 +367,20 @@ define([
         }
     };
     /**
-     * Hides the popup and all its children.
+     * Hides all of this popup's children.
      */
-    Popup.prototype.hide = function () {
+    Popup.prototype.hideChildren = function () {
         var i;
-        this._element.hidden = true;
         for (i = 0; i < this._childPopups.length; i++) {
             this._childPopups[i].hide();
         }
+    };
+    /**
+     * Hides the popup and all its children.
+     */
+    Popup.prototype.hide = function () {
+        this.hideChildren();
+        this._element.hidden = true;
         if (this._eventHandlers[EVENT_HIDE_NAME]) {
             this._eventHandlers[EVENT_HIDE_NAME]();
         }
