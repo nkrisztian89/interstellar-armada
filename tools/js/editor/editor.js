@@ -167,7 +167,7 @@ define([
         windowContent.innerHTML = "";
         if (_selectedItem.type === ItemType.NONE) {
             windowContent.appendChild(_createLabel(NO_ITEM_SELECTED_TEXT));
-        } else if (!descriptors[_selectedItem.category]) {
+        } else if (!descriptors.itemDescriptors[_selectedItem.category]) {
             windowContent.appendChild(_createLabel(NO_PROPERTIES_TEXT));
         } else {
             properties.createProperties(windowContent, _selectedItem, _previews[_selectedItem.category]);
