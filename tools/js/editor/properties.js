@@ -29,8 +29,6 @@ define([
             PROPERTY_CLASS = "propertyName",
             CONTROL_CLASS = "propertyControl",
             PROPERTY_EDITOR_HEADER_CLASS = "propertyEditorHeader",
-            POPUP_START_Z_INDEX = 1000,
-            POPUP_PLACEMENT_STEP = 10,
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -43,16 +41,6 @@ define([
              * @type Editor~Preview
              */
             _preview,
-            /**
-             * A list of all the popup elements added straight to document.body
-             * @type Element[]
-             */
-            _popups = [],
-            /**
-             * The current highest Z index, assigned to the last popup element
-             * @type Number
-             */
-            _maxZIndex,
             // ------------------------------------------------------------------------------
             // Private functions
             _createProperties;
@@ -94,12 +82,9 @@ define([
      * @returns {Element}
      */
     function _createBooleanControl(topName, data, parent, name) {
-        var result = document.createElement("input");
-        result.type = "checkbox";
-        result.checked = data;
-        result.onchange = function () {
+        var result = common.createBooleanInput(data, function () {
             _changeData(topName, result.checked, parent, name);
-        };
+        });
         return result;
     }
     /**
@@ -177,7 +162,7 @@ define([
     /**
      * Creates and returns a control that can be used to edit color properties.
      * @param {String} name Name of the property to edit
-     * @param {Number[4]} data The starting value
+     * @param {Number[4]} data The reference to the property to edit
      * @returns {Element}
      */
     function _createColorControl(name, data) {
@@ -188,11 +173,22 @@ define([
     /**
      * Creates and returns a control that can be used to edit numeric vector properties.
      * @param {String} name Name of the property to edit
-     * @param {Number[]} data The starting value
+     * @param {Number[]} data The reference to the property to edit
      * @returns {Element}
      */
     function _createVectorControl(name, data) {
         return common.createVectorEditor(data, function () {
+            _updateData(name);
+        });
+    }
+    /**
+     * Creates and returns a control that can be used to edit numeric range properties.
+     * @param {String} name Name of the property to edit
+     * @param {Number[2]} data The reference to the property to edit
+     * @returns {Element}
+     */
+    function _createRangeControl(name, data) {
+        return common.createRangeEditor(data, function () {
             _updateData(name);
         });
     }
@@ -222,19 +218,23 @@ define([
      * @param {ObjectDescriptor} descriptor The descriptor desribing the object's type (structure), including its name and its properties
      * @param {Object|Array} data The data itself to be modified (an instance of the object the type of which is described, or an array of
      * such objects)
+     * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
      * @returns {Element}
      */
-    function _createObjectControl(topName, descriptor, data) {
+    function _createObjectControl(topName, descriptor, data, parentPopup) {
         var
                 button = document.createElement("button"),
-                propertyEditor = document.createElement("div"),
+                popup = new common.Popup(button, parentPopup, {
+                    show: function () {
+                        _preview.handleStartEdit(topName, 0);
+                    },
+                    hide: function () {
+                        _preview.handleStopEdit(topName);
+                    }
+                }),
                 isArray = (data instanceof Array),
                 hasName = _hasNameProperty(descriptor.properties),
                 header, indices, indexLabel, indexSelector, propertiesTable;
-        // creating a popup to edit the object's properties
-        propertyEditor.hidden = true;
-        propertyEditor.style.position = "absolute";
-        propertyEditor.classList.add(common.POPUP_CLASS);
         // for arrays: adding a selector at the top of the popup, using which the instance to modify within the array can be selected
         if (isArray) {
             // if the array elements have a "name" property, use the values of that instead of indices for selection
@@ -242,24 +242,21 @@ define([
             while (indices.length < data.length) {
                 indices.push(hasName ? data[indices.length].name : indices.length.toString());
             }
-            indexLabel = document.createElement("span");
-            indexLabel.classList.add(common.LABEL_CLASS);
-            indexLabel.innerHTML = descriptor.name + (hasName ? ":" : " index:");
+            indexLabel = common.createLabel(descriptor.name + (hasName ? ":" : " index:"));
             indexSelector = common.createSelector(indices, indices[0], false, function () {
                 var index = indexSelector.selectedIndex;
                 _preview.handleStartEdit(topName, index);
-                propertyEditor.removeChild(propertiesTable);
-                propertiesTable = _createProperties(propertyEditor, data[index], descriptor.properties, topName);
+                popup.getElement().removeChild(propertiesTable);
+                propertiesTable = _createProperties(popup.getElement(), data[index], descriptor.properties, topName, popup);
             });
             header = document.createElement("div");
             header.classList.add(PROPERTY_EDITOR_HEADER_CLASS);
             header.appendChild(indexLabel);
             header.appendChild(indexSelector);
-            propertyEditor.appendChild(header);
+            popup.getElement().appendChild(header);
         }
-        propertiesTable = _createProperties(propertyEditor, isArray ? (data[0] || {}) : data, descriptor.properties, topName);
-        document.body.appendChild(propertyEditor);
-        _popups.push(propertyEditor);
+        propertiesTable = _createProperties(popup.getElement(), isArray ? (data[0] || {}) : data, descriptor.properties, topName, popup);
+        popup.addToPage();
         // create a button using which the popup can be opened
         button.type = "button";
         button.innerHTML = descriptor.name;
@@ -267,23 +264,7 @@ define([
             button.innerHTML += " (" + data.length + ")";
         }
         button.onclick = function () {
-            var rect = button.getBoundingClientRect(), left = rect.left;
-            propertyEditor.style.left = rect.left + "px";
-            propertyEditor.style.top = rect.bottom + "px";
-            propertyEditor.hidden = !propertyEditor.hidden;
-            rect = propertyEditor.getBoundingClientRect();
-            while ((left >= POPUP_PLACEMENT_STEP) && (rect.right >= window.innerWidth)) {
-                left -= POPUP_PLACEMENT_STEP;
-                propertyEditor.style.left = left + "px";
-                rect = propertyEditor.getBoundingClientRect();
-            }
-            if (!propertyEditor.hidden) {
-                propertyEditor.style.zIndex = _maxZIndex;
-                _maxZIndex++;
-                _preview.handleStartEdit(topName, 0);
-            } else {
-                _preview.handleStopEdit(topName);
-            }
+            popup.toggle();
         };
         return button;
     }
@@ -306,9 +287,10 @@ define([
      * directly under the main item must be given here (so that the preview can be notified about under which property did the change happen)
      * @param {Object} [parent] If the property to edit resides below another property of the main edited item, the parent object of the
      * edited property must be given here
+     * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
      * @returns {Element}
      */
-    function _createControl(typeDescriptor, data, topName, parent) {
+    function _createControl(typeDescriptor, data, topName, parent, parentPopup) {
         var result;
         topName = topName || typeDescriptor.name;
         if (data === undefined) {
@@ -337,6 +319,9 @@ define([
                     case "vector3":
                         result = _createVectorControl(topName, data);
                         break;
+                    case "range":
+                        result = _createRangeControl(topName, data);
+                        break;
                     case "array":
                         if (typeof typeDescriptor.elementType === "string") {
                             switch (typeDescriptor.elementType) {
@@ -347,7 +332,7 @@ define([
                                     result = _createDefaultControl(data);
                             }
                         } else if (typeof typeDescriptor.elementType === "object") {
-                            result = _createObjectControl(topName, typeDescriptor.elementType, data);
+                            result = _createObjectControl(topName, typeDescriptor.elementType, data, parentPopup);
                         } else {
                             document.crash();
                         }
@@ -356,7 +341,7 @@ define([
                         result = _createDefaultControl(data);
                 }
             } else if (typeof typeDescriptor.type === "object") {
-                result = _createObjectControl(topName, typeDescriptor.type, data);
+                result = _createObjectControl(topName, typeDescriptor.type, data, parentPopup);
             } else {
                 document.crash();
             }
@@ -365,25 +350,15 @@ define([
         return result;
     }
     /**
-     * Removes all popups that were added to document.body
-     */
-    function _removePopups() {
-        var i;
-        for (i = 0; i < _popups.length; i++) {
-            document.body.removeChild(_popups[i]);
-        }
-        _popups = [];
-        _maxZIndex = POPUP_START_Z_INDEX;
-    }
-    /**
      * Creates labels and controls to show and edit the properties of an object
      * @param {Element} element The parent HTML element to add the created content to
      * @param {Object} data The object itself that is to be edited
      * @param {Object} descriptor An object that should contain the property descriptors based on which to create the controls
      * @param {String} [topName] See _changeData or _createControl
+     * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
      * @returns {Element} The element that houses the properties and was added to the parent element
      */
-    _createProperties = function (element, data, descriptor, topName) {
+    _createProperties = function (element, data, descriptor, topName, parentPopup) {
         var
                 table, row, nameCell, valueCell, properties, i;
         table = document.createElement("table");
@@ -396,7 +371,7 @@ define([
             nameCell.innerHTML = descriptor[properties[i]].name;
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
-            valueCell.appendChild(_createControl(descriptor[properties[i]], data[descriptor[properties[i]].name], topName, data));
+            valueCell.appendChild(_createControl(descriptor[properties[i]], data[descriptor[properties[i]].name], topName, data, parentPopup));
             row.appendChild(valueCell);
             table.appendChild(row);
         }
@@ -413,7 +388,6 @@ define([
          * @param {Editor~Preview} preview The module providing the Preview window for the item
          */
         createProperties: function (element, item, preview) {
-            _removePopups();
             _createProperties(element, item.data, descriptors[item.category]);
             _item = item;
             _preview = preview;

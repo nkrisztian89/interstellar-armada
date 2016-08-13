@@ -7,8 +7,8 @@
  * @version 1.0
  */
 
-/*global define, document */
-/*jslint plusplus: true, white: true */
+/*global define, document, window */
+/*jslint plusplus: true, white: true, nomen: true */
 
 /**
  * @param utils Used for converting between float / hex colors
@@ -36,13 +36,58 @@ define([
             // ------------------------------------------------------------------------------
             // Constants
             LABEL_CLASS = "label",
-            POPUP_CLASS = "popup",
             NUMERIC_INPUT_CLASS = "numericInput",
             COLOR_COMPONENT_CLASS = "colorComponent",
+            COLOR_PICKER_CLASS = "colorPicker",
             COLOR_PREVIEW_CLASS = "colorPreview",
-            VECTOR_COMPONENT_CLASS = "vectorComponent";
+            VECTOR_COMPONENT_CLASS = "vectorComponent",
+            RANGE_CHECKBOX_CLASS = "rangeCheckbox",
+            RANGE_NUMERIC_INPUT_CLASS = "rangeNumericInput",
+            POPUP_CLASS = "popup",
+            POPUP_START_Z_INDEX = 1000,
+            POPUP_PLACEMENT_STEP = 10,
+            EVENT_SHOW_NAME = "show",
+            EVENT_HIDE_NAME = "hide",
+            // ------------------------------------------------------------------------------
+            // Private variables
+            /**
+             * A list of the root level Popups added to document.body
+             * @type Popup[]
+             */
+            _popups = [],
+            /**
+             * The current highest Z index, assigned to the last popup element
+             * @type Number
+             */
+            _maxZIndex;
     // ------------------------------------------------------------------------------
     // Public functions
+    /**
+     * Creates and returns a simple label - a span with a style and the given text content
+     * @param {String} text
+     * @returns {Element}
+     */
+    function createLabel(text) {
+        var result = document.createElement("span");
+        result.classList.add(LABEL_CLASS);
+        result.innerHTML = text;
+        return result;
+    }
+    /**
+     * Creates and returns a control that can be used to edit boolean values.
+     * @param {Boolean} data The starting value
+     * @param {Function} [changeHandler] The function that should be run on the change event
+     * @returns {Element}
+     */
+    function createBooleanInput(data, changeHandler) {
+        var result = document.createElement("input");
+        result.type = "checkbox";
+        result.checked = data;
+        result.onchange = changeHandler ? function () {
+            changeHandler(result);
+        } : null;
+        return result;
+    }
     /**
      * Creates and returns a control that can be used to edit numeric values.
      * @param {Number} data The starting value
@@ -103,7 +148,7 @@ define([
                         changeHandler();
                     }
                 };
-        result.style.display = "inline-block";
+        result.classList.add(COLOR_PICKER_CLASS);
         preview = document.createElement("input");
         preview.type = "color";
         preview.classList.add(COLOR_PREVIEW_CLASS);
@@ -160,7 +205,6 @@ define([
                         changeHandler();
                     }
                 };
-        result.style.display = "inline-block";
         components = [];
         for (i = 0; i < data.length; i++) {
             component = createNumericInput(data[i], true, componentChangeHander.bind(this, i));
@@ -170,15 +214,214 @@ define([
         }
         return result;
     }
+    /**
+     * Creates and returns a control that can be used to edit numeric ranges.
+     * @param {Number[2]} data A reference to the range that can be edited.
+     * @param {Function} [changeHandler] If given, this function will be called every time the range is changed by the control
+     * @returns {Element}
+     */
+    function createRangeEditor(data, changeHandler) {
+        var result = document.createElement("div"), minCheckbox, maxCheckbox, minEditor, maxEditor, dash;
+        minCheckbox = createBooleanInput(data[0] !== undefined, function () {
+            data[0] = minCheckbox.checked ? minEditor.value : undefined;
+            minEditor.disabled = !minCheckbox.checked;
+            if (changeHandler) {
+                changeHandler();
+            }
+        });
+        minCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
+        minEditor = createNumericInput(data[0] || 0, function () {
+            data[0] = minCheckbox.checked ? minEditor.value : undefined;
+            if (changeHandler) {
+                changeHandler();
+            }
+        });
+        minEditor.classList.add(RANGE_NUMERIC_INPUT_CLASS);
+        if (data[0] === undefined) {
+            minEditor.disabled = true;
+        }
+        maxCheckbox = createBooleanInput(data[1] !== undefined, function () {
+            data[1] = maxCheckbox.checked ? maxEditor.value : undefined;
+            maxEditor.disabled = !maxCheckbox.checked;
+            if (changeHandler) {
+                changeHandler();
+            }
+        });
+        maxCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
+        maxEditor = createNumericInput(data[1] || 0, function () {
+            data[1] = maxCheckbox.checked ? maxEditor.value : undefined;
+            if (changeHandler) {
+                changeHandler();
+            }
+        });
+        maxEditor.classList.add(RANGE_NUMERIC_INPUT_CLASS);
+        if (data[1] === undefined) {
+            maxEditor.disabled = true;
+        }
+        dash = createLabel("-");
+        result.appendChild(minCheckbox);
+        result.appendChild(minEditor);
+        result.appendChild(dash);
+        result.appendChild(maxCheckbox);
+        result.appendChild(maxEditor);
+        return result;
+    }
+    /**
+     * @class
+     * Represents an (initially hidden) panel that can be shown at a position depending on another element and can have children of the 
+     * same type. Showing a popup automatically hides all other popups on the same level.
+     * @param {Element} invoker The element under which this popup should show up (at the same left position and directly under it)
+     * @param {Popup} [parent] If given, this popup will be added as a child of the given popup
+     * @param {Object} [eventHandlers] The fuctions to execute as events happen to the popup, by the names of the events.
+     */
+    function Popup(invoker, parent, eventHandlers) {
+        /**
+         * The HTML element that represents this popup.
+         * @type Element
+         */
+        this._element = document.createElement("div");
+        this._element.classList.add(POPUP_CLASS);
+        this._element.hidden = true;
+        /**
+         * The children of this popup.
+         * @type Popup[]
+         */
+        this._childPopups = [];
+        /**
+         * The element under which this popup is displayed.
+         * @type Element
+         */
+        this._invoker = invoker;
+        /**
+         * The parent of this popup.
+         * @type Popup
+         */
+        this._parent = parent;
+        if (this._parent) {
+            this._parent._childPopups.push(this);
+        }
+        /**
+         * @type Object
+         */
+        this._eventHandlers = eventHandlers || {};
+    }
+    /**
+     * Adds the wrapped element to the document body.
+     */
+    Popup.prototype.addToPage = function () {
+        document.body.appendChild(this._element);
+        if (!this._parent) {
+            _popups.push(this);
+        }
+    };
+    /**
+     * Returns the wrapped element.
+     * @returns {Element}
+     */
+    Popup.prototype.getElement = function () {
+        return this._element;
+    };
+    /**
+     * Returns whether the popup is currently visible.
+     * @returns {Boolean}
+     */
+    Popup.prototype.isVisible = function () {
+        return !this._element.hidden;
+    };
+    /**
+     * Shows the popup and hides all other popups on the same level. Automatically positions the popup to be under the invoking element and
+     * to fit on the screen horizontally (if possible)
+     */
+    Popup.prototype.show = function () {
+        var i, rect, left;
+        // hide the other popups open at the same level
+        if (!this._parent) {
+            for (i = 0; i < _popups.length; i++) {
+                if (_popups[i] !== this) {
+                    _popups[i].hide();
+                }
+            }
+        } else {
+            for (i = 0; i < this._parent._childPopups.length; i++) {
+                if (this._parent._childPopups[i] !== this) {
+                    this._parent._childPopups[i].hide();
+                }
+            }
+        }
+        // show this popup at the right position
+        rect = this._invoker.getBoundingClientRect();
+        left = rect.left;
+        this._element.style.left = rect.left + "px";
+        this._element.style.top = rect.bottom + "px";
+        this._element.hidden = false;
+        rect = this._element.getBoundingClientRect();
+        while ((left >= POPUP_PLACEMENT_STEP) && (rect.right >= window.innerWidth)) {
+            left -= POPUP_PLACEMENT_STEP;
+            this._element.style.left = left + "px";
+            rect = this._element.getBoundingClientRect();
+        }
+        this._element.style.zIndex = _maxZIndex;
+        _maxZIndex++;
+        if (this._eventHandlers[EVENT_SHOW_NAME]) {
+            this._eventHandlers[EVENT_SHOW_NAME]();
+        }
+    };
+    /**
+     * Hides the popup and all its children.
+     */
+    Popup.prototype.hide = function () {
+        var i;
+        this._element.hidden = true;
+        for (i = 0; i < this._childPopups.length; i++) {
+            this._childPopups[i].hide();
+        }
+        if (this._eventHandlers[EVENT_HIDE_NAME]) {
+            this._eventHandlers[EVENT_HIDE_NAME]();
+        }
+    };
+    /**
+     * Toggles the visibility of the popup (shows / hides it depending on the current state)
+     */
+    Popup.prototype.toggle = function () {
+        if (this.isVisible()) {
+            this.hide();
+        } else {
+            this.show();
+        }
+    };
+    /**
+     * Removes the popup and all its elements from the DOM
+     */
+    Popup.prototype.remove = function () {
+        var i;
+        for (i = 0; i < this._childPopups.length; i++) {
+            this._childPopups[i].remove();
+        }
+        document.body.removeChild(this._element);
+    };
+    /**
+     * Removes all popups that were added to document.body
+     */
+    function removePopups() {
+        var i;
+        for (i = 0; i < _popups.length; i++) {
+            _popups[i].remove();
+        }
+        _popups = [];
+        _maxZIndex = POPUP_START_Z_INDEX;
+    }
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
-        LABEL_CLASS: LABEL_CLASS,
-        POPUP_CLASS: POPUP_CLASS,
+        createLabel: createLabel,
+        createBooleanInput: createBooleanInput,
         createNumericInput: createNumericInput,
         createSelector: createSelector,
         createColorPicker: createColorPicker,
         setColorForPicker: setColorForPicker,
-        createVectorEditor: createVectorEditor
+        createVectorEditor: createVectorEditor,
+        createRangeEditor: createRangeEditor,
+        Popup: Popup,
+        removePopups: removePopups
     };
 });

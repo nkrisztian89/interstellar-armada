@@ -17,6 +17,7 @@
  * @param graphics Used to load the graphics settings from file
  * @param classes Used to display the class structure in the Classes window and access the selected class for preview and properties
  * @param logic Used to load the environments 
+ * @param common Used for clearing open popups
  * @param spacecraftPreview Used to create previews for spacecraft classes
  * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
  * @param properties Used to generate the content of the Properties window
@@ -29,10 +30,11 @@ define([
     "armada/graphics",
     "armada/classes",
     "armada/logic",
+    "editor/common",
     "editor/spacecraft-preview",
     "editor/descriptors",
     "editor/properties"
-], function (application, resources, constants, config, graphics, classes, logic, spacecraftPreview, descriptors, properties) {
+], function (application, resources, constants, config, graphics, classes, logic, common, spacecraftPreview, descriptors, properties) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -194,6 +196,7 @@ define([
                     application.crash();
             }
             _selectedItem.data = _selectedItem.reference.getData();
+            common.removePopups();
             _loadProperties();
             _loadPreview();
         }

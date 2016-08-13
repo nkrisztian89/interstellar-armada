@@ -58,6 +58,7 @@ define([
             CAMERA_ROTATE_BUTTON = utils.MouseButton.MIDDLE,
             ENLARGE_FACTOR = 1.05,
             SHRINK_FACTOR = 0.95,
+            SETTING_CLASS = "setting",
             SETTING_LABEL_CLASS = "settingLabel",
             CANVAS_BACKGROUND_COLOR = [0, 0, 0, 1],
             LIGHT_SOURCES = [
@@ -346,16 +347,27 @@ define([
         return result;
     }
     /**
+     * Creates a setting element for the preview options panel, with a label and a control
+     * @param {String} labelText The text that should show on the label
+     * @param {Element} control The control to edit the value of the setting
+     * @returns {Element}
+     */
+    function _createSetting(labelText, control) {
+        var result = document.createElement("div");
+        result.classList.add(SETTING_CLASS);
+        result.appendChild(_createSettingLabel(labelText));
+        result.appendChild(control);
+        return result;
+    }
+    /**
      * Creates the content for the preview information panel and adds it to the page.
      */
     function _updateInfo() {
-        var infoLabel = document.createElement("span");
         _elements.info.innerHTML = "";
-        infoLabel.classList.add(common.LABEL_CLASS);
-        infoLabel.innerHTML = "Model: " +
+        _elements.info.appendChild(common.createLabel(
+                "Model: " +
                 "triangles: " + _spacecraft.getVisualModel().getModel().getNumTriangles(graphics.getLOD(_lod)) +
-                ", lines: " + _spacecraft.getVisualModel().getModel().getNumLines(graphics.getLOD(_lod));
-        _elements.info.appendChild(infoLabel);
+                ", lines: " + _spacecraft.getVisualModel().getModel().getNumLines(graphics.getLOD(_lod))));
         _elements.info.hidden = false;
     }
     /**
@@ -548,24 +560,21 @@ define([
     function _createOptions() {
         _elements.options.innerHTML = "";
         // render mode selector
-        _elements.options.appendChild(_createSettingLabel("Render mode:"));
         _optionElements.renderModeSelector = common.createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
             _renderMode = _optionElements.renderModeSelector.value;
             _updateForRenderMode();
             _requestRender();
         });
-        _elements.options.appendChild(_optionElements.renderModeSelector);
+        _elements.options.appendChild(_createSetting("Render mode:", _optionElements.renderModeSelector));
         // LOD selector
-        _elements.options.appendChild(_createSettingLabel("LOD:"));
         _optionElements.lodSelector = common.createSelector(graphics.getLODLevels(), _lod, false, function () {
             _lod = _optionElements.lodSelector.value;
             _updateForLOD();
             _requestRender();
             _updateInfo();
         });
-        _elements.options.appendChild(_optionElements.lodSelector);
+        _elements.options.appendChild(_createSetting("LOD:", _optionElements.lodSelector));
         // environment selector
-        _elements.options.appendChild(_createSettingLabel("Environment:"));
         _optionElements.environmentSelector = common.createSelector(logic.getEnvironmentNames(), _environmentName, true, function () {
             _updateCanvas({
                 preserve: true,
@@ -573,9 +582,8 @@ define([
                 equipmentProfileName: _equipmentProfileName
             });
         });
-        _elements.options.appendChild(_optionElements.environmentSelector);
+        _elements.options.appendChild(_createSetting("Environment:", _optionElements.environmentSelector));
         // equipment profile selector
-        _elements.options.appendChild(_createSettingLabel("Equipment:"));
         _optionElements.equipmentSelector = common.createSelector(_spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
             _updateCanvas({
                 preserve: true,
@@ -583,9 +591,8 @@ define([
                 equipmentProfileName: (_optionElements.equipmentSelector.value !== "none") ? _optionElements.equipmentSelector.value : null
             });
         });
-        _elements.options.appendChild(_optionElements.equipmentSelector);
+        _elements.options.appendChild(_createSetting("Equipment:", _optionElements.equipmentSelector));
         // faction color picker
-        _elements.options.appendChild(_createSettingLabel("Faction color:"));
         _optionElements.factionColorPicker = common.createColorPicker(_factionColor, function () {
             _factionColorChanged = true;
             _updateCanvas({
@@ -595,7 +602,7 @@ define([
                 equipmentProfileName: _equipmentProfileName
             });
         });
-        _elements.options.appendChild(_optionElements.factionColorPicker);
+        _elements.options.appendChild(_createSetting("Faction color:", _optionElements.factionColorPicker));
         _elements.options.hidden = false;
     }
     // ----------------------------------------------------------------------
