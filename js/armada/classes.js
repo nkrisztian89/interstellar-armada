@@ -387,7 +387,7 @@ define([
      * @returns {SoundSource}
      */
     function _createSoundSource(soundEffectDescriptor, loop, position) {
-        return soundEffectDescriptor.resource.createSoundSource(soundEffectDescriptor.volume, loop, position, soundEffectDescriptor.rolloff);
+        return soundEffectDescriptor.resource ? soundEffectDescriptor.resource.createSoundSource(soundEffectDescriptor.volume, loop, position, soundEffectDescriptor.rolloff) : null;
     }
     /**
      * Similar to _playSoundEffect, but also uses stacking if appropriate: if a currently playing instance of the same sound effect is found

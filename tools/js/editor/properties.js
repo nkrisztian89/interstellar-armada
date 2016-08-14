@@ -393,7 +393,11 @@ define([
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
-                values = utils.getEnumValues(typeDescriptor.values),
+                values = typeDescriptor.values ?
+                utils.getEnumValues(typeDescriptor.values) :
+                (typeDescriptor.resourceReference ?
+                        resources.getResourceNames(typeDescriptor.resourceReference) :
+                        (typeDescriptor.classReference ? classes.getClassNames(typeDescriptor.classReference) : [])),
                 table, row, cell, propertyEditor, i,
                 typeName = new descriptors.Type(typeDescriptor).getDisplayName(),
                 updateButton = function () {

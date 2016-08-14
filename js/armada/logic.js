@@ -2012,11 +2012,15 @@ define([
         }
         if (!this._thrusterSoundSource) {
             this._thrusterSoundSource = this._class.createThrusterSoundSource(camSpacePosition);
-            this._thrusterSoundSource.play();
+            if (this._thrusterSoundSource) {
+                this._thrusterSoundSource.play();
+            }
         } else {
             this._thrusterSoundSource.setPosition(camSpacePosition[0], camSpacePosition[1], camSpacePosition[2]);
         }
-        this._thrusterSoundSource.rampVolume(this._getSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true);
+        if (this._thrusterSoundSource) {
+            this._thrusterSoundSource.rampVolume(this._getSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true);
+        }
     };
     /**
      * Removes all references stored by this object
@@ -3951,6 +3955,13 @@ define([
         return this._targetHitPosition;
     };
     /**
+     * 
+     * @returns {Propulsion}
+     */
+    Spacecraft.prototype.getPropulsion = function () {
+        return this._propulsion;
+    };
+    /**
      * Resets all the thruster burn levels of the spacecraft to zero.
      */
     Spacecraft.prototype.resetThrusterBurn = function () {
@@ -4119,7 +4130,9 @@ define([
             if (this._class.hasHumSound()) {
                 if (!this._humSource) {
                     this._humSource = this._class.createHumSource(p);
-                    this._humSource.play();
+                    if (this._humSource) {
+                        this._humSource.play();
+                    }
                 } else {
                     this._humSource.setPosition(p[0], p[1], p[2]);
                 }

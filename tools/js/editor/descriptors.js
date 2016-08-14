@@ -66,9 +66,9 @@ define([
      * @typedef {Object} Editor~TypeDescriptor
      * @property {String} baseType (enum BaseType)
      * @property {Boolean} [long=false] For BaseType.STRING
-     * @property {String} [resourceReference] For BaseType.STRING
-     * @property {String} [classReference] For BaseType.STRING
-     * @property {String} [name] For BaseType.OBJECT
+     * @property {String} [resourceReference] For BaseType.STRING and BaseType.SET
+     * @property {String} [classReference] For BaseType.STRING and BaseType.SET
+     * @property {String} [name] For BaseType.OBJECT and BaseType.SET
      * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
      * @property {Object} [values] For BaseType.ENUM and BaseType.SET
      * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
@@ -688,6 +688,14 @@ define([
         }
     },
     /**
+     * @type Editor~TypeDescriptor
+     */
+    SPACECRAFT_TYPES = {
+        baseType: BaseType.SET,
+        name: "SpacecraftTypes",
+        classReference: "spacecraftTypes"
+    },
+    /**
      * The descriptor object for spacecraft types, describing their properties
      * @type Editor~ItemDescriptor
      */
@@ -710,13 +718,11 @@ define([
         },
         GOOD_AGAINST: {
             name: "goodAgainst",
-            type: BaseType.ARRAY,
-            elementType: SPACECRAFT_TYPE_REFERENCE
+            type: SPACECRAFT_TYPES
         },
         BAD_AGAINST: {
             name: "badAgainst",
-            type: BaseType.ARRAY,
-            elementType: SPACECRAFT_TYPE_REFERENCE
+            type: SPACECRAFT_TYPES
         }
     },
     /**
@@ -1252,6 +1258,7 @@ define([
     // The public interface of the module
     return {
         BaseType: BaseType,
+        ThrusterUse: ThrusterUse,
         AXIS: AXIS,
         /**
          * @type Object.<String, Editor~ItemDescriptor>

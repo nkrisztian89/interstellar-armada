@@ -21,6 +21,7 @@
  * @param classes Used to create an object view for the preview spacecraft.
  * @param logic Used to create the preview spacecraft(s) and access the environments.
  * @param common Used to create selectors.
+ * @param descriptors Used to access enums
  */
 define([
     "utils/utils",
@@ -33,8 +34,9 @@ define([
     "armada/configuration",
     "armada/classes",
     "armada/logic",
-    "editor/common"
-], function (utils, vec, mat, managedGL, budaScene, resources, graphics, config, classes, logic, common) {
+    "editor/common",
+    "editor/descriptors"
+], function (utils, vec, mat, managedGL, budaScene, resources, graphics, config, classes, logic, common, descriptors) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -79,7 +81,7 @@ define([
              * The names of properties the changing of which should trigger a refresh of the preview
              * @type String[]
              */
-            REFRESH_PROPERTIES = ["model", "shader", "texture", "factionColor", "defaultLuminosityFactors", "bodies", "weaponSlots", "equipmentProfiles"],
+            REFRESH_PROPERTIES = ["model", "shader", "texture", "factionColor", "defaultLuminosityFactors", "bodies", "weaponSlots", "thrusterSlots", "equipmentProfiles"],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -136,6 +138,10 @@ define([
              */
             _factionColorChanged,
             /**
+             * @type String[]
+             */
+            _activeEngineUses = [],
+            /**
              * 
              * @type Boolean
              */
@@ -154,7 +160,9 @@ define([
                 lodSelector: null,
                 environmentSelector: null,
                 equipmentSelector: null,
-                factionColorPicker: null
+                factionColorPicker: null,
+                engineStateEditor: null,
+                engineStatePopup: null
             };
     // ----------------------------------------------------------------------
     // Private Functions
@@ -336,6 +344,26 @@ define([
         }
     }
     /**
+     * Updates the visual models of the thrusters according to the currently set engine state.
+     */
+    function _updateThrusters() {
+        var i;
+        if (_spacecraft.getPropulsion()) {
+            _spacecraft.resetThrusterBurn();
+            for (i = 0; i < _activeEngineUses.length; i++) {
+                _spacecraft.addThrusterBurn(_activeEngineUses[i], (
+                        (_activeEngineUses[i] === descriptors.ThrusterUse.FORWARD) ||
+                        (_activeEngineUses[i] === descriptors.ThrusterUse.REVERSE) ||
+                        (_activeEngineUses[i] === descriptors.ThrusterUse.STRAFE_LEFT) ||
+                        (_activeEngineUses[i] === descriptors.ThrusterUse.STRAFE_RIGHT) ||
+                        (_activeEngineUses[i] === descriptors.ThrusterUse.RAISE) ||
+                        (_activeEngineUses[i] === descriptors.ThrusterUse.LOWER)) ?
+                        _spacecraft.getMaxThrusterMoveBurnLevel() :
+                        _spacecraft.getMaxThrusterTurnBurnLevel());
+            }
+        }
+    }
+    /**
      * Creates and returns a <span> HTML element storing the passed text, having the class associated with setting labels.
      * @param {String} text
      * @returns {Element}
@@ -462,13 +490,17 @@ define([
             }
         }
         _spacecraft.addToScene(_scene, undefined, false,
-                (environmentChanged || shouldReload) ? {weapons: true, lightSources: true, blinkers: true, hitboxes: true} : {self: false, weapons: true},
+                (environmentChanged || shouldReload) ?
+                {weapons: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true} :
+                {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
                     factionColor: _factionColor
                 });
         _wireframeSpacecraft.addToScene(_scene, undefined, true,
-                (environmentChanged || shouldReload) ? {weapons: true} : {self: false, weapons: true},
+                (environmentChanged || shouldReload) ?
+                {weapons: true} :
+                {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
                     shaderName: WIREFRAME_SHADER_NAME
@@ -530,6 +562,7 @@ define([
                 utils.executeAsync(function () {
                     _updateForRenderMode();
                     _updateForLOD();
+                    _updateThrusters();
                     _updateForHitboxState();
                     _requestRender();
                 });
@@ -552,7 +585,76 @@ define([
         if (!_factionColorChanged) {
             _factionColor = _spacecraftClass.getFactionColor().slice();
         }
+        _activeEngineUses = [];
         _showHitbox = false;
+    }
+    /**
+     * Updates the engine state editor control in the preview options panel according to the current possibilities and settings.
+     */
+    function _updateEngineStateEditor() {
+        var i, checkboxes;
+        _optionElements.engineStateEditor.disabled = !_spacecraft.getPropulsion();
+        if (_optionElements.engineStateEditor.disabled) {
+            _activeEngineUses = [];
+            checkboxes = _optionElements.engineStatePopup.getElement().querySelectorAll('input[type="checkbox"]');
+            for (i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = false;
+            }
+            _optionElements.engineStatePopup.hide();
+        }
+        _optionElements.engineStateEditor.innerHTML = _activeEngineUses.length > 0 ?
+                (_activeEngineUses[0] + ((_activeEngineUses.length > 1) ? "..." : "")) :
+                "off";
+    }
+    /**
+     * Creates and returns the control that can be used to set the engine state for the preview. Also sets the reference for the 
+     * corresponding popup.
+     * @returns {Element}
+     */
+    function _createEngineEditor() {
+        var
+                button = document.createElement("button"),
+                popup = new common.Popup(button, null, {}),
+                values = utils.getEnumValues(descriptors.ThrusterUse),
+                table, row, cell, propertyEditor, i,
+                elementChangeHandler = function (index, checkbox) {
+                    var elementIndex = _activeEngineUses.indexOf(values[index]);
+                    if (checkbox.checked) {
+                        if (elementIndex === -1) {
+                            _activeEngineUses.push(values[index]);
+                        }
+                    } else {
+                        if (elementIndex >= 0) {
+                            _activeEngineUses.splice(elementIndex, 1);
+                        }
+                    }
+                    _updateEngineStateEditor();
+                    _updateThrusters();
+                    _requestRender();
+                };
+        table = document.createElement("table");
+        for (i = 0; i < values.length; i++) {
+            propertyEditor = common.createBooleanInput(_activeEngineUses.indexOf(values[i]) >= 0, elementChangeHandler.bind(this, i));
+            row = document.createElement("tr");
+            cell = document.createElement("td");
+            cell.appendChild(common.createLabel(values[i].toString()));
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            table.appendChild(row);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        _optionElements.engineStatePopup = popup;
+        // create a button using which the popup can be opened
+        button.type = "button";
+        button.innerHTML = "off";
+        button.disabled = true;
+        button.onclick = function () {
+            popup.toggle();
+        };
+        return button;
     }
     /**
      * Creates the controls that form the content of the preview options and adds them to the page.
@@ -587,9 +689,11 @@ define([
         _optionElements.equipmentSelector = common.createSelector(_spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
             _updateCanvas({
                 preserve: true,
+                reload: true,
                 environmentName: _environmentName,
                 equipmentProfileName: (_optionElements.equipmentSelector.value !== "none") ? _optionElements.equipmentSelector.value : null
             });
+            _updateEngineStateEditor();
         });
         _elements.options.appendChild(_createSetting("Equipment:", _optionElements.equipmentSelector));
         // faction color picker
@@ -603,6 +707,9 @@ define([
             });
         });
         _elements.options.appendChild(_createSetting("Faction color:", _optionElements.factionColorPicker));
+        // engine state editor
+        _optionElements.engineStateEditor = _createEngineEditor();
+        _elements.options.appendChild(_createSetting("Engine:", _optionElements.engineStateEditor));
         _elements.options.hidden = false;
     }
     // ----------------------------------------------------------------------
