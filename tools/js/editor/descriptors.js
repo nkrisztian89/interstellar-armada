@@ -10,7 +10,12 @@
 /*global define, document */
 /*jslint white: true, plusplus: true, nomen: true */
 
-define(function () {
+/**
+ * @param classes
+ */
+define([
+    "armada/classes"
+], function (classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -107,9 +112,23 @@ define(function () {
     /**
      * @type Editor~TypeDescriptor
      */
+    CUBEMAP_REFERENCE = {
+        baseType: BaseType.STRING,
+        resourceReference: "cubemaps"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
     SPACECRAFT_TYPE_REFERENCE = {
         baseType: BaseType.STRING,
         classReference: "spacecraftTypes"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    EXPLOSION_CLASS_REFERENCE = {
+        baseType: BaseType.STRING,
+        classReference: "explosionClasses"
     },
     /**
      * @type Editor~TypeDescriptor
@@ -145,6 +164,334 @@ define(function () {
     AXIS = {
         baseType: BaseType.ENUM,
         values: Axis
+    },
+    /**
+     * The descriptor object for skybox classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    SKYBOX_CLASS = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        SHADER: {
+            name: "shader",
+            type: SHADER_REFERENCE
+        },
+        CUBEMAP: {
+            name: "cubemap",
+            type: CUBEMAP_REFERENCE
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    BACKGROUND_OBJECT_LAYER = {
+        baseType: BaseType.OBJECT,
+        name: "Layer",
+        properties: {
+            SIZE: {
+                name: "size",
+                type: BaseType.NUMBER
+            },
+            SHADER: {
+                name: "shader",
+                type: SHADER_REFERENCE
+            },
+            TEXTURE: {
+                name: "texture",
+                type: TEXTURE_REFERENCE
+            },
+            COLOR: {
+                name: "color",
+                type: BaseType.COLOR
+            }
+        }
+    },
+    /**
+     * The descriptor object for background object classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    BACKGROUND_OBJECT_CLASS = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        LIGHT_COLOR: {
+            name: "lightColor",
+            type: BaseType.COLOR
+        },
+        LAYERS: {
+            name: "layers",
+            type: BaseType.ARRAY,
+            elementType: BACKGROUND_OBJECT_LAYER
+        }
+    },
+    /**
+     * The descriptor object for dust cloud classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    DUST_CLOUD_CLASS = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        SHADER: {
+            name: "shader",
+            type: SHADER_REFERENCE
+        },
+        NUMBER_OF_PARTICLES: {
+            name: "numberOfParticles",
+            type: BaseType.NUMBER
+        },
+        RANGE: {
+            name: "range",
+            type: BaseType.NUMBER
+        },
+        COLOR: {
+            name: "color",
+            type: BaseType.COLOR
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    PARTICLE_EMITTER_TYPE = {
+        baseType: BaseType.ENUM,
+        values: classes.ParticleEmitterType
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    PARTICLE_STATE = {
+        baseType: BaseType.OBJECT,
+        name: "ParticleState",
+        properties: {
+            COLOR: {
+                name: "color",
+                type: BaseType.COLOR
+            },
+            SIZE: {
+                name: "size",
+                type: BaseType.NUMBER
+            },
+            TIME_TO_REACH: {
+                name: "timeToReach",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    PARTICLE_EMITTER = {
+        baseType: BaseType.OBJECT,
+        name: "ParticleEmitter",
+        properties: {
+            TYPE: {
+                name: "type",
+                type: PARTICLE_EMITTER_TYPE
+            },
+            DIMENSIONS: {
+                name: "dimensions",
+                type: BaseType.VECTOR3
+            },
+            DIRECTION_SPREAD: {
+                name: "directionSpread",
+                type: BaseType.NUMBER
+            },
+            VELOCITY: {
+                name: "velocity",
+                type: BaseType.NUMBER
+            },
+            VELOCITY_SPREAD: {
+                name: "velocitySpread",
+                type: BaseType.NUMBER
+            },
+            INITIAL_NUMBER: {
+                name: "initialNumber",
+                type: BaseType.NUMBER
+            },
+            SPAWN_NUMBER: {
+                name: "spawnNumber",
+                type: BaseType.NUMBER
+            },
+            SPAWN_TIME: {
+                name: "spawnTime",
+                type: BaseType.NUMBER
+            },
+            DURATION: {
+                name: "duration",
+                type: BaseType.NUMBER
+            },
+            SHADER: {
+                name: "shader",
+                type: SHADER_REFERENCE
+            },
+            TEXTURE: {
+                name: "texture",
+                type: TEXTURE_REFERENCE
+            },
+            PARTICLE_STATES: {
+                name: "particleStates",
+                type: BaseType.ARRAY,
+                elementType: PARTICLE_STATE
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    LIGHT_STATE = {
+        baseType: BaseType.OBJECT,
+        name: "LightState",
+        properties: {
+            COLOR: {
+                name: "color",
+                type: BaseType.COLOR
+            },
+            INTENSITY: {
+                name: "intensity",
+                type: BaseType.NUMBER
+            },
+            TIME_TO_REACH: {
+                name: "timeToReach",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * The descriptor object for propulsion classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    EXPLOSION_CLASS = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        PARTICLE_EMITTERS: {
+            name: "particleEmitters",
+            type: BaseType.ARRAY,
+            elementType: PARTICLE_EMITTER
+        },
+        LIGHT_STATES: {
+            name: "lightStates",
+            type: BaseType.ARRAY,
+            elementType: LIGHT_STATE
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    PARTICLE_DESCRIPTOR = {
+        baseType: BaseType.OBJECT,
+        name: "ParticleDescriptor",
+        properties: {
+            SHADER: {
+                name: "shader",
+                type: SHADER_REFERENCE
+            },
+            TEXTURE: {
+                name: "texture",
+                type: TEXTURE_REFERENCE
+            },
+            COLOR: {
+                name: "color",
+                type: BaseType.COLOR
+            },
+            SIZE: {
+                name: "size",
+                type: BaseType.NUMBER
+            },
+            DURATION: {
+                name: "duration",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    SOUND_DESCRIPTOR = {
+        baseType: BaseType.OBJECT,
+        name: "SoundDescriptor",
+        properties: {
+            NAME: {
+                name: "name",
+                type: BaseType.STRING
+            },
+            VOLUME: {
+                name: "volume",
+                type: BaseType.NUMBER
+            },
+            ROLLOFF: {
+                name: "rolloff",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * The descriptor object for projectile classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    PROJECTILE_CLASS = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        DAMAGE: {
+            name: "damage",
+            type: BaseType.NUMBER
+        },
+        SHADER: {
+            name: "shader",
+            type: SHADER_REFERENCE
+        },
+        TEXTURE: {
+            name: "texture",
+            type: TEXTURE_REFERENCE
+        },
+        SIZE: {
+            name: "size",
+            type: BaseType.NUMBER
+        },
+        MASS: {
+            name: "mass",
+            type: BaseType.NUMBER
+        },
+        DURATION: {
+            name: "duration",
+            type: BaseType.NUMBER
+        },
+        INTERSECTION_POSITIONS: {
+            name: "intersectionPositions",
+            type: BaseType.ARRAY,
+            elementType: BaseType.NUMBER
+        },
+        WIDTH: {
+            name: "width",
+            type: BaseType.NUMBER
+        },
+        MUZZLE_FLASH: {
+            name: "muzzleFlash",
+            type: PARTICLE_DESCRIPTOR
+        },
+        LIGHT_COLOR: {
+            name: "lightColor",
+            type: BaseType.COLOR
+        },
+        LIGHT_INTENSITY: {
+            name: "lightIntensity",
+            type: BaseType.NUMBER
+        },
+        EXLOSION: {
+            name: "explosion",
+            type: EXPLOSION_CLASS_REFERENCE
+        },
+        HIT_SOUND: {
+            name: "hitSound",
+            type: SOUND_DESCRIPTOR
+        }
     },
     /**
      * The descriptor object for propulsion classes, describing their properties
@@ -602,6 +949,11 @@ define(function () {
          * @type Object.<String, Editor~ItemDescriptor>
          */
         itemDescriptors: {
+            "skyboxClasses": SKYBOX_CLASS,
+            "backgroundObjectClasses": BACKGROUND_OBJECT_CLASS,
+            "dustCloudClasses": DUST_CLOUD_CLASS,
+            "explosionClasses": EXPLOSION_CLASS,
+            "projectileClasses": PROJECTILE_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,
             "spacecraftClasses": SPACECRAFT_CLASS
