@@ -310,6 +310,7 @@ define([
                     popup.hideChildren();
                     popup.getElement().removeChild(propertiesTable);
                     propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup);
+                    popup.alignPosition();
                 };
         // for arrays: adding a selector at the top of the popup, using which the instance to modify within the array can be selected
         if (isArray) {

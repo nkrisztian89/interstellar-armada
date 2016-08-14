@@ -45,7 +45,8 @@ define([
             RANGE_NUMERIC_INPUT_CLASS = "rangeNumericInput",
             POPUP_CLASS = "popup",
             POPUP_START_Z_INDEX = 1000,
-            POPUP_PLACEMENT_STEP = 10,
+            POPUP_RIGHT_MARGIN = 4,
+            POPUP_BOTTOM_MARGIN = 4,
             EVENT_SHOW_NAME = "show",
             EVENT_HIDE_NAME = "hide",
             // ------------------------------------------------------------------------------
@@ -334,13 +335,30 @@ define([
     Popup.prototype.alignPosition = function () {
         var rect, left;
         if (this.isVisible()) {
+            rect = this._invoker.getBoundingClientRect();
+            this._element.style.left = rect.left + "px";
+            this._element.style.top = rect.bottom + "px";
+            this._element.style.width = "";
+            this._element.style.height = "";
+            // first horizontal alignment, as it can change the height by canceling out text wrapping
             rect = this._element.getBoundingClientRect();
-            left = rect.left;
-            while ((left >= POPUP_PLACEMENT_STEP) && (rect.right >= window.innerWidth)) {
-                left -= POPUP_PLACEMENT_STEP;
-                this._element.style.left = left + "px";
+            if (rect.right > window.innerWidth - POPUP_RIGHT_MARGIN) {
+                this._element.style.left = (window.innerWidth - (rect.right - rect.left) - POPUP_RIGHT_MARGIN) + "px";
                 rect = this._element.getBoundingClientRect();
+                left = rect.left;
+                while ((left > 0) && (rect.right > window.innerWidth - POPUP_RIGHT_MARGIN)) {
+                    left -= POPUP_RIGHT_MARGIN;
+                    this._element.style.left = left + "px";
+                    rect = this._element.getBoundingClientRect();
+                }
             }
+            if (rect.bottom > window.innerHeight - POPUP_BOTTOM_MARGIN) {
+                this._element.style.height = (window.innerHeight - rect.top - 10 - POPUP_BOTTOM_MARGIN) + "px";
+                rect = this._element.getBoundingClientRect();
+                this._element.style.left = (rect.left - 21) + "px";
+                this._element.style.width = ((rect.right - rect.left) + 16) + "px";
+            }
+            rect = this._element.getBoundingClientRect();
         }
     };
     /**
@@ -364,9 +382,6 @@ define([
             }
         }
         // show this popup at the right position
-        rect = this._invoker.getBoundingClientRect();
-        this._element.style.left = rect.left + "px";
-        this._element.style.top = rect.bottom + "px";
         this._element.hidden = false;
         this.alignPosition();
         this._element.style.zIndex = _maxZIndex;

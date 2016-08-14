@@ -25,6 +25,10 @@ textarea {
     margin-right: 0.5em;
 }
 
+select {
+    max-width: 12em;
+}
+
 /* -------------------------------------------------------------------- */
 /* general: common */
 
@@ -44,7 +48,7 @@ textarea {
 }
 
 .colorComponent {
-    width: 2em;
+    width: 1.9em;
 }
 
 .vectorComponent {
@@ -57,10 +61,10 @@ textarea {
 
 .colorPreview {
     display: inline-block;
-    width: 1.4em;
+    width: 1.2em;
     height: 1.4em;
     margin-bottom: 0;
-    margin-right: 0.5em;
+    margin-right: 0.3em;
 }
 
 .rangeCheckbox {
@@ -80,6 +84,9 @@ textarea {
 
     padding-top: 0.2em;
     padding-bottom: 0.2em;
+
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 /* -------------------------------------------------------------------- */

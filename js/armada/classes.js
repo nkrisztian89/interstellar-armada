@@ -1477,7 +1477,7 @@ define([
          * 1.0 to make it 4 element, as it is used in multiplication with 4x4 matrices.
          * @type Number[4]
          */
-        this._positionVector = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        this._positionVector = dataJSON ? (dataJSON.position.slice() || _showMissingPropertyError(this, "position")) : null;
         if (this._positionVector) {
             this._positionVector.push(1);
         }
@@ -1629,7 +1629,7 @@ define([
          * considering all the rotators. In 4D, with a 1.0 appended to make it easier to multiply it with 4x4 matrices.
          * @type Number[4]
          */
-        this._basePoint = (dataJSON && !this._fixed) ? (dataJSON.basePoint || _showMissingPropertyError(this, "basePoint")) : null;
+        this._basePoint = (dataJSON && !this._fixed) ? (dataJSON.basePoint.slice() || _showMissingPropertyError(this, "basePoint")) : null;
         if (this._basePoint) {
             this._basePoint.push(1);
         }
@@ -3381,6 +3381,7 @@ define([
     return {
         SOUND_EFFECT_2D: SOUND_EFFECT_2D,
         ParticleEmitterType: ParticleEmitterType,
+        ObjectViewLookAtMode: ObjectViewLookAtMode,
         WeaponRotationStyle: WeaponRotationStyle,
         SpacecraftTurnStyle: SpacecraftTurnStyle,
         TexturedModelClass: TexturedModelClass,

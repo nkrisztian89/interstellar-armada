@@ -11,11 +11,13 @@
 /*jslint white: true, plusplus: true, nomen: true */
 
 /**
- * @param classes
+ * @param budaScene Used to access enums
+ * @param classes Used to access enums
  */
 define([
+    "modules/buda-scene",
     "armada/classes"
-], function (classes) {
+], function (budaScene, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -119,6 +121,13 @@ define([
     /**
      * @type Editor~TypeDescriptor
      */
+    SOUND_REFERENCE = {
+        baseType: BaseType.STRING,
+        resourceReference: "soundEffects"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
     SPACECRAFT_TYPE_REFERENCE = {
         baseType: BaseType.STRING,
         classReference: "spacecraftTypes"
@@ -126,9 +135,23 @@ define([
     /**
      * @type Editor~TypeDescriptor
      */
+    SPACECRAFT_CLASS_REFERENCE = {
+        baseType: BaseType.STRING,
+        classReference: "spacecraftClasses"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
     EXPLOSION_CLASS_REFERENCE = {
         baseType: BaseType.STRING,
         classReference: "explosionClasses"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    PROJECTILE_CLASS_REFERENCE = {
+        baseType: BaseType.STRING,
+        classReference: "projectileClasses"
     },
     /**
      * @type Editor~TypeDescriptor
@@ -418,7 +441,7 @@ define([
         properties: {
             NAME: {
                 name: "name",
-                type: BaseType.STRING
+                type: SOUND_REFERENCE
             },
             VOLUME: {
                 name: "volume",
@@ -494,6 +517,127 @@ define([
         }
     },
     /**
+     * @type Editor~TypeDescriptor
+     */
+    BARREL = {
+        baseType: BaseType.OBJECT,
+        name: "Barrel",
+        properties: {
+            PROJECTILE: {
+                name: "projectile",
+                type: PROJECTILE_CLASS_REFERENCE
+            },
+            PROJECTILE_VELOCITY: {
+                name: "projectileVelocity",
+                type: BaseType.NUMBER
+            },
+            POSITION: {
+                name: "position",
+                type: BaseType.VECTOR3
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    WEAPON_ROTATION_STYLE = {
+        baseType: BaseType.ENUM,
+        values: classes.WeaponRotationStyle
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    WEAPON_ROTATOR = {
+        baseType: BaseType.OBJECT,
+        name: "WeaponRotator",
+        properties: {
+            AXIS: {
+                name: "axis",
+                type: BaseType.VECTOR3
+            },
+            CENTER: {
+                name: "center",
+                type: BaseType.VECTOR3
+            },
+            RANGE: {
+                name: "range",
+                type: BaseType.RANGE
+            },
+            DEFAULT_ANGLE: {
+                name: "defaultAngle",
+                type: BaseType.NUMBER
+            },
+            ROTATION_RATE: {
+                name: "rotationRate",
+                type: BaseType.NUMBER
+            },
+            TRANSFORM_GROUP_INDEX: {
+                name: "transformGroupIndex",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * The descriptor object for weapon classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    WEAPON_CLASS = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        SHADER: {
+            name: "shader",
+            type: SHADER_REFERENCE
+        },
+        MODEL: {
+            name: "model",
+            type: MODEL_REFERENCE
+        },
+        TEXTURE: {
+            name: "texture",
+            type: TEXTURE_REFERENCE
+        },
+        DEFAULT_LUMINOSITY_FACTORS: {
+            name: "defaultLuminosityFactors",
+            type: LUMINOSITY_FACTOR_PAIRS
+        },
+        GRADE: {
+            name: "grade",
+            type: BaseType.NUMBER
+        },
+        COOLDOWN: {
+            name: "cooldown",
+            type: BaseType.NUMBER
+        },
+        BARRELS: {
+            name: "barrels",
+            type: BaseType.ARRAY,
+            elementType: BARREL
+        },
+        ATTACHMENT_POINT: {
+            name: "attachmentPoint",
+            type: BaseType.VECTOR3
+        },
+        ROTATION_STYLE: {
+            name: "rotationStyle",
+            type: WEAPON_ROTATION_STYLE
+        },
+        BASE_POINT: {
+            name: "basePoint",
+            type: BaseType.VECTOR3
+        },
+        ROTATORS: {
+            name: "rotators",
+            type: BaseType.ARRAY,
+            elementType: WEAPON_ROTATOR
+        },
+        FIRE_SOUND: {
+            name: "fireSound",
+            type: SOUND_DESCRIPTOR
+        }
+    },
+    /**
      * The descriptor object for propulsion classes, describing their properties
      * @type Editor~ItemDescriptor
      */
@@ -537,6 +681,10 @@ define([
         MAX_TURN_BURN_LEVEL: {
             name: "maxTurnBurnLevel",
             type: BaseType.NUMBER
+        },
+        THRUSTER_SOUND: {
+            name: "thrusterSound",
+            type: SOUND_DESCRIPTOR
         }
     },
     /**
@@ -570,6 +718,13 @@ define([
             type: BaseType.ARRAY,
             elementType: SPACECRAFT_TYPE_REFERENCE
         }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    SPACECRAFT_TURN_STYLE = {
+        baseType: BaseType.ENUM,
+        values: classes.SpacecraftTurnStyle
     },
     /**
      * @type Editor~TypeDescriptor
@@ -659,6 +814,20 @@ define([
     /**
      * @type Editor~TypeDescriptor
      */
+    BASE_ORIENTATION = {
+        baseType: BaseType.ENUM,
+        values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    OBJECT_VIEW_LOOK_AT_MODE = {
+        baseType: BaseType.ENUM,
+        values: classes.ObjectViewLookAtMode
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
     VIEW = {
         baseType: BaseType.OBJECT,
         name: "View",
@@ -686,6 +855,18 @@ define([
             FOLLOWS_POSITION: {
                 name: "followsPosition",
                 type: BaseType.BOOLEAN
+            },
+            BASE_ORIENTATION: {
+                name: "baseOrientation",
+                type: BASE_ORIENTATION
+            },
+            STARTS_WITH_RELATIVE_POSITION: {
+                name: "startsWithRelativePosition",
+                type: BaseType.BOOLEAN
+            },
+            LOOK_AT: {
+                name: "lookAt",
+                type: OBJECT_VIEW_LOOK_AT_MODE
             },
             MOVABLE: {
                 name: "movable",
@@ -774,6 +955,86 @@ define([
         }
     },
     /**
+     * @type Editor~TypeDescriptor
+     */
+    DAMAGE_INDICATOR = {
+        baseType: BaseType.OBJECT,
+        name: "DamageIndicator",
+        properties: {
+            HULL_INTEGRITY: {
+                name: "hullIntegrity",
+                type: BaseType.NUMBER
+            },
+            CLASS: {
+                name: "class",
+                type: EXPLOSION_CLASS_REFERENCE
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    SPACECRAFT_LIGHT = {
+        baseType: BaseType.OBJECT,
+        name: "Light",
+        properties: {
+            POSITION: {
+                name: "position",
+                type: BaseType.VECTOR3
+            },
+            COLOR: {
+                name: "color",
+                type: BaseType.COLOR
+            },
+            INTENSITY: {
+                name: "intensity",
+                type: BaseType.NUMBER
+            },
+            SPOT_DIRECTION: {
+                name: "spotDirection",
+                type: BaseType.VECTOR3
+            },
+            SPOT_CUTOFF_ANGLE: {
+                name: "spotCutoffAngle",
+                type: BaseType.NUMBER
+            },
+            SPOT_FULL_INTENSITY_ANGLE: {
+                name: "spotFullIntensityAngle",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    BLINKER = {
+        baseType: BaseType.OBJECT,
+        name: "Blinker",
+        properties: {
+            PARTICLE: {
+                name: "particle",
+                type: PARTICLE_DESCRIPTOR
+            },
+            POSITION: {
+                name: "position",
+                type: BaseType.VECTOR3
+            },
+            PERIOD: {
+                name: "period",
+                type: BaseType.NUMBER
+            },
+            BLINKS: {
+                name: "blinks",
+                type: BaseType.ARRAY,
+                elementType: BaseType.NUMBER
+            },
+            INTENSITY: {
+                name: "intensity",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
      * The descriptor object for spacecraft classes, describing their properties
      * @type Editor~ItemDescriptor
      */
@@ -781,6 +1042,10 @@ define([
         NAME: {
             name: "name",
             type: BaseType.STRING
+        },
+        BASED_ON: {
+            name: "basedOn",
+            type: SPACECRAFT_CLASS_REFERENCE
         },
         TYPE: {
             name: "type",
@@ -804,6 +1069,18 @@ define([
         },
         ARMOR: {
             name: "armor",
+            type: BaseType.NUMBER
+        },
+        TURN_STYLE: {
+            name: "turnStyle",
+            type: SPACECRAFT_TURN_STYLE
+        },
+        ATTACK_VECTOR: {
+            name: "attackVector",
+            type: BaseType.VECTOR3
+        },
+        ATTACK_THRESHOLD_ANGLE: {
+            name: "attackThresholdAngle",
             type: BaseType.NUMBER
         },
         MODEL: {
@@ -858,6 +1135,37 @@ define([
             name: "equipmentProfiles",
             type: BaseType.ARRAY,
             elementType: EQUIPMENT_PROFILE
+        },
+        HUM_SOUND: {
+            name: "humSound",
+            type: SOUND_DESCRIPTOR
+        },
+        EXPLOSION: {
+            name: "explosion",
+            type: EXPLOSION_CLASS_REFERENCE
+        },
+        EXPLOSION_SOUND: {
+            name: "explosionSound",
+            type: SOUND_DESCRIPTOR
+        },
+        SHOW_TIME_RATIO_DURING_EXPLOSION: {
+            name: "showTimeRatioDuringExplosion",
+            type: BaseType.NUMBER
+        },
+        DAMAGE_INDICATORS: {
+            name: "damageIndicators",
+            type: BaseType.ARRAY,
+            elementType: DAMAGE_INDICATOR
+        },
+        LIGHTS: {
+            name: "lights",
+            type: BaseType.ARRAY,
+            elementType: SPACECRAFT_LIGHT
+        },
+        BLINKERS: {
+            name: "blinkers",
+            type: BaseType.ARRAY,
+            elementType: BLINKER
         }
     };
     /**
@@ -954,6 +1262,7 @@ define([
             "dustCloudClasses": DUST_CLOUD_CLASS,
             "explosionClasses": EXPLOSION_CLASS,
             "projectileClasses": PROJECTILE_CLASS,
+            "weaponClasses": WEAPON_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,
             "spacecraftClasses": SPACECRAFT_CLASS
