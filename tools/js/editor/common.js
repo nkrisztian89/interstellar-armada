@@ -329,11 +329,26 @@ define([
         return !this._element.hidden;
     };
     /**
+     * If the popup does not fit on the screen, tries to reposition it.
+     */
+    Popup.prototype.alignPosition = function () {
+        var rect, left;
+        if (this.isVisible()) {
+            rect = this._element.getBoundingClientRect();
+            left = rect.left;
+            while ((left >= POPUP_PLACEMENT_STEP) && (rect.right >= window.innerWidth)) {
+                left -= POPUP_PLACEMENT_STEP;
+                this._element.style.left = left + "px";
+                rect = this._element.getBoundingClientRect();
+            }
+        }
+    };
+    /**
      * Shows the popup and hides all other popups on the same level. Automatically positions the popup to be under the invoking element and
      * to fit on the screen horizontally (if possible)
      */
     Popup.prototype.show = function () {
-        var i, rect, left;
+        var i, rect;
         // hide the other popups open at the same level
         if (!this._parent) {
             for (i = 0; i < _popups.length; i++) {
@@ -350,16 +365,10 @@ define([
         }
         // show this popup at the right position
         rect = this._invoker.getBoundingClientRect();
-        left = rect.left;
         this._element.style.left = rect.left + "px";
         this._element.style.top = rect.bottom + "px";
         this._element.hidden = false;
-        rect = this._element.getBoundingClientRect();
-        while ((left >= POPUP_PLACEMENT_STEP) && (rect.right >= window.innerWidth)) {
-            left -= POPUP_PLACEMENT_STEP;
-            this._element.style.left = left + "px";
-            rect = this._element.getBoundingClientRect();
-        }
+        this.alignPosition();
         this._element.style.zIndex = _maxZIndex;
         _maxZIndex++;
         if (this._eventHandlers[EVENT_SHOW_NAME]) {

@@ -381,6 +381,63 @@ define([
         return button;
     }
     /**
+     * Creates and returns a control that can be used to edit set properties. (by opening a popup to toggle the elements of that set)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the set type
+     * @param {Array} data The set itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createSetControl(topName, typeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                values = utils.getEnumValues(typeDescriptor.values),
+                table, row, cell, propertyEditor, i,
+                typeName = new descriptors.Type(typeDescriptor).getDisplayName(),
+                updateButton = function () {
+                    button.innerHTML = typeName + " (" + data.length + "/" + values.length + ")";
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                },
+                elementChangeHandler = function (index, checkbox) {
+                    var elementIndex = data.indexOf(values[index]);
+                    if (checkbox.checked) {
+                        if (elementIndex === -1) {
+                            data.push(values[index]);
+                        }
+                    } else {
+                        if (elementIndex >= 0) {
+                            data.splice(elementIndex, 1);
+                        }
+                    }
+                    _updateData(topName);
+                    updateButton();
+                };
+        table = document.createElement("table");
+        for (i = 0; i < values.length; i++) {
+            propertyEditor = common.createBooleanInput(data.indexOf(values[i]) >= 0, elementChangeHandler.bind(this, i));
+            row = document.createElement("tr");
+            cell = document.createElement("td");
+            cell.appendChild(common.createLabel(values[i].toString()));
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            table.appendChild(row);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        button.type = "button";
+        updateButton();
+        button.onclick = function () {
+            popup.toggle();
+        };
+        return button;
+    }
+    /**
      * Creates and returns a control that can be used to array of pairs type properties. (by opening a popup to edit the pairs in the
      * array)
      * @param {String} topName Name of the top property being edited (under which this array resides)
@@ -544,6 +601,9 @@ define([
                     break;
                 case descriptors.BaseType.ROTATIONS:
                     result = _createRotationsControl(topName, data, parentPopup);
+                    break;
+                case descriptors.BaseType.SET:
+                    result = _createSetControl(topName, propertyDescriptor.type, data, parentPopup);
                     break;
                 case descriptors.BaseType.ARRAY:
                     elementType = new descriptors.Type(propertyDescriptor.elementType);

@@ -26,17 +26,32 @@ define(function () {
                 VECTOR3: "vector3",
                 RANGE: "range",
                 PAIRS: "pairs",
-                ROTATIONS: "rotations"
+                ROTATIONS: "rotations",
+                SET: "set"
             },
-            /**
-             * The possible axes for rotations
-             * @enum {String}
-             * @type Object
-             */
+    /**
+     * The possible axes for rotations
+     * @enum {String}
+     * @type Object
+     */
     Axis = {
         X: "X",
         Y: "Y",
         Z: "Z"
+    },
+    ThrusterUse = {
+        FORWARD: "forward",
+        REVERSE: "reverse",
+        STRAFE_LEFT: "strafeLeft",
+        STRAFE_RIGHT: "strafeRight",
+        RAISE: "raise",
+        LOWER: "lower",
+        YAW_LEFT: "yawLeft",
+        YAW_RIGHT: "yawRight",
+        PITCH_UP: "pitchUp",
+        PITCH_DOWN: "pitchDown",
+        ROLL_LEFT: "rollLeft",
+        ROLL_RIGHT: "rollRight"
     },
     // ------------------------------------------------------------------------------
     // Constants
@@ -48,7 +63,7 @@ define(function () {
      * @property {String} [classReference] For BaseType.STRING
      * @property {String} [name] For BaseType.OBJECT
      * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
-     * @property {Object} [values] For BaseType.ENUM
+     * @property {Object} [values] For BaseType.ENUM and BaseType.SET
      * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
      * @property {Editor~PropertyDescriptor} [second] For BaseType.PAIRS
      */
@@ -267,6 +282,14 @@ define(function () {
     /**
      * @type Editor~TypeDescriptor
      */
+    THRUSTER_USES = {
+        baseType: BaseType.SET,
+        name: "ThrusterUses",
+        values: ThrusterUse
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
     THRUSTER_SLOT = {
         baseType: BaseType.OBJECT,
         name: "ThrusterSlot",
@@ -277,8 +300,7 @@ define(function () {
             },
             USES: {
                 name: "uses",
-                type: BaseType.ARRAY,
-                elementType: BaseType.STRING
+                type: THRUSTER_USES
             },
             THRUSTERS: {
                 name: "thrusters",
