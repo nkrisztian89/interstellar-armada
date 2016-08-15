@@ -42,6 +42,11 @@ define([
              */
             _item,
             /**
+             * 
+             * @type Boolean
+             */
+            _isDerived,
+            /**
              * The module providing the Preview for the item the properties of which are displayed
              * @type Editor~Preview
              */
@@ -544,6 +549,54 @@ define([
         return button;
     }
     /**
+     * Creates and returns a control that can be used to edit confines type properties. (by opening a popup to edit the ranges)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createConfinesControl(topName, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, row, cell, axisLabel, propertyEditor, i, axis;
+        table = document.createElement("table");
+        for (i = 0; i < data.length; i++) {
+            switch (i) {
+                case 0:
+                    axis = "X";
+                    break;
+                case 1:
+                    axis = "Y";
+                    break;
+                case 2:
+                    axis = "Z";
+                    break;
+                default:
+                    axis = i.toString();
+            }
+            axisLabel = common.createLabel(axis);
+            propertyEditor = _createRangeControl(topName, data[i]);
+            row = document.createElement("tr");
+            cell = document.createElement("td");
+            cell.appendChild(axisLabel);
+            row.appendChild(cell);
+            cell = document.createElement("td");
+            cell.appendChild(propertyEditor);
+            row.appendChild(cell);
+            table.appendChild(row);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        button.type = "button";
+        button.innerHTML = "Confines";
+        button.onclick = function () {
+            popup.toggle();
+        };
+        return button;
+    }
+    /**
      * Creates and returns an element that can be used to display the value of properties the type of which is not identified.
      * @param {} data The value of the property to display
      * @returns {Element}
@@ -567,10 +620,20 @@ define([
      */
     _createControl = function (propertyDescriptor, data, topName, parent, parentPopup) {
         var result, type = new descriptors.Type(propertyDescriptor.type), elementType;
-        topName = topName || propertyDescriptor.name;
         if (data === undefined) {
-            result = _createDefaultControl("inherited");
+            if (!topName && _isDerived) {
+                result = _createDefaultControl("inherited");
+            } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault) {
+                result = _createDefaultControl("default");
+            } else if (propertyDescriptor.defaultDerived) {
+                result = _createDefaultControl("derived");
+            } else if (propertyDescriptor.optional) {
+                result = _createDefaultControl("unset");
+            } else {
+                result = _createDefaultControl("unknown");
+            }
         } else {
+            topName = topName || propertyDescriptor.name;
             switch (type.getBaseType()) {
                 case descriptors.BaseType.BOOLEAN:
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name);
@@ -609,6 +672,9 @@ define([
                     break;
                 case descriptors.BaseType.SET:
                     result = _createSetControl(topName, propertyDescriptor.type, data, parentPopup);
+                    break;
+                case descriptors.BaseType.CONFINES:
+                    result = _createConfinesControl(topName, data, parentPopup);
                     break;
                 case descriptors.BaseType.ARRAY:
                     elementType = new descriptors.Type(propertyDescriptor.elementType);
@@ -669,6 +735,7 @@ define([
          */
         createProperties: function (element, item, preview) {
             _item = item;
+            _isDerived = !!item.data.basedOn;
             _preview = preview;
             _createProperties(element, item.data, descriptors.itemDescriptors[item.category]);
         }

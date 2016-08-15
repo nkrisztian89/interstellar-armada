@@ -750,16 +750,20 @@ define([
         for (i = 0, n = graphics.getMaxLuminosityFactors(); i < n; i++) {
             this._defaultLuminosityFactors.push(0.0);
         }
-        for (i = 0; i < (dataJSON.defaultLuminosityFactors || []).length; i++) {
-            j = dataJSON.defaultLuminosityFactors[i][0];
-            if (j < graphics.getMaxLuminosityFactors()) {
-                this._defaultLuminosityFactors[j] = dataJSON.defaultLuminosityFactors[i][1];
-            } else {
-                application.showError("Attempting to set luminosity of group with index " + j + ", while there are only " +
-                        graphics.getMaxLuminosityFactors() + " luminosity groups available. (and indices start with 0)",
-                        application.ErrorSeverity.MINOR,
-                        "Happened while creating textured model class '" + this.getName() + "'.");
+        if (dataJSON.defaultLuminosityFactors) {
+            for (i = 0; i < dataJSON.defaultLuminosityFactors.length; i++) {
+                j = dataJSON.defaultLuminosityFactors[i][0];
+                if (j < graphics.getMaxLuminosityFactors()) {
+                    this._defaultLuminosityFactors[j] = dataJSON.defaultLuminosityFactors[i][1];
+                } else {
+                    application.showError("Attempting to set luminosity of group with index " + j + ", while there are only " +
+                            graphics.getMaxLuminosityFactors() + " luminosity groups available. (and indices start with 0)",
+                            application.ErrorSeverity.MINOR,
+                            "Happened while creating textured model class '" + this.getName() + "'.");
+                }
             }
+        } else if (otherTexturedModelClass) {
+            this._defaultLuminosityFactors = otherTexturedModelClass._defaultLuminosityFactors.slice();
         }
     };
     /**

@@ -34,7 +34,8 @@ define([
                 RANGE: "range",
                 PAIRS: "pairs",
                 ROTATIONS: "rotations",
-                SET: "set"
+                SET: "set",
+                CONFINES: "confines"
             },
     /**
      * The possible axes for rotations
@@ -79,6 +80,10 @@ define([
      * @property {String} name
      * @property {String|Editor~TypeDescriptor} type (if string: enum BaseType)
      * @property {String|Editor~TypeDescriptor} [elementType] given only if baseType is BaseType.ARRAY - same format as type
+     * @property {Boolean} [optional=false] Whether undefined / null (= unset) is actually a valid value for this property
+     * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value
+     * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
+     * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
      */
     /**
      * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
@@ -745,7 +750,8 @@ define([
             },
             ROTATIONS: {
                 name: "rotations",
-                type: BaseType.ROTATIONS
+                type: BaseType.ROTATIONS,
+                optional: true
             },
             SIZE: {
                 name: "size",
@@ -762,27 +768,33 @@ define([
         properties: {
             POSITION: {
                 name: "position",
-                type: BaseType.VECTOR3
+                type: BaseType.VECTOR3,
+                optional: true
             },
             ARRAY: {
                 name: "array",
-                type: BaseType.BOOLEAN
+                type: BaseType.BOOLEAN,
+                defaultValue: false
             },
             COUNT: {
                 name: "count",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                optional: true
             },
             START_POSITION: {
                 name: "startPosition",
-                type: BaseType.VECTOR3
+                type: BaseType.VECTOR3,
+                optional: true
             },
             TRANSLATION_VECTOR: {
                 name: "translationVector",
-                type: BaseType.VECTOR3
+                type: BaseType.VECTOR3,
+                optional: true
             },
             ROTATIONS: {
                 name: "rotations",
-                type: BaseType.ROTATIONS
+                type: BaseType.ROTATIONS,
+                optional: true
             },
             MAX_GRADE: {
                 name: "maxGrade",
@@ -833,27 +845,33 @@ define([
             THRUSTERS: {
                 name: "thrusters",
                 type: BaseType.ARRAY,
-                elementType: THRUSTER
+                elementType: THRUSTER,
+                optional: true
             },
             ARRAY: {
                 name: "array",
-                type: BaseType.BOOLEAN
+                type: BaseType.BOOLEAN,
+                defaultValue: false
             },
             COUNT: {
                 name: "count",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                optional: true
             },
             START_POSITION: {
                 name: "startPosition",
-                type: BaseType.VECTOR3
+                type: BaseType.VECTOR3,
+                optional: true
             },
             TRANSLATION_VECTOR: {
                 name: "translationVector",
-                type: BaseType.VECTOR3
+                type: BaseType.VECTOR3,
+                optional: true
             },
             SIZE: {
                 name: "size",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                optional: true
             }
         }
     },
@@ -863,6 +881,13 @@ define([
     BASE_ORIENTATION = {
         baseType: BaseType.ENUM,
         values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    POINT_TO_FALLBACK = {
+        baseType: BaseType.ENUM,
+        values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
     },
     /**
      * @type Editor~TypeDescriptor
@@ -888,15 +913,28 @@ define([
             },
             FOV: {
                 name: "fov",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                globalDefault: true
             },
             FOV_RANGE: {
                 name: "fovRange",
-                type: BaseType.RANGE
+                type: BaseType.RANGE,
+                globalDefault: true
+            },
+            SPAN: {
+                name: "span",
+                type: BaseType.NUMBER,
+                globalDefault: true
+            },
+            SPAN_RANGE: {
+                name: "spanRange",
+                type: BaseType.RANGE,
+                globalDefault: true
             },
             FPS: {
                 name: "fps",
-                type: BaseType.BOOLEAN
+                type: BaseType.BOOLEAN,
+                defaultValue: false
             },
             FOLLOWS_POSITION: {
                 name: "followsPosition",
@@ -904,11 +942,18 @@ define([
             },
             BASE_ORIENTATION: {
                 name: "baseOrientation",
-                type: BASE_ORIENTATION
+                type: BASE_ORIENTATION,
+                defaultDerived: true
+            },
+            POINT_TO_FALLBACK: {
+                name: "pointToFallback",
+                type: POINT_TO_FALLBACK,
+                optional: true
             },
             STARTS_WITH_RELATIVE_POSITION: {
                 name: "startsWithRelativePosition",
-                type: BaseType.BOOLEAN
+                type: BaseType.BOOLEAN,
+                optional: true
             },
             LOOK_AT: {
                 name: "lookAt",
@@ -924,19 +969,33 @@ define([
             },
             ALPHA_RANGE: {
                 name: "alphaRange",
-                type: BaseType.RANGE
+                type: BaseType.RANGE,
+                defaultDerived: true
             },
             BETA_RANGE: {
                 name: "betaRange",
-                type: BaseType.RANGE
+                type: BaseType.RANGE,
+                defaultDerived: true
             },
             ROTATION_CENTER_IS_OBJECT: {
                 name: "rotationCenterIsObject",
-                type: BaseType.BOOLEAN
+                type: BaseType.BOOLEAN,
+                defaultDerived: true
             },
             DISTANCE_RANGE: {
                 name: "distanceRange",
-                type: BaseType.RANGE
+                type: BaseType.RANGE,
+                optional: true
+            },
+            CONFINES: {
+                name: "confines",
+                type: BaseType.CONFINES,
+                optional: true
+            },
+            RESETS_WHEN_LEAVING_CONFINES: {
+                name: "resetsWhenLeavingConfines",
+                type: BaseType.BOOLEAN,
+                optional: true
             },
             POSITION: {
                 name: "position",
@@ -944,11 +1003,18 @@ define([
             },
             ROTATIONS: {
                 name: "rotations",
-                type: BaseType.ROTATIONS
+                type: BaseType.ROTATIONS,
+                optional: true
+            },
+            MOVES_RELATIVE_TO_OBJECT: {
+                name: "movesRelativeToObject",
+                type: BaseType.BOOLEAN,
+                defaultValue: false
             },
             RESETS_ON_FOCUS_CHANGE: {
                 name: "resetsOnFocusChange",
-                type: BaseType.BOOLEAN
+                type: BaseType.BOOLEAN,
+                optional: true
             }
         }
     },
@@ -987,16 +1053,19 @@ define([
         properties: {
             NAME: {
                 name: "name",
-                type: BaseType.STRING
+                type: BaseType.STRING,
+                defaultValue: "custom"
             },
             WEAPONS: {
                 name: "weapons",
                 type: BaseType.ARRAY,
-                elementType: WEAPON
+                elementType: WEAPON,
+                optional: true
             },
             PROPULSION: {
                 name: "propulsion",
-                type: PROPULSION
+                type: PROPULSION,
+                optional: true
             }
         }
     },
@@ -1038,15 +1107,18 @@ define([
             },
             SPOT_DIRECTION: {
                 name: "spotDirection",
-                type: BaseType.VECTOR3
+                type: BaseType.VECTOR3,
+                optional: true
             },
             SPOT_CUTOFF_ANGLE: {
                 name: "spotCutoffAngle",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                optional: true
             },
             SPOT_FULL_INTENSITY_ANGLE: {
                 name: "spotFullIntensityAngle",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                optional: true
             }
         }
     },
@@ -1091,7 +1163,8 @@ define([
         },
         BASED_ON: {
             name: "basedOn",
-            type: SPACECRAFT_CLASS_REFERENCE
+            type: SPACECRAFT_CLASS_REFERENCE,
+            optional: true
         },
         TYPE: {
             name: "type",
@@ -1119,15 +1192,18 @@ define([
         },
         TURN_STYLE: {
             name: "turnStyle",
-            type: SPACECRAFT_TURN_STYLE
+            type: SPACECRAFT_TURN_STYLE,
+            defaultValue: classes.SpacecraftTurnStyle.YAW_PITCH
         },
         ATTACK_VECTOR: {
             name: "attackVector",
-            type: BaseType.VECTOR3
+            type: BaseType.VECTOR3,
+            defaultValue: [0, 1, 0]
         },
         ATTACK_THRESHOLD_ANGLE: {
             name: "attackThresholdAngle",
-            type: BaseType.NUMBER
+            type: BaseType.NUMBER,
+            defaultValue: 0
         },
         MODEL: {
             name: "model",
@@ -1147,7 +1223,8 @@ define([
         },
         DEFAULT_LUMINOSITY_FACTORS: {
             name: "defaultLuminosityFactors",
-            type: LUMINOSITY_FACTOR_PAIRS
+            type: LUMINOSITY_FACTOR_PAIRS,
+            optional: true
         },
         MASS: {
             name: "mass",
@@ -1161,7 +1238,8 @@ define([
         WEAPON_SLOTS: {
             name: "weaponSlots",
             type: BaseType.ARRAY,
-            elementType: WEAPON_SLOT
+            elementType: WEAPON_SLOT,
+            optional: true
         },
         MAX_PROPULSION_GRADE: {
             name: "maxPropulsionGrade",
@@ -1170,7 +1248,8 @@ define([
         THRUSTER_SLOTS: {
             name: "thrusterSlots",
             type: BaseType.ARRAY,
-            elementType: THRUSTER_SLOT
+            elementType: THRUSTER_SLOT,
+            optional: true
         },
         VIEWS: {
             name: "views",
@@ -1180,11 +1259,13 @@ define([
         EQUIPMENT_PROFILES: {
             name: "equipmentProfiles",
             type: BaseType.ARRAY,
-            elementType: EQUIPMENT_PROFILE
+            elementType: EQUIPMENT_PROFILE,
+            optional: true
         },
         HUM_SOUND: {
             name: "humSound",
-            type: SOUND_DESCRIPTOR
+            type: SOUND_DESCRIPTOR,
+            optional: true
         },
         EXPLOSION: {
             name: "explosion",
