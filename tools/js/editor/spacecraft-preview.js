@@ -81,7 +81,13 @@ define([
              * The names of properties the changing of which should trigger a refresh of the preview
              * @type String[]
              */
-            REFRESH_PROPERTIES = ["model", "shader", "texture", "factionColor", "defaultLuminosityFactors", "bodies", "weaponSlots", "thrusterSlots", "equipmentProfiles"],
+            REFRESH_PROPERTIES = [
+                "model", "shader", "texture",
+                "factionColor", "defaultLuminosityFactors",
+                "bodies",
+                "weaponSlots", "thrusterSlots",
+                "equipmentProfiles",
+                "lights", "blinkers"],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -617,9 +623,9 @@ define([
                 popup = new common.Popup(button, null, {}),
                 values = utils.getEnumValues(descriptors.ThrusterUse),
                 table, row, cell, propertyEditor, i,
-                elementChangeHandler = function (index, checkbox) {
+                elementChangeHandler = function (index, value) {
                     var elementIndex = _activeEngineUses.indexOf(values[index]);
-                    if (checkbox.checked) {
+                    if (value) {
                         if (elementIndex === -1) {
                             _activeEngineUses.push(values[index]);
                         }

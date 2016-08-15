@@ -85,7 +85,7 @@ define([
         result.type = "checkbox";
         result.checked = data;
         result.onchange = changeHandler ? function () {
-            changeHandler(result);
+            changeHandler(result.checked);
         } : null;
         return result;
     }
@@ -102,12 +102,13 @@ define([
         result.type = "text";
         result.value = data;
         result.onchange = function () {
-            result.value = allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
-            if (isNaN(result.value)) {
-                result.value = 0;
+            var number = allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
+            if (isNaN(number)) {
+                number = 0;
             }
+            result.value = number.toString();
             if (changeHandler) {
-                changeHandler(result);
+                changeHandler(number);
             }
         };
         return result;
@@ -142,8 +143,8 @@ define([
     function createColorPicker(data, changeHandler) {
         var component, i, components, preview,
                 result = document.createElement("div"),
-                componentChangeHander = function (index, comp) {
-                    data[index] = comp.value;
+                componentChangeHander = function (index, value) {
+                    data[index] = value;
                     preview.value = utils.getHexColor(data);
                     if (changeHandler) {
                         changeHandler();
@@ -200,8 +201,8 @@ define([
     function createVectorEditor(data, changeHandler) {
         var component, i, components,
                 result = document.createElement("div"),
-                componentChangeHander = function (index, comp) {
-                    data[index] = comp.value;
+                componentChangeHander = function (index, value) {
+                    data[index] = value;
                     if (changeHandler) {
                         changeHandler();
                     }
@@ -231,8 +232,8 @@ define([
             }
         });
         minCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        minEditor = createNumericInput(data[0] || 0, function () {
-            data[0] = minCheckbox.checked ? minEditor.value : undefined;
+        minEditor = createNumericInput(data[0] || 0, function (value) {
+            data[0] = minCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
             }
@@ -249,8 +250,8 @@ define([
             }
         });
         maxCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        maxEditor = createNumericInput(data[1] || 0, function () {
-            data[1] = maxCheckbox.checked ? maxEditor.value : undefined;
+        maxEditor = createNumericInput(data[1] || 0, function (value) {
+            data[1] = maxCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
             }
@@ -366,28 +367,30 @@ define([
      * to fit on the screen horizontally (if possible)
      */
     Popup.prototype.show = function () {
-        var i, rect;
-        // hide the other popups open at the same level
-        if (!this._parent) {
-            for (i = 0; i < _popups.length; i++) {
-                if (_popups[i] !== this) {
-                    _popups[i].hide();
+        var i;
+        if (!this.isVisible()) {
+            // hide the other popups open at the same level
+            if (!this._parent) {
+                for (i = 0; i < _popups.length; i++) {
+                    if (_popups[i] !== this) {
+                        _popups[i].hide();
+                    }
+                }
+            } else {
+                for (i = 0; i < this._parent._childPopups.length; i++) {
+                    if (this._parent._childPopups[i] !== this) {
+                        this._parent._childPopups[i].hide();
+                    }
                 }
             }
-        } else {
-            for (i = 0; i < this._parent._childPopups.length; i++) {
-                if (this._parent._childPopups[i] !== this) {
-                    this._parent._childPopups[i].hide();
-                }
+            // show this popup at the right position
+            this._element.hidden = false;
+            this.alignPosition();
+            this._element.style.zIndex = _maxZIndex;
+            _maxZIndex++;
+            if (this._eventHandlers[EVENT_SHOW_NAME]) {
+                this._eventHandlers[EVENT_SHOW_NAME]();
             }
-        }
-        // show this popup at the right position
-        this._element.hidden = false;
-        this.alignPosition();
-        this._element.style.zIndex = _maxZIndex;
-        _maxZIndex++;
-        if (this._eventHandlers[EVENT_SHOW_NAME]) {
-            this._eventHandlers[EVENT_SHOW_NAME]();
         }
     };
     /**
@@ -403,10 +406,12 @@ define([
      * Hides the popup and all its children.
      */
     Popup.prototype.hide = function () {
-        this.hideChildren();
-        this._element.hidden = true;
-        if (this._eventHandlers[EVENT_HIDE_NAME]) {
-            this._eventHandlers[EVENT_HIDE_NAME]();
+        if (this.isVisible()) {
+            this.hideChildren();
+            this._element.hidden = true;
+            if (this._eventHandlers[EVENT_HIDE_NAME]) {
+                this._eventHandlers[EVENT_HIDE_NAME]();
+            }
         }
     };
     /**

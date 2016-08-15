@@ -88,8 +88,8 @@ define([
      * @returns {Element}
      */
     function _createBooleanControl(topName, data, parent, name) {
-        var result = common.createBooleanInput(data, function () {
-            _changeData(topName, result.checked, parent, name);
+        var result = common.createBooleanInput(data, function (value) {
+            _changeData(topName, value, parent, name);
         });
         return result;
     }
@@ -197,11 +197,11 @@ define([
      * @returns {Element}
      */
     function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name) {
-        var result = common.createNumericInput(data, allowFloats, function () {
+        var result = common.createNumericInput(data, allowFloats, function (value) {
             if (changeHandler) {
-                changeHandler(result);
+                changeHandler(value);
             } else {
-                _changeData(topName, result.value, parent, name);
+                _changeData(topName, value, parent, name);
             }
         });
         return result;
@@ -406,9 +406,9 @@ define([
                         parentPopup.alignPosition();
                     }
                 },
-                elementChangeHandler = function (index, checkbox) {
+                elementChangeHandler = function (index, value) {
                     var elementIndex = data.indexOf(values[index]);
-                    if (checkbox.checked) {
+                    if (value) {
                         if (elementIndex === -1) {
                             data.push(values[index]);
                         }

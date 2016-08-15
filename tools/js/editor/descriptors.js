@@ -764,6 +764,26 @@ define([
                 name: "position",
                 type: BaseType.VECTOR3
             },
+            ARRAY: {
+                name: "array",
+                type: BaseType.BOOLEAN
+            },
+            COUNT: {
+                name: "count",
+                type: BaseType.NUMBER
+            },
+            START_POSITION: {
+                name: "startPosition",
+                type: BaseType.VECTOR3
+            },
+            TRANSLATION_VECTOR: {
+                name: "translationVector",
+                type: BaseType.VECTOR3
+            },
+            ROTATIONS: {
+                name: "rotations",
+                type: BaseType.ROTATIONS
+            },
             MAX_GRADE: {
                 name: "maxGrade",
                 type: BaseType.NUMBER
@@ -814,6 +834,26 @@ define([
                 name: "thrusters",
                 type: BaseType.ARRAY,
                 elementType: THRUSTER
+            },
+            ARRAY: {
+                name: "array",
+                type: BaseType.BOOLEAN
+            },
+            COUNT: {
+                name: "count",
+                type: BaseType.NUMBER
+            },
+            START_POSITION: {
+                name: "startPosition",
+                type: BaseType.VECTOR3
+            },
+            TRANSLATION_VECTOR: {
+                name: "translationVector",
+                type: BaseType.VECTOR3
+            },
+            SIZE: {
+                name: "size",
+                type: BaseType.NUMBER
             }
         }
     },
